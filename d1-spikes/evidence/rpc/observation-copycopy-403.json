@@ -1,0 +1,320 @@
+{
+  "recordedAt": "2026-09-18T11:29:54Z",
+  "implementation": "rpc-python",
+  "kind": "environment-observation",
+  "title": "provider tal-token-plan-copy-copy returns 403 for every model in --mode rpc while print mode works",
+  "detail": "pi auth check --provider tal-token-plan-copy-copy reports ready; pi -p (print mode) with claude-sonnet-5 succeeds; the same provider/model/flags in --mode rpc consistently fail with stopReason=error and errorMessage 403 Access denied (observed for claude-sonnet-5, claude-haiku-4-5, claude-fable-5). The sibling provider tal-token-plan-06c64a09 (deepseek-v4.1-flash) works in both modes. Scenario evidence runs therefore used 06c64a09; final provider/model baseline is PENDING_OWNER.",
+  "reproduce": [
+    "pi -p \"Reply with exactly: pong\" --provider tal-token-plan-copy-copy --model claude-sonnet-5   # works",
+    "pi --mode rpc --provider tal-token-plan-copy-copy --model claude-sonnet-5  # then prompt -> 403"
+  ],
+  "rawEventsOfFailedRpcRun": [
+    {
+      "seq": 1,
+      "observedAt": "2026-09-18T11:28:41.235Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "extension_ui_request",
+      "runState": "idle",
+      "payload": {
+        "type": "extension_ui_request",
+        "id": "f694f51c-2aa7-4372-bc44-502409d5c967",
+        "method": "setStatus",
+        "statusKey": "pi-switch",
+        "statusText": "pi-switch: 9 providers"
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 2,
+      "observedAt": "2026-09-18T11:28:41.236Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "extension_ui_request",
+      "runState": "idle",
+      "payload": {
+        "type": "extension_ui_request",
+        "id": "5e34b9a8-e092-4f0a-8179-8ada5a267b19",
+        "method": "setStatus",
+        "statusKey": "pi-switch",
+        "statusText": "deepseek-v4.1-flash @ claude-desktop/TAL Token Plan"
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 3,
+      "observedAt": "2026-09-18T11:28:41.465Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "agent_start",
+      "runState": "running",
+      "payload": {
+        "type": "agent_start"
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 4,
+      "observedAt": "2026-09-18T11:28:41.465Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "turn_start",
+      "runState": "running",
+      "payload": {
+        "type": "turn_start"
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 5,
+      "observedAt": "2026-09-18T11:28:41.465Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "message_start",
+      "runState": "running",
+      "payload": {
+        "type": "message_start",
+        "message": {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Reply with exactly the word: pong"
+            }
+          ],
+          "timestamp": 1789730921464
+        }
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 6,
+      "observedAt": "2026-09-18T11:28:41.465Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "message_end",
+      "runState": "running",
+      "payload": {
+        "type": "message_end",
+        "message": {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Reply with exactly the word: pong"
+            }
+          ],
+          "timestamp": 1789730921464
+        }
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 7,
+      "observedAt": "2026-09-18T11:28:41.941Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "message_start",
+      "runState": "running",
+      "payload": {
+        "type": "message_start",
+        "message": {
+          "role": "assistant",
+          "content": [],
+          "api": "anthropic-messages",
+          "provider": "tal-token-plan-copy-copy",
+          "model": "claude-sonnet-5",
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 0,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "stopReason": "error",
+          "timestamp": 1789730921472,
+          "errorMessage": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}"
+        }
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 8,
+      "observedAt": "2026-09-18T11:28:41.941Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "message_end",
+      "runState": "running",
+      "payload": {
+        "type": "message_end",
+        "message": {
+          "role": "assistant",
+          "content": [],
+          "api": "anthropic-messages",
+          "provider": "tal-token-plan-copy-copy",
+          "model": "claude-sonnet-5",
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 0,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "stopReason": "error",
+          "timestamp": 1789730921472,
+          "errorMessage": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}"
+        }
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 9,
+      "observedAt": "2026-09-18T11:28:41.941Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "turn_end",
+      "runState": "running",
+      "payload": {
+        "type": "turn_end",
+        "message": {
+          "role": "assistant",
+          "content": [],
+          "api": "anthropic-messages",
+          "provider": "tal-token-plan-copy-copy",
+          "model": "claude-sonnet-5",
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 0,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "stopReason": "error",
+          "timestamp": 1789730921472,
+          "errorMessage": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}"
+        },
+        "toolResults": []
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 10,
+      "observedAt": "2026-09-18T11:28:41.943Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "agent_end",
+      "runState": "running",
+      "payload": {
+        "type": "agent_end",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Reply with exactly the word: pong"
+              }
+            ],
+            "timestamp": 1789730921464
+          },
+          {
+            "role": "assistant",
+            "content": [],
+            "api": "anthropic-messages",
+            "provider": "tal-token-plan-copy-copy",
+            "model": "claude-sonnet-5",
+            "usage": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "totalTokens": 0,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0,
+                "total": 0
+              }
+            },
+            "stopReason": "error",
+            "timestamp": 1789730921472,
+            "errorMessage": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}"
+          }
+        ],
+        "willRetry": false
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 11,
+      "observedAt": "2026-09-18T11:28:41.945Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "agent_settled",
+      "runState": "idle",
+      "payload": {
+        "type": "agent_settled"
+      },
+      "redactionVersion": "d1-v1"
+    },
+    {
+      "seq": 12,
+      "observedAt": "2026-09-18T11:28:41.958Z",
+      "implementation": "rpc-python",
+      "scenario": "basic",
+      "sessionId": "unknown",
+      "piEventType": "scenario_summary",
+      "runState": "idle",
+      "payload": {
+        "status": "FAIL",
+        "error": {
+          "message": "basic round 1 judgments failed",
+          "kind": "assertion",
+          "stage": "basic round 1",
+          "deltas": "",
+          "finalTexts": [
+            "Reply with exactly the word: pong"
+          ],
+          "stopReasons": [
+            "error"
+          ]
+        },
+        "extra": {}
+      },
+      "redactionVersion": "d1-v1"
+    }
+  ]
+}

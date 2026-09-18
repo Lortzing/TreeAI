@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-09-18T11:34:08Z",
+  "implementation": "rpc-python",
+  "probe": "crash-probe",
+  "runId": "20260918T113408-28fcca",
+  "phases": [
+    {
+      "phase": "idle",
+      "status": "PASS",
+      "piPid": 93084,
+      "driverKilledWith": "SIGKILL",
+      "exitedOnItsOwn": true,
+      "exitAfterMs": 261,
+      "observeTimeoutS": 45.0,
+      "forcedCleanupApplied": false,
+      "leftoverProcess": false,
+      "argv": "pi --mode rpc --no-session --provider tal-token-plan-06c64a09 --model deepseek-v4.1-flash --thinking off"
+    },
+    {
+      "phase": "streaming",
+      "status": "PASS",
+      "piPid": 93188,
+      "driverKilledWith": "SIGKILL",
+      "exitedOnItsOwn": true,
+      "exitAfterMs": 262,
+      "observeTimeoutS": 45.0,
+      "forcedCleanupApplied": false,
+      "leftoverProcess": false,
+      "argv": "pi --mode rpc --no-session --provider tal-token-plan-06c64a09 --model deepseek-v4.1-flash --thinking off"
+    }
+  ],
+  "conclusion": "idle: exitedOnItsOwn=True exitAfterMs=261 forcedCleanup=False; streaming: exitedOnItsOwn=True exitAfterMs=262 forcedCleanup=False",
+  "limitations": [
+    "macOS has no PDEATHSIG equivalent; orphan behavior depends on pi observing stdin EOF after the host's pipes are closed",
+    "PID liveness is checked with kill(pid, 0); short PID-reuse windows are theoretically possible but were not observed"
+  ],
+  "status": "PASS"
+}

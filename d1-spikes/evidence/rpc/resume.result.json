@@ -1,0 +1,23 @@
+{
+  "implementation": "rpc-python",
+  "scenario": "resume",
+  "status": "PASS",
+  "startedAt": "2026-09-18T11:33:57.041Z",
+  "endedAt": "2026-09-18T11:34:00.164Z",
+  "durationMs": 3122,
+  "command": "python3 rpc-python/probe.py run --scenario resume",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/rpc/resume.events.jsonl"
+  ],
+  "observations": [
+    "env: pi 0.85.1 | provider=tal-token-plan-06c64a09 model=deepseek-v4.1-flash thinking=off | python 3.9.6",
+    "phase A: settledAfter=1.54s sessionId='cc666a0d-1352-42cf-a5c6-9f6b098226b2' sessionFile=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-resume-ghmzzln7/sessions/2026-09-18T11-33-57-182Z_cc666a0d-1352-42cf-a5c6-9f6b098226b2.jsonl answer='ACKNOWLEDGED'",
+    "phase A: process exit code=0",
+    "phase B: sessionId='cc666a0d-1352-42cf-a5c6-9f6b098226b2' sameAsA=True sessionFileSame=True messages=2 historyHasCodeWord=True",
+    "phase B: follow-up settledAfter=1.10s answer='RIVER-MOON-77'",
+    "pi subprocess exit codes (spawn order): [0, 0]"
+  ],
+  "limitations": [],
+  "error": null
+}

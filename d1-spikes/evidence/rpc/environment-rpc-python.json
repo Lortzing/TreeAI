@@ -1,0 +1,137 @@
+{
+  "recordedAt": "2026-09-18T11:52:04Z",
+  "implementation": "rpc-python",
+  "piBin": "pi",
+  "piVersion": {
+    "argv": [
+      "pi",
+      "--version"
+    ],
+    "exitCode": 0,
+    "stdout": "0.85.1",
+    "stderr": ""
+  },
+  "piPackageGlobal": {
+    "argv": [
+      "npm",
+      "ls",
+      "-g",
+      "@earendil-works/pi-coding-agent"
+    ],
+    "exitCode": 0,
+    "stdout": "<HOME>/.local/share/fnm/node-versions/v24.21.0/installation/lib\n└── @earendil-works/pi-coding-agent@0.85.1",
+    "stderr": ""
+  },
+  "nodeVersion": {
+    "argv": [
+      "node",
+      "--version"
+    ],
+    "exitCode": 0,
+    "stdout": "v24.21.0",
+    "stderr": ""
+  },
+  "python": {
+    "version": "3.9.6",
+    "executable": "/Library/Developer/CommandLineTools/usr/bin/python3",
+    "implementation": "CPython"
+  },
+  "platform": {
+    "system": "Darwin",
+    "release": "25.6.0",
+    "machine": "arm64"
+  },
+  "uvVersion": {
+    "argv": [
+      "uv",
+      "--version"
+    ],
+    "exitCode": 0,
+    "stdout": "uv 0.12.13 (Homebrew 2026-09-10 aarch64-apple-darwin)",
+    "stderr": ""
+  },
+  "provider": "tal-token-plan-06c64a09",
+  "model": "deepseek-v4.1-flash",
+  "thinking": "off",
+  "authCheck": {
+    "argv": [
+      "pi",
+      "auth",
+      "check",
+      "--provider",
+      "tal-token-plan-06c64a09"
+    ],
+    "exitCode": 1,
+    "stdout": "not_ready",
+    "stderr": ""
+  },
+  "liveCheck": {
+    "ok": true,
+    "stopReason": "stop",
+    "answered": "pong",
+    "errorMessage": null,
+    "elapsedMs": 1834,
+    "detail": ""
+  },
+  "modelList": {
+    "argv": [
+      "pi",
+      "--list-models"
+    ],
+    "exitCode": 0,
+    "stdout": "provider                  model                context  max-out  thinking  images\ntal-token-plan-06c64a09   deepseek-v4.1-flash  1M       384K     yes       yes   \ntal-token-plan-copy-copy  claude-fable-5       1M       128K     yes       yes   \ntal-token-plan-copy-copy  claude-haiku-4-5     1M       128K     yes       yes   \ntal-token-plan-copy-copy  claude-opus-5        1M       128K     yes       yes   \ntal-token-plan-copy-copy  claude-sonnet-5      1M       128K     yes       yes",
+    "stderr": ""
+  },
+  "agentBAlignment": {
+    "status": "CHECK_AVAILABLE",
+    "detail": "sdk-node/ is present (pi dependency: @earendil-works/pi-coding-agent: 0.85.1); recorded pi version 0.85.1 MATCHES this probe's pi 0.85.1; delivered scenario statuses: {\"basic\": \"BLOCKED\", \"tool\": \"BLOCKED\", \"steer\": \"BLOCKED\", \"abort\": \"BLOCKED\", \"resume\": \"BLOCKED\"}; sdk-node ran with pi's default provider/model (no override) and its scenarios are BLOCKED with 403 -- the same provider 403 this probe documented in evidence/rpc/observation-copycopy-403.json; a common working provider/model baseline remains PENDING_OWNER",
+    "sdkNodePresent": true,
+    "piDependency": "@earendil-works/pi-coding-agent: 0.85.1",
+    "deliveredRuns": 2,
+    "newestRunEnvironment": {
+      "runDir": "2026-09-18T11-09-33-297Z-78785",
+      "piPackageVersion": "0.85.1",
+      "globalCliVersion": "0.85.1",
+      "nodeVersion": "v24.21.0",
+      "thinkingLevel": "off",
+      "modelOverride": null
+    },
+    "newestRunSummary": {
+      "runDir": "2026-09-18T11-09-33-297Z-78785",
+      "statuses": {
+        "basic": "BLOCKED",
+        "tool": "BLOCKED",
+        "steer": "BLOCKED",
+        "abort": "BLOCKED",
+        "resume": "BLOCKED"
+      }
+    },
+    "piVersionMatch": true,
+    "reproduceWith": [
+      "pi --version",
+      "npm ls -g @earendil-works/pi-coding-agent",
+      "pi --list-models",
+      "cat d1-spikes/sdk-node/package.json"
+    ]
+  },
+  "notes": [
+    "readiness is decided by liveCheck (a real minimal RPC prompt), not by `pi auth check`: on this machine one provider reports ready but 403s RPC calls while another reports not_ready but serves normally (see evidence/rpc/observation-copycopy-403.json)",
+    "authCheck/liveCheck record status only; key material is never read, printed or stored by this probe",
+    "pi subprocess argv and stdout are redacted (secrets, auth headers, absolute user paths) before being written",
+    "final SDK-vs-RPC choice, host language and model baseline are PENDING_OWNER decisions, not made by this probe"
+  ],
+  "credentialsReady": true,
+  "probeDefaults": {
+    "evidenceDir": "<HOME>/Projects/TreeAI/.claude/worktrees/agent-a28b5ea6fe7be9622/d1-spikes/evidence/rpc/",
+    "requestTimeout": 120.0,
+    "scenarioTimeouts": {
+      "basic": 300.0,
+      "tool": 300.0,
+      "steer": 240.0,
+      "abort": 150.0,
+      "resume": 420.0
+    },
+    "fixtureDirUsed": "fixtures",
+    "sharedFixturesPresent": true
+  }
+}

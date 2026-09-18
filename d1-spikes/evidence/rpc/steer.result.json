@@ -1,0 +1,23 @@
+{
+  "implementation": "rpc-python",
+  "scenario": "steer",
+  "status": "PASS",
+  "startedAt": "2026-09-18T11:33:38.627Z",
+  "endedAt": "2026-09-18T11:33:41.604Z",
+  "durationMs": 2976,
+  "command": "python3 rpc-python/probe.py run --scenario steer",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/rpc/steer.events.jsonl"
+  ],
+  "observations": [
+    "env: pi 0.85.1 | provider=tal-token-plan-06c64a09 model=deepseek-v4.1-flash thinking=off | python 3.9.6",
+    "steer: deltasBeforeSteer=3 steerSentToResponse=0.00s steerResponseToSettled=1.19s queueUpdates=2 steerInHistory=True reflectedInOutput=True sessionIdUnchanged=True",
+    "queue_update timeline: [{\"type\": \"queue_update\", \"steering\": [\"Stop counting now. Reply with exactly the word: steered\"], \"followUp\": []}, {\"type\": \"queue_update\", \"steering\": [], \"followUp\": []}]",
+    "pi subprocess exit codes (spawn order): [0]"
+  ],
+  "limitations": [
+    "steer delivery timing is inferred from queue_update events and the next assistant message; the protocol has no explicit 'steer delivered' event"
+  ],
+  "error": null
+}

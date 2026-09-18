@@ -1,0 +1,24 @@
+# D1 RPC probe -- dependency lock
+#
+# Runtime dependencies: NONE. The probe uses the Python standard library
+# only (subprocess, threading, queue, json, argparse, unittest). An empty
+# dependency set is the strongest possible lock: nothing to resolve.
+#
+# Reference interpreter (pinned, see .python-version):
+#   CPython 3.12.14 (uv-managed, verified with: uv python list)
+#   The code also runs on CPython 3.9+ (verified with the system python3
+#   3.9.6); 3.12.14 is the recorded reference for reproducibility.
+#
+# Environment creation (no third-party packages installed):
+#   uv venv --python 3.12.14
+#   # or: uv run --python 3.12.14 python -m pi_rpc_probe --help
+#
+# Test execution (stdlib unittest, no pytest):
+#   PYTHONPATH=src python3 -m unittest discover -s tests -v
+#
+# Tooling used to produce evidence (not imported by the probe):
+#   uv 0.12.13 (Homebrew)  -- interpreter pinning only
+#
+# The pi subprocess itself is NOT a Python dependency: it is the globally
+# installed @earendil-works/pi-coding-agent 0.85.1 CLI (Node >= 20).
+# Its exact version is recorded by `python -m pi_rpc_probe env-check`.
