@@ -1,0 +1,29 @@
+{
+  "name": "treeai-d1-sdk-node-probe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TreeAI D1 spike: in-process Node.js/TypeScript probe for the Pi SDK (@earendil-works/pi-coding-agent). Not production code; intended to be deletable.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "probe": "tsx src/run.ts",
+    "probe:basic": "tsx src/run.ts basic",
+    "probe:tool": "tsx src/run.ts tool",
+    "probe:steer": "tsx src/run.ts steer",
+    "probe:abort": "tsx src/run.ts abort",
+    "probe:resume": "tsx src/run.ts resume",
+    "probe:all": "tsx src/run.ts all"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.5",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3"
+  }
+}

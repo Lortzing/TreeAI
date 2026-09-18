@@ -1,0 +1,30 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "basic",
+  "status": "BLOCKED",
+  "startedAt": "2026-09-18T11:07:09.816Z",
+  "endedAt": "2026-09-18T11:07:10.840Z",
+  "durationMs": 1024,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:basic",
+  "exitCode": 2,
+  "evidenceFiles": [
+    "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-07-09-207Z-77525/basic/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-copy-copy/claude-fable-5 (thinking=off, source=first-available)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "fixture cwd: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-basic-y3XQpA (temp copy, source=local-fallback)"
+  ],
+  "limitations": [
+    "Agent D's shared JSON schemas (d1-spikes/schemas/) were not present; results were validated against the task-book field rules implemented in src/validate.ts instead (PENDING integration).",
+    "adapter code: 298 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1774 code lines; direct Pi API surface: 11 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model.",
+    "Fixture source is the local fallback (Agent D's shared fixtures/ not present yet)."
+  ],
+  "error": {
+    "name": "BlockedError",
+    "message": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}",
+    "stack": "BlockedError: 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}\n    at classifyAndThrow (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/pi-bridge.ts:209:11)\n    at RealProbeSession.prompt (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/pi-bridge.ts:134:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runBasicScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/scenarios/basic.ts:74:7)\n    at async Object.exec (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:132:9)\n    at async runScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/runner.ts:134:5)\n    at async main (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:113:20)",
+    "blockedReason": "BLOCKED_CREDENTIALS"
+  }
+}

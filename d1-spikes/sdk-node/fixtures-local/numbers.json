@@ -1,0 +1,6 @@
+{
+  "scenario": "treeai-d1-tool-fixture",
+  "marker": "TREEAI-D1-FIXTURE-7f3a",
+  "numbers": { "a": 17, "b": 25 },
+  "sum": 42
+}

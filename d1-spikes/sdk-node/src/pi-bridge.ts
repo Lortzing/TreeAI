@@ -1,0 +1,251 @@
+/**
+ * TreeAI D1 spike - the Pi SDK adapter (the code under measurement).
+ *
+ * This is the ONLY module that talks to the real Pi SDK
+ * (@earendil-works/pi-coding-agent). Everything it needs from Pi is listed
+ * in PI_API_SURFACE (audited in README and scenario observations).
+ *
+ * It does NOT fork or modify Pi, and it does not define any TreeAI domain
+ * model or RuntimeAdapter - it is probe glue, intended to be deleted.
+ *
+ * Credentials: the bridge never reads, prints, or stores API keys. Pi's
+ * ModelRuntime resolves auth itself (runtime override > ~/.pi/agent/auth.json
+ * > environment variables). If no authenticated model exists, the bridge
+ * throws BlockedError("BLOCKED_CREDENTIALS").
+ */
+
+import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-agent";
+import * as Pi from "@earendil-works/pi-coding-agent";
+import type {
+  CreateProbeSessionOptions,
+  ProbeSessionLike,
+  ProbeSessionFactory,
+} from "./types.js";
+import { BlockedError } from "./blocked.js";
+import { PROBE_THINKING_LEVEL } from "./prompts.js";
+
+/**
+ * Structurally identical to pi-agent-core's ThinkingLevel ("off"|"minimal"|
+ * "low"|"medium"|"high"|"xhigh"|"max"), which the main package does not
+ * re-export; assignment to createAgentSession's option is type-safe.
+ */
+const THINKING_LEVEL = PROBE_THINKING_LEVEL;
+
+/** Every Pi SDK API this adapter touches (audit inventory). */
+export const PI_API_SURFACE: Record<string, string[]> = {
+  "Pi.createAgentSession": ["session factory: options.cwd, model, thinkingLevel, modelRuntime, sessionManager, tools, noTools"],
+  "Pi.SessionManager": ["inMemory(cwd)", "create(cwd, sessionDir)", "open(sessionFile)", "getEntries()", "getSessionFile()", "getSessionId()"],
+  "Pi.ModelRuntime": ["create()", "getModel(providerId, modelId)", "getAvailable()"],
+  "Pi.VERSION": ["package version constant"],
+  "AgentSession.prompt": ["prompt(text, { streamingBehavior })"],
+  "AgentSession.steer": ["steer(text)"],
+  "AgentSession.followUp": ["followUp(text)"],
+  "AgentSession.abort": ["abort()"],
+  "AgentSession.dispose": ["dispose()"],
+  "AgentSession.subscribe": ["subscribe(listener) -> unsubscribe"],
+  "AgentSession state": ["sessionId", "sessionFile", "isStreaming", "messages", "model", "thinkingLevel", "state.errorMessage"],
+};
+
+export interface ResolvedModel {
+  providerId: string;
+  modelId: string;
+  thinkingLevel: string;
+  source: "env-override" | "first-available";
+}
+
+export class RealProbeSession implements ProbeSessionLike {
+  private unsubscribeFn: (() => void) | null = null;
+  private readonly extraListeners: Array<(event: AgentSessionEvent) => void> = [];
+
+  private constructor(
+    private readonly session: AgentSession,
+    private readonly sessionManager: Pi.SessionManager,
+  ) {}
+
+  static async create(opts: CreateProbeSessionOptions & { resolvedModel: ResolvedModel }): Promise<RealProbeSession> {
+    const modelRuntime = await Pi.ModelRuntime.create();
+    const model =
+      opts.resolvedModel.source === "env-override"
+        ? modelRuntime.getModel(opts.resolvedModel.providerId, opts.resolvedModel.modelId)
+        : (await modelRuntime.getAvailable())[0];
+    if (!model) {
+      throw new BlockedError(
+        "BLOCKED_MODEL",
+        `Configured model ${opts.resolvedModel.providerId}/${opts.resolvedModel.modelId} could not be resolved`,
+      );
+    }
+    const sessionManager = opts.openSessionFile
+      ? Pi.SessionManager.open(opts.openSessionFile)
+      : opts.persist
+        ? Pi.SessionManager.create(opts.cwd, opts.sessionDir)
+        : Pi.SessionManager.inMemory(opts.cwd);
+    const { session } = await Pi.createAgentSession({
+      cwd: opts.cwd,
+      model,
+      thinkingLevel: PROBE_THINKING_LEVEL,
+      modelRuntime,
+      sessionManager,
+      tools: opts.tools === "read-only" ? ["read"] : undefined,
+      noTools: opts.tools === "none" ? "all" : undefined,
+    });
+    return new RealProbeSession(session, sessionManager);
+  }
+
+  get sessionId(): string {
+    return this.session.sessionId;
+  }
+
+  get sessionFile(): string | undefined {
+    return this.session.sessionFile;
+  }
+
+  get isStreaming(): boolean {
+    return this.session.isStreaming;
+  }
+
+  get errorMessage(): string | undefined {
+    const state = (this.session as unknown as { state?: { errorMessage?: string } }).state;
+    return state?.errorMessage;
+  }
+
+  subscribe(listener: (event: Record<string, unknown>) => void): () => void {
+    const wrapped = listener as (event: AgentSessionEvent) => void;
+    this.extraListeners.push(wrapped);
+    const unsub = this.session.subscribe(wrapped);
+    return () => {
+      const idx = this.extraListeners.indexOf(wrapped);
+      if (idx >= 0) this.extraListeners.splice(idx, 1);
+      unsub();
+    };
+  }
+
+  /** Attach the evidence recorder listener. Called once per session. */
+  attachRecorder(onEvent: (event: AgentSessionEvent) => void): void {
+    if (this.unsubscribeFn) throw new Error("recorder already attached");
+    this.unsubscribeFn = this.session.subscribe(onEvent);
+  }
+
+  async prompt(text: string, opts?: { streamingBehavior?: "steer" | "followUp" }): Promise<void> {
+    await this.session.prompt(text, opts);
+    // Pi reports post-acceptance failures through the message stream, not
+    // by rejecting prompt(). Surface the latest assistant error here.
+    const err = this.errorMessage;
+    if (err && !/aborted/i.test(err)) {
+      classifyAndThrow(err);
+    }
+  }
+
+  async steer(text: string): Promise<void> {
+    await this.session.steer(text);
+  }
+
+  async followUp(text: string): Promise<void> {
+    await this.session.followUp(text);
+  }
+
+  async abort(): Promise<void> {
+    await this.session.abort();
+  }
+
+  dispose(): void {
+    this.unsubscribeFn?.();
+    this.unsubscribeFn = null;
+    this.session.dispose();
+  }
+
+  getHistorySummary(): {
+    entries: number;
+    userMessages: number;
+    assistantMessages: number;
+    lastAssistantText: string | undefined;
+  } {
+    const messages = this.session.messages;
+    let userMessages = 0;
+    let assistantMessages = 0;
+    let lastAssistantText: string | undefined;
+    for (const m of messages) {
+      const msg = m as { role?: string; content?: unknown };
+      if (msg.role === "user") userMessages += 1;
+      if (msg.role === "assistant") {
+        assistantMessages += 1;
+        lastAssistantText = extractText(msg.content);
+      }
+    }
+    return {
+      entries: this.sessionManager.getEntries().length,
+      userMessages,
+      assistantMessages,
+      lastAssistantText,
+    };
+  }
+}
+
+function extractText(content: unknown): string | undefined {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (part === null || typeof part !== "object") return "";
+        const p = part as { type?: string; text?: string };
+        return p.type === "text" && typeof p.text === "string" ? p.text : "";
+      })
+      .join("");
+  }
+  return undefined;
+}
+
+/** Classify a Pi/model error message into FAIL vs BLOCKED. */
+export function classifyAndThrow(message: string): never {
+  const lowered = message.toLowerCase();
+  if (
+    lowered.includes("api key") ||
+    lowered.includes("apikey") ||
+    lowered.includes("unauthorized") ||
+    lowered.includes("401") ||
+    lowered.includes("403") ||
+    lowered.includes("authentication") ||
+    (lowered.includes("auth") && lowered.includes("missing"))
+  ) {
+    throw new BlockedError("BLOCKED_CREDENTIALS", message);
+  }
+  throw new Error(message);
+}
+
+/** Resolve which model the probe will use; BLOCKED_CREDENTIALS when none. */
+export async function resolveProbeModel(): Promise<ResolvedModel> {
+  const override = process.env.PI_PROBE_MODEL;
+  const thinkingLevel = PROBE_THINKING_LEVEL;
+  if (override) {
+    const slash = override.indexOf("/");
+    if (slash <= 0) {
+      throw new Error(`PI_PROBE_MODEL must be "providerId/modelId", got: ${override}`);
+    }
+    return {
+      providerId: override.slice(0, slash),
+      modelId: override.slice(slash + 1),
+      thinkingLevel,
+      source: "env-override",
+    };
+  }
+  const modelRuntime = await Pi.ModelRuntime.create();
+  const available = await modelRuntime.getAvailable();
+  if (available.length === 0) {
+    throw new BlockedError(
+      "BLOCKED_CREDENTIALS",
+      "No model with valid authentication: Pi auth.json has no stored credentials and no provider API key environment variables are set. Run `pi auth login` (or set a provider API key env var) and re-run the probe.",
+    );
+  }
+  const first = available[0] as { provider: string; id: string };
+  return { providerId: first.provider, modelId: first.id, thinkingLevel, source: "first-available" };
+}
+
+/** Real session factory wired into scenarios by src/run.ts. */
+export function createRealSessionFactory(resolvedModel: ResolvedModel): ProbeSessionFactory {
+  return {
+    async create(options: CreateProbeSessionOptions): Promise<ProbeSessionLike> {
+      return RealProbeSession.create({ ...options, resolvedModel });
+    },
+  };
+}
+
+export const PI_PACKAGE_VERSION: string = Pi.VERSION;

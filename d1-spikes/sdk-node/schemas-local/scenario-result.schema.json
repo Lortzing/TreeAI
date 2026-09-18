@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "treeai-d1-local/scenario-result.schema.json",
+  "title": "TreeAI D1 scenario result (LOCAL FALLBACK, Agent B)",
+  "description": "Local placeholder mirroring the D1 task book section 6.2. The authoritative schema is d1-spikes/schemas/scenario-result.schema.json (Agent D); when it appears, results must be re-validated against it.",
+  "type": "object",
+  "required": [
+    "implementation",
+    "scenario",
+    "status",
+    "startedAt",
+    "endedAt",
+    "durationMs",
+    "command",
+    "exitCode",
+    "evidenceFiles",
+    "observations",
+    "limitations",
+    "error"
+  ],
+  "properties": {
+    "implementation": { "const": "sdk-node" },
+    "scenario": { "enum": ["basic", "tool", "steer", "abort", "resume"] },
+    "status": { "enum": ["PASS", "FAIL", "BLOCKED", "NOT_RUN"] },
+    "startedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$" },
+    "endedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$" },
+    "durationMs": { "type": "number", "minimum": 0 },
+    "command": { "type": "string", "minLength": 1 },
+    "exitCode": { "type": "integer" },
+    "evidenceFiles": { "type": "array", "items": { "type": "string" } },
+    "observations": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "error": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["name", "message"],
+          "properties": {
+            "name": { "type": "string" },
+            "message": { "type": "string" },
+            "blockedReason": { "enum": ["BLOCKED_CREDENTIALS", "BLOCKED_SDK", "BLOCKED_MODEL", "BLOCKED_FIXTURE"] },
+            "stack": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "blockedReason": { "enum": ["BLOCKED_CREDENTIALS", "BLOCKED_SDK", "BLOCKED_MODEL", "BLOCKED_FIXTURE"] },
+    "failedChecks": { "type": "array", "items": { "type": "string" } },
+    "environment": { "type": "object" }
+  },
+  "additionalProperties": false
+}
