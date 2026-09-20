@@ -48,7 +48,7 @@ npm run probe:resume
 | 场景 | 验证点 | 关键判据 |
 |---|---|---|
 | basic | 连续 3 个子回合；delta 拼接一致性；stopReason | delta 串 === 最终文本；答案含 `42`；sessionId 跨子回合不变 |
-| tool | 只读白名单（`read`）；fixture 真值校验；错误路径 | 工具路径被限制在 fixture 临时副本内；答案含 `MARKER=TREEAI-D1-FIXTURE-7f3a`/`SUM=42`；读不存在文件 → `isError: true` |
+| tool | 只读白名单（`read`）；fixture 真值校验；错误路径 | 工具路径被限制在 fixture 临时副本内；答案含 `COUNT=16`/`SUM=80`/`MIN=1`/`MAX=9`/`MEDIAN=5`；读不存在文件 → `isError: true` |
 | steer | 流中转向 | `queue_update`(steering 非空)；第二个 `agent_start`；最终输出含 `STEERED-OK`；sessionId 不变 |
 | abort | 流中中止 + 资源释放 | 中止后 ≤60s 内 settle；`isStreaming=false`；stopReason=aborted；中止后**新会话**仍可正常作答（`5`） |
 | resume | 跨进程恢复 | 两个独立 OS 进程（phase A/B）；只有 sessionFile 路径跨边界；B 读回 A 的历史（u≥2 且 a≥2）；答案回忆口令 `TREEAI-RESUME-9c4e`；A/B 子进程事件以全局 seq 合并进场景事件流 |
@@ -64,7 +64,9 @@ dispose/临时目录删除）；超时/失败也**必须**留下完整证据。
   `redactionVersion:"d1-v1"`；resume 场景额外带 `probePhase:"A"|"B"`。
 - `<scenario>/result.json`：`status`（PASS/FAIL/BLOCKED/NOT_RUN）、`startedAt/endedAt/durationMs`、
   `command`、`exitCode`、`evidenceFiles`、`observations`、`limitations`、`error`（结构化）、
-  额外 `blockedReason`/`failedChecks`/`environment`。
+  额外 `blockedReason`/`failedChecks`/`environment`。`evidenceFiles` 与 run-summary 的
+  `runDir` 一律输出**相对 d1-spikes 根**的路径（如 `evidence/sdk/runs/<时间戳>/...`），
+  不含绝对路径或家目录。
 - 写入管线：redact（`d1-v1`：key 模式、Bearer、`/Users/<name>/` 家目录路径、敏感字段名）
   → slim（message_update 摘要化、thinking 只留长度、文本上限 16KB、payload 上限 64KB）
   → 逐行 JSON（U+2028/U+2029 转义）→ tmp 文件 → fsync → 原子 rename。
@@ -81,9 +83,10 @@ dispose/临时目录删除）；超时/失败也**必须**留下完整证据。
 `src/audit.ts` 在每次运行时统计并写入 `run-summary.json` 的 limitations。当前计数
 （`npm run probe` 输出为准）：
 - **适配层**（直接绑定 Pi SDK、若选 SDK 路线需要长期维护的部分）：
-  `src/pi-bridge.ts`（252 行）+ `src/scenarios/resume-child.ts`（131 行），共 298 行代码
+  `src/pi-bridge.ts`（200 行）+ `src/scenarios/resume-child.ts`（98 行），共 298 行代码
   （不含注释/空行；以 `npm run probe` 每次输出的统计为准）。
-- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：18 个文件、1781 行代码。
+- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：17 个文件、1818 行代码
+  （audit.ts 的 HARNESS_FILES 清单口径；不含 fake-session/fixture/child-runner 等测试辅助）。
 
 ### 直接可访问的 Pi 状态/类型（进程内 SDK 路线的实际可得面）
 `session.sessionId`、`session.sessionFile`、`session.isStreaming`、`session.messages`、
@@ -117,11 +120,12 @@ phase A 不向 B 传递任何内存对象；Pi 自身配置之外无其他共享
 - 全部 72 个测试（redact/recorder/validate/runner/scenarios/static/pi-bridge）在无网络、
   无凭据环境下通过；场景逻辑用脚本化 FakeProbeSession（src/fake-session.ts）驱动，
   真实入口 `src/run.ts` 不导入 fake（static 测试强制）。
-- 共享 `fixtures/`、`schemas/`（Agent D 产物）当前未出现时，回退到本目录
-  `fixtures-local/`、`schemas-local/`；共享目录就绪后自动优先使用（src/paths.ts），
+- 共享 `fixtures/` 与 `schemas/`（Agent D 产物）已交付，自动优先使用（src/paths.ts）；
+  若共享目录缺失则回退到本目录 `fixtures-local/`、`schemas-local/`（fixture 数据与共享
+  版本一致：16 个 pi 数字，count=16/sum=80/min=1/max=9/median=5，static 测试交叉校验），
   并在 result limitations 中注明回退状态。
-- 脱敏版本 `d1-v1`：保留 key 前缀便于辨识，替换凭据本体；探针自身内容
-  （prompt、marker、口令）不属于敏感串，测试验证了边界。
+- 脱敏版本 `d1-v1`：保留可审计的字段前缀，替换凭据本体；探针自身内容
+  （prompt、fixture 聚合值、口令）不属于敏感串，测试验证了边界。
 - 不 fork、不修改 Pi；仅作为依赖使用。
 
 ## PENDING_OWNER（需负责人决定，本探针不定案）
@@ -132,3 +136,13 @@ phase A 不向 B 传递任何内存对象；Pi 自身配置之外无其他共享
 3. **权限策略**：tool 场景目前固定最小只读白名单（`read`），生产环境的工具白名单与
    批准流程未定。
 4. **凭据供给方式**：当前依赖 Pi 已配置的凭据或既有环境变量；正式的密钥管理方案未定。
+5. **与 Agent D 共享 schema/验收的两处契约差**（需负责人裁定以哪边为准，本探针按
+   任务书第 6 节实现，未擅自变更）：
+   - blockedReason 词表：任务书/B 用 `BLOCKED_CREDENTIALS|BLOCKED_SDK|BLOCKED_MODEL|
+     BLOCKED_FIXTURE`（src/types.ts），共享 scenario-result.schema.json 的枚举是
+     `CREDENTIALS|VERSION_UNAVAILABLE|DEPENDENCY_MISSING|ENVIRONMENT|OTHER`；
+   - 证据布局：任务书/B 用追加式 `evidence/sdk/runs/<时间戳>-<pid>/<scenario>/
+     {events.jsonl,result.json}`（永不改写历史失败记录），共享契约/verify-d1 查找
+     扁平的 `evidence/sdk/<scenario>.result.json` + `<scenario>.events.jsonl`。
+     裁定前 verify-d1 会把 B 的五个场景记为 FAIL（找不到扁平结果文件）；如需扁平
+     兼容层（每次运行覆盖最新结果），应由负责人确认覆盖语义后再实现。

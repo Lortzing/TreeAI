@@ -1,0 +1,1357 @@
+#!/usr/bin/env python3
+"""verify-d1 - unified acceptance entry for TreeAI D1 (Agent D owned).
+
+Runs, in order:
+  1. Agent D static infrastructure: fixtures integrity (MANIFEST.sha256),
+     schemas (parse + valid/invalid instance probes), validator self-test,
+     secret-scanner self-test, run-dir generator self-test.
+  2. Reproducible dependency install for sdk-node / rpc-python
+     (NOT_RUN while an implementation directory is not delivered).
+  3. Unit tests for sdk-node / rpc-python (NOT_RUN while not delivered).
+     rpc-python: pytest when installed, otherwise the standard-library
+     fallback PYTHONPATH=src python -m unittest discover -s tests
+     (Agent C ships unittest tests); BLOCKED only if neither is available.
+  4. The five scenario results for both implementations, each validated
+     against scenario-result.schema.json; PASS claims are additionally
+     traced to existing evidence files, schema-valid events JSONL with
+     strictly increasing seq, and matching implementation/scenario fields.
+     Evidence layouts (schemas/README.md section 2): flat
+     evidence/<dir>/<scenario>.result.json takes precedence per scenario;
+     otherwise the LATEST COMPLETE run under evidence/<dir>/runs/ is
+     selected (a run is complete when all five scenarios carry result.json)
+     and every run-sourced row must keep all of its evidence inside that
+     single run - files from different runs are never combined, and a
+     result referencing another run's files FAILs. BLOCKED claims must
+     still reference existing, valid evidence (task book section 0.6).
+  5. Comparison parity: both implementations must have run the same Pi
+     version, provider, model and thinking configuration (task book
+     section 5) before SDK-vs-RPC outcomes may be compared.
+  6. Aggregate JSON Schema validation of delivered evidence.
+  7. Log redaction / secret scan over evidence/ and over the rest of the
+     d1-spikes workspace (any finding fails verification).
+  8. Trusted exit codes: PASS results must exit 0, FAIL results non-zero.
+  9. Residual processes tied to the probes (pi rpc mode, sdk-node/rpc-python
+     commands, leftover run dirs).
+
+Rules of honesty (task book sections 5, 11, 14):
+  - Missing files, schema violations, secret findings or broken exit codes
+    make this script exit non-zero. Nothing is ever reported as PASS without
+    a traceable evidence path.
+  - Not-yet-delivered Agent B/C work is recorded as NOT_RUN (implementation
+    directory absent) or FAIL (implementation directory present but required
+    evidence missing), never silently skipped or faked.
+  - BLOCKED_CREDENTIALS results are preserved as BLOCKED rows; their
+    evidence is still validated, and a common provider/model baseline for
+    the SDK/RPC comparison remains a PENDING_OWNER decision
+    (reports/blockers.md DECISION-008).
+
+Usage:
+  scripts/verify-d1            # default run (offline-safe)
+  scripts/verify-d1 --repro    # additionally copy each delivered
+                               # implementation to a clean temp dir,
+                               # reinstall dependencies and rerun its tests
+
+Exit codes: 0 = every check PASS; 2 = at least one FAIL; 3 = no FAIL but
+BLOCKED/NOT_RUN present (incomplete delivery); 1 = internal tool error.
+Evidence is written to d1-spikes/evidence/verification/ (append-only
+history in verify-history.jsonl; each run gets its own timestamped
+summary and log). This script never modifies evidence produced by
+Agents B or C.
+"""
+
+import argparse
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from datetime import datetime, timezone
+
+VERIFY_VERSION = "d1-v1"
+
+SCRIPT_PATH = os.path.abspath(__file__)
+SCRIPTS_DIR = os.path.dirname(SCRIPT_PATH)
+ROOT = os.path.dirname(SCRIPTS_DIR)          # .../d1-spikes
+REPO = os.path.dirname(ROOT)                 # repository root
+EVID_VER = os.path.join(ROOT, "evidence", "verification")
+
+SCENARIOS = ["basic", "tool", "steer", "abort", "resume"]
+IMPL_TO_DIR = {"sdk-node": "sdk", "rpc-python": "rpc"}
+
+NODE_LOCKFILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
+                  "pnpm-lock.yaml", "bun.lockb", "bun.lock"]
+PY_LOCKFILES = ["uv.lock", "poetry.lock", "Pipfile.lock"]
+
+HOME_RE = re.compile(r"/(?:Users|home)/[A-Za-z0-9_.\-]+")
+RESIDENT_FIRST = ("node", "npm", "npx", "python", "python3", "uv", "pi")
+# observation line of the form "model: <provider>/<model> (thinking=<level>, ..."
+OBS_MODEL_RE = re.compile(r"model:\s*([A-Za-z0-9_.\-]+)/([A-Za-z0-9_.\-]+)"
+                          r"\s*\(thinking=([A-Za-z0-9_\-]+)")
+
+
+def redact(s):
+    return HOME_RE.sub("<home>", s)
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
+
+
+def iso(dt):
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.") + "%03dZ" % (dt.microsecond // 1000)
+
+
+def stamp(dt):
+    return dt.strftime("%Y%m%dT%H%M%S") + "%03dZ" % (dt.microsecond // 1000)
+
+
+def rel(path):
+    rp = os.path.relpath(path, ROOT)
+    if rp.startswith(".."):
+        return redact(os.path.abspath(path))
+    return rp
+
+
+def load_module(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, path)
+    spec = importlib.util.spec_from_loader(name, loader)
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+def run_cmd(cmd, cwd=None, timeout=120, env=None):
+    """Returns (returncode, stdout, stderr, timed_out)."""
+    try:
+        p = subprocess.run(cmd, cwd=cwd, timeout=timeout, capture_output=True,
+                           text=True, errors="replace", env=env)
+        return p.returncode, p.stdout or "", p.stderr or "", False
+    except subprocess.TimeoutExpired as e:
+        def _s(x):
+            if isinstance(x, bytes):
+                return x.decode("utf-8", "replace")
+            return x or ""
+        return None, _s(e.stdout), _s(e.stderr), True
+    except FileNotFoundError:
+        return 127, "", "command not found: " + cmd[0], False
+    except OSError as e:
+        return 126, "", str(e), False
+
+
+def tail(s, n=1200):
+    return redact((s or ""))[-n:]
+
+
+def atomic_write_json(path, obj):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(obj, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
+    os.replace(tmp, path)
+
+
+def atomic_write_text(path, text):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
+
+
+def git_info():
+    info = {"commit": "unknown", "dirty": None}
+    try:
+        p = subprocess.run(["git", "-C", ROOT, "rev-parse", "--short", "HEAD"],
+                           capture_output=True, text=True, timeout=10)
+        if p.returncode == 0:
+            info["commit"] = p.stdout.strip()
+        p2 = subprocess.run(["git", "-C", ROOT, "status", "--porcelain"],
+                            capture_output=True, text=True, timeout=10)
+        if p2.returncode == 0:
+            info["dirty"] = bool(p2.stdout.strip())
+    except Exception:
+        pass
+    return info
+
+
+def node_version():
+    rc, so, _se, _to = run_cmd(["node", "--version"], timeout=15)
+    return so.strip() if rc == 0 else None
+
+
+class Checks(object):
+    def __init__(self):
+        self.rows = []
+
+    def add(self, cid, desc, status, details="", evidence=None, repro=""):
+        row = {"id": cid, "description": desc, "status": status,
+               "details": details, "evidence": evidence or [],
+               "reproCommand": repro}
+        self.rows.append(row)
+        return row
+
+    def counts(self):
+        c = {"PASS": 0, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 0}
+        for r in self.rows:
+            c[r["status"]] += 1
+        return c
+
+
+# --------------------------------------------------------------------------
+# individual checks
+# --------------------------------------------------------------------------
+
+def check_fixtures(checks):
+    cid = "fixtures-integrity"
+    desc = "Deterministic fixtures present, MANIFEST.sha256 verified, README aggregates consistent"
+    repro = "cd d1-spikes/fixtures && shasum -a 256 -c MANIFEST.sha256"
+    fdir = os.path.join(ROOT, "fixtures")
+    required = ["README.txt", "numbers.json", "readonly/notes.md",
+                "readonly/glossary.txt", "MANIFEST.sha256"]
+    problems = []
+    for f in required:
+        if not os.path.isfile(os.path.join(fdir, f)):
+            problems.append("missing fixtures/" + f)
+    if not problems:
+        with open(os.path.join(fdir, "MANIFEST.sha256"), "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                digest, _sep, path = line.partition("  ")
+                full = os.path.join(fdir, path)
+                if not os.path.isfile(full):
+                    problems.append("manifest lists missing file: " + path)
+                    continue
+                h = hashlib.sha256()
+                with open(full, "rb") as fh2:
+                    for chunk in iter(lambda: fh2.read(65536), b""):
+                        h.update(chunk)
+                if h.hexdigest() != digest:
+                    problems.append("checksum mismatch: " + path)
+        try:
+            with open(os.path.join(fdir, "numbers.json"), "r", encoding="utf-8") as fh:
+                vals = json.load(fh)["values"]
+            vs = sorted(vals)
+            n = len(vals)
+            med = vs[n // 2] if n % 2 else (vs[n // 2 - 1] + vs[n // 2]) / 2.0
+            agg = {"count": n, "sum": sum(vals), "min": min(vals),
+                   "max": max(vals),
+                   "median": int(med) if float(med).is_integer() else med}
+            with open(os.path.join(fdir, "README.txt"), "r", encoding="utf-8") as fh:
+                readme = fh.read()
+            for k in ("count", "sum", "min", "max", "median"):
+                if ("%s = %s" % (k, agg[k])) not in readme:
+                    problems.append("README.txt missing documented aggregate '%s = %s'"
+                                    % (k, agg[k]))
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            problems.append("fixture consistency check failed: %s" % e)
+    if problems:
+        checks.add(cid, desc, "FAIL", "\n".join(problems),
+                   evidence=["fixtures/MANIFEST.sha256"], repro=repro)
+    else:
+        checks.add(cid, desc, "PASS",
+                   "5 fixture files verified against MANIFEST.sha256; "
+                   "tool-scenario aggregates consistent with README.txt",
+                   evidence=["fixtures/MANIFEST.sha256"], repro=repro)
+
+
+def check_schemas(checks, schemacheck_mod):
+    cid = "schemas-valid"
+    desc = "Shared schemas parse and accept/reject known probe instances"
+    problems = []
+    schemas = {}
+    for name in ("evidence-event.schema.json", "scenario-result.schema.json"):
+        path = os.path.join(ROOT, "schemas", name)
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                schemas[name] = json.load(fh)
+        except (OSError, ValueError) as e:
+            problems.append("cannot load schemas/%s: %s" % (name, e))
+    if not problems:
+        ev_schema = schemas["evidence-event.schema.json"]
+        res_schema = schemas["scenario-result.schema.json"]
+
+        valid_event = {
+            "seq": 1,
+            "observedAt": "2026-09-18T00:00:00.000Z",
+            "implementation": "sdk-node",
+            "scenario": "basic",
+            "sessionId": "redacted-or-test-id",
+            "piEventType": "message_update",
+            "runState": "running",
+            "payload": {},
+            "redactionVersion": "d1-v1",
+        }
+        valid_result = {
+            "implementation": "rpc-python",
+            "scenario": "tool",
+            "status": "PASS",
+            "startedAt": "2026-09-18T00:00:00.000Z",
+            "endedAt": "2026-09-18T00:00:05.000Z",
+            "durationMs": 5000,
+            "command": "python3 -m treeai_d1_probe tool",
+            "exitCode": 0,
+            "evidenceFiles": ["evidence/rpc/tool.events.jsonl"],
+            "observations": ["tool output matched fixture"],
+            "limitations": [],
+            "error": None,
+        }
+        cases = [
+            (ev_schema, valid_event, True, "valid event (task book 6.1 example)"),
+            (ev_schema, {k: v for k, v in valid_event.items() if k != "seq"},
+             False, "event missing seq"),
+            (ev_schema, dict(valid_event, scenario="warmup"),
+             False, "event with non-unified scenario"),
+            (ev_schema, dict(valid_event, observedAt="not-a-date"),
+             False, "event with invalid timestamp"),
+            (ev_schema, dict(valid_event, redactionVersion="v1"),
+             False, "event with non-d1 redaction version"),
+            (res_schema, valid_result, True, "valid PASS result"),
+            (res_schema, dict(valid_result, exitCode=1),
+             False, "PASS with non-zero exitCode"),
+            (res_schema, dict(valid_result, status="FAIL"),
+             False, "FAIL with zero exitCode and null error"),
+            (res_schema, dict(valid_result, status="BLOCKED"),
+             False, "BLOCKED without blockedReason anywhere"),
+            (res_schema, dict(valid_result, status="MAYBE"),
+             False, "non-unified status value"),
+            (res_schema, dict(valid_result, evidenceFiles=[]),
+             False, "PASS with empty evidenceFiles"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="CREDENTIALS",
+                              error={"message": "no model credentials",
+                                     "code": "Eauth"}),
+             True, "BLOCKED with top-level blockedReason"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              error={"message": "403 access denied",
+                                     "blockedReason": "BLOCKED_CREDENTIALS"}),
+             True, "BLOCKED with error.blockedReason (task-book literal, "
+                   "as delivered by sdk-node)"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="BLOCKED_CREDENTIALS",
+                              error=None),
+             True, "BLOCKED with task-book literal top-level blockedReason"),
+        ]
+        for schema, inst, expect_valid, label in cases:
+            errs = schemacheck_mod.validate_instance(schema, inst)
+            got_valid = not errs
+            if got_valid != expect_valid:
+                problems.append("schema probe failed: %s (expected valid=%s, got=%s, errors=%r)"
+                                % (label, expect_valid, got_valid, errs[:3]))
+    if problems:
+        checks.add(cid, desc, "FAIL", "\n".join(problems),
+                   evidence=["schemas/evidence-event.schema.json",
+                             "schemas/scenario-result.schema.json"])
+    else:
+        checks.add(cid, desc, "PASS",
+                   "both schemas parse; 14 probe instances accepted/rejected as expected "
+                   "(including both BLOCKED_CREDENTIALS encodings)",
+                   evidence=["schemas/evidence-event.schema.json",
+                             "schemas/scenario-result.schema.json"])
+
+
+def check_subprocess_selftest(checks, cid, desc, cmd):
+    rc, so, se, to = run_cmd(cmd, timeout=180)
+    evidence_line = tail(so or se, 200)
+    if to:
+        checks.add(cid, desc, "FAIL", "timed out")
+    elif rc == 0:
+        checks.add(cid, desc, "PASS", evidence_line.strip())
+    else:
+        checks.add(cid, desc, "FAIL",
+                   "exit=%s; %s" % (rc, evidence_line.strip()))
+
+
+def check_deps_repro(checks, impl):
+    cid = "deps-repro-" + impl
+    desc = "Reproducible dependency install for %s (pinned manifest + lockfile)" % impl
+    d = os.path.join(ROOT, impl)
+    if not os.path.isdir(d):
+        checks.add(cid, desc, "NOT_RUN", "%s/ not delivered yet" % impl)
+        return
+    if impl == "sdk-node":
+        pkg = os.path.join(d, "package.json")
+        if not os.path.isfile(pkg):
+            checks.add(cid, desc, "FAIL", "package.json missing in sdk-node/")
+            return
+        locks = [l for l in NODE_LOCKFILES if os.path.isfile(os.path.join(d, l))]
+        if not locks:
+            checks.add(cid, desc, "FAIL",
+                       "no lockfile found in sdk-node/ (expected one of: %s)"
+                       % ", ".join(NODE_LOCKFILES))
+            return
+        checks.add(cid, desc, "PASS",
+                   "package.json + %s present (clean-room reinstall: scripts/verify-d1 --repro)"
+                   % locks[0])
+    else:
+        req = os.path.join(d, "requirements.txt")
+        pyproject = os.path.join(d, "pyproject.toml")
+        if os.path.isfile(req):
+            unpinned = []
+            with open(req, "r", encoding="utf-8") as fh:
+                for line in fh:
+                    s = line.strip()
+                    if not s or s.startswith("#"):
+                        continue
+                    if s.startswith("-r"):
+                        unpinned.append(s + " (include directive, pinning not verifiable)")
+                    elif "==" not in s:
+                        unpinned.append(s)
+            if unpinned:
+                checks.add(cid, desc, "FAIL",
+                           "unpinned requirement(s): %s" % "; ".join(unpinned[:5]))
+            else:
+                checks.add(cid, desc, "PASS",
+                           "all requirements.txt entries pinned with == "
+                           "(clean-room reinstall: scripts/verify-d1 --repro)")
+        elif os.path.isfile(pyproject):
+            locks = [l for l in PY_LOCKFILES if os.path.isfile(os.path.join(d, l))]
+            if locks:
+                checks.add(cid, desc, "PASS",
+                           "pyproject.toml + %s present" % locks[0])
+            else:
+                checks.add(cid, desc, "FAIL",
+                           "pyproject.toml without a lockfile (expected one of: %s)"
+                           % ", ".join(PY_LOCKFILES))
+        else:
+            checks.add(cid, desc, "FAIL",
+                       "no pinned dependency specification (requirements.txt with == "
+                       "pins, or pyproject.toml + lockfile)")
+
+
+def run_python_tests(cwd, timeout=900):
+    """Run a Python implementation's unit tests.
+
+    pytest is the preferred runner when it is importable in this interpreter;
+    otherwise the standard-library fallback is used exactly as documented in
+    rpc-python/requirements.txt and README:
+      PYTHONPATH=src python -m unittest discover -s tests
+    (Agent C ships stdlib unittest tests.) BLOCKED is only reported when
+    neither runner is available at all; test failures keep FAIL semantics.
+    Returns (status, detail, log_tail)."""
+    if importlib.util.find_spec("pytest") is not None:
+        rc, so, se, to = run_cmd([sys.executable, "-m", "pytest", "-q"],
+                                 cwd=cwd, timeout=timeout)
+        if to:
+            return "FAIL", "pytest timed out (%ss)" % timeout, ""
+        if rc == 0:
+            return "PASS", "pytest exited 0 (runner: pytest)", tail(so or se)
+        if rc == 5:
+            return "FAIL", "pytest collected no tests (exit 5)", tail(se or so)
+        return "FAIL", "pytest exited %s" % rc, tail(se or so)
+    if importlib.util.find_spec("unittest") is None:
+        return "BLOCKED", ("neither pytest nor the standard-library unittest module "
+                           "is importable in %s" % sys.executable), ""
+    if not os.path.isdir(os.path.join(cwd, "tests")):
+        return "FAIL", ("pytest not installed in %s and no tests/ directory "
+                        "delivered; nothing to run" % sys.executable), ""
+    env = dict(os.environ)
+    env["PYTHONPATH"] = "src" + (os.pathsep + env["PYTHONPATH"]
+                                 if env.get("PYTHONPATH") else "")
+    cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
+    rc, so, se, to = run_cmd(cmd, cwd=cwd, timeout=timeout, env=env)
+    if to:
+        return "FAIL", "unittest discover timed out (%ss)" % timeout, ""
+    if rc == 0:
+        return ("PASS",
+                "stdlib unittest passed (runner: PYTHONPATH=src %s -m unittest "
+                "discover -s tests; pytest not installed in %s)"
+                % (os.path.basename(sys.executable), sys.executable),
+                tail(so or se))
+    return "FAIL", "unittest discover exited %s" % rc, tail(se or so)
+
+
+def check_unit_tests(checks, impl):
+    cid = "unit-tests-" + impl
+    desc = "Unit tests for %s" % impl
+    d = os.path.join(ROOT, impl)
+    if not os.path.isdir(d):
+        checks.add(cid, desc, "NOT_RUN", "%s/ not delivered yet" % impl)
+        return
+    if impl == "sdk-node":
+        pkg_path = os.path.join(d, "package.json")
+        try:
+            with open(pkg_path, "r", encoding="utf-8") as fh:
+                pkg = json.load(fh)
+        except (OSError, ValueError) as e:
+            checks.add(cid, desc, "FAIL", "cannot read package.json: %s" % e)
+            return
+        if not (pkg.get("scripts") or {}).get("test"):
+            checks.add(cid, desc, "FAIL", "no test script defined in package.json")
+            return
+        if shutil.which("npm") is None:
+            checks.add(cid, desc, "BLOCKED", "npm not available on PATH")
+            return
+        rc, so, se, to = run_cmd(["npm", "test", "--silent"], cwd=d, timeout=900)
+        if to:
+            checks.add(cid, desc, "FAIL", "npm test timed out (900s)")
+        elif rc == 0:
+            checks.add(cid, desc, "PASS", "npm test exited 0")
+        else:
+            checks.add(cid, desc, "FAIL", "npm test exited %s; stderr tail: %s"
+                       % (rc, tail(se)))
+    else:
+        status, detail, log_tail = run_python_tests(d, timeout=900)
+        if log_tail:
+            detail = detail + "; tail: " + log_tail
+        checks.add(cid, desc, status, detail)
+
+
+def traceability(data, impl, scen, ev_schema, schemacheck_mod, strict, run_scope=None):
+    """Check that a PASS/FAIL/BLOCKED claim traces to existing, schema-valid
+    events. run_scope (when given) enforces the no-cross-run-mixing rule of
+    the runs layout: {"runsRoot": path, "selectedRun": name-or-None,
+    "resultFromRun": bool}."""
+    problems = []
+    ev_files = []
+    for ef in data.get("evidenceFiles", []):
+        cand_root = os.path.join(ROOT, ef)
+        cand_repo = os.path.join(REPO, ef)
+        if os.path.isfile(cand_root):
+            actual = cand_root
+        elif os.path.isfile(cand_repo):
+            actual = cand_repo
+        else:
+            problems.append("evidence file not found: %s" % ef)
+            continue
+        if run_scope is not None and os.path.isdir(run_scope["runsRoot"]):
+            try:
+                rel_to_runs = os.path.relpath(actual, run_scope["runsRoot"])
+            except ValueError:
+                rel_to_runs = None
+            if rel_to_runs is not None and not rel_to_runs.startswith(".."):
+                # the referenced evidence lives under runs/ - apply the
+                # single-run rule (schemas/README.md section 2)
+                ref_run = rel_to_runs.split(os.sep)[0]
+                if run_scope["resultFromRun"]:
+                    if ref_run != run_scope["selectedRun"]:
+                        problems.append(
+                            "cross-run evidence mixing: result from run %s references "
+                            "%s (only the selected run %s may be used)"
+                            % (run_scope["selectedRun"], ef, run_scope["selectedRun"]))
+                else:
+                    problems.append(
+                        "flat-layout result references run-scoped evidence %s; "
+                        "run-scoped files may only be referenced by results inside "
+                        "the same run (possible cross-run mixing)" % ef)
+        if ef.endswith(".jsonl"):
+            ev_files.append(actual)
+    if strict and not ev_files:
+        problems.append("no .jsonl events file referenced "
+                        "(PASS must be traceable to raw events)")
+    for path in ev_files:
+        rpath = rel(path)
+        prev_seq = None
+        n_events = 0
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                for i, line in enumerate(fh, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    n_events += 1
+                    try:
+                        ev = json.loads(line)
+                    except ValueError as e:
+                        problems.append("%s: line %d is not JSON (%s)" % (rpath, i, e))
+                        continue
+                    eerrs = schemacheck_mod.validate_instance(ev_schema, ev)
+                    if eerrs:
+                        problems.append("%s: line %d event schema: %s"
+                                        % (rpath, i, "; ".join(eerrs[:2])))
+                    seq = ev.get("seq")
+                    if not isinstance(seq, int) or isinstance(seq, bool):
+                        problems.append("%s: line %d seq is not an integer" % (rpath, i))
+                    else:
+                        if prev_seq is None:
+                            if seq != 1:
+                                problems.append("%s: first event seq is %s (must start at 1)"
+                                                % (rpath, seq))
+                        elif seq <= prev_seq:
+                            problems.append("%s: line %d seq %s not strictly increasing "
+                                            "(previous %s)" % (rpath, i, seq, prev_seq))
+                        prev_seq = seq
+                    if ev.get("implementation") != impl:
+                        problems.append("%s: line %d implementation %r does not match %s"
+                                        % (rpath, i, ev.get("implementation"), impl))
+                    if ev.get("scenario") != scen:
+                        problems.append("%s: line %d scenario %r does not match %s"
+                                        % (rpath, i, ev.get("scenario"), scen))
+            if strict and n_events == 0:
+                problems.append("%s: events file contains no events" % rpath)
+        except OSError as e:
+            problems.append("%s: cannot read (%s)" % (rpath, e))
+    return problems
+
+
+def resolve_impl_evidence(impl):
+    """Resolve where scenario result files come from for one implementation.
+
+    Layouts (schemas/README.md section 2):
+      flat: evidence/<dir>/<scenario>.result.json
+      runs: evidence/<dir>/runs/<run-id>/<scenario>/result.json (append-only,
+            delivered by sdk-node; a fresh directory per real probe run)
+
+    A run is complete when all five scenarios carry result.json. The latest
+    complete run is selected; run-sourced rows must keep all of their
+    evidence inside that single run (enforced in traceability). Per
+    scenario, a flat file takes precedence over the selected run's copy.
+    """
+    edir = os.path.join(ROOT, "evidence", IMPL_TO_DIR[impl])
+    runs_root = os.path.join(edir, "runs")
+    all_runs = []
+    complete_runs = []
+    incomplete = {}  # run name -> missing scenarios
+    if os.path.isdir(runs_root):
+        all_runs = sorted(d for d in os.listdir(runs_root)
+                          if os.path.isdir(os.path.join(runs_root, d)))
+        for name in all_runs:
+            missing = [s for s in SCENARIOS
+                       if not os.path.isfile(os.path.join(runs_root, name, s,
+                                                          "result.json"))]
+            if missing:
+                incomplete[name] = missing
+            else:
+                complete_runs.append(name)
+    flat = [s for s in SCENARIOS
+            if os.path.isfile(os.path.join(edir, s + ".result.json"))]
+    return {
+        "impl": impl,
+        "evidenceDir": edir,
+        "runsRoot": runs_root,
+        "allRuns": all_runs,
+        "completeRuns": complete_runs,
+        "incompleteRuns": incomplete,
+        "selectedRun": complete_runs[-1] if complete_runs else None,
+        "flatScenarios": flat,
+    }
+
+
+def check_scenario(checks, schemacheck_mod, ev_schema, res_schema, impl, scen, cache, ev_info):
+    cid = "scenario-%s-%s" % (impl, scen)
+    desc = "%s / %s scenario result" % (impl, scen)
+    flat = os.path.join(ROOT, "evidence", IMPL_TO_DIR[impl], scen + ".result.json")
+    run_file = None
+    if ev_info["selectedRun"]:
+        run_file = os.path.join(ev_info["runsRoot"], ev_info["selectedRun"],
+                                scen, "result.json")
+    impl_dir = os.path.isdir(os.path.join(ROOT, impl))
+
+    source_note = []
+    if os.path.isfile(flat):
+        f, from_run = flat, False
+        source_note.append("source: flat layout evidence/%s/%s.result.json"
+                           % (IMPL_TO_DIR[impl], scen))
+        if run_file and os.path.isfile(run_file):
+            source_note.append("note: a runs/ copy also exists for this scenario; "
+                               "the flat file takes precedence")
+    elif run_file and os.path.isfile(run_file):
+        f, from_run = run_file, True
+        source_note.append("source: runs/%s/%s/result.json (latest complete run "
+                           "of %d run(s), %d complete)"
+                           % (ev_info["selectedRun"], scen, len(ev_info["allRuns"]),
+                              len(ev_info["completeRuns"])))
+        newer_incomplete = [r for r in ev_info["incompleteRuns"]
+                            if r > ev_info["selectedRun"]]
+        if newer_incomplete:
+            source_note.append("note: newer incomplete run(s) not used: %s"
+                               % ", ".join(newer_incomplete))
+    else:
+        if impl_dir:
+            if ev_info["allRuns"]:
+                if ev_info["selectedRun"] is None:
+                    newest = ev_info["allRuns"][-1]
+                    missing = ev_info["incompleteRuns"].get(newest, list(SCENARIOS))
+                    checks.add(cid, desc, "FAIL",
+                               "implementation delivered evidence/%s/runs/ but no "
+                               "complete run exists (a complete run needs result.json "
+                               "for all five scenarios); newest run %s is missing: %s; "
+                               "files from different runs are never combined"
+                               % (IMPL_TO_DIR[impl], newest, ", ".join(missing)),
+                               evidence=["evidence/%s/runs/" % IMPL_TO_DIR[impl]])
+                else:
+                    checks.add(cid, desc, "FAIL",
+                               "result file missing for this scenario although a "
+                               "complete run was selected (internal inconsistency)")
+            else:
+                checks.add(cid, desc, "FAIL",
+                           "implementation directory exists but result file is missing: "
+                           "evidence/%s/%s.result.json (and no runs/ layout present)"
+                           % (IMPL_TO_DIR[impl], scen))
+        else:
+            checks.add(cid, desc, "NOT_RUN",
+                       "not delivered: neither %s/ nor evidence/%s/" % (impl, IMPL_TO_DIR[impl]))
+        cache.append({"impl": impl, "scenario": scen, "status": None,
+                      "exitCode": None, "file": None, "source": None})
+        return
+    try:
+        with open(f, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError) as e:
+        checks.add(cid, desc, "FAIL", "result file is not valid JSON: %s" % e,
+                   evidence=[rel(f)])
+        cache.append({"impl": impl, "scenario": scen, "status": None,
+                      "exitCode": None, "file": rel(f),
+                      "source": "runs" if from_run else "flat"})
+        return
+    errs = schemacheck_mod.validate_instance(res_schema, data)
+    st = data.get("status")
+    cache.append({"impl": impl, "scenario": scen, "status": st,
+                  "exitCode": data.get("exitCode"), "file": rel(f),
+                  "source": "runs/%s" % ev_info["selectedRun"] if from_run else "flat"})
+    if errs:
+        checks.add(cid, desc, "FAIL",
+                   "schema errors in %s:\n%s" % (rel(f), "\n".join(errs[:5])),
+                   evidence=[rel(f)])
+        return
+    if data.get("implementation") != impl or data.get("scenario") != scen:
+        checks.add(cid, desc, "FAIL",
+                   "result fields (implementation=%r, scenario=%r) do not match the "
+                   "file location %s"
+                   % (data.get("implementation"), data.get("scenario"), rel(f)),
+                   evidence=[rel(f)])
+        return
+    run_scope = {"runsRoot": ev_info["runsRoot"],
+                 "selectedRun": ev_info["selectedRun"],
+                 "resultFromRun": from_run}
+    blocked_reason = data.get("blockedReason") or \
+        (data.get("error") or {}).get("blockedReason")
+    if st == "PASS":
+        problems = traceability(data, impl, scen, ev_schema, schemacheck_mod,
+                                strict=True, run_scope=run_scope)
+        if problems:
+            checks.add(cid, desc, "FAIL",
+                       "claimed PASS is not traceable:\n" + "\n".join(problems[:8]),
+                       evidence=[rel(f)])
+        else:
+            checks.add(cid, desc, "PASS",
+                       "claimed PASS verified: exitCode=0, evidence files exist, "
+                       "events schema-valid with strictly increasing seq; "
+                       + "; ".join(source_note),
+                       evidence=[rel(f)])
+    elif st == "FAIL":
+        problems = traceability(data, impl, scen, ev_schema, schemacheck_mod,
+                                strict=False, run_scope=run_scope)
+        err = (data.get("error") or {}).get("message", "(no message)")
+        detail = "scenario reported FAIL by the implementation (preserved as-is): %s" % err
+        if source_note:
+            detail += "; " + "; ".join(source_note)
+        if problems:
+            detail += "\nadditional traceability defects:\n" + "\n".join(problems[:5])
+        checks.add(cid, desc, "FAIL", detail, evidence=[rel(f)])
+    elif st == "BLOCKED":
+        problems = []
+        if not data.get("evidenceFiles"):
+            problems.append("BLOCKED result references no evidenceFiles; every "
+                            "conclusion must carry an evidence path (task book "
+                            "section 0.6, section 14)")
+        problems.extend(traceability(data, impl, scen, ev_schema, schemacheck_mod,
+                                     strict=False, run_scope=run_scope))
+        if problems:
+            checks.add(cid, desc, "FAIL",
+                       "BLOCKED claim (blockedReason=%s) has defective or "
+                       "untraceable evidence:\n" % blocked_reason
+                       + "\n".join(problems[:8]),
+                       evidence=[rel(f)])
+        else:
+            err_msg = (data.get("error") or {}).get("message", "")
+            checks.add(cid, desc, "BLOCKED",
+                       "scenario blocked (blockedReason=%s); referenced evidence "
+                       "files exist and validate (schema, seq, implementation/"
+                       "scenario match); %s%s"
+                       % (blocked_reason, err_msg, "; " + "; ".join(source_note)
+                          if source_note else ""),
+                       evidence=[rel(f)])
+    else:
+        checks.add(cid, desc, "NOT_RUN",
+                   "scenario recorded as NOT_RUN by the implementation"
+                   + ("; " + "; ".join(source_note) if source_note else ""),
+                   evidence=[rel(f)])
+
+
+def check_environment_file(checks):
+    cid = "evidence-environment"
+    desc = "Shared environment record evidence/environment.json"
+    f = os.path.join(ROOT, "evidence", "environment.json")
+    if not os.path.isfile(f):
+        checks.add(cid, desc, "NOT_RUN",
+                   "evidence/environment.json not present (file ownership outside all "
+                   "agent scopes is pending; see reports/blockers.md DELIVERY-004). "
+                   "Delivered per-implementation records: sdk-node writes "
+                   "environment.json inside each run directory, rpc-python writes "
+                   "evidence/rpc/environment-rpc-python.json; a shared record needs "
+                   "an owner first")
+        return
+    try:
+        with open(f, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        keys = ", ".join(sorted(data.keys())) if isinstance(data, dict) else "(non-object)"
+        checks.add(cid, desc, "PASS",
+                   "valid JSON; top-level keys: %s (no published schema yet)" % keys,
+                   evidence=["evidence/environment.json"])
+    except (OSError, ValueError) as e:
+        checks.add(cid, desc, "FAIL", "not valid JSON: %s" % e,
+                   evidence=["evidence/environment.json"])
+
+
+def extract_model_info(impl, ev_info):
+    """Best-effort extraction of the comparison-parity fields (piVersion,
+    provider, model, thinking) from the environment artifacts an
+    implementation actually delivered. These artifacts have no shared
+    published schema yet (see reports/blockers.md DELIVERY-004), so the
+    known delivered formats are read defensively and anything that cannot
+    be determined is reported instead of guessed.
+    Returns (info, problems)."""
+    problems = []
+    info = {"piVersion": None, "provider": None, "model": None,
+            "thinking": None, "sources": []}
+    run_dir = (os.path.join(ev_info["runsRoot"], ev_info["selectedRun"])
+               if ev_info["selectedRun"] else None)
+
+    def jload(path):
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+
+    # runs layout: run-scoped environment.json (pi version, thinking)
+    if run_dir:
+        p = os.path.join(run_dir, "environment.json")
+        if os.path.isfile(p):
+            try:
+                d = jload(p)
+                pi = d.get("pi") or {}
+                probe = d.get("probe") or {}
+                if info["piVersion"] is None and pi.get("packageVersion"):
+                    info["piVersion"] = pi.get("packageVersion")
+                    info["sources"].append(rel(p))
+                if info["thinking"] is None and probe.get("thinkingLevel"):
+                    info["thinking"] = probe.get("thinkingLevel")
+                    info["sources"].append(rel(p))
+            except (OSError, ValueError) as e:
+                problems.append("cannot parse %s: %s" % (rel(p), e))
+        # runs layout: run-summary.json model block (provider/model)
+        p = os.path.join(run_dir, "run-summary.json")
+        if os.path.isfile(p):
+            try:
+                d = jload(p)
+                m = ((d.get("environment") or {}).get("model") or {})
+                if m.get("providerId") and m.get("modelId"):
+                    info["provider"] = m.get("providerId")
+                    info["model"] = m.get("modelId")
+                    if info["thinking"] is None and m.get("thinkingLevel"):
+                        info["thinking"] = m.get("thinkingLevel")
+                    info["sources"].append(rel(p))
+            except (OSError, ValueError) as e:
+                problems.append("cannot parse %s: %s" % (rel(p), e))
+    # flat layout: an environment record next to the scenario results
+    # (Agent C delivers evidence/rpc/environment-rpc-python.json)
+    edir = ev_info["evidenceDir"]
+    if os.path.isdir(edir):
+        for name in sorted(os.listdir(edir)):
+            if not (name.startswith("environment") and name.endswith(".json")):
+                continue
+            p = os.path.join(edir, name)
+            try:
+                d = jload(p)
+            except (OSError, ValueError) as e:
+                problems.append("cannot parse %s: %s" % (rel(p), e))
+                continue
+            info["sources"].append(rel(p))
+            pv = d.get("piVersion")
+            if isinstance(pv, dict) and pv.get("stdout"):
+                pv = str(pv.get("stdout")).strip()
+            if info["piVersion"] is None and pv:
+                info["piVersion"] = str(pv)
+            if info["provider"] is None and d.get("provider"):
+                info["provider"] = d.get("provider")
+            if info["model"] is None and d.get("model"):
+                info["model"] = d.get("model")
+            if info["thinking"] is None and d.get("thinking"):
+                info["thinking"] = d.get("thinking")
+    # last resort: the "model: <provider>/<model> (thinking=...)" observation
+    # line that both probes write into their scenario results
+    if (info["provider"] is None or info["model"] is None) and run_dir:
+        for scen in SCENARIOS:
+            p = os.path.join(run_dir, scen, "result.json")
+            if not os.path.isfile(p):
+                continue
+            try:
+                d = jload(p)
+            except (OSError, ValueError):
+                continue
+            for obs in d.get("observations") or []:
+                m = OBS_MODEL_RE.search(str(obs))
+                if m:
+                    info["provider"], info["model"] = m.group(1), m.group(2)
+                    if info["thinking"] is None:
+                        info["thinking"] = m.group(3)
+                    info["sources"].append(rel(p))
+                    break
+            if info["provider"]:
+                break
+    missing = [k for k in ("piVersion", "provider", "model", "thinking")
+               if info[k] is None]
+    if missing:
+        problems.append("could not determine %s from the delivered environment "
+                        "artifacts" % ", ".join(missing))
+    return info, problems
+
+
+def check_comparison_parity(checks, ev_info_by_impl, cache):
+    cid = "comparison-parity"
+    desc = ("SDK and RPC ran the same Pi version, provider, model and thinking "
+            "(task book section 5 fair-comparison precondition)")
+    missing_impl = [i for i in ("sdk-node", "rpc-python")
+                    if not os.path.isdir(os.path.join(ROOT, i))]
+    if missing_impl:
+        checks.add(cid, desc, "NOT_RUN",
+                   "both implementations must be delivered before parity can be "
+                   "compared; not delivered: %s" % ", ".join(missing_impl))
+        return
+    infos, problems_by_impl = {}, {}
+    for impl in ("sdk-node", "rpc-python"):
+        if ev_info_by_impl.get(impl) is None:
+            problems_by_impl[impl] = ["evidence layout could not be resolved "
+                                      "(see the evidence-layout-%s row)" % impl]
+            infos[impl] = {"piVersion": None, "provider": None, "model": None,
+                           "thinking": None, "sources": []}
+            continue
+        infos[impl], problems_by_impl[impl] = extract_model_info(impl, ev_info_by_impl[impl])
+    if any(problems_by_impl.values()):
+        lines = ["cannot determine comparison inputs from delivered evidence:"]
+        for impl in ("sdk-node", "rpc-python"):
+            for p in problems_by_impl[impl]:
+                lines.append("  %s: %s" % (impl, p))
+        lines.append("(environment artifacts are implementation-specific and have no "
+                     "shared schema yet; see reports/blockers.md DELIVERY-004)")
+        checks.add(cid, desc, "BLOCKED", "\n".join(lines))
+        return
+    a, b = infos["sdk-node"], infos["rpc-python"]
+    evidence = sorted(set(a["sources"] + b["sources"]))
+    diffs = [k for k in ("piVersion", "provider", "model", "thinking") if a[k] != b[k]]
+    if not diffs:
+        checks.add(cid, desc, "PASS",
+                   "sdk-node and rpc-python both ran pi %s with %s/%s (thinking=%s)"
+                   % (a["piVersion"], a["provider"], a["model"], a["thinking"]),
+                   evidence=evidence)
+        return
+    lines = ["SDK and RPC comparison inputs differ (task book section 5 requires "
+             "the same Pi version, model and thinking configuration):"]
+    for k in diffs:
+        lines.append("  %s: sdk-node=%r rpc-python=%r" % (k, a[k], b[k]))
+    lines.append("The five-scenario outcomes of the two implementations are therefore "
+                 "NOT directly comparable. A common provider/model baseline is "
+                 "PENDING_OWNER (reports/blockers.md DECISION-008).")
+    blocked_creds = [c for c in cache
+                     if c["impl"] == "sdk-node" and c["status"] == "BLOCKED"]
+    if blocked_creds:
+        lines.append("Context: all sdk-node scenarios are currently BLOCKED "
+                     "(BLOCKED_CREDENTIALS), so unifying the baseline additionally "
+                     "requires working credentials for Agent B's provider.")
+    checks.add(cid, desc, "BLOCKED", "\n".join(lines), evidence=evidence)
+
+
+def check_schema_aggregate(checks, cache):
+    cid = "schema-validation"
+    desc = "All delivered result files valid against the shared schemas"
+    files = [c["file"] for c in cache if c.get("file")]
+    if not files:
+        checks.add(cid, desc, "NOT_RUN", "no scenario result files delivered")
+        return
+    invalid = [c for c in cache if c.get("file") and c.get("status") is None]
+    if invalid:
+        checks.add(cid, desc, "FAIL",
+                   "unparseable result files: %s" % ", ".join(c["file"] for c in invalid))
+    else:
+        checks.add(cid, desc, "PASS",
+                   "%d result files valid (events JSONL validated inside each scenario row)"
+                   % len(files))
+
+
+def run_secret_scan(checks, secrets_mod, cid, desc, paths, ts, tag):
+    started = utcnow()
+    findings, stats = secrets_mod.scan(paths)
+    report = secrets_mod.build_report(paths, findings, stats, iso(started), iso(utcnow()))
+    rp = os.path.join(EVID_VER, "secrets-scan-%s-%s.json" % (ts, tag))
+    atomic_write_json(rp, report)
+    if findings:
+        lines = ["[%s] %s:%s %s" % (f["ruleId"], f["path"], f["line"], f["excerptMasked"])
+                 for f in findings[:20]]
+        if len(findings) > 20:
+            lines.append("... and %d more findings (see report)" % (len(findings) - 20))
+        checks.add(cid, desc, "FAIL", "\n".join(lines), evidence=[rel(rp)],
+                   repro="d1-spikes/scripts/check-secrets " + " ".join(rel(p) for p in paths))
+    else:
+        checks.add(cid, desc, "PASS",
+                   "%d files scanned, no findings" % stats["filesScanned"],
+                   evidence=[rel(rp)],
+                   repro="d1-spikes/scripts/check-secrets " + " ".join(rel(p) for p in paths))
+
+
+def check_exit_codes(checks, cache):
+    cid = "exit-codes"
+    desc = "Trusted exit codes (PASS exits 0, FAIL exits non-zero)"
+    rows = [c for c in cache if c.get("file")]
+    if not rows:
+        checks.add(cid, desc, "NOT_RUN", "no scenario result files delivered")
+        return
+    violations = []
+    for c in rows:
+        if c["status"] == "PASS" and c["exitCode"] != 0:
+            violations.append("%s/%s claims PASS but exitCode=%r"
+                              % (c["impl"], c["scenario"], c["exitCode"]))
+        if c["status"] == "FAIL" and (c["exitCode"] is None or c["exitCode"] == 0):
+            violations.append("%s/%s claims FAIL but exitCode=%r"
+                              % (c["impl"], c["scenario"], c["exitCode"]))
+    if violations:
+        checks.add(cid, desc, "FAIL", "\n".join(violations))
+    else:
+        checks.add(cid, desc, "PASS",
+                   "%d result files checked; PASS exits are zero and FAIL exits non-zero"
+                   % len(rows))
+
+
+def check_residual_processes(checks):
+    cid = "residual-processes"
+    desc = ("No residual probe processes tied to this d1-spikes "
+            "(pi rpc mode, sdk-node/rpc-python commands, leftover run dirs)")
+    rc, so, se, to = run_cmd(["ps", "-axo", "pid=,command="], timeout=30)
+    if rc != 0 or to:
+        checks.add(cid, desc, "BLOCKED", "cannot list processes (ps unavailable)")
+        return
+    own = {os.getpid(), os.getppid()}
+    tools = ("verify-d1", "check-secrets", "schema-check", "make-run-dir")
+    this_root_marker = ROOT + os.sep
+    findings = []
+    external = []
+    for line in so.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(None, 1)
+        if len(parts) < 2:
+            continue
+        pid_s, cmd = parts
+        try:
+            pid = int(pid_s)
+        except ValueError:
+            continue
+        if pid in own or any(t in cmd for t in tools):
+            continue
+        base = os.path.basename(cmd.split(None, 1)[0]) if cmd else ""
+        flag = False
+        if base in RESIDENT_FIRST:
+            if "sdk-node" in cmd or "rpc-python" in cmd:
+                if this_root_marker in cmd:
+                    flag = True          # process tied to this very workspace
+                elif re.search(r"/d1-spikes(/|[\s\"']|$)", cmd):
+                    # a different d1-spikes tree (e.g. a parallel agent's
+                    # worktree): record for audit, do not count as residual
+                    external.append("pid %s: %s" % (pid_s, redact(cmd[:120])))
+                else:
+                    flag = True          # sdk-node/rpc-python process with no
+                                        # other d1-spikes root to attribute to
+            if "treeai-d1-run." in cmd:
+                flag = True              # leftover process on a fixture run dir
+        if re.search(r"(^|\s|/)pi\s+[^|]*--mode[^|]*rpc", cmd):
+            flag = True                  # any pi RPC subprocess is suspect
+        if flag:
+            findings.append("pid %s: %s" % (pid_s, redact(cmd[:120])))
+    details = ""
+    if findings:
+        details = "\n".join(findings)
+    if external:
+        details += ("\nobserved external d1-spikes activity on this machine "
+                    "(different tree, not counted as residual of this "
+                    "workspace):\n" + "\n".join(external[:5]))
+    if findings:
+        checks.add(cid, desc, "FAIL", details)
+    else:
+        checks.add(cid, desc, "PASS",
+                   details or "no residual probe processes found")
+
+
+def do_repro(checks, impl, ts):
+    cid = "repro-" + impl
+    desc = "Clean-room reproduction of %s (temp copy, reinstall, rerun tests)" % impl
+    src = os.path.join(ROOT, impl)
+    if not os.path.isdir(src):
+        checks.add(cid, desc, "NOT_RUN", "%s/ not delivered yet" % impl)
+        return
+    tmp = tempfile.mkdtemp(prefix="treeai-d1-repro.")
+    logf = os.path.join(EVID_VER, "repro-%s-%s.log" % (ts, impl))
+    lines = []
+    ok = True
+    try:
+        dest = os.path.join(tmp, impl)
+        shutil.copytree(src, dest,
+                        ignore=shutil.ignore_patterns("node_modules", ".venv", "venv",
+                                                      "__pycache__", "dist",
+                                                      ".pytest_cache", ".git", "*.log"))
+        lines.append("copied %s to clean temp dir (deps excluded)" % impl)
+        if impl == "sdk-node":
+            if shutil.which("npm") is None:
+                checks.add(cid, desc, "BLOCKED", "npm not available on PATH")
+                return
+            rc, so, se, to = run_cmd(["npm", "ci"], cwd=dest, timeout=1800)
+            lines.append("$ npm ci -> exit %s%s" % (rc, " (timeout)" if to else ""))
+            lines.append(tail(se or so, 800))
+            ok = ok and (rc == 0 and not to)
+            rc2, so2, se2, to2 = run_cmd(["npm", "test", "--silent"], cwd=dest, timeout=1800)
+            lines.append("$ npm test -> exit %s%s" % (rc2, " (timeout)" if to2 else ""))
+            lines.append(tail(se2 or so2, 800))
+            ok = ok and (rc2 == 0 and not to2)
+        else:
+            req = os.path.join(dest, "requirements.txt")
+            install_cmd = [sys.executable, "-m", "pip", "install", "-r", "requirements.txt",
+                           "--no-input", "--disable-pip-version-check"]
+            if os.path.isfile(os.path.join(dest, "uv.lock")) and shutil.which("uv"):
+                install_cmd = ["uv", "sync"]
+            rc, so, se, to = run_cmd(install_cmd, cwd=dest, timeout=1800)
+            lines.append("$ %s -> exit %s%s" % (" ".join(install_cmd), rc, " (timeout)" if to else ""))
+            lines.append(tail(se or so, 800))
+            ok = ok and (rc == 0 and not to)
+            status, detail, log_tail = run_python_tests(dest, timeout=1800)
+            lines.append("$ unit tests (%s) -> %s" % ("pytest" if status != "PASS" or "pytest" in detail else "stdlib unittest", status))
+            lines.append(detail)
+            if log_tail:
+                lines.append(log_tail)
+            ok = ok and (status == "PASS")
+        checks.add(cid, desc, "PASS" if ok else "FAIL",
+                   "clean temp copy at %s; see log" % impl if ok else
+                   "clean-room reproduction failed; see log",
+                   evidence=[rel(logf)])
+    finally:
+        atomic_write_text(logf, "\n".join(lines) + "\n")
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# --------------------------------------------------------------------------
+# main
+# --------------------------------------------------------------------------
+
+def main(argv):
+    ap = argparse.ArgumentParser(
+        add_help=True,
+        description="TreeAI D1 unified verification entry (Agent D). "
+                    "Exit codes: 0 all PASS, 2 has FAIL, 3 incomplete "
+                    "(BLOCKED/NOT_RUN), 1 tool error.")
+    ap.add_argument("--repro", action="store_true",
+                    help="also run clean-room reproduction of delivered implementations")
+    args = ap.parse_args(argv)
+
+    started = utcnow()
+    t0 = time.time()
+    log_lines = []
+
+    def out(line=""):
+        print(line)
+        log_lines.append(line)
+
+    os.makedirs(EVID_VER, exist_ok=True)
+
+    secrets_mod = load_module("d1_check_secrets", os.path.join(SCRIPTS_DIR, "check-secrets"))
+    schemacheck_mod = load_module("d1_schema_check", os.path.join(SCRIPTS_DIR, "schema-check"))
+
+    with open(os.path.join(ROOT, "schemas", "evidence-event.schema.json"), "r",
+              encoding="utf-8") as fh:
+        ev_schema = json.load(fh)
+    with open(os.path.join(ROOT, "schemas", "scenario-result.schema.json"), "r",
+              encoding="utf-8") as fh:
+        res_schema = json.load(fh)
+
+    checks = Checks()
+    cache = []  # scenario result summaries for the exit-code check
+
+    out("=== TreeAI D1 verification ===")
+    out("started: %s" % iso(started))
+    gi = git_info()
+    out("workspace: d1-spikes (git %s%s)" % (gi["commit"], ", dirty" if gi["dirty"] else ""))
+    out("mode: %s" % ("repro" if args.repro else "default"))
+    out("")
+
+    def guarded(fn, *fn_args):
+        try:
+            fn(*fn_args)
+        except Exception as e:  # internal error guard: record, never crash silently
+            checks.add("internal-" + fn.__name__, "internal error guard for " + fn.__name__,
+                       "FAIL", "unexpected exception: %r" % e)
+
+    # 1. Agent D static infrastructure
+    guarded(check_fixtures, checks)
+    guarded(check_schemas, checks, schemacheck_mod)
+    guarded(check_subprocess_selftest, checks, "schema-validator-selftest",
+            "schema-check CLI self-test",
+            [os.path.join(SCRIPTS_DIR, "schema-check"), "--selftest"])
+    guarded(check_subprocess_selftest, checks, "secrets-scanner-selftest",
+            "check-secrets CLI self-test (synthetic corpus)",
+            [os.path.join(SCRIPTS_DIR, "check-secrets"), "--selftest"])
+    guarded(check_subprocess_selftest, checks, "run-dir-generator-selftest",
+            "make-run-dir self-test (integrity + temp copy + cleanup)",
+            [os.path.join(SCRIPTS_DIR, "make-run-dir"), "--selftest"])
+
+    # 2. reproducible dependency install
+    for impl in ("sdk-node", "rpc-python"):
+        guarded(check_deps_repro, checks, impl)
+
+    # 3. unit tests
+    for impl in ("sdk-node", "rpc-python"):
+        guarded(check_unit_tests, checks, impl)
+
+    # 3b. clean-room reproduction (only executes with --repro)
+    ts = stamp(started)
+    if args.repro:
+        for impl in ("sdk-node", "rpc-python"):
+            guarded(do_repro, checks, impl, ts)
+    else:
+        for impl in ("sdk-node", "rpc-python"):
+            checks.add("repro-" + impl,
+                       "Clean-room reproduction of %s (temp copy, reinstall, rerun tests)" % impl,
+                       "NOT_RUN",
+                       "not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro "
+                       "(requires the implementation directory)")
+
+    # 4. the five scenarios for both implementations (evidence layout
+    #    resolution: flat file per scenario, else the latest complete run;
+    #    never combining files across runs - schemas/README.md section 2)
+    ev_info_by_impl = {}
+    for impl in ("sdk-node", "rpc-python"):
+        try:
+            ev_info_by_impl[impl] = resolve_impl_evidence(impl)
+        except Exception as e:
+            ev_info_by_impl[impl] = None
+            checks.add("evidence-layout-" + impl,
+                       "Evidence layout resolution for %s" % impl,
+                       "FAIL", "unexpected exception: %r" % e)
+    for impl in ("sdk-node", "rpc-python"):
+        if ev_info_by_impl.get(impl) is None:
+            continue
+        for scen in SCENARIOS:
+            guarded(check_scenario, checks, schemacheck_mod, ev_schema, res_schema,
+                    impl, scen, cache, ev_info_by_impl[impl])
+
+    # 4b. comparison parity (same Pi version / provider / model / thinking)
+    guarded(check_comparison_parity, checks, ev_info_by_impl, cache)
+
+    # 5. environment record + aggregate schema validation
+    guarded(check_environment_file, checks)
+    guarded(check_schema_aggregate, checks, cache)
+
+    # 6. log redaction / secret scans
+    guarded(run_secret_scan, checks, secrets_mod, "redaction-evidence",
+            "Secret/redaction scan over evidence/",
+            [os.path.join(ROOT, "evidence")], ts, "evidence")
+    workspace_paths = [os.path.join(ROOT, name) for name in sorted(os.listdir(ROOT))
+                       if name not in ("evidence", ".git")]
+    if workspace_paths:
+        guarded(run_secret_scan, checks, secrets_mod, "redaction-workspace",
+                "Secret/redaction scan over the rest of the d1-spikes workspace",
+                workspace_paths, ts, "workspace")
+    else:
+        checks.add("redaction-workspace",
+                   "Secret/redaction scan over the rest of the d1-spikes workspace",
+                   "NOT_RUN", "no other workspace entries present")
+
+    # 7. trusted exit codes
+    guarded(check_exit_codes, checks, cache)
+
+    # 8. residual processes
+    guarded(check_residual_processes, checks)
+
+    # ---- results -----------------------------------------------------------
+    counts = checks.counts()
+    statuses = [r["status"] for r in checks.rows]
+    if "FAIL" in statuses:
+        exit_code = 2
+        verdict = "HAS_FAIL"
+    elif "BLOCKED" in statuses or "NOT_RUN" in statuses:
+        exit_code = 3
+        verdict = "INCOMPLETE (BLOCKED/NOT_RUN present)"
+    else:
+        exit_code = 0
+        verdict = "ALL_PASS"
+
+    out("--- checks ---")
+    for i, r in enumerate(checks.rows, 1):
+        out("[%2d/%d] %-8s %s" % (i, len(checks.rows), r["status"], r["id"]))
+        if r["details"]:
+            for dl in r["details"].splitlines()[:4]:
+                out("           %s" % dl)
+    out("")
+    out("counts: PASS=%d FAIL=%d BLOCKED=%d NOT_RUN=%d"
+        % (counts["PASS"], counts["FAIL"], counts["BLOCKED"], counts["NOT_RUN"]))
+    out("verdict: %s" % verdict)
+
+    ended = utcnow()
+    summary = {
+        "verifyVersion": VERIFY_VERSION,
+        "startedAt": iso(started),
+        "endedAt": iso(ended),
+        "durationMs": int((time.time() - t0) * 1000),
+        "workspaceRoot": "d1-spikes",
+        "git": gi,
+        "environment": {
+            "python": sys.version.split()[0],
+            "platform": sys.platform,
+            "node": node_version(),
+        },
+        "mode": "repro" if args.repro else "default",
+        "evidenceLayout": {
+            impl: (None if ev_info_by_impl.get(impl) is None else {
+                "selectedRun": ev_info_by_impl[impl]["selectedRun"],
+                "completeRuns": ev_info_by_impl[impl]["completeRuns"],
+                "incompleteRuns": ev_info_by_impl[impl]["incompleteRuns"],
+                "flatScenarios": ev_info_by_impl[impl]["flatScenarios"],
+            }) for impl in ("sdk-node", "rpc-python")
+        },
+        "checks": checks.rows,
+        "counts": counts,
+        "overall": {"verdict": verdict, "exitCode": exit_code},
+        "reproCommands": [
+            "d1-spikes/scripts/verify-d1",
+            "d1-spikes/scripts/verify-d1 --repro",
+            "d1-spikes/scripts/make-run-dir",
+            "d1-spikes/scripts/make-run-dir --selftest",
+            "cd d1-spikes/fixtures && shasum -a 256 -c MANIFEST.sha256",
+            "d1-spikes/scripts/check-secrets d1-spikes",
+            "d1-spikes/scripts/check-secrets --selftest",
+            "d1-spikes/scripts/schema-check --selftest",
+            "d1-spikes/scripts/schema-check d1-spikes/schemas/scenario-result.schema.json <result-file>",
+            "cd d1-spikes/rpc-python && PYTHONPATH=src python3 -m unittest discover -s tests",
+        ],
+    }
+    base = "verify-" + ts
+    json_path = os.path.join(EVID_VER, base + ".json")
+    log_path = os.path.join(EVID_VER, base + ".log")
+    atomic_write_json(json_path, summary)
+    atomic_write_text(log_path, "\n".join(log_lines) + "\n")
+    out("")
+    out("summary: evidence/verification/%s.json" % base)
+    out("log:     evidence/verification/%s.log" % base)
+
+    # post-write self-scan: the files this run just produced must be clean too
+    hist_path = os.path.join(EVID_VER, "verify-history.jsonl")
+    post_findings, _stats = secrets_mod.scan([json_path, log_path])
+    if post_findings:
+        exit_code = 2
+        out("")
+        out("POST-WRITE LEAK DETECTED in freshly written evidence "
+            "(overriding exit code to 2):")
+        for f in post_findings[:10]:
+            out("  [%s] %s:%s %s" % (f["ruleId"], f["path"], f["line"], f["excerptMasked"]))
+
+    entry = {"ts": iso(started), "exitCode": exit_code, "counts": counts,
+             "summary": "evidence/verification/%s.json" % base}
+    with open(hist_path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    return exit_code
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

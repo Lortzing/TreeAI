@@ -87,7 +87,7 @@ export function captureEnvironment(): EnvironmentSnapshot {
       packageName: "@earendil-works/pi-coding-agent",
       packageVersion,
       globalCliVersion: runSafe("pi", ["--version"]),
-      agentDir,
+      agentDir: "~/.pi/agent",
       agentDirAuthFileExists: existsSync(join(agentDir, "auth.json")),
       agentDirModelsFileExists: existsSync(join(agentDir, "models.json")),
     },

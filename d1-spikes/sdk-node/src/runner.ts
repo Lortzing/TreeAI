@@ -10,10 +10,12 @@
  *   exit code (PASS=0, FAIL=1, BLOCKED=2, NOT_RUN=3).
  */
 
-import { mkdirSync, writeFileSync, renameSync, existsSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, writeFileSync, renameSync } from "node:fs";
+import { join, relative } from "node:path";
 import { EvidenceRecorder } from "./recorder.js";
 import { BlockedError, isBlockedError } from "./blocked.js";
+import { redactValue } from "./redact.js";
+import { D1_SPIKES_DIR } from "./paths.js";
 import {
   EXIT_CODES,
   IMPLEMENTATION,
@@ -184,25 +186,26 @@ export async function runScenario(opts: RunScenarioOptions): Promise<ScenarioRes
     durationMs,
     command: opts.command,
     exitCode: EXIT_CODES[status],
-    evidenceFiles: [eventsPath],
+    evidenceFiles: [relative(D1_SPIKES_DIR, eventsPath)],
     observations,
     limitations,
     error,
     failedChecks: failedChecks.length > 0 ? failedChecks : undefined,
   };
 
-  const resultValidation = validateScenarioResult(result);
+  const redactedResult = redactValue(result) as ScenarioResult;
+  const resultValidation = validateScenarioResult(redactedResult);
   if (!resultValidation.ok) {
     // The harness itself is broken; that is a hard FAIL with details.
-    result.status = "FAIL";
-    result.exitCode = EXIT_CODES.FAIL;
-    result.observations.push(
+    redactedResult.status = "FAIL";
+    redactedResult.exitCode = EXIT_CODES.FAIL;
+    redactedResult.observations.push(
       `result-schema-violations: ${resultValidation.errors.join(" | ")}`,
     );
   }
 
-  writeResultJson(scenarioDir, result);
-  return result;
+  writeResultJson(scenarioDir, redactedResult);
+  return redactedResult;
 }
 
 function validateEventFileSafe(path: string): { ok: boolean; errors: string[] } {

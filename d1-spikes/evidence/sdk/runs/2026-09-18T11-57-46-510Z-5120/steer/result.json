@@ -1,0 +1,27 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "steer",
+  "status": "BLOCKED",
+  "startedAt": "2026-09-18T11:57:49.257Z",
+  "endedAt": "2026-09-18T11:58:24.484Z",
+  "durationMs": 35227,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:steer",
+  "exitCode": 2,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/steer/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-copy-copy/claude-fable-5 (thinking=off, source=first-available)",
+    "direct Pi state/type access points used by the adapter: 10"
+  ],
+  "limitations": [
+    "adapter code: 298 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1815 code lines; direct Pi API surface: 11 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": {
+    "name": "BlockedError",
+    "message": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}",
+    "stack": "BlockedError: 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}\n    at classifyAndThrow (~/Projects/TreeAI/d1-spikes/sdk-node/src/pi-bridge.ts:209:11)\n    at RealProbeSession.prompt (~/Projects/TreeAI/d1-spikes/sdk-node/src/pi-bridge.ts:134:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+    "blockedReason": "BLOCKED_CREDENTIALS"
+  }
+}

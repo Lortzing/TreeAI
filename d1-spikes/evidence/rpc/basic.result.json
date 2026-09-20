@@ -2,9 +2,9 @@
   "implementation": "rpc-python",
   "scenario": "basic",
   "status": "PASS",
-  "startedAt": "2026-09-18T11:33:11.441Z",
-  "endedAt": "2026-09-18T11:33:15.469Z",
-  "durationMs": 4028,
+  "startedAt": "2026-09-20T01:46:45.241Z",
+  "endedAt": "2026-09-20T01:46:49.898Z",
+  "durationMs": 4656,
   "command": "python3 rpc-python/probe.py run --scenario basic",
   "exitCode": 0,
   "evidenceFiles": [
@@ -13,10 +13,10 @@
   "observations": [
     "env: pi 0.85.1 | provider=tal-token-plan-06c64a09 model=deepseek-v4.1-flash thinking=off | python 3.9.6",
     "argv=pi --mode rpc --provider tal-token-plan-06c64a09 --model deepseek-v4.1-flash --thinking off --no-session",
-    "round 1: settledAfter=0.93s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
-    "round 2: settledAfter=0.95s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
-    "round 3: settledAfter=0.98s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
-    "sessionId after rounds: '01a0b44a-c568-7425-806e-61f7af904f88' (no-session mode)",
+    "round 1: settledAfter=1.19s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
+    "round 2: settledAfter=0.97s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
+    "round 3: settledAfter=1.27s textDeltas=2 stopReasons=['stop'] assembledInFinal=True",
+    "sessionId after rounds: '01a0bc7e-987e-7042-a867-35a080c84d65' (no-session mode)",
     "pi subprocess exit codes (spawn order): [0]"
   ],
   "limitations": [

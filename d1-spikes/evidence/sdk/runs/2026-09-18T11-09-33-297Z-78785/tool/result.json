@@ -8,7 +8,7 @@
   "command": "npm run --prefix d1-spikes/sdk-node probe:tool",
   "exitCode": 2,
   "evidenceFiles": [
-    "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/tool/events.jsonl"
+    "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/tool/events.jsonl"
   ],
   "observations": [
     "model: tal-token-plan-copy-copy/claude-fable-5 (thinking=off, source=first-available)",
@@ -24,7 +24,7 @@
   "error": {
     "name": "BlockedError",
     "message": "403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}",
-    "stack": "BlockedError: 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}\n    at classifyAndThrow (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/pi-bridge.ts:209:11)\n    at RealProbeSession.prompt (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/pi-bridge.ts:134:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runToolScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/scenarios/tool.ts:90:3)\n    at async Object.exec (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:132:9)\n    at async runScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/runner.ts:134:5)\n    at async main (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:113:20)",
+    "stack": "BlockedError: 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}\n    at classifyAndThrow (d1-spikes/sdk-node/src/pi-bridge.ts:209:11)\n    at RealProbeSession.prompt (d1-spikes/sdk-node/src/pi-bridge.ts:134:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runToolScenario (d1-spikes/sdk-node/src/scenarios/tool.ts:90:3)\n    at async Object.exec (d1-spikes/sdk-node/src/run.ts:132:9)\n    at async runScenario (d1-spikes/sdk-node/src/runner.ts:134:5)\n    at async main (d1-spikes/sdk-node/src/run.ts:113:20)",
     "blockedReason": "BLOCKED_CREDENTIALS"
   }
 }

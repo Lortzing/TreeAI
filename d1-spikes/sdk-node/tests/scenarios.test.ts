@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { D1_SPIKES_DIR } from "../src/paths.js";
 import { runScenario } from "../src/runner.js";
 import { executeScenario } from "../src/scenarios/index.js";
 import {
@@ -147,7 +148,7 @@ test("basic: prompt error propagates as FAIL with structured error", async () =>
 test("tool: read-only tool used, fixture values verified, error path observed -> PASS", async () => {
   const factory = createFakeSessionFactory([
     {
-      answer: "MARKER=TREEAI-D1-FIXTURE-7f3a\nSUM=42",
+      answer: "COUNT=16\nSUM=80\nMIN=1\nMAX=9\nMEDIAN=5",
       toolCalls: [
         {
           toolName: "read",
@@ -174,16 +175,16 @@ test("tool: read-only tool used, fixture values verified, error path observed ->
   assert.ok(result.observations.some((o) => o.includes("tool only accessed the fixture temp copy")));
 });
 
-test("tool: tool returns wrong marker -> FAIL", async () => {
+test("tool: tool returns wrong sum -> FAIL", async () => {
   const factory = createFakeSessionFactory([
     {
-      answer: "MARKER=WRONG\nSUM=41",
+      answer: "COUNT=16\nSUM=41\nMIN=1\nMAX=9\nMEDIAN=5",
       toolCalls: [{ toolName: "read", args: { path: "numbers.json" }, result: {}, isError: false }],
     },
   ]);
   const result = await runFakeScenario("tool", factory);
   assert.equal(result.status, "FAIL");
-  assert.ok(result.failedChecks?.some((c) => c.includes("MARKER=")));
+  assert.ok(result.failedChecks?.some((c) => c.includes("SUM=80")));
 });
 
 test("steer: queue observed, second run, final output reflects instruction -> PASS", async () => {
@@ -223,7 +224,7 @@ test("steer: prompt rejects during the streaming poll window -> structured FAIL,
   const result = await runFakeScenario("steer", factory);
   assert.equal(result.status, "FAIL");
   assert.equal(result.error?.message, "403 Access denied");
-  assert.ok(existsSync(join(result.evidenceFiles[0]!, "..", "result.json")));
+  assert.ok(existsSync(join(D1_SPIKES_DIR, result.evidenceFiles[0]!, "..", "result.json")));
 });
 
 test("abort: hanging stream aborted, settles fast, new session works -> PASS", async () => {

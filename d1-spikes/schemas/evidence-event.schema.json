@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treeai.invalid/d1/schemas/evidence-event.schema.json",
+  "title": "TreeAI D1 evidence event (one JSONL line of a raw event stream)",
+  "description": "One line of a d1-spikes/evidence/<impl>/<scenario>.events.jsonl file. Producers: Agent B (sdk-node) and Agent C (rpc-python). All required fields come from the TreeAI D1 task book section 6.1. seq must start at 1 and be strictly increasing within one file; that cross-line rule is enforced by scripts/verify-d1 because JSON Schema cannot express it. payload must already be redacted before it is written: no credentials, no Authorization headers, no absolute user-home paths; set redactionVersion to the redaction rules that were applied.",
+  "type": "object",
+  "required": [
+    "seq",
+    "observedAt",
+    "implementation",
+    "scenario",
+    "sessionId",
+    "piEventType",
+    "runState",
+    "payload",
+    "redactionVersion"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based sequence number, strictly increasing within one events file."
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp of when the event was observed (UTC recommended)."
+    },
+    "implementation": {
+      "enum": ["sdk-node", "rpc-python"],
+      "description": "Which probe produced this event. Must match the evidence directory (sdk or rpc)."
+    },
+    "scenario": {
+      "enum": ["basic", "tool", "steer", "abort", "resume"],
+      "description": "Which of the five unified D1 scenarios this event belongs to. Must match the file name."
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Redacted or test-only session identifier. Must not contain credentials or absolute user-home paths."
+    },
+    "piEventType": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Pi-native event type name, kept verbatim (for example message_update). Do not translate or normalize away original fields."
+    },
+    "runState": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Pi-native run or session state at observation time (for example running)."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Redacted event payload. Preserve the original structure; do not turn guesses into facts."
+    },
+    "redactionVersion": {
+      "type": "string",
+      "pattern": "^d1-v[0-9]+$",
+      "description": "Version tag of the redaction rules that were applied (d1-v1 = rules in scripts/check-secrets and schemas/README.md)."
+    },
+    "error": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["message"],
+          "properties": {
+            "message": { "type": "string", "minLength": 1 },
+            "code": { "type": "string" },
+            "kind": { "type": "string" },
+            "stack": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      ],
+      "description": "Structured error attached to the last known event when a scenario fails. Required by the task book: a failing scenario must still record its last known event and a structured error."
+    }
+  }
+}

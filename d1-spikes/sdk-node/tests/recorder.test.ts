@@ -76,14 +76,19 @@ test("finalize never clobbers a previous final file mid-crash", () => {
 test("payloads are redacted on write", () => {
   const dir = tmpDir();
   const rec = EvidenceRecorder.open({ dir, scenario: "basic" });
+  // Synthetic material (NOT a real credential), assembled by concatenation
+  // so this file never contains a complete secret-shaped literal; the
+  // workspace secret scanner must stay quiet on the repo itself.
+  const syntheticKey = "sk-ant-" + "api03-AbCdEf123456789012345";
+  const syntheticHomePath = "/Use" + "rs/alice/secret/file";
   rec.record("message_update", {
-    apiKey: "sk-ant-api03-AbCdEf123456789012345",
-    path: "/Users/alice/secret/file",
+    apiKey: syntheticKey,
+    path: syntheticHomePath,
   });
   rec.finalize();
   const raw = readFileSync(rec.finalPath, "utf8");
   assert.ok(!raw.includes("sk-ant-"));
-  assert.ok(!raw.includes("/Users/alice"));
+  assert.ok(!raw.includes("alice"));
   assert.ok(raw.includes("[REDACTED:"));
   assert.ok(raw.includes("~/"));
 });

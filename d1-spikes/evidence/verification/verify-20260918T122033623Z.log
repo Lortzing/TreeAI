@@ -1,0 +1,71 @@
+=== TreeAI D1 verification ===
+started: 2026-09-18T12:20:33.623Z
+workspace: d1-spikes (git 334f4fd, dirty)
+mode: default
+
+--- checks ---
+[ 1/28] PASS     fixtures-integrity
+           5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt
+[ 2/28] FAIL     schemas-valid
+           schema probe failed: BLOCKED without blockedReason anywhere (expected valid=False, got=True, errors=[])
+[ 3/28] PASS     schema-validator-selftest
+           SELFTEST: PASS (33 cases)
+[ 4/28] PASS     secrets-scanner-selftest
+           SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)
+[ 5/28] PASS     run-dir-generator-selftest
+           SELFTEST: PASS (run dir generator verified; temp copy cleaned up)
+[ 6/28] PASS     deps-repro-sdk-node
+           package.json + package-lock.json present (clean-room reinstall: scripts/verify-d1 --repro)
+[ 7/28] PASS     deps-repro-rpc-python
+           all requirements.txt entries pinned with == (clean-room reinstall: scripts/verify-d1 --repro)
+[ 8/28] PASS     unit-tests-sdk-node
+           npm test exited 0
+[ 9/28] PASS     unit-tests-rpc-python
+           stdlib unittest passed (runner: PYTHONPATH=src python3 -m unittest discover -s tests; pytest not installed in /Library/Developer/CommandLineTools/usr/bin/python3); tail: | provider=fake model=fake-model thinking=off | python 3.x
+                    obs: argv=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-test-qz54ox8p/fake-pi-wrapper.sh --mode rpc --provider fake --model fake-model --thinking off --no-session
+                    obs: round 1: settledAfter=0.00s textDeltas=0 stopReasons=['stop'] assembledInFinal=True
+                    obs: pi subprocess exit codes (spawn order): [0]
+[10/28] NOT_RUN  repro-sdk-node
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[11/28] NOT_RUN  repro-rpc-python
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[12/28] BLOCKED  scenario-sdk-node-basic
+           scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {"error":{"code":"403","message":"Access denied: You do not have permission to access this resource."}}; source: runs/2026-09-18T11-57-46-510Z-5120/basic/result.json (latest complete run of 3 run(s), 2 complete)
+[13/28] BLOCKED  scenario-sdk-node-tool
+           scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {"error":{"code":"403","message":"Access denied: You do not have permission to access this resource."}}; source: runs/2026-09-18T11-57-46-510Z-5120/tool/result.json (latest complete run of 3 run(s), 2 complete)
+[14/28] BLOCKED  scenario-sdk-node-steer
+           scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {"error":{"code":"403","message":"Access denied: You do not have permission to access this resource."}}; source: runs/2026-09-18T11-57-46-510Z-5120/steer/result.json (latest complete run of 3 run(s), 2 complete)
+[15/28] BLOCKED  scenario-sdk-node-abort
+           scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {"error":{"code":"403","message":"Access denied: You do not have permission to access this resource."}}; source: runs/2026-09-18T11-57-46-510Z-5120/abort/result.json (latest complete run of 3 run(s), 2 complete)
+[16/28] BLOCKED  scenario-sdk-node-resume
+           scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); phase A child process was blocked (BLOCKED_CREDENTIALS); see phase-a/ evidence; source: runs/2026-09-18T11-57-46-510Z-5120/resume/result.json (latest complete run of 3 run(s), 2 complete)
+[17/28] PASS     scenario-rpc-python-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/basic.result.json
+[18/28] PASS     scenario-rpc-python-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/tool.result.json
+[19/28] PASS     scenario-rpc-python-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/steer.result.json
+[20/28] PASS     scenario-rpc-python-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/abort.result.json
+[21/28] PASS     scenario-rpc-python-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/resume.result.json
+[22/28] BLOCKED  comparison-parity
+           SDK and RPC comparison inputs differ (task book section 5 requires the same Pi version, model and thinking configuration):
+             provider: sdk-node='tal-token-plan-copy-copy' rpc-python='tal-token-plan-06c64a09'
+             model: sdk-node='claude-fable-5' rpc-python='deepseek-v4.1-flash'
+           The five-scenario outcomes of the two implementations are therefore NOT directly comparable. A common provider/model baseline is PENDING_OWNER (reports/blockers.md DECISION-008).
+[23/28] NOT_RUN  evidence-environment
+           evidence/environment.json not present (file ownership outside all agent scopes is pending; see reports/blockers.md DELIVERY-004). Delivered per-implementation records: sdk-node writes environment.json inside each run directory, rpc-python writes evidence/rpc/environment-rpc-python.json; a shared record needs an owner first
+[24/28] PASS     schema-validation
+           10 result files valid (events JSONL validated inside each scenario row)
+[25/28] PASS     redaction-evidence
+           80 files scanned, no findings
+[26/28] PASS     redaction-workspace
+           80 files scanned, no findings
+[27/28] PASS     exit-codes
+           10 result files checked; PASS exits are zero and FAIL exits non-zero
+[28/28] PASS     residual-processes
+           no residual probe processes found
+
+counts: PASS=18 FAIL=1 BLOCKED=6 NOT_RUN=3
+verdict: HAS_FAIL

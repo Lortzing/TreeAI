@@ -2,9 +2,9 @@
   "implementation": "rpc-python",
   "scenario": "abort",
   "status": "PASS",
-  "startedAt": "2026-09-18T11:33:47.263Z",
-  "endedAt": "2026-09-18T11:33:50.789Z",
-  "durationMs": 3525,
+  "startedAt": "2026-09-20T01:46:59.832Z",
+  "endedAt": "2026-09-20T01:47:02.982Z",
+  "durationMs": 3149,
   "command": "python3 rpc-python/probe.py run --scenario abort",
   "exitCode": 0,
   "evidenceFiles": [
@@ -12,8 +12,8 @@
   ],
   "observations": [
     "env: pi 0.85.1 | provider=tal-token-plan-06c64a09 model=deepseek-v4.1-flash thinking=off | python 3.9.6",
-    "abort: responseLatencyMs=12 stopReasons=['aborted'] lastEventType=agent_settled settled=True",
-    "abort: post-abort session usable, followup settledAfter=1.90s answer='again'",
+    "abort: responseLatencyMs=14 stopReasons=['aborted'] lastEventType=agent_settled settled=True",
+    "abort: post-abort session usable, followup settledAfter=1.22s answer='again'",
     "pi subprocess exit codes (spawn order): [0]"
   ],
   "limitations": [

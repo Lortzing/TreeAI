@@ -10,15 +10,18 @@
 import type { ScenarioName } from "./types.js";
 
 export const FIXTURE_FILE = "numbers.json";
-export const FIXTURE_MARKER = "TREEAI-D1-FIXTURE-7f3a";
-export const FIXTURE_SUM = 42;
+export const FIXTURE_COUNT = 16;
+export const FIXTURE_SUM = 80;
+export const FIXTURE_MIN = 1;
+export const FIXTURE_MAX = 9;
+export const FIXTURE_MEDIAN = 5;
 export const BASIC_PROMPT = "What is 17 + 25? Reply with just the number, nothing else.";
 export const BASIC_EXPECTED = "42";
 
 export const TOOL_PROMPT =
   'Read the file numbers.json in the current working directory using the read tool. ' +
-  'Then answer with exactly two lines: first "MARKER=<value of the marker field>", ' +
-  'then "SUM=<value of the sum field>". No other text.';
+  'Then answer with exactly five lines: first "COUNT=<number of values>", then "SUM=<sum of values>", ' +
+  'then "MIN=<minimum value>", then "MAX=<maximum value>", then "MEDIAN=<median value>". No other text.';
 
 export const TOOL_MISSING_FILE_PROMPT =
   "Read the file definitely-missing-9b1c.json in the current working directory using the read tool, " +

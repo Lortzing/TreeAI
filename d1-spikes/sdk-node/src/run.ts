@@ -15,7 +15,7 @@
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { SCENARIOS, type ScenarioName, type ScenarioResult } from "./types.js";
 import { runScenario, aggregateExitCode } from "./runner.js";
 import { executeScenario } from "./scenarios/index.js";
@@ -32,6 +32,7 @@ import { defaultEvidenceDir, D1_SPIKES_DIR } from "./paths.js";
 import { DEFAULT_TIMEOUT_MS, scenarioCommand } from "./prompts.js";
 import { detectSharedSchemas } from "./validate.js";
 import { adapterMetrics, DIRECT_PI_ACCESS } from "./audit.js";
+import { redactValue } from "./redact.js";
 
 function usage(): never {
   console.error("usage: tsx src/run.ts <basic|tool|steer|abort|resume|all> [--timeout-ms N] [--evidence-dir DIR]");
@@ -70,8 +71,13 @@ async function main(): Promise<number> {
   mkdirSync(runDir, { recursive: true });
 
   // Environment snapshot (no secrets) - always written, blocked or not.
+  // Redacted defensively like every other evidence file: the snapshot is
+  // clean by construction, but modelOverride comes from an env var.
   const environment = captureEnvironment();
-  writeFileSync(join(runDir, "environment.json"), JSON.stringify(environment, null, 2) + "\n");
+  writeFileSync(
+    join(runDir, "environment.json"),
+    JSON.stringify(redactValue(environment), null, 2) + "\n",
+  );
 
   const sharedSchemas = detectSharedSchemas(D1_SPIKES_DIR);
   const globalLimitations: string[] = [];
@@ -143,7 +149,7 @@ async function main(): Promise<number> {
 
   const summary = {
     implementation: "sdk-node" as const,
-    runDir,
+    runDir: relative(D1_SPIKES_DIR, runDir),
     scenario: scenario === "all" ? "all" : scenario,
     startedAt: results[0]?.startedAt ?? new Date().toISOString(),
     results: results.map((r) => ({
@@ -165,7 +171,7 @@ async function main(): Promise<number> {
     adapterMetrics: metrics,
     sharedSchemasDetected: sharedSchemas,
   };
-  writeFileSync(join(runDir, "run-summary.json"), JSON.stringify(summary, null, 2) + "\n");
+  writeFileSync(join(runDir, "run-summary.json"), JSON.stringify(redactValue(summary), null, 2) + "\n");
 
   const exitCode = aggregateExitCode(results);
   console.log(`[sdk-node] run dir: ${runDir}`);

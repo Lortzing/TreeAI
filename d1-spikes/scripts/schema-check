@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+"""schema-check - minimal JSON Schema validator for TreeAI D1 (Agent D owned).
+
+Self-contained (Python 3.9+, standard library only) validator for the subset
+of JSON Schema draft 2020-12 used by d1-spikes/schemas/*.schema.json:
+
+  supported: type, enum, const, required, properties,
+             additionalProperties (boolean), items (single schema), minItems,
+             minLength, maxLength, pattern, minimum, maximum,
+             format "date-time", anyOf, allOf, oneOf, not, if/then/else,
+             boolean schemas (true/false)
+  ignored:   $schema, $id, title, description, $comment, examples, default
+  rejected:  $ref and any other unsupported combinator keyword ($defs, ...)
+
+Intentionally dependency-free so acceptance runs do not depend on network
+installation of ajv/jsonschema. If a schema ever needs keywords beyond this
+subset, extend this file in the same commit - do not silently ignore.
+
+Usage:
+  schema-check SCHEMA INSTANCE [INSTANCE ...]      # human output
+  schema-check --json OUT SCHEMA INSTANCE ...      # machine JSON to OUT
+  schema-check --selftest                          # validator self-test
+
+Exit codes: 0 = all instances valid, 1 = at least one invalid,
+            2 = usage or tool error.
+"""
+
+import argparse
+import json
+import re
+import sys
+
+DATE_TIME_RE = re.compile(
+    r"^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(\.\d+)?([Zz]|[+-]\d{2}:\d{2})$"
+)
+
+SUPPORTED_ANNOTATIONS = (
+    "$schema", "$id", "title", "description", "$comment", "examples", "default",
+)
+
+
+def is_date_time(s):
+    m = DATE_TIME_RE.match(s)
+    if not m:
+        return False
+    y, mo, d, h, mi, se = (int(m.group(i)) for i in range(1, 7))
+    if not 1 <= mo <= 12 or not 1 <= d <= 31 or h > 23 or mi > 59 or se > 60:
+        return False
+    leap = (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0))
+    dim = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1]
+    return d <= dim
+
+
+def json_type_name(inst):
+    if isinstance(inst, dict):
+        return "object"
+    if isinstance(inst, list):
+        return "array"
+    if isinstance(inst, str):
+        return "string"
+    if isinstance(inst, bool):
+        return "boolean"
+    if inst is None:
+        return "null"
+    if isinstance(inst, int):
+        return "integer"
+    if isinstance(inst, float):
+        return "number"
+    return type(inst).__name__
+
+
+def type_ok(t, inst):
+    if t == "object":
+        return isinstance(inst, dict)
+    if t == "array":
+        return isinstance(inst, list)
+    if t == "string":
+        return isinstance(inst, str)
+    if t == "boolean":
+        return isinstance(inst, bool)
+    if t == "null":
+        return inst is None
+    if t == "integer":
+        return isinstance(inst, int) and not isinstance(inst, bool)
+    if t == "number":
+        return isinstance(inst, (int, float)) and not isinstance(inst, bool)
+    return False
+
+
+def same_json_value(a, b):
+    # JSON booleans are not integers, but Python's True == 1.
+    if isinstance(a, bool) != isinstance(b, bool):
+        return False
+    return a == b
+
+
+def validate(schema, inst, path, errors):
+    if schema is True:
+        return
+    if schema is False:
+        errors.append("%s: never valid (false schema)" % path)
+        return
+    if not isinstance(schema, dict):
+        errors.append("%s: schema node is not an object" % path)
+        return
+
+    for kw in schema:
+        if kw.startswith("$") and kw not in SUPPORTED_ANNOTATIONS:
+            errors.append("%s: unsupported schema keyword %r" % (path, kw))
+            return
+
+    if "type" in schema:
+        t = schema["type"]
+        if isinstance(t, str) and not type_ok(t, inst):
+            errors.append("%s: expected type %s, got %s" % (path, t, json_type_name(inst)))
+
+    if "enum" in schema:
+        if not any(same_json_value(v, inst) for v in schema["enum"]):
+            errors.append("%s: value %r is not one of %r" % (path, inst, schema["enum"]))
+
+    if "const" in schema:
+        if not same_json_value(schema["const"], inst):
+            errors.append("%s: value %r is not the constant %r" % (path, inst, schema["const"]))
+
+    if isinstance(inst, dict):
+        for r in schema.get("required", []):
+            if r not in inst:
+                errors.append("%s: missing required property %r" % (path, r))
+        props = schema.get("properties", {})
+        for k in sorted(props):
+            if k in inst:
+                validate(props[k], inst[k], "%s.%s" % (path, k), errors)
+        if schema.get("additionalProperties", True) is False:
+            for k in sorted(inst):
+                if k not in props:
+                    errors.append("%s: additional property %r not allowed" % (path, k))
+
+    if isinstance(inst, list):
+        if "items" in schema:
+            sub = schema["items"]
+            for i, el in enumerate(inst):
+                validate(sub, el, "%s[%d]" % (path, i), errors)
+        if "minItems" in schema and len(inst) < schema["minItems"]:
+            errors.append("%s: fewer than %d items" % (path, schema["minItems"]))
+
+    if isinstance(inst, str):
+        if "minLength" in schema and len(inst) < schema["minLength"]:
+            errors.append("%s: shorter than %d chars" % (path, schema["minLength"]))
+        if "maxLength" in schema and len(inst) > schema["maxLength"]:
+            errors.append("%s: longer than %d chars" % (path, schema["maxLength"]))
+        if "pattern" in schema and re.search(schema["pattern"], inst) is None:
+            errors.append("%s: does not match pattern %r" % (path, schema["pattern"]))
+        if schema.get("format") == "date-time" and not is_date_time(inst):
+            errors.append("%s: not an RFC 3339 date-time" % path)
+
+    if isinstance(inst, (int, float)) and not isinstance(inst, bool):
+        if "minimum" in schema and inst < schema["minimum"]:
+            errors.append("%s: below minimum %r" % (path, schema["minimum"]))
+        if "maximum" in schema and inst > schema["maximum"]:
+            errors.append("%s: above maximum %r" % (path, schema["maximum"]))
+
+    def sub_errors(sub):
+        e = []
+        validate(sub, inst, path, e)
+        return e
+
+    if "anyOf" in schema:
+        if not any(not sub_errors(sub) for sub in schema["anyOf"]):
+            errors.append("%s: matches no schema in anyOf" % path)
+    if "oneOf" in schema:
+        n = sum(1 for sub in schema["oneOf"] if not sub_errors(sub))
+        if n != 1:
+            errors.append("%s: matches %d schemas in oneOf (expected 1)" % (path, n))
+    if "allOf" in schema:
+        for sub in schema["allOf"]:
+            errors.extend(sub_errors(sub))
+    if "not" in schema:
+        if not sub_errors(schema["not"]):
+            errors.append("%s: must not match the 'not' subschema" % path)
+    if "if" in schema:
+        if not sub_errors(schema["if"]):
+            if "then" in schema:
+                errors.extend(sub_errors(schema["then"]))
+        else:
+            if "else" in schema:
+                errors.extend(sub_errors(schema["else"]))
+
+
+def validate_instance(schema, inst):
+    errors = []
+    validate(schema, inst, "$", errors)
+    return errors
+
+
+def selftest():
+    cases = [
+        # (label, schema, instance, expect_valid)
+        ("type-ok", {"type": "integer"}, 3, True),
+        ("type-bad", {"type": "integer"}, "3", False),
+        ("bool-not-int", {"type": "integer"}, True, False),
+        ("enum-ok", {"enum": ["a", "b"]}, "a", True),
+        ("enum-bad", {"enum": ["a", "b"]}, "c", False),
+        ("const-ok", {"const": 0}, 0, True),
+        ("const-bad", {"const": 0}, 1, False),
+        ("required-ok", {"required": ["x"], "type": "object"}, {"x": 1}, True),
+        ("required-bad", {"required": ["x"], "type": "object"}, {"y": 1}, False),
+        ("addprops-ok", {"properties": {"x": {}}, "additionalProperties": False}, {"x": 1}, True),
+        ("addprops-bad", {"properties": {"x": {}}, "additionalProperties": False}, {"x": 1, "y": 2}, False),
+        ("items-ok", {"type": "array", "items": {"type": "string"}}, ["a"], True),
+        ("items-bad", {"type": "array", "items": {"type": "string"}}, [1], False),
+        ("minitems-bad", {"minItems": 1}, [], False),
+        ("minlength-bad", {"minLength": 1}, "", False),
+        ("maxlength-bad", {"maxLength": 2}, "abc", False),
+        ("pattern-ok", {"pattern": "^d1-v[0-9]+$"}, "d1-v1", True),
+        ("pattern-bad", {"pattern": "^d1-v[0-9]+$"}, "d1-x1", False),
+        ("minimum-bad", {"minimum": 1}, 0, False),
+        ("datetime-ok", {"format": "date-time"}, "2026-09-18T00:00:00.000Z", True),
+        ("datetime-bad", {"format": "date-time"}, "2026-09-18", False),
+        ("datetime-bad2", {"format": "date-time"}, "2026-13-01T00:00:00Z", False),
+        ("anyof-ok", {"anyOf": [{"type": "string"}, {"type": "integer"}]}, 5, True),
+        ("anyof-bad", {"anyOf": [{"type": "string"}, {"type": "integer"}]}, 5.5, False),
+        ("oneof-ok", {"oneOf": [{"type": "string"}, {"type": "boolean"}]}, "s", True),
+        ("oneof-bad", {"oneOf": [{"type": "integer"}, {"minimum": 0}]}, 5, False),  # matches both branches
+        ("not-ok", {"not": {"const": 0}}, 1, True),
+        ("not-bad", {"not": {"const": 0}}, 0, False),
+        ("ifthen-fire", {"if": {"properties": {"s": {"const": "P"}}}, "then": {"required": ["x"]}},
+         {"s": "P"}, False),
+        ("ifthen-nofire", {"if": {"properties": {"s": {"const": "P"}}}, "then": {"required": ["x"]}},
+         {"s": "Q"}, True),
+        ("true-schema", True, "anything", True),
+        ("false-schema", False, "anything", False),
+        ("ref-unsupported", {"$ref": "#/x"}, {"a": 1}, False),
+    ]
+    failed = []
+    for label, schema, inst, expect_valid in cases:
+        got_errors = validate_instance(schema, inst)
+        got_valid = not got_errors
+        if got_valid != expect_valid:
+            failed.append((label, expect_valid, got_valid, got_errors))
+    if failed:
+        print("SELFTEST: FAIL (%d/%d cases)" % (len(failed), len(cases)))
+        for label, expect_valid, got_valid, got_errors in failed:
+            print("  case %s: expected valid=%s got valid=%s errors=%r"
+                  % (label, expect_valid, got_valid, got_errors))
+        return False
+    print("SELFTEST: PASS (%d cases)" % len(cases))
+    return True
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(add_help=True, description=__doc__.splitlines()[0])
+    ap.add_argument("--json", metavar="OUT", help="write machine-readable results to OUT")
+    ap.add_argument("--selftest", action="store_true", help="run the validator self-test")
+    ap.add_argument("schema", nargs="?", help="path to the JSON Schema file")
+    ap.add_argument("instances", nargs="*", help="instance JSON files to validate")
+    args = ap.parse_args(argv)
+
+    if args.selftest:
+        return 0 if selftest() else 1
+
+    if not args.schema or not args.instances:
+        sys.stderr.write("usage: schema-check [--json OUT] SCHEMA INSTANCE...\n")
+        return 2
+
+    try:
+        with open(args.schema, "r", encoding="utf-8") as fh:
+            schema = json.load(fh)
+    except (OSError, ValueError) as exc:
+        sys.stderr.write("schema-check: cannot load schema %s: %s\n" % (args.schema, exc))
+        return 2
+
+    results = []
+    all_valid = True
+    for path in args.instances:
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                inst = json.load(fh)
+        except (OSError, ValueError) as exc:
+            results.append({"file": path, "valid": False, "errors": ["cannot load: %s" % exc]})
+            all_valid = False
+            continue
+        errors = validate_instance(schema, inst)
+        results.append({"file": path, "valid": not errors, "errors": errors})
+        if errors:
+            all_valid = False
+
+    for r in results:
+        status = "VALID" if r["valid"] else "INVALID"
+        print("%s: %s" % (status, r["file"]))
+        for e in r["errors"]:
+            print("    %s" % e)
+
+    if args.json:
+        payload = {"schema": args.schema, "allValid": all_valid, "results": results}
+        with open(args.json, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+
+    return 0 if all_valid else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

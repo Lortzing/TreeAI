@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treeai.invalid/d1/schemas/scenario-result.schema.json",
+  "title": "TreeAI D1 scenario result",
+  "description": "One result file per implementation and scenario. Producers: Agent B (sdk-node, runs layout under evidence/sdk/runs/<run-id>/<scenario>/result.json) and Agent C (rpc-python, flat layout under evidence/rpc/<scenario>.result.json). The status vocabulary is exactly PASS/FAIL/BLOCKED/NOT_RUN. A PASS claim must be traceable to raw events and a zero exit code; a FAIL claim must carry a non-zero exit code and a structured error. Cross-file traceability (evidence files exist, events validate, seq increases, no cross-run mixing) is enforced by scripts/verify-d1. Revision 2026-09-18 (Agent D): for status=BLOCKED, blockedReason may be encoded either at the top level (enum below) or inside the error object (error.blockedReason); the task book section 14 names the marker literally 'BLOCKED_CREDENTIALS' and the delivered sdk-node evidence encodes it as error.blockedReason='BLOCKED_CREDENTIALS', so both encodings are accepted and at least one is required. This is a documented schema revision, not a silent change; see schemas/README.md section 4.",
+  "type": "object",
+  "required": [
+    "implementation",
+    "scenario",
+    "status",
+    "startedAt",
+    "endedAt",
+    "durationMs",
+    "command",
+    "exitCode",
+    "evidenceFiles",
+    "observations",
+    "limitations",
+    "error"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "implementation": {
+      "enum": ["sdk-node", "rpc-python"],
+      "description": "Which probe produced this result. Must match the evidence directory (sdk or rpc)."
+    },
+    "scenario": {
+      "enum": ["basic", "tool", "steer", "abort", "resume"],
+      "description": "Which of the five unified D1 scenarios. Must match the file name."
+    },
+    "status": {
+      "enum": ["PASS", "FAIL", "BLOCKED", "NOT_RUN"],
+      "description": "Exactly one of the four unified states. Markdown-only claims of success are not acceptable."
+    },
+    "blockedReason": {
+      "enum": ["CREDENTIALS", "BLOCKED_CREDENTIALS", "VERSION_UNAVAILABLE",
+               "DEPENDENCY_MISSING", "ENVIRONMENT", "OTHER"],
+      "description": "Required when status=BLOCKED (either here at the top level or as error.blockedReason). CREDENTIALS is the schema-native encoding of the task book's BLOCKED_CREDENTIALS; BLOCKED_CREDENTIALS is the task-book-literal form and is accepted in both locations."
+    },
+    "startedAt": {
+      "anyOf": [{ "const": "" }, { "type": "string", "format": "date-time" }],
+      "description": "RFC 3339 timestamp. The empty string is only allowed while the scenario has not run."
+    },
+    "endedAt": {
+      "anyOf": [{ "const": "" }, { "type": "string", "format": "date-time" }],
+      "description": "RFC 3339 timestamp. The empty string is only allowed while the scenario has not run."
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Wall-clock duration of the scenario run in milliseconds."
+    },
+    "command": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Exact shell command a third party can re-run to reproduce this scenario. Paths relative to the d1-spikes/ root. Must not contain secrets."
+    },
+    "exitCode": {
+      "anyOf": [{ "type": "integer" }, { "type": "null" }],
+      "description": "Process exit code of the command above. 0 for PASS, non-zero for FAIL."
+    },
+    "evidenceFiles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 },
+      "description": "Paths (relative to the d1-spikes/ root) of raw evidence backing this result, for example evidence/sdk/basic.events.jsonl. Non-empty for PASS and FAIL."
+    },
+    "observations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Facts observed during the run; each must be traceable to the evidence files."
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Known limitations of this run (for example model or timeout constraints)."
+    },
+    "error": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["message"],
+          "properties": {
+            "message": { "type": "string", "minLength": 1 },
+            "code": { "type": "string" },
+            "kind": { "type": "string" },
+            "blockedReason": {
+              "enum": ["CREDENTIALS", "BLOCKED_CREDENTIALS", "VERSION_UNAVAILABLE",
+                       "DEPENDENCY_MISSING", "ENVIRONMENT", "OTHER"],
+              "description": "Alternative location for the BLOCKED reason (task-book-literal encoding, as delivered by sdk-node). Satisfies the BLOCKED requirement together with, or instead of, the top-level blockedReason."
+            }
+          },
+          "additionalProperties": true
+        }
+      ],
+      "description": "Structured error for FAIL (or the blocking cause for BLOCKED)."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "PASS" } }
+      },
+      "then": {
+        "properties": {
+          "exitCode": { "const": 0 },
+          "command": { "minLength": 1 },
+          "startedAt": { "format": "date-time" },
+          "endedAt": { "format": "date-time" },
+          "evidenceFiles": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "FAIL" } }
+      },
+      "then": {
+        "properties": {
+          "exitCode": { "type": "integer", "not": { "const": 0 } },
+          "command": { "minLength": 1 },
+          "evidenceFiles": { "minItems": 1 },
+          "error": { "not": { "type": "null" } }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "BLOCKED" } }
+      },
+      "then": {
+        "anyOf": [
+          { "required": ["blockedReason"] },
+          {
+            "required": ["error"],
+            "properties": {
+              "error": {
+                "type": "object",
+                "required": ["blockedReason"]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

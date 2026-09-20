@@ -1,0 +1,19 @@
+{
+  "selftest": "selftest-infra",
+  "version": "d1-v1",
+  "startedAt": "2026-09-18T10:54:56Z",
+  "passed": 5,
+  "failed": 5,
+  "results": [
+    {"name": "T1 fixtures-integrity row", "expected": "FAIL", "actual": "FAIL", "ok": true},
+    {"name": "T1 overall exit", "expected": "2", "actual": "2", "ok": true},
+    {"name": "T2 scenario row", "expected": "FAIL", "actual": "scenario-sdk-node-basic", "ok": false},
+    {"name": "T2 overall exit", "expected": "2", "actual": "2", "ok": true},
+    {"name": "T3 redaction-evidence row", "expected": "FAIL", "actual": "redaction-evidence", "ok": false},
+    {"name": "T3 overall exit", "expected": "2", "actual": "2", "ok": true},
+    {"name": "T4 scenario row", "expected": "PASS", "actual": "scenario-sdk-node-basic", "ok": false},
+    {"name": "T4 overall exit", "expected": "3", "actual": "2", "ok": false},
+    {"name": "T5 scenario row", "expected": "FAIL", "actual": "scenario-sdk-node-basic", "ok": false},
+    {"name": "T5 overall exit", "expected": "2", "actual": "2", "ok": true}
+  ]
+}

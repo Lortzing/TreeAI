@@ -1,0 +1,327 @@
+{
+  "verifyVersion": "d1-v1",
+  "startedAt": "2026-09-18T12:33:12.170Z",
+  "endedAt": "2026-09-18T12:33:41.424Z",
+  "durationMs": 29253,
+  "workspaceRoot": "d1-spikes",
+  "git": {
+    "commit": "334f4fd",
+    "dirty": true
+  },
+  "environment": {
+    "python": "3.9.6",
+    "platform": "darwin",
+    "node": "v24.21.0"
+  },
+  "mode": "default",
+  "evidenceLayout": {
+    "sdk-node": {
+      "selectedRun": "2026-09-18T11-57-46-510Z-5120",
+      "completeRuns": [
+        "2026-09-18T11-09-33-297Z-78785",
+        "2026-09-18T11-57-46-510Z-5120"
+      ],
+      "incompleteRuns": {
+        "2026-09-18T11-07-09-207Z-77525": [
+          "steer",
+          "abort",
+          "resume"
+        ]
+      },
+      "flatScenarios": []
+    },
+    "rpc-python": {
+      "selectedRun": null,
+      "completeRuns": [],
+      "incompleteRuns": {},
+      "flatScenarios": [
+        "basic",
+        "tool",
+        "steer",
+        "abort",
+        "resume"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "id": "fixtures-integrity",
+      "description": "Deterministic fixtures present, MANIFEST.sha256 verified, README aggregates consistent",
+      "status": "PASS",
+      "details": "5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt",
+      "evidence": [
+        "fixtures/MANIFEST.sha256"
+      ],
+      "reproCommand": "cd d1-spikes/fixtures && shasum -a 256 -c MANIFEST.sha256"
+    },
+    {
+      "id": "schemas-valid",
+      "description": "Shared schemas parse and accept/reject known probe instances",
+      "status": "PASS",
+      "details": "both schemas parse; 14 probe instances accepted/rejected as expected (including both BLOCKED_CREDENTIALS encodings)",
+      "evidence": [
+        "schemas/evidence-event.schema.json",
+        "schemas/scenario-result.schema.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "schema-validator-selftest",
+      "description": "schema-check CLI self-test",
+      "status": "PASS",
+      "details": "SELFTEST: PASS (33 cases)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "secrets-scanner-selftest",
+      "description": "check-secrets CLI self-test (synthetic corpus)",
+      "status": "PASS",
+      "details": "SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "run-dir-generator-selftest",
+      "description": "make-run-dir self-test (integrity + temp copy + cleanup)",
+      "status": "PASS",
+      "details": "SELFTEST: PASS (run dir generator verified; temp copy cleaned up)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "deps-repro-sdk-node",
+      "description": "Reproducible dependency install for sdk-node (pinned manifest + lockfile)",
+      "status": "PASS",
+      "details": "package.json + package-lock.json present (clean-room reinstall: scripts/verify-d1 --repro)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "deps-repro-rpc-python",
+      "description": "Reproducible dependency install for rpc-python (pinned manifest + lockfile)",
+      "status": "PASS",
+      "details": "all requirements.txt entries pinned with == (clean-room reinstall: scripts/verify-d1 --repro)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "unit-tests-sdk-node",
+      "description": "Unit tests for sdk-node",
+      "status": "PASS",
+      "details": "npm test exited 0",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "unit-tests-rpc-python",
+      "description": "Unit tests for rpc-python",
+      "status": "PASS",
+      "details": "stdlib unittest passed (runner: PYTHONPATH=src python3 -m unittest discover -s tests; pytest not installed in /Library/Developer/CommandLineTools/usr/bin/python3); tail: | provider=fake model=fake-model thinking=off | python 3.x\n         obs: argv=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-test-pq46sbc5/fake-pi-wrapper.sh --mode rpc --provider fake --model fake-model --thinking off --no-session\n         obs: round 1: settledAfter=0.00s textDeltas=0 stopReasons=['stop'] assembledInFinal=True\n         obs: pi subprocess exit codes (spawn order): [0]\nsummary: {\"basic\": \"FAIL\"}\nbasic    PASS        426ms exit=0 evidence=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-test-rw00hd92/evidence/basic.result.json\n         obs: env: pi 0.0 | provider=fake model=fake-model thinking=off | python 3.x\n         obs: argv=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-test-rw00hd92/fake-pi-wrapper.sh --mode rpc --provider fake --model fake-model --thinking off --no-session\n         obs: round 1: settledAfter=0.00s textDeltas=2 stopReasons=['stop'] assembledInFinal=True\n         obs: round 2: settledAfter=0.00s textDeltas=2 stopReasons=['stop'] assembledInFinal=True\n         obs: round 3: settledAfter=0.00s textDeltas=2 stopReasons=['stop'] assembledInFinal=True\n         obs: sessionId after rounds: 's' (no-session mode)\nsummary: {\"basic\": \"PASS\"}\n",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "repro-sdk-node",
+      "description": "Clean-room reproduction of sdk-node (temp copy, reinstall, rerun tests)",
+      "status": "NOT_RUN",
+      "details": "not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "repro-rpc-python",
+      "description": "Clean-room reproduction of rpc-python (temp copy, reinstall, rerun tests)",
+      "status": "NOT_RUN",
+      "details": "not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-sdk-node-basic",
+      "description": "sdk-node / basic scenario result",
+      "status": "BLOCKED",
+      "details": "scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}; source: runs/2026-09-18T11-57-46-510Z-5120/basic/result.json (latest complete run of 3 run(s), 2 complete)",
+      "evidence": [
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/basic/result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-sdk-node-tool",
+      "description": "sdk-node / tool scenario result",
+      "status": "BLOCKED",
+      "details": "scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}; source: runs/2026-09-18T11-57-46-510Z-5120/tool/result.json (latest complete run of 3 run(s), 2 complete)",
+      "evidence": [
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/tool/result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-sdk-node-steer",
+      "description": "sdk-node / steer scenario result",
+      "status": "BLOCKED",
+      "details": "scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}; source: runs/2026-09-18T11-57-46-510Z-5120/steer/result.json (latest complete run of 3 run(s), 2 complete)",
+      "evidence": [
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/steer/result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-sdk-node-abort",
+      "description": "sdk-node / abort scenario result",
+      "status": "BLOCKED",
+      "details": "scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); 403 {\"error\":{\"code\":\"403\",\"message\":\"Access denied: You do not have permission to access this resource.\"}}; source: runs/2026-09-18T11-57-46-510Z-5120/abort/result.json (latest complete run of 3 run(s), 2 complete)",
+      "evidence": [
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/abort/result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-sdk-node-resume",
+      "description": "sdk-node / resume scenario result",
+      "status": "BLOCKED",
+      "details": "scenario blocked (blockedReason=BLOCKED_CREDENTIALS); referenced evidence files exist and validate (schema, seq, implementation/scenario match); phase A child process was blocked (BLOCKED_CREDENTIALS); see phase-a/ evidence; source: runs/2026-09-18T11-57-46-510Z-5120/resume/result.json (latest complete run of 3 run(s), 2 complete)",
+      "evidence": [
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/resume/result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-rpc-python-basic",
+      "description": "rpc-python / basic scenario result",
+      "status": "PASS",
+      "details": "claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/basic.result.json",
+      "evidence": [
+        "evidence/rpc/basic.result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-rpc-python-tool",
+      "description": "rpc-python / tool scenario result",
+      "status": "PASS",
+      "details": "claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/tool.result.json",
+      "evidence": [
+        "evidence/rpc/tool.result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-rpc-python-steer",
+      "description": "rpc-python / steer scenario result",
+      "status": "PASS",
+      "details": "claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/steer.result.json",
+      "evidence": [
+        "evidence/rpc/steer.result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-rpc-python-abort",
+      "description": "rpc-python / abort scenario result",
+      "status": "PASS",
+      "details": "claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/abort.result.json",
+      "evidence": [
+        "evidence/rpc/abort.result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "scenario-rpc-python-resume",
+      "description": "rpc-python / resume scenario result",
+      "status": "PASS",
+      "details": "claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/resume.result.json",
+      "evidence": [
+        "evidence/rpc/resume.result.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "comparison-parity",
+      "description": "SDK and RPC ran the same Pi version, provider, model and thinking (task book section 5 fair-comparison precondition)",
+      "status": "BLOCKED",
+      "details": "SDK and RPC comparison inputs differ (task book section 5 requires the same Pi version, model and thinking configuration):\n  provider: sdk-node='tal-token-plan-copy-copy' rpc-python='tal-token-plan-06c64a09'\n  model: sdk-node='claude-fable-5' rpc-python='deepseek-v4.1-flash'\nThe five-scenario outcomes of the two implementations are therefore NOT directly comparable. A common provider/model baseline is PENDING_OWNER (reports/blockers.md DECISION-008).\nContext: all sdk-node scenarios are currently BLOCKED (BLOCKED_CREDENTIALS), so unifying the baseline additionally requires working credentials for Agent B's provider.",
+      "evidence": [
+        "evidence/rpc/environment-rpc-python.json",
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/environment.json",
+        "evidence/sdk/runs/2026-09-18T11-57-46-510Z-5120/run-summary.json"
+      ],
+      "reproCommand": ""
+    },
+    {
+      "id": "evidence-environment",
+      "description": "Shared environment record evidence/environment.json",
+      "status": "NOT_RUN",
+      "details": "evidence/environment.json not present (file ownership outside all agent scopes is pending; see reports/blockers.md DELIVERY-004). Delivered per-implementation records: sdk-node writes environment.json inside each run directory, rpc-python writes evidence/rpc/environment-rpc-python.json; a shared record needs an owner first",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "schema-validation",
+      "description": "All delivered result files valid against the shared schemas",
+      "status": "PASS",
+      "details": "10 result files valid (events JSONL validated inside each scenario row)",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "redaction-evidence",
+      "description": "Secret/redaction scan over evidence/",
+      "status": "PASS",
+      "details": "93 files scanned, no findings",
+      "evidence": [
+        "evidence/verification/secrets-scan-20260918T123312170Z-evidence.json"
+      ],
+      "reproCommand": "d1-spikes/scripts/check-secrets evidence"
+    },
+    {
+      "id": "redaction-workspace",
+      "description": "Secret/redaction scan over the rest of the d1-spikes workspace",
+      "status": "PASS",
+      "details": "80 files scanned, no findings",
+      "evidence": [
+        "evidence/verification/secrets-scan-20260918T123312170Z-workspace.json"
+      ],
+      "reproCommand": "d1-spikes/scripts/check-secrets fixtures reports research rpc-python schemas scripts sdk-node"
+    },
+    {
+      "id": "exit-codes",
+      "description": "Trusted exit codes (PASS exits 0, FAIL exits non-zero)",
+      "status": "PASS",
+      "details": "10 result files checked; PASS exits are zero and FAIL exits non-zero",
+      "evidence": [],
+      "reproCommand": ""
+    },
+    {
+      "id": "residual-processes",
+      "description": "No residual probe processes tied to this d1-spikes (pi rpc mode, sdk-node/rpc-python commands, leftover run dirs)",
+      "status": "PASS",
+      "details": "no residual probe processes found",
+      "evidence": [],
+      "reproCommand": ""
+    }
+  ],
+  "counts": {
+    "PASS": 19,
+    "FAIL": 0,
+    "BLOCKED": 6,
+    "NOT_RUN": 3
+  },
+  "overall": {
+    "verdict": "INCOMPLETE (BLOCKED/NOT_RUN present)",
+    "exitCode": 3
+  },
+  "reproCommands": [
+    "d1-spikes/scripts/verify-d1",
+    "d1-spikes/scripts/verify-d1 --repro",
+    "d1-spikes/scripts/make-run-dir",
+    "d1-spikes/scripts/make-run-dir --selftest",
+    "cd d1-spikes/fixtures && shasum -a 256 -c MANIFEST.sha256",
+    "d1-spikes/scripts/check-secrets d1-spikes",
+    "d1-spikes/scripts/check-secrets --selftest",
+    "d1-spikes/scripts/schema-check --selftest",
+    "d1-spikes/scripts/schema-check d1-spikes/schemas/scenario-result.schema.json <result-file>",
+    "cd d1-spikes/rpc-python && PYTHONPATH=src python3 -m unittest discover -s tests"
+  ]
+}

@@ -8,7 +8,7 @@
   "command": "npm run --prefix d1-spikes/sdk-node probe:resume",
   "exitCode": 2,
   "evidenceFiles": [
-    "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/resume/events.jsonl"
+    "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/resume/events.jsonl"
   ],
   "observations": [
     "model: tal-token-plan-copy-copy/claude-fable-5 (thinking=off, source=first-available)",
@@ -23,7 +23,7 @@
   "error": {
     "name": "BlockedError",
     "message": "phase A child process was blocked (BLOCKED_CREDENTIALS); see phase-a/ evidence",
-    "stack": "BlockedError: phase A child process was blocked (BLOCKED_CREDENTIALS); see phase-a/ evidence\n    at Object.markBlocked (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/runner.ts:117:13)\n    at runResumeScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/scenarios/resume.ts:48:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.exec (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:132:9)\n    at async runScenario (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/runner.ts:134:5)\n    at async main (/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/sdk-node/src/run.ts:113:20)",
+    "stack": "BlockedError: phase A child process was blocked (BLOCKED_CREDENTIALS); see phase-a/ evidence\n    at Object.markBlocked (d1-spikes/sdk-node/src/runner.ts:117:13)\n    at runResumeScenario (d1-spikes/sdk-node/src/scenarios/resume.ts:48:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.exec (d1-spikes/sdk-node/src/run.ts:132:9)\n    at async runScenario (d1-spikes/sdk-node/src/runner.ts:134:5)\n    at async main (d1-spikes/sdk-node/src/run.ts:113:20)",
     "blockedReason": "BLOCKED_CREDENTIALS"
   }
 }

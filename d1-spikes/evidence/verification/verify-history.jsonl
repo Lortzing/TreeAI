@@ -1,0 +1,11 @@
+{"ts": "2026-09-18T10:48:57.948Z", "exitCode": 3, "counts": {"PASS": 8, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 19}, "summary": "evidence/verification/verify-20260918T104857948Z.json"}
+{"ts": "2026-09-18T10:57:15.479Z", "exitCode": 3, "counts": {"PASS": 8, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 19}, "summary": "evidence/verification/verify-20260918T105715479Z.json"}
+{"ts": "2026-09-18T10:57:26.571Z", "exitCode": 3, "counts": {"PASS": 8, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 19}, "summary": "evidence/verification/verify-20260918T105726571Z.json"}
+{"ts": "2026-09-18T11:02:03.130Z", "exitCode": 3, "counts": {"PASS": 8, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 19}, "summary": "evidence/verification/verify-20260918T110203130Z.json"}
+{"ts": "2026-09-18T11:02:03.414Z", "exitCode": 3, "counts": {"PASS": 8, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 19}, "summary": "evidence/verification/verify-20260918T110203414Z.json"}
+{"ts": "2026-09-18T11:59:24.248Z", "exitCode": 2, "counts": {"PASS": 17, "FAIL": 6, "BLOCKED": 1, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T115924248Z.json"}
+{"ts": "2026-09-18T12:20:33.623Z", "exitCode": 2, "counts": {"PASS": 18, "FAIL": 1, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T122033623Z.json"}
+{"ts": "2026-09-18T12:22:13.821Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T122213821Z.json"}
+{"ts": "2026-09-18T12:32:03.098Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T123203098Z.json"}
+{"ts": "2026-09-18T12:33:12.170Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T123312170Z.json"}
+{"ts": "2026-09-20T01:48:04.084Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260920T014804084Z.json"}

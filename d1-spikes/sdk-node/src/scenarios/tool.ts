@@ -11,8 +11,11 @@ import type { ScenarioContext } from "../runner.js";
 import type { ScenarioDeps } from "./basic.js";
 import { prepareFixtureCwd } from "../fixture.js";
 import {
+  FIXTURE_COUNT,
   FIXTURE_FILE,
-  FIXTURE_MARKER,
+  FIXTURE_MAX,
+  FIXTURE_MEDIAN,
+  FIXTURE_MIN,
   FIXTURE_SUM,
   TOOL_MISSING_FILE_PROMPT,
   TOOL_PROMPT,
@@ -28,12 +31,24 @@ export async function runToolScenario(ctx: ScenarioContext, deps: ScenarioDeps):
 
   // Ground truth from the fixture copy itself (what the agent should return).
   const fixtureJson = JSON.parse(readFileSync(fixture.fixturePath, "utf8")) as {
-    marker: string;
-    sum: number;
+    values: number[];
   };
+  const sortedValues = [...fixtureJson.values].sort((a, b) => a - b);
+  const fixtureCount = fixtureJson.values.length;
+  const fixtureSum = fixtureJson.values.reduce((sum, value) => sum + value, 0);
+  const fixtureMin = sortedValues[0];
+  const fixtureMax = sortedValues.at(-1);
+  const fixtureMedian =
+    fixtureCount % 2 === 0
+      ? (sortedValues[fixtureCount / 2 - 1]! + sortedValues[fixtureCount / 2]!) / 2
+      : sortedValues[Math.floor(fixtureCount / 2)];
   ctx.check(
-    fixtureJson.marker === FIXTURE_MARKER && fixtureJson.sum === FIXTURE_SUM,
-    "fixture ground truth matches expected marker/sum",
+    fixtureCount === FIXTURE_COUNT &&
+      fixtureSum === FIXTURE_SUM &&
+      fixtureMin === FIXTURE_MIN &&
+      fixtureMax === FIXTURE_MAX &&
+      fixtureMedian === FIXTURE_MEDIAN,
+    "fixture ground truth matches expected aggregates",
   );
 
   const session = await deps.createSession.create({ cwd: fixture.cwd, persist: false, tools: "read-only" });
@@ -86,7 +101,7 @@ export async function runToolScenario(ctx: ScenarioContext, deps: ScenarioDeps):
   });
   ctx.onCleanup(unsub2);
 
-  // Turn 1: read the fixture and report marker + sum.
+  // Turn 1: read the fixture and report its aggregates.
   await session.prompt(TOOL_PROMPT);
 
   ctx.check(sawToolStart, "observed tool_execution_start");
@@ -106,12 +121,24 @@ export async function runToolScenario(ctx: ScenarioContext, deps: ScenarioDeps):
     ctx.check(false, "tool args contained a path to inspect");
   }
   ctx.check(
-    finalText.includes(`MARKER=${FIXTURE_MARKER}`),
-    `answer reports MARKER=${FIXTURE_MARKER} (answer: ${finalText.slice(0, 200)})`,
+    finalText.includes(`COUNT=${String(fixtureCount)}`),
+    `answer reports COUNT=${fixtureCount} (answer: ${finalText.slice(0, 240)})`,
   );
   ctx.check(
-    finalText.includes(`SUM=${String(FIXTURE_SUM)}`),
-    `answer reports SUM=${FIXTURE_SUM}`,
+    finalText.includes(`SUM=${String(fixtureSum)}`),
+    `answer reports SUM=${fixtureSum}`,
+  );
+  ctx.check(
+    finalText.includes(`MIN=${String(fixtureMin)}`),
+    `answer reports MIN=${fixtureMin}`,
+  );
+  ctx.check(
+    finalText.includes(`MAX=${String(fixtureMax)}`),
+    `answer reports MAX=${fixtureMax}`,
+  );
+  ctx.check(
+    finalText.includes(`MEDIAN=${String(fixtureMedian)}`),
+    `answer reports MEDIAN=${fixtureMedian}`,
   );
 
   // Turn 2: error path - reading a missing file must be a clear failure.

@@ -1,0 +1,18 @@
+TreeAI D1 fixture glossary (fixtureVersion d1-v1)
+
+Scenarios
+  basic   create a session, send one fixed prompt, receive a full streamed answer
+  tool    ask the agent to read fixture files and answer a verification question
+  steer   send a steering instruction while a long answer is still streaming
+  abort   abort generation mid-stream and verify cleanup within the timeout
+  resume  persist a conversation, exit the host process, restart, and continue
+
+Result statuses
+  PASS     scenario ran to completion and every required observation held
+  FAIL     scenario ran and produced a failure (must exit non-zero)
+  BLOCKED  scenario could not run due to an external cause (e.g. no credentials)
+  NOT_RUN  scenario was not executed
+
+Implementations
+  sdk-node    Agent B probe: Pi SDK embedded in a Node.js process
+  rpc-python  Agent C probe: Pi driven as an RPC subprocess from Python

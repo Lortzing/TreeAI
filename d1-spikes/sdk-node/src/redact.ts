@@ -33,8 +33,8 @@ const STRING_PATTERNS: Array<{ name: string; re: RegExp }> = [
 
 /** macOS / Linux home-directory absolute paths -> ~/. */
 const HOME_PATH_PATTERNS: RegExp[] = [
-  /\/Users\/[A-Za-z0-9._-]+\//g,
-  /\/home\/[A-Za-z0-9._-]+\//g,
+  /\/Users\/[A-Za-z0-9._-]+(?:\/|$)/g,
+  /\/home\/[A-Za-z0-9._-]+(?:\/|$)/g,
 ];
 
 /** Object keys whose values are always redacted regardless of shape. */

@@ -1,0 +1,63 @@
+=== TreeAI D1 verification ===
+started: 2026-09-18T10:57:15.479Z
+workspace: d1-spikes (git 8e66ecf, dirty)
+mode: default
+
+--- checks ---
+[ 1/27] PASS     fixtures-integrity
+           5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt
+[ 2/27] PASS     schemas-valid
+           both schemas parse; 11 probe instances accepted/rejected as expected
+[ 3/27] PASS     schema-validator-selftest
+           SELFTEST: PASS (33 cases)
+[ 4/27] PASS     secrets-scanner-selftest
+           SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)
+[ 5/27] PASS     run-dir-generator-selftest
+           SELFTEST: PASS (run dir generator verified; temp copy cleaned up)
+[ 6/27] NOT_RUN  deps-repro-sdk-node
+           sdk-node/ not delivered yet
+[ 7/27] NOT_RUN  deps-repro-rpc-python
+           rpc-python/ not delivered yet
+[ 8/27] NOT_RUN  unit-tests-sdk-node
+           sdk-node/ not delivered yet
+[ 9/27] NOT_RUN  unit-tests-rpc-python
+           rpc-python/ not delivered yet
+[10/27] NOT_RUN  repro-sdk-node
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[11/27] NOT_RUN  repro-rpc-python
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[12/27] NOT_RUN  scenario-sdk-node-basic
+           not delivered: neither sdk-node/ nor evidence/sdk/
+[13/27] NOT_RUN  scenario-sdk-node-tool
+           not delivered: neither sdk-node/ nor evidence/sdk/
+[14/27] NOT_RUN  scenario-sdk-node-steer
+           not delivered: neither sdk-node/ nor evidence/sdk/
+[15/27] NOT_RUN  scenario-sdk-node-abort
+           not delivered: neither sdk-node/ nor evidence/sdk/
+[16/27] NOT_RUN  scenario-sdk-node-resume
+           not delivered: neither sdk-node/ nor evidence/sdk/
+[17/27] NOT_RUN  scenario-rpc-python-basic
+           not delivered: neither rpc-python/ nor evidence/rpc/
+[18/27] NOT_RUN  scenario-rpc-python-tool
+           not delivered: neither rpc-python/ nor evidence/rpc/
+[19/27] NOT_RUN  scenario-rpc-python-steer
+           not delivered: neither rpc-python/ nor evidence/rpc/
+[20/27] NOT_RUN  scenario-rpc-python-abort
+           not delivered: neither rpc-python/ nor evidence/rpc/
+[21/27] NOT_RUN  scenario-rpc-python-resume
+           not delivered: neither rpc-python/ nor evidence/rpc/
+[22/27] NOT_RUN  evidence-environment
+           evidence/environment.json not present (file ownership outside all agent scopes is pending; see reports/blockers.md DELIVERY-004)
+[23/27] NOT_RUN  schema-validation
+           no scenario result files delivered
+[24/27] PASS     redaction-evidence
+           10 files scanned, no findings
+[25/27] PASS     redaction-workspace
+           13 files scanned, no findings
+[26/27] NOT_RUN  exit-codes
+           no scenario result files delivered
+[27/27] PASS     residual-processes
+           no residual probe processes found
+
+counts: PASS=8 FAIL=0 BLOCKED=0 NOT_RUN=19
+verdict: INCOMPLETE (BLOCKED/NOT_RUN present)

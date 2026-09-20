@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { SDK_NODE_DIR } from "../src/paths.js";
+import { D1_SPIKES_DIR, SDK_NODE_DIR } from "../src/paths.js";
 
 const packageJson = JSON.parse(
   readFileSync(join(SDK_NODE_DIR, "package.json"), "utf8"),
@@ -141,12 +141,30 @@ test("README.md exists and documents install, all five probes, and limitations",
   }
 });
 
-test("local fallback fixture matches the canonical values", () => {
+test("local fallback fixture matches the canonical values and stays aligned with the shared fixture", () => {
   const fixture = JSON.parse(
     readFileSync(join(SDK_NODE_DIR, "fixtures-local", "numbers.json"), "utf8"),
-  ) as { marker: string; sum: number };
-  assert.equal(fixture.marker, "TREEAI-D1-FIXTURE-7f3a");
-  assert.equal(fixture.sum, 42);
+  ) as { values: number[] };
+  // Canonical content: the 16 digits of pi (d1-spikes/fixtures/numbers.json).
+  assert.deepEqual(fixture.values, [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3]);
+  // Aggregates the tool scenario expects (src/prompts.ts constants).
+  const sorted = [...fixture.values].sort((a, b) => a - b);
+  assert.equal(fixture.values.length, 16);
+  assert.equal(fixture.values.reduce((sum, v) => sum + v, 0), 80);
+  assert.equal(sorted[0], 1);
+  assert.equal(sorted[sorted.length - 1], 9);
+  assert.equal((sorted[7]! + sorted[8]!) / 2, 5);
+  // When Agent D's shared fixture is delivered, the fallback must not drift
+  // from it (values are the load-bearing contract; descriptions may differ).
+  const sharedPath = join(D1_SPIKES_DIR, "fixtures", "numbers.json");
+  if (existsSync(sharedPath)) {
+    const shared = JSON.parse(readFileSync(sharedPath, "utf8")) as { values: number[] };
+    assert.deepEqual(
+      fixture.values,
+      shared.values,
+      "fixtures-local/numbers.json drifted from the shared fixture; realign it and src/prompts.ts",
+    );
+  }
 });
 
 test("local fallback schemas mirror the task-book required fields", () => {

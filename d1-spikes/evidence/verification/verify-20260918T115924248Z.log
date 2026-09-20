@@ -1,0 +1,66 @@
+=== TreeAI D1 verification ===
+started: 2026-09-18T11:59:24.248Z
+workspace: d1-spikes (git 334f4fd, dirty)
+mode: default
+
+--- checks ---
+[ 1/27] PASS     fixtures-integrity
+           5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt
+[ 2/27] PASS     schemas-valid
+           both schemas parse; 11 probe instances accepted/rejected as expected
+[ 3/27] PASS     schema-validator-selftest
+           SELFTEST: PASS (33 cases)
+[ 4/27] PASS     secrets-scanner-selftest
+           SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)
+[ 5/27] PASS     run-dir-generator-selftest
+           SELFTEST: PASS (run dir generator verified; temp copy cleaned up)
+[ 6/27] PASS     deps-repro-sdk-node
+           package.json + package-lock.json present (clean-room reinstall: scripts/verify-d1 --repro)
+[ 7/27] PASS     deps-repro-rpc-python
+           all requirements.txt entries pinned with == (clean-room reinstall: scripts/verify-d1 --repro)
+[ 8/27] PASS     unit-tests-sdk-node
+           npm test exited 0
+[ 9/27] BLOCKED  unit-tests-rpc-python
+           pytest not installed in this interpreter
+[10/27] NOT_RUN  repro-sdk-node
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[11/27] NOT_RUN  repro-rpc-python
+           not requested in this run; execute: d1-spikes/scripts/verify-d1 --repro (requires the implementation directory)
+[12/27] FAIL     scenario-sdk-node-basic
+           implementation directory exists but result file is missing: evidence/sdk/basic.result.json
+[13/27] FAIL     scenario-sdk-node-tool
+           implementation directory exists but result file is missing: evidence/sdk/tool.result.json
+[14/27] FAIL     scenario-sdk-node-steer
+           implementation directory exists but result file is missing: evidence/sdk/steer.result.json
+[15/27] FAIL     scenario-sdk-node-abort
+           implementation directory exists but result file is missing: evidence/sdk/abort.result.json
+[16/27] FAIL     scenario-sdk-node-resume
+           implementation directory exists but result file is missing: evidence/sdk/resume.result.json
+[17/27] PASS     scenario-rpc-python-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq
+[18/27] PASS     scenario-rpc-python-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq
+[19/27] PASS     scenario-rpc-python-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq
+[20/27] PASS     scenario-rpc-python-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq
+[21/27] PASS     scenario-rpc-python-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq
+[22/27] NOT_RUN  evidence-environment
+           evidence/environment.json not present (file ownership outside all agent scopes is pending; see reports/blockers.md DELIVERY-004)
+[23/27] PASS     schema-validation
+           5 result files valid (events JSONL validated inside each scenario row)
+[24/27] PASS     redaction-evidence
+           76 files scanned, no findings
+[25/27] FAIL     redaction-workspace
+           [home-path] research/pi-capability-inventory.md:108 /Use...[REDACTED len=10]
+           [home-path] research/pi-capability-inventory.md:348 /Use...[REDACTED len=10]
+           [home-path] research/pi-capability-inventory.md:414 /Use...[REDACTED len=10]
+           [anthropic-key] sdk-node/tests/recorder.test.ts:84 sk-a...[REDACTED len=34]
+[26/27] PASS     exit-codes
+           5 result files checked; PASS exits are zero and FAIL exits non-zero
+[27/27] PASS     residual-processes
+           no residual probe processes found
+
+counts: PASS=17 FAIL=6 BLOCKED=1 NOT_RUN=3
+verdict: HAS_FAIL

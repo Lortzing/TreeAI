@@ -1,6 +1,6 @@
 {
   "implementation": "sdk-node",
-  "runDir": "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785",
+  "runDir": "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785",
   "scenario": "all",
   "startedAt": "2026-09-18T11:09:33.519Z",
   "results": [
@@ -10,7 +10,7 @@
       "exitCode": 2,
       "durationMs": 869,
       "evidenceFiles": [
-        "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/basic/events.jsonl"
+        "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/basic/events.jsonl"
       ]
     },
     {
@@ -19,7 +19,7 @@
       "exitCode": 2,
       "durationMs": 1042,
       "evidenceFiles": [
-        "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/tool/events.jsonl"
+        "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/tool/events.jsonl"
       ]
     },
     {
@@ -28,7 +28,7 @@
       "exitCode": 2,
       "durationMs": 35062,
       "evidenceFiles": [
-        "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/steer/events.jsonl"
+        "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/steer/events.jsonl"
       ]
     },
     {
@@ -37,7 +37,7 @@
       "exitCode": 2,
       "durationMs": 33312,
       "evidenceFiles": [
-        "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/abort/events.jsonl"
+        "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/abort/events.jsonl"
       ]
     },
     {
@@ -46,7 +46,7 @@
       "exitCode": 2,
       "durationMs": 1720,
       "evidenceFiles": [
-        "/Users/tal/Projects/TreeAI/.claude/worktrees/agent-afed5fd9ccdb61375/d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/resume/events.jsonl"
+        "d1-spikes/evidence/sdk/runs/2026-09-18T11-09-33-297Z-78785/resume/events.jsonl"
       ]
     }
   ],

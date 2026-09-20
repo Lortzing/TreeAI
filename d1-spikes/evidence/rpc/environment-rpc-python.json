@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-09-18T11:52:04Z",
+  "recordedAt": "2026-09-20T01:46:44Z",
   "implementation": "rpc-python",
   "piBin": "pi",
   "piVersion": {
@@ -70,7 +70,7 @@
     "stopReason": "stop",
     "answered": "pong",
     "errorMessage": null,
-    "elapsedMs": 1834,
+    "elapsedMs": 2187,
     "detail": ""
   },
   "modelList": {
@@ -87,9 +87,9 @@
     "detail": "sdk-node/ is present (pi dependency: @earendil-works/pi-coding-agent: 0.85.1); recorded pi version 0.85.1 MATCHES this probe's pi 0.85.1; delivered scenario statuses: {\"basic\": \"BLOCKED\", \"tool\": \"BLOCKED\", \"steer\": \"BLOCKED\", \"abort\": \"BLOCKED\", \"resume\": \"BLOCKED\"}; sdk-node ran with pi's default provider/model (no override) and its scenarios are BLOCKED with 403 -- the same provider 403 this probe documented in evidence/rpc/observation-copycopy-403.json; a common working provider/model baseline remains PENDING_OWNER",
     "sdkNodePresent": true,
     "piDependency": "@earendil-works/pi-coding-agent: 0.85.1",
-    "deliveredRuns": 2,
+    "deliveredRuns": 3,
     "newestRunEnvironment": {
-      "runDir": "2026-09-18T11-09-33-297Z-78785",
+      "runDir": "2026-09-18T11-57-46-510Z-5120",
       "piPackageVersion": "0.85.1",
       "globalCliVersion": "0.85.1",
       "nodeVersion": "v24.21.0",
@@ -97,7 +97,7 @@
       "modelOverride": null
     },
     "newestRunSummary": {
-      "runDir": "2026-09-18T11-09-33-297Z-78785",
+      "runDir": "2026-09-18T11-57-46-510Z-5120",
       "statuses": {
         "basic": "BLOCKED",
         "tool": "BLOCKED",
@@ -120,18 +120,5 @@
     "pi subprocess argv and stdout are redacted (secrets, auth headers, absolute user paths) before being written",
     "final SDK-vs-RPC choice, host language and model baseline are PENDING_OWNER decisions, not made by this probe"
   ],
-  "credentialsReady": true,
-  "probeDefaults": {
-    "evidenceDir": "<HOME>/Projects/TreeAI/.claude/worktrees/agent-a28b5ea6fe7be9622/d1-spikes/evidence/rpc/",
-    "requestTimeout": 120.0,
-    "scenarioTimeouts": {
-      "basic": 300.0,
-      "tool": 300.0,
-      "steer": 240.0,
-      "abort": 150.0,
-      "resume": 420.0
-    },
-    "fixtureDirUsed": "fixtures",
-    "sharedFixturesPresent": true
-  }
+  "credentialsReady": true
 }

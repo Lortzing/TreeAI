@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# TreeAI D1 - fixture run-directory generator (Agent D owned).
+#
+# Creates a single-use temporary copy of d1-spikes/fixtures/ and prints its
+# path. Every scenario run (Agent B sdk-node and Agent C rpc-python alike)
+# must operate on such a copy, never on d1-spikes/fixtures/ itself.
+#
+# Run dir layout:
+#   <run>/fixtures/    complete copy of d1-spikes/fixtures/ (readonly/ is
+#                      stripped of write permissions inside the copy)
+#   <run>/work/        writable working directory for scenario outputs
+#   <run>/RUN-INFO.txt how this copy was created (command, time, manifest digest)
+#
+# Usage:
+#   scripts/make-run-dir               create under the system temp dir, print path
+#   scripts/make-run-dir -o DIR        create at DIR (must not exist)
+#   scripts/make-run-dir --selftest    integrity check + copy + verify + cleanup
+#
+# Exit codes: 0 ok, 1 failure. The caller owns the run dir and removes it
+# when done (--selftest cleans up after itself).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+D1_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+FIXTURES="$D1_ROOT/fixtures"
+MANIFEST="$FIXTURES/MANIFEST.sha256"
+
+die() { echo "make-run-dir: ERROR: $*" >&2; exit 1; }
+
+usage() {
+  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+checksum_tool() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    echo "sha256sum"
+  elif command -v shasum >/dev/null 2>&1; then
+    echo "shasum -a 256"
+  else
+    echo ""
+  fi
+}
+
+# verify_manifest <fixtures-dir-with-MANIFEST.sha256>
+verify_manifest() {
+  local dir="$1" tool out n_expected n_ok
+  tool="$(checksum_tool)"
+  [ -n "$tool" ] || die "no sha256 tool found (sha256sum or shasum)"
+  [ -f "$dir/MANIFEST.sha256" ] || return 1
+  n_expected="$(grep -c -E '^[0-9a-f]{64}[[:space:]]' "$dir/MANIFEST.sha256" || true)"
+  out="$(cd "$dir" && $tool --check MANIFEST.sha256 2>&1 || true)"
+  if printf '%s\n' "$out" | grep -q 'FAILED'; then
+    return 1
+  fi
+  n_ok="$(printf '%s\n' "$out" | grep -c ': OK' || true)"
+  [ "$n_ok" = "$n_expected" ] || return 1
+  return 0
+}
+
+SELFTEST_TMP=""
+
+cleanup() {
+  if [ -n "$SELFTEST_TMP" ]; then
+    # readonly/ inside the copy was stripped of write permissions; restore
+    # them so rm can unlink, and never let cleanup failure change the exit code.
+    chmod -R u+w "$SELFTEST_TMP" 2>/dev/null || true
+    rm -rf "$SELFTEST_TMP" 2>/dev/null || true
+  fi
+  return 0
+}
+trap cleanup EXIT
+
+# new_run_dir - creates $RUN_DIR and populates it. Assumes $RUN_DIR is set.
+new_run_dir() {
+  mkdir -p "$RUN_DIR"
+  cp -R "$FIXTURES" "$RUN_DIR/fixtures"
+  mkdir -p "$RUN_DIR/work"
+  chmod -R a-w "$RUN_DIR/fixtures/readonly"
+
+  local manifest_digest git_sha created_cmd
+  manifest_digest="$(shasum -a 256 "$MANIFEST" 2>/dev/null | cut -d' ' -f1 || echo unknown)"
+  git_sha="$(git -C "$D1_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  created_cmd="d1-spikes/scripts/make-run-dir"
+  if [ -n "$OPT_OUTPUT" ]; then created_cmd="$created_cmd -o <target>"; fi
+
+  cat > "$RUN_DIR/RUN-INFO.txt" <<EOF
+TreeAI D1 fixture run directory
+createdCommand: $created_cmd
+createdAt: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+fixturesSource: d1-spikes/fixtures (git: $git_sha)
+manifestSha256: $manifest_digest
+rules:
+  - Scenario runs read and write only inside this run directory.
+  - fixtures/readonly/ is read-only; write attempts there must fail.
+  - To delete this directory when done:
+    chmod -R u+w <run-dir> && rm -rf <run-dir>
+EOF
+}
+
+OPT_OUTPUT=""
+SELFTEST=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|--output) OPT_OUTPUT="$2"; shift 2 ;;
+    --selftest) SELFTEST=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) die "unknown argument: $1 (see --help)" ;;
+  esac
+done
+
+[ -f "$MANIFEST" ] || die "MANIFEST.sha256 missing at d1-spikes/fixtures/MANIFEST.sha256"
+verify_manifest "$FIXTURES" || die "fixture integrity check FAILED - refusing to copy (d1-spikes/fixtures was modified or MANIFEST is stale)"
+
+if [ "$SELFTEST" = "1" ]; then
+  SELFTEST_TMP="$(mktemp -d "${TMPDIR:-/tmp}/treeai-d1-selftest.XXXXXXXX")"
+  RUN_DIR="$SELFTEST_TMP/run"
+  new_run_dir
+  fail=0
+  [ -f "$RUN_DIR/fixtures/numbers.json" ] || { echo "selftest: numbers.json missing in copy" >&2; fail=1; }
+  [ -f "$RUN_DIR/RUN-INFO.txt" ] || { echo "selftest: RUN-INFO.txt missing" >&2; fail=1; }
+  [ -d "$RUN_DIR/work" ] || { echo "selftest: work/ missing" >&2; fail=1; }
+  if [ -w "$RUN_DIR/fixtures/readonly/notes.md" ]; then
+    echo "selftest: readonly/notes.md is writable in the copy (chmod enforcement failed)" >&2
+    fail=1
+  fi
+  if ! verify_manifest "$RUN_DIR/fixtures"; then
+    echo "selftest: copied fixtures failed integrity check" >&2
+    fail=1
+  fi
+  if [ "$fail" = "0" ]; then
+    echo "SELFTEST: PASS (run dir generator verified; temp copy cleaned up)"
+    exit 0
+  fi
+  echo "SELFTEST: FAIL" >&2
+  exit 1
+fi
+
+if [ -n "$OPT_OUTPUT" ]; then
+  [ -e "$OPT_OUTPUT" ] && die "target already exists: $OPT_OUTPUT"
+  RUN_DIR="$OPT_OUTPUT"
+else
+  RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/treeai-d1-run.XXXXXXXX")"
+fi
+
+new_run_dir
+echo "$RUN_DIR"

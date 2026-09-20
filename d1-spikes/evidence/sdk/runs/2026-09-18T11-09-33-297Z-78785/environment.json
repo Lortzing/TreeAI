@@ -10,7 +10,7 @@
     "packageName": "@earendil-works/pi-coding-agent",
     "packageVersion": "0.85.1",
     "globalCliVersion": "0.85.1",
-    "agentDir": "/Users/tal/.pi/agent",
+    "agentDir": "~/.pi/agent",
     "agentDirAuthFileExists": true,
     "agentDirModelsFileExists": true
   },
