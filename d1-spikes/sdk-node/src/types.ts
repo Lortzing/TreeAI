@@ -11,6 +11,22 @@ export const IMPLEMENTATION = "sdk-node" as const;
 export const SCENARIOS = ["basic", "tool", "steer", "abort", "resume"] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
+/**
+ * Additional architecture probe (owner closure follow-up, 2026-09-20):
+ * idle-state in-place tree navigation via AgentSession.navigateTree().
+ *
+ * Deliberately NOT part of SCENARIOS: `npm run probe:all` and the five
+ * unified D1 scenario results never include it, and its evidence is written
+ * under evidence/sdk/tree-nav/ instead of evidence/sdk/runs/ so it can never
+ * mix into the five-scenario results (or their verification).
+ */
+export const TREE_NAV_SCENARIO = "tree-nav" as const;
+export type TreeNavScenarioName = typeof TREE_NAV_SCENARIO;
+
+/** Any scenario name this probe can record (five unified + tree-nav). */
+export type ProbeScenarioName = ScenarioName | TreeNavScenarioName;
+export const PROBE_SCENARIO_NAMES: readonly ProbeScenarioName[] = [...SCENARIOS, TREE_NAV_SCENARIO];
+
 export const RESULT_STATUSES = ["PASS", "FAIL", "BLOCKED", "NOT_RUN"] as const;
 export type ResultStatus = (typeof RESULT_STATUSES)[number];
 
@@ -36,7 +52,7 @@ export interface EvidenceEvent {
   seq: number;
   observedAt: string;
   implementation: typeof IMPLEMENTATION;
-  scenario: ScenarioName;
+  scenario: ProbeScenarioName;
   sessionId: string;
   piEventType: string;
   runState: string;
@@ -59,7 +75,7 @@ export interface StructuredError {
 /** Scenario result JSON (task book 6.2). */
 export interface ScenarioResult {
   implementation: typeof IMPLEMENTATION;
-  scenario: ScenarioName;
+  scenario: ProbeScenarioName;
   status: ResultStatus;
   startedAt: string;
   endedAt: string;
@@ -88,6 +104,19 @@ export interface ProbeSessionLike {
   abort(): Promise<void>;
   dispose(): void;
   /**
+   * In-place tree navigation within the same session (Pi
+   * AgentSession.navigateTree). Idle-state only: implementations must
+   * reject while streaming, mirroring Pi 0.85.1. The probe never passes
+   * summarize options (that would trigger an extra model call).
+   */
+  navigateTree(targetId: string): Promise<{ cancelled: boolean; editorText?: string }>;
+  /**
+   * Read-only tree state (ids/structure only, no message content) for the
+   * tree-nav scenario: entry ids/parentId/type/role, the current leaf id,
+   * and the LLM context size on the current branch.
+   */
+  getTreeState(): ProbeTreeState;
+  /**
    * History summary for resume checks. Reads message/entry state the
    * implementation exposes; must not fabricate content.
    */
@@ -97,6 +126,24 @@ export interface ProbeSessionLike {
     assistantMessages: number;
     lastAssistantText: string | undefined;
   };
+}
+
+/** One session entry as seen by the tree-nav probe (structure only). */
+export interface ProbeTreeEntryInfo {
+  id: string;
+  parentId: string | null;
+  type: string;
+  /** Message role when type === "message". */
+  role?: string;
+}
+
+/** Tree state snapshot (tree-nav scenario checks; ids only, no content). */
+export interface ProbeTreeState {
+  sessionId: string;
+  leafId: string | null;
+  entries: ProbeTreeEntryInfo[];
+  /** LLM context size on the current branch (root -> leaf). */
+  contextMessageCount: number;
 }
 
 export type ToolsMode = "none" | "read-only";

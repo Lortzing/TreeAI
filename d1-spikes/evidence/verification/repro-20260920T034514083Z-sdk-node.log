@@ -1,0 +1,33 @@
+copied sdk-node to clean temp dir (deps excluded)
+$ npm ci -> exit 0
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm warn install-scripts 5 packages have install scripts not yet covered by allowScripts:
+npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn install-scripts   fsevents@2.3.3 (install: (install scripts present))
+npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+
+$ npm test -> exit 0
+ext mismatch (user-message target semantics broken) -> FAIL (50.9565ms)
+✔ fake navigateTree mirrors Pi semantics: leaf move, no-op, not found, streaming reject (28.015042ms)
+✔ tree-nav stays separate from the five unified scenarios (0.254792ms)
+✔ valid event passes (1.126166ms)
+✔ invalid events are rejected field by field (0.157416ms)
+✔ valid result passes; invalid statuses rejected (0.132958ms)
+✔ validateEventFile: good file passes with count (0.723583ms)
+✔ validateEventFile: non-monotonic seq fails (0.525083ms)
+✔ validateEventFile: broken JSON line fails (0.803458ms)
+✔ detectSharedSchemas reports absence honestly (0.110792ms)
+✔ detectSharedSchemas finds schemas when present (0.412042ms)
+ℹ tests 80
+ℹ suites 0
+ℹ pass 80
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1668.729917
+

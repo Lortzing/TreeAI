@@ -15,8 +15,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   IMPLEMENTATION,
+  PROBE_SCENARIO_NAMES,
   RESULT_STATUSES,
-  SCENARIOS,
   type EvidenceEvent,
   type ScenarioResult,
 } from "./types.js";
@@ -28,6 +28,18 @@ export interface ValidationResult {
 }
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+
+/**
+ * Accepted scenario names for LOCAL structural validation: the five unified
+ * task-book scenarios plus the tree-nav architecture probe. Note: the
+ * shared schemas (d1-spikes/schemas/) enumerate only the five unified
+ * scenarios, so tree-nav evidence is intentionally NOT covered by them and
+ * never mixed into the five-scenario results (PENDING_OWNER whether the
+ * shared contract should be extended).
+ */
+function isProbeScenarioName(value: unknown): value is (typeof PROBE_SCENARIO_NAMES)[number] {
+  return typeof value === "string" && (PROBE_SCENARIO_NAMES as readonly string[]).includes(value);
+}
 
 export function validateEvidenceEvent(ev: unknown): ValidationResult {
   const errors: string[] = [];
@@ -44,10 +56,9 @@ export function validateEvidenceEvent(ev: unknown): ValidationResult {
   if (e.implementation !== IMPLEMENTATION) {
     errors.push(`implementation must be "${IMPLEMENTATION}", got ${String(e.implementation)}`);
   }
-  if (!SCENARIOS.includes(e.scenario as (typeof SCENARIOS)[number])) {
-    errors.push(`scenario must be one of ${SCENARIOS.join("|")}, got ${String(e.scenario)}`);
-  }
-  if (typeof e.sessionId !== "string" || e.sessionId.length === 0) {
+  if (!isProbeScenarioName(e.scenario)) {
+    errors.push(`scenario must be one of ${PROBE_SCENARIO_NAMES.join("|")}, got ${String(e.scenario)}`);
+  }  if (typeof e.sessionId !== "string" || e.sessionId.length === 0) {
     errors.push("sessionId must be a non-empty string");
   }
   if (typeof e.piEventType !== "string" || e.piEventType.length === 0) {
@@ -74,8 +85,8 @@ export function validateScenarioResult(r: unknown): ValidationResult {
   if (res.implementation !== IMPLEMENTATION) {
     errors.push(`implementation must be "${IMPLEMENTATION}", got ${String(res.implementation)}`);
   }
-  if (!SCENARIOS.includes(res.scenario as (typeof SCENARIOS)[number])) {
-    errors.push(`scenario must be one of ${SCENARIOS.join("|")}, got ${String(res.scenario)}`);
+  if (!isProbeScenarioName(res.scenario)) {
+    errors.push(`scenario must be one of ${PROBE_SCENARIO_NAMES.join("|")}, got ${String(res.scenario)}`);
   }
   if (!RESULT_STATUSES.includes(res.status as (typeof RESULT_STATUSES)[number])) {
     errors.push(`status must be one of ${RESULT_STATUSES.join("|")}, got ${String(res.status)}`);

@@ -14,6 +14,7 @@ import type {
   CreateProbeSessionOptions,
   ProbeSessionLike,
   ProbeSessionFactory,
+  ProbeTreeState,
 } from "./types.js";
 
 /** One scripted turn: what the fake model does for the n-th user message. */
@@ -38,6 +39,16 @@ export interface FakeTurnScript {
 }
 
 let nextSessionId = 1;
+let nextEntryId = 1;
+
+/** Minimal session entry for the fake tree model (mirrors Pi ids/parentIds). */
+interface FakeTreeEntry {
+  id: string;
+  parentId: string | null;
+  type: "message";
+  role: "user" | "assistant";
+  text: string;
+}
 
 export class FakeProbeSession implements ProbeSessionLike {
   readonly sessionId: string;
@@ -51,6 +62,9 @@ export class FakeProbeSession implements ProbeSessionLike {
   private followUpQueue: string[] = [];
   private turnCounter = 0;
   private persistedHeader = false;
+  /** Append-only entry tree mirroring Pi's session tree (tree-nav tests). */
+  private treeEntries: FakeTreeEntry[] = [];
+  private treeLeafId: string | null = null;
   readonly history: Array<{ role: "user" | "assistant"; text: string }> = [];
   public promptCalls: string[] = [];
   public steerCalls: string[] = [];
@@ -131,7 +145,8 @@ export class FakeProbeSession implements ProbeSessionLike {
   ): Promise<void> {
     this.streamingFlag = true;
     this.history.push({ role: "user", text });
-    this.persistEntry("user", text);
+    const userEntry = this.appendTreeEntry("user", text);
+    this.persistEntry(userEntry);
     this.turnCounter += 1;
     const script = this.scripts[this.turnCounter - 1] ?? { answer: "ok" };
 
@@ -182,7 +197,8 @@ export class FakeProbeSession implements ProbeSessionLike {
     const finalText = this.abortRequested ? accumulated : script.answer;
     if (!this.abortRequested) {
       this.history.push({ role: "assistant", text: finalText });
-      this.persistEntry("assistant", finalText);
+      const assistantEntry = this.appendTreeEntry("assistant", finalText);
+      this.persistEntry(assistantEntry);
     }
     this.emit({
       type: "message_end",
@@ -230,15 +246,78 @@ export class FakeProbeSession implements ProbeSessionLike {
   /**
    * Persist a JSONL "session file" for the resume fake runner. The first
    * line is a header carrying the session id, mirroring Pi's session files
-   * (header + entries).
+   * (header + entries). Entry lines carry the tree entry's id/parentId so
+   * the tree-nav scenario's on-disk history check works against the fake
+   * too (readFakeSessionFile keeps reading role/text, so the resume fakes
+   * are unaffected).
    */
-  private persistEntry(role: string, text: string): void {
+  private persistEntry(entry: FakeTreeEntry): void {
     if (this.sessionFile === undefined) return;
     if (!this.persistedHeader) {
       appendFileSync(this.sessionFile, JSON.stringify({ role: "session-header", sessionId: this.sessionId }) + "\n");
       this.persistedHeader = true;
     }
-    appendFileSync(this.sessionFile, JSON.stringify({ role, text }) + "\n");
+    appendFileSync(this.sessionFile, JSON.stringify(entry) + "\n");
+  }
+
+  /** Append a message entry as a child of the current leaf, then advance
+   *  the leaf - mirrors Pi SessionManager.appendMessage(). */
+  private appendTreeEntry(role: "user" | "assistant", text: string): FakeTreeEntry {
+    const entry: FakeTreeEntry = {
+      id: `fake-entry-${nextEntryId++}`,
+      parentId: this.treeLeafId,
+      type: "message",
+      role,
+      text,
+    };
+    this.treeEntries.push(entry);
+    this.treeLeafId = entry.id;
+    return entry;
+  }
+
+  /** Path root -> leaf (entries on the current branch, in order). */
+  private branchEntryIds(): string[] {
+    const byId = new Map(this.treeEntries.map((e) => [e.id, e]));
+    const path: string[] = [];
+    let cur = this.treeLeafId;
+    while (cur !== null) {
+      const e = byId.get(cur);
+      if (e === undefined) break;
+      path.unshift(e.id);
+      cur = e.parentId;
+    }
+    return path;
+  }
+
+  /**
+   * Mirrors Pi 0.85.1 AgentSession.navigateTree(): rejects while streaming;
+   * a user-message target moves the leaf to the entry's parent and returns
+   * the message text as editorText; any other target becomes the new leaf;
+   * same target as the current leaf is a no-op.
+   */
+  async navigateTree(targetId: string): Promise<{ cancelled: boolean; editorText?: string }> {
+    if (this.streamingFlag) {
+      throw new Error("Wait for the current response to finish before navigating the session tree.");
+    }
+    if (targetId === this.treeLeafId) return { cancelled: false };
+    const target = this.treeEntries.find((e) => e.id === targetId);
+    if (!target) throw new Error(`Entry ${targetId} not found`);
+    if (target.role === "user") {
+      this.treeLeafId = target.parentId;
+      return { cancelled: false, editorText: target.text };
+    }
+    this.treeLeafId = targetId;
+    return { cancelled: false };
+  }
+
+  getTreeState(): ProbeTreeState {
+    const branch = new Set(this.branchEntryIds());
+    return {
+      sessionId: this.sessionId,
+      leafId: this.treeLeafId,
+      entries: this.treeEntries.map((e) => ({ id: e.id, parentId: e.parentId, type: e.type, role: e.role })),
+      contextMessageCount: this.treeEntries.filter((e) => branch.has(e.id)).length,
+    };
   }
 
   async steer(text: string): Promise<void> {

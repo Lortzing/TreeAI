@@ -28,6 +28,8 @@ import type {
   CreateProbeSessionOptions,
   ProbeSessionLike,
   ProbeSessionFactory,
+  ProbeTreeEntryInfo,
+  ProbeTreeState,
 } from "./types.js";
 import { BlockedError } from "./blocked.js";
 import { PROBE_THINKING_LEVEL } from "./prompts.js";
@@ -57,6 +59,13 @@ export const PI_API_SURFACE: Record<string, string[]> = {
   "AgentSession.dispose": ["dispose()"],
   "AgentSession.subscribe": ["subscribe(listener) -> unsubscribe"],
   "AgentSession state": ["sessionId", "sessionFile", "isStreaming", "messages", "model", "thinkingLevel", "state.errorMessage"],
+  "AgentSession.navigateTree": [
+    "in-place tree navigation within the same session file: navigateTree(targetId) -> { editorText?, cancelled }; idle-state only (rejects while streaming); user-message targets move the leaf to the entry's parent and return the message text as editorText; non-user targets move the leaf to the target itself (tree-nav scenario; options/summarize deliberately not used)",
+  ],
+  "SessionManager tree state": [
+    "getLeafId() (leaf pointer before/after navigation)",
+    "getEntries() id/parentId/type/message.role mapping (tree structure snapshot)",
+  ],
 };
 
 export interface ResolvedModel {
@@ -162,6 +171,38 @@ export class RealProbeSession implements ProbeSessionLike {
 
   async abort(): Promise<void> {
     await this.session.abort();
+  }
+
+  async navigateTree(targetId: string): Promise<{ cancelled: boolean; editorText?: string }> {
+    // Options are deliberately omitted: summarize/label would trigger an
+    // extra summarizer model call and is outside this probe's scope. The
+    // probe only navigates in the idle state (Pi rejects mid-stream).
+    return this.session.navigateTree(targetId);
+  }
+
+  getTreeState(): ProbeTreeState {
+    const entries: ProbeTreeEntryInfo[] = this.sessionManager.getEntries().map((raw) => {
+      const e = raw as {
+        id: string;
+        parentId?: string | null;
+        type: string;
+        message?: { role?: string };
+      };
+      return {
+        id: e.id,
+        parentId: e.parentId ?? null,
+        type: e.type,
+        role: e.message?.role,
+      };
+    });
+    return {
+      sessionId: this.session.sessionId,
+      leafId: this.sessionManager.getLeafId(),
+      entries,
+      // AgentSession.messages is the live LLM context; navigateTree()
+      // rebuilds it from the new branch (agent.state.messages = context).
+      contextMessageCount: this.session.messages.length,
+    };
   }
 
   dispose(): void {

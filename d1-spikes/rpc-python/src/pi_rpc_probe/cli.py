@@ -4,12 +4,18 @@ Subcommands:
   env-check     record environment facts (versions, provider readiness)
   run           run one or all of the five unified scenarios
   crash-probe   verify pi subprocess cleanup after a host crash
+  tree-nav      tree/navigation architecture-contrast probe
+                (supplementary; NOT one of the five unified scenarios)
 
 Evidence layout (shared contract, d1-spikes/schemas/README.md):
   <out>/<scenario>.events.jsonl      raw redacted events, one file/scenario
   <out>/<scenario>.result.json       structured result, one file/scenario
   <out>/environment-rpc-python.json  environment record (this probe only)
   <out>/crash-probe.json             host-crash cleanup observations
+  <out>/tree-navigation.events.jsonl append-only tree/navigation raw
+        events (seq continues across runs; supplementary probe)
+  <out>/tree-navigation.result.jsonl append-only tree/navigation result
+        records, one line per run (supplementary probe)
 result.json exitCode is the probe CLI exit code (0 PASS / 1 FAIL /
 2 BLOCKED / 3 NOT_RUN), matching what a third party re-running `command`
 observes; pi subprocess exit codes are recorded as observations.
@@ -35,6 +41,8 @@ from .crash_probe import run_crash_probe
 from .envcheck import check_environment, write_environment_record
 from .evidence import BLOCKED_CREDENTIALS, redact_text
 from .scenarios import SCENARIOS, ProbeConfig, run_scenario
+from .tree_nav import (SCENARIO_ID as TREE_NAV_SCENARIO_ID, TREE_NAV_TIMEOUT,
+                       run_tree_nav)
 
 # Local machine's configured pi provider/model at D1 time. These are NOT an
 # architecture decision: final model/provider baseline is PENDING_OWNER and
@@ -116,6 +124,13 @@ def build_parser() -> argparse.ArgumentParser:
     pc = sub.add_parser("crash-probe",
                         help="pi cleanup after host crash (SIGKILL driver)")
     _add_common(pc)
+
+    pt = sub.add_parser(
+        "tree-nav",
+        help="tree/navigation architecture probe: get_tree/fork/clone/"
+             "switch_session vs the SDK navigateTree capability "
+             "(supplementary; NOT one of the five unified scenarios)")
+    _add_common(pt)
     return p
 
 
@@ -312,6 +327,43 @@ def cmd_crash_probe(args: argparse.Namespace) -> int:
     }.get(result["status"], EXIT_FAIL)
 
 
+def cmd_tree_nav(args: argparse.Namespace) -> int:
+    """Run the supplementary tree/navigation architecture probe.
+
+    Same provider/model/thinking baseline as the five scenarios (shared
+    defaults and check_environment); evidence is append-only:
+    tree-navigation.events.jsonl (raw events, seq continues across runs)
+    and tree-navigation.result.jsonl (one result record per run).
+    """
+    config = _make_config(args)
+    config.scenario_timeouts[TREE_NAV_SCENARIO_ID] = (
+        TREE_NAV_TIMEOUT * args.timeout_factor)
+    ready, env_record = check_environment(
+        args.pi_bin, args.provider, args.model, d1_root=_D1_ROOT,
+        thinking=args.thinking
+    )
+    env_path = os.path.join(config.evidence_dir,
+                            "environment-rpc-python.json")
+    write_environment_record(env_path, env_record)
+    record = run_tree_nav(
+        config, ready=ready,
+        block_reason=(env_record.get("liveCheck", {}).get("detail")
+                      or env_record.get("authCheck", {}).get("stdout")
+                      or "provider not ready (live RPC check failed)"),
+        env_record=env_record,
+    )
+    print("tree-navigation: %s (runId=%s)"
+          % (record["status"], record.get("runId")))
+    for obs in record.get("observations", [])[:10]:
+        print("         obs: %s" % obs[:220])
+    if record.get("conclusion"):
+        print("conclusion: %s" % record["conclusion"])
+    if record.get("error"):
+        print("error: %s" % json.dumps(record["error"],
+                                       ensure_ascii=False)[:300])
+    return record.get("exitCode", 1)
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -321,6 +373,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_run(args)
     if args.cmd == "crash-probe":
         return cmd_crash_probe(args)
+    if args.cmd == "tree-nav":
+        return cmd_tree_nav(args)
     parser.error("unknown command")  # pragma: no cover
     return 2  # pragma: no cover
 

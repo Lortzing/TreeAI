@@ -40,11 +40,13 @@ const HARNESS_FILES = [
   "src/audit.ts",
   "src/blocked.ts",
   "src/run.ts",
+  "src/tree-nav-run.ts",
   "src/scenarios/basic.ts",
   "src/scenarios/tool.ts",
   "src/scenarios/steer.ts",
   "src/scenarios/abort.ts",
   "src/scenarios/resume.ts",
+  "src/scenarios/tree-nav.ts",
   "src/scenarios/index.ts",
 ];
 
@@ -124,4 +126,6 @@ export const DIRECT_PI_ACCESS: Array<{ what: string; where: string }> = [
   { what: "AgentSessionEvent (typed union)", where: "subscribe() listener, compile-time exhaustiveness" },
   { what: "AssistantMessage.stopReason", where: "finish reason check" },
   { what: "ModelRuntime.getAvailable()", where: "credential availability check" },
+  { what: "AgentSession.navigateTree(targetId)", where: "in-place tree navigation (tree-nav scenario)" },
+  { what: "SessionManager.getLeafId()", where: "tree leaf pointer before/after navigation (tree-nav scenario)" },
 ];

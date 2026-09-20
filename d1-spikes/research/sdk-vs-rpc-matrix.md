@@ -1,17 +1,21 @@
 # SDK vs RPC 对照矩阵（sdk-vs-rpc-matrix）
 
-- 文档版本：1.0
-- 日期：2026-09-18
+- 文档版本：1.2
+- 日期：2026-09-20（v1.2 收口收尾：回填 tree-navigation 补充证据、清除过时状态）；v1.1：2026-09-20；v1.0：2026-09-18
 - 作者：Agent A（D1 调研）
-- 状态：结构就绪，**测量值全部 NOT_RUN**（等待 Agent B/C 实测），**权重与最终推荐全部 PENDING_OWNER**
+- 状态：事实层与**测量层均已回填**（五场景两侧 PASS、provider parity 满足、`--repro` 干净复现双侧 PASS、共享环境记录已补齐、最新验收单轮全 PASS，见 §3.1/§3.3）；tree/navigation 以**场景外补充架构证据**登记（§3.6，非五场景 PASS、在共享契约枚举外、未经统一验收）；**评分规则与权重、最终推荐、是否扩展共享契约全部 PENDING_OWNER**
 - 上游事实来源：`d1-spikes/research/pi-capability-inventory.md`（下称"清单"，事实编号沿用其证据等级 E1/E2/E3/E4）
 - 审阅对象：负责人（唯一有权确认权重与推荐的人）、Agent B、Agent C、Agent D
+- 修订记录：
+  - 1.0（2026-09-18）：初始版；事实层完成，测量层全部 NOT_RUN（预留路径）。
+  - 1.1（2026-09-20）：按负责人指示，Agent A 依据已提交证据（时点：仓库 commit `5eca1d1`，验收运行 `d1-spikes/evidence/verification/verify-20260920T021547888Z.json`）回填 §3 测量层：五场景 SDK/RPC-Python 双侧 PASS、B 的适配层与直接状态访问计数、C 的协议状态机与隔离成本、D 的验收结果；更正 §3.1 的实际证据路径（v1.0 预留的扁平 SDK 路径已被追加式 runs 布局取代）。§4/§5 状态不变（PENDING_OWNER）。B/C/D 对各自原始证据拥有解释权；本文与原始证据冲突时以原始证据为准，并按 §0.3 登记 `d1-spikes/reports/blockers.md`。
+  - 1.2（2026-09-20）：收口收尾更新。(a) 新增 §3.6：tree/session navigation 的**场景外补充架构证据**——B 的 SDK 探针真实 PASS（`navigateTree` 同一 session 内移动叶指针、上下文按目标分支重建）；C 的 RPC 补充探针真实 PASS 且运行时证实 RPC 命令集无 `navigateTree` 等价命令（只能以 fork/switch_session/clone/get_entries 组合）。两份证据的 scenario 值均在共享 schema 枚举外、未经 verify-d1 统一验收，**不计入 §3.1 五场景 PASS**；§2.6 的 E3 推断随之升级为运行时证实。(b) 清除过时状态：`--repro` 干净复现已实际执行且双侧 PASS（03:21:22Z 轮 `verify-20260920T032122324Z.json` checks 10/11；03:45:14Z 轮 `verify-20260920T034514083Z.json` mode=repro 单轮 28 项全 PASS、exit 0）；共享 `evidence/environment.json` 已由集成人补齐（2026-09-20T03:33:45Z），evidence-environment 检查转 PASS；§3.3 锚定最新运行、§3.5 缺口表相应更新（v1.1 时点"树导航未测、`--repro` 未执行、共享 environment 缺失"均为历史事实，沿革保留于 §3.3/§3.5 与本记录）。(c) §4/§5 与最终推荐状态不变；新增待决项"是否扩展共享契约把 tree-nav 纳入统一验收"亦为 PENDING_OWNER（blockers DECISION-009）。
 
 ---
 
 ## 0. 使用说明（负责人请先读）
 
-1. 本矩阵把**事实、测量、评分、权重**四层物理分离。事实层已完成（来自官方文档与本机核对，逐条可溯源）；测量层为 Agent B（SDK 探针）与 Agent C（RPC 探针）预留路径，当前全部 `NOT_RUN`；评分层依赖测量层；权重层任何数值在负责人确认前都是**非约束示例**。
+1. 本矩阵把**事实、测量、评分、权重**四层物理分离。事实层完成（来自官方文档与本机核对，逐条可溯源）；测量层已于 2026-09-20 按已提交证据回填（§3，五场景双侧 PASS；另含 §3.6 场景外补充架构证据，来源与路径逐条可溯源）；评分层依赖测量层与负责人确认的规则；权重层任何数值在负责人确认前都是**非约束示例**。
 2. **本矩阵不产出最终推荐。** 汇总公式见 §5，但计算结果与推荐结论必须等测量层填满、负责人确认权重后才有效。负责人未确认前，任何单元格中的 `PENDING_OWNER` 不得被当作默认值使用。
 3. Agent B/C/D 不得修改本文件的 §1（候选定义）、§2（事实层）与 §4（权重层）；只能按 §3 的路径约定填充测量层并在 §6 登记更新。发现事实层错误时写入 `d1-spikes/reports/blockers.md` 并通知 Agent A。
 
@@ -68,7 +72,7 @@
 
 | | SDK | RPC |
 |---|---|---|
-| 事实 | `session.navigateTree(targetId, opts)`（原地改叶、可选分支摘要；agent 忙时 reject）；`SessionManager` 树 API：`getTree/getPath/getLeafEntry/getChildren/branch/branchWithSummary/createBranchedSession`；`runtime.fork(entryId,{position:"at"})`（SDK-doc） | `get_tree`（树+leafId）、`get_entries`（append 序全量/游标）、`fork`、`clone`、`switch_session`、`get_fork_messages`（RPC-doc）。**未见与 `navigateTree` 等价的原地树导航命令**（清单 §6.6，E3 推断，待 Agent C 实测确认） |
+| 事实 | `session.navigateTree(targetId, opts)`（原地改叶、可选分支摘要；agent 忙时 reject）；`SessionManager` 树 API：`getTree/getPath/getLeafEntry/getChildren/branch/branchWithSummary/createBranchedSession`；`runtime.fork(entryId,{position:"at"})`（SDK-doc） | `get_tree`（树+leafId）、`get_entries`（append 序全量/游标）、`fork`、`clone`、`switch_session`、`get_fork_messages`（RPC-doc）。**未见与 `navigateTree` 等价的原地树导航命令**（清单 §6.6，E3 推断；**2026-09-20 已由 C 的补充探针运行时证实**——`navigate_tree`/`navigateTree` 均返回 "Unknown command"，实测与替代原语组合见 §3.6，事实摘录见 `d1-spikes/reports/d1-verification.md` §4b） |
 
 ### 2.7 extension UI（扩展界面）
 
@@ -100,38 +104,81 @@
 
 ---
 
-## 3. 第二层：测量矩阵（全部 NOT_RUN，路径已预留）
+## 3. 第二层：测量矩阵（2026-09-20 已按交付证据回填）
 
-以下为 Agent B/C 实测数据的**登记位置**。当前状态一律 `NOT_RUN`；B/C 完成后按任务书 §6 的证据格式（原始事件 JSONL + 场景结果 JSON）写入对应路径，并回填本层状态（`PASS`/`FAIL`/`BLOCKED`/`NOT_RUN`）。**本层没有任何预填数值。**
+以下为 Agent B/C/D 实测数据的登记。v1.1 回填依据：Agent B 的 `d1-spikes/sdk-node/README.md` 与其 run 内审计文件、Agent C 的 `d1-spikes/rpc-python/README.md` 与 `d1-spikes/evidence/rpc/`、Agent D 的 `d1-spikes/reports/d1-verification.md` 与 `d1-spikes/evidence/verification/verify-20260920T021547888Z.json`。v1.2 增补：§3.3 锚定最新验收运行 `d1-spikes/evidence/verification/verify-20260920T034514083Z.json`；新增 §3.6 登记 B/C 于收口窗口交付的 tree/session navigation 场景外补充证据。统一判定状态词仍为 `PASS`/`FAIL`/`BLOCKED`/`NOT_RUN`；**本层所有数值均可溯源到上述证据路径，无预填、无推断值。**
 
 ### 3.1 五场景测量（每实现 × 每场景）
 
+统一基线（两侧一致，2026-09-20 验收复核）：Pi `0.85.1`、provider `tal-token-plan-06c64a09`、model `deepseek-v4.1-flash`、thinking `off`（证据：`d1-spikes/evidence/verification/verify-20260920T034514083Z.json` check 22 `comparison-parity` PASS；`d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/environment.json`；`d1-spikes/evidence/rpc/environment-rpc-python.json`；共享记录 `d1-spikes/evidence/environment.json`，集成人补齐）。
+
 | 场景 | SDK（Agent B）证据路径 | RPC-Python（Agent C）证据路径 | SDK 状态 | RPC 状态 |
 |---|---|---|---|---|
-| basic | `d1-spikes/evidence/sdk/basic/`（`events.jsonl` + `result.json`） | `d1-spikes/evidence/rpc/basic/`（同构） | NOT_RUN | NOT_RUN |
-| tool | `d1-spikes/evidence/sdk/tool/` | `d1-spikes/evidence/rpc/tool/` | NOT_RUN | NOT_RUN |
-| steer | `d1-spikes/evidence/sdk/steer/` | `d1-spikes/evidence/rpc/steer/` | NOT_RUN | NOT_RUN |
-| abort | `d1-spikes/evidence/sdk/abort/` | `d1-spikes/evidence/rpc/abort/` | NOT_RUN | NOT_RUN |
-| resume | `d1-spikes/evidence/sdk/resume/` | `d1-spikes/evidence/rpc/resume/` | NOT_RUN | NOT_RUN |
+| basic | `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/basic/{result.json,events.jsonl}` | `d1-spikes/evidence/rpc/basic.{result.json,events.jsonl}` | PASS | PASS |
+| tool | `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/tool/{result.json,events.jsonl}` | `d1-spikes/evidence/rpc/tool.{result.json,events.jsonl}` | PASS | PASS |
+| steer | `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/steer/{result.json,events.jsonl}` | `d1-spikes/evidence/rpc/steer.{result.json,events.jsonl}` | PASS | PASS |
+| abort | `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/abort/{result.json,events.jsonl}` | `d1-spikes/evidence/rpc/abort.{result.json,events.jsonl}` | PASS | PASS |
+| resume | `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/resume/{result.json,events.jsonl}` | `d1-spikes/evidence/rpc/resume.{result.json,events.jsonl}` | PASS | PASS |
+
+回填说明：
+
+1. **证据路径更正**：v1.0 为 SDK 预留的是扁平路径 `d1-spikes/evidence/sdk/<scenario>/`；B 实际采用追加式 runs 布局（每次运行新建 `runs/<时间戳>-<pid>/`，证据只追加、不改写历史）。Agent D 的验收器已于 2026-09-18 修正为兼容两种布局（扁平优先，否则取 runs 下最新完整 run，跨 run 引用判 FAIL），规则见 `d1-spikes/schemas/README.md` 第二节与 `d1-spikes/reports/d1-verification.md` §0.1。上表登记的是验收器实际选定的 run `2026-09-20T02-12-05-667Z-6220`（6 个 run 中最新完整者）。
+2. **历史 run 保留（追加原则）**：B 的 09-18 各 run（五场景 BLOCKED_CREDENTIALS，403）与 09-20 两个中间 run（`runs/2026-09-20T01-50-33-164Z-97987/` 全 BLOCKED——自定义 provider 须经 `createAgentSessionServices()` 发现；`runs/2026-09-20T02-03-27-035Z-3077/` steer FAIL——检查器语义与 Pi 0.85.1 实际行为不符）全部原样保留，时间线见 `d1-spikes/reports/d1-verification.md` §4a。
+3. **验收复核**：上表 10 个 PASS 均经 Agent D 的 `verify-d1` 复核（exitCode=0、evidenceFiles 存在、事件 schema 合法且 seq 严格递增），对应 `verify-20260920T034514083Z.json` checks 12–21（v1.1 时点为 `verify-20260920T021547888Z.json`，结论相同）。
+4. **单次运行耗时**（同一工作区、同基线、各一次运行，**非基准测试，不构成性能结论**；数值来自两侧 result.json 的 `durationMs`）——SDK：basic 4087ms / tool 6073ms / steer 3481ms / abort 2538ms / resume 3908ms；RPC-Python：basic 4656ms / tool 6760ms / steer 3170ms / abort 3149ms / resume 3318ms。
+5. **场景外的能力未随五场景测得**：tree/session navigation 已有场景外补充实测（§3.6，双侧真实 PASS，但 scenario 值在共享契约枚举外、未经统一验收）；extension UI 嵌入、容器隔离（PO-A4）等仍无实测，见 §3.5。
 
 场景判定标准以任务书 §7.1–§7.5 的"必须验证"条目为准（Agent D 的 schema 落地为 `d1-spikes/schemas/scenario-result.schema.json`）。
 
-### 3.2 工程量测量（任务书 §9.6 / §10.6 要求的计数）
+#### 3.1.1 两侧关键通过性观察（摘自已提交证据，供评分溯源）
 
-| 测量项 | SDK 登记处 | RPC 登记处 | 状态 |
-|---|---|---|---|
-| 自行维护的适配代码量（LOC + 文件数） | `d1-spikes/sdk-node/README.md`（B 填写） | `d1-spikes/rpc-python/README.md`（C 填写） | NOT_RUN |
-| 协议状态机复杂度（framing/ID 关联/异步分发/超时/退出检测的代码行与测试数） | —（SDK 无此层） | 同上 | NOT_RUN |
-| 错误传播方式记录 | `d1-spikes/sdk-node/README.md` | `d1-spikes/rpc-python/README.md` | NOT_RUN |
-| 资源释放行为（订阅/子进程/孙进程残留计数） | 同上 | 同上 | NOT_RUN |
-| 重启恢复所需外部标识清单 | 同上 | 同上 | NOT_RUN |
+- **SDK（B，`runs/2026-09-20T02-12-05-667Z-6220/`）**：basic 连续 3 子回合、流式增量与最终文本拼接一致、答案含期望值；tool 白名单 `read`、fixture 地面真值校验、读不存在文件 `isError=true`；steer 流中发送、`queue_update` 队列被消费清空、同 session 产出后续输出、Pi 0.85.1 呈同一 agent run 内新 turn 形态（单个 `agent_start`）；abort 流中 1 个 delta 后中止、abort() 19ms 内收口、`isStreaming=false`、中止后新会话可正常作答；resume 两个独立 OS 进程、跨进程仅 sessionFile+sessionId、phase B 读回历史并答对口令。（逐条见各 `<scenario>/result.json` 的 observations；汇总引述见 `d1-spikes/reports/d1-verification.md` §4。）
+- **RPC-Python（C，`evidence/rpc/`）**：basic 3 轮 delta 拼装与最终消息一致（`assembledInFinal=true`）；tool `--tools read` 限定、工具路径在 fixture 临时副本内、答案与 fixture 真值一致、失败路径 `isError=true`；steer `deltasBeforeSteer=3`、queue_update 时间线完整、输出反映新指令、sessionId 不变；abort 响应延迟 14ms、`stopReason=aborted`、中止后同进程新会话可用、pi 子进程退出码 `[0]`；resume `--session-dir`+`--session-id` 跨宿主进程恢复、phase A/B sessionId 一致、历史含口令、pi 子进程退出码 `[0,0]`。（逐条见各 `<scenario>.result.json` 的 observations。）
 
-### 3.3 验收测量（Agent D）
+### 3.2 工程量测量（任务书 §9.6 / §10.6 要求的计数；2026-09-20 回填）
 
-| 测量项 | 登记处 | 状态 |
+| 测量项 | SDK（Agent B） | RPC-Python（Agent C） |
 |---|---|---|
-| 依赖可重复安装（干净环境） | `d1-spikes/evidence/verification/` | NOT_RUN |
-| schema 校验、脱敏扫描、退出码、残留进程 | 同上 + `d1-spikes/reports/d1-verification.md` | NOT_RUN |
+| 自行维护的适配/协议代码量 | **302 行代码 / 2 文件**（`src/pi-bridge.ts` 204 行 + `src/scenarios/resume-child.ts` 98 行；不含注释/空行）。探针骨架另计 1836 行 / 17 文件（录制/校验/脱敏/运行器，与 Pi 无关） | **协议接入核心 484 行代码 / 2 文件**（`src/pi_rpc_probe/transport.py` 224 行：子进程+严格 JSONL framing；`client.py` 260 行：请求关联+事件分发+派生运行状态机；不含注释/空行）。探针骨架另计（scenarios 962 行、evidence 219 行、envcheck 251 行、crash 探针 218 行、cli 329 行等，零第三方依赖） |
+| 协议状态机复杂度 | 无此层（进程内直接方法调用与订阅） | 需自建：LF-only framing（U+2028/U+2029 在 JSON 字符串内合法，不能按通用换行切分）、逐请求 id 关联（`type=="response"` 才是响应，`bash_execution_update` 等事件也回显 id）、派生运行状态机（`agent_start`→running、`compaction_start`→compacting、`agent_settled`→idle；`agent_end` 不回 idle）、stdin/stdout/stderr 三通道线程模型、超时 SIGKILL 回收、子进程退出检测（stdout EOF→pending 请求回收为 ProcessExitedError）。协议专项单测 28 个（test_transport 17 + test_client 11） |
+| 错误传播方式 | `prompt()` resolve 后读 `agent.state.errorMessage` 分类：认证类（401/invalid api key/auth）→ `BLOCKED_CREDENTIALS`；其余 → 结构化 FAIL（name/message/stack）；resume 子进程经 stdout JSON summary + 退出码（0/1/2）传回 | 失败命令返回 `success:false`+`error`；超时为有类型的 `RpcTimeoutError`；子进程先死 → `ProcessExitedError`（带退出码与 stderr tail）；stderr 独立落盘、脱敏后折叠为 `probe_note` 事件，不混入 stdout 解析通道 |
+| 资源释放行为 | `subscribe()` 返回退订函数；场景结束 `dispose()`；abort 场景实测 `abort()` 19ms 收口、`isStreaming=false`、`getActiveResourcesInfo` 前后对比；resume 子进程独立退出、超时 SIGKILL、fixture 临时副本 finally 删除 | `close()` 幂等（关 stdin→等待→terminate→kill）；看门狗线程 deadline+5s SIGKILL；崩溃探针实测：宿主 SIGKILL 后 pi 子进程 idle 261ms / streaming 262ms 内自行退出（stdin EOF），无残留、无需强制回收（macOS 无 PDEATHSIG 等价物） |
+| 重启恢复所需外部标识 | 跨进程**仅** sessionFile 路径 + sessionId（身份校验）；不传任何内存对象 | `--session-dir <dir>` + `--session-id <uuid>`（同 cwd）；`switch_session(sessionPath)` 为显式兜底（两条路径均实现并记录于 resume 证据） |
+
+证据路径：
+
+- B 侧全部计数：`d1-spikes/sdk-node/README.md`（"审计记录"节）＋每次运行自动写入的 `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/run-summary.json`（`adapterMetrics` 字段：adapter 302/2 文件、harness 1836/17 文件）与各 `<scenario>/result.json` 的 limitations/observations（"direct Pi API surface: 12 entry points"、"access points used by the adapter: 10"）；直接状态访问清单见 `d1-spikes/sdk-node/src/audit.ts` 的 `DIRECT_PI_ACCESS`（session.sessionId / sessionFile / isStreaming / messages / agent.state.errorMessage / model+thinkingLevel / SessionManager.getEntries() / AgentSessionEvent / AssistantMessage.stopReason / ModelRuntime.getAvailable()）。
+- C 侧定性事实：`d1-spikes/rpc-python/README.md` §6（九条协议观察）、§7（子进程清理矩阵）；C 侧隔离/清理实测：`d1-spikes/evidence/rpc/crash-probe.json`、`d1-spikes/evidence/rpc/abort.result.json`、`d1-spikes/evidence/rpc/resume.result.json`。
+- C 侧 LOC 计数为 Agent A 2026-09-20 按已提交代码（commit `5eca1d1`）统计，口径与 B 的 adapterMetrics 一致（剔除注释行与空行）；单测计数来自各 test 文件的 `def test_` 方法数（v1.1 时点 17+11+14+15+2=59；C 收口期追加 tree-nav 探针与测试后总数为 65，`d1-spikes/reports/d1-verification.md` 收口跟进版 check 9 记录 65/65）。若 C 交付自计数值，以 C 的原始记录为准。
+
+#### 3.2.1 B/C 实测中的工程性发现（对成本评估有直接影响）
+
+1. **SDK 侧模型发现路径**：自定义 provider（扩展注册）只有经 `createAgentSessionServices()` 加载 `~/.pi/agent` 扩展后才可见，裸 `ModelRuntime.create()` 看不到——曾致 09-20 01:50 run 全 BLOCKED，B 修正后统一经 services 路径创建会话（`d1-spikes/sdk-node/README.md` "模型发现路径（2026-09-20 修正）"；中间 run `d1-spikes/evidence/sdk/runs/2026-09-20T01-50-33-164Z-97987/`）。这是 SDK 路线的一处隐性耦合成本。
+2. **Pi 0.85.1 steer 语义**：steer 在同一 agent run 内以新 turn 生效（单个 `agent_start`），而非启动第二个 agent run——B 的 02:03 run 曾因检查器预期后者而 steer FAIL，修正检查器语义后 02:12 全 PASS（`d1-spikes/evidence/sdk/runs/2026-09-20T02-03-27-035Z-3077/`；`d1-spikes/reports/d1-verification.md` §7.4 标注为单实现单版本观察，RPC 侧证据与此一致：steer 后 sessionId 不变）。
+3. **RPC 侧无推送式运行状态**：`get_state` 为纯拉取，客户端必须自建派生状态机（C 已实现并测试；`d1-spikes/rpc-python/README.md` §6.1）。
+4. **RPC 侧启动噪声**：本地扩展会主动发无请求的 `extension_ui_request`（如 `setStatus`），客户端必须容忍（清单 §9.1 E1 冒烟已见；C 的探针处理见 README §6.6）。
+5. **RPC 侧凭据就绪性判断**：`pi auth check` 报 `not_ready` 的 provider 实际可服务（liveCheck 通过）、报 `ready` 的 provider 在 `--mode rpc` 下 403——就绪性应以真实最小调用为准（`d1-spikes/evidence/rpc/environment-rpc-python.json` 的 authCheck/liveCheck 字段；`d1-spikes/evidence/rpc/observation-copycopy-403.json`；`d1-spikes/reports/d1-verification.md` §7.2）。
+
+### 3.3 验收测量（Agent D；2026-09-20 回填，v1.2 锚定最新运行）
+
+统一验收入口：`d1-spikes/scripts/verify-d1`。最新验收运行：`d1-spikes/evidence/verification/verify-20260920T034514083Z.json`（2026-09-20T03:45:14Z，mode=repro，durationMs 69819，**28 项检查单轮全 PASS、overall=ALL_PASS、exit 0**）；汇总报告 `d1-spikes/reports/d1-verification.md`（2026-09-20 收口跟进版，锚定 03:21:22Z 轮）。注意：28 项检查只覆盖五场景与基础设施，**不覆盖 tree-navigation**（§3.6）。
+
+| 测量项 | 状态 | 说明与证据 |
+|---|---|---|
+| 依赖可重复安装（清单级：lockfile/全量 `==` 锁定） | PASS | checks 6（sdk-node：package.json+package-lock.json，Pi 0.85.1 精确锁）、7（rpc-python：requirements.txt 全 `==`，零第三方依赖） |
+| 干净环境实际复现（`--repro`：临时目录重装+重测） | **PASS** | 2026-09-20 首次实际执行（03:21:22Z 轮 `d1-spikes/evidence/verification/verify-20260920T032122324Z.json` checks 10/11）并复验（03:45:14Z 轮 checks 10/11）：sdk-node 干净临时目录 npm ci 退出 0 + npm test 80/80；rpc-python pip install 退出 0 + stdlib unittest 65/65（`d1-spikes/evidence/verification/repro-20260920T034514083Z-{sdk-node,rpc-python}.log`）。沿革（历史事实，保留）：v1.1 时点该项为 NOT_RUN（blockers DELIVERY-006 已解除）；中间轮 03:12Z rpc 侧曾因 C 进行中的 tree-nav 代码缺陷 FAIL（`d1-spikes/evidence/verification/repro-20260920T031204255Z-rpc-python.log`），修复后复跑 PASS，两轮均按追加原则保留 |
+| 五场景结果（10 项） | PASS | checks 12–21：两侧各五场景 PASS，退出码、evidenceFiles、事件 schema、seq 严格递增均复核通过（03:45Z 轮 source：SDK `d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/`、RPC 扁平布局 `d1-spikes/evidence/rpc/`） |
+| 对照公平性（同 Pi 版本/provider/model/thinking） | PASS | check 22 `comparison-parity`：两侧均 pi 0.85.1 + `tal-token-plan-06c64a09`/`deepseek-v4.1-flash` + thinking=off。正式基线的确认仍属负责人（blockers DECISION-008） |
+| schema 校验 | PASS | check 24：10 个结果文件全部通过共享 schema（check 2 另有 19 个正反例探针） |
+| 秘密/脱敏扫描 | PASS | checks 25/26（03:45Z 轮）：evidence/ 189 文件 + 工作区其余 86 文件零发现（`d1-spikes/evidence/verification/secrets-scan-20260920T034514083Z-{evidence,workspace}.json`） |
+| 可信退出码 | PASS | check 27：10 个结果文件 PASS 退出码为 0；FAIL/BLOCKED 须非零整数、NOT_RUN 不得声称 0（2026-09-20 收口后的完整规则） |
+| 残留进程 | PASS | check 28：无本工作区相关残留探针进程 |
+| 共享环境记录 `evidence/environment.json` | **PASS** | 已由集成人补齐（`d1-spikes/evidence/environment.json`，generatedAt 2026-09-20T03:33:45Z：pi 0.85.1、`tal-token-plan-06c64a09`/`deepseek-v4.1-flash`/thinking=off、darwin、Node v24.21.0、Python 3.9.6）。check 23：valid JSON（尚无强制 schema）。沿革（历史事实，保留）：v1.1 时点文件不存在、属主未定（blockers DELIVERY-004，B/C 各自环境记录当时无共享 schema） |
+| 单元测试 | PASS | checks 8（sdk-node npm test 退出 0，80/80，含 tree-nav 相关测试）、9（rpc-python stdlib unittest 通过，65/65，含 tree-nav gate 测试）。v1.1 时点为 72/59（tree-nav 交付前，历史事实） |
+| 验收门槛失败路径自证 | PASS | `d1-spikes/scripts/selftest-infra` 20/20（`d1-spikes/evidence/verification/selftest-infra-20260920T031856Z.json`：T1–T7 注入缺陷均被正确检出，含 2026-09-20 收口新增的 T6 BLOCKED 退出码保留与 T7 post-write 泄露改判同步）。v1.1 时点为 10/10（T1–T5，历史事实） |
+| **整体验收** | **ALL_PASS（exit 0）** | 最新轮 `verify-20260920T034514083Z.json`：**PASS=28、FAIL=0、BLOCKED=0、NOT_RUN=0**。沿革（历史事实，保留）：02:15Z 轮 exit 3（PASS=25/NOT_RUN=3：`--repro` ×2 + 共享 environment.json）→ 03:21Z 轮 exit 3（PASS=27/NOT_RUN=1：`--repro` 双侧已 PASS，余 environment.json）→ 03:43Z 轮 exit 3（PASS=26/NOT_RUN=2：默认模式未请求 `--repro` 检查）→ 03:45Z 轮 exit 0（集成人补齐 environment.json 后，`--repro` 模式单轮全 PASS） |
+
+验收历史为追加式（16 条，最早 2026-09-18T10:48:57Z，见 `d1-spikes/evidence/verification/verify-history.jsonl`）；此前的 BLOCKED/FAIL 轮次（含 09-18 B 侧 BLOCKED_CREDENTIALS、验收器布局误判、schema 探针发现缺陷、03:12Z 收口中间轮各轮）全部原样保留，沿革见 `d1-spikes/reports/d1-verification.md` "版本沿革"节。**整体验收全 PASS 不改变 §4/§5 状态：评分规则、权重与最终推荐仍全部 PENDING_OWNER。**
 
 ### 3.4 已完成的非场景测量（Agent A，非模型调用）
 
@@ -140,6 +187,39 @@
 | SDK 模块导出数 | 151 个符号，11 个关键 API 均为 function | 清单 §9.2（E1） |
 | RPC `get_state` 冒烟 | success:true，exit 0（stdin EOF） | 清单 §9.1（E1） |
 | registry 可用性 | npm view 全通过，无 BLOCKED | 清单 §9.3（E1） |
+
+### 3.5 测量覆盖缺口（截至 2026-09-20 v1.2，评分时须注意）
+
+以下为**未被五场景或统一验收覆盖**的能力/证据缺口（tree/session navigation 的补充实测单列于 §3.6，此处仅登记其统一验收缺口）：
+
+| 能力 | 现状 | 影响 |
+|---|---|---|
+| tree/session navigation 的统一验收 | 已有场景外补充实测（§3.6：B/C 双侧真实 PASS），但 scenario 值在共享 schema 枚举外、未经 verify-d1 验收；是否扩展契约并补验收属 PENDING_OWNER（blockers DECISION-009） | §4 该维度现有双侧实测输入，但其证据等级受"契约外、未经统一验收"限制，如何计分随评分规则一并由负责人定夺 |
+| extension UI（SDK 侧 TUI 嵌入 / RPC 侧对话框子协议） | 仅 E1 冒烟见过 RPC `setStatus` 事件（清单 §9.1）与 C 对启动噪声的容忍处理；`InteractiveMode` 嵌入、对话框阻塞应答等未实测 | 评分只能依据 §2 文档事实（E2 封顶） |
+| 容器隔离（§2.8 / 清单 §7.3 四模式） | 未纳入 D1（PO-A4）；两侧实测的"隔离"仅到子进程边界（C 的 kill/terminate/崩溃清理） | process isolation 维度的实测输入仅覆盖子进程层，不含 OS 级容器 |
+| 长时运行/并发会话压力 | 未测量（不在 D1 五场景范围） | 稳定性结论限于单次运行 |
+
+（历史沿革，保留：v1.1 时点 tree/session navigation 整体未测、`--repro` 干净复现未执行；两者已分别于 2026-09-20 收口窗口由 B/C 的补充探针与 03:21Z/03:45Z 验收运行解决，见 §3.3/§3.6。）
+
+### 3.6 补充架构证据（场景外）：tree/session navigation（2026-09-20 收口窗口交付；非五场景 PASS）
+
+**定位（先读）**：tree/session navigation 不是 D1 五统一场景之一（任务书 §7 仅定义 basic/tool/steer/abort/resume）。本节登记 B/C 在收口窗口交付的**场景外补充探针**证据：两份结果的 scenario 值（B 为 `tree-nav`、C 为 `tree-navigation`）均在共享 `d1-spikes/schemas/scenario-result.schema.json` 的 scenario 枚举之外，当前契约下 schema-check 判 INVALID（Agent D 复核 B 的 result.json：唯一违规点即 scenario 枚举），**均未纳入 verify-d1 的 28 项检查，也不属于 §3.3 的 ALL_PASS**。双方各自在其结果文件的 limitations 中如实声明契约外身份（非隐藏）。是否扩展共享契约把 tree-nav 纳入统一验收：**PENDING_OWNER**（`d1-spikes/reports/blockers.md` DECISION-009；事实摘录见 `d1-spikes/reports/d1-verification.md` §4b）。**本节证据不得被引用为"五场景 PASS"或"验收通过"。**
+
+**B（SDK，真实 PASS，2026-09-20T02:59:39Z）**：证据 `d1-spikes/evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/`（`tree-nav/{result.json,events.jsonl}`，另含 environment.json、run-summary.json、session-store/）。统一基线（pi 0.85.1、`tal-token-plan-06c64a09`/`deepseek-v4.1-flash`、thinking=off）；exitCode=0、durationMs 3847。关键观察（result.json observations）：
+
+- `navigateTree(targetId)` resolved（cancelled=false），**叶指针在同一 session 内移动**（entryId `3f7ed6ae` → `f22507c8`）；sessionId 保持、session 文件不变（区别于 fork）。
+- **追加式树**：导航仅移动指针，条目数不变（6 条）；被放弃的 turn-2 分支全部保留在文件中。
+- **LLM 上下文按目标分支重建**（4 → 2 条消息，turn-2 分支不再在上下文）；导航后在新分支上 prompt 成功且答对 turn-1 口令；历史（含被放弃分支）完整保留，树分叉可见（turn-2 用户条目与新 prompt 条目为目标条目的兄弟节点）。
+- 限制：仅验证 idle 态导航（文档的忙时 reject 未测；`summarize`/`label` 选项未行使——会触发额外 summarizer 模型调用，是否纳入范围属 PENDING_OWNER）；`navigateTree` 不向 `subscribe()` 事件流发事件（Pi 0.85.1 仅向扩展发 `session_tree`），宿主须从返回值或 SessionManager 读树状态。
+- 规模联动：该 run 的 limitations 记录适配层 302 → 336 行、探针骨架 1836 → 2260 行、Pi API surface 12 → 14 入口（§3.2 的计数仍为五场景最终 run 口径，未随之改动）。
+
+**C（RPC-Python，真实 PASS，2026-09-20T03:21:32Z；含关键差异发现）**：证据 `d1-spikes/evidence/rpc/tree-navigation.result.jsonl`（单行 JSON；**命名不符合 *.result.json 约定**，属验收定夺项）与 `d1-spikes/evidence/rpc/tree-navigation.events.jsonl`。统一基线；exitCode=0、durationMs 6319。关键发现：
+
+- **RPC 侧不存在 `navigateTree` 等价命令（运行时证实）**：`navigate_tree` 与 `navigateTree` 两种命名的探针均返回 "Unknown command"——§2.6/清单 §6.6 的 E3 推断就此从"文档未见"升级为"运行时证实"。
+- 可用替代原语（C 实测）：`fork`（新 sessionId + 新 session 文件；分支上下文不含原主干口令，preForkHistoryKept=false、postForkHistoryDropped=true；分支上 prompt 正常 settle）、`switch_session(sessionPath)`（回切原 session 并恢复主干历史与叶指针，回切后 prompt 正常作答）、`clone`（新 sessionId、历史保留）、`get_entries(since=...)`（游标增量读取，严格返回其后条目）。
+- 语义差异（`d1-spikes/reports/d1-verification.md` §4b 的定性）：SDK `navigateTree` 的"同 session 内移动叶指针、上下文按目标分支重建"，在 RPC 侧只能以 fork/switch_session/clone 组合达成，且 fork 伴随新 session/新文件与上下文变化——这是五场景之外的一条**实质性能力差异实证**。
+
+**对评分层的意义（事实性说明，非评分）**：§4 评分表的 tree/session navigation 维度现有双侧实测输入；但两份证据均在共享契约枚举外且未经统一验收，其证据等级如何在 §4 规则下计分（是否受封顶、是否先扩展契约补验收）属 PENDING_OWNER，随评分规则一并确认。PO-A3（RPC 树导航缺口是否否决项）的事实输入已由本节提供，结论仍属负责人。
 
 ---
 
@@ -158,7 +238,9 @@
 
 提议的判定来源约束：**任何评分必须能追溯到 §3 的一条 PASS/FAIL/BLOCKED 证据或 §2 的文档事实**；BLOCKED 场景对应维度不得给分（记 `N/A-BLOCKED`）。文档声称但未实测的能力最高给 1 分（E2 封顶），实测通过后可到 2–3 分。
 
-评分表（待测量完成后填写，当前全部空白）：
+> v1.2 就绪度说明（事实性，非评分）：截至 2026-09-20，§3.1 已提供 streaming、tool events、steer/follow-up、abort、resume/persistence 五个维度在两侧实现（SDK 与 RPC，协议同源）的 PASS 实测输入（§3.1.1）；tree/session navigation 有场景外补充实测输入（§3.6：SDK `navigateTree` 真实 PASS；RPC 侧运行时证实无等价命令——注意两份证据在共享契约枚举外、未经统一验收，计分方式随评分规则由负责人定夺）；type safety 与 process isolation 有部分实测输入（SDK `.d.ts` E1 验证、C 的子进程边界/崩溃清理实测）；extension UI 仍无实测输入（§3.5）。RPC-Node 候选无独立探针，其评分输入沿用 RPC 协议共享证据 + §2.9 语言侧文档事实。**本说明不改变任何刻度或分数，评分表继续留空待负责人确认规则后填写。**
+
+评分表（测量输入已就绪（§3），待负责人确认 §4 规则后填写，当前全部空白）：
 
 | 维度 | SDK | RPC-Node | RPC-Python |
 |---|---|---|---|
@@ -202,10 +284,10 @@
 
 **最终推荐：PENDING_OWNER。** 在以下条件全部满足前，本矩阵不产生、也不应被引用为推荐依据：
 
-1. §3.1 五场景 × 两实现全部为 PASS/FAIL/BLOCKED（不允许留 NOT_RUN）；
-2. Agent D 的 `d1-verification.md` 完成验收；
-3. 负责人书面确认 §4 评分规则与 §5 权重；
-4. 负责人明示是否接受 BLOCKED 项折算规则（当前未定义，属 PENDING_OWNER）。
+1. §3.1 五场景 × 两实现全部为 PASS/FAIL/BLOCKED（不允许留 NOT_RUN）——**已满足**（2026-09-20：两侧全 PASS，`d1-spikes/evidence/verification/verify-20260920T034514083Z.json` checks 12–21）；
+2. Agent D 的 `d1-verification.md` 完成验收——**已交付**（2026-09-20 收口跟进版；最新验收运行 `verify-20260920T034514083Z.json` 单轮 28 项全 PASS、exit 0。v1.1 时点的两项 NOT_RUN——`--repro` ×2 与共享 `evidence/environment.json`——已分别由实际执行（双侧 PASS）与集成人补齐解决，历史沿革保留于 §3.3；`d1-spikes/reports/blockers.md` DELIVERY-004/006 的状态以该文件最新版为准）；
+3. 负责人书面确认 §4 评分规则与 §5 权重——**未满足**（本文件不催办、不代填）；
+4. 负责人明示是否接受 BLOCKED 项折算规则（当前未定义，属 PENDING_OWNER）——本轮五场景无 BLOCKED 项，该规则暂无适用对象，但定义权仍在负责人。
 
 ---
 
@@ -217,10 +299,10 @@
 | Agent C | 填 §3.1 RPC 列状态、§3.2 RPC 列 |
 | Agent D | 填 §3.3；在 `d1-spikes/reports/d1-verification.md` 汇总，不回写他人原始证据 |
 | 负责人 | 确认 §4 评分规则、§5 权重与最终推荐 |
-| Agent A | 维护 §2 事实层（收到纠错时更新并注明来源与日期） |
+| Agent A | 维护 §2 事实层（收到纠错时更新并注明来源与日期）；经负责人指示可代为回填 §3（v1.1 即属此情形：依据 B/C/D 已提交证据回填，并逐条注明来源；B/C/D 对各自原始证据拥有解释权，冲突时以原始证据为准） |
 
-每次更新须在文件头的修订记录追加一行。本版为 1.0 初始版。
+每次更新须在文件头的修订记录追加一行。当前版本 1.2（2026-09-20）。
 
 ---
 
-*本矩阵不包含任何虚构测量结果。截至本文档撰写时，五场景 × 两实现的实测状态均为 NOT_RUN。*
+*本矩阵不包含任何虚构测量结果。截至 v1.2（2026-09-20）：五场景 × 两实现均为 PASS，`--repro` 干净复现双侧 PASS，共享环境记录已由集成人补齐，最新验收运行单轮 28 项全 PASS（统一基线 pi 0.85.1 / `tal-token-plan-06c64a09` / `deepseek-v4.1-flash` / thinking=off，`d1-spikes/evidence/verification/verify-20260920T034514083Z.json`）；tree/session navigation 有场景外补充实测（§3.6，在共享契约枚举外、未经统一验收，**非五场景 PASS**）；§3.5 所列其余能力缺口未测；评分与权重、最终推荐、是否扩展共享契约全部 PENDING_OWNER。*

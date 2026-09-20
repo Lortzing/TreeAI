@@ -21,7 +21,7 @@ import {
   readFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { IMPLEMENTATION, type EvidenceEvent, type ScenarioName } from "./types.js";
+import { IMPLEMENTATION, type EvidenceEvent, type ProbeScenarioName } from "./types.js";
 import { REDACTION_VERSION, redactValue, findLeakCandidates } from "./redact.js";
 
 /** Cap for any single serialized payload (chars). Prevents runaway JSONL. */
@@ -99,7 +99,7 @@ export function runStateFor(piEventType: string): string {
 /** Build one evidence event (pure; exported for tests). */
 export function buildEvidenceEvent(opts: {
   seq: number;
-  scenario: ScenarioName;
+  scenario: ProbeScenarioName;
   sessionId: string;
   piEventType: string;
   payload: unknown;
@@ -155,7 +155,7 @@ export function toSafeJsonLine(value: unknown): string {
 export class EvidenceRecorder {
   readonly finalPath: string;
   private readonly tmpPath: string;
-  private readonly scenario: ScenarioName;
+  private readonly scenario: ProbeScenarioName;
   private sessionId: string;
   private seqCounter = 0;
   private fd: number | null = null;
@@ -164,7 +164,7 @@ export class EvidenceRecorder {
 
   private constructor(opts: {
     dir: string;
-    scenario: ScenarioName;
+    scenario: ProbeScenarioName;
     sessionId: string;
     probePhase?: string;
   }) {
@@ -177,7 +177,7 @@ export class EvidenceRecorder {
 
   static open(opts: {
     dir: string;
-    scenario: ScenarioName;
+    scenario: ProbeScenarioName;
     sessionId?: string;
     probePhase?: string;
   }): EvidenceRecorder {

@@ -29,7 +29,9 @@ Runs, in order:
   6. Aggregate JSON Schema validation of delivered evidence.
   7. Log redaction / secret scan over evidence/ and over the rest of the
      d1-spikes workspace (any finding fails verification).
-  8. Trusted exit codes: PASS results must exit 0, FAIL results non-zero.
+  8. Trusted exit codes: exit 0 is reserved for PASS. FAIL and BLOCKED
+     results must carry a non-zero integer exit code; NOT_RUN results must
+     never claim 0 (null is acceptable when nothing executed).
   9. Residual processes tied to the probes (pi rpc mode, sdk-node/rpc-python
      commands, leftover run dirs).
 
@@ -56,7 +58,10 @@ BLOCKED/NOT_RUN present (incomplete delivery); 1 = internal tool error.
 Evidence is written to d1-spikes/evidence/verification/ (append-only
 history in verify-history.jsonl; each run gets its own timestamped
 summary and log). This script never modifies evidence produced by
-Agents B or C.
+Agents B or C. After writing, the run's own summary and log are secret-
+scanned; a leak forces the exit code to 2 AND resynchronizes the summary
+JSON (overall.verdict/exitCode, counts and a synthetic post-write FAIL
+row) so the recorded summary always matches the real exit code.
 """
 
 import argparse
@@ -317,26 +322,56 @@ def check_schemas(checks, schemacheck_mod):
              False, "PASS with non-zero exitCode"),
             (res_schema, dict(valid_result, status="FAIL"),
              False, "FAIL with zero exitCode and null error"),
-            (res_schema, dict(valid_result, status="BLOCKED"),
+            (res_schema, dict(valid_result, status="BLOCKED", exitCode=2,
+                              error={"message": "no model credentials",
+                                     "code": "Eauth"}),
              False, "BLOCKED without blockedReason anywhere"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="CREDENTIALS",
+                              exitCode=2,
+                              error={"message": "no model credentials",
+                                     "code": "Eauth"}),
+             True, "BLOCKED with top-level blockedReason and non-zero exit"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              exitCode=2,
+                              error={"message": "403 access denied",
+                                     "blockedReason": "BLOCKED_CREDENTIALS"}),
+             True, "BLOCKED with error.blockedReason (task-book literal, "
+                   "as delivered by sdk-node) and non-zero exit"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="BLOCKED_CREDENTIALS",
+                              exitCode=2, error=None),
+             True, "BLOCKED with task-book literal top-level blockedReason"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="CREDENTIALS",
+                              exitCode=0,
+                              error={"message": "no model credentials",
+                                     "code": "Eauth"}),
+             False, "BLOCKED claiming exitCode=0 (exit 0 is reserved for PASS; "
+                   "schema revision 2026-09-20)"),
+            (res_schema, dict(valid_result, status="BLOCKED",
+                              blockedReason="CREDENTIALS",
+                              exitCode=None,
+                              error={"message": "no model credentials",
+                                     "code": "Eauth"}),
+             False, "BLOCKED with null exitCode (a blocked attempt still ran; "
+                   "a non-zero integer is required)"),
+            (res_schema, dict(valid_result, status="NOT_RUN", exitCode=None,
+                              startedAt="", endedAt="", durationMs=0,
+                              command="", error=None),
+             True, "NOT_RUN with null exitCode (nothing executed)"),
+            (res_schema, dict(valid_result, status="NOT_RUN", exitCode=0,
+                              startedAt="", endedAt="", durationMs=0,
+                              command="", error=None),
+             False, "NOT_RUN claiming exitCode=0 (exit 0 is reserved for PASS)"),
+            (res_schema, dict(valid_result, status="NOT_RUN", exitCode=3,
+                              startedAt="", endedAt="", durationMs=0,
+                              command="", error=None),
+             True, "NOT_RUN with non-zero exitCode"),
             (res_schema, dict(valid_result, status="MAYBE"),
              False, "non-unified status value"),
             (res_schema, dict(valid_result, evidenceFiles=[]),
              False, "PASS with empty evidenceFiles"),
-            (res_schema, dict(valid_result, status="BLOCKED",
-                              blockedReason="CREDENTIALS",
-                              error={"message": "no model credentials",
-                                     "code": "Eauth"}),
-             True, "BLOCKED with top-level blockedReason"),
-            (res_schema, dict(valid_result, status="BLOCKED",
-                              error={"message": "403 access denied",
-                                     "blockedReason": "BLOCKED_CREDENTIALS"}),
-             True, "BLOCKED with error.blockedReason (task-book literal, "
-                   "as delivered by sdk-node)"),
-            (res_schema, dict(valid_result, status="BLOCKED",
-                              blockedReason="BLOCKED_CREDENTIALS",
-                              error=None),
-             True, "BLOCKED with task-book literal top-level blockedReason"),
         ]
         for schema, inst, expect_valid, label in cases:
             errs = schemacheck_mod.validate_instance(schema, inst)
@@ -350,8 +385,10 @@ def check_schemas(checks, schemacheck_mod):
                              "schemas/scenario-result.schema.json"])
     else:
         checks.add(cid, desc, "PASS",
-                   "both schemas parse; 14 probe instances accepted/rejected as expected "
-                   "(including both BLOCKED_CREDENTIALS encodings)",
+                   "both schemas parse; %d probe instances accepted/rejected as "
+                   "expected (including both BLOCKED_CREDENTIALS encodings and "
+                   "the 2026-09-20 exit-code reservations: BLOCKED non-zero "
+                   "integer, NOT_RUN never 0)" % len(cases),
                    evidence=["schemas/evidence-event.schema.json",
                              "schemas/scenario-result.schema.json"])
 
@@ -995,7 +1032,8 @@ def run_secret_scan(checks, secrets_mod, cid, desc, paths, ts, tag):
 
 def check_exit_codes(checks, cache):
     cid = "exit-codes"
-    desc = "Trusted exit codes (PASS exits 0, FAIL exits non-zero)"
+    desc = ("Trusted exit codes (exit 0 is reserved for PASS: FAIL and BLOCKED "
+            "must exit non-zero, NOT_RUN must never claim 0)")
     rows = [c for c in cache if c.get("file")]
     if not rows:
         checks.add(cid, desc, "NOT_RUN", "no scenario result files delivered")
@@ -1008,12 +1046,28 @@ def check_exit_codes(checks, cache):
         if c["status"] == "FAIL" and (c["exitCode"] is None or c["exitCode"] == 0):
             violations.append("%s/%s claims FAIL but exitCode=%r"
                               % (c["impl"], c["scenario"], c["exitCode"]))
+        if c["status"] == "BLOCKED" and (c["exitCode"] is None or c["exitCode"] == 0):
+            violations.append("%s/%s claims BLOCKED but exitCode=%r "
+                              "(a blocked attempt still ran and terminated; its "
+                              "exit code must be a non-zero integer, never 0)"
+                              % (c["impl"], c["scenario"], c["exitCode"]))
+        if c["status"] == "NOT_RUN" and c["exitCode"] == 0:
+            violations.append("%s/%s claims NOT_RUN but exitCode=%r "
+                              "(exit 0 is reserved for PASS; use null when "
+                              "nothing executed, or the real non-zero exit)"
+                              % (c["impl"], c["scenario"], c["exitCode"]))
     if violations:
         checks.add(cid, desc, "FAIL", "\n".join(violations))
     else:
+        by_status = {}
+        for c in rows:
+            by_status[c["status"]] = by_status.get(c["status"], 0) + 1
+        summary = ", ".join("%s=%d" % (k, by_status[k])
+                            for k in sorted(by_status)) or "none"
         checks.add(cid, desc, "PASS",
-                   "%d result files checked; PASS exits are zero and FAIL exits non-zero"
-                   % len(rows))
+                   "%d result files checked (%s); exit 0 appears only on PASS, "
+                   "FAIL/BLOCKED exit non-zero, NOT_RUN never claims 0"
+                   % (len(rows), summary))
 
 
 def check_residual_processes(checks):
@@ -1338,12 +1392,75 @@ def main(argv):
     hist_path = os.path.join(EVID_VER, "verify-history.jsonl")
     post_findings, _stats = secrets_mod.scan([json_path, log_path])
     if post_findings:
+        # The real exit code becomes 2. The summary JSON and log written a
+        # moment ago still carry the previous verdict, so they MUST be
+        # resynchronized (overall.verdict/exitCode, counts and a synthetic
+        # post-write FAIL row) before anything else reads them - otherwise the
+        # recorded evidence would disagree with the process exit code.
         exit_code = 2
+        verdict = "HAS_FAIL"
         out("")
         out("POST-WRITE LEAK DETECTED in freshly written evidence "
             "(overriding exit code to 2):")
         for f in post_findings[:10]:
             out("  [%s] %s:%s %s" % (f["ruleId"], f["path"], f["line"], f["excerptMasked"]))
+        if len(post_findings) > 10:
+            out("  ... and %d more finding(s)" % (len(post_findings) - 10))
+        leak_details = "\n".join(
+            "[%s] %s:%s %s" % (f["ruleId"], f["path"], f["line"], f["excerptMasked"])
+            for f in post_findings[:20])
+        summary["checks"].append({
+            "id": "post-write-selfscan",
+            "description": ("Post-write secret scan of this run's own summary "
+                            "and log (leak override)"),
+            "status": "FAIL",
+            "details": leak_details,
+            "evidence": [rel(json_path), rel(log_path)],
+            "reproCommand": ("d1-spikes/scripts/check-secrets "
+                             "evidence/verification/%s.json evidence/verification/%s.log"
+                             % (base, base)),
+        })
+        # summary["checks"] is the same list object as checks.rows, so the
+        # append above is already reflected in a recount
+        summary["counts"] = checks.counts()
+        summary["overall"] = {
+            "verdict": verdict,
+            "exitCode": exit_code,
+            "overriddenBy": "post-write self-scan found a leak in this run's own "
+                            "summary/log; the pre-scan verdict above is superseded",
+        }
+        summary["postWriteScan"] = {
+            "scanned": [rel(json_path), rel(log_path)],
+            "findingCount": len(post_findings),
+            "findings": post_findings,   # excerpts are masked by the scanner
+            "result": "FAIL",
+            "action": "exit code forced to 2 and summary resynchronized",
+        }
+        out("summary resynchronized: overall.exitCode=%d, verdict=%s, "
+            "post-write FAIL row added" % (exit_code, verdict))
+        atomic_write_json(json_path, summary)
+        atomic_write_text(log_path, "\n".join(log_lines) + "\n")
+        # Bounded re-check of the rewritten artifacts. The original leak
+        # occurrences LEGITIMATELY remain in the record (check details,
+        # evidenceLayout) - removing them would falsify what happened - so
+        # this rescan is expected to re-detect them. What it must not find
+        # is any NEW finding introduced by the resynchronization itself
+        # (notice lines and postWriteScan carry masked excerpts only).
+        re_findings, _re_stats = secrets_mod.scan([json_path, log_path])
+        new_from_rewrite = len(re_findings) - len(post_findings)
+        if new_from_rewrite > 0:
+            out("WARNING: the resynchronization itself introduced %d new "
+                "finding(s) (masking bug?) - kept as FAIL, inspect manually"
+                % new_from_rewrite)
+        else:
+            out("post-write rescan: %d finding(s) re-detected (original leak "
+                "occurrences remain in the record as evidence); %d new "
+                "finding(s) introduced by the resynchronization (expected 0)"
+                % (len(re_findings), max(0, new_from_rewrite)))
+        summary["postWriteScan"]["rescanAfterRewriteFindingCount"] = len(re_findings)
+        summary["postWriteScan"]["newFindingsFromRewrite"] = max(0, new_from_rewrite)
+        atomic_write_json(json_path, summary)
+        atomic_write_text(log_path, "\n".join(log_lines) + "\n")
 
     entry = {"ts": iso(started), "exitCode": exit_code, "counts": counts,
              "summary": "evidence/verification/%s.json" % base}

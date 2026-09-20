@@ -50,6 +50,14 @@ TreeAI D1 共享 JSON Schema 与证据契约
   3. PASS 由 schema 强制：exitCode=0、command 非空、startedAt/endedAt 为
      真实 RFC3339 时间戳、evidenceFiles 至少 1 条。
   4. FAIL 由 schema 强制：exitCode 为非零整数、error 非 null。
+  4a. 可信退出码保留（schema 修订 2026-09-20，Agent D）：exit 0 仅保留给
+     PASS。FAIL 与 BLOCKED 必须携带非零整数 exitCode（BLOCKED 表示尝试
+     已执行并被阻塞，进程已终止，退出码必须存在且非零）；NOT_RUN 不得
+     声明 exitCode=0（未执行任何命令时 null 可接受）。全部历史 BLOCKED
+     证据（2026-09-18 与 2026-09-20 各 run）实际 exitCode 均为 2，本次
+     收紧不使任何已交付证据失效。scripts/verify-d1 的 check_exit_codes
+     独立强制同一规则（纵深防御：即使结果文件 schema 校验失败，其
+     status/exitCode 组合仍会被退出码检查覆盖）。公开修订，非静默变更。
   5. evidenceFiles 路径相对 d1-spikes/ 根目录书写，
      例如 "evidence/sdk/basic.events.jsonl" 或
      "evidence/sdk/runs/<run-id>/basic/events.jsonl"（verify-d1 按此解析

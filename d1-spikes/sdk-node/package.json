@@ -16,6 +16,7 @@
     "probe:steer": "tsx src/run.ts steer",
     "probe:abort": "tsx src/run.ts abort",
     "probe:resume": "tsx src/run.ts resume",
+    "probe:tree-nav": "tsx src/tree-nav-run.ts",
     "probe:all": "tsx src/run.ts all"
   },
   "dependencies": {

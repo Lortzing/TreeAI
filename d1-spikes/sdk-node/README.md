@@ -37,6 +37,7 @@ npm run probe:tool
 npm run probe:steer
 npm run probe:abort
 npm run probe:resume
+npm run probe:tree-nav # 树导航架构探针（独立于五场景，见下节）
 ```
 
 环境变量（只列名称，本探针从不打印值）：`PI_PROBE_EVIDENCE_DIR`（证据输出目录覆盖）、
@@ -55,6 +56,33 @@ npm run probe:resume
 
 每个场景：总超时（默认 180s）内完成；`finally` 中逆序执行 cleanup（unsubscribe/abort/
 dispose/临时目录删除）；超时/失败也**必须**留下完整证据。
+
+## 树导航架构探针（tree-nav，2026-09-20 负责人收口跟进；独立于五场景）
+
+目的：验证 idle 状态下经 SDK `AgentSession.navigateTree()` 从当前 leaf（turn 2 结束处）
+切换到一个已有 entry（turn 1 的 assistant message entry），并继续发送 prompt。这是
+SDK 路线相对 RPC 路线的差异化能力面（research/pi-capability-inventory.md §6.6：RPC
+命令集未见 `navigateTree` 等价命令，E3 推断待 Agent C 实测确认）。
+
+- 命令：`npm run probe:tree-nav`（入口 `src/tree-nav-run.ts`，**不在** `probe:all` 内）。
+- 模型基线：与五场景完全相同的解析路径（`resolveProbeModel` / `createAgentSessionServices`），
+  用 `PI_PROBE_MODEL` 指定同一 provider/model/thinking 即可与五场景同基线对照。
+- 证据布局：`evidence/sdk/tree-nav/runs/<时间戳>-<pid>/`（五场景在 `evidence/sdk/runs/`，
+  两个子树互不相交；verify-d1 的五场景扫描不受影响，tree-nav 结果**不混入**五场景结果）。
+- 关键判据（全部为真实断言，SDK API 不可用/行为不符即 FAIL，不伪造 PASS）：
+  - navigateTree resolve 且 `cancelled=false`；sessionId 与 sessionFile 全程不变
+    （原地导航，不产生新会话/新文件，区别于 fork）；
+  - leaf 指针变为目标 entry（entryId 变化）；导航本身不增删任何 entry（append-only 指针移动）；
+  - LLM 上下文按目标分支重建（4→2 条消息，被放弃的 turn-2 分支不再在上下文中）；
+  - user-message 目标语义：leaf 移到该消息的 parent，消息文本以 `editorText` 返回（重编辑形态）；
+  - 导航后 prompt 成功且答案召回 turn-1 口令 `TREEAI-TREENAV-b7f2`（新分支上继续对话）；
+  - 历史保留：新 prompt 后所有旧 entry（含被放弃分支）仍在内存 entry 表**和**持久化会话文件中
+    （磁盘逐行核验 entry id），新 user entry 与 turn-2 user entry 同为目标的子节点（树分叉可见）；
+  - 观察：Pi 0.85.1 的 `navigateTree` 在 subscribe() 事件流上不产生任何 AgentSessionEvent
+    （`session_tree` 仅为扩展事件）——宿主需从返回值或 SessionManager 读取导航后状态。
+- 未覆盖（限制，见 result limitations）：流中 navigateTree 的 reject 语义（仅文档/源码证据）、
+  `summarize/label` 选项（会触发额外摘要模型调用）、`branchWithSummary`/`createBranchedSession`
+  等其他树 API。
 
 ## 证据格式（任务书第 6 节）
 
@@ -83,10 +111,12 @@ dispose/临时目录删除）；超时/失败也**必须**留下完整证据。
 `src/audit.ts` 在每次运行时统计并写入 `run-summary.json` 的 limitations。当前计数
 （`npm run probe` 输出为准）：
 - **适配层**（直接绑定 Pi SDK、若选 SDK 路线需要长期维护的部分）：
-  `src/pi-bridge.ts`（204 行）+ `src/scenarios/resume-child.ts`（98 行），共 302 行代码
-  （不含注释/空行；以 `npm run probe` 每次输出的统计为准）。
-- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：17 个文件、1836 行代码
-  （audit.ts 的 HARNESS_FILES 清单口径；不含 fake-session/fixture/child-runner 等测试辅助）。
+  `src/pi-bridge.ts`（238 行）+ `src/scenarios/resume-child.ts`（98 行），共 336 行代码
+  （不含注释/空行；以 `npm run probe` 每次输出的统计为准；2026-09-20 增加 tree-nav
+  的 navigateTree/getTreeState 后由 302 行增至 336 行）。
+- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：19 个文件、2260 行代码
+  （audit.ts 的 HARNESS_FILES 清单口径；不含 fake-session/fixture/child-runner 等测试辅助；
+  含 2026-09-20 新增的 tree-nav 场景与独立入口）。
 
 ### 模型发现路径（2026-09-20 修正）
 自定义 provider（如本机 `pi-ccs` 扩展注册的 token-plan provider）只有在
@@ -98,7 +128,8 @@ ModelRuntime 之后才可见；裸 `ModelRuntime.create()` 看不到它们（这
 ### 直接可访问的 Pi 状态/类型（进程内 SDK 路线的实际可得面）
 `session.sessionId`、`session.sessionFile`、`session.isStreaming`、`session.messages`、
 `session.agent.state.errorMessage`、`session.model`/`thinkingLevel`、
-`SessionManager.getEntries()`、`AgentSessionEvent`（带判别的类型联合）、
+`session.navigateTree(targetId)`（原地树导航，tree-nav 场景）、
+`SessionManager.getEntries()`/`getLeafId()`、`AgentSessionEvent`（带判别的类型联合）、
 `AssistantMessage.stopReason`、`ModelRuntime.getAvailable()`。
 完整清单（含用途）见 `src/audit.ts` 的 `DIRECT_PI_ACCESS`；每次运行的 result.json 亦引用。
 
@@ -124,9 +155,11 @@ phase A 不向 B 传递任何内存对象；Pi 自身配置之外无其他共享
   key，五个真实场景将全部产生结构化的 `BLOCKED_CREDENTIALS` 结果（退出码 2）并保留完整
   证据链。这是诚实结果，不是缺陷；提供凭据后重跑 `npm run probe:all` 即可得到真实
   PASS/FAIL。
-- 全部 72 个测试（redact/recorder/validate/runner/scenarios/static/pi-bridge）在无网络、
-  无凭据环境下通过；场景逻辑用脚本化 FakeProbeSession（src/fake-session.ts）驱动，
-  真实入口 `src/run.ts` 不导入 fake（static 测试强制）。
+- 全部 80 个测试（redact/recorder/validate/runner/scenarios/tree-nav/static/pi-bridge）
+  在无网络、无凭据环境下通过；场景逻辑用脚本化 FakeProbeSession（src/fake-session.ts）
+  驱动，真实入口 `src/run.ts` 与 `src/tree-nav-run.ts` 均不导入 fake（static 测试强制；
+  fake 的 navigateTree 镜像 Pi 0.85.1 语义：非 user 目标 leaf 落在目标上、user 目标
+  返回 editorText 且 leaf 落到 parent、流中 reject、目标不存在 reject）。
 - 共享 `fixtures/` 与 `schemas/`（Agent D 产物）已交付，自动优先使用（src/paths.ts）；
   若共享目录缺失则回退到本目录 `fixtures-local/`、`schemas-local/`（fixture 数据与共享
   版本一致：16 个 pi 数字，count=16/sum=80/min=1/max=9/median=5，static 测试交叉校验），
@@ -153,3 +186,9 @@ phase A 不向 B 传递任何内存对象；Pi 自身配置之外无其他共享
      扁平的 `evidence/sdk/<scenario>.result.json` + `<scenario>.events.jsonl`。
      裁定前 verify-d1 会把 B 的五个场景记为 FAIL（找不到扁平结果文件）；如需扁平
      兼容层（每次运行覆盖最新结果），应由负责人确认覆盖语义后再实现。
+6. **tree-nav 探针的契约归属**（2026-09-20 收口跟进新增）：共享 schemas 的 scenario
+   枚举仅覆盖五场景；`tree-nav` 证据目前只在 B 的本地校验（src/validate.ts）下合格，
+   生活在独立的 `evidence/sdk/tree-nav/` 子树、不进入五场景验收。是否把它并入统一
+   契约（需 Agent D 扩展 schema 并保持追加语义）、以及是否要求 RPC 侧对照（research
+   §6.6 推断 RPC 无 `navigateTree` 等价命令，待 Agent C 实测），由负责人裁定。
+   tree-nav 未覆盖的流中 reject、summarize/label 选项是否需要补测也一并待定。

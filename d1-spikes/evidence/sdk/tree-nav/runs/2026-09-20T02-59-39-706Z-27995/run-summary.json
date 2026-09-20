@@ -1,0 +1,198 @@
+{
+  "implementation": "sdk-node",
+  "runDir": "evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995",
+  "scenario": "tree-nav",
+  "note": "tree/navigation architecture probe; separate from the five unified scenarios and never part of probe:all",
+  "startedAt": "2026-09-20T02:59:39.926Z",
+  "results": [
+    {
+      "scenario": "tree-nav",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 3847,
+      "evidenceFiles": [
+        "evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/tree-nav/events.jsonl"
+      ]
+    }
+  ],
+  "environment": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "piPackageVersion": "0.85.1",
+    "piGlobalCliVersion": "0.85.1",
+    "model": {
+      "providerId": "tal-token-plan-06c64a09",
+      "modelId": "deepseek-v4.1-flash",
+      "thinkingLevel": "off",
+      "source": "env-override"
+    },
+    "modelResolveError": null,
+    "envApiKeyNamesPresent": []
+  },
+  "adapterMetrics": {
+    "adapter": {
+      "files": [
+        {
+          "path": "src/pi-bridge.ts",
+          "totalLines": 313,
+          "codeLines": 238,
+          "commentLines": 48,
+          "blankLines": 27
+        },
+        {
+          "path": "src/scenarios/resume-child.ts",
+          "totalLines": 131,
+          "codeLines": 98,
+          "commentLines": 20,
+          "blankLines": 13
+        }
+      ],
+      "totalCodeLines": 336,
+      "totalLines": 444
+    },
+    "harness": {
+      "files": [
+        {
+          "path": "src/recorder.ts",
+          "totalLines": 309,
+          "codeLines": 256,
+          "commentLines": 32,
+          "blankLines": 21
+        },
+        {
+          "path": "src/redact.ts",
+          "totalLines": 150,
+          "codeLines": 121,
+          "commentLines": 20,
+          "blankLines": 9
+        },
+        {
+          "path": "src/runner.ts",
+          "totalLines": 236,
+          "codeLines": 191,
+          "commentLines": 24,
+          "blankLines": 21
+        },
+        {
+          "path": "src/validate.ts",
+          "totalLines": 179,
+          "codeLines": 145,
+          "commentLines": 25,
+          "blankLines": 9
+        },
+        {
+          "path": "src/env.ts",
+          "totalLines": 105,
+          "codeLines": 91,
+          "commentLines": 8,
+          "blankLines": 6
+        },
+        {
+          "path": "src/types.ts",
+          "totalLines": 197,
+          "codeLines": 125,
+          "commentLines": 54,
+          "blankLines": 18
+        },
+        {
+          "path": "src/prompts.ts",
+          "totalLines": 83,
+          "codeLines": 51,
+          "commentLines": 18,
+          "blankLines": 14
+        },
+        {
+          "path": "src/paths.ts",
+          "totalLines": 41,
+          "codeLines": 19,
+          "commentLines": 17,
+          "blankLines": 5
+        },
+        {
+          "path": "src/audit.ts",
+          "totalLines": 132,
+          "codeLines": 109,
+          "commentLines": 14,
+          "blankLines": 9
+        },
+        {
+          "path": "src/blocked.ts",
+          "totalLines": 21,
+          "codeLines": 12,
+          "commentLines": 5,
+          "blankLines": 4
+        },
+        {
+          "path": "src/run.ts",
+          "totalLines": 190,
+          "codeLines": 154,
+          "commentLines": 20,
+          "blankLines": 16
+        },
+        {
+          "path": "src/tree-nav-run.ts",
+          "totalLines": 181,
+          "codeLines": 141,
+          "commentLines": 26,
+          "blankLines": 14
+        },
+        {
+          "path": "src/scenarios/basic.ts",
+          "totalLines": 111,
+          "codeLines": 94,
+          "commentLines": 6,
+          "blankLines": 11
+        },
+        {
+          "path": "src/scenarios/tool.ts",
+          "totalLines": 162,
+          "codeLines": 140,
+          "commentLines": 11,
+          "blankLines": 11
+        },
+        {
+          "path": "src/scenarios/steer.ts",
+          "totalLines": 163,
+          "codeLines": 128,
+          "commentLines": 23,
+          "blankLines": 12
+        },
+        {
+          "path": "src/scenarios/abort.ts",
+          "totalLines": 128,
+          "codeLines": 98,
+          "commentLines": 18,
+          "blankLines": 12
+        },
+        {
+          "path": "src/scenarios/resume.ts",
+          "totalLines": 132,
+          "codeLines": 104,
+          "commentLines": 14,
+          "blankLines": 14
+        },
+        {
+          "path": "src/scenarios/tree-nav.ts",
+          "totalLines": 314,
+          "codeLines": 253,
+          "commentLines": 38,
+          "blankLines": 23
+        },
+        {
+          "path": "src/scenarios/index.ts",
+          "totalLines": 35,
+          "codeLines": 28,
+          "commentLines": 3,
+          "blankLines": 4
+        }
+      ],
+      "totalCodeLines": 2260,
+      "totalLines": 2869
+    },
+    "countedAt": "2026-09-20T02:59:39.926Z"
+  },
+  "sharedSchemasDetected": {
+    "evidenceEventSchema": "~/Projects/TreeAI/d1-spikes/schemas/evidence-event.schema.json",
+    "scenarioResultSchema": "~/Projects/TreeAI/d1-spikes/schemas/scenario-result.schema.json"
+  }
+}

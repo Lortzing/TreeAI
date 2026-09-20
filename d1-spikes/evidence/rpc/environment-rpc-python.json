@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-09-20T01:46:44Z",
+  "recordedAt": "2026-09-20T03:21:31Z",
   "implementation": "rpc-python",
   "piBin": "pi",
   "piVersion": {
@@ -70,7 +70,7 @@
     "stopReason": "stop",
     "answered": "pong",
     "errorMessage": null,
-    "elapsedMs": 2187,
+    "elapsedMs": 1875,
     "detail": ""
   },
   "modelList": {
@@ -84,26 +84,26 @@
   },
   "agentBAlignment": {
     "status": "CHECK_AVAILABLE",
-    "detail": "sdk-node/ is present (pi dependency: @earendil-works/pi-coding-agent: 0.85.1); recorded pi version 0.85.1 MATCHES this probe's pi 0.85.1; delivered scenario statuses: {\"basic\": \"BLOCKED\", \"tool\": \"BLOCKED\", \"steer\": \"BLOCKED\", \"abort\": \"BLOCKED\", \"resume\": \"BLOCKED\"}; sdk-node ran with pi's default provider/model (no override) and its scenarios are BLOCKED with 403 -- the same provider 403 this probe documented in evidence/rpc/observation-copycopy-403.json; a common working provider/model baseline remains PENDING_OWNER",
+    "detail": "sdk-node/ is present (pi dependency: @earendil-works/pi-coding-agent: 0.85.1); recorded pi version 0.85.1 MATCHES this probe's pi 0.85.1; delivered scenario statuses: {\"basic\": \"PASS\", \"tool\": \"PASS\", \"steer\": \"PASS\", \"abort\": \"PASS\", \"resume\": \"PASS\"}",
     "sdkNodePresent": true,
     "piDependency": "@earendil-works/pi-coding-agent: 0.85.1",
-    "deliveredRuns": 3,
+    "deliveredRuns": 6,
     "newestRunEnvironment": {
-      "runDir": "2026-09-18T11-57-46-510Z-5120",
+      "runDir": "2026-09-20T02-12-05-667Z-6220",
       "piPackageVersion": "0.85.1",
       "globalCliVersion": "0.85.1",
       "nodeVersion": "v24.21.0",
       "thinkingLevel": "off",
-      "modelOverride": null
+      "modelOverride": "tal-token-plan-06c64a09/deepseek-v4.1-flash"
     },
     "newestRunSummary": {
-      "runDir": "2026-09-18T11-57-46-510Z-5120",
+      "runDir": "2026-09-20T02-12-05-667Z-6220",
       "statuses": {
-        "basic": "BLOCKED",
-        "tool": "BLOCKED",
-        "steer": "BLOCKED",
-        "abort": "BLOCKED",
-        "resume": "BLOCKED"
+        "basic": "PASS",
+        "tool": "PASS",
+        "steer": "PASS",
+        "abort": "PASS",
+        "resume": "PASS"
       }
     },
     "piVersionMatch": true,

@@ -7,7 +7,7 @@
  * implementations is tracked as PENDING_OWNER in limitations.
  */
 
-import type { ScenarioName } from "./types.js";
+import type { ProbeScenarioName } from "./types.js";
 
 export const FIXTURE_FILE = "numbers.json";
 export const FIXTURE_COUNT = 16;
@@ -46,6 +46,20 @@ export const RESUME_PROMPT_B =
   "What passphrase did I ask you to remember earlier in this session? Reply with just the passphrase.";
 export const RESUME_EXPECTED = "TREEAI-RESUME-9c4e";
 
+/**
+ * Tree/navigation architecture probe (owner closure follow-up 2026-09-20;
+ * separate from the five unified scenarios). Three model turns: a memorable
+ * passphrase, an unrelated second turn (the branch to abandon), then after
+ * navigateTree() back to turn 1 a recall prompt that only succeeds if the
+ * post-navigation context follows the target branch.
+ */
+export const TREE_NAV_PROMPT_A =
+  "Please remember this passphrase for later: TREEAI-TREENAV-b7f2. Reply with just ACK.";
+export const TREE_NAV_PROMPT_B = "What is 6 + 7? Reply with just the number, nothing else.";
+export const TREE_NAV_PROMPT_C =
+  "What passphrase did I ask you to remember earlier in this session? Reply with just the passphrase.";
+export const TREE_NAV_EXPECTED = "TREEAI-TREENAV-b7f2";
+
 /** Thinking level used by every scenario (recorded in environment.json). */
 export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 export type ProbeThinkingLevel = (typeof THINKING_LEVELS)[number];
@@ -63,6 +77,6 @@ export const PROBE_THINKING_LEVEL: ProbeThinkingLevel = parseThinkingLevel(proce
 /** Default total timeout per scenario unless overridden. */
 export const DEFAULT_TIMEOUT_MS = Number(process.env.PI_PROBE_TIMEOUT_MS ?? 180_000);
 
-export function scenarioCommand(scenario: ScenarioName | "all"): string {
+export function scenarioCommand(scenario: ProbeScenarioName | "all"): string {
   return `npm run --prefix d1-spikes/sdk-node probe:${scenario === "all" ? "all" : scenario}`;
 }

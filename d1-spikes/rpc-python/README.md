@@ -2,14 +2,17 @@
 
 一次性（可删除）的 Python spike：把 `pi --mode rpc` 作为子进程驱动，
 验证 Pi RPC 协议在五个统一场景（basic / tool / steer / abort / resume）下
-的可观测性、进程生命周期与失败路径。**这不是正式 Python 后端**：没有
+的可观测性、进程生命周期与失败路径；另含一个补充的
+**tree/navigation 架构对照探针**（`tree-nav` 子命令，见第 7 节），
+验证 RPC 命令集能否表达 TreeAI 所需的 Branch 生命周期、以及是否缺少
+SDK `navigateTree` 等价能力。**这不是正式 Python 后端**：没有
 通用 RuntimeAdapter、没有服务层、没有对 Pi 源码的 fork 或修改。
 
 - 实现标识（证据中 `implementation` 字段）：`rpc-python`
 - 独占写入范围：`d1-spikes/rpc-python/`、`d1-spikes/evidence/rpc/`
 - 语言/依赖：纯 CPython 标准库（零第三方运行时依赖）
 - 参考解释器：CPython 3.12.14（uv 0.12.13 管理，`.python-version` 锁定）；
-  兼容系统 CPython 3.9.6（两套解释器均通过全部 59 个测试）
+  兼容系统 CPython 3.9.6（两套解释器均通过全部 65 个测试）
 - Pi CLI：`@earendil-works/pi-coding-agent` 0.85.1（全局安装，Node 24），
   本机实测可用 provider `tal-token-plan-06c64a09`（model
   `deepseek-v4.1-flash`），thinking off。**环境观察**：另一个本地
@@ -42,12 +45,14 @@ rpc-python/
     envcheck.py               环境事实记录（版本/凭据就绪状态）
     crash_probe.py            宿主崩溃清理探针
     crash_driver.py           崩溃探针的牺牲宿主进程（被 SIGKILL）
+    tree_nav.py               tree/navigation 架构对照探针（补充，非五场景）
   tests/
     fake_pi.py                可编程假 pi 服务器（协议单元测试用）
     test_transport.py         framing / stderr 隔离 / 退出码 / 回收
     test_client.py            请求关联 / 超时 / 事件分发 / since-index
     test_evidence.py          脱敏 / 原子写 / 结果结构 / append-only
     test_scenarios.py         五场景 PASS/FAIL/BLOCKED 路径 + CLI 退出码
+    test_tree_nav.py          tree-nav 全生命周期 / 追加式证据 / CLI 退出码
     test_integration.py       真实 pi 冒烟（有 pi 且凭据就绪才运行）
 ```
 
@@ -93,6 +98,10 @@ python3 rpc-python/probe.py run
 
 # 宿主崩溃清理探针（额外证据，不属于五场景）
 python3 rpc-python/probe.py crash-probe
+
+# tree/navigation 架构对照探针（补充证据，非五场景；追加式证据文件，
+# 详见第 7 节；同一 provider/model/thinking 基线）
+python3 rpc-python/probe.py tree-nav
 ```
 
 常用参数：`--pi-bin`（默认 `pi`）、`--provider`、`--model`、`--thinking`、
@@ -128,6 +137,7 @@ d1-spikes/evidence/rpc/
   abort.events.jsonl   resume.events.jsonl
   basic.result.json    tool.result.json    …
   environment-rpc-python.json    crash-probe.json
+  tree-navigation.events.jsonl   tree-navigation.result.jsonl
 ```
 
 - 每行事件：`seq`（单文件内从 1 严格递增）/ `observedAt` /
@@ -136,10 +146,22 @@ d1-spikes/evidence/rpc/
   的 `evidence-event.schema.json`。
 - 结果：符合 `scenario-result.schema.json`；FAIL 时最后一行事件携带
   结构化 `error`（必含 `message`）。
-- 所有文件先写 `.tmp` 再原子 rename；脱敏（sk-/rk- 密钥、Bearer、
-  api_key、`/Users/<name>`→`<HOME>`）在落盘前完成；stderr 只进独立
-  文件、进程退出后以脱敏 tail 折叠为 `probe_note` 事件，原始文件删除
-  ——stdout JSONL 解析通道里永远没有 stderr 字节。
+- **tree-navigation 两个文件是追加式（append-only）**，与五场景的
+  “每次运行整文件重写”不同：每次 `tree-nav` 运行把本 run 的事件追加到
+  `tree-navigation.events.jsonl`（`seq` 从文件现有最大值继续，文件级
+  严格递增）并补一行带 `runId` 的 `scenario_summary`；
+  `tree-navigation.result.jsonl` 每次 run 追加一行完整结果记录。
+  追加前先写入 `.run-<runId>.tmp` 暂存文件，run 结束（含失败）后一次
+  `write+fsync` 追加，崩溃不会留下半行。scenario 值
+  `tree-navigation` 有意不在共享 schema 的五场景枚举内（保持同一行
+  结构；扩展枚举属 PENDING_OWNER，见第 10 节）。
+- 所有文件先写 `.tmp` 再原子 rename（tree-nav 为暂存+单次追加）；
+  脱敏（sk-/rk- 密钥、Bearer、api_key、`/Users/<name>`→`<HOME>`）
+  在落盘前完成；stderr 只进独立文件、进程退出后以脱敏 tail 折叠为
+  `probe_note` 事件，原始文件删除——stdout JSONL 解析通道里永远没有
+  stderr 字节。命令响应不进事件流（客户端不向订阅者分发 response），
+  tree-nav 把 navigate 探针的逐字响应作为 `probe_note` 记录，作为
+  能力缺口证据。
 
 ## 6. RPC 协议观察（与 SDK 的差异点）
 
@@ -173,7 +195,72 @@ d1-spikes/evidence/rpc/
    JSON 字符串里合法，不能按通用换行切分）、逐请求关联、stdin/stdout
   /stderr 三通道线程模型、以及超时后 SIGKILL 回收。
 
-## 7. 子进程清理矩阵
+## 7. Tree/Navigation 对照探针（补充证据，非五场景）
+
+`tree-nav` 子命令回答 Agent A 留给本探针的问题（research
+pi-capability-inventory.md §6.6 / PO-A3）：**RPC 命令集能否表达 TreeAI
+所需的 Branch 生命周期，是否缺少 SDK `navigateTree` 等价能力**。同一
+provider/model/thinking 基线（与五场景共享默认值与 `check_environment`），
+单个 pi 子进程、`--session-dir`+`--session-id` 持久会话、`--no-tools`，
+七个阶段：
+
+1. **trunk**：两条 prompt 建主线；`get_state`/`get_tree`/`get_entries`/
+   `get_fork_messages` 记录 sessionId、sessionFile、树形、leafId、
+   可 fork 的 user entryId。
+2. **fork**：在第一条 user 消息处 `fork {entryId}`；记录会话身份变化、
+   树形、历史保留（fork 前标记保留 / fork 后标记丢弃——全部以
+   `get_messages` 协议数据判定，不采信模型口述）、分支上后续 prompt
+   是否落定（settled）、leaf 是否前移。
+3. **navigate 探测**：发送 `navigate_tree` 与 `navigateTree` 两个候选
+   命令名，逐字记录响应——**拒绝本身就是证据**（能力缺口），不构成
+   FAIL；只有超时/进程死亡才 FAIL。
+4. **switch-back**：`switch_session {sessionPath: <原 trunk 文件>}`；
+   记录身份还原、历史还原、后续 prompt 落定。
+5. **clone**：`clone`；记录身份变化、历史保留、后续 prompt 落定。
+6. **cursor**：`get_entries {since: <entryId>}` 持久游标；验证只返回
+   严格在游标之后的条目。
+7. **session-dir 清点**：宿主侧列出 `--session-dir` 里的 `*.jsonl`
+   （不读取 pi 默认会话目录——D1 不访问个人 home 的政策）。
+
+PASS 含义是“各阶段执行完、观察收集到”（同 crash-probe 先例）；能力
+结论在结果记录的 `findings`/`conclusion` 字段，不在 status 里。
+
+### 7.1 真实运行结果（pi 0.85.1，2026-09-20，runId 20260920T032132-68ccb1，PASS，6.3s）
+
+证据：`evidence/rpc/tree-navigation.{events.jsonl,result.jsonl}`
+（追加式；后续运行追加在后面）。
+
+| 问题 | 实测结论（协议数据） |
+|---|---|
+| `get_tree` 可用性 | 可用：trunk 2 条 prompt 后 6 节点/深度 6 线性树，`leafId` 随 prompt 前移；`get_entries` 6 条 |
+| `fork` 语义 | **创建新会话**：sessionId 与 sessionFile 都变（新文件写入 `--session-dir`）；fork 响应 `data.text` 携带 fork 点前的对话（含 TRUNK-ONE-41），但 fork 后 `get_messages` **不含** fork 前历史（标记缺失），分支上模型亦答“本会话没有代码词”（软观察，与协议数据一致）；fork 后树 4 节点、分支 prompt 落定、leaf 前移 |
+| RPC 是否有 SDK `navigateTree` 等价命令 | **没有**：`navigate_tree` 与 `navigateTree` 均被运行时拒绝 `Unknown command: ...`（逐字响应记录在事件里）——PO-A3 的运行时确认；SDK 可在同一 session 文件内移动 active leaf，RPC 不行 |
+| 树切换方式 | 只有 `switch_session {sessionPath}`（按文件路径整体切换）：sessionId 还原=True、trunk 双标记历史还原=True、后续 prompt 落定；**没有**树内 in-place 导航 |
+| `clone` 语义 | **创建新会话**：sessionId/sessionFile 变化；`get_messages` 保留完整历史（双标记都在）；prompt 落定 |
+| 持久游标 | `get_entries {since}` 可用：10 条中返回游标后 5 条，全部严格在游标之后 |
+| 是否需要新 session | fork 与 clone 都落到新 session 文件（`--session-dir` 内实测 3 个文件：trunk/fork/clone）；TreeAI 的“同树多分支”在 RPC 侧等价于“多 session 文件 + switch_session 显式切换”，而非单文件内的树导航 |
+
+**对 TreeAI Branch 生命周期的含义**：RPC 侧可表达
+“trunk → fork（新文件，fork 点后语义）→ switch_session 回 trunk →
+clone（新文件，全历史）”，配合 `get_tree`/`get_entries(since)` 可重建
+分支结构；但与 SDK `navigateTree` 相比缺少“同一 session 文件内移动
+active leaf”的能力，树切换必须经 session 文件路径、且每次切换改变会话
+身份。fork 后 `get_messages` 不暴露 fork 前历史这一细节对依赖分支上下
+文的用例需要进一步确认（fork `data.text` 携带的是否进入模型上下文，
+模型口述为“没有”——软观察）。是否构成 D1 否决项属 PENDING_OWNER
+（第 10 节）。
+
+### 7.2 失败语义
+
+- 命令被拒（文档内命令返回 `success:false`，如 fork 被取消）→ FAIL
+  （kind=command），最后已知事件与结构化 error 仍追加进证据。
+- 超时（请求级/场景级）/ 进程退出 → FAIL（kind=timeout /
+  process-exited），看门狗 SIGKILL 回收。
+- 凭据不可用 → BLOCKED + blockedReason=CREDENTIALS，不伪造 PASS。
+- 单元测试以可编程假 pi 全量回放上述路径（`tests/test_tree_nav.py`，
+  含追加式证据的跨 run seq 连续性与“每 run 一行 result”契约）。
+
+## 8. 子进程清理矩阵
 
 | 情形 | 行为 | 验证 |
 |---|---|---|
@@ -188,7 +275,7 @@ finally 里删除（含 make-run-dir 副本，先恢复写权限再删，调用�
 `--run-dir` 传入的除外）；单元测试的临时目录由 `tests/helpers.py`
 的 atexit 钩子统一回收（每次全套测试运行后零残留，实测验证）。
 
-## 8. 局限
+## 9. 局限
 
 - 判定依赖模型确实输出指定词（pong/steered/READ_FAILED/…）；模型不
   听话时是 FAIL 而非协议错误 —— 与 SDK 探针同一条件，公平对照。
@@ -197,23 +284,39 @@ finally 里删除（含 make-run-dir 副本，先恢复写权限再删，调用�
   `switch_session` 两条路径的实测差异记录在证据 observations 里。
 - 崩溃探针在 macOS 上无 PDEATHSIG 等价物；孤儿子进程行为依赖 pi
   观察 stdin EOF。
+- tree-nav：PASS 只表示阶段执行完（第 7 节）；fork 后 `get_messages`
+  不含 fork 前历史为协议数据，但 fork `data.text` 是否进入模型上下文
+  仅有模型口述旁证（软观察）；navigate 探针只测了两个最 plausible 的
+  命令名（`navigate_tree`/`navigateTree`）——若 pi 未来以其他命名提供
+  该能力，需重跑。
 - 本探针不读取、不打印、不复制任何凭据；凭据不可用时输出
   BLOCKED + blockedReason=CREDENTIALS。
 
-## 9. 需要负责人决定的事项（PENDING_OWNER）
+## 10. 需要负责人决定的事项（PENDING_OWNER）
 
 以下决策本探针一律不自行做出，只提供证据：
 
 1. **SDK vs RPC** 作为正式接入方式（两探针对照数据齐备后决定）。
 2. **正式宿主语言/版本**（Python 3.12.14 仅为本次 spike 的参考锁定）。
 3. **provider/model/thinking 基线**。pi 版本已对齐（双方均 0.85.1，
-   记录在 `environment-rpc-python.json` 的 `agentBAlignment`）；但
-   Agent B（sdk-node）以 pi 默认 provider `tal-token-plan-copy-copy`
-   运行，五场景全部 403 BLOCKED，而本探针显式切换到
-   `tal-token-plan-06c64a09`/`deepseek-v4.1-flash` 才得到五场景
-   PASS。两边跑通的 provider/model 并不一致，统一基线待负责人定夺。
+   记录在 `environment-rpc-python.json` 的 `agentBAlignment`）。2026-09-20
+   复核：Agent B（sdk-node）已以
+   `tal-token-plan-06c64a09/deepseek-v4.1-flash` 重跑，五个场景全部
+   PASS，与本探针基线一致（此前 copy-copy 403 的分歧已消除）；正式
+   认定该统一基线仍待负责人确认。
 4. **权限策略**（RPC 侧只有启动期 `--tools` 白名单；更细的策略需要
    负责人定夺）。
 5. `d1-spikes/evidence/environment.json`（共享环境记录）归属未定
    （Agent D 已登记 DELIVERY-004）；本探针只写自己范围内的
    `evidence/rpc/environment-rpc-python.json`。
+6. **补充探针的 schema 枚举**：`tree-navigation` 不在共享
+   `evidence-event`/`scenario-result` schema 的五场景 `scenario` 枚举
+   内（本探针保持同一行结构；`scripts/verify-d1` 只校验五场景，不受
+   影响；`check-secrets` 覆盖全部 evidence/）。是否扩展枚举以纳入
+   补充探针（tree-navigation、crash-probe 同类），由 Agent D/负责人
+   决定。
+7. **RPC 缺少 SDK `navigateTree` 等价能力是否为 D1 否决项**（PO-A3，
+   已运行时确认，见第 7.1 节）：RPC 的树切换必须经 `switch_session`
+   （session 文件路径、切换即换会话身份），fork/clone 均落新 session
+   文件。TreeAI 若要求“单文件内树导航”或“分支上下文随 fork 保留”，
+   需据此裁决 SDK vs RPC；本探针只提供证据。

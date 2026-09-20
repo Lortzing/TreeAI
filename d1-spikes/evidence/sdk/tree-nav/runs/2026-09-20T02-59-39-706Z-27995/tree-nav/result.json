@@ -1,0 +1,50 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "tree-nav",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:59:39.926Z",
+  "endedAt": "2026-09-20T02:59:43.773Z",
+  "durationMs": 3847,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:tree-nav",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/tree-nav/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 12",
+    "check-pass: session is persisted (sessionFile defined)",
+    "check-pass: two completed turns produced exactly two user and two assistant message entries (u=2, a=2)",
+    "check-pass: session is idle before navigateTree (isStreaming=false)",
+    "check-pass: LLM context before navigation holds all four turn messages (got 4)",
+    "check-pass: navigateTree(targetId) resolved with cancelled=false",
+    "check-pass: leaf pointer moved to the target entry (entryId changed: 3f7ed6ae -> f22507c8)",
+    "check-pass: sessionId preserved across navigateTree (no new session)",
+    "check-pass: navigation stayed in the same session file (no new file, unlike fork)",
+    "check-pass: navigation appended and removed nothing: same 6 entries (append-only tree, pointer move only)",
+    "check-pass: LLM context rebuilt from the target branch (4 -> 2 messages; turn-2 branch no longer in context)",
+    "check-pass: navigateTree(userMessageEntry) resolved with cancelled=false",
+    "check-pass: user-message target returns the message text as editorText (re-edit semantics; got: What is 6 + 7? Reply with just the number, nothing else.)",
+    "check-pass: user-message target moves the leaf to the message's parent, not the message itself (leaf=f22507c8)",
+    "check-pass: post-navigation prompt succeeded on the new branch; answer recalls the turn-1 passphrase (got: TREEAI-TREENAV-b7f2)",
+    "check-pass: sessionId still preserved after the post-navigation prompt",
+    "check-pass: session file still the same after the post-navigation prompt",
+    "check-pass: history preserved: every pre-navigation entry (including the abandoned turn-2 branch) is still present after the new prompt (append-only)",
+    "check-pass: the post-navigation prompt appended exactly two entries on the new branch (got 2)",
+    "check-pass: tree fork visible: the turn-2 user entry and the new post-navigation user entry are siblings under the navigation target",
+    "check-pass: final LLM context follows the new branch (u1,a1,u3,a3 = 4 messages; got 4)",
+    "check-pass: persisted session file retains all 8 tracked entry ids on disk (missing: none; 9 lines)",
+    "navigateTree emitted no AgentSessionEvent on the subscribe() stream (Pi 0.85.1 emits session_tree only to extensions); hosts must read tree state from the return value or SessionManager after navigating",
+    "leaf transition: 3f7ed6ae -> f22507c8 (assistant message of turn 1); context 4 -> 2 -> 4 messages after the post-navigation prompt",
+    "turn durations: turn1=1425ms, turn2=1025ms, post-navigation=945ms; sessionId=01a0bcc1-4ece-74a1-be44-80c0ba85b787 throughout",
+    "navigateTree options (summarize/label) were not exercised: they trigger an extra summarizer model call and are outside this minimal probe (PENDING_OWNER scope)"
+  ],
+  "limitations": [
+    "tree-nav is an architecture probe outside the five unified D1 scenarios; the shared schemas' scenario enum does not cover 'tree-nav' (PENDING_OWNER whether to extend the shared contract).",
+    "adapter code: 336 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 2260 code lines; direct Pi API surface: 14 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model.",
+    "tree-nav is an architecture probe separate from the five unified D1 scenarios: its evidence lives under evidence/sdk/tree-nav/ and is not mixed into the five-scenario results; the shared schemas' scenario enum does not cover it (PENDING_OWNER whether to extend the shared contract).",
+    "Only idle-state navigation was verified; navigateTree's documented mid-stream rejection and branch summarization were not exercised (see research/pi-capability-inventory.md section 6.6)."
+  ],
+  "error": null
+}

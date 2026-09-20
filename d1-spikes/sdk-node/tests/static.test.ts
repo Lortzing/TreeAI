@@ -119,12 +119,31 @@ test("tests never write into the shared evidence directory", () => {
   }
 });
 
-test("run.ts never imports the fake session (no fake results in real probes)", () => {
-  const text = readFileSync(join(SDK_NODE_DIR, "src", "run.ts"), "utf8");
-  assert.ok(!text.includes("fake-session"));
+test("real entry points never import the fake session (no fake results in real probes)", () => {
+  for (const entry of ["run.ts", "tree-nav-run.ts"]) {
+    const text = readFileSync(join(SDK_NODE_DIR, "src", entry), "utf8");
+    assert.ok(!text.includes("fake-session"), `${entry} must not import the fake session`);
+  }
 });
 
-test("README.md exists and documents install, all five probes, and limitations", () => {
+test("tree-nav stays separate from the five unified scenarios", () => {
+  const pkg = JSON.parse(readFileSync(join(SDK_NODE_DIR, "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+  };
+  // probe:all drives src/run.ts with the five-name SCENARIOS list only.
+  assert.equal(pkg.scripts!["probe:all"]!.endsWith("src/run.ts all"), true);
+  assert.equal(pkg.scripts!["probe:tree-nav"]!.endsWith("src/tree-nav-run.ts"), true);
+  // The five-scenario entry never mentions tree-nav.
+  const runTs = readFileSync(join(SDK_NODE_DIR, "src", "run.ts"), "utf8");
+  assert.equal(runTs.includes("tree-nav"), false);
+  // Evidence separation: the tree-nav entry writes under a dedicated
+  // tree-nav/ subtree, never directly into the five-scenario runs/ root.
+  const treeNavRun = readFileSync(join(SDK_NODE_DIR, "src", "tree-nav-run.ts"), "utf8");
+  assert.ok(treeNavRun.includes('join(evidenceDir, "tree-nav", "runs"'));
+  assert.ok(!treeNavRun.includes('evidenceDir, "runs"'));
+});
+
+test("README.md exists and documents install, all five probes, tree-nav, and limitations", () => {
   const readme = readFileSync(join(SDK_NODE_DIR, "README.md"), "utf8");
   for (const section of [
     "npm ci",
@@ -133,6 +152,7 @@ test("README.md exists and documents install, all five probes, and limitations",
     "probe:steer",
     "probe:abort",
     "probe:resume",
+    "probe:tree-nav",
     "probe:all",
     "PENDING_OWNER",
     "BLOCKED",

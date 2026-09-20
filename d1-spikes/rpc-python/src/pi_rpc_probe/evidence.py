@@ -113,12 +113,19 @@ class AtomicJsonlWriter:
 # ---------------------------------------------------------------------------
 
 class EvidenceRecorder:
-    """Records every observed event/response/anomaly as a redacted JSONL line."""
+    """Records every observed event/response/anomaly as a redacted JSONL line.
 
-    def __init__(self, scenario: str, out_path: str) -> None:
+    seq_start: initial seq value (0 for the standard one-file-per-scenario
+    layout where every run rewrites the file from seq 1). The append-only
+    tree-navigation evidence passes the last seq of the existing file so a
+    later run's appended lines keep the file's seq strictly increasing.
+    """
+
+    def __init__(self, scenario: str, out_path: str,
+                 seq_start: int = 0) -> None:
         self.scenario = scenario
         self.writer = AtomicJsonlWriter(out_path)
-        self._seq = 0
+        self._seq = int(seq_start)
         self.session_id = "unknown"
         self.run_state = "idle"
         self.event_count = 0

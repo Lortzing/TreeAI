@@ -1,0 +1,22 @@
+copied rpc-python to clean temp dir (deps excluded)
+$ /Library/Developer/CommandLineTools/usr/bin/python3 -m pip install -r requirements.txt --no-input --disable-pip-version-check -> exit 0
+Defaulting to user installation because normal site-packages is not writeable
+
+$ unit tests (pytest) -> FAIL
+unittest discover exited 1
+recent call last):
+  File "/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-repro.0lz5s9nv/rpc-python/tests/test_tree_nav.py", line 247, in test_pass_with_fake
+    record = _run_once(d, "pass", env_record=ENV_RECORD)
+  File "/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-repro.0lz5s9nv/rpc-python/tests/test_tree_nav.py", line 240, in _run_once
+    return run_tree_nav(config, ready=ready, block_reason=block_reason,
+  File "/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-repro.0lz5s9nv/rpc-python/tests/../src/pi_rpc_probe/tree_nav.py", line 675, in run_tree_nav
+    _append_file_atomically(tmp_events, events_path)
+  File "/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-repro.0lz5s9nv/rpc-python/tests/../src/pi_rpc_probe/tree_nav.py", line 183, in _append_file_atomically
+    with open(src_path, "rb") as src:
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/d1-test-ne7qoq29/evidence/tree-navigation.events.jsonl.run-20260920T031310-4cd54d.tmp'
+
+----------------------------------------------------------------------
+Ran 65 tests in 25.591s
+
+FAILED (errors=4)
+

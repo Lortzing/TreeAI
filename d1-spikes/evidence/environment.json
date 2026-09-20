@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "d1-v1",
+  "generatedAt": "2026-09-20T03:33:45Z",
+  "purpose": "Shared environment baseline for TreeAI D1 SDK/RPC comparison",
+  "pi": {
+    "packageName": "@earendil-works/pi-coding-agent",
+    "version": "0.85.1",
+    "cliVersion": "0.85.1"
+  },
+  "comparisonBaseline": {
+    "providerId": "tal-token-plan-06c64a09",
+    "modelId": "deepseek-v4.1-flash",
+    "thinkingLevel": "off"
+  },
+  "runtime": {
+    "platform": "darwin",
+    "node": "v24.21.0",
+    "python": "3.9.6"
+  },
+  "packageManagers": {
+    "sdkNode": {
+      "name": "npm",
+      "version": "11.19.0",
+      "lockfile": "sdk-node/package-lock.json"
+    },
+    "rpcPython": {
+      "name": "pip",
+      "dependencies": "standard-library-only",
+      "lockfile": "rpc-python/requirements.txt"
+    }
+  },
+  "implementations": {
+    "sdkNode": {
+      "source": "sdk-node/",
+      "latestFiveScenarioEvidence": "evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/",
+      "status": "PASS"
+    },
+    "rpcPython": {
+      "source": "rpc-python/",
+      "fiveScenarioEvidence": "evidence/rpc/",
+      "status": "PASS"
+    }
+  },
+  "evidenceSources": [
+    "evidence/verification/verify-20260920T032122324Z.json",
+    "evidence/verification/repro-20260920T032122324Z-sdk-node.log",
+    "evidence/verification/repro-20260920T032122324Z-rpc-python.log",
+    "evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/",
+    "evidence/rpc/tree-navigation.events.jsonl",
+    "evidence/rpc/tree-navigation.result.jsonl"
+  ],
+  "credentialPolicy": "Credentials are resolved by Pi from existing local configuration or provider environment variables; no credential values are recorded here."
+}

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://treeai.invalid/d1/schemas/scenario-result.schema.json",
   "title": "TreeAI D1 scenario result",
-  "description": "One result file per implementation and scenario. Producers: Agent B (sdk-node, runs layout under evidence/sdk/runs/<run-id>/<scenario>/result.json) and Agent C (rpc-python, flat layout under evidence/rpc/<scenario>.result.json). The status vocabulary is exactly PASS/FAIL/BLOCKED/NOT_RUN. A PASS claim must be traceable to raw events and a zero exit code; a FAIL claim must carry a non-zero exit code and a structured error. Cross-file traceability (evidence files exist, events validate, seq increases, no cross-run mixing) is enforced by scripts/verify-d1. Revision 2026-09-18 (Agent D): for status=BLOCKED, blockedReason may be encoded either at the top level (enum below) or inside the error object (error.blockedReason); the task book section 14 names the marker literally 'BLOCKED_CREDENTIALS' and the delivered sdk-node evidence encodes it as error.blockedReason='BLOCKED_CREDENTIALS', so both encodings are accepted and at least one is required. This is a documented schema revision, not a silent change; see schemas/README.md section 4.",
+  "description": "One result file per implementation and scenario. Producers: Agent B (sdk-node, runs layout under evidence/sdk/runs/<run-id>/<scenario>/result.json) and Agent C (rpc-python, flat layout under evidence/rpc/<scenario>.result.json). The status vocabulary is exactly PASS/FAIL/BLOCKED/NOT_RUN. A PASS claim must be traceable to raw events and a zero exit code; a FAIL claim must carry a non-zero exit code and a structured error. Cross-file traceability (evidence files exist, events validate, seq increases, no cross-run mixing) is enforced by scripts/verify-d1. Revision 2026-09-18 (Agent D): for status=BLOCKED, blockedReason may be encoded either at the top level (enum below) or inside the error object (error.blockedReason); the task book section 14 names the marker literally 'BLOCKED_CREDENTIALS' and the delivered sdk-node evidence encodes it as error.blockedReason='BLOCKED_CREDENTIALS', so both encodings are accepted and at least one is required. Revision 2026-09-20 (Agent D): exit 0 is reserved for PASS. FAIL and BLOCKED must carry a non-zero integer exitCode (a blocked attempt still ran and terminated); NOT_RUN must never claim exitCode 0 (null is acceptable when nothing executed). All preserved BLOCKED evidence (2026-09-18 and 2026-09-20 runs) already uses exitCode=2, so no delivered evidence is invalidated. scripts/verify-d1 check_exit_codes enforces the same rule independently (defense in depth, also covering rows that fail schema validation). See schemas/README.md section 4.",
   "type": "object",
   "required": [
     "implementation",
@@ -57,7 +57,7 @@
     },
     "exitCode": {
       "anyOf": [{ "type": "integer" }, { "type": "null" }],
-      "description": "Process exit code of the command above. 0 for PASS, non-zero for FAIL."
+      "description": "Process exit code of the command above. Exit 0 is reserved for PASS only. FAIL and BLOCKED must carry a non-zero integer; NOT_RUN must never claim 0 (null is acceptable when nothing executed)."
     },
     "evidenceFiles": {
       "type": "array",
@@ -123,6 +123,28 @@
           "command": { "minLength": 1 },
           "evidenceFiles": { "minItems": 1 },
           "error": { "not": { "type": "null" } }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "BLOCKED" } }
+      },
+      "then": {
+        "properties": {
+          "exitCode": { "type": "integer", "not": { "const": 0 } }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "NOT_RUN" } }
+      },
+      "then": {
+        "properties": {
+          "exitCode": { "not": { "const": 0 } }
         }
       }
     },

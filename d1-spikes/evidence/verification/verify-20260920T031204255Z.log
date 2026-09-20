@@ -1,0 +1,68 @@
+=== TreeAI D1 verification ===
+started: 2026-09-20T03:12:04.255Z
+workspace: d1-spikes (git 5eca1d1, dirty)
+mode: repro
+
+--- checks ---
+[ 1/28] PASS     fixtures-integrity
+           5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt
+[ 2/28] PASS     schemas-valid
+           both schemas parse; 19 probe instances accepted/rejected as expected (including both BLOCKED_CREDENTIALS encodings and the 2026-09-20 exit-code reservations: BLOCKED non-zero integer, NOT_RUN never 0)
+[ 3/28] PASS     schema-validator-selftest
+           SELFTEST: PASS (33 cases)
+[ 4/28] PASS     secrets-scanner-selftest
+           SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)
+[ 5/28] PASS     run-dir-generator-selftest
+           SELFTEST: PASS (run dir generator verified; temp copy cleaned up)
+[ 6/28] PASS     deps-repro-sdk-node
+           package.json + package-lock.json present (clean-room reinstall: scripts/verify-d1 --repro)
+[ 7/28] PASS     deps-repro-rpc-python
+           all requirements.txt entries pinned with == (clean-room reinstall: scripts/verify-d1 --repro)
+[ 8/28] PASS     unit-tests-sdk-node
+           npm test exited 0
+[ 9/28] FAIL     unit-tests-rpc-python
+           unittest discover exited 1; tail: =================================================
+           ERROR: test_pass_with_fake (test_tree_nav.TestTreeNavPass)
+           ----------------------------------------------------------------------
+           Traceback (most recent call last):
+[10/28] PASS     repro-sdk-node
+           clean temp copy at sdk-node; see log
+[11/28] FAIL     repro-rpc-python
+           clean-room reproduction failed; see log
+[12/28] PASS     scenario-sdk-node-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/basic/result.json (latest complete run of 6 run(s), 5 complete)
+[13/28] PASS     scenario-sdk-node-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/tool/result.json (latest complete run of 6 run(s), 5 complete)
+[14/28] PASS     scenario-sdk-node-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/steer/result.json (latest complete run of 6 run(s), 5 complete)
+[15/28] PASS     scenario-sdk-node-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/abort/result.json (latest complete run of 6 run(s), 5 complete)
+[16/28] PASS     scenario-sdk-node-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/resume/result.json (latest complete run of 6 run(s), 5 complete)
+[17/28] PASS     scenario-rpc-python-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/basic.result.json
+[18/28] PASS     scenario-rpc-python-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/tool.result.json
+[19/28] PASS     scenario-rpc-python-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/steer.result.json
+[20/28] PASS     scenario-rpc-python-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/abort.result.json
+[21/28] PASS     scenario-rpc-python-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/resume.result.json
+[22/28] PASS     comparison-parity
+           sdk-node and rpc-python both ran pi 0.85.1 with tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off)
+[23/28] NOT_RUN  evidence-environment
+           evidence/environment.json not present (file ownership outside all agent scopes is pending; see reports/blockers.md DELIVERY-004). Delivered per-implementation records: sdk-node writes environment.json inside each run directory, rpc-python writes evidence/rpc/environment-rpc-python.json; a shared record needs an owner first
+[24/28] PASS     schema-validation
+           10 result files valid (events JSONL validated inside each scenario row)
+[25/28] PASS     redaction-evidence
+           165 files scanned, no findings
+[26/28] PASS     redaction-workspace
+           85 files scanned, no findings
+[27/28] PASS     exit-codes
+           10 result files checked (PASS=10); exit 0 appears only on PASS, FAIL/BLOCKED exit non-zero, NOT_RUN never claims 0
+[28/28] PASS     residual-processes
+           no residual probe processes found
+
+counts: PASS=25 FAIL=2 BLOCKED=0 NOT_RUN=1
+verdict: HAS_FAIL

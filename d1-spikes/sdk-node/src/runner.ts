@@ -20,7 +20,7 @@ import {
   EXIT_CODES,
   IMPLEMENTATION,
   type BlockedReason,
-  type ScenarioName,
+  type ProbeScenarioName,
   type ScenarioResult,
   type StructuredError,
 } from "./types.js";
@@ -41,7 +41,7 @@ export class TimeoutError extends Error {
 }
 
 export interface ScenarioContext {
-  scenario: ScenarioName;
+  scenario: ProbeScenarioName;
   recorder: EvidenceRecorder;
   /** Directory for this scenario's evidence (already exists). */
   scenarioDir: string;
@@ -60,7 +60,7 @@ export interface ScenarioContext {
 }
 
 export interface RunScenarioOptions {
-  scenario: ScenarioName;
+  scenario: ProbeScenarioName;
   command: string;
   timeoutMs: number;
   runDir: string;

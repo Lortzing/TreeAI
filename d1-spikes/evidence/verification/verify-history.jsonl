@@ -10,3 +10,7 @@
 {"ts": "2026-09-18T12:33:12.170Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260918T123312170Z.json"}
 {"ts": "2026-09-20T01:48:04.084Z", "exitCode": 3, "counts": {"PASS": 19, "FAIL": 0, "BLOCKED": 6, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260920T014804084Z.json"}
 {"ts": "2026-09-20T02:15:47.888Z", "exitCode": 3, "counts": {"PASS": 25, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 3}, "summary": "evidence/verification/verify-20260920T021547888Z.json"}
+{"ts": "2026-09-20T03:12:04.255Z", "exitCode": 2, "counts": {"PASS": 25, "FAIL": 2, "BLOCKED": 0, "NOT_RUN": 1}, "summary": "evidence/verification/verify-20260920T031204255Z.json"}
+{"ts": "2026-09-20T03:21:22.324Z", "exitCode": 3, "counts": {"PASS": 27, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 1}, "summary": "evidence/verification/verify-20260920T032122324Z.json"}
+{"ts": "2026-09-20T03:43:34.578Z", "exitCode": 3, "counts": {"PASS": 26, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 2}, "summary": "evidence/verification/verify-20260920T034334578Z.json"}
+{"ts": "2026-09-20T03:45:14.083Z", "exitCode": 0, "counts": {"PASS": 28, "FAIL": 0, "BLOCKED": 0, "NOT_RUN": 0}, "summary": "evidence/verification/verify-20260920T034514083Z.json"}

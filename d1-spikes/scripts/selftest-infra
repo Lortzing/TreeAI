@@ -10,6 +10,21 @@
 #   T3 leaking evidence file       -> redaction-evidence FAIL, exit 2
 #   T4 valid PASS with real events -> scenario row PASS, overall exit 3
 #   T5 events with broken seq      -> scenario row FAIL, exit 2
+#   T6 BLOCKED claiming exit 0     -> exit-codes row FAIL, exit 2
+#                                     (gap fix 2026-09-20: BLOCKED/NOT_RUN
+#                                      must exit non-zero; schema revision
+#                                      2026-09-20 makes the result file
+#                                      itself invalid as well)
+#   T7 leak in verify's own output -> post-write self-scan forces exit 2 and
+#                                     the summary JSON is RESYNCHRONIZED
+#                                     (gap fix 2026-09-20: overall.exitCode/
+#                                      verdict/counts must match the real
+#                                     exit code). The leak rides in an
+#                                     incomplete run DIRECTORY name, which
+#                                     the pre-write file scans cannot see
+#                                     (directories are not file content),
+#                                     so only the post-write scan of the
+#                                     freshly written summary/log catches it.
 #
 # Nothing in the real d1-spikes tree is modified. A machine-readable result
 # is appended to d1-spikes/evidence/verification/selftest-infra-<ts>.json.
@@ -40,6 +55,46 @@ KNOWN_SCAN_NOISE=(
   "sdk-node/tests/recorder.test.ts"
   "sdk-node/tests/redact.test.ts"
 )
+
+# Test-isolation note (2026-09-20): Agent B is concurrently developing the
+# tree-nav scenario in the shared workspace during this closing phase; its
+# in-progress unit tests (tests/tree-nav.test.ts and the tree-nav assertions
+# in tests/static.test.ts) can make `npm test` fail for reasons unrelated to
+# what T4 and T7 exercise. Later the same day Agent C's in-progress
+# tree-nav tests (rpc-python tests/test_tree_nav.py) showed the same
+# pattern on the RPC side. The pass/fail state of B/C work-in-progress
+# tests is NOT the object under test here - the real workspace verify runs
+# record the real state, whatever it is. For the two cases that assert a
+# precise overall exit code with no other FAIL present (T4 expects 3; T7
+# needs a clean 3 so the post-write override 3->2 is observable), the
+# THROWAWAY COPY replaces both unit-test entry points with deterministic
+# passes: the npm test script becomes a no-op and rpc-python tests/ becomes
+# a single trivial stub test. The real tree is never touched.
+isolate_in_progress_unit_tests() {
+  "$PY" - "$TMP/case" <<'PYEOF'
+import json
+import os
+import sys
+case = sys.argv[1]
+p = case + "/sdk-node/package.json"
+with open(p) as fh:
+    d = json.load(fh)
+d["scripts"]["test"] = "node -e 0"
+with open(p, "w") as fh:
+    json.dump(d, fh, indent=2)
+    fh.write("\n")
+tdir = case + "/rpc-python/tests"
+if os.path.isdir(tdir):
+    import shutil
+    shutil.rmtree(tdir)
+os.makedirs(tdir, exist_ok=True)
+with open(os.path.join(tdir, "test__isolation_stub.py"), "w") as fh:
+    fh.write("import unittest\n\n\n"
+             "class IsolationStub(unittest.TestCase):\n"
+             "    def test_stub(self):\n"
+             "        self.assertTrue(True)\n")
+PYEOF
+}
 
 fresh_copy() {
   rm -rf "$TMP/case"
@@ -137,6 +192,7 @@ record "T3 overall exit" "2" "$(overall_exit)"
 
 echo "T4: valid traceable PASS"
 fresh_copy
+isolate_in_progress_unit_tests   # keep B/C in-progress tree-nav tests out of T4's exit-3 expectation
 mkdir -p "$TMP/case/evidence/sdk"
 "$PY" - "$TMP/case" <<'PYEOF'
 import json
@@ -192,6 +248,98 @@ PYEOF
 run_case_verify
 record "T5 scenario row" "FAIL" "$(row_status scenario-sdk-node-basic)"
 record "T5 overall exit" "2" "$(overall_exit)"
+
+echo "T6: BLOCKED result claiming exit 0 (exit-code reservation gap)"
+fresh_copy
+mkdir -p "$TMP/case/evidence/sdk"
+"$PY" - "$TMP/case" <<'PYEOF'
+import json
+import sys
+case = sys.argv[1]
+# schema-valid BLOCKED shape but with a lying exitCode=0: under the
+# 2026-09-20 schema revision the file itself is schema-invalid, and
+# check_exit_codes must flag the BLOCKED/exit-0 combination even though
+# the scenario row already FAILed on schema grounds (the result summary
+# still enters the exit-code cache before the schema early-return).
+events = []
+for i, (t, et, rs) in enumerate([
+        ("00:00:00.000Z", "message_start", "running"),
+        ("00:00:01.000Z", "message_update", "running"),
+        ("00:00:02.000Z", "message_end", "completed")], start=1):
+    events.append({"seq": i, "observedAt": "2026-09-18T" + t,
+                   "implementation": "sdk-node", "scenario": "basic",
+                   "sessionId": "test-session-001", "piEventType": et,
+                   "runState": rs, "payload": {}, "redactionVersion": "d1-v1"})
+with open(case + "/evidence/sdk/basic.events.jsonl", "w") as fh:
+    for e in events:
+        fh.write(json.dumps(e) + "\n")
+r = {"implementation": "sdk-node", "scenario": "basic", "status": "BLOCKED",
+     "blockedReason": "CREDENTIALS",
+     "startedAt": "2026-09-18T00:00:00.000Z", "endedAt": "2026-09-18T00:00:02.000Z",
+     "durationMs": 2000, "command": "node dist/basic.js", "exitCode": 0,
+     "evidenceFiles": ["evidence/sdk/basic.events.jsonl"],
+     "observations": ["blocked attempt"], "limitations": [],
+     "error": {"message": "no model credentials", "code": "Eauth"}}
+json.dump(r, open(case + "/evidence/sdk/basic.result.json", "w"), indent=2)
+PYEOF
+run_case_verify
+record "T6 exit-codes row" "FAIL" "$(row_status exit-codes)"
+record "T6 overall exit" "2" "$(overall_exit)"
+
+echo "T7: post-write leak in verify's own output (summary sync gap)"
+fresh_copy
+isolate_in_progress_unit_tests   # T7 needs a clean pre-override verdict of 3 so the post-write 3->2 override is observable
+# The leak rides in an incomplete run DIRECTORY name. Directory names are
+# invisible to the pre-write scans (they scan file contents and file
+# basenames only), but the name flows into the run-selection notes of the
+# PASS scenario rows and into the summary JSON evidenceLayout - so only the
+# post-write self-scan of the freshly written summary/log can catch it.
+# Assembled at runtime from pieces so this script's own source stays clean.
+LEAKY_RUN="zz-sk-""ant-""abcdef0123456789abcdef"
+mkdir -p "$TMP/case/evidence/sdk/runs/$LEAKY_RUN"
+run_case_verify
+record "T7 overall exit (post-write override)" "2" "$(overall_exit)"
+T7_SYNC="$("$PY" - "$TMP/case" <<'PYEOF'
+import glob
+import json
+import sys
+case = sys.argv[1]
+files = sorted(glob.glob(case + "/evidence/verification/verify-*.json"))
+if not files:
+    print("no-summary")
+    raise SystemExit
+d = json.load(open(files[-1]))
+ov = d.get("overall", {})
+lines = []
+lines.append(str(ov.get("exitCode")))
+lines.append(str(ov.get("verdict")))
+pw = d.get("postWriteScan", {})
+lines.append("present" if pw.get("findingCount") else "missing")
+row = [c for c in d.get("checks", []) if c.get("id") == "post-write-selfscan"]
+lines.append("present" if row else "missing")
+fail_count = d.get("counts", {}).get("FAIL", 0)
+lines.append("ok" if fail_count >= 1 else "fail=%s" % fail_count)
+new_leaks = d.get("postWriteScan", {}).get("newFindingsFromRewrite")
+lines.append("clean" if new_leaks == 0 else "new=%s" % new_leaks)
+log = open(files[-1].replace(".json", ".log")).read()
+lines.append("notified" if "POST-WRITE LEAK DETECTED" in log else "log-missing-notice")
+print("\n".join(lines))
+PYEOF
+)"
+T7_EXIT_SYNC="$(printf '%s\n' "$T7_SYNC" | sed -n 1p)"
+T7_VERDICT_SYNC="$(printf '%s\n' "$T7_SYNC" | sed -n 2p)"
+T7_POSTSCAN="$(printf '%s\n' "$T7_SYNC" | sed -n 3p)"
+T7_ROWPRESENT="$(printf '%s\n' "$T7_SYNC" | sed -n 4p)"
+T7_FAILCOUNT="$(printf '%s\n' "$T7_SYNC" | sed -n 5p)"
+T7_NEWLEAKS="$(printf '%s\n' "$T7_SYNC" | sed -n 6p)"
+T7_LOGNOTICE="$(printf '%s\n' "$T7_SYNC" | sed -n 7p)"
+record "T7 summary overall.exitCode synced" "2" "$T7_EXIT_SYNC"
+record "T7 summary overall.verdict synced" "HAS_FAIL" "$T7_VERDICT_SYNC"
+record "T7 postWriteScan section" "present" "$T7_POSTSCAN"
+record "T7 post-write FAIL row in checks" "present" "$T7_ROWPRESENT"
+record "T7 counts.FAIL >= 1" "ok" "$T7_FAILCOUNT"
+record "T7 resync introduced no new leak" "clean" "$T7_NEWLEAKS"
+record "T7 log rewritten with notice" "notified" "$T7_LOGNOTICE"
 
 mkdir -p "$EVID_VER"
 TS="$(date -u +%Y%m%dT%H%M%S)Z"
