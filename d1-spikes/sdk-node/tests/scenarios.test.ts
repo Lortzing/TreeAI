@@ -187,7 +187,7 @@ test("tool: tool returns wrong sum -> FAIL", async () => {
   assert.ok(result.failedChecks?.some((c) => c.includes("SUM=80")));
 });
 
-test("steer: queue observed, second run, final output reflects instruction -> PASS", async () => {
+test("steer: queue observed, consumed in-session, final output reflects instruction -> PASS", async () => {
   const longAnswer = Array.from({ length: 20 }, (_, i) => `${i + 1}. something about ${i + 1}`).join("\n");
   const factory = createFakeSessionFactory([
     { answer: longAnswer, deltaCount: 12 },
@@ -196,8 +196,9 @@ test("steer: queue observed, second run, final output reflects instruction -> PA
   const result = await runFakeScenario("steer", factory);
   assert.equal(result.status, "PASS", JSON.stringify(result.failedChecks));
   assert.ok(result.observations.some((o) => o.includes("queue_update")));
-  const result2 = result;
-  void result2;
+  // Pi 0.85.1 semantics: the steered turn continues the SAME agent run
+  // (single agent_start) — the fake mirrors that since 2026-09-20.
+  assert.ok(result.observations.some((o) => o.includes("single agent_start")));
 });
 
 test("steer: steer ignored (no second run) -> FAIL", async () => {

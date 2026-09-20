@@ -15,7 +15,8 @@ import { SDK_NODE_DIR } from "../src/paths.js";
 test("installed Pi SDK exports the API surface this probe depends on", () => {
   const pi = Pi as unknown as Record<string, unknown>;
   for (const name of [
-    "createAgentSession",
+    "createAgentSessionServices",
+    "createAgentSessionFromServices",
     "SessionManager",
     "ModelRuntime",
     "VERSION",
@@ -29,9 +30,11 @@ test("installed Pi SDK exports the API surface this probe depends on", () => {
   for (const method of ["create", "open", "inMemory", "continueRecent", "list"]) {
     assert.ok(typeof sm[method] === "function", `SessionManager.${method} must be a function`);
   }
-  // ModelRuntime methods used by the bridge.
-  const mr = Pi.ModelRuntime as unknown as Record<string, unknown>;
-  assert.ok(typeof mr.create === "function");
+  // ModelRuntime instance methods used via services.modelRuntime.
+  const proto = Pi.ModelRuntime.prototype as unknown as Record<string, unknown>;
+  for (const method of ["getModel", "getAvailable"]) {
+    assert.ok(typeof proto[method] === "function", `ModelRuntime.${method} must be a function`);
+  }
 });
 
 test("VERSION matches the pinned package.json dependency", () => {

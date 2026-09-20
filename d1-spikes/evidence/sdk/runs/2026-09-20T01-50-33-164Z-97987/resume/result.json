@@ -1,0 +1,27 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "resume",
+  "status": "BLOCKED",
+  "startedAt": "2026-09-20T01:50:33.440Z",
+  "endedAt": "2026-09-20T01:50:33.982Z",
+  "durationMs": 542,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:resume",
+  "exitCode": 2,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T01-50-33-164Z-97987/resume/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10"
+  ],
+  "limitations": [
+    "adapter code: 298 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1818 code lines; direct Pi API surface: 11 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": {
+    "name": "BlockedError",
+    "message": "phase A child process was blocked (BLOCKED_MODEL); see phase-a/ evidence",
+    "stack": "BlockedError: phase A child process was blocked (BLOCKED_MODEL); see phase-a/ evidence\n    at Object.markBlocked (~/Projects/TreeAI/d1-spikes/sdk-node/src/runner.ts:119:13)\n    at runResumeScenario (~/Projects/TreeAI/d1-spikes/sdk-node/src/scenarios/resume.ts:48:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.exec (~/Projects/TreeAI/d1-spikes/sdk-node/src/run.ts:138:9)\n    at async runScenario (~/Projects/TreeAI/d1-spikes/sdk-node/src/runner.ts:136:5)\n    at async main (~/Projects/TreeAI/d1-spikes/sdk-node/src/run.ts:119:20)",
+    "blockedReason": "BLOCKED_MODEL"
+  }
+}

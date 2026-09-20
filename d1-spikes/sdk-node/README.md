@@ -49,7 +49,7 @@ npm run probe:resume
 |---|---|---|
 | basic | 连续 3 个子回合；delta 拼接一致性；stopReason | delta 串 === 最终文本；答案含 `42`；sessionId 跨子回合不变 |
 | tool | 只读白名单（`read`）；fixture 真值校验；错误路径 | 工具路径被限制在 fixture 临时副本内；答案含 `COUNT=16`/`SUM=80`/`MIN=1`/`MAX=9`/`MEDIAN=5`；读不存在文件 → `isError: true` |
-| steer | 流中转向 | `queue_update`(steering 非空)；第二个 `agent_start`；最终输出含 `STEERED-OK`；sessionId 不变 |
+| steer | 流中转向 | `queue_update`(steering 非空)；steering 队列被消费（清空后的 `queue_update`）且同 session 内产出后续 turn 输出（Pi 0.85.1：同一 agent run 内新 turn、单个 `agent_start`，也接受第二个 agent run 形态）；最终输出含 `STEERED-OK`；sessionId 不变 |
 | abort | 流中中止 + 资源释放 | 中止后 ≤60s 内 settle；`isStreaming=false`；stopReason=aborted；中止后**新会话**仍可正常作答（`5`） |
 | resume | 跨进程恢复 | 两个独立 OS 进程（phase A/B）；只有 sessionFile 路径跨边界；B 读回 A 的历史（u≥2 且 a≥2）；答案回忆口令 `TREEAI-RESUME-9c4e`；A/B 子进程事件以全局 seq 合并进场景事件流 |
 
@@ -83,10 +83,17 @@ dispose/临时目录删除）；超时/失败也**必须**留下完整证据。
 `src/audit.ts` 在每次运行时统计并写入 `run-summary.json` 的 limitations。当前计数
 （`npm run probe` 输出为准）：
 - **适配层**（直接绑定 Pi SDK、若选 SDK 路线需要长期维护的部分）：
-  `src/pi-bridge.ts`（200 行）+ `src/scenarios/resume-child.ts`（98 行），共 298 行代码
+  `src/pi-bridge.ts`（204 行）+ `src/scenarios/resume-child.ts`（98 行），共 302 行代码
   （不含注释/空行；以 `npm run probe` 每次输出的统计为准）。
-- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：17 个文件、1818 行代码
+- **探针骨架**（录制/校验/脱敏/运行器，与 Pi 无关）：17 个文件、1836 行代码
   （audit.ts 的 HARNESS_FILES 清单口径；不含 fake-session/fixture/child-runner 等测试辅助）。
+
+### 模型发现路径（2026-09-20 修正）
+自定义 provider（如本机 `pi-ccs` 扩展注册的 token-plan provider）只有在
+`createAgentSessionServices()` 加载 `~/.pi/agent` 扩展并把扩展注册的 provider 刷入
+ModelRuntime 之后才可见；裸 `ModelRuntime.create()` 看不到它们（这是 2026-09-20 第一次
+真实运行 BLOCKED_MODEL 的根因）。适配层现在统一经 `createAgentSessionServices()` +
+`createAgentSessionFromServices()` 解析模型与创建会话——与 `pi` CLI/RPC 同一基线。
 
 ### 直接可访问的 Pi 状态/类型（进程内 SDK 路线的实际可得面）
 `session.sessionId`、`session.sessionFile`、`session.isStreaming`、`session.messages`、

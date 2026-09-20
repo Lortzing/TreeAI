@@ -103,17 +103,38 @@ export class FakeProbeSession implements ProbeSessionLike {
       if (opts.streamingBehavior === "steer") return this.steer(text);
       return this.followUp(text);
     }
-    await this.runTurn(text);
+    await this.runAgent(text);
   }
 
-  private async runTurn(text: string): Promise<void> {
+  /** One agent run: agent_start, one or more turns, agent_end, agent_settled. */
+  private async runAgent(text: string): Promise<void> {
+    this.emit({ type: "agent_start" });
+    const run: { messages: Array<Record<string, unknown>>; error?: Error } = { messages: [] };
+    await this.runTurn(text, run);
+    // Mirrors Pi's contract: agent_end carries the new messages of the run
+    // (user prompt + assistant answer, one pair per turn).
+    this.emit({ type: "agent_end", messages: run.messages, willRetry: false });
+    this.streamingFlag = false;
+    this.emit({ type: "agent_settled" });
+    if (run.error) throw run.error;
+  }
+
+  /**
+   * One turn inside an agent run. Queued steering/follow-up messages are
+   * drained as further turns in the SAME agent run: mirrors Pi 0.85.1,
+   * where steer() during streaming is consumed at the next turn boundary
+   * (turn_start + emptied queue_update) WITHOUT a second agent_start.
+   */
+  private async runTurn(
+    text: string,
+    run: { messages: Array<Record<string, unknown>>; error?: Error },
+  ): Promise<void> {
     this.streamingFlag = true;
     this.history.push({ role: "user", text });
     this.persistEntry("user", text);
     this.turnCounter += 1;
     const script = this.scripts[this.turnCounter - 1] ?? { answer: "ok" };
 
-    this.emit({ type: "agent_start" });
     this.emit({ type: "turn_start" });
 
     for (const tool of script.toolCalls ?? []) {
@@ -180,33 +201,29 @@ export class FakeProbeSession implements ProbeSessionLike {
       },
       toolResults: [],
     });
-    // Mirrors Pi's contract: agent_end carries the new messages of the run
-    // (user prompt + assistant answer).
-    this.emit({
-      type: "agent_end",
-      messages: [
-        { role: "user", content: [{ type: "text", text }] },
-        { role: "assistant", content: [{ type: "text", text: finalText }] },
-      ],
-      willRetry: false,
-    });
-    this.streamingFlag = false;
-    this.emit({ type: "agent_settled" });
+    run.messages.push(
+      { role: "user", content: [{ type: "text", text }] },
+      { role: "assistant", content: [{ type: "text", text: finalText }] },
+    );
 
     if (script.turnError) {
-      throw script.turnError;
+      run.error = script.turnError;
+      return;
     }
 
-    // Drain queued messages as new turns (mirrors Pi queue delivery).
+    // Drain queued messages as new turns in the same agent run (mirrors Pi
+    // 0.85.1 queue delivery: no second agent_start for steered turns).
     while (this.steeringQueue.length > 0) {
       const queued = this.steeringQueue.shift()!;
       this.emit({ type: "queue_update", steering: [...this.steeringQueue], followUp: [...this.followUpQueue] });
-      await this.runTurn(queued);
+      await this.runTurn(queued, run);
+      if (run.error) return;
     }
     while (this.followUpQueue.length > 0) {
       const queued = this.followUpQueue.shift()!;
       this.emit({ type: "queue_update", steering: [...this.steeringQueue], followUp: [...this.followUpQueue] });
-      await this.runTurn(queued);
+      await this.runTurn(queued, run);
+      if (run.error) return;
     }
   }
 
@@ -227,9 +244,9 @@ export class FakeProbeSession implements ProbeSessionLike {
   async steer(text: string): Promise<void> {
     this.steerCalls.push(text);
     if (!this.streamingFlag && !this.disposed) {
-      // Mirrors Pi: a steering message arriving after the current turn
-      // ended is delivered as the next turn.
-      await this.runTurn(text);
+      // Mirrors Pi: a steering message arriving after the current run
+      // settled is delivered as a new agent run.
+      await this.runAgent(text);
       return;
     }
     this.steeringQueue.push(text);

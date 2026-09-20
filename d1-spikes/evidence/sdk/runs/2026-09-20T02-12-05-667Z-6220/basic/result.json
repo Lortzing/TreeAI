@@ -1,0 +1,42 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "basic",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:12:05.871Z",
+  "endedAt": "2026-09-20T02:12:09.958Z",
+  "durationMs": 4087,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:basic",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/basic/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "fixture cwd: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d1-basic-ZWWzAP (temp copy, source=shared)",
+    "check-pass: run1: observed text_delta events",
+    "check-pass: run1: observed finish/stop reason (stop)",
+    "check-pass: run1: final assistant text present",
+    "check-pass: run1: streamed deltas concatenate to final text without duplication or loss (streamed 2 chars vs final 2)",
+    "check-pass: run1: answer contains expected value 42",
+    "run1: 1 deltas, 1036ms, stopReason=stop",
+    "check-pass: run2: observed text_delta events",
+    "check-pass: run2: observed finish/stop reason (stop)",
+    "check-pass: run2: final assistant text present",
+    "check-pass: run2: streamed deltas concatenate to final text without duplication or loss (streamed 2 chars vs final 2)",
+    "check-pass: run2: answer contains expected value 42",
+    "run2: 1 deltas, 894ms, stopReason=stop",
+    "check-pass: run3: observed text_delta events",
+    "check-pass: run3: observed finish/stop reason (stop)",
+    "check-pass: run3: final assistant text present",
+    "check-pass: run3: streamed deltas concatenate to final text without duplication or loss (streamed 2 chars vs final 2)",
+    "check-pass: run3: answer contains expected value 42",
+    "run3: 1 deltas, 1152ms, stopReason=stop",
+    "three consecutive sub-runs completed (durations: 1036, 894, 1152ms)"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1836 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": null
+}

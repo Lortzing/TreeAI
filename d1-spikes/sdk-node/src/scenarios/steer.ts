@@ -27,13 +27,11 @@ export async function runSteerScenario(ctx: ScenarioContext, deps: ScenarioDeps)
 
   let deltaCountBeforeSteer = -1;
   let deltaCount = 0;
-  let steerSeqObserved = -1;
+  let steerQueuedSeq = -1;
+  let steerConsumedSeq = -1;
   let agentRunCount = 0;
-  let queueUpdateWithSteering = false;
-  let steerDeliveryObserved = false;
-  const finalTexts: string[] = [];
+  const postSteerMessageTexts: string[] = [];
   let baseAnswerText = "";
-  let steeredAnswerText = "";
 
   const unsub = session.subscribe((event) => {
     const type = event.type as string;
@@ -47,22 +45,31 @@ export async function runSteerScenario(ctx: ScenarioContext, deps: ScenarioDeps)
     if (type === "queue_update") {
       const steering = event.steering as readonly string[] | undefined;
       if (steering && steering.length > 0) {
-        queueUpdateWithSteering = true;
-        steerSeqObserved = ctx.recorder.eventCount;
+        if (steerQueuedSeq < 0) steerQueuedSeq = ctx.recorder.eventCount;
+      } else if (steering && steerQueuedSeq >= 0 && steerConsumedSeq < 0) {
+        // Pi 0.85.1 emits this queue_update right after the turn_start of
+        // the turn that picked up the steering message.
+        steerConsumedSeq = ctx.recorder.eventCount;
       }
     }
     if (type === "agent_start") {
       agentRunCount += 1;
-      if (agentRunCount === 2) steerDeliveryObserved = true;
     }
     if (type === "message_end") {
       const msg = event.message as { content?: Array<{ type?: string; text?: string }> } | undefined;
       const text = (msg?.content ?? [])
         .map((p) => (p.type === "text" ? p.text ?? "" : ""))
         .join("");
-      finalTexts.push(text);
-      if (agentRunCount === 1) baseAnswerText = text;
-      if (agentRunCount >= 2) steeredAnswerText = text;
+      if (steerConsumedSeq >= 0 || agentRunCount >= 2) {
+        // Output produced after the steering message was picked up. Pi
+        // 0.85.1 delivers steer() as a new turn inside the SAME agent run
+        // (single agent_start), so post-steer messages are identified by
+        // consumption, not by a second agent_start. A second agent_start
+        // (accepted as an alternative delivery form) is also honored.
+        postSteerMessageTexts.push(text);
+      } else if (agentRunCount === 1) {
+        baseAnswerText = text;
+      }
     }
   });
   ctx.onCleanup(unsub);
@@ -91,30 +98,48 @@ export async function runSteerScenario(ctx: ScenarioContext, deps: ScenarioDeps)
 
   await promptPromise;
 
+  const steeredAnswerText = postSteerMessageTexts.join("");
+  const deliveryForm =
+    agentRunCount >= 2
+      ? "second agent run in the same session"
+      : steerConsumedSeq >= 0
+        ? "new turn within the same agent run (single agent_start, Pi 0.85.1 semantics)"
+        : "not observed";
   ctx.recorder.recordMarker("steer_effect_observed", {
     agentRunCount,
-    queueUpdateWithSteering,
-    steerDeliveryObserved,
+    steerQueuedSeq,
+    steerConsumedSeq,
+    postSteerMessages: postSteerMessageTexts.length,
+    deliveryForm,
   });
 
   ctx.check(deltaCountBeforeSteer >= 1, "steer was sent during streaming (at least one delta observed before)");
-  ctx.check(queueUpdateWithSteering, "queue_update event with non-empty steering queue observed");
-  ctx.check(steerDeliveryObserved, "steering message was delivered in the same session (second agent run started)");
-  ctx.check(agentRunCount >= 2, `steer triggered a subsequent agent run (runs=${agentRunCount})`);
+  ctx.check(steerQueuedSeq >= 0, "queue_update event with non-empty steering queue observed");
+  ctx.check(
+    steerConsumedSeq >= 0,
+    "steering message was consumed by the agent (queue_update with emptied steering queue)",
+  );
+  ctx.check(
+    postSteerMessageTexts.length > 0 || agentRunCount >= 2,
+    "steering output delivered in the same session (post-steer assistant message observed)",
+  );
   ctx.check(
     steeredAnswerText.includes(STEER_EXPECTED),
     `final output reflects the new instruction (contains ${STEER_EXPECTED}; got: ${steeredAnswerText.slice(0, 200)})`,
   );
   ctx.check(
-    !baseAnswerText.includes(STEER_EXPECTED) || steeredAnswerText.length > 0,
+    session.sessionId === sessionId,
     "steer is not represented as a new independent session (sessionId unchanged)",
   );
   ctx.observe(`sessionId stayed ${sessionId} across steering`);
+  ctx.observe(`steer delivery form: ${deliveryForm}`);
   ctx.observe(
-    `timing: steer sent after ${deltaCountBeforeSteer} deltas (waited ${waitedMs}ms), queue_update at recorder event #${steerSeqObserved}, ${agentRunCount} agent runs total`,
+    `timing: steer sent after ${deltaCountBeforeSteer} deltas (waited ${waitedMs}ms), steering queued at recorder event #${steerQueuedSeq}, consumed at #${steerConsumedSeq}, ${agentRunCount} agent run(s) total`,
   );
-  ctx.observe(`base answer ${baseAnswerText.length} chars; steered answer ${steeredAnswerText.length} chars`);
-  void finalTexts;
+  ctx.observe(
+    `base answer ${baseAnswerText.length} chars; post-steer answer ${steeredAnswerText.length} chars (${postSteerMessageTexts.length} message(s))`,
+  );
+  ctx.observe("no tools are enabled in this scenario, so no tool call could complete/skip/continue (task book 7.3 item is N/A here)");
 }
 
 function promptPromiseDone(p: Promise<void>): boolean {

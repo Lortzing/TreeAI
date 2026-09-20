@@ -1,0 +1,32 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "abort",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:03:39.354Z",
+  "endedAt": "2026-09-20T02:03:41.911Z",
+  "durationMs": 2557,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:abort",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-03-27-035Z-3077/abort/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "check-pass: abort happened during streaming (after 1 deltas)",
+    "check-pass: abort() settled within 60000ms (took 23ms)",
+    "check-pass: prompt promise settled after abort (resolved)",
+    "check-pass: session.isStreaming is false after abort",
+    "check-pass: last event recorded (agent_settled)",
+    "stopReason after abort: aborted",
+    "last event type before settle: agent_settled",
+    "active resources before=[PipeWrap,PipeWrap,TCPSocketWrap,Timeout,Immediate] after=[PipeWrap,PipeWrap,TCPSocketWrap,Timeout]",
+    "check-pass: new session works after abort (answer contains 5: 5)",
+    "post-abort new session answered: 5"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1818 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": null
+}

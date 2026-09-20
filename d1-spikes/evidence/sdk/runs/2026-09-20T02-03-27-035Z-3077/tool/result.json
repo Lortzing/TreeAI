@@ -1,0 +1,36 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "tool",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:03:31.602Z",
+  "endedAt": "2026-09-20T02:03:36.082Z",
+  "durationMs": 4480,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:tool",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-03-27-035Z-3077/tool/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "check-pass: fixture ground truth matches expected aggregates",
+    "check-pass: observed tool_execution_start",
+    "check-pass: tool name is \"read\" (got read)",
+    "check-pass: tool_execution_end for fixture read is not an error (isError=false)",
+    "check-pass: tool only accessed the fixture temp copy (requested numbers.json)",
+    "check-pass: answer reports COUNT=16 (answer: COUNT=16\nSUM=80\nMIN=1\nMAX=9\nMEDIAN=5)",
+    "check-pass: answer reports SUM=80",
+    "check-pass: answer reports MIN=1",
+    "check-pass: answer reports MAX=9",
+    "check-pass: answer reports MEDIAN=5",
+    "check-pass: error path: read tool was invoked for the missing file",
+    "check-pass: error path: tool_execution_end reports isError=true (got true)",
+    "check-pass: error path: assistant states the file could not be read (answer: The file `definitely-missing-9b1c.json` could not be read — it does not exist in the current working directory (ENOENT: no such file or directory).)",
+    "fixture content verified through tool round-trip (numbers.json)"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1818 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": null
+}

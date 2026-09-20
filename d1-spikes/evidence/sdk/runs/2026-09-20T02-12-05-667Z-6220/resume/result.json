@@ -1,0 +1,34 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "resume",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:12:22.064Z",
+  "endedAt": "2026-09-20T02:12:25.972Z",
+  "durationMs": 3908,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:resume",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/resume/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "check-pass: phase A child exited 0 (got 0)",
+    "check-pass: phase A produced a persisted session file (~/Projects/TreeAI/d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/resume/session-store/2026-09-20T02-12-22-827Z_01a0bc96-02ab-73f5-a0b4-8df73b79630d.jsonl)",
+    "restart-recovery external identifier: sessionFile=~/Projects/TreeAI/d1-spikes/evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/resume/session-store/2026-09-20T02-12-22-827Z_01a0bc96-02ab-73f5-a0b4-8df73b79630d.jsonl",
+    "restart-recovery external identifier: sessionId=01a0bc96-02ab-73f5-a0b4-8df73b79630d",
+    "check-pass: phase B child exited 0 (got 0)",
+    "check-pass: phase B read prior history from the session file (entries=6, u=2, a=2)",
+    "check-pass: phase B continued the conversation with a new prompt; answer recalls the passphrase (got: TREEAI-RESUME-9c4e)",
+    "session identity preserved across processes (01a0bc96-02ab-73f5-a0b4-8df73b79630d)",
+    "durations: phaseA=2030ms, phaseB=1863ms; history after resume: {\"entries\":6,\"userMessages\":2,\"assistantMessages\":2,\"lastAssistantText\":\"TREEAI-RESUME-9c4e\"}",
+    "merged 38 child events into the scenario event stream (probePhase-tagged)",
+    "check-pass: child events merged into scenario evidence"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1836 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model.",
+    "Resume depends only on the session file path (plus Pi's own config). No in-memory object from phase A is referenced by phase B."
+  ],
+  "error": null
+}

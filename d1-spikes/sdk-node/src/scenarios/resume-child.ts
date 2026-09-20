@@ -71,7 +71,7 @@ async function main(): Promise<void> {
     const fileEntryCount = fileText.split("\n").filter((l) => l.trim() !== "").length;
 
     const model = await resolveProbeModel();
-    // SessionManager.open() reads the persisted file; createAgentSession
+    // SessionManager.open() reads the persisted file; createAgentSessionFromServices
     // then restores model/history from it (no in-memory state from phase A).
     const session = await RealProbeSession.create({
       cwd,

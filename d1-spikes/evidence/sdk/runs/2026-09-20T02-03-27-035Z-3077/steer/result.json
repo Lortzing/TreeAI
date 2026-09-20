@@ -1,0 +1,40 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "steer",
+  "status": "FAIL",
+  "startedAt": "2026-09-20T02:03:36.087Z",
+  "endedAt": "2026-09-20T02:03:39.348Z",
+  "durationMs": 3261,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:steer",
+  "exitCode": 1,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-03-27-035Z-3077/steer/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "check-pass: steer was sent during streaming (at least one delta observed before)",
+    "check-pass: queue_update event with non-empty steering queue observed",
+    "check-FAIL: steering message was delivered in the same session (second agent run started)",
+    "check-FAIL: steer triggered a subsequent agent run (runs=1)",
+    "check-FAIL: final output reflects the new instruction (contains STEERED-OK; got: )",
+    "check-FAIL: steer is not represented as a new independent session (sessionId unchanged)",
+    "sessionId stayed 01a0bc8d-fa4b-70d0-8a5d-bbef13fab0cc across steering",
+    "timing: steer sent after 1 deltas (waited 610ms), queue_update at recorder event #11, 1 agent runs total",
+    "base answer 10 chars; steered answer 0 chars"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1818 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": {
+    "name": "ScenarioCheckError",
+    "message": "failed checks: steering message was delivered in the same session (second agent run started); steer triggered a subsequent agent run (runs=1); final output reflects the new instruction (contains STEERED-OK; got: ); steer is not represented as a new independent session (sessionId unchanged)"
+  },
+  "failedChecks": [
+    "steering message was delivered in the same session (second agent run started)",
+    "steer triggered a subsequent agent run (runs=1)",
+    "final output reflects the new instruction (contains STEERED-OK; got: )",
+    "steer is not represented as a new independent session (sessionId unchanged)"
+  ]
+}

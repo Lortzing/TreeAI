@@ -1,0 +1,33 @@
+{
+  "implementation": "sdk-node",
+  "scenario": "steer",
+  "status": "PASS",
+  "startedAt": "2026-09-20T02:12:16.038Z",
+  "endedAt": "2026-09-20T02:12:19.518Z",
+  "durationMs": 3481,
+  "command": "npm run --prefix d1-spikes/sdk-node probe:steer",
+  "exitCode": 0,
+  "evidenceFiles": [
+    "evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/steer/events.jsonl"
+  ],
+  "observations": [
+    "model: tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off, source=env-override)",
+    "direct Pi state/type access points used by the adapter: 10",
+    "check-pass: steer was sent during streaming (at least one delta observed before)",
+    "check-pass: queue_update event with non-empty steering queue observed",
+    "check-pass: steering message was consumed by the agent (queue_update with emptied steering queue)",
+    "check-pass: steering output delivered in the same session (post-steer assistant message observed)",
+    "check-pass: final output reflects the new instruction (contains STEERED-OK; got: NEW INSTRUCTION: Stop listing numbers. Reply with exactly the word STEERED-OK and nothing else.STEERED-OK)",
+    "check-pass: steer is not represented as a new independent session (sessionId unchanged)",
+    "sessionId stayed 01a0bc95-e946-7135-9622-23e8e7322a15 across steering",
+    "steer delivery form: new turn within the same agent run (single agent_start, Pi 0.85.1 semantics)",
+    "timing: steer sent after 1 deltas (waited 850ms), steering queued at recorder event #11, consumed at #253, 1 agent run(s) total",
+    "base answer 899 chars; post-steer answer 105 chars (2 message(s))",
+    "no tools are enabled in this scenario, so no tool call could complete/skip/continue (task book 7.3 item is N/A here)"
+  ],
+  "limitations": [
+    "adapter code: 302 code lines across 2 file(s) (src/pi-bridge.ts, src/scenarios/resume-child.ts); probe harness: 1836 code lines; direct Pi API surface: 12 entry points; Pi package version: 0.85.1",
+    "Spike probe output, not a production adapter: no RuntimeAdapter, no TreeAI domain model."
+  ],
+  "error": null
+}

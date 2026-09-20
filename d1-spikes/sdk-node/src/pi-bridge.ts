@@ -12,6 +12,14 @@
  * ModelRuntime resolves auth itself (runtime override > ~/.pi/agent/auth.json
  * > environment variables). If no authenticated model exists, the bridge
  * throws BlockedError("BLOCKED_CREDENTIALS").
+ *
+ * Model discovery: providers registered by pi packages/extensions (e.g. the
+ * pi-ccs token-plan provider used for the 2026-09-20 baseline) are only
+ * visible on a ModelRuntime after createAgentSessionServices() has loaded
+ * ~/.pi/agent resources and flushed extension provider registrations into
+ * the runtime. A bare ModelRuntime.create() cannot see them (this was the
+ * root cause of the 2026-09-20 BLOCKED_MODEL run), so every model resolution
+ * in this bridge goes through createAgentSessionServices().
  */
 
 import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-agent";
@@ -27,15 +35,20 @@ import { PROBE_THINKING_LEVEL } from "./prompts.js";
 /**
  * Structurally identical to pi-agent-core's ThinkingLevel ("off"|"minimal"|
  * "low"|"medium"|"high"|"xhigh"|"max"), which the main package does not
- * re-export; assignment to createAgentSession's option is type-safe.
+ * re-export; assignment to createAgentSessionFromServices' option is type-safe.
  */
 const THINKING_LEVEL = PROBE_THINKING_LEVEL;
 
 /** Every Pi SDK API this adapter touches (audit inventory). */
 export const PI_API_SURFACE: Record<string, string[]> = {
-  "Pi.createAgentSession": ["session factory: options.cwd, model, thinkingLevel, modelRuntime, sessionManager, tools, noTools"],
+  "Pi.createAgentSessionServices": [
+    "services factory: options.cwd -> { modelRuntime, settingsManager, resourceLoader, diagnostics }; loads ~/.pi/agent extensions (settings packages) and flushes their provider registrations into the model runtime",
+  ],
+  "Pi.createAgentSessionFromServices": [
+    "session factory: options { services, sessionManager, model, thinkingLevel, tools, noTools }",
+  ],
   "Pi.SessionManager": ["inMemory(cwd)", "create(cwd, sessionDir)", "open(sessionFile)", "getEntries()", "getSessionFile()", "getSessionId()"],
-  "Pi.ModelRuntime": ["create()", "getModel(providerId, modelId)", "getAvailable()"],
+  "Pi.ModelRuntime": ["getModel(providerId, modelId)", "getAvailable()"],
   "Pi.VERSION": ["package version constant"],
   "AgentSession.prompt": ["prompt(text, { streamingBehavior })"],
   "AgentSession.steer": ["steer(text)"],
@@ -63,11 +76,16 @@ export class RealProbeSession implements ProbeSessionLike {
   ) {}
 
   static async create(opts: CreateProbeSessionOptions & { resolvedModel: ResolvedModel }): Promise<RealProbeSession> {
-    const modelRuntime = await Pi.ModelRuntime.create();
+    // createAgentSessionServices() is the SDK's supported entry point for
+    // CLI-equivalent model discovery: it loads ~/.pi/agent extensions
+    // (settings `packages`, e.g. pi-ccs) and flushes their provider
+    // registrations into the model runtime before we resolve the model. A
+    // bare ModelRuntime.create() cannot see extension-registered providers.
+    const services = await Pi.createAgentSessionServices({ cwd: opts.cwd });
     const model =
       opts.resolvedModel.source === "env-override"
-        ? modelRuntime.getModel(opts.resolvedModel.providerId, opts.resolvedModel.modelId)
-        : (await modelRuntime.getAvailable())[0];
+        ? services.modelRuntime.getModel(opts.resolvedModel.providerId, opts.resolvedModel.modelId)
+        : (await services.modelRuntime.getAvailable())[0];
     if (!model) {
       throw new BlockedError(
         "BLOCKED_MODEL",
@@ -79,12 +97,11 @@ export class RealProbeSession implements ProbeSessionLike {
       : opts.persist
         ? Pi.SessionManager.create(opts.cwd, opts.sessionDir)
         : Pi.SessionManager.inMemory(opts.cwd);
-    const { session } = await Pi.createAgentSession({
-      cwd: opts.cwd,
+    const { session } = await Pi.createAgentSessionFromServices({
+      services,
+      sessionManager,
       model,
       thinkingLevel: PROBE_THINKING_LEVEL,
-      modelRuntime,
-      sessionManager,
       tools: opts.tools === "read-only" ? ["read"] : undefined,
       noTools: opts.tools === "none" ? "all" : undefined,
     });
@@ -227,8 +244,11 @@ export async function resolveProbeModel(): Promise<ResolvedModel> {
       source: "env-override",
     };
   }
-  const modelRuntime = await Pi.ModelRuntime.create();
-  const available = await modelRuntime.getAvailable();
+  // Same services path as RealProbeSession.create: extension-registered
+  // providers (pi packages in ~/.pi/agent) must be visible for the
+  // availability check too.
+  const services = await Pi.createAgentSessionServices({ cwd: process.cwd() });
+  const available = await services.modelRuntime.getAvailable();
   if (available.length === 0) {
     throw new BlockedError(
       "BLOCKED_CREDENTIALS",
