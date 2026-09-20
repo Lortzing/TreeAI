@@ -17,7 +17,12 @@ TreeAI D1 共享 JSON Schema 与证据契约
     d1-spikes/evidence/sdk/runs/<run-id>/environment.json、run-summary.json
     （每次真实运行新建 run 目录，证据只追加，不改写历史 run）
   <scenario> ∈ {basic, tool, steer, abort, resume}
-  verify-d1 解析规则（严格，不跨 run 拼接）：
+  补充场景：tree-navigation 为规范名称；tree-nav 为现有 SDK 证据的兼容别名。
+    SDK：d1-spikes/evidence/sdk/tree-nav/runs/<run-id>/tree-nav/{result.json,events.jsonl}
+    RPC：d1-spikes/evidence/rpc/tree-navigation.result.json（最新快照）+
+         tree-navigation.result.jsonl（追加式历史）+
+         tree-navigation.events.jsonl
+  verify-d1 的五场景完整 run 判定不包含补充场景；补充场景由独立检查校验。
     1. 某场景若在扁平布局存在 <scenario>.result.json，以扁平文件为准；
     2. 否则使用 runs/ 下"最新的完整 run"（五个场景的 result.json 齐备才算
        完整）中该场景的 result.json；所有 run 内结果引用的 evidenceFiles
@@ -58,6 +63,11 @@ TreeAI D1 共享 JSON Schema 与证据契约
      收紧不使任何已交付证据失效。scripts/verify-d1 的 check_exit_codes
      独立强制同一规则（纵深防御：即使结果文件 schema 校验失败，其
      status/exitCode 组合仍会被退出码检查覆盖）。公开修订，非静默变更。
+  4b. tree-navigation 契约修订（2026-09-20，DECISION-009）：共享 scenario 枚举接受
+      规范名 tree-navigation 与既有 SDK 证据别名 tree-nav。RPC 的 .result.json
+      是 .result.jsonl 追加日志最后一行的规范快照；每次新增运行必须刷新快照，
+      verify-d1 会拒绝过期快照。tree-navigation 不并入五场景核心 run 完整性判断，
+      但由独立验收行检查事件、seq、字段、退出码和快照/journal 一致性。
   5. evidenceFiles 路径相对 d1-spikes/ 根目录书写，
      例如 "evidence/sdk/basic.events.jsonl" 或
      "evidence/sdk/runs/<run-id>/basic/events.jsonl"（verify-d1 按此解析

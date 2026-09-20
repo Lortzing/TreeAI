@@ -1,14 +1,28 @@
-# ADR-001：TreeAI 首版接入 Pi 的技术路线（草案）
+# ADR-001：TreeAI 首版接入 Pi 的技术路线
 
-- **状态：Proposed（草案，未批准）**
-- 创建日期：2026-09-18；本次更新：2026-09-20（v1.2）
+- **状态：Accepted（2026-09-20，负责人批准）**
+- 创建日期：2026-09-18；本次更新：2026-09-20（v1.3）
 - 作者：Agent A（D1 调研）
-- 决策权：负责人（本草案不包含、也不预示 Go/No-Go 或 Approved 结论）
-- 事实基础：`d1-spikes/research/pi-capability-inventory.md`（下称"清单"）；对照与评分：`d1-spikes/research/sdk-vs-rpc-matrix.md`（下称"矩阵"；测量层已于 2026-09-20 回填：五场景两侧 PASS；tree/session navigation 另有场景外补充实测，见矩阵 §3.6；评分与权重仍 PENDING_OWNER）
-- 验收依据：`d1-spikes/reports/d1-verification.md`（2026-09-20 收口跟进版）与 `d1-spikes/evidence/verification/verify-20260920T034514083Z.json`（2026-09-20T03:45:14Z，mode=repro，counts PASS=28/FAIL=0/BLOCKED=0/NOT_RUN=0，整体 ALL_PASS、exit 0；该 28 项不含 tree-navigation）
-- 修订记录：1.2（2026-09-20）收口收尾：回填 tree/session navigation 场景外补充实测（矩阵 §3.6；RPC 侧运行时证实无 `navigateTree` 等价命令，只能以 fork/switch_session/clone/get_entries 组合）；清除过时状态（`--repro` 已双侧 PASS、共享 `evidence/environment.json` 已由集成人补齐、最新验收单轮全 PASS exit 0）；三候选、边界（§4）、收益/风险/不可逆成本/退出方案全部保留不变，一切决策仍 PENDING_OWNER；1.1（2026-09-20）同步 B/C/D 已提交证据：五场景两侧 PASS、provider parity 满足、适配/协议成本计数（彼时树导航仍待探针、干净复现未执行——历史事实，其后均已解决）；1.0（2026-09-18）初始草案
+- 决策权：负责人（已完成 D1 决策；D2 工程细节与生产发布标准另行管理）
+- 事实基础：`d1-spikes/research/pi-capability-inventory.md`（下称"清单"）；对照与评分：`d1-spikes/research/sdk-vs-rpc-matrix.md`（下称"矩阵"；五场景与 tree-navigation 补充实测已回填；评分公式与权重未使用）
+- 验收依据：`d1-spikes/reports/d1-verification.md` 与最新 `d1-spikes/evidence/verification/verify-20260920T124525829Z.json`（tree-navigation 纳入补充验收后 30/30 PASS、exit 0）
+- 修订记录：1.3（2026-09-20）负责人批准 D1 Go、接受候选 1 并授权 D2；tree-navigation 纳入共享契约与补充验收；1.2（2026-09-20）回填场景外 tree/navigation 实测并同步 clean-room；1.1（2026-09-20）同步 B/C/D 证据；1.0（2026-09-18）初始草案
 
-> **阅读警告**：截至 v1.2，五个统一场景（basic/tool/steer/abort/resume）已在统一基线（pi 0.85.1、provider `tal-token-plan-06c64a09`、model `deepseek-v4.1-flash`、thinking=off）下于两条路线实测**全部 PASS**；`--repro` 干净复现双侧 PASS；共享环境记录已由集成人补齐；最新验收运行单轮 28 项全 PASS（矩阵 §3.1/§3.3；`d1-spikes/evidence/verification/verify-20260920T034514083Z.json`）。tree/session navigation 已有**场景外补充实测**（矩阵 §3.6：SDK 侧 `navigateTree` 真实 PASS——同 session 移动叶指针、上下文按目标分支重建；RPC 侧真实 PASS 且运行时证实**无 `navigateTree` 等价命令**）——但两份证据均在共享契约 scenario 枚举外、未经统一验收，**不是五场景 PASS**；extension UI 嵌入与容器隔离仍未实测（矩阵 §3.5）。矩阵评分规则与权重未获负责人确认；**本 ADR 未获批准**。本草案的目的仍是**框定决策空间**，不是呈现结论。任何以本草案为据的"Pi 已选定 X 路线"表述都是错误的。
+> **阅读警告**：截至 v1.2，五个统一场景（basic/tool/steer/abort/resume）已在统一基线（pi 0.85.1、provider `tal-token-plan-06c64a09`、model `deepseek-v4.1-flash`、thinking=off）下于两条路线实测**全部 PASS**；`--repro` 干净复现双侧 PASS；共享环境记录已由集成人补齐；最新验收运行单轮 28 项全 PASS（矩阵 §3.1/§3.3；`d1-spikes/evidence/verification/verify-20260920T034514083Z.json`）。tree/session navigation 已有**场景外补充实测**（矩阵 §3.6：SDK 侧 `navigateTree` 真实 PASS——同 session 移动叶指针、上下文按目标分支重建；RPC 侧真实 PASS 且运行时证实**无 `navigateTree` 等价命令**）——但两份证据均在共享契约 scenario 枚举外、未经统一验收，**不是五场景 PASS**；extension UI 嵌入与容器隔离仍未实测（矩阵 §3.5）。矩阵评分规则与权重未获负责人确认；**v1.2 时点本 ADR 未获批准；该历史 warning 已被上方 2026-09-20 负责人批准记录 supersede。**本草案的目的仍是**框定决策空间**，不是呈现结论。任何以本草案为据的"Pi 已选定 X 路线"表述都是错误的。
+
+## 0.1 负责人批准记录（2026-09-20）
+
+负责人批准 TreeAI D1 Go，并批准本 ADR 的候选 1：**TypeScript/Node.js + Pi SDK 进程内嵌入**，锁定 Pi `0.85.1`，授权进入 D2。
+
+批准边界：
+
+- 同进程风险仅在受信任本地模式下接受；同进程不构成沙箱或安全边界。
+- 默认实行最小权限：工具仅可读 fixtures 与负责人明确授权的目录；shell 与网络默认拒绝；高风险操作逐次授权。
+- TreeAI 自有数据库是 Forest/Tree/Branch/Episode/Run 等产品事实源；Pi session 仅作运行时恢复、回放和引用目标。
+- D1 的 spike、证据和验收结果不等于生产发布批准；D2 负责把已验证逻辑收敛为可维护的首版运行时，生产发布标准另行审查。
+- tree-navigation 已纳入共享 scenario 契约和统一验收；RPC 侧缺少 SDK `navigateTree` 等价命令的事实保留为 D2 设计约束。
+
+本记录不扩展批准范围，不批准通用多 Runtime 协议，不批准将 Pi session 作为 TreeAI 数据库，也不替负责人决定 D2 的实现细节。
 
 ---
 
@@ -170,7 +184,7 @@ TreeAI 后端为 Python，以 `subprocess.Popen(["pi","--mode","rpc",...])` 驱�
 - 树导航语义随路线分化：SDK `navigateTree` 在同一 session 内移动叶指针并按目标分支重建上下文（场景外补充实测 PASS）；RPC 侧无等价命令，需以 fork/switch_session/clone 组合并接受新 session/新文件与上下文重建的语义差异（双侧场景外实测，矩阵 §3.6；验收汇总 §4b）。若 TreeAI 产品依赖"原地树导航"，这一差异是路线选择的关键输入；该证据尚未纳入统一验收，是否扩展共享契约属 PENDING_OWNER（DECISION-009）。
 - D1 之后的正式工程（数据库、UI、导航产品化）均不受本 ADR 约束，另行决策。
 
-## 6. 未决问题（全部 PENDING_OWNER，负责人定案前不推进为结论）
+## 6. 历史未决问题（D1 批准前记录，保留以便审计）
 
 | ID | 问题 | 关联 |
 |---|---|---|
@@ -184,16 +198,32 @@ TreeAI 后端为 Python，以 `subprocess.Popen(["pi","--mode","rpc",...])` 驱�
 | PO-B3 | 矩阵评分规则与权重确认（测量层已就绪，规则与权重仍待确认） | 矩阵 §4/§5 |
 | PO-B4 | 本 ADR 是否批准（以及后续 Go/No-Go） | 任务书 §13；blockers DECISION-006/007 |
 
-## 7. 决策流程（下一步）
+## 7. 历史决策流程（D1 批准前记录）
 
 1. ~~Agent B/C 完成五场景实测，填充矩阵 §3~~——**已完成**（2026-09-20：统一基线两侧五场景 PASS，矩阵 §3 已回填；`d1-spikes/evidence/verification/verify-20260920T034514083Z.json` checks 12–22）。
 2. ~~Agent D 完成 `d1-verification.md` 验收汇总~~——**已交付**（2026-09-20 收口跟进版；最新验收运行 `verify-20260920T034514083Z.json`：counts PASS=28/FAIL=0/BLOCKED=0/NOT_RUN=0，整体 ALL_PASS、exit 0。沿革：02:15Z 轮 exit 3 时 `--repro` ×2 与共享 `evidence/environment.json` 尚为 NOT_RUN，其后分别由实际执行（双侧 PASS）与集成人补齐解决——历史事实保留于矩阵 §3.3 与报告"版本沿革"节）。
 3. **（可选，负责人定）tree/navigation 证据的统一验收**：B/C 已交付场景外补充实测（矩阵 §3.6），但其 scenario 值在共享契约枚举外、未经 verify-d1 验收；是否扩展 scenario 枚举并补跑统一验收（含 C 的 `.result.jsonl` 命名定夺）属 PENDING_OWNER（blockers DECISION-009）。是否作为决策前置由负责人决定。
 4. 负责人确认矩阵评分规则与权重（PO-B3）后，矩阵产出量化对比。
 5. 负责人在本 ADR 上做出决策（批准/修改/否决任一候选，PO-B4）。
-6. ADR 状态从 `Proposed` 变更为负责人签署的终态——**在此之前，本文件不构成任何形式的批准。**
+6. ADR 状态从 `Proposed` 变更为负责人签署的终态——**该历史流程已于 2026-09-20 完成，当前状态为 Accepted；D2 与生产发布仍按批准记录和独立门槛执行。**
 
 **干净复现与人工目标机条件（不可由 Agent 代劳）**：`--repro` 干净复现已实际执行且双侧 PASS（03:21:22Z 首次执行、03:45:14Z 复验，均 mode=repro），但任务书 §11 明确**不将容器/干净目录复现等同于目标设备人工复现**；按任务书 §16，D1 正式结束还需负责人完成**真实环境复现、权限审查、ADR 批准与 Go/No-Go 签字**。当前全部实测均来自单一工作区（macOS/darwin、Node v24.21.0、Python 3.9.6，`d1-spikes/evidence/verification/verify-20260920T034514083Z.json` environment 字段）——换机器/目标设备的复现结果以负责人侧记录为准，本草案不预设其结论。
+
+## 7.1 D2 授权与边界（2026-09-20）
+
+负责人授权进入 D2 正式工程化。D2 只把 D1 已验证逻辑收敛为可维护的首版运行时，不扩大为通用 Agent Runtime。
+
+建议模块边界：
+
+- **PiRuntime**：创建/恢复 session、prompt、steer、abort、navigateTree、订阅事件。
+- **TreeRepository**：维护 TreeAI 的 Forest/Tree/Branch/Episode/Run 数据。
+- **SessionReference**：只保存 sessionFile、sessionId、entryId 等 Pi 引用。
+- **EventJournal**：把 Pi 事件转成 TreeAI 可审计事件，并保留原始证据引用。
+- **ToolPolicy**：工具白名单、目录范围、写入与高风险操作授权。
+
+D2 首批工作包：运行时工程化、树模型接入、TreeAI 自有数据库持久化、最小权限策略、可观测性和 CI 门禁。完成门槛包括完整 TreeAI 树的双分支切换与重启恢复、Pi session 删除不破坏域数据、abort/进程退出/模型错误不留下脏运行状态、越权负例被默认策略拒绝、Pi 升级回归可重复执行、tree-navigation 进入正式门禁，以及至少一次目标设备人工验收。
+
+D2 不复制 D1 probe 目录为生产代码，不建设多 Runtime 通用适配层，不把 Pi session JSONL 当作 TreeAI 数据库，不为隔离牺牲已批准的原生树导航语义，也不使用 `latest` 作为 Pi 依赖版本。D2 完成不等于生产发布批准；生产发布和权限审查仍有独立门槛。
 
 ## 8. 参考
 

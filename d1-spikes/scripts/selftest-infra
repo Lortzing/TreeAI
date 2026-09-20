@@ -25,6 +25,9 @@
 #                                     (directories are not file content),
 #                                     so only the post-write scan of the
 #                                     freshly written summary/log catches it.
+#   T8 missing supplementary tree-navigation evidence -> both supplementary
+#                                      rows FAIL and overall exit 2
+#                                      (tree-navigation contract revision).
 #
 # Nothing in the real d1-spikes tree is modified. A machine-readable result
 # is appended to d1-spikes/evidence/verification/selftest-infra-<ts>.json.
@@ -340,6 +343,17 @@ record "T7 post-write FAIL row in checks" "present" "$T7_ROWPRESENT"
 record "T7 counts.FAIL >= 1" "ok" "$T7_FAILCOUNT"
 record "T7 resync introduced no new leak" "clean" "$T7_NEWLEAKS"
 record "T7 log rewritten with notice" "notified" "$T7_LOGNOTICE"
+
+echo "T8: missing supplementary tree-navigation evidence"
+fresh_copy
+rm -f "$TMP/case/evidence/rpc/tree-navigation.result.json" \
+      "$TMP/case/evidence/rpc/tree-navigation.result.jsonl" \
+      "$TMP/case/evidence/rpc/tree-navigation.events.jsonl"
+rm -rf "$TMP/case/evidence/sdk/tree-nav"
+run_case_verify
+record "T8 SDK tree-navigation row" "FAIL" "$(row_status scenario-sdk-node-tree-navigation)"
+record "T8 RPC tree-navigation row" "FAIL" "$(row_status scenario-rpc-python-tree-navigation)"
+record "T8 overall exit" "2" "$(overall_exit)"
 
 mkdir -p "$EVID_VER"
 TS="$(date -u +%Y%m%dT%H%M%S)Z"

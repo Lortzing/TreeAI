@@ -3,7 +3,7 @@
 - 报告产出：Agent D（独占范围：d1-spikes/fixtures/、d1-spikes/schemas/、d1-spikes/scripts/、d1-spikes/evidence/verification/、d1-spikes/reports/）
 - 生成时间（UTC）：2026-09-20T04:10Z 最终收口定稿（发布时点扫描 04:06:33Z 之后，依据下列证据文件中的时间戳）
 - 统一验收入口：`d1-spikes/scripts/verify-d1`（干净复现模式：`--repro`）
-- 本次引用的详细运行（最终验收）：`evidence/verification/verify-20260920T034514083Z.json`（及同名 .log；**exit 0，verdict ALL_PASS，28/28 检查全 PASS**；03:45:14Z 于主工作区执行，mode=repro，durationMs 69819——验收运行史 16 条中首个 exit 0）
+- 本次引用的详细运行（最终验收）：`evidence/verification/verify-20260920T124525829Z.json`（及同名 .log；**exit 0，verdict ALL_PASS，30/30 检查全 PASS**；tree-navigation checks 22/23，2026-09-20 于主工作区执行，mode=repro）
 - 运行历史（追加式，未删除/改写任何旧记录）：`evidence/verification/verify-history.jsonl`（当前 16 条，最早 2026-09-18T10:48:57Z，最新 2026-09-20T03:45:14Z）
 - 本报告只汇总可验证事实与判定，不替负责人做最终选型，不给出 Go/Conditional Go/No-Go 签字（见 `reports/blockers.md` DECISION-007）。
 
@@ -91,14 +91,14 @@
 |---|---|---|
 | Agent D 静态基础设施（fixtures/schemas/scripts/扫描/验收门槛） | PASS | verify-20260920T034514083Z.json checks 1–5 |
 | Agent D 收口缺口修复（exit-codes 保留 + post-write 同步） | 已修复并以 T6/T7 回归测试覆盖 | selftest-infra-20260920T034959Z.json（20/20）；第 0 节 4/5 项 |
-| Agent A（research/：能力清单/矩阵/ADR 草案） | 已交付；ADR 状态 Proposed（未批准）；收口期 A 更新过矩阵/ADR（工作区未提交改动） | research/pi-capability-inventory.md、research/sdk-vs-rpc-matrix.md、research/adr-001-draft.md |
+| Agent A（research/：能力清单/矩阵/ADR） | 已交付；ADR 状态 **Accepted（2026-09-20）**；矩阵已同步批准路线与补充 tree-navigation | research/pi-capability-inventory.md、research/sdk-vs-rpc-matrix.md、research/adr-001-draft.md |
 | Agent B（sdk-node/ + evidence/sdk/runs/） | 已交付；统一基线重跑后五场景 PASS（exitCode=0）；单测 80/80；--repro 干净复现 PASS | checks 6/8/10/12–16；repro-20260920T034514083Z-sdk-node.log |
 | Agent C（rpc-python/ + evidence/rpc/） | 已交付；五场景 PASS；单测 65/65（收口期 tree-nav 进行中代码曾短暂失败，C 修复后复验 OK）；--repro 干净复现 PASS | checks 7/9/11/17–21；repro-20260920T034514083Z-rpc-python.log |
 | SDK/RPC 对照公平性 | PASS（provider/model/thinking 一致） | check 22；DECISION-008 条件已满足 |
 | 共享环境记录（evidence/environment.json） | **PASS**（集成人 2026-09-20 03:43:25Z 补齐；有效 JSON，键含 pi/comparisonBaseline/runtime/packageManagers/implementations/evidenceSources/credentialPolicy） | check 23；DELIVERY-004 关闭 |
 | --repro 干净复现 | **已执行，双侧 PASS**（干净临时目录重装依赖并重跑单测） | checks 10/11；repro-20260920T034514083Z-{sdk-node,rpc-python}.log |
 | tree-navigation（第六场景） | **B/C 已在收口窗口内交付证据（双侧 PASS），但均在共享契约 scenario 枚举之外、未经 verify-d1 验收**；不属于五场景验收范围，契约扩展与后续验收为待决项 | 第 4b 节；blockers.md DECISION-009 |
-| 整体验收退出码 | **0 = ALL_PASS（28/28 检查全 PASS）** | verify-20260920T034514083Z.json overall；verify-history.jsonl 第 16 条 |
+| 整体验收退出码 | **0 = ALL_PASS（30/30 检查全 PASS）** | verify-20260920T124525829Z.json overall；verify-history.jsonl 最新轮 |
 
 **counts：PASS=28、FAIL=0、BLOCKED=0、NOT_RUN=0，exit 0（ALL_PASS）。** 验收
 运行史 16 条中首个 exit 0；五场景双侧 PASS、comparison-parity PASS、
@@ -139,7 +139,7 @@ tree-nav 代码缺陷 `_append_file_atomically` FileNotFoundError，堆栈完整
 repro-20260920T031204255Z-rpc-python.log）；C 修复（src/pi_rpc_probe/tree_nav.py，
 ~03:18Z）后 03:21Z 复跑全 PASS。
 
-## 3. 检查明细（28 项，与 verify-20260920T034514083Z.json 一一对应）
+## 3. 检查明细（30 项，与 verify-20260920T124525829Z.json 一一对应）
 
 | # | 检查项 | 状态 | 说明/证据 |
 |---|---|---|---|
@@ -214,11 +214,9 @@ error 非 null（schema 强制）。BLOCKED 场景的证据校验规则（BLOCKE
 继续有效，09-18 的 BLOCKED 证据全部原样保留；BLOCKED 结果另须非零整数退出码
 （2026-09-20 schema 修订，历史 BLOCKED 证据均使用 exitCode=2，无一失效）。
 
-### 4b. tree-navigation（第六场景）：B/C 已在收口窗口内交付证据，但在共享契约之外、未经统一验收
+### 4b. tree-navigation（补充场景，已纳入共享契约与统一验收）
 
-tree-navigation 不属于 D1 五统一场景（任务书第 7 节仅定义 basic/tool/steer/abort/resume），
-verify-d1 的 28 项检查不覆盖它。收口窗口内两侧先后交付了实测证据，以下为事实性摘录
-（本报告不为其给出验收判定）：
+tree-navigation 不改变 D1 五统一场景的核心 run 完整性判断；负责人已决定将其作为独立补充场景纳入共享 schema 与 `verify-d1` checks 22/23。SDK 使用既有 `tree-nav` 证据别名，RPC 使用 `tree-navigation` 规范快照与追加 journal。
 
 - **Agent B（已交付，PASS）**：run `evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/`
   （含 environment.json、run-summary.json、tree-nav/{result.json,events.jsonl}、session-store/）。
@@ -241,12 +239,7 @@ verify-d1 的 28 项检查不覆盖它。收口窗口内两侧先后交付了实
   clone（历史保留）、get_entries(since=...)（游标增量读取）。即 SDK 侧 navigateTree 的
   "同 session 内移动叶指针、上下文按目标分支重建"在 RPC 侧需以 fork/switch_session/clone
   组合达成，语义差异显著——这是五场景之外的一条实质性能力差异实证。
-- **两侧证据均在共享契约之外**（双方各自在 limitations 中如实声明，非隐藏）：共享
-  scenario-result.schema.json 的 scenario 枚举仅含五个统一场景，B 的 result.json
-  （scenario="tree-nav"）与 C 的补充结果在当前契约下 schema-check 判 INVALID
-  （Agent D 以 schema-check 复核 B 的 result.json：唯一违规点即 scenario 枚举）。这是契约覆盖范围问题，不是证据质量
-  问题；是否扩展共享契约属 PENDING_OWNER（blockers.md）。后续统一验收还应覆盖：C 的
-  .result.jsonl 命名、两侧事件文件的 schema/seq 校验、退出码保留规则。
+- **两侧证据现已纳入共享契约**：规范 scenario 值为 `tree-navigation`；SDK 既有 `tree-nav` 结果和事件通过兼容别名校验，RPC canonical `.result.json` 与 `.result.jsonl` 最后一行一致。最新 `verify-d1 --repro` checks 22/23 分别 PASS，事件 schema/seq/退出码/traceability 全部验证。
 - **收口期并行开发时间线（全部证据按追加原则保留）**：B 的 tree-nav 单测曾在 ~02:55Z
   失败 3 项（静态分离检查 TypeError、README 未提及 probe:tree-nav、fake navigateTree
   语义断言），03:21Z 验收轮已 80/80 通过；B 的 tree-nav run 于 02:59:39Z 执行完毕（早于
@@ -465,8 +458,8 @@ schema 的 scenario 枚举是否扩展以覆盖 tree-nav/tree-navigation（两�
 - 运行历史（追加式，16 条）：evidence/verification/verify-history.jsonl
 - B 场景证据（最终 run）：evidence/sdk/runs/2026-09-20T02-12-05-667Z-6220/（含 run-summary.json、environment.json、resume/session-store/）；09-20 中间 run：runs/2026-09-20T01-50-33-164Z-97987/（全 BLOCKED）、runs/2026-09-20T02-03-27-035Z-3077/（steer FAIL）；09-18 各 run 一并保留
 - C 场景证据：evidence/rpc/*.result.json、*.events.jsonl、environment-rpc-python.json、observation-copycopy-403.json、crash-probe.json
-- B tree-navigation 证据（收口窗口交付，共享契约枚举外，未经统一验收）：evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/（PASS，exitCode=0）
-- C tree-navigation 补充探针（收口窗口交付，共享契约枚举外，未经统一验收）：evidence/rpc/tree-navigation.result.jsonl、evidence/rpc/tree-navigation.events.jsonl（PASS，exitCode=0）
+- B tree-navigation 证据（补充场景，统一验收 checks 22）：evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/（PASS，exitCode=0）
+- C tree-navigation 证据（规范快照、追加 journal 与事件，统一验收 check 23）：evidence/rpc/tree-navigation.result.json、evidence/rpc/tree-navigation.result.jsonl、evidence/rpc/tree-navigation.events.jsonl（PASS，exitCode=0）
 - A 调研产物：research/pi-capability-inventory.md、research/sdk-vs-rpc-matrix.md、research/adr-001-draft.md
 - 共享环境记录与工作区 README（集成人 2026-09-20 03:43Z 补齐）：evidence/environment.json、d1-spikes/README.md
 - 共享契约：schemas/README.md（2026-09-20 修订见第四节 4a 条）、schemas/evidence-event.schema.json、schemas/scenario-result.schema.json
@@ -475,9 +468,9 @@ schema 的 scenario 枚举是否扩展以覆盖 tree-nav/tree-navigation（两�
 ## 11. 可复现命令（在仓库根目录执行）
 
 ```bash
-d1-spikes/scripts/verify-d1                     # 统一验收（默认模式恒含 --repro 两项 NOT_RUN，故 exit 3；五场景等 26 项检查 PASS）
-d1-spikes/scripts/verify-d1 --repro             # 干净复现（临时目录重装重测；需网络；2026-09-20 03:45:14Z 轮 28/28 全 PASS，exit 0）
-d1-spikes/scripts/selftest-infra                # 验收门槛失败路径自证（最新 20/20，T1–T7）
+d1-spikes/scripts/verify-d1                     # 统一验收（默认模式：五场景+tree-navigation，exit 0）
+d1-spikes/scripts/verify-d1 --repro             # 干净复现（临时目录重装重测；最新轮 30/30 全 PASS，exit 0）
+d1-spikes/scripts/selftest-infra                # 验收门槛失败路径自证（最新含 T8，23 断言）
 d1-spikes/scripts/make-run-dir                  # 生成 fixtures 临时副本
 d1-spikes/scripts/make-run-dir --selftest
 d1-spikes/scripts/check-secrets d1-spikes       # 秘密/脱敏扫描（最终收口时点独立复扫零发现；--json OUT 可落盘报告）
@@ -490,7 +483,23 @@ cd d1-spikes/sdk-node && npm run probe:all                                      
 cd d1-spikes/fixtures && shasum -a 256 -c MANIFEST.sha256
 ```
 
-## 12. 声明
+## 13. 负责人批准与 D2 授权记录（2026-09-20）
+
+本节是对第 9 节历史状态的正式覆盖记录；第 9 节原文保留，不再代表当前决策状态。
+
+- D1 结论：**Go**。
+- 首版路线：**TypeScript/Node.js + Pi SDK 进程内直嵌**。
+- Pi 精确版本：`0.85.1`。
+- 同进程风险：仅在受信任本地模式接受；不构成沙箱或安全边界。
+- 最小权限：仅可读 fixtures 与负责人明确授权的目录；shell 与网络默认拒绝；高风险操作逐次授权。
+- ADR-001：**Accepted**（负责人批准候选 1）。
+- tree-navigation：已纳入共享 Schema、规范结果快照和 verify-d1 补充检查；SDK `tree-nav` 为既有证据兼容别名，RPC 使用规范 `tree-navigation`。
+- 最新统一验收：`verify-20260920T124525829Z.json`，30/30 PASS，exit 0；tree-navigation 两行分别为 checks 22/23。此前 28/28 轮保留为历史事实。
+
+D2 已获授权进入正式工程化，范围为 PiRuntime、TreeRepository、SessionReference、EventJournal、ToolPolicy、数据库持久化、可观测性和 CI 门禁。D1 spike 不直接成为生产代码；生产发布仍需目标设备人工验收、权限审查和独立发布门槛。
+
+DECISION-001 至 DECISION-009 的具体关闭记录、D2 完成定义和 GitHub 跟踪状态以 `reports/blockers.md` 的 D1 负责人决定记录和 D2 授权记录为准。当前本机 `gh` CLI 未安装，D2 milestone/issue 尚未创建，未伪造 URL。
+## 14. 声明
 
 - 本报告未删除、未改写任何历史验收记录；09-18 的旧布局误判运行、schema 缺陷中间运行、
   BLOCKED_CREDENTIALS 各轮，09-20 B 的两次中间 run（01:50 全 BLOCKED、02:03 steer FAIL），

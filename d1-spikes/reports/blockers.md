@@ -136,3 +136,125 @@
 
 - 每项 PENDING_OWNER 决定后，由负责人（或其授权的 Agent）在对应 DECISION 下追加决定结果与日期；Agent D 不代填。
 - 交付阻塞解除时更新 A 节状态并引用新的证据路径，不删除历史行。
+
+## D1 负责人决定记录（2026-09-20）
+
+以下记录由负责人批准后追加，关闭对应历史 `PENDING_OWNER` 状态；历史条目与原始证据保留不变。
+
+### DECISION-001 关闭
+
+- 决定：TreeAI 首版采用 **TypeScript/Node.js + Pi SDK 进程内直嵌**（候选 1）。
+- 依据：统一基线下 SDK/RPC 五场景均 PASS，tree-navigation 证据显示 SDK 保留原生同 session 导航语义；D1 最终验收与 clean-room 已通过。
+
+### DECISION-002 关闭
+
+- 决定：首版宿主语言为 **TypeScript/Node.js**。
+
+### DECISION-003 关闭
+
+- 决定：Pi 精确版本锁定 **0.85.1**。Node.js `v24.21.0`、npm `11.19.0` 和 Python `3.9.6` 作为 D2 当前复现环境基线；后续偏离必须通过显式升级记录和回归验收。
+
+### DECISION-004 关闭
+
+- 决定：接受受信任本地模式下的 SDK 同进程风险。该模式不构成沙箱或安全边界；出现强隔离要求时另立架构决策。
+
+### DECISION-005 关闭
+
+- 决定：实施最小权限策略：工具仅可读 fixtures 与负责人明确授权的目录；shell 与网络默认拒绝；写入和其他高风险操作逐次授权。正式产品目录清单由 D2 按该边界落定，不由 D1 推测扩大。
+
+### DECISION-006 关闭
+
+- 决定：批准 ADR-001，批准对象为 TypeScript/Node.js + Pi SDK 候选 1；TreeAI 数据与 Pi session 边界仍为 ADR §4 的硬约束。
+
+### DECISION-007 关闭
+
+- 决定：**D1 Go**。该决定只表示 D1 证据、复现和验收达到阶段门槛，不表示生产发布已批准。
+
+### DECISION-008 关闭
+
+- 决定：正式记录 D1 对照基线为 `tal-token-plan-06c64a09/deepseek-v4.1-flash/thinking=off`，Pi `0.85.1`；D2 或生产环境如更换 provider/model，必须两侧同步重跑。
+
+### DECISION-009 关闭
+
+- 决定：将 tree-navigation 纳入共享 scenario 契约和统一验收；规范值为 `tree-navigation`，现有 SDK `tree-nav` 作为兼容别名；新增验收证据见最新 `verify-d1 --repro`。
+
+## D2 授权记录（2026-09-20）
+
+负责人授权进入 D2。D2 目标是把 D1 spike 收敛为可维护的首版运行时，不建设通用 Agent Runtime。
+
+授权模块边界：PiRuntime、TreeRepository、SessionReference、EventJournal、ToolPolicy。首批工作包为运行时工程化、树模型接入、TreeAI 自有数据库持久化、最小权限策略、可观测性和 CI 门禁；完成定义为完整树的双分支切换/重启恢复、Pi session 删除不破坏域数据、异常不留下脏运行状态、默认权限拒绝越权、Pi 升级回归可重复、tree-navigation 进入正式门禁、至少一次目标设备人工验收。
+
+明确不做：复制 D1 probe 为生产代码、建设多 Runtime 通用适配层、把 Pi session 当 TreeAI 数据库、牺牲原生树导航语义换取未经批准的隔离方案，或使用 `latest` 依赖版本。
+
+## DELIVERY-007 收口记录（2026-09-20）
+
+- tree-navigation 已纳入共享 schema（`tree-navigation` 规范名、`tree-nav` 兼容别名）和 `verify-d1` 补充检查。
+- SDK/RPC tree-navigation 结果与事件均通过最新 30 项验收（checks 22/23）；RPC canonical `.result.json` 与追加 journal 最后一行一致。
+- 原始契约外状态和中间验证历史保留；该交付阻塞关闭。DECISION-009 的范围决定记录仍保留在上方，供 D2 回顾。
+
+
+- 状态：`PENDING_TOOLING`
+- `gh` CLI 当前不可用（未安装），因此本次未创建 milestone/issue，也不伪造 URL。
+- 待创建资源：milestone `D2`；issue 标题建议为 `D2: Formalize trusted-local TreeAI runtime with Pi SDK`。
+- issue 正文应使用负责人批准的 D2 目标、PiRuntime/TreeRepository/SessionReference/EventJournal/ToolPolicy 边界、六个首批工作包、完成门槛和“不建议做的事”；前置条件为本节 DECISION-001、006、007 已关闭，tree-navigation 已纳入契约。
+
+### D2 milestone / issue 可粘贴材料（gh 安装并认证后创建）
+
+**Milestone title**：`D2`
+
+**Milestone description**：
+
+> Formalize the trusted-local TreeAI runtime after D1 approval. D2 is engineering convergence, not production release approval.
+
+**Issue title**：`D2: Formalize trusted-local TreeAI runtime with Pi SDK`
+
+**Issue body**：
+
+> ## Goal
+>
+> 收敛 D1 已验证逻辑，形成可维护的首版运行时，不扩大为通用 Agent Runtime。
+>
+> ## Approved boundary
+>
+> - TypeScript/Node.js + Pi SDK process embedding
+> - Pi 0.85.1
+> - Trusted-local same-process mode accepted; this is not a sandbox/security boundary
+> - Minimum permissions: fixtures and owner-authorized directories readable; shell/network denied by default; high-risk operations require per-operation authorization
+> - TreeAI-owned database is the product fact source; Pi session is only a runtime recovery/replay reference
+>
+> ## Module boundaries
+>
+> - **PiRuntime**: create/restore session, prompt, steer, abort, navigateTree, event subscription
+> - **TreeRepository**: Forest/Tree/Branch/Episode/Run data
+> - **SessionReference**: sessionFile + sessionId + entryId references only
+> - **EventJournal**: auditable TreeAI events with raw Pi evidence references
+> - **ToolPolicy**: tool allowlist, directory scope, writes and high-risk authorization
+>
+> ## First work packages
+>
+> 1. Runtime engineering: formal TypeScript package, pinned dependencies, error classification; basic/steer/abort/resume tests
+> 2. Tree model integration: TreeAI branch to Pi entry/session references; in-place switch, fork, return, restart recovery
+> 3. Persistence: TreeAI-owned database schema; deleting Pi sessions must not break domain facts
+> 4. Permission policy: default policy and per-operation authorization; overreach tests for reads/writes/shell/network
+> 5. Observability: run state, event journal, errors and duration with no credential leakage
+> 6. CI gates: unit tests, schema, secret scan and D1 regression; live suite in credentialed environments
+>
+> ## Definition of done
+>
+> - One complete TreeAI tree can create two branches, switch between them and recover after restart
+> - TreeAI/Pi ownership boundary passes delete/recovery tests
+> - abort, process exit and model errors never leave a stale running state
+> - default tool policy rejects unauthorized access
+> - Pi upgrade regression command is reproducible and tree-navigation is a formal gate
+> - at least one target-device manual acceptance is complete
+>
+> ## Explicit non-goals
+>
+> - Do not copy the D1 probe directory into production
+> - Do not build a multi-runtime generic adapter
+> - Do not use Pi session JSONL as the TreeAI database
+> - Do not sacrifice native tree-navigation semantics only for RPC isolation
+> - Do not use `latest` as a Pi dependency version
+> - D2 completion is not production release approval
+
+`gh` 当前不可用，因此 milestone/issue 尚未创建；以上内容是唯一真实的待创建材料，不含伪造 URL。

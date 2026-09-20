@@ -1,0 +1,72 @@
+=== TreeAI D1 verification ===
+started: 2026-09-20T12:41:14.847Z
+workspace: d1-spikes (git 75f5a5d, dirty)
+mode: repro
+
+--- checks ---
+[ 1/30] PASS     fixtures-integrity
+           5 fixture files verified against MANIFEST.sha256; tool-scenario aggregates consistent with README.txt
+[ 2/30] PASS     schemas-valid
+           both schemas parse; 22 probe instances accepted/rejected as expected (including both BLOCKED_CREDENTIALS encodings and the 2026-09-20 exit-code reservations: BLOCKED non-zero integer, NOT_RUN never 0)
+[ 3/30] PASS     schema-validator-selftest
+           SELFTEST: PASS (33 cases)
+[ 4/30] PASS     secrets-scanner-selftest
+           SELFTEST: PASS (23 rules fired, 30 findings, clean corpus clean, report masked)
+[ 5/30] PASS     run-dir-generator-selftest
+           SELFTEST: PASS (run dir generator verified; temp copy cleaned up)
+[ 6/30] PASS     deps-repro-sdk-node
+           package.json + package-lock.json present (clean-room reinstall: scripts/verify-d1 --repro)
+[ 7/30] PASS     deps-repro-rpc-python
+           all requirements.txt entries pinned with == (clean-room reinstall: scripts/verify-d1 --repro)
+[ 8/30] PASS     unit-tests-sdk-node
+           npm test exited 0
+[ 9/30] PASS     unit-tests-rpc-python
+           stdlib unittest passed (runner: PYTHONPATH=src python3 -m unittest discover -s tests; pytest not installed in /Library/Developer/CommandLineTools/usr/bin/python3); tail: gate probe 'navigate_tree': responded=True success=False error='Unknown command: navigate_tree'
+                    obs: navigate probe 'navigateTree': responded=True success=False error='Unknown command: navigateTree'
+                    obs: switch-back: method=switch_session(sessionPath) sessionIdRestored=True trunkHistoryRestored=True promptSettled=True leafId=e4
+                    obs: clone: sessionIdChanged=True historyKept=True promptSettled=True treeNodes=6 leafId=e7
+[10/30] PASS     repro-sdk-node
+           clean temp copy at sdk-node; see log
+[11/30] PASS     repro-rpc-python
+           clean temp copy at rpc-python; see log
+[12/30] PASS     scenario-sdk-node-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/basic/result.json (latest complete run of 6 run(s), 5 complete)
+[13/30] PASS     scenario-sdk-node-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/tool/result.json (latest complete run of 6 run(s), 5 complete)
+[14/30] PASS     scenario-sdk-node-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/steer/result.json (latest complete run of 6 run(s), 5 complete)
+[15/30] PASS     scenario-sdk-node-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/abort/result.json (latest complete run of 6 run(s), 5 complete)
+[16/30] PASS     scenario-sdk-node-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: runs/2026-09-20T02-12-05-667Z-6220/resume/result.json (latest complete run of 6 run(s), 5 complete)
+[17/30] PASS     scenario-rpc-python-basic
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/basic.result.json
+[18/30] PASS     scenario-rpc-python-tool
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/tool.result.json
+[19/30] PASS     scenario-rpc-python-steer
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/steer.result.json
+[20/30] PASS     scenario-rpc-python-abort
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/abort.result.json
+[21/30] PASS     scenario-rpc-python-resume
+           claimed PASS verified: exitCode=0, evidence files exist, events schema-valid with strictly increasing seq; source: flat layout evidence/rpc/resume.result.json
+[22/30] PASS     scenario-sdk-node-tree-navigation
+           tree-navigation PASS verified: schema, events, seq, exitCode and evidence traceability; SDK tree-nav run 2026-09-20T02-59-39-706Z-27995
+[23/30] PASS     scenario-rpc-python-tree-navigation
+           tree-navigation PASS verified: schema, events, seq, exitCode and evidence traceability; RPC canonical snapshot
+[24/30] PASS     comparison-parity
+           sdk-node and rpc-python both ran pi 0.85.1 with tal-token-plan-06c64a09/deepseek-v4.1-flash (thinking=off)
+[25/30] PASS     evidence-environment
+           valid JSON; top-level keys: comparisonBaseline, credentialPolicy, evidenceSources, generatedAt, implementations, packageManagers, pi, purpose, runtime, schemaVersion (no published schema yet)
+[26/30] PASS     schema-validation
+           12 result files valid (events JSONL validated inside each scenario row)
+[27/30] PASS     redaction-evidence
+           208 files scanned, no findings
+[28/30] PASS     redaction-workspace
+           86 files scanned, no findings
+[29/30] PASS     exit-codes
+           12 result files checked (PASS=12); exit 0 appears only on PASS, FAIL/BLOCKED exit non-zero, NOT_RUN never claims 0
+[30/30] PASS     residual-processes
+           no residual probe processes found
+
+counts: PASS=30 FAIL=0 BLOCKED=0 NOT_RUN=0
+verdict: ALL_PASS

@@ -1,0 +1,32 @@
+{
+  "selftest": "selftest-infra",
+  "version": "d1-v1",
+  "startedAt": "2026-09-20T12:24:39Z",
+  "passed": 0,
+  "failed": 23,
+  "results": [
+    {"name": "T1 fixtures-integrity row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T1 overall exit", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T2 scenario row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T2 overall exit", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T3 redaction-evidence row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T3 overall exit", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T4 scenario row", "expected": "PASS", "actual": "", "ok": false},
+    {"name": "T4 overall exit", "expected": "3", "actual": "1", "ok": false},
+    {"name": "T5 scenario row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T5 overall exit", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T6 exit-codes row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T6 overall exit", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T7 overall exit (post-write override)", "expected": "2", "actual": "1", "ok": false},
+    {"name": "T7 summary overall.exitCode synced", "expected": "2", "actual": "no-summary", "ok": false},
+    {"name": "T7 summary overall.verdict synced", "expected": "HAS_FAIL", "actual": "", "ok": false},
+    {"name": "T7 postWriteScan section", "expected": "present", "actual": "", "ok": false},
+    {"name": "T7 post-write FAIL row in checks", "expected": "present", "actual": "", "ok": false},
+    {"name": "T7 counts.FAIL >= 1", "expected": "ok", "actual": "", "ok": false},
+    {"name": "T7 resync introduced no new leak", "expected": "clean", "actual": "", "ok": false},
+    {"name": "T7 log rewritten with notice", "expected": "notified", "actual": "", "ok": false},
+    {"name": "T8 SDK tree-navigation row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T8 RPC tree-navigation row", "expected": "FAIL", "actual": "", "ok": false},
+    {"name": "T8 overall exit", "expected": "2", "actual": "1", "ok": false}
+  ]
+}

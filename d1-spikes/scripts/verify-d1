@@ -11,18 +11,16 @@ Runs, in order:
      rpc-python: pytest when installed, otherwise the standard-library
      fallback PYTHONPATH=src python -m unittest discover -s tests
      (Agent C ships unittest tests); BLOCKED only if neither is available.
-  4. The five scenario results for both implementations, each validated
-     against scenario-result.schema.json; PASS claims are additionally
-     traced to existing evidence files, schema-valid events JSONL with
-     strictly increasing seq, and matching implementation/scenario fields.
-     Evidence layouts (schemas/README.md section 2): flat
-     evidence/<dir>/<scenario>.result.json takes precedence per scenario;
-     otherwise the LATEST COMPLETE run under evidence/<dir>/runs/ is
-     selected (a run is complete when all five scenarios carry result.json)
-     and every run-sourced row must keep all of its evidence inside that
-     single run - files from different runs are never combined, and a
-     result referencing another run's files FAILs. BLOCKED claims must
-     still reference existing, valid evidence (task book section 0.6).
+  4. The five core scenario results for both implementations, plus the
+     supplementary tree-navigation result for each implementation, each
+     validated against scenario-result.schema.json; PASS claims are additionally
+     traced to evidence files, schema-valid events JSONL with strictly
+     increasing seq, matching implementation/scenario fields, and (for RPC)
+     canonical snapshot / append-only journal equality. Core evidence layouts
+     (schemas/README.md section 2): flat evidence/<dir>/<scenario>.result.json
+     takes precedence per core scenario; otherwise the LATEST COMPLETE run under
+     evidence/<dir>/runs/ is selected. Supplementary tree-navigation uses its
+     own SDK tree-nav runs root and RPC canonical snapshot/journal files.
   5. Comparison parity: both implementations must have run the same Pi
      version, provider, model and thinking configuration (task book
      section 5) before SDK-vs-RPC outcomes may be compared.
@@ -311,6 +309,12 @@ def check_schemas(checks, schemacheck_mod):
             (ev_schema, valid_event, True, "valid event (task book 6.1 example)"),
             (ev_schema, {k: v for k, v in valid_event.items() if k != "seq"},
              False, "event missing seq"),
+            (ev_schema, dict(valid_event, scenario="tree-navigation"),
+             True, "valid supplementary tree-navigation event"),
+            (res_schema, dict(valid_result, scenario="tree-navigation"),
+             True, "valid supplementary tree-navigation result"),
+            (res_schema, dict(valid_result, scenario="tree-nav"),
+             True, "valid SDK tree-nav compatibility alias"),
             (ev_schema, dict(valid_event, scenario="warmup"),
              False, "event with non-unified scenario"),
             (ev_schema, dict(valid_event, observedAt="not-a-date"),
@@ -812,6 +816,146 @@ def check_scenario(checks, schemacheck_mod, ev_schema, res_schema, impl, scen, c
                    evidence=[rel(f)])
 
 
+def resolve_supplementary_evidence():
+    """Resolve tree-navigation evidence without changing five-scenario run rules."""
+    sdk_root = os.path.join(ROOT, "evidence", "sdk", "tree-nav", "runs")
+    sdk_runs = sorted(
+        name for name in os.listdir(sdk_root)
+        if os.path.isdir(os.path.join(sdk_root, name))
+    ) if os.path.isdir(sdk_root) else []
+    sdk_complete = [
+        name for name in sdk_runs
+        if os.path.isfile(os.path.join(sdk_root, name, "tree-nav", "result.json"))
+        and os.path.isfile(os.path.join(sdk_root, name, "tree-nav", "events.jsonl"))
+    ]
+    rpc_dir = os.path.join(ROOT, "evidence", "rpc")
+    return {
+        "sdk": {
+            "runsRoot": sdk_root,
+            "allRuns": sdk_runs,
+            "completeRuns": sdk_complete,
+            "selectedRun": sdk_complete[-1] if sdk_complete else None,
+        },
+        "rpc": {
+            "result": os.path.join(rpc_dir, "tree-navigation.result.json"),
+            "journal": os.path.join(rpc_dir, "tree-navigation.result.jsonl"),
+            "events": os.path.join(rpc_dir, "tree-navigation.events.jsonl"),
+        },
+    }
+
+
+def _load_json(path):
+    with open(path, "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def check_supplementary_scenario(checks, schemacheck_mod, ev_schema,
+                                 res_schema, impl, info, cache):
+    """Validate tree-navigation evidence as a separate supplementary check."""
+    cid = "scenario-%s-tree-navigation" % impl
+    desc = "%s / tree-navigation supplementary scenario result" % impl
+    scenario_value = "tree-nav" if impl == "sdk-node" else "tree-navigation"
+    implementation_dir = os.path.join(ROOT, impl)
+
+    if impl == "sdk-node":
+        selected = info["selectedRun"]
+        if not os.path.isdir(implementation_dir):
+            checks.add(cid, desc, "NOT_RUN", "%s/ not delivered" % impl)
+            cache.append({"impl": impl, "scenario": scenario_value, "status": None,
+                          "exitCode": None, "file": None, "source": None})
+            return
+        if selected is None:
+            checks.add(cid, desc, "FAIL",
+                       "tree-navigation SDK evidence has no complete run",
+                       evidence=[rel(info["runsRoot"])])
+            cache.append({"impl": impl, "scenario": scenario_value, "status": None,
+                          "exitCode": None, "file": None, "source": None})
+            return
+        result_file = os.path.join(info["runsRoot"], selected, "tree-nav", "result.json")
+        events_file = os.path.join(info["runsRoot"], selected, "tree-nav", "events.jsonl")
+        source = "SDK tree-nav run %s" % selected
+        run_scope = {"runsRoot": info["runsRoot"], "selectedRun": selected,
+                     "resultFromRun": True}
+    else:
+        if not os.path.isdir(implementation_dir):
+            checks.add(cid, desc, "NOT_RUN", "%s/ not delivered" % impl)
+            cache.append({"impl": impl, "scenario": scenario_value, "status": None,
+                          "exitCode": None, "file": None, "source": None})
+            return
+        result_file = info["result"]
+        events_file = info["events"]
+        source = "RPC canonical snapshot"
+        run_scope = None
+
+    try:
+        data = _load_json(result_file)
+    except (OSError, ValueError) as e:
+        checks.add(cid, desc, "FAIL", "result file is not valid JSON: %s" % e,
+                   evidence=[rel(result_file)])
+        cache.append({"impl": impl, "scenario": scenario_value, "status": None,
+                      "exitCode": None, "file": rel(result_file), "source": source})
+        return
+
+    errors = schemacheck_mod.validate_instance(res_schema, data)
+    cache.append({"impl": impl, "scenario": data.get("scenario"),
+                  "status": data.get("status"), "exitCode": data.get("exitCode"),
+                  "file": rel(result_file), "source": source})
+    if errors:
+        checks.add(cid, desc, "FAIL",
+                   "schema errors in %s:\n%s" % (rel(result_file), "\n".join(errors[:8])),
+                   evidence=[rel(result_file)])
+        return
+    if data.get("implementation") != impl or data.get("scenario") != scenario_value:
+        checks.add(cid, desc, "FAIL",
+                   "result fields (implementation=%r, scenario=%r) do not match %s"
+                   % (data.get("implementation"), data.get("scenario"), rel(result_file)),
+                   evidence=[rel(result_file)])
+        return
+
+    if impl == "rpc-python":
+        try:
+            with open(info["journal"], "r", encoding="utf-8") as journal_fh:
+                journal_rows = [_load_json_line(line) for line in journal_fh if line.strip()]
+        except (OSError, ValueError, json.JSONDecodeError) as e:
+            checks.add(cid, desc, "FAIL", "cannot read result journal: %s" % e,
+                       evidence=[rel(info["journal"])])
+            return
+        if not journal_rows:
+            checks.add(cid, desc, "FAIL", "tree-navigation result journal is empty",
+                       evidence=[rel(info["journal"])])
+            return
+        if journal_rows[-1] != data:
+            checks.add(cid, desc, "FAIL",
+                       "canonical tree-navigation result snapshot is stale versus journal final row",
+                       evidence=[rel(result_file), rel(info["journal"])])
+            return
+
+    problems = traceability(data, impl, scenario_value, ev_schema, schemacheck_mod,
+                            strict=True, run_scope=run_scope)
+    if problems:
+        checks.add(cid, desc, "FAIL",
+                   "tree-navigation evidence is not traceable:\n" + "\n".join(problems[:8]),
+                   evidence=[rel(result_file)])
+        return
+    if data.get("status") == "PASS":
+        checks.add(cid, desc, "PASS",
+                   "tree-navigation PASS verified: schema, events, seq, exitCode and evidence traceability; %s"
+                   % source, evidence=[rel(result_file), rel(events_file)])
+    elif data.get("status") == "FAIL":
+        checks.add(cid, desc, "FAIL", "tree-navigation result preserved as FAIL",
+                   evidence=[rel(result_file)])
+    elif data.get("status") == "BLOCKED":
+        checks.add(cid, desc, "BLOCKED", "tree-navigation result is BLOCKED",
+                   evidence=[rel(result_file)])
+    else:
+        checks.add(cid, desc, "NOT_RUN", "tree-navigation result is NOT_RUN",
+                   evidence=[rel(result_file)])
+
+
+def _load_json_line(line):
+    return json.loads(line)
+
+
 def check_environment_file(checks):
     cid = "evidence-environment"
     desc = "Shared environment record evidence/environment.json"
@@ -1289,6 +1433,14 @@ def main(argv):
             guarded(check_scenario, checks, schemacheck_mod, ev_schema, res_schema,
                     impl, scen, cache, ev_info_by_impl[impl])
 
+    # 4a. Supplementary tree-navigation scenario. It is intentionally kept out
+    # of SCENARIOS so the five-scenario run completeness rule cannot regress.
+    supplementary = resolve_supplementary_evidence()
+    guarded(check_supplementary_scenario, checks, schemacheck_mod, ev_schema,
+            res_schema, "sdk-node", supplementary["sdk"], cache)
+    guarded(check_supplementary_scenario, checks, schemacheck_mod, ev_schema,
+            res_schema, "rpc-python", supplementary["rpc"], cache)
+
     # 4b. comparison parity (same Pi version / provider / model / thinking)
     guarded(check_comparison_parity, checks, ev_info_by_impl, cache)
 
@@ -1356,12 +1508,30 @@ def main(argv):
         },
         "mode": "repro" if args.repro else "default",
         "evidenceLayout": {
-            impl: (None if ev_info_by_impl.get(impl) is None else {
-                "selectedRun": ev_info_by_impl[impl]["selectedRun"],
-                "completeRuns": ev_info_by_impl[impl]["completeRuns"],
-                "incompleteRuns": ev_info_by_impl[impl]["incompleteRuns"],
-                "flatScenarios": ev_info_by_impl[impl]["flatScenarios"],
-            }) for impl in ("sdk-node", "rpc-python")
+            "sdk-node": (None if ev_info_by_impl.get("sdk-node") is None else {
+                "selectedRun": ev_info_by_impl["sdk-node"]["selectedRun"],
+                "completeRuns": ev_info_by_impl["sdk-node"]["completeRuns"],
+                "incompleteRuns": ev_info_by_impl["sdk-node"]["incompleteRuns"],
+                "flatScenarios": ev_info_by_impl["sdk-node"]["flatScenarios"],
+            }),
+            "rpc-python": (None if ev_info_by_impl.get("rpc-python") is None else {
+                "selectedRun": ev_info_by_impl["rpc-python"]["selectedRun"],
+                "completeRuns": ev_info_by_impl["rpc-python"]["completeRuns"],
+                "incompleteRuns": ev_info_by_impl["rpc-python"]["incompleteRuns"],
+                "flatScenarios": ev_info_by_impl["rpc-python"]["flatScenarios"],
+            }),
+            "tree-navigation": {
+                "sdk": {
+                    "selectedRun": supplementary["sdk"]["selectedRun"],
+                    "completeRuns": supplementary["sdk"]["completeRuns"],
+                    "allRuns": supplementary["sdk"]["allRuns"],
+                },
+                "rpc": {
+                    "result": rel(supplementary["rpc"]["result"]),
+                    "journal": rel(supplementary["rpc"]["journal"]),
+                    "events": rel(supplementary["rpc"]["events"]),
+                },
+            },
         },
         "checks": checks.rows,
         "counts": counts,

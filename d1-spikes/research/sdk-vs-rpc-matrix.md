@@ -1,22 +1,23 @@
 # SDK vs RPC 对照矩阵（sdk-vs-rpc-matrix）
 
-- 文档版本：1.2
-- 日期：2026-09-20（v1.2 收口收尾：回填 tree-navigation 补充证据、清除过时状态）；v1.1：2026-09-20；v1.0：2026-09-18
+- 文档版本：1.3
+- 日期：2026-09-20（v1.3：负责人批准 D1 Go、确定 SDK 路线、tree-navigation 纳入补充统一验收）；v1.2：收口收尾；v1.1：同步测量；v1.0：初始版
 - 作者：Agent A（D1 调研）
-- 状态：事实层与**测量层均已回填**（五场景两侧 PASS、provider parity 满足、`--repro` 干净复现双侧 PASS、共享环境记录已补齐、最新验收单轮全 PASS，见 §3.1/§3.3）；tree/navigation 以**场景外补充架构证据**登记（§3.6，非五场景 PASS、在共享契约枚举外、未经统一验收）；**评分规则与权重、最终推荐、是否扩展共享契约全部 PENDING_OWNER**
+- 状态：事实层、测量层和补充 tree-navigation 验收均已回填；五场景与 tree-navigation 双侧 PASS，provider parity、`--repro` 和共享环境记录均 PASS；负责人已批准 **TypeScript/Node.js + Pi SDK、Pi 0.85.1** 并授权 D2。评分规则/权重未用于决策，最终推荐列仅作历史分析记录；tree-navigation 现在使用 `tree-navigation` 规范名和 `tree-nav` 兼容别名，通过 verify-d1 独立补充检查。
 - 上游事实来源：`d1-spikes/research/pi-capability-inventory.md`（下称"清单"，事实编号沿用其证据等级 E1/E2/E3/E4）
 - 审阅对象：负责人（唯一有权确认权重与推荐的人）、Agent B、Agent C、Agent D
 - 修订记录：
   - 1.0（2026-09-18）：初始版；事实层完成，测量层全部 NOT_RUN（预留路径）。
   - 1.1（2026-09-20）：按负责人指示，Agent A 依据已提交证据（时点：仓库 commit `5eca1d1`，验收运行 `d1-spikes/evidence/verification/verify-20260920T021547888Z.json`）回填 §3 测量层：五场景 SDK/RPC-Python 双侧 PASS、B 的适配层与直接状态访问计数、C 的协议状态机与隔离成本、D 的验收结果；更正 §3.1 的实际证据路径（v1.0 预留的扁平 SDK 路径已被追加式 runs 布局取代）。§4/§5 状态不变（PENDING_OWNER）。B/C/D 对各自原始证据拥有解释权；本文与原始证据冲突时以原始证据为准，并按 §0.3 登记 `d1-spikes/reports/blockers.md`。
   - 1.2（2026-09-20）：收口收尾更新。(a) 新增 §3.6：tree/session navigation 的**场景外补充架构证据**——B 的 SDK 探针真实 PASS（`navigateTree` 同一 session 内移动叶指针、上下文按目标分支重建）；C 的 RPC 补充探针真实 PASS 且运行时证实 RPC 命令集无 `navigateTree` 等价命令（只能以 fork/switch_session/clone/get_entries 组合）。两份证据的 scenario 值均在共享 schema 枚举外、未经 verify-d1 统一验收，**不计入 §3.1 五场景 PASS**；§2.6 的 E3 推断随之升级为运行时证实。(b) 清除过时状态：`--repro` 干净复现已实际执行且双侧 PASS（03:21:22Z 轮 `verify-20260920T032122324Z.json` checks 10/11；03:45:14Z 轮 `verify-20260920T034514083Z.json` mode=repro 单轮 28 项全 PASS、exit 0）；共享 `evidence/environment.json` 已由集成人补齐（2026-09-20T03:33:45Z），evidence-environment 检查转 PASS；§3.3 锚定最新运行、§3.5 缺口表相应更新（v1.1 时点"树导航未测、`--repro` 未执行、共享 environment 缺失"均为历史事实，沿革保留于 §3.3/§3.5 与本记录）。(c) §4/§5 与最终推荐状态不变；新增待决项"是否扩展共享契约把 tree-nav 纳入统一验收"亦为 PENDING_OWNER（blockers DECISION-009）。
+  - 1.3（2026-09-20）：负责人批准 D1 Go 与候选 1，授权 D2；tree-navigation 纳入共享 scenario 契约和 verify-d1 独立补充检查（SDK `tree-nav` 兼容别名、RPC `tree-navigation` 规范名）；评分权重与最终推荐不作为本次决策计算。
 
 ---
 
 ## 0. 使用说明（负责人请先读）
 
 1. 本矩阵把**事实、测量、评分、权重**四层物理分离。事实层完成（来自官方文档与本机核对，逐条可溯源）；测量层已于 2026-09-20 按已提交证据回填（§3，五场景双侧 PASS；另含 §3.6 场景外补充架构证据，来源与路径逐条可溯源）；评分层依赖测量层与负责人确认的规则；权重层任何数值在负责人确认前都是**非约束示例**。
-2. **本矩阵不产出最终推荐。** 汇总公式见 §5，但计算结果与推荐结论必须等测量层填满、负责人确认权重后才有效。负责人未确认前，任何单元格中的 `PENDING_OWNER` 不得被当作默认值使用。
+2. 负责人已直接批准候选 1（TypeScript/Node.js + Pi SDK）并授权 D2，因此本矩阵不再用于决定 D1 路线；评分规则与权重表保留为可审计的历史分析输入，不产生新的架构推荐。
 3. Agent B/C/D 不得修改本文件的 §1（候选定义）、§2（事实层）与 §4（权重层）；只能按 §3 的路径约定填充测量层并在 §6 登记更新。发现事实层错误时写入 `d1-spikes/reports/blockers.md` 并通知 Agent A。
 
 ---
@@ -194,16 +195,16 @@
 
 | 能力 | 现状 | 影响 |
 |---|---|---|
-| tree/session navigation 的统一验收 | 已有场景外补充实测（§3.6：B/C 双侧真实 PASS），但 scenario 值在共享 schema 枚举外、未经 verify-d1 验收；是否扩展契约并补验收属 PENDING_OWNER（blockers DECISION-009） | §4 该维度现有双侧实测输入，但其证据等级受"契约外、未经统一验收"限制，如何计分随评分规则一并由负责人定夺 |
+| tree/session navigation 的统一验收 | 已纳入补充契约并通过 verify-d1 checks 22/23；SDK 同 session `navigateTree` 与 RPC fork/switch_session/clone 语义差异已形成事实输入 | `verify-20260920T124525829Z.json`；是否在 D2 将 RPC 组合语义提升为产品约束，按 D2 完成定义执行 |
 | extension UI（SDK 侧 TUI 嵌入 / RPC 侧对话框子协议） | 仅 E1 冒烟见过 RPC `setStatus` 事件（清单 §9.1）与 C 对启动噪声的容忍处理；`InteractiveMode` 嵌入、对话框阻塞应答等未实测 | 评分只能依据 §2 文档事实（E2 封顶） |
 | 容器隔离（§2.8 / 清单 §7.3 四模式） | 未纳入 D1（PO-A4）；两侧实测的"隔离"仅到子进程边界（C 的 kill/terminate/崩溃清理） | process isolation 维度的实测输入仅覆盖子进程层，不含 OS 级容器 |
 | 长时运行/并发会话压力 | 未测量（不在 D1 五场景范围） | 稳定性结论限于单次运行 |
 
 （历史沿革，保留：v1.1 时点 tree/session navigation 整体未测、`--repro` 干净复现未执行；两者已分别于 2026-09-20 收口窗口由 B/C 的补充探针与 03:21Z/03:45Z 验收运行解决，见 §3.3/§3.6。）
 
-### 3.6 补充架构证据（场景外）：tree/session navigation（2026-09-20 收口窗口交付；非五场景 PASS）
+### 3.6 补充架构证据：tree/session navigation（2026-09-20，已纳入补充统一验收）
 
-**定位（先读）**：tree/session navigation 不是 D1 五统一场景之一（任务书 §7 仅定义 basic/tool/steer/abort/resume）。本节登记 B/C 在收口窗口交付的**场景外补充探针**证据：两份结果的 scenario 值（B 为 `tree-nav`、C 为 `tree-navigation`）均在共享 `d1-spikes/schemas/scenario-result.schema.json` 的 scenario 枚举之外，当前契约下 schema-check 判 INVALID（Agent D 复核 B 的 result.json：唯一违规点即 scenario 枚举），**均未纳入 verify-d1 的 28 项检查，也不属于 §3.3 的 ALL_PASS**。双方各自在其结果文件的 limitations 中如实声明契约外身份（非隐藏）。是否扩展共享契约把 tree-nav 纳入统一验收：**PENDING_OWNER**（`d1-spikes/reports/blockers.md` DECISION-009；事实摘录见 `d1-spikes/reports/d1-verification.md` §4b）。**本节证据不得被引用为"五场景 PASS"或"验收通过"。**
+**定位**：tree/session navigation 是 D1 五统一场景之外的补充架构场景；负责人已决定将其纳入共享契约和 `verify-d1` 独立补充检查。规范 scenario 名称为 `tree-navigation`，现有 SDK 证据的 `tree-nav` 作为兼容别名保留。最新验收运行 `d1-spikes/evidence/verification/verify-20260920T124525829Z.json` 的 checks 22/23 已分别验证 SDK/RPC 证据、事件、seq、退出码和 RPC canonical snapshot/journal 一致性。
 
 **B（SDK，真实 PASS，2026-09-20T02:59:39Z）**：证据 `d1-spikes/evidence/sdk/tree-nav/runs/2026-09-20T02-59-39-706Z-27995/`（`tree-nav/{result.json,events.jsonl}`，另含 environment.json、run-summary.json、session-store/）。统一基线（pi 0.85.1、`tal-token-plan-06c64a09`/`deepseek-v4.1-flash`、thinking=off）；exitCode=0、durationMs 3847。关键观察（result.json observations）：
 
@@ -282,12 +283,7 @@
 候选总分 = Σ（维度评分 × 负责人确认权重）   // 仅当 §3 全部证据就位且 §4/§5 获负责人确认后执行
 ```
 
-**最终推荐：PENDING_OWNER。** 在以下条件全部满足前，本矩阵不产生、也不应被引用为推荐依据：
-
-1. §3.1 五场景 × 两实现全部为 PASS/FAIL/BLOCKED（不允许留 NOT_RUN）——**已满足**（2026-09-20：两侧全 PASS，`d1-spikes/evidence/verification/verify-20260920T034514083Z.json` checks 12–21）；
-2. Agent D 的 `d1-verification.md` 完成验收——**已交付**（2026-09-20 收口跟进版；最新验收运行 `verify-20260920T034514083Z.json` 单轮 28 项全 PASS、exit 0。v1.1 时点的两项 NOT_RUN——`--repro` ×2 与共享 `evidence/environment.json`——已分别由实际执行（双侧 PASS）与集成人补齐解决，历史沿革保留于 §3.3；`d1-spikes/reports/blockers.md` DELIVERY-004/006 的状态以该文件最新版为准）；
-3. 负责人书面确认 §4 评分规则与 §5 权重——**未满足**（本文件不催办、不代填）；
-4. 负责人明示是否接受 BLOCKED 项折算规则（当前未定义，属 PENDING_OWNER）——本轮五场景无 BLOCKED 项，该规则暂无适用对象，但定义权仍在负责人。
+**D1 路线结论：负责人已批准 TypeScript/Node.js + Pi SDK。** §4/§5 的评分表与权重保留为历史分析工具，未用于替代负责人决定；后续评分不应反向覆盖 ADR-001 的 Accepted 状态。D2 应继续验证 RPC 树导航组合语义、权限策略和生产工程边界。
 
 ---
 
@@ -298,11 +294,11 @@
 | Agent B | 填 §3.1 SDK 列状态、§3.2 SDK 列 |
 | Agent C | 填 §3.1 RPC 列状态、§3.2 RPC 列 |
 | Agent D | 填 §3.3；在 `d1-spikes/reports/d1-verification.md` 汇总，不回写他人原始证据 |
-| 负责人 | 确认 §4 评分规则、§5 权重与最终推荐 |
+| 负责人 | 确认 §4 评分规则、§5 权重与最终推荐（D1 路线已由 ADR-001 直接决定；D2 可继续使用本矩阵作风险输入） |
 | Agent A | 维护 §2 事实层（收到纠错时更新并注明来源与日期）；经负责人指示可代为回填 §3（v1.1 即属此情形：依据 B/C/D 已提交证据回填，并逐条注明来源；B/C/D 对各自原始证据拥有解释权，冲突时以原始证据为准） |
 
-每次更新须在文件头的修订记录追加一行。当前版本 1.2（2026-09-20）。
+每次更新须在文件头的修订记录追加一行。当前版本 1.3（2026-09-20）。
 
 ---
 
-*本矩阵不包含任何虚构测量结果。截至 v1.2（2026-09-20）：五场景 × 两实现均为 PASS，`--repro` 干净复现双侧 PASS，共享环境记录已由集成人补齐，最新验收运行单轮 28 项全 PASS（统一基线 pi 0.85.1 / `tal-token-plan-06c64a09` / `deepseek-v4.1-flash` / thinking=off，`d1-spikes/evidence/verification/verify-20260920T034514083Z.json`）；tree/session navigation 有场景外补充实测（§3.6，在共享契约枚举外、未经统一验收，**非五场景 PASS**）；§3.5 所列其余能力缺口未测；评分与权重、最终推荐、是否扩展共享契约全部 PENDING_OWNER。*
+*本矩阵不包含任何虚构测量结果。截至 v1.3（2026-09-20）：五场景 × 两实现均为 PASS，tree-navigation 双侧补充验收 PASS，`--repro` 干净复现双侧 PASS，共享环境记录 PASS，最新验收运行 `d1-spikes/evidence/verification/verify-20260920T124525829Z.json` 为 30/30 PASS（统一基线 pi 0.85.1 / `tal-token-plan-06c64a09` / `deepseek-v4.1-flash` / thinking=off）；负责人已批准 D1 Go 与 TypeScript/Node.js + Pi SDK，并授权 D2。§3.5 所列 extension UI、容器隔离等仍是 D2 风险输入；评分表保留为历史分析工具，未用于替代负责人决策。*

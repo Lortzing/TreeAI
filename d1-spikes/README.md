@@ -2,16 +2,19 @@
 
 ## 当前状态
 
-D1 技术验证已完成实验性收口，尚未完成负责人签字：
+D1 已由负责人批准为 **Go**，并授权进入 D2；这不是生产发布批准：
 
-- 五个统一场景（basic/tool/steer/abort/resume）：SDK 与 RPC 双侧均 `PASS`
-- tree-navigation 补充探针：两侧均完成真实证据；RPC 不提供 SDK `navigateTree` 等价命令
+- 首版路线：TypeScript/Node.js + Pi SDK 进程内直嵌
+- Pi：`0.85.1`
+- 风险边界：仅受信任本地模式接受同进程风险；同进程不构成沙箱
+- 权限边界：fixtures/负责人授权目录可读；shell、网络默认拒绝；高风险操作逐次授权
+- 五个统一场景：SDK 与 RPC 双侧均 `PASS`
+- tree-navigation：已加入共享 scenario 契约和统一验收；RPC 无 SDK `navigateTree` 等价命令
 - clean-room reproduction：SDK 与 RPC 均通过
-- 最新统一验收：以 `d1-spikes/scripts/verify-d1` 的最新 JSON 结果为准
-- ADR-001：`Proposed`，未批准
-- 最终路线、权限策略和 Go/Conditional Go/No-Go：`PENDING_OWNER`
+- ADR-001：`Accepted`（2026-09-20）
+- D2：已授权；正式工程与生产发布仍需独立门槛
 
-本目录是可删除的 D1 spike，不是正式产品代码。D1 不创建 TreeAI 领域数据库、Web UI 或通用 RuntimeAdapter。
+本目录是可删除的 D1 spike，不是正式产品代码。D1 证据通过不等于生产发布；D2 负责提炼已验证逻辑，生产发布还需要目标设备人工验收、权限审查和发布门禁。
 
 ## 固定实验基线
 
@@ -88,7 +91,7 @@ python3 d1-spikes/rpc-python/probe.py tree-nav
 
 ## 证据规则
 
-每次真实运行创建新的证据路径，不覆盖历史失败记录。事件 JSONL 必须逐行可解析、`seq` 严格递增、payload 脱敏；场景结果必须能追溯到事件文件和可信退出码。tree-navigation 是收口补充探针，不属于任务书定义的五个统一场景；其 scenario 枚举是否纳入共享 Schema 仍由负责人决定。
+每次真实运行创建新的证据路径，不覆盖历史失败记录。事件 JSONL 必须逐行可解析、`seq` 严格递增、payload 脱敏；场景结果必须能追溯到事件文件和可信退出码。tree-navigation 现为共享契约中的补充场景，规范名为 `tree-navigation`，历史 SDK `tree-nav` 为兼容别名；它独立于五个核心场景的 runs 完整性判断。
 
 完整事实、推断、限制和待决事项见：
 
@@ -97,15 +100,10 @@ python3 d1-spikes/rpc-python/probe.py tree-nav
 - `research/sdk-vs-rpc-matrix.md`
 - `research/adr-001-draft.md`
 
-## 负责人待决事项
+## D2 与生产发布边界
 
-- SDK 直嵌还是 RPC 子进程
-- 正式宿主语言与版本基线
-- 是否接受 SDK 同进程权限风险
-- 产品工具和目录权限
-- 是否批准 ADR-001
-- D1 Go/Conditional Go/No-Go
-- 是否正式确认当前 provider/model/thinking 基线
-- 是否将 tree-navigation 纳入共享场景契约
+D1 Go 只批准进入 D2 正式工程化，不等于生产发布批准。D2 按 ADR-001 的边界提炼 PiRuntime、TreeRepository、SessionReference、EventJournal 和 ToolPolicy；TreeAI 自有数据库仍是产品事实源。生产发布还必须满足目标设备人工验收、权限审查、异常状态清理和独立 CI/发布门禁。
 
-实验结果已准备好供负责人复现和审阅；本 README 不替负责人做架构批准或最终签字。
+## 已决定事项
+
+D1 路线、宿主、Pi 版本、受信任本地同进程风险、最小权限、ADR-001、D1 Go、统一 provider/model 基线和 tree-navigation 契约均已由负责人记录关闭；完整历史和批准记录见 `reports/blockers.md`。GitHub D2 milestone/issue 因本机 `gh` CLI 未安装暂未创建，状态见同文件的 GitHub D2 跟踪段。
