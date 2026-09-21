@@ -193,10 +193,10 @@
 - 原始契约外状态和中间验证历史保留；该交付阻塞关闭。DECISION-009 的范围决定记录仍保留在上方，供 D2 回顾。
 
 
-- 状态：`PENDING_TOOLING`
-- `gh` CLI 当前不可用（未安装），因此本次未创建 milestone/issue，也不伪造 URL。
-- 待创建资源：milestone `D2`；issue 标题建议为 `D2: Formalize trusted-local TreeAI runtime with Pi SDK`。
-- issue 正文应使用负责人批准的 D2 目标、PiRuntime/TreeRepository/SessionReference/EventJournal/ToolPolicy 边界、六个首批工作包、完成门槛和“不建议做的事”；前置条件为本节 DECISION-001、006、007 已关闭，tree-navigation 已纳入契约。
+- 状态：`CREATED`
+- milestone：`D2` — https://github.com/Lortzing/TreeAI/milestone/1
+- issue：`D2: Formalize trusted-local TreeAI runtime with Pi SDK` — https://github.com/Lortzing/TreeAI/issues/1
+- 创建方式：已使用已认证的 `gh` CLI 创建并核验；issue body 与负责人批准的 D2 目标、模块边界、工作包、完成门槛和不做清单一致。
 
 ### D2 milestone / issue 可粘贴材料（gh 安装并认证后创建）
 
@@ -257,4 +257,4 @@
 > - Do not use `latest` as a Pi dependency version
 > - D2 completion is not production release approval
 
-`gh` 当前不可用，因此 milestone/issue 尚未创建；以上内容是唯一真实的待创建材料，不含伪造 URL。
+`gh` 已安装并认证；以上材料已经在 milestone 1 / issue 1 中创建。以下正文仍保留作为归档副本。
