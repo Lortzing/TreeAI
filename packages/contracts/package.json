@@ -1,0 +1,12 @@
+{
+  "name": "@treeai/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TreeAI D2 frozen domain contracts. Type-only package: no runtime dependencies, no runtime code, no Pi SDK imports.",
+  "license": "MIT",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run typecheck && bash scripts/run-negative-type-tests.sh && bash scripts/check-no-pi-imports.sh"
+  }
+}

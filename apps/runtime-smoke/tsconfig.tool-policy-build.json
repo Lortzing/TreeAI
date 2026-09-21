@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist/tool-policy",
+    "rootDir": "../../packages/tool-policy/src",
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["../../packages/tool-policy/src/**/*.ts"]
+}

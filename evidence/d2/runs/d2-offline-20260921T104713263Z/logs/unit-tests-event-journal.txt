@@ -1,0 +1,95 @@
+$ npm test -w @treeai/event-journal
+
+> @treeai/event-journal@0.0.0 test
+> npm run typecheck && npm run build:test && node --test 'dist/tests/*.test.js'
+
+
+> @treeai/event-journal@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+✔ seq strictly increasing within a run is accepted (1,2,3 and gaps) (1.390667ms)
+✔ duplicate seq in the same run is detected and rejected (0.126ms)
+✔ seq below the current max is rejected (strict monotonicity) (0.0955ms)
+✔ same seq across different runs is fine (seq scope is per run) (0.097583ms)
+✔ duplicate eventId is detected and rejected (0.092708ms)
+✔ appendNext auto-allocates strictly increasing seq and fresh ids (1.460875ms)
+✔ invalid event shapes are rejected with precise reasons (0.338625ms)
+✔ journal deep-redacts payloads and evidence locators before persisting (0.677542ms)
+✔ JSONL file on disk never contains secrets after append (5.196917ms)
+✔ query API filters by runId, type, types, afterSeq and limit (0.443083ms)
+✔ reopen reloads events and keeps rejecting duplicates across restarts (2.180167ms)
+✔ torn tail (crash-partial line, no trailing newline) is repaired at open (1.688917ms)
+✔ corruption in the middle of the file fails loudly (corrupt reason) (1.135166ms)
+✔ file-level duplicate seq across restart is treated as corruption (0.742125ms)
+✔ append and recovery after close throw; queries remain available (0.322041ms)
+✔ concurrent appends are serialized and all seq land strictly increasing (0.226583ms)
+✔ every legal edge of the frozen transition table applies via run.state-changed (0.737167ms)
+✔ every illegal edge is rejected with the right anomaly kind (0.264458ms)
+✔ illegal regression examples: running->queued and queued->succeeded (0.061333ms)
+✔ terminal self-confirmation is tolerated as an idempotent no-op (0.469625ms)
+✔ explicit failed transition records the failure from payload (0.062166ms)
+✔ explicit failed transition without failure payload defaults to unknown (0.0455ms)
+✔ out-of-sync explicit transition is rejected with the current state preserved (0.046541ms)
+✔ agent.started derives queued->running; repeats are idempotent (0.040167ms)
+✔ run.abort-requested derives running->aborting; from queued it is illegal (0.053791ms)
+✔ runtime.error with user-abort code from running converges via two steps to aborted (0.356042ms)
+✔ runtime.error with a non-abort code converges to failed with the failure recorded (0.072917ms)
+✔ runtime.error from queued converges directly to failed (queued->failed is legal) (0.041166ms)
+✔ runtime.error user-abort from queued has no legal path (illegal-convergence) (0.03425ms)
+✔ agent.settled statuses converge from running (succeeded / failed / aborted via two steps) (0.074583ms)
+✔ agent.settled aborted from aborting converges directly (0.037583ms)
+✔ agent.settled without status derives from state: running->succeeded, aborting->aborted (0.035083ms)
+✔ agent.settled after a terminal state is informational (no status) or a double-terminal (with status) (0.038166ms)
+✔ runtime.recovered converges to resolvedTo with the recovered failure (0.0735ms)
+✔ malformed state-bearing payloads yield invalid-payload anomalies (0.0605ms)
+✔ unknown event types (pi.unknown, message.*, custom) never affect state and never throw (0.043708ms)
+✔ events are processed in seq order regardless of input order (0.026458ms)
+✔ empty stream yields the zero-event queued projection (0.028791ms)
+✔ isLegalRunStateTransition agrees with the expected edge table (0.068792ms)
+✔ piRuntimeEventKindToType maps known kinds, renames steer, and routes unknowns (0.409166ms)
+✔ recordPiRuntimeEvent: known kind maps 1:1 with pi-runtime evidence and caller timestamp (1.087375ms)
+✔ recordPiRuntimeEvent: steer.enqueued becomes run.steer-enqueued (0.096ms)
+✔ recordPiRuntimeEvent: unknown kind is preserved as pi.unknown with rawKind, no throw (0.105666ms)
+✔ recordPiRuntimeEvent: non-record payloads are wrapped as { value } (0.127291ms)
+✔ recordPiRuntimeEvent: secrets in an unredacted payload are caught by the journal safety net (0.197708ms)
+✔ recording the same PiRuntimeEvent twice is rejected as duplicate-event-id (0.140416ms)
+✔ recordError persists code/message/details but never the cause (0.8575ms)
+✔ session lifecycle records carry the reference and the previous snapshot (0.3205ms)
+✔ tree navigation records the entry pointer move (0.146417ms)
+✔ recordDuration emits duration.recorded with phase/timing/attributes (0.121541ms)
+✔ recorder allocates strictly increasing seq across all record methods (0.496958ms)
+✔ buildRunAudit aggregates errors, durations, session changes and navigations (0.410958ms)
+✔ buildRunAudit on an empty stream yields a queued projection and empty records (0.044208ms)
+✔ resolveRecoveryConvergence implements the host-crash / host-dispose table (0.635875ms)
+✔ host-crash converges a running run to failed(unknown) with hostInterrupted details (1.2595ms)
+✔ host-dispose converges running via aborting to aborted(user-abort) (1.176917ms)
+✔ host-dispose converges aborting directly to aborted (0.394958ms)
+✔ queued runs at dispose converge to failed(unknown, neverStarted) (0.341458ms)
+✔ recovery is idempotent: a second call finds the run already terminal (0.378042ms)
+✔ already-terminal runs are reported and left untouched (0.284375ms)
+✔ runIds filter scopes recovery; unknown ids are reported (0.464791ms)
+✔ mixed journal recovers every non-terminal run (0.480959ms)
+✔ file journal: crash -> reopen -> recover -> reopen keeps converged state (5.594292ms)
+✔ secret corpus: every synthetic secret is redacted and re-scan finds nothing (1.955917ms)
+✔ string redaction: cookie names survive, values never do (0.073375ms)
+✔ redactStringWithCategories reports category names, not contents (0.119292ms)
+✔ clean corpus: deepRedact returns an equal structure (no over-redaction of required fields) (0.730125ms)
+✔ clean corpus: scalar and array passthrough (0.119333ms)
+✔ deep nesting beyond the limit yields a depth marker without throwing (0.081875ms)
+✔ circular references are marked, not followed forever (0.053209ms)
+✔ unserializable values are replaced by typed markers (0.060167ms)
+✔ input is never mutated (0.068166ms)
+✔ findRemainingSecrets flags unredacted values (negative control) (0.109959ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.727834
+

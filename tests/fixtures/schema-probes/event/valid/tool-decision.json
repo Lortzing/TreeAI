@@ -1,0 +1,20 @@
+{
+  "eventId": "d2-offline-20260921T000000000Z-e42",
+  "runId": "d2-offline-20260921T000000000Z",
+  "seq": 42,
+  "occurredAt": "2026-09-21T23:59:59.999Z",
+  "type": "tool.decision",
+  "payload": {
+    "category": "write",
+    "outcome": "require-approval",
+    "ruleId": "workspace-write",
+    "reason": "write inside workspace requires user approval"
+  },
+  "evidence": [
+    {
+      "source": "treeai-journal",
+      "refId": "d2-offline-20260921T000000000Z-e41",
+      "locator": "events.jsonl#L41"
+    }
+  ]
+}

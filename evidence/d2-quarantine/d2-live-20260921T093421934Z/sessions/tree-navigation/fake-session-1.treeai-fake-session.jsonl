@@ -1,0 +1,7 @@
+{"format":"treeai-fake-session","version":1,"sessionId":"fake-session-1","piVersion":"0.85.1","model":{"providerId":"fake-provider","modelId":"fake-model"}}
+{"id":"e1","kind":"user","text":"This is branch A. Remember: branch A is about apples. Reply: ok","parent":"e0","createdAt":"2026-09-21T09:34:26.020Z"}
+{"id":"e2","kind":"assistant","text":"ok: acknowledged.","parent":"e1","createdAt":"2026-09-21T09:34:26.047Z"}
+{"id":"e3","kind":"user","text":"Now branch B, about batteries. Reply: ok","parent":"e2","createdAt":"2026-09-21T09:34:26.048Z"}
+{"id":"e4","kind":"assistant","text":"ok: acknowledged.","parent":"e3","createdAt":"2026-09-21T09:34:26.075Z"}
+{"id":"e5","kind":"user","text":"Which branch are we on? Reply with one word.","parent":"e2","createdAt":"2026-09-21T09:34:26.076Z"}
+{"id":"e6","kind":"assistant","text":"ok: acknowledged.","parent":"e5","createdAt":"2026-09-21T09:34:26.102Z"}

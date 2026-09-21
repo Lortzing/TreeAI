@@ -1,0 +1,47 @@
+
+> treeai@0.0.0 test:integration
+> npm test --workspace @treeai/runtime-smoke && node --test tests/integration/*.test.ts
+
+
+> @treeai/runtime-smoke@0.0.0 test
+> npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/runtime-smoke@0.0.0 build:deps
+> tsc -p tsconfig.tool-policy-build.json && npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+
+> @treeai/runtime-smoke@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ scenario child process runs offline under a sandboxed HOME without touching it (435.755958ms)
+runtime-smoke:scenario-report ok (runs=8 gen1-events=37 gen2-events=45)
+✔ wave-2 offline scenario: full eleven-step integration flow (45.981416ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 498.530084
+✔ e2e dual-branch: one session tree, two sibling branches, append-only (12.813166ms)
+✔ e2e switch-back: navigateTree to the branch point, context rebuilt, fork continues (12.842917ms)
+✔ e2e restart-recovery: dispose, restore, continue; I6 host-crash convergence (9.627584ms)
+✔ e2e session-missing: deleted file -> session-corrupt, availability degraded, domain data intact (5.854917ms)
+✔ e2e policy-overreach: default denials, approval is not allow, decisions journaled (4.441167ms)
+✔ e2e error-convergence: model error, user abort, dispose, host crash each reach the right terminal (18.343042ms)
+✔ evidence writer: guarded writes mask injected secrets and record leaks (1.531583ms)
+✔ scenario records written by every e2e test conform to the scenarioResult schema shape (0.096333ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 139.9495

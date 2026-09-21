@@ -1,0 +1,426 @@
+
+> treeai@0.0.0 test
+> npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts
+
+
+> @treeai/contracts@0.1.0 test
+> npm run typecheck && bash scripts/run-negative-type-tests.sh && bash scripts/check-no-pi-imports.sh
+
+
+> @treeai/contracts@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/brand-ids-not-interchangeable
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/error-code-not-in-enum
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/pinned-pi-version-drift
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/run-state-illegal-transition
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/run-state-illegal-via-helper
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/session-reference-missing-entry-id
+negative ok（已按预期拒绝）: <repo>/packages/contracts/tests/negatives/tool-decision-invalid-outcome
+negative type tests: 7/7 rejected as expected
+ok: no Pi imports in packages/contracts (src + tests)
+
+> @treeai/runtime-pi@0.0.0 test
+> npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts
+
+
+> @treeai/runtime-pi@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ real Pi SDK offline battery in a sandboxed child process (727.718209ms)
+✔ unit test files never import the real Pi port (import graph isolation) (0.481875ms)
+✔ classifyPiFailure maps message patterns to the 8 closed codes (4.451791ms)
+✔ classification precedence: timeout > auth > model-unavailable > abort > upstream (0.305708ms)
+✔ TreeAIError instances pass through unchanged (identity) (2.300958ms)
+✔ policy marker wins over message classification (0.18575ms)
+✔ cause and fallback message handling (0.111917ms)
+✔ TreeAIRuntimeError redacts message and details at construction (0.246666ms)
+✔ TreeAIRuntimeError is a real Error subclass satisfying the contract shape (0.062041ms)
+✔ redactText rules: headers, cookies, bearer, sk-keys, credential fields, home (0.074375ms)
+✔ redactJsonValue recurses arrays and nested objects; setHomedirForTesting injects (0.126042ms)
+✔ POLICY_DENIED_MARKER uses a cross-realm symbol key (0.087417ms)
+✔ createSession in-memory: snapshot, event, no file (4.010625ms)
+✔ createSession with sessionDir: file lazily flushed at first assistant message (Pi behavior) (6.655875ms)
+✔ createSession unknown model: TreeAIError model-unavailable + runtime.error event (0.805333ms)
+✔ createSession invalid inputs: TypeError (caller contract violations) (0.666208ms)
+✔ restoreSession after persisted prompts: same ids, entry advanced, prompt works (8.59225ms)
+✔ restoreSession failure taxonomy (3.972916ms)
+✔ restoreSession mid-tree reference: leaf repositioned via branch (9.196458ms)
+✔ restoreSession of never-prompted session: no file on disk (Pi lazy flush) -> missing-file (0.566625ms)
+✔ restoreSession pins the stored model across a completed-prompt session (7.949041ms)
+✔ restoreSession model not resolvable: model-unavailable with fallback marker (4.8145ms)
+✔ sessionDir directory is created if missing (file itself is lazily flushed) (0.574458ms)
+✔ navigateTree to assistant entry: same session/file, leaf moved, no new session (18.995416ms)
+✔ navigateTree to user entry: leaf moves to parent (Pi 0.85.1 semantics) (8.404083ms)
+✔ navigateTree to current leaf: no-op success (0.464958ms)
+✔ navigateTree preconditions: TypeError for bad input, in-flight run, missing session (6.162791ms)
+✔ prompt success: result message, advanced reference, normalized events (16.931292ms)
+✔ prompt sync throw: auth classification (401 unauthorized) (1.539041ms)
+✔ prompt sync throw: timeout classification (0.495417ms)
+✔ prompt sync throw: upstream classification (503) (0.535166ms)
+✔ prompt run failure (stopReason error + errorMessage): classified from state (3.612416ms)
+✔ prompt run failure with auth-shaped errorMessage: auth classification (3.300584ms)
+✔ prompt precondition violations: TypeError (thrown synchronously) (4.202875ms)
+✔ methods without session: TypeError; abort is a safe no-op (0.839708ms)
+✔ steer without in-flight run: TypeError (0.328833ms)
+✔ steer during in-flight run: same agent run, new turn, steer.enqueued event (127.497625ms)
+✔ abort during hanging run: abort resolves fast, prompt rejects user-abort, runtime non-streaming (10.302708ms)
+✔ double abort: idempotent, single run.abort-requested, no error (5.22ms)
+✔ abort with no in-flight run: silent no-op (0.976209ms)
+✔ safety timer: prompt still settles user-abort when Pi abort never converges (60.146833ms)
+✔ dispose with in-flight run: prompt settles user-abort, dispose idempotent, events stop (1.814625ms)
+✔ dispose with idle runtime: clean resolve (0.268792ms)
+✔ multiple listeners, unsubscribe, no history replay (9.167542ms)
+✔ eventId format, seq strict monotonic, occurredAt ISO (8.056333ms)
+✔ session replacement: old subscription invalidated, new effective, seq continuous, in-flight settled (4.853917ms)
+✔ listener exceptions are isolated: other listeners and the runtime survive (4.366834ms)
+✔ subscribe preconditions: TypeError for non-function and after dispose (0.384208ms)
+✔ port reporting a different Pi version fails the constructor explicitly (2.375542ms)
+✔ matching version constructs and reports piVersion = pinned (1.798084ms)
+✔ config without a real port object fails with TypeError (0.453042ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 814.248666
+
+> @treeai/persistence@0.0.0 test
+> npm run typecheck && node --test "tests/*.test.ts"
+
+
+> @treeai/persistence@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ backup and restore round-trip restores the snapshot state exactly (60.085792ms)
+✔ createBackup refuses to overwrite an existing target unless asked (15.128459ms)
+✔ restoreFromBackup can save the current database first (backupCurrentTo) (19.005792ms)
+✔ restore and validation fail clearly on bad backup files (6.869209ms)
+✔ restoreFromBackup is rejected for in-memory repositories (7.317042ms)
+✔ two repository handles on one file: second terminal update conflicts, no double terminal (48.368708ms)
+✔ parallel terminal updates from two worker threads produce exactly one terminal state (221.710125ms)
+✔ parallel restart sweeps converge all runs to failed exactly once (43.0235ms)
+✔ direct SQL mutation of a terminal run is blocked by the trigger (third defense layer) (3.876958ms)
+✔ migration applies to an empty file database (34.755042ms)
+✔ migration applies to an empty in-memory database (0.558917ms)
+✔ repeated migration execution is safe (idempotent) (9.327542ms)
+✔ corrupt file (not SQLite) fails with DatabaseCorruptError (1.77875ms)
+✔ foreign SQLite database (tables but no schema_migrations) is rejected (5.126916ms)
+✔ user_version set but schema_migrations missing is treated as corrupt (7.887417ms)
+✔ database from a newer TreeAI version fails with UnsupportedDatabaseVersionError (9.114333ms)
+✔ failed migration rolls back atomically and reports version (2.792542ms)
+✔ getBranchRecovery returns the full context for a dual-branch tree (39.59225ms)
+✔ recovery info surfaces degraded session availability for the latest run (1.690042ms)
+✔ getTreeRecovery covers every branch of the tree (1.834958ms)
+✔ empty branch recovery has no episodes and null latest run (0.772416ms)
+✔ failNonTerminalRuns sweeps I6 recovery: non-terminal to failed, idempotent, terminals untouched (20.120917ms)
+✔ creates the full hierarchy and persists dual-branch relationship across reopen (36.287709ms)
+✔ branch parent validation: missing tree/parent, cross-tree parent, self-parent (3.288917ms)
+✔ tree/episode/run parent validation (1.033625ms)
+✔ duplicate entity ids are rejected as constraint violations without partial state (1.228792ms)
+✔ run creation with explicit duplicate id leaves no partial rows (1.66275ms)
+✔ session reference validation rejects empty reference fields (1.178417ms)
+✔ get/find semantics: EntityNotFoundError vs null (1.073791ms)
+✔ every legal transition in the frozen table is accepted (17.555333ms)
+✔ illegal transitions are rejected (I5 no-skip, no-rollback; I7 exhaustive table) (5.987292ms)
+✔ terminal states are absorbing (I2) and singular (I3): same-connection double terminal rejected (0.952083ms)
+✔ failure is stored iff state is failed (2.130416ms)
+✔ aborting converges to aborted (I4) and leaves no permanent aborting state (1.335792ms)
+✔ updateRunState on unknown run is EntityNotFoundError (0.970791ms)
+✔ creating a run never requires the Pi session file to exist (TreeAI DB is the fact source) (22.211791ms)
+✔ deleting the session file degrades availability but never deletes domain data (15.768833ms)
+✔ markSessionFileAvailability batches per file in both directions (11.628ms)
+✔ refreshSessionAvailability uses the injected probe and never reads session content (7.9815ms)
+✔ updateRunSessionReference replaces the whole reference (entryId advance) (4.902084ms)
+✔ updateSessionAvailability validates the unavailable reason (4.175959ms)
+✔ mid-transaction failure rolls back every write in the transaction (22.534084ms)
+✔ nested savepoint: inner failure caught by caller rolls back only the inner scope (0.897959ms)
+✔ nested failure that propagates rolls back the outer transaction too (0.985625ms)
+✔ closed repository rejects operations and close is idempotent (1.021917ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 451.959417
+
+> @treeai/tool-policy@0.0.0 test
+> npm run typecheck && bash scripts/run-tests.sh
+
+
+> @treeai/tool-policy@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ 审计记录与返回的 ToolDecision 字段一致 (2.920917ms)
+✔ targetPath 记录 canonical 形态 (0.605708ms)
+✔ 审计不含命令/主机原值与秘密形态 (0.381583ms)
+✔ 审计从不包含文件正文（引擎不读取目标内容） (0.673833ms)
+✔ reason 为固定模板，不含用户可控内容 (0.542917ms)
+✔ action 标签按安全模式净化 (0.695375ms)
+✔ 容量截断显式计数，保留最新记录 (0.843125ms)
+✔ 审计快照为只读副本（追加式纪律） (0.535ms)
+✔ issue 固化 canonical 目标路径与显式有效期 (2.299542ms)
+✔ revoke 后授权立即失效，重复 revoke 返回 false (0.810709ms)
+✔ purgeExpired 清理过期授权并返回数量 (0.484333ms)
+✔ listActive 不含已消费的单次授权与过期授权 (0.8685ms)
+✔ 过期边界：now === expiresAt 即失效 (0.828333ms)
+✔ 授权生命周期写入审计（issued/consumed/revoked/purged） (0.768916ms)
+✔ absolute path with redundant separators and dot segments normalizes (0.806792ms)
+✔ root traversal clamps at filesystem root (0.149291ms)
+✔ relative path resolves against the provided cwd (0.674792ms)
+✔ relative path without cwd resolves against process.cwd() (0.481459ms)
+✔ non-existent suffix stays under the nearest existing ancestor (0.670083ms)
+✔ fully existing path resolves symlinks to the real location (0.930667ms)
+✔ symlink escape resolves outside the linking directory (0.632834ms)
+✔ dot-dot after a symlink follows OS semantics, not lexical collapse (0.488458ms)
+✔ dangling symlink as final target is unresolvable (null) (0.316542ms)
+✔ dangling symlink as intermediate component is unresolvable (null) (0.312958ms)
+✔ path under a file component stays under it lexically (OS would fail) (0.330875ms)
+✔ empty input returns null (fail closed) (0.072459ms)
+✔ 大小写语义：已存在组件收敛到盘上真实大小写，不存在后缀保留输入大小写 (0.436875ms)
+✔ 不存在后缀中的 `..` 不可解析（fail closed） (0.504375ms)
+✔ isPathWithin: containment boundaries (0.049959ms)
+✔ 默认配置下全部类别拒绝（DEFAULT_TOOL_POLICY_CONFIG） (2.177583ms)
+✔ readRoots 为空时 fixtures 式目录也拒绝（目录必须由调用方显式传入） (0.420334ms)
+✔ fixtures 目录内读取允许 (0.894709ms)
+✔ readRoot 内尚不存在的目标路径也可评估（规范化到最近存在祖先） (0.543833ms)
+✔ 授权目录之外的读取拒绝 (0.480667ms)
+✔ `..` 穿越出 read root 拒绝 (0.475042ms)
+✔ 符号链接逃逸拒绝（链接位于 read root 内、真实位置在外） (0.496125ms)
+✔ read 请求缺失目标路径拒绝（fail closed） (0.308459ms)
+✔ read 目标不可规范化（悬空符号链接）拒绝 (0.549875ms)
+✔ shell 默认拒绝 (0.306667ms)
+✔ network 默认拒绝 (0.382834ms)
+✔ 显式配置 allowShell 后 shell 才允许（risk 仍为 high） (0.057083ms)
+✔ 显式配置 allowNetwork 后 network 才允许 (0.050792ms)
+✔ workspace 外写入拒绝 (0.422625ms)
+✔ workspace 内未授权写入返回 require-approval（不是 allow） (0.400625ms)
+✔ workspace 内不存在的新路径（嵌套目录）同样 require-approval (0.361208ms)
+✔ write 目标不可规范化拒绝 (0.481375ms)
+✔ 单次授权：产生一次 allow 后即消费，不可复用 (0.883459ms)
+✔ 限时多次授权：有效期内可复用，过期后失效 (0.633459ms)
+✔ 授权路径精确匹配：授权 A 路径不覆盖 B 路径 (0.517417ms)
+✔ 授权类别精确匹配：write 授权不覆盖 other-high-risk (0.500042ms)
+✔ 授权匹配规范化路径：等价路径形式命中同一授权 (1.429ms)
+✔ 授权签发校验：不可授权类别 / 越界目标 / 非法有效期 / 不可解析路径 (0.755459ms)
+✔ other-high-risk：无路径拒绝、越界拒绝、workspace 内需授权、授权后允许 (1.145041ms)
+✔ 相对 targetPath 按配置 cwd 解析 (0.640167ms)
+✔ 大小写差异：已存在组件按平台语义收敛，不存在后缀精确匹配（fail closed） (0.813083ms)
+✔ 风险级别映射：read=low，其余=high (0.068084ms)
+✔ 配置结构非法抛 TypeError（编程错误，不产出决定） (0.2265ms)
+✔ 请求类别不在封闭枚举内抛 TypeError (0.230375ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66.955667
+
+> @treeai/event-journal@0.0.0 test
+> npm run typecheck && npm run build:test && node --test 'dist/tests/*.test.js'
+
+
+> @treeai/event-journal@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+✔ seq strictly increasing within a run is accepted (1,2,3 and gaps) (0.714ms)
+✔ duplicate seq in the same run is detected and rejected (0.105667ms)
+✔ seq below the current max is rejected (strict monotonicity) (0.090333ms)
+✔ same seq across different runs is fine (seq scope is per run) (0.0975ms)
+✔ duplicate eventId is detected and rejected (0.090875ms)
+✔ appendNext auto-allocates strictly increasing seq and fresh ids (1.433416ms)
+✔ invalid event shapes are rejected with precise reasons (0.337375ms)
+✔ journal deep-redacts payloads and evidence locators before persisting (0.655ms)
+✔ JSONL file on disk never contains secrets after append (7.498417ms)
+✔ query API filters by runId, type, types, afterSeq and limit (0.365166ms)
+✔ reopen reloads events and keeps rejecting duplicates across restarts (2.265ms)
+✔ torn tail (crash-partial line, no trailing newline) is repaired at open (1.333834ms)
+✔ corruption in the middle of the file fails loudly (corrupt reason) (1.072167ms)
+✔ file-level duplicate seq across restart is treated as corruption (1.009708ms)
+✔ append and recovery after close throw; queries remain available (0.347167ms)
+✔ concurrent appends are serialized and all seq land strictly increasing (0.23375ms)
+✔ every legal edge of the frozen transition table applies via run.state-changed (0.742375ms)
+✔ every illegal edge is rejected with the right anomaly kind (0.263084ms)
+✔ illegal regression examples: running->queued and queued->succeeded (0.059459ms)
+✔ terminal self-confirmation is tolerated as an idempotent no-op (0.048917ms)
+✔ explicit failed transition records the failure from payload (0.562291ms)
+✔ explicit failed transition without failure payload defaults to unknown (0.086041ms)
+✔ out-of-sync explicit transition is rejected with the current state preserved (0.063ms)
+✔ agent.started derives queued->running; repeats are idempotent (0.045375ms)
+✔ run.abort-requested derives running->aborting; from queued it is illegal (0.054625ms)
+✔ runtime.error with user-abort code from running converges via two steps to aborted (0.396083ms)
+✔ runtime.error with a non-abort code converges to failed with the failure recorded (0.078125ms)
+✔ runtime.error from queued converges directly to failed (queued->failed is legal) (0.045917ms)
+✔ runtime.error user-abort from queued has no legal path (illegal-convergence) (0.045167ms)
+✔ agent.settled statuses converge from running (succeeded / failed / aborted via two steps) (0.222625ms)
+✔ agent.settled aborted from aborting converges directly (0.145959ms)
+✔ agent.settled without status derives from state: running->succeeded, aborting->aborted (0.105042ms)
+✔ agent.settled after a terminal state is informational (no status) or a double-terminal (with status) (0.106208ms)
+✔ runtime.recovered converges to resolvedTo with the recovered failure (0.102333ms)
+✔ malformed state-bearing payloads yield invalid-payload anomalies (0.15875ms)
+✔ unknown event types (pi.unknown, message.*, custom) never affect state and never throw (0.125416ms)
+✔ events are processed in seq order regardless of input order (0.081666ms)
+✔ empty stream yields the zero-event queued projection (0.059416ms)
+✔ isLegalRunStateTransition agrees with the expected edge table (0.1735ms)
+✔ piRuntimeEventKindToType maps known kinds, renames steer, and routes unknowns (0.444167ms)
+✔ recordPiRuntimeEvent: known kind maps 1:1 with pi-runtime evidence and caller timestamp (1.1175ms)
+✔ recordPiRuntimeEvent: steer.enqueued becomes run.steer-enqueued (0.10525ms)
+✔ recordPiRuntimeEvent: unknown kind is preserved as pi.unknown with rawKind, no throw (0.109417ms)
+✔ recordPiRuntimeEvent: non-record payloads are wrapped as { value } (0.100917ms)
+✔ recordPiRuntimeEvent: secrets in an unredacted payload are caught by the journal safety net (0.141209ms)
+✔ recording the same PiRuntimeEvent twice is rejected as duplicate-event-id (0.12ms)
+✔ recordError persists code/message/details but never the cause (1.124083ms)
+✔ session lifecycle records carry the reference and the previous snapshot (0.322875ms)
+✔ tree navigation records the entry pointer move (0.146625ms)
+✔ recordDuration emits duration.recorded with phase/timing/attributes (0.126625ms)
+✔ recorder allocates strictly increasing seq across all record methods (0.382875ms)
+✔ buildRunAudit aggregates errors, durations, session changes and navigations (0.419416ms)
+✔ buildRunAudit on an empty stream yields a queued projection and empty records (0.047167ms)
+✔ resolveRecoveryConvergence implements the host-crash / host-dispose table (0.664084ms)
+✔ host-crash converges a running run to failed(unknown) with hostInterrupted details (1.267542ms)
+✔ host-dispose converges running via aborting to aborted(user-abort) (1.226916ms)
+✔ host-dispose converges aborting directly to aborted (0.20275ms)
+✔ queued runs at dispose converge to failed(unknown, neverStarted) (0.162083ms)
+✔ recovery is idempotent: a second call finds the run already terminal (0.153333ms)
+✔ already-terminal runs are reported and left untouched (0.160208ms)
+✔ runIds filter scopes recovery; unknown ids are reported (0.226833ms)
+✔ mixed journal recovers every non-terminal run (0.215917ms)
+✔ file journal: crash -> reopen -> recover -> reopen keeps converged state (3.931167ms)
+✔ secret corpus: every synthetic secret is redacted and re-scan finds nothing (2.898166ms)
+✔ string redaction: cookie names survive, values never do (0.079625ms)
+✔ redactStringWithCategories reports category names, not contents (0.129958ms)
+✔ clean corpus: deepRedact returns an equal structure (no over-redaction of required fields) (0.728334ms)
+✔ clean corpus: scalar and array passthrough (0.065875ms)
+✔ deep nesting beyond the limit yields a depth marker without throwing (0.076917ms)
+✔ circular references are marked, not followed forever (0.052416ms)
+✔ unserializable values are replaced by typed markers (0.063417ms)
+✔ input is never mutated (0.910625ms)
+✔ findRemainingSecrets flags unredacted values (negative control) (0.129791ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 59.074708
+✔ createSession: session.created, reference fields, pinned version (13.355917ms)
+✔ prompt: single agent run with agent.started once and agent.settled once; entries appended (4.088292ms)
+✔ steer during streaming: enqueued event, NEW TURN in the SAME agent run (249.043708ms)
+✔ steer without an in-flight run is a caller contract violation (TypeError) (2.346458ms)
+✔ prompt while streaming is a caller contract violation (TypeError) (126.376792ms)
+✔ abort: in-flight prompt rejects with user-abort; abort without run is silent no-op (129.628875ms)
+✔ navigateTree: same session, same file, append-only entries, context rebuild (14.885292ms)
+✔ navigateTree while streaming is a caller contract violation (124.912875ms)
+✔ session replacement: createSession again emits session.replaced then session.created; seq continues (7.591875ms)
+✔ restoreSession: happy path restores entries, leaf and emits session.restored (14.162875ms)
+✔ restoreSession: missing file -> session-corrupt (missing-file) (3.864292ms)
+✔ restoreSession: version drift -> session-corrupt (version-mismatch) (3.0225ms)
+✔ restoreSession: corrupt file -> session-corrupt (corrupt) (1.616ms)
+✔ dispose: idempotent; in-flight prompt settles user-abort; methods after dispose throw (4.866125ms)
+✔ scripted failure: prompt rejects with the scripted TreeAIError code (2.161417ms)
+✔ tool policy integration: deny makes the prompt fail with policy-denied and emits tool events (5.475375ms)
+✔ tool policy integration: allow proceeds and finishes clean (5.212917ms)
+✔ multi-turn script: several assistant turns in one run, single agent.started (9.280375ms)
+✔ the real fixture tree is fully consistent (hashes, manifest, probes) (10.275834ms)
+✔ tampered fixture content is detected (hash mismatch) (18.187542ms)
+✔ injected stray fixture file is detected (manifest divergence) (41.555583ms)
+✔ an invalid probe relabeled valid is detected (constraint-loss detection) (53.917584ms)
+✔ schemas themselves are valid JSON with required basics (0.379833ms)
+✔ TRANSITIONS re-declaration matches the frozen contract table (satisfies check) (2.567125ms)
+✔ I1: new runs start queued (8.416417ms)
+✔ legal path queued->running->succeeded (0.104417ms)
+✔ I5: no skipping states (queued -> succeeded is illegal) (0.181875ms)
+✔ I5: no backwards transitions (running -> queued is illegal) (0.059459ms)
+✔ I2: terminals are absorbing (succeeded -> running illegal) (0.059042ms)
+✔ I3: a run cannot enter a second terminal even through the table (0.054375ms)
+✔ I4: aborting only from running; converges to aborted or failed (0.070792ms)
+✔ I6: host-crash recovery moves every non-terminal run to failed with hostInterrupted (0.099125ms)
+✔ I6: dispose recovery converges running/aborting to aborted (0.0895ms)
+✔ I6: queued run at dispose converges via the only legal edge (failed) (0.057916ms)
+✔ Journal: seq strictly increases per runId and is independent across runs (0.100167ms)
+✔ Journal: duplicate (runId, seq) is impossible by construction (append allocates seq) (0.057625ms)
+✔ Journal: projection replays legal state machines and rejects illegal ones (0.109ms)
+✔ FakeToolPolicy: default deny with ruleId null (0.094416ms)
+✔ FakeToolPolicy: read under roots allowed, outside denied (with .. normalization) (0.148042ms)
+✔ FakeToolPolicy: write inside workspace requires approval, outside denied (0.04525ms)
+✔ FakeToolPolicy: network denied; other-high-risk denied (0.0365ms)
+✔ isUnder handles plain and nested paths (0.035333ms)
+✔ policy decisions carry no secrets or file contents in reason (0.059375ms)
+✔ type: string / integer / number / boolean / null / array / object (0.699ms)
+✔ enum and const (0.113125ms)
+✔ required / properties / additionalProperties (0.108083ms)
+✔ array: items / minItems / maxItems / uniqueItems (0.092ms)
+✔ string: minLength / maxLength / pattern (0.12775ms)
+✔ number: minimum / maximum (0.055584ms)
+✔ anyOf / oneOf / allOf / not (0.097125ms)
+✔ format date-time: UTC-only RFC3339 (0.103916ms)
+✔ local $ref through $defs (0.121417ms)
+✔ unsupported keyword is a loud error, never a silent pass (0.249292ms)
+✔ boolean root schemas: true allows everything, false allows nothing (0.057667ms)
+✔ non-object schema input is rejected loudly (0.082375ms)
+✔ selftest corpus: cases exist and all pass (0.471709ms)
+✔ real schemas accept their canonical valid instances (0.100208ms)
+✔ content rules fire on synthetic secret shapes (1.358167ms)
+✔ json-secret-field fires on token-ish keys with digit-bearing string values (0.088042ms)
+✔ clean text produces no findings (0.290708ms)
+✔ home paths are detected and redaction replaces them (0.061667ms)
+✔ mask keeps only a prefix and the length (0.0485ms)
+✔ maskSecretsInText removes every match (0.079667ms)
+✔ filename rules (0.234833ms)
+✔ scanFiles: findings never contain the raw secret (1.018875ms)
+✔ scanFiles skips node_modules and .git (1.346125ms)
+✔ scanner self-test (synthetic corpus, temp dir, every rule fires, clean corpus clean) (4.216333ms)
+✔ all PASS -> ALL_PASS / exit 0 (1.341583ms)
+✔ any FAIL -> HAS_FAIL / exit 2 even with BLOCKED and NOT_RUN present (0.19525ms)
+✔ no FAIL but BLOCKED/NOT_RUN -> INCOMPLETE / exit 3 (0.12425ms)
+✔ empty item list -> ALL_PASS / exit 0 (a verifier with zero checks is a bug caught elsewhere) (0.119541ms)
+✔ exit-code consistency: PASS must be 0 (0.245ms)
+✔ exit-code consistency: FAIL needs non-zero exit AND structured error (0.093333ms)
+✔ exit-code consistency: BLOCKED/NOT_RUN need reason, never exit 0 (0.081167ms)
+✔ exit-code consistency: unknown status is a problem (0.048083ms)
+ℹ tests 75
+ℹ suites 0
+ℹ pass 75
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 819.083375
+✔ e2e dual-branch: one session tree, two sibling branches, append-only (14.345708ms)
+✔ e2e switch-back: navigateTree to the branch point, context rebuilt, fork continues (13.161958ms)
+✔ e2e restart-recovery: dispose, restore, continue; I6 host-crash convergence (9.905292ms)
+✔ e2e session-missing: deleted file -> session-corrupt, availability degraded, domain data intact (5.962833ms)
+✔ e2e policy-overreach: default denials, approval is not allow, decisions journaled (3.627875ms)
+✔ e2e error-convergence: model error, user abort, dispose, host crash each reach the right terminal (17.344291ms)
+✔ evidence writer: guarded writes mask injected secrets and record leaks (2.079542ms)
+✔ scenario records written by every e2e test conform to the scenarioResult schema shape (0.13775ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 148.659542
+✔ the six frozen scenario ids are exactly the task-book list (0.558833ms)
+✔ all six scenarios PASS against the fake driver and validate against scenarioResult (3170.936291ms)
+✔ loadPiDriver reports the honest state (real module or NOT_RUN reason) (561.781375ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3820.073292

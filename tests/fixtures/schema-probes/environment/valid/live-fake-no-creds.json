@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-21T14:15:00.000Z",
+  "mode": "live",
+  "driver": "fake",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.0.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": null
+  },
+  "credentialPolicy": {
+    "policy": "none",
+    "note": "live requested but no controlled credentials present; all scenarios must report BLOCKED"
+  },
+  "verifier": { "name": "verify-d2-live", "version": "1.0.0" }
+}

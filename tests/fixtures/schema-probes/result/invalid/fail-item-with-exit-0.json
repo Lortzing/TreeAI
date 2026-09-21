@@ -1,0 +1,18 @@
+{
+  "runId": "d2-offline-20260921T101112000Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T10:11:12.000Z",
+  "endedAt": "2026-09-21T10:11:20.000Z",
+  "verdict": "HAS_FAIL",
+  "counts": { "pass": 0, "fail": 1, "blocked": 0, "notRun": 0 },
+  "exitCode": 2,
+  "results": [
+    {
+      "id": "unit-tests",
+      "status": "FAIL",
+      "exitCode": 0,
+      "error": { "message": "3 tests failed" }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "$comment": "Expectation manifest for the D2 schema probe corpus. Every *.json under schema-probes/{event,result,environment}/{valid,invalid} MUST have an entry here; the fixtures-integrity check fails on any mismatch (missing entry, stray file, wrong expectation, or hash drift). valid = must validate against the named schema; invalid = must be rejected.",
+  "schemas": {
+    "event": "../../../schemas/d2/event.schema.json",
+    "result": "../../../schemas/d2/result.schema.json",
+    "environment": "../../../schemas/d2/environment.schema.json"
+  },
+  "probes": {
+    "event/valid/minimal.json": "valid",
+    "event/valid/tool-decision.json": "valid",
+    "event/valid/session-replaced.json": "valid",
+    "event/invalid/missing-event-id.json": "invalid",
+    "event/invalid/bad-event-id-pattern.json": "invalid",
+    "event/invalid/seq-zero.json": "invalid",
+    "event/invalid/non-utc-timestamp.json": "invalid",
+    "event/invalid/type-no-dot-notation.json": "invalid",
+    "event/invalid/payload-not-object.json": "invalid",
+    "event/invalid/additional-property.json": "invalid",
+    "event/invalid/bad-evidence-source.json": "invalid",
+    "result/valid/all-pass.json": "valid",
+    "result/valid/incomplete-wave1.json": "valid",
+    "result/valid/live-all-pass.json": "valid",
+    "result/invalid/pass-item-with-exit-1.json": "invalid",
+    "result/invalid/fail-item-with-exit-0.json": "invalid",
+    "result/invalid/not-run-without-reason.json": "invalid",
+    "result/invalid/verdict-exitcode-mismatch.json": "invalid",
+    "result/invalid/unknown-status.json": "invalid",
+    "result/invalid/counts-additional-property.json": "invalid",
+    "environment/valid/offline.json": "valid",
+    "environment/valid/live-drift-recorded.json": "valid",
+    "environment/valid/live-fake-no-creds.json": "valid",
+    "environment/invalid/pinned-latest.json": "invalid",
+    "environment/invalid/missing-credential-policy.json": "invalid",
+    "environment/invalid/additional-top-level-property.json": "invalid"
+  }
+}

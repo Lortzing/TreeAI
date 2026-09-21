@@ -1,0 +1,93 @@
+{
+  "runId": "d2-live-20260921T093531182Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "live",
+  "driver": "pi",
+  "startedAt": "2026-09-21T09:35:31.182Z",
+  "endedAt": "2026-09-21T09:35:31.321Z",
+  "verdict": "INCOMPLETE",
+  "counts": {
+    "pass": 3,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 6
+  },
+  "exitCode": 3,
+  "results": [
+    {
+      "id": "live-scenario-basic",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "reason": "real runtime driver unavailable: @treeai/runtime-pi not importable: Error: Cannot find package '[HOME]/Projects/TreeAI/node_modules/@treeai/runtime-pi/index.js' imported from [HOME]/Projects/TreeAI/tests/live/framework.ts"
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "real-driver run; credentials via controlled env injection only"
+  ]
+}

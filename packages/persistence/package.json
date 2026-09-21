@@ -1,0 +1,17 @@
+{
+  "name": "@treeai/persistence",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TreeRepository, migrations and SessionReference persistence for the TreeAI-owned database (Forest/Tree/Branch/Episode/Run). Depends only on @treeai/contracts (type-only) and Node built-ins (node:sqlite). MUST NOT import Pi types or write Pi session JSONL.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run typecheck && node --test \"tests/*.test.ts\""
+  },
+  "dependencies": {
+    "@treeai/contracts": "0.1.0"
+  }
+}

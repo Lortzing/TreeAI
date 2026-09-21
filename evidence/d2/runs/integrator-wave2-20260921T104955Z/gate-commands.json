@@ -1,0 +1,56 @@
+{
+  "runId": "integrator-wave2-20260921T104955Z",
+  "kind": "integrator-wave2-gates",
+  "date": "2026-09-21T10:50:38.302Z",
+  "note": "Logs sanitized: absolute paths (repository root, user home directory, temp directories) replaced with the placeholders <repo>, <userhome>, <tmpdir>. This directory is Integrator-owned gate evidence, appended without overwriting any prior run.",
+  "commands": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "meaning": "all six workspaces with TypeScript sources typecheck clean",
+      "log": "logs/typecheck.log"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "meaning": "five package test suites (contracts script gates, runtime-pi 51, persistence 45, tool-policy 58, event-journal 73) + Agent F unit 75 + integration 8 + live selftest 3",
+      "log": "logs/test.log"
+    },
+    {
+      "command": "npm run test:integration",
+      "exitCode": 0,
+      "meaning": "runtime-smoke 2/2 + Agent F integration 8/8",
+      "log": "logs/test-integration.log"
+    },
+    {
+      "command": "npm test -w @treeai/runtime-smoke",
+      "exitCode": 0,
+      "meaning": "Wave 2 offline integration app: sandboxed-child offline run + full eleven-step scenario (8 runs: 5 succeeded / 2 failed / 1 aborted; gen1=37 gen2=45 journal events; 1 host-crash recovery; 8 policy decisions)",
+      "log": "logs/runtime-smoke.log"
+    },
+    {
+      "command": "node --input-type=module (live framework loadPiDriver probe)",
+      "exitCode": 0,
+      "meaning": "@treeai/runtime-pi importable via package entry; factory createPiRuntime discovered (driver: pi); no real model call, no ~/.pi read",
+      "log": "logs/live-driver-import-probe.log"
+    },
+    {
+      "command": "npm run verify:d2",
+      "exitCode": 3,
+      "meaning": "Agent F offline verifier: 20 PASS, 0 FAIL, 0 BLOCKED, 1 NOT_RUN (d1-repro: requires explicit --d1-repro + network + d1-spikes write authorization; F frozen semantics, not modified). Separate verifier-owned evidence: evidence/d2/runs/d2-offline-*",
+      "log": null
+    },
+    {
+      "command": "npm run verify:d2:selftest",
+      "exitCode": 0,
+      "meaning": "verifier failure-injection selftest: 4/4 PASS (control exit 0; secret/bad-schema/illegal-exit-codes injections all exit 2)",
+      "log": "logs/verify-d2-selftest.log"
+    },
+    {
+      "command": "npm run verify:d2:live",
+      "exitCode": 3,
+      "meaning": "live verifier without credentials: 3 PASS (schema/exit-codes/evidence hygiene), 6 BLOCKED (missing TREEAI_LIVE_PROVIDER_ID, TREEAI_LIVE_MODEL_ID, TREEAI_LIVE_API_KEY) — never a faked live PASS",
+      "log": "logs/verify-d2-live.log"
+    }
+  ]
+}

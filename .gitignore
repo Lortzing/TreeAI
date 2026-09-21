@@ -1,0 +1,34 @@
+# TreeAI .gitignore (D2 Gate 0, Integrator)
+
+# Dependencies
+node_modules/
+
+# Build output / TS incremental state
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Credential-shaped files must never be committed (defense in depth;
+# the real gate is the D2 secret scan — see coordination/d2/README.md).
+# NOTE: evidence/ directories are append-only and are NOT ignored here;
+# anything committed under evidence/ must pass secret scanning first.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+credentials.json
+
+# npm noise
+npm-debug.log*
+.npm/
+
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+*.swp

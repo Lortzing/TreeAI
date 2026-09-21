@@ -1,0 +1,14 @@
+{
+  "id": "live-scenario-resume",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "resume",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "restored": true,
+    "followUpLength": 17,
+    "sessionFile": "<recorded in run evidence>"
+  },
+  "durationMs": 55
+}

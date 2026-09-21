@@ -1,0 +1,27 @@
+
+> @treeai/runtime-smoke@0.0.0 test
+> npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/runtime-smoke@0.0.0 build:deps
+> tsc -p tsconfig.tool-policy-build.json && npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+
+> @treeai/runtime-smoke@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ scenario child process runs offline under a sandboxed HOME without touching it (408.892458ms)
+runtime-smoke:scenario-report ok (runs=8 gen1-events=37 gen2-events=45)
+✔ wave-2 offline scenario: full eleven-step integration flow (44.586209ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 469.070167

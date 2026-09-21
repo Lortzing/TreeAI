@@ -1,0 +1,29 @@
+{
+  "name": "treeai",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TreeAI — trusted-local tree-structured agent runtime on the Pi SDK (D2). TypeScript/Node.js + Pi SDK in-process embedding per ADR-001 (Accepted 2026-09-20). Not production-approved.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": "24.21.0",
+    "npm": "11.19.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "typecheck": "node scripts/typecheck.js",
+    "test": "npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts",
+    "test:integration": "npm test --workspace @treeai/runtime-smoke && node --test tests/integration/*.test.ts",
+    "verify:d2": "node scripts/verify-d2.js",
+    "verify:d2:live": "node scripts/verify-d2-live.js",
+    "verify:d2:selftest": "node scripts/verify-d2-selftest.js"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.5",
+    "typescript": "5.9.3"
+  }
+}

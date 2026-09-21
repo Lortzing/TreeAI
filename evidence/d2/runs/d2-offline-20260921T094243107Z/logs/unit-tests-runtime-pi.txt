@@ -1,0 +1,38 @@
+$ npm test -w @treeai/runtime-pi
+
+> @treeai/runtime-pi@0.0.0 test
+> npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts
+
+
+> @treeai/runtime-pi@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+tests/real-port/offline-child.ts(116,49): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(98,50): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(130,47): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(136,47): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(137,47): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(138,47): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+tests/unit/navigate-tree.test.ts(151,47): error TS2322: Type 'string' is not assignable to type 'PiEntryId'.
+  Type 'string' is not assignable to type '{ readonly __brand: "PiEntryId"; }'.
+
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path [HOME]/Projects/TreeAI/packages/runtime-pi
+npm error workspace @treeai/runtime-pi@0.0.0
+npm error location [HOME]/Projects/TreeAI/packages/runtime-pi
+npm error command failed
+npm error command sh -c tsc --noEmit -p tsconfig.json
+npm error Lifecycle script `test` failed with error:
+npm error code 2
+npm error path [HOME]/Projects/TreeAI/packages/runtime-pi
+npm error workspace @treeai/runtime-pi@0.0.0
+npm error location [HOME]/Projects/TreeAI/packages/runtime-pi
+npm error command failed
+npm error command sh -c npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts

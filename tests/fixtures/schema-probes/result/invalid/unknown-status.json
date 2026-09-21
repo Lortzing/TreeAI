@@ -1,0 +1,18 @@
+{
+  "runId": "d2-offline-20260921T101112000Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T10:11:12.000Z",
+  "endedAt": "2026-09-21T10:11:20.000Z",
+  "verdict": "ALL_PASS",
+  "counts": { "pass": 1, "fail": 0, "blocked": 0, "notRun": 0 },
+  "exitCode": 0,
+  "results": [
+    {
+      "id": "typecheck",
+      "status": "SKIPPED",
+      "exitCode": null,
+      "reason": "made-up status must be rejected"
+    }
+  ]
+}

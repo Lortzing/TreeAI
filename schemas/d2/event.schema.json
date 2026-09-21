@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treeai.invalid/d2/schemas/event.schema.json",
+  "title": "TreeAI D2 evidence event (one JSONL line of an append-only journal)",
+  "description": "One line of an events.jsonl file under evidence/d2/runs/<run-id>/, and the on-disk shape of the frozen contracts TreeAIEvent (packages/contracts/src/events.ts, CONTRACT-FREEZE-1 item 5). Invariants that JSON Schema cannot express are enforced by scripts/verify-d2: seq must start at 1 and be STRICTLY INCREASING per runId across lines, and payload must already be redacted (content-level secret scan). Known type values (open union per the frozen contract; unknown Pi events are recorded with their raw kind, never dropped): run.state-changed, run.abort-requested, run.steer-enqueued, agent.started, agent.settled, turn.started, turn.completed, message.started, message.updated, message.completed, tool.execution.started, tool.execution.finished, tool.decision, session.created, session.restored, session.replaced, tree.navigated, runtime.error, runtime.recovered, pi.unknown; verifier-added families: verify.run-started, verify.check-finished, verify.run-finished, live.scenario-started, live.scenario-finished. Revision policy: any breaking change to this schema requires a schemas/d2/README.md revision entry and new positive/negative probes under tests/fixtures/schema-probes/event/.",
+  "type": "object",
+  "required": [
+    "eventId",
+    "runId",
+    "seq",
+    "occurredAt",
+    "type",
+    "payload",
+    "evidence"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Opaque unique event id. Unique at least within one run's journal."
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "The run this event belongs to. Cross-line rule: seq is strictly increasing per runId (enforced by the verifier, not by the schema)."
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based sequence number within the runId, strictly increasing, no duplicates. Continuity (no gaps) is recommended practice, not a hard requirement (frozen contract events.ts)."
+    },
+    "occurredAt": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "UTC ISO 8601 timestamp. The Z suffix is mandatory: non-UTC offsets are rejected."
+    },
+    "type": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$",
+      "description": "Dot-notation event type (frozen contract TreeAIEventType, open union)."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Redacted JSON payload. Must already be free of credentials, Authorization/Cookie values, tokens and absolute user-home paths before it is written (content scan enforces; the schema only requires an object)."
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceReference" },
+      "description": "References to the raw records this event was derived from. May be empty for pure projection events (frozen contract)."
+    }
+  },
+  "$defs": {
+    "evidenceReference": {
+      "type": "object",
+      "required": ["source", "refId"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "enum": ["pi-runtime", "treeai-journal", "external"],
+          "description": "Where the referenced raw record lives (frozen contract EvidenceReference)."
+        },
+        "refId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Identifier of the raw record (e.g. a PiRuntimeEvent.eventId value)."
+        },
+        "locator": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional already-redacted locator (relative path/line). Must not contain secrets or absolute user-home paths."
+        }
+      }
+    }
+  }
+}

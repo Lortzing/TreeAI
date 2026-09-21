@@ -1,0 +1,30 @@
+{
+  "runId": "d2-offline-20260921T095543803Z",
+  "checks": [
+    {
+      "durationMs": 63,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "271 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ]
+}

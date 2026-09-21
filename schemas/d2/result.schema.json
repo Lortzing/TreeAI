@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://treeai.invalid/d2/schemas/result.schema.json",
+  "title": "TreeAI D2 verification result",
+  "description": "Shape of result.json (overall verification run summary, root schema) and of every item in checks.json / results[] (a single check or scenario outcome, $defs/resultItem). Exit-code discipline (frozen for D2, mirrors the D1 2026-09-20 hardening): exit 0 is reserved for PASS. FAIL must carry a non-zero integer exitCode and an error. BLOCKED must carry a reason and must never claim exitCode 0 (null = blocked before the command ran; non-zero integer = the blocked attempt exited non-zero). NOT_RUN must never claim exitCode 0 (null = nothing executed). Revision policy: breaking changes require a schemas/d2/README.md revision entry and new probes under tests/fixtures/schema-probes/result/.",
+  "type": "object",
+  "required": [
+    "runId",
+    "schemaVersion",
+    "mode",
+    "startedAt",
+    "endedAt",
+    "verdict",
+    "counts",
+    "exitCode",
+    "results"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "schemaVersion": {
+      "const": "d2-result-1"
+    },
+    "mode": {
+      "enum": ["offline", "live"],
+      "description": "offline = verify:d2 (no credentials by design). live = verify:d2:live (controlled credential environment)."
+    },
+    "driver": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Live runs only: which runtime driver executed the scenarios (pi | fake)."
+    },
+    "startedAt": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "endedAt": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "verdict": {
+      "enum": ["ALL_PASS", "HAS_FAIL", "INCOMPLETE", "VERIFIER_ERROR"],
+      "description": "ALL_PASS = every requested check PASS. HAS_FAIL = at least one FAIL. INCOMPLETE = no FAIL but BLOCKED or NOT_RUN present (the honest Wave 1 state while module owners deliver). VERIFIER_ERROR = the verifier itself failed."
+    },
+    "counts": {
+      "type": "object",
+      "required": ["pass", "fail", "blocked", "notRun"],
+      "additionalProperties": false,
+      "properties": {
+        "pass": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "notRun": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "exitCode": {
+      "type": "integer",
+      "description": "0 = all PASS; 1 = verifier error; 2 = at least one FAIL; 3 = no FAIL but BLOCKED/NOT_RUN. Consistency with verdict is enforced by the anyOf below."
+    },
+    "results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/resultItem" },
+      "minItems": 1
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 2048 },
+      "description": "Redacted free-text notes (e.g. mode semantics explaining absent optional checks)."
+    }
+  },
+  "anyOf": [
+    {
+      "properties": { "verdict": { "const": "ALL_PASS" }, "exitCode": { "const": 0 } }
+    },
+    {
+      "properties": { "verdict": { "const": "HAS_FAIL" }, "exitCode": { "const": 2 } }
+    },
+    {
+      "properties": { "verdict": { "const": "INCOMPLETE" }, "exitCode": { "const": 3 } }
+    },
+    {
+      "properties": { "verdict": { "const": "VERIFIER_ERROR" }, "exitCode": { "const": 1 } }
+    }
+  ],
+  "$defs": {
+    "resultItem": {
+      "type": "object",
+      "required": ["id", "status"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9][a-z0-9.-]*$",
+          "description": "Check or scenario id (e.g. typecheck, unit-tests-contracts, live-scenario-steer)."
+        },
+        "status": {
+          "enum": ["PASS", "FAIL", "BLOCKED", "NOT_RUN"]
+        },
+        "exitCode": {
+          "anyOf": [{ "type": "null" }, { "type": "integer" }],
+          "description": "Exit code of the executed command, if any. Consistency with status is enforced by the anyOf branches below: PASS requires 0; FAIL requires a non-zero integer; BLOCKED/NOT_RUN require null or a non-zero integer, never 0."
+        },
+        "evidenceFiles": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 },
+          "description": "Paths (relative to the run directory) of evidence files this result is traceable to. The verifier asserts the files exist."
+        },
+        "error": {
+          "$ref": "#/$defs/error",
+          "description": "Structured, redacted error. Required for FAIL."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Human-readable, redacted reason. Required for BLOCKED and NOT_RUN (an unexecuted check must never look like a pass)."
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 4096,
+          "description": "Redacted supplementary detail (summary line of a command, counts, etc.)."
+        }
+      },
+      "anyOf": [
+        {
+          "properties": { "status": { "const": "PASS" }, "exitCode": { "const": 0 } },
+          "required": ["exitCode"]
+        },
+        {
+          "properties": {
+            "status": { "const": "FAIL" },
+            "exitCode": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["exitCode", "error"]
+        },
+        {
+          "properties": {
+            "status": { "const": "BLOCKED" },
+            "exitCode": {
+              "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+            }
+          },
+          "required": ["exitCode", "reason"]
+        },
+        {
+          "properties": {
+            "status": { "const": "NOT_RUN" },
+            "exitCode": {
+              "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+            }
+          },
+          "required": ["exitCode", "reason"]
+        }
+      ]
+    },
+    "scenarioResult": {
+      "description": "A live-scenario result item (verify:d2:live). Extends resultItem with live-specific required fields. scenario ids are frozen from the D1/D2 shared contract: tree-navigation is the canonical name (D1 DECISION-009).",
+      "allOf": [
+        { "$ref": "#/$defs/resultItem" },
+        {
+          "type": "object",
+          "required": ["scenario", "driver", "piVersion"],
+          "properties": {
+            "scenario": {
+              "enum": [
+                "basic",
+                "tool-policy",
+                "steer",
+                "abort",
+                "resume",
+                "tree-navigation"
+              ]
+            },
+            "driver": { "enum": ["pi", "fake"] },
+            "piVersion": {
+              "const": "0.85.1",
+              "description": "Must equal the D2 pinned Pi version (PinnedPiVersion in the frozen contracts)."
+            }
+          }
+        }
+      ]
+    },
+    "error": {
+      "type": "object",
+      "required": ["message"],
+      "additionalProperties": true,
+      "properties": {
+        "message": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "code": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Prefer a frozen TreeAIErrorCode (auth | model-unavailable | user-abort | timeout | policy-denied | upstream | session-corrupt | unknown) for runtime failures; other short machine codes are allowed for verifier-internal failures."
+        },
+        "details": { "type": "object" }
+      }
+    }
+  }
+}

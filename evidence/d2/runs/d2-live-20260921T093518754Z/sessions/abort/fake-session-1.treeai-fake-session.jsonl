@@ -1,0 +1,4 @@
+{"format":"treeai-fake-session","version":1,"sessionId":"fake-session-1","piVersion":"0.85.1","model":{"providerId":"fake-provider","modelId":"fake-model"}}
+{"id":"e1","kind":"user","text":"Write a 500-word essay about the history of computing.","parent":"e0","createdAt":"2026-09-21T09:35:21.350Z"}
+{"id":"e2","kind":"user","text":"Reply with the single word: recovered","parent":"e1","createdAt":"2026-09-21T09:35:21.602Z"}
+{"id":"e3","kind":"assistant","text":"ok: acknowledged.","parent":"e2","createdAt":"2026-09-21T09:35:22.805Z"}

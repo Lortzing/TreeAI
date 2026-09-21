@@ -1,0 +1,23 @@
+{
+  "name": "@treeai/runtime-smoke",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TreeAI runtime smoke app — Wave 2 end-to-end offline integration (two branches in one append-only session, restart recovery, abort convergence, degraded session handling, policy denials, journal discipline). Integrator-owned. Offline only: drives the real Wave 1 packages through a local deterministic fake Pi SDK port; no real models, no network, no user Pi home access.",
+  "license": "MIT",
+  "type": "module",
+  "imports": {
+    "#tool-policy": "./dist/tool-policy/index.js"
+  },
+  "scripts": {
+    "build:deps": "tsc -p tsconfig.tool-policy-build.json && npm run --workspace @treeai/event-journal build:test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build:deps && npm run typecheck && node --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@treeai/contracts": "0.1.0",
+    "@treeai/event-journal": "0.0.0",
+    "@treeai/persistence": "0.0.0",
+    "@treeai/runtime-pi": "0.0.0",
+    "@treeai/tool-policy": "0.0.0"
+  }
+}

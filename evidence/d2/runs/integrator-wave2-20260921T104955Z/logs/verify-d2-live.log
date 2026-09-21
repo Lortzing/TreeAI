@@ -1,0 +1,18 @@
+
+> treeai@0.0.0 verify:d2:live
+> node scripts/verify-d2-live.js
+
+verify-d2-live 1.0.0 — live scenario suite
+root: <repo>
+driver: pi
+evidence: <repo>/evidence/d2/runs/d2-live-20260921T105025475Z
+
+credentials: missing TREEAI_LIVE_PROVIDER_ID, TREEAI_LIVE_MODEL_ID, TREEAI_LIVE_API_KEY — all scenarios BLOCKED
+  [PASS] scenario-results-schema
+  [PASS] exit-codes
+  [PASS] evidence-write-hygiene
+
+verify-d2-live summary:
+  3 PASS, 0 FAIL, 6 BLOCKED, 0 NOT_RUN
+  verdict: INCOMPLETE (exit 3)
+  evidence: <repo>/evidence/d2/runs/d2-live-20260921T105025475Z

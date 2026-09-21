@@ -1,0 +1,14 @@
+{
+  "id": "live-scenario-steer",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "steer",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "steerEnqueued": 1,
+    "agentStarts": 1,
+    "finalMessage": "ok: steer acknowledged."
+  },
+  "durationMs": 2410
+}

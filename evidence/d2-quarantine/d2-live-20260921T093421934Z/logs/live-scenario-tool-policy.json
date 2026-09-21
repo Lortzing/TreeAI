@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-tool-policy",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "tool-policy",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "groundTruthMatched": true,
+    "toolEvents": 1
+  },
+  "durationMs": 27
+}

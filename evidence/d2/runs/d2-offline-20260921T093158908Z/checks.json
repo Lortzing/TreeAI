@@ -1,0 +1,44 @@
+{
+  "runId": "d2-offline-20260921T093158908Z",
+  "checks": [
+    {
+      "durationMs": 7,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "33 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "keyword corpus clean",
+      "id": "schema-validator-selftest"
+    },
+    {
+      "durationMs": 4,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "23 rules fired on the synthetic corpus, clean corpus clean",
+      "id": "secret-scanner-selftest"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ]
+}

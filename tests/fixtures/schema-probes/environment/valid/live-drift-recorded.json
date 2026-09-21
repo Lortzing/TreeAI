@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-21T14:15:00.000Z",
+  "mode": "live",
+  "driver": "pi",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.0.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": "0.86.0",
+    "source": "node_modules/@earendil-works/pi-coding-agent/package.json"
+  },
+  "credentialPolicy": {
+    "policy": "controlled-env-injection",
+    "note": "credentials supplied only via TREEAI_LIVE_* env var names, in-memory only, never persisted or logged"
+  },
+  "verifier": { "name": "verify-d2-live", "version": "1.0.0" }
+}

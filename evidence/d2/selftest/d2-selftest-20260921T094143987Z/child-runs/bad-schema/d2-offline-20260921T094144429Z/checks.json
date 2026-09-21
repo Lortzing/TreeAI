@@ -1,0 +1,32 @@
+{
+  "runId": "d2-offline-20260921T094144429Z",
+  "checks": [
+    {
+      "durationMs": 4,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "invalid probe event/invalid/missing-event-id.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/bad-event-id-pattern.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/seq-zero.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/non-utc-timestamp.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/type-no-dot-notation.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/payload-not-object.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/additional-property.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/bad-evidence-source.json validated — a schema constraint was lost (or the validator is broken)"
+      },
+      "id": "fixtures-integrity"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ]
+}

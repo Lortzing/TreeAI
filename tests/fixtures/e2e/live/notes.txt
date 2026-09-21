@@ -1,0 +1,6 @@
+Ground truth for the live tool-policy scenario: the secret number is 4127.
+
+The live run asks the agent (over the Pi runtime) to read this file and report
+the number; the scenario result records whether the read went through the
+policy decision path and whether the reported number matches this ground truth.
+This file itself contains no credentials.

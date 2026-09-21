@@ -1,0 +1,119 @@
+{
+  "runId": "d2-live-20260921T093518754Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "live",
+  "driver": "fake",
+  "startedAt": "2026-09-21T09:35:18.754Z",
+  "endedAt": "2026-09-21T09:35:22.948Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 9,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "id": "live-scenario-basic",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "basic",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "messageLength": 17
+      },
+      "durationMs": 28
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tool-policy",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "groundTruthMatched": true,
+        "toolEvents": 1
+      },
+      "durationMs": 27
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "steer",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "steerEnqueued": 1,
+        "agentStarts": 1,
+        "finalMessage": "ok: steer acknowledged."
+      },
+      "durationMs": 2408
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "abort",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "aborted": true,
+        "recovered": true
+      },
+      "durationMs": 1457
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "resume",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "restored": true,
+        "followUpLength": 17,
+        "sessionFile": "<recorded in run evidence>"
+      },
+      "durationMs": 56
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tree-navigation",
+      "driver": "fake",
+      "piVersion": "0.85.1",
+      "meta": {
+        "navigatedBack": true,
+        "forkAdvanced": true,
+        "answer": "ok: acknowledged."
+      },
+      "durationMs": 83
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "--driver=fake: framework dry-run against FakePiRuntime (zero credentials)"
+  ]
+}

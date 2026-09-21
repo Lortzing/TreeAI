@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-abort",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "abort",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "aborted": true,
+    "recovered": true
+  },
+  "durationMs": 1459
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-21T10:47:13.372Z",
+  "mode": "offline",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "typeScript": "5.9.3",
+    "ci": false
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": "0.85.1",
+    "source": "node_modules/@earendil-works/pi-coding-agent/package.json",
+    "declaredDependency": "0.85.1"
+  },
+  "credentialPolicy": {
+    "policy": "offline",
+    "note": "verify:d2 runs with no credentials by design; live checks are not requested and d1-repro requires an explicit flag"
+  },
+  "git": {
+    "commit": "3f2873a28586165f7b35f9ec9f8c65dc295d0e12",
+    "dirty": true
+  },
+  "verifier": {
+    "name": "verify-d2",
+    "version": "1.0.0"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "runId": "d2-offline-20260921T095342463Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T09:53:42.463Z",
+  "endedAt": "2026-09-21T09:53:42.537Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 3,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 4,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "invalid probe result/invalid/pass-item-with-exit-1.json validated — a schema constraint was lost (or the validator is broken); invalid probe result/invalid/fail-item-with-exit-0.json validated — a schema constraint was lost (or the validator is broken); invalid probe result/invalid/not-run-without-reason.json validated — a schema constraint was lost (or the validator is broken); invalid probe result/invalid/verdict-exitcode-mismatch.json validated — a schema constraint was lost (or the validator is broken)"
+      },
+      "id": "fixtures-integrity"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity executed",
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}

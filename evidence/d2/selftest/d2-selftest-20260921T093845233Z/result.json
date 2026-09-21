@@ -1,0 +1,46 @@
+{
+  "runId": "d2-selftest-20260921T093845233Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T09:38:45.234Z",
+  "endedAt": "2026-09-21T09:38:45.916Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 3,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "id": "control-clean-tree",
+      "status": "FAIL",
+      "exitCode": 2,
+      "reason": "expected exit 0, got 2",
+      "detail": "clean synthetic tree: fixtures-integrity + secret-scan-workspace must both PASS"
+    },
+    {
+      "id": "inject-secret",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "secret-shaped file in tests/ → secret-scan-workspace FAIL, gate exit 2"
+    },
+    {
+      "id": "inject-bad-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "accept-anything event schema → invalid probes validate → fixtures-integrity FAIL"
+    },
+    {
+      "id": "inject-illegal-exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "exit-code constraints stripped → PASS-with-exit-1 probe validates → fixtures-integrity FAIL"
+    }
+  ],
+  "notes": [
+    "failure-path selftest: defects were injected into synthetic trees (temp dirs), the real scripts/verify-d2.js was executed against them, and each injection was required to fail the gate (child exit 2)",
+    "the real working tree was never modified"
+  ]
+}

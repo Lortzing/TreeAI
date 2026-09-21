@@ -1,0 +1,9 @@
+{
+  "eventId": "run-001-e1",
+  "runId": "run-001",
+  "seq": 1,
+  "occurredAt": "2026-09-21T10:00:00.000Z",
+  "type": "runstatechanged",
+  "payload": { "state": "queued" },
+  "evidence": []
+}

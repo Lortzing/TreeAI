@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-21T09:40:49.438Z",
+  "mode": "offline",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "ci": false
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": null
+  },
+  "credentialPolicy": {
+    "policy": "offline",
+    "note": "verify:d2 runs with no credentials by design; live checks are not requested and d1-repro requires an explicit flag"
+  },
+  "verifier": {
+    "name": "verify-d2",
+    "version": "1.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@treeai/tool-policy",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ToolPolicy — default-deny application-layer tool policy with path scoping and per-operation authorization. Gate 0 placeholder scaffold — production content is Agent D's exclusive deliverable. May depend only on @treeai/contracts; MUST NOT import Pi types. Application-layer policy, NOT an OS sandbox or security boundary.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run typecheck && bash scripts/run-tests.sh"
+  },
+  "dependencies": {
+    "@treeai/contracts": "0.1.0"
+  }
+}

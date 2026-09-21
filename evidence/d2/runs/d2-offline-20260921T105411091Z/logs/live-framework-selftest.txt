@@ -1,0 +1,13 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --test tests/live/*.test.ts
+✔ the six frozen scenario ids are exactly the task-book list (0.545375ms)
+✔ all six scenarios PASS against the fake driver and validate against scenarioResult (3169.97125ms)
+✔ loadPiDriver reports the honest state (real module or NOT_RUN reason) (316.436958ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3567.462583
+

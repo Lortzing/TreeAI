@@ -1,0 +1,155 @@
+{
+  "runId": "d2-offline-20260921T094642699Z",
+  "checks": [
+    {
+      "durationMs": 7,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "33 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "keyword corpus clean",
+      "id": "schema-validator-selftest"
+    },
+    {
+      "durationMs": 4,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "23 rules fired on the synthetic corpus, clean corpus clean",
+      "id": "secret-scanner-selftest"
+    },
+    {
+      "durationMs": 2295,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "[HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node exited 1 (no signal)"
+      },
+      "detail": "[typecheck] FAIL: tsc failed for: @treeai/runtime-pi",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 357,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 2000,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "negative type tests: 7/7 rejected as expected\nok: no Pi imports in packages/contracts (src + tests)",
+      "id": "unit-tests-contracts"
+    },
+    {
+      "durationMs": 926,
+      "status": "FAIL",
+      "exitCode": 2,
+      "error": {
+        "message": "npm test -w @treeai/runtime-pi exited 2"
+      },
+      "detail": "npm error path [HOME]/Projects/TreeAI/packages/runtime-pi\nnpm error workspace @treeai/runtime-pi@0.0.0\nnpm error location [HOME]/Projects/TreeAI/packages/runtime-pi\nnpm error command failed\nnpm error command sh -c tsc --noEmit -p tsconfig.json\nnpm error Lifecycle script `test` failed with error:\nnpm error code 2\nnpm error path [HOME]/Projects/TreeAI/packages/runtime-pi\nnpm error workspace @treeai/runtime-pi@0.0.0\nnpm error location [HOME]/Projects/TreeAI/packages/runtime-pi\nnpm error command failed\nnpm error command sh -c npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts",
+      "id": "unit-tests-runtime-pi"
+    },
+    {
+      "durationMs": 985,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 436.888917",
+      "id": "unit-tests-persistence"
+    },
+    {
+      "durationMs": 857,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 60.090833",
+      "id": "unit-tests-tool-policy"
+    },
+    {
+      "durationMs": 1132,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 64.203458",
+      "id": "unit-tests-event-journal"
+    },
+    {
+      "durationMs": 249,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 222.47775",
+      "id": "unit-tests-agent-f"
+    },
+    {
+      "durationMs": 167,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 142.146208",
+      "id": "integration-tests-agent-f"
+    },
+    {
+      "durationMs": 3287,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 3261.519708",
+      "id": "live-framework-selftest"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "runtime-smoke is Integrator-owned Wave 2 skeleton; no test script wired yet",
+      "id": "runtime-smoke"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "declared \"0.85.1\" / installed \"0.85.1\"",
+      "id": "pi-version-pin"
+    },
+    {
+      "durationMs": 30,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "178 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "durationMs": 9,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no treeai-* temp leftovers",
+      "id": "residual-resources"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization",
+      "id": "d1-repro"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ]
+}

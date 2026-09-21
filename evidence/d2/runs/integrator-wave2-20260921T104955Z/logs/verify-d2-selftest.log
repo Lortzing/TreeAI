@@ -1,0 +1,14 @@
+
+> treeai@0.0.0 verify:d2:selftest
+> node scripts/verify-d2-selftest.js
+
+verify-d2-selftest — failure-path selftest
+evidence: <repo>/evidence/d2/selftest/d2-selftest-20260921T105024637Z
+
+  [PASS] control-clean-tree (child exit 0)
+  [PASS] inject-secret (child exit 2)
+  [PASS] inject-bad-schema (child exit 2)
+  [PASS] inject-illegal-exit-codes (child exit 2)
+
+verify-d2-selftest summary: 4 PASS, 0 FAIL → ALL_PASS (exit 0)
+evidence: <repo>/evidence/d2/selftest/d2-selftest-20260921T105024637Z

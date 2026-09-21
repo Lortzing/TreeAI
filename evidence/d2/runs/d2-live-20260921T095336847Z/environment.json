@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-21T09:53:36.912Z",
+  "mode": "live",
+  "driver": "pi",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "typeScript": "5.9.3",
+    "ci": false
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": "0.85.1",
+    "source": "node_modules/@earendil-works/pi-coding-agent/package.json"
+  },
+  "credentialPolicy": {
+    "policy": "none",
+    "note": "live credentials missing: TREEAI_LIVE_PROVIDER_ID, TREEAI_LIVE_MODEL_ID, TREEAI_LIVE_API_KEY (env var NAMES only are logged; values never). The user's real Pi config was NOT read as a shortcut"
+  },
+  "git": {
+    "commit": "3f2873a28586165f7b35f9ec9f8c65dc295d0e12"
+  },
+  "verifier": {
+    "name": "verify-d2-live",
+    "version": "1.0.0"
+  }
+}

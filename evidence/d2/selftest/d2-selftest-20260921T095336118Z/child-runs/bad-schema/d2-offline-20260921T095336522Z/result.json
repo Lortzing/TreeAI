@@ -1,0 +1,48 @@
+{
+  "runId": "d2-offline-20260921T095336522Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T09:53:36.522Z",
+  "endedAt": "2026-09-21T09:53:36.596Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 3,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 4,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "invalid probe event/invalid/missing-event-id.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/bad-event-id-pattern.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/seq-zero.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/non-utc-timestamp.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/type-no-dot-notation.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/payload-not-object.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/additional-property.json validated — a schema constraint was lost (or the validator is broken); invalid probe event/invalid/bad-evidence-source.json validated — a schema constraint was lost (or the validator is broken)"
+      },
+      "id": "fixtures-integrity"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity executed",
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}

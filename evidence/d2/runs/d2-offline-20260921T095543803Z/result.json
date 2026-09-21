@@ -1,0 +1,46 @@
+{
+  "runId": "d2-offline-20260921T095543803Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T09:55:43.804Z",
+  "endedAt": "2026-09-21T09:55:44.073Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 4,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "durationMs": 63,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "271 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only secret-scan-workspace executed",
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}

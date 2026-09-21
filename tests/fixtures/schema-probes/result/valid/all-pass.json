@@ -1,0 +1,32 @@
+{
+  "runId": "d2-offline-20260921T101112000Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-21T10:11:12.000Z",
+  "endedAt": "2026-09-21T10:12:30.000Z",
+  "verdict": "ALL_PASS",
+  "counts": { "pass": 3, "fail": 0, "blocked": 0, "notRun": 0 },
+  "exitCode": 0,
+  "results": [
+    {
+      "id": "typecheck",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationMs": 4200,
+      "detail": "tsc --noEmit clean"
+    },
+    {
+      "id": "schema-validator-selftest",
+      "status": "PASS",
+      "exitCode": 0,
+      "evidenceFiles": ["checks.json"]
+    },
+    {
+      "id": "secret-scan-workspace",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "0 findings across 412 files"
+    }
+  ],
+  "notes": ["offline mode: live-scenario checks are not part of this run"]
+}
