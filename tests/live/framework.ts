@@ -396,23 +396,8 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
       cwd: REPO_ROOT,
       sessionDir: ctx.sessionDir,
     });
-    const allowed = await withTimeout(
-      ctx.runtime.prompt({
-        text:
-          "Use your read file tool on tests/fixtures/e2e/live/notes.txt, then " +
-          "reply with only the four-digit number it contains.",
-      }),
-      MODEL_PROMPT_TIMEOUT_MS,
-      "tool-policy allowed prompt",
-    );
-    if (!allowed.message.includes(groundTruth)) {
-      return failed(
-        `allowed read answer does not contain the ground-truth number (got: ${allowed.message.slice(0, 120)})`,
-      );
-    }
-
     const eventCountBeforeDenied = ctx.recorder.events.length;
-    for (let attempt = 0; attempt < 3 && !decisions.some((decision) => decision.outcome === "deny"); attempt += 1) {
+    for (let attempt = 0; attempt < 5 && !decisions.some((decision) => decision.outcome === "deny"); attempt += 1) {
       try {
         await withTimeout(
           ctx.runtime.prompt({
@@ -428,12 +413,10 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
         // A blocked tool may cause the model turn to reject; the policy decision is authoritative.
       }
     }
-
-    const allowedDecision = decisions.find((decision) => decision.outcome === "allow");
     const deniedDecision = decisions.find((decision) => decision.outcome === "deny");
-    if (allowedDecision === undefined || deniedDecision === undefined) {
+    if (deniedDecision === undefined) {
       return failed(
-        `expected real tool.decision allow and deny, got ${decisions.map((decision) => decision.outcome).join(",") || "none"}`,
+        `expected a real tool.decision deny, got ${decisions.map((decision) => decision.outcome).join(",") || "none"}`,
         undefined,
         { toolDecisions: decisions },
       );
@@ -449,6 +432,29 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
       return failed("denied read produced a successful tool execution", "policy-denied", {
         toolDecisions: decisions,
       });
+    }
+
+    const allowed = await withTimeout(
+      ctx.runtime.prompt({
+        text:
+          "Use your read file tool on tests/fixtures/e2e/live/notes.txt, then " +
+          "reply with only the four-digit number it contains.",
+      }),
+      MODEL_PROMPT_TIMEOUT_MS,
+      "tool-policy allowed prompt",
+    );
+    const allowedDecision = decisions.find((decision) => decision.outcome === "allow");
+    if (allowedDecision === undefined) {
+      return failed(
+        `expected a real tool.decision allow, got ${decisions.map((decision) => decision.outcome).join(",")}`,
+        undefined,
+        { toolDecisions: decisions },
+      );
+    }
+    if (!allowed.message.includes(groundTruth)) {
+      return failed(
+        `allowed read answer does not contain the ground-truth number (got: ${allowed.message.slice(0, 120)})`,
+      );
     }
     return ok({
       groundTruthMatched: true,
