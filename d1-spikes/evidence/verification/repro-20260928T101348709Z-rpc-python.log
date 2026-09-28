@@ -1,0 +1,14 @@
+copied rpc-python to clean temp dir (deps excluded)
+$ /Library/Developer/CommandLineTools/usr/bin/python3 -m pip install -r requirements.txt --no-input --disable-pip-version-check -> exit 0
+Defaulting to user installation because normal site-packages is not writeable
+
+$ unit tests (pytest) -> PASS
+stdlib unittest passed (runner: PYTHONPATH=src python3 -m unittest discover -s tests; pytest not installed in /Library/Developer/CommandLineTools/usr/bin/python3)
+gate probe 'navigate_tree': responded=True success=False error='Unknown command: navigate_tree'
+         obs: navigate probe 'navigateTree': responded=True success=False error='Unknown command: navigateTree'
+         obs: switch-back: method=switch_session(sessionPath) sessionIdRestored=True trunkHistoryRestored=True promptSettled=True leafId=e4
+         obs: clone: sessionIdChanged=True historyKept=True promptSettled=True treeNodes=6 leafId=e7
+         obs: cursor: get_entries(since=e3) -> 3/6 entries, strictlyAfter=True
+         obs: session-dir after run: 3 file(s): clone.jsonl (18 bytes); fork.jsonl (18 bytes); trunk.jsonl (18 bytes)
+conclusion: fork -> new session (sessionIdChanged=True, sessionFileChanged=True; pre-fork history kept=True, post-fork history dropped=True; prompt on the branch settled=True); in-place navigateTree equivalent found=False (navigate_tree: responded=True success=False; navigateTree: responded=True success=False); switch back -> switch_session(sessionPath) (sessionId restored=True, trunk history restored=True, prompt settled=True); clone -> new session (changed=True, history kept=True, prompt settled=True); session files in --session-dir after run: 3
+
