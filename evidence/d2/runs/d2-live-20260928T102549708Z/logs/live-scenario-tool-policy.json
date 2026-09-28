@@ -1,0 +1,35 @@
+{
+  "id": "live-scenario-tool-policy",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "tool-policy",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "meta": {
+    "groundTruthMatched": true,
+    "toolDecisions": [
+      {
+        "toolCallId": "call_00_ET_1NRfxOtzdf0lJbPScdyc6805",
+        "category": "read",
+        "outcome": "allow",
+        "risk": "low",
+        "ruleId": "allow-read-configured-roots",
+        "reason": "read target resolves inside a configured read root (explicit allow rule)",
+        "scopeRoots": [
+          "/private/tmp/treeai-d2-clean-XfChN0/tests/fixtures/e2e/live"
+        ]
+      },
+      {
+        "toolCallId": "call_00_YyFhWUISaAXyBl6tNLbu2529",
+        "category": "read",
+        "outcome": "deny",
+        "risk": "low",
+        "ruleId": null,
+        "reason": "read target resolves outside every configured read root; no rule allows it",
+        "scopeRoots": []
+      }
+    ],
+    "deniedExecution": false
+  },
+  "durationMs": 2046
+}
