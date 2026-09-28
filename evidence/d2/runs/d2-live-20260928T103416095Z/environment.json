@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-28T10:34:16.980Z",
+  "mode": "live",
+  "driver": "pi",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "typeScript": "5.9.3",
+    "ci": false
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": "0.85.1",
+    "source": "node_modules/@earendil-works/pi-coding-agent/package.json"
+  },
+  "credentialPolicy": {
+    "policy": "controlled-env-injection",
+    "note": "credentials supplied exclusively via TREEAI_LIVE_PROVIDER_ID, TREEAI_LIVE_MODEL_ID, TREEAI_LIVE_API_KEY; held in memory only, handed to the runtime factory, never persisted or logged; the user's real Pi config was not read"
+  },
+  "git": {
+    "commit": "38ae4b2624111fb68cdae118707660ba8dd3aecc",
+    "tree": "365ebb52b87e1306fc2af319771806438584952e",
+    "trackedDirty": false,
+    "untrackedCount": 0,
+    "statusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "verifier": {
+    "name": "verify-d2-live",
+    "version": "1.0.0"
+  }
+}

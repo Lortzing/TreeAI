@@ -157,4 +157,4 @@ are recorded separately:
   to the live step; FAIL and verifier-error exits still stop the job.
 
 Final controlled live evidence:
-`evidence/d2/runs/d2-live-20260928T102549708Z/`.
+`evidence/d2/runs/d2-live-20260928T103416095Z/`.

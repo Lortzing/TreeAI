@@ -104,7 +104,7 @@ at minimum:
 The open checkboxes in §1 preserve the historical owner-decision record; the
 factory-shape mismatch and initial credentialless state were resolved for the
 controlled run. Final live evidence is
-`evidence/d2/runs/d2-live-20260928T102549708Z/`, bound to the committed source
+`evidence/d2/runs/d2-live-20260928T103416095Z/`, bound to the committed source
 via its environment commit/tree hashes. The live workflow now lets expected
 offline exit 3 reach the live step while preserving failure semantics.
 

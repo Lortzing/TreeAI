@@ -1,0 +1,141 @@
+{
+  "runId": "d2-live-20260928T103416095Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "live",
+  "driver": "pi",
+  "startedAt": "2026-09-28T10:34:16.097Z",
+  "endedAt": "2026-09-28T10:34:28.202Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 9,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "id": "live-scenario-basic",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "messageLength": 5
+      },
+      "durationMs": 676
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "groundTruthMatched": true,
+        "toolDecisions": [
+          {
+            "toolCallId": "call_00_AuTShJzD0VopQmNqB54l2774",
+            "category": "read",
+            "outcome": "deny",
+            "risk": "low",
+            "ruleId": null,
+            "reason": "read target resolves outside every configured read root; no rule allows it",
+            "scopeRoots": []
+          },
+          {
+            "toolCallId": "call_00_Syn779eZDL3SUdyMGVUM4040",
+            "category": "read",
+            "outcome": "allow",
+            "risk": "low",
+            "ruleId": "allow-read-configured-roots",
+            "reason": "read target resolves inside a configured read root (explicit allow rule)",
+            "scopeRoots": [
+              "/private/tmp/treeai-d2-clean-bwmgIF/tests/fixtures/e2e/live"
+            ]
+          }
+        ],
+        "deniedExecution": false
+      },
+      "durationMs": 3154
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "steerEnqueued": 1,
+        "agentStarts": 1,
+        "finalMessage": "steered"
+      },
+      "durationMs": 1243
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "aborted": true,
+        "recovered": true
+      },
+      "durationMs": 1272
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "restored": true,
+        "followUpLength": 5,
+        "sessionFile": "<recorded in run evidence>"
+      },
+      "durationMs": 1267
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "navigatedBack": true,
+        "forkAdvanced": true,
+        "answer": "A"
+      },
+      "durationMs": 3587
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "real-driver run; credentials via controlled env injection only"
+  ]
+}
