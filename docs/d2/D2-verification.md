@@ -1,14 +1,14 @@
-# D2 Verification Record (Wave 2 Offline Closure)
+# D2 Verification Record (Historical Wave 2 Offline Closure)
 
-- Date: 2026-09-21 (UTC)
+- Date: 2026-09-21 (UTC; historical baseline)
 - Executor: Integrator (Wave 2 integration + Gate 1/Gate 2 offline closure)
-- Status: **offline acceptance closed honestly** — every requested offline check
+- Status: **historical offline acceptance snapshot** — every requested offline check
   PASS except `d1-repro` (NOT_RUN by frozen design until the owner opts in).
-  Live verification remains BLOCKED on credentials. Production release is
-  NOT approved.
+  The current controlled live/D1 closeout is recorded in §7; production release
+  remains NOT approved.
 
-This record separates what was actually executed and observed from what was
-not. No live PASS is claimed anywhere; no `--d1-repro` pass is claimed.
+This opening section preserves what was executed on 2026-09-21 and must not be
+read as the current gate result. Current evidence and source binding are in §7.
 
 ## 1. Gate command matrix (real runs, real exit codes)
 
