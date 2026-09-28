@@ -57,6 +57,7 @@ export interface ScenarioRecord {
 export interface DriverContext {
   readonly driver: "pi" | "fake";
   readonly sessionDir: string;
+  readonly agentDir: string;
   /** Model selector from controlled env (never logged). */
   readonly model: { providerId: string; modelId: string };
   /** Which scenario this runtime is being created for. */
@@ -115,15 +116,6 @@ export function defaultFakeScripts(): Partial<Record<LiveScenarioId, readonly Fa
 /* Pi driver (real @treeai/runtime-pi; factory discovery)              */
 /* ------------------------------------------------------------------ */
 
-/**
- * Candidate factory export names in @treeai/runtime-pi. Agent B's exact
- * factory signature is a Wave-1 deliverable; when it lands, the FIRST
- * matching export is used. If none matches, scenarios are NOT_RUN (honest
- * state) — this is an explicit interface deviation recorded in
- * coordination/d2/agent-f-handoff.md for the Integrator to reconcile.
- */
-const FACTORY_EXPORT_NAMES = ["createPiRuntime", "createPiRuntimeForVerification", "createRuntime"] as const;
-
 export interface PiDriverLoadResult {
   driver: LiveDriver | null;
   problem?: string;
@@ -143,40 +135,34 @@ export async function loadPiDriver(
 ): Promise<PiDriverLoadResult> {
   let mod: Record<string, unknown>;
   try {
-    // Non-literal specifier on purpose: @treeai/runtime-pi's public factory
-    // shape is a Wave-1 deliverable and its package types are not frozen;
-    // discovery is structural (see FACTORY_EXPORT_NAMES). Never falls back
-    // to the fake silently.
     const specifier = "@treeai/runtime-pi";
     mod = (await import(specifier)) as Record<string, unknown>;
   } catch (err) {
     return { driver: null, problem: `@treeai/runtime-pi not importable: ${String(err)}` };
   }
-  for (const name of FACTORY_EXPORT_NAMES) {
-    const candidate = mod[name];
-    if (typeof candidate === "function") {
-      const apiKey = options.credentials?.apiKey;
-      return {
-        driver: {
-          name: "pi",
-          async createRuntime(ctx) {
-            // Controlled credential injection: in-memory only, never logged.
-            const factory = candidate as (config: unknown) => Promise<PiRuntime> | PiRuntime;
-            const runtime = await factory({
-              piVersion: "0.85.1",
-              model: ctx.model,
-              sessionDir: ctx.sessionDir,
-              ...(apiKey !== undefined ? { apiKey } : {}),
-            });
-            return runtime;
-          },
-        },
-      };
-    }
+
+  const candidate = mod["createPiRuntime"];
+  if (typeof candidate !== "function") {
+    return { driver: null, problem: "@treeai/runtime-pi has no createPiRuntime export" };
   }
+
+  const apiKey = options.credentials?.apiKey;
   return {
-    driver: null,
-    problem: `@treeai/runtime-pi has no factory export (${FACTORY_EXPORT_NAMES.join(", ")})`,
+    driver: {
+      name: "pi",
+      async createRuntime(ctx) {
+        const factory = candidate as (config: unknown) => Promise<PiRuntime> | PiRuntime;
+        return await factory({
+          agentDir: ctx.agentDir,
+          defaultCwd: REPO_ROOT,
+          thinkingLevel: "off",
+          tools: ["read"],
+          ...(apiKey === undefined
+            ? {}
+            : { credentials: { providerId: ctx.model.providerId, apiKey } }),
+        });
+      },
+    },
   };
 }
 
@@ -188,6 +174,7 @@ interface ScenarioRunContext {
   readonly runtime: PiRuntime;
   readonly recorder: EventRecorder;
   readonly model: { providerId: string; modelId: string };
+  readonly sessionDir: string;
   readonly isFake: boolean;
 }
 
@@ -220,6 +207,16 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((r) => setTimeout(r, ms));
 }
 
+const STREAMING_WAIT_TIMEOUT_MS = 15_000;
+
+async function waitForStreaming(recorder: EventRecorder): Promise<boolean> {
+  const deadline = Date.now() + STREAMING_WAIT_TIMEOUT_MS;
+  while (recorder.countOf("message.updated") === 0 && Date.now() < deadline) {
+    await sleep(25);
+  }
+  return recorder.countOf("message.updated") > 0;
+}
+
 const MODEL_PROMPT_TIMEOUT_MS = 120_000;
 
 async function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
@@ -238,7 +235,11 @@ async function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<
 
 /** basic: create a session, run one prompt, verify the run envelope. */
 const scenarioBasic: ScenarioFn = async (ctx) => {
-  await ctx.runtime.createSession({ model: ctx.model });
+  await ctx.runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const result = await withTimeout(
     ctx.runtime.prompt({ text: "Reply with the single word: ready" }),
     MODEL_PROMPT_TIMEOUT_MS,
@@ -262,7 +263,11 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
   const notes = readFileSync(LIVE_FIXTURE, "utf8");
   const groundTruth = /(\d{4})/.exec(notes)?.[1];
   if (groundTruth === undefined) return failed("live fixture lost its ground-truth number");
-  await ctx.runtime.createSession({ model: ctx.model });
+  await ctx.runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const result = await withTimeout(
     ctx.runtime.prompt({
       text:
@@ -292,11 +297,18 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
 
 /** steer: mid-flight steer creates a NEW TURN in the SAME agent run. */
 const scenarioSteer: ScenarioFn = async (ctx) => {
-  await ctx.runtime.createSession({ model: ctx.model });
+  await ctx.runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const pending = ctx.runtime.prompt({
     text: "Count slowly from 1 to 30, one number per line.",
   });
-  await sleep(250);
+  void pending.catch(() => undefined);
+  if (!(await waitForStreaming(ctx.recorder))) {
+    return failed("prompt did not emit a streaming update before steer");
+  }
   try {
     await ctx.runtime.steer({ text: "Stop counting. Reply with the single word: steered" });
   } catch (err) {
@@ -320,11 +332,18 @@ const scenarioSteer: ScenarioFn = async (ctx) => {
 
 /** abort: in-flight prompt settles with user-abort and the runtime recovers. */
 const scenarioAbort: ScenarioFn = async (ctx) => {
-  await ctx.runtime.createSession({ model: ctx.model });
+  await ctx.runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const pending = ctx.runtime.prompt({
     text: "Write a 500-word essay about the history of computing.",
   });
-  await sleep(250);
+  void pending.catch(() => undefined);
+  if (!(await waitForStreaming(ctx.recorder))) {
+    return failed("prompt did not emit a streaming update before abort");
+  }
   await ctx.runtime.abort();
   let aborted = false;
   let abortError: { code?: string; message: string } | undefined;
@@ -354,7 +373,11 @@ const scenarioAbort: ScenarioFn = async (ctx) => {
 /** resume: session survives runtime disposal and restoration. */
 const scenarioResume: ScenarioFn = async (ctx) => {
   const { runtime, recorder } = ctx;
-  await runtime.createSession({ model: ctx.model });
+  await runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const first = await withTimeout(
     runtime.prompt({ text: "Remember the codeword: cedar. Reply with: stored" }),
     MODEL_PROMPT_TIMEOUT_MS,
@@ -394,7 +417,11 @@ const scenarioResume: ScenarioFn = async (ctx) => {
 /** tree-navigation: dual branch + switch back within ONE session. */
 const scenarioTreeNavigation: ScenarioFn = async (ctx) => {
   const { runtime, recorder } = ctx;
-  await runtime.createSession({ model: ctx.model });
+  await runtime.createSession({
+    model: ctx.model,
+    cwd: REPO_ROOT,
+    sessionDir: ctx.sessionDir,
+  });
   const a = await withTimeout(
     runtime.prompt({ text: "This is branch A. Remember: branch A is about apples. Reply: ok" }),
     MODEL_PROMPT_TIMEOUT_MS,
@@ -459,6 +486,7 @@ export interface RunScenarioOptions {
   readonly driver: LiveDriver;
   readonly model: { providerId: string; modelId: string };
   readonly sessionDir: string;
+  readonly agentDir: string;
   readonly scenario: ScenarioDefinition;
 }
 
@@ -472,6 +500,7 @@ export async function runOneScenario(options: RunScenarioOptions): Promise<Scena
     runtime = await driver.createRuntime({
       driver: driver.name,
       sessionDir: options.sessionDir,
+      agentDir: options.agentDir,
       model: options.model,
       scenarioId: scenario.id,
     });
@@ -480,6 +509,7 @@ export async function runOneScenario(options: RunScenarioOptions): Promise<Scena
       secondRuntime = await driver.createRuntime({
         driver: driver.name,
         sessionDir: options.sessionDir,
+        agentDir: options.agentDir,
         model: options.model,
         scenarioId: scenario.id,
       });
@@ -488,6 +518,7 @@ export async function runOneScenario(options: RunScenarioOptions): Promise<Scena
       runtime,
       recorder,
       model: options.model,
+      sessionDir: options.sessionDir,
       isFake: driver.name === "fake",
     };
     if (secondRuntime !== null) ctx.__secondRuntime = secondRuntime;
@@ -536,6 +567,7 @@ export async function runAllScenarios(options: {
   driver: LiveDriver;
   model: { providerId: string; modelId: string };
   sessionDir: string;
+  agentDir: string;
 }): Promise<ScenarioRecord[]> {
   const records: ScenarioRecord[] = [];
   for (const scenario of LIVE_SCENARIOS) {
@@ -544,6 +576,7 @@ export async function runAllScenarios(options: {
         driver: options.driver,
         model: options.model,
         sessionDir: options.sessionDir,
+        agentDir: options.agentDir,
         scenario,
       }),
     );

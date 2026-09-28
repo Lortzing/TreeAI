@@ -32,14 +32,18 @@ export { redactText, redactJsonValue } from "./redact.ts";
 export type { PiSdkPort } from "./pi-sdk-port.ts";
 
 import type { PiRuntime } from "@treeai/contracts";
-import { createRealPiSdkPort } from "./pi-real-port.ts";
+import { createRealPiSdkPort, type PiRuntimeCredentials } from "./pi-real-port.ts";
 import { createPiRuntimeFromConfig } from "./pi-runtime.ts";
 import type { PiRuntimeConfig } from "./pi-runtime.ts";
+
+export type { PiRuntimeCredentials } from "./pi-real-port.ts";
 
 /** createPiRuntime 的公开选项（port 省略时使用真实 Pi SDK 端口）。 */
 export type PiRuntimeOptions = Omit<PiRuntimeConfig, "port"> & {
   /** Pi SDK 端口覆盖（测试注入 fake）。 */
   readonly port?: PiRuntimeConfig["port"];
+  /** 仅内存中的 provider credential；credential value 不会写入 Pi auth.json。 */
+  readonly credentials?: PiRuntimeCredentials;
 };
 
 /**
@@ -49,9 +53,11 @@ export type PiRuntimeOptions = Omit<PiRuntimeConfig, "port"> & {
  * 不一致抛 PiVersionMismatchError（明确失败，绝不带病运行）。
  */
 export function createPiRuntime(options?: PiRuntimeOptions): PiRuntime {
-  const { port, ...rest } = options ?? {};
+  const { port, credentials, ...rest } = options ?? {};
   return createPiRuntimeFromConfig({
     ...rest,
-    port: port ?? createRealPiSdkPort(),
+    port:
+      port ??
+      createRealPiSdkPort(credentials === undefined ? undefined : { credentials }),
   });
 }

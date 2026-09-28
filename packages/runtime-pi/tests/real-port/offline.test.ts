@@ -96,6 +96,7 @@ test("real Pi SDK offline battery in a sandboxed child process", () => {
     "runtime-pi-version",
     "bogus-model-rejected",
     "offline-provider-create",
+    "credential-bridge-in-memory",
     "lazy-file-before-assistant",
     "fresh-entry-nonempty",
     "file-flushed-after-assistant",

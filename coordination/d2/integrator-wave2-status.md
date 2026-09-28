@@ -115,3 +115,19 @@ Gate 1 备注（范围外、仅记录）：F scanner 另在四份 Wave 1 agent s
 4. **跨模块归一化决策**（§5.4.1–3、6）：runtime.error 载荷、precheck 事件可见性、journal eventId 命名空间、tool-policy 包入口——每项均可在 host 层继续绕开（runtime-smoke 即参照实现），或由负责人指派对应包修改。
 5. **生产发布**：未批准。离线证据 ≠ 真实 SDK 行为、时序与故障面；发布前置条件见 owner-checklist §4。
 6. **Wave 1 agent status 文件中的绝对 home 路径**（§5.3 备注）：范围外，待负责人定夺。
+
+## 七、D2 live 接线收口（2026-09-28）
+
+已在当前工作树收口第 2 项 live 阻塞：
+
+- `tests/live/framework.ts` 现在调用真实 `createPiRuntime()` 的有效 factory options，并把 `cwd`/`sessionDir` 显式传给六个场景的 `createSession()`。
+- `packages/runtime-pi` 通过 Pi 0.85.1 公开的 `createAgentSessionServices()` 与 `ModelRuntime.setRuntimeApiKey()` 建立内存 credential bridge；key 不进入 contracts、session reference 或用户 `~/.pi`。
+- verifier 使用被 Git 忽略的本地 `.pi-d2-live/` 作为受控 `agentDir`，真实 provider extension/model 定义若有需要必须显式放入该目录，不从用户全局 Pi 配置复制。
+- fake live 验证已重新通过（9 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN，exit 0）；无凭据 real verifier 仍诚实返回 6 BLOCKED，exit 3。
+
+历史 blocked 记录与证据不改写；真实六场景通过仍待受控 provider、model 和 key 的实际运行。
+
+## 八、授权门禁执行结果（2026-09-28）
+
+- `npm run verify:d2 -- --d1-repro` 已执行并通过：`21 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`，exit 0。
+- `npm run verify:d2:live` 首次无凭据执行时结果为 6 BLOCKED、exit 3；随后使用受控本地 provider 配置重跑通过：`9 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`，exit 0，六场景 session evidence 已脱敏落盘。

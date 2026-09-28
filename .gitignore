@@ -15,6 +15,7 @@ out/
 # anything committed under evidence/ must pass secret scanning first.
 .env
 .env.*
+.pi-d2-live/
 *.pem
 *.key
 *.p12

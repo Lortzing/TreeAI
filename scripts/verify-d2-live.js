@@ -34,8 +34,16 @@
  * Root package.json wiring (verify:d2:live) is the Integrator's job.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
@@ -134,6 +142,24 @@ function pushItem(item) {
 function writeJsonUltraGuarded(relPath, value) {
   const raw = `${JSON.stringify(value, null, 2)}\n`;
   return writer.writeTextGuarded(relPath, stripCredential(raw));
+}
+
+function copySessionEvidence(sourceDir, scenarioId) {
+  if (!existsSync(sourceDir)) return;
+  const targetRoot = `sessions/${scenarioId}`;
+  const copyTree = (source, relativeDir) => {
+    for (const entry of readdirSync(source, { withFileTypes: true })) {
+      const sourcePath = join(source, entry.name);
+      const relativePath = relativeDir === "" ? entry.name : `${relativeDir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        copyTree(sourcePath, relativePath);
+        continue;
+      }
+      const content = readFileSync(sourcePath, "utf8");
+      writer.writeTextGuarded(`${targetRoot}/${relativePath}`, stripCredential(content));
+    }
+  };
+  copyTree(sourceDir, "");
 }
 
 /* ------------------------------------------------------------------ */
@@ -260,9 +286,15 @@ async function main() {
   writeJsonUltraGuarded("environment.json", collectEnvironment(driverName, credentialPolicy));
 
   if (driver !== null) {
-    // Sessions live INSIDE the run dir: they are run evidence, and the
-    // post-write secret rescan therefore covers them too.
-    const sessionDir = join(writer.runDir, "sessions");
+    // Pi owns the session JSONL. Keep the live source outside evidence, then
+    // copy a redacted snapshot through EvidenceWriter after each scenario.
+    const sessionRoot = mkdtempSync(join(tmpdir(), "treeai-d2-live-sessions-"));
+    const sessionDir = join(sessionRoot, "sessions");
+    mkdirSync(sessionDir, { recursive: true });
+    // Provider definitions live in an ignored local directory, not in the
+    // evidence tree: Pi may create auth/model state files there.
+    const agentDir = join(ROOT, ".pi-d2-live");
+    mkdirSync(agentDir, { recursive: true });
     const model =
       DRIVER_ARG === "fake"
         ? { providerId: "fake-provider", modelId: "fake-model" }
@@ -270,23 +302,30 @@ async function main() {
             providerId: process.env[ENV_PROVIDER],
             modelId: process.env[ENV_MODEL],
           };
-    for (const scenario of LIVE_SCENARIOS) {
-      const record = await runOneScenario({
-        driver,
-        model,
-        sessionDir: join(sessionDir, scenario.id),
-        scenario,
-      });
-      writeJsonUltraGuarded(`logs/${record.id}.json`, record);
-      records.push(record);
-      writer.journal({
-        type: "verify.scenario-finished",
-        payload: {
-          scenario: record.scenario,
-          status: record.status,
-          durationMs: record.durationMs,
-        },
-      });
+    try {
+      for (const scenario of LIVE_SCENARIOS) {
+        const scenarioSessionDir = join(sessionDir, scenario.id);
+        const record = await runOneScenario({
+          driver,
+          model,
+          sessionDir: scenarioSessionDir,
+          agentDir,
+          scenario,
+        });
+        copySessionEvidence(scenarioSessionDir, scenario.id);
+        writeJsonUltraGuarded(`logs/${record.id}.json`, record);
+        records.push(record);
+        writer.journal({
+          type: "verify.scenario-finished",
+          payload: {
+            scenario: record.scenario,
+            status: record.status,
+            durationMs: record.durationMs,
+          },
+        });
+      }
+    } finally {
+      rmSync(sessionRoot, { recursive: true, force: true });
     }
   }
 

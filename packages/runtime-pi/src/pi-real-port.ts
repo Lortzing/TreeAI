@@ -55,7 +55,7 @@ function adaptSession(session: PiSession): PiPortSession {
       return session.sessionId;
     },
     get sessionFile(): string | undefined {
-      return session.sessionFile;
+      return session.sessionManager.getSessionFile();
     },
     get isStreaming(): boolean {
       return session.isStreaming;
@@ -89,7 +89,17 @@ function adaptSession(session: PiSession): PiPortSession {
   };
 }
 
-export function createRealPiSdkPort(): PiSdkPort {
+export interface PiRuntimeCredentials {
+  readonly providerId: string;
+  readonly apiKey: string;
+}
+
+export interface PiRealSdkPortOptions {
+  readonly credentials?: PiRuntimeCredentials;
+}
+
+export function createRealPiSdkPort(options: PiRealSdkPortOptions = {}): PiSdkPort {
+  const credentials = options.credentials;
   return {
     version: Pi.VERSION,
 
@@ -98,10 +108,15 @@ export function createRealPiSdkPort(): PiSdkPort {
         cwd,
         agentDir: agentDir === undefined ? undefined : agentDir,
       });
+      if (credentials !== undefined) {
+        await services.modelRuntime.setRuntimeApiKey(credentials.providerId, credentials.apiKey);
+      }
       return {
         getModel: (providerId: string, modelId: string): PiPortModelHandle | undefined => {
           const model = services.modelRuntime.getModel(providerId, modelId);
-          return model === undefined ? undefined : { provider: model.provider, id: model.id };
+          return model === undefined
+            ? undefined
+            : { provider: model.provider, id: model.id, raw: model };
         },
         raw: services,
       };
@@ -129,7 +144,7 @@ export function createRealPiSdkPort(): PiSdkPort {
         model:
           input.model === undefined
             ? undefined
-            : (input.model as unknown as PiCreateSessionOptions["model"]),
+            : ((input.model.raw ?? input.model) as unknown as PiCreateSessionOptions["model"]),
         thinkingLevel:
           input.thinkingLevel === undefined
             ? undefined

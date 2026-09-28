@@ -740,7 +740,8 @@ class PiRuntimeImpl implements PiRuntime {
     const active = this.requireActiveSession("referenceFromActive");
     return {
       sessionId: active.session.sessionId as SessionReference["sessionId"],
-      sessionFile: active.session.sessionFile ?? "",
+      sessionFile:
+        active.manager.getSessionFile() ?? active.session.sessionFile ?? "",
       entryId: (active.manager.getLeafId() ?? "") as SessionReference["entryId"],
       piVersion: PINNED_PI_VERSION_BRANDED,
       availability: { status: "available" },

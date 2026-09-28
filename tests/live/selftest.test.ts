@@ -51,6 +51,7 @@ test("all six scenarios PASS against the fake driver and validate against scenar
       driver: fakeDriver({ scriptByScenario: defaultFakeScripts(), longDelayMs: 300 }),
       model: { providerId: "fake-provider", modelId: "fake-model" },
       sessionDir: join(dir, "sessions"),
+      agentDir: join(dir, "agent"),
     });
     assert.equal(records.length, 6);
     const schema = scenarioResultSchema();

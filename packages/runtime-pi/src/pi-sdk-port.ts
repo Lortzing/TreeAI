@@ -22,6 +22,8 @@ export interface PiEventLike {
 export interface PiPortModelHandle {
   readonly provider: string;
   readonly id: string;
+  /** Opaque SDK model retained by the real adapter for tool/request execution. */
+  readonly raw?: unknown;
 }
 
 /** 会话消息（结构子集：stopReason/errorMessage 判别失败形态）。 */

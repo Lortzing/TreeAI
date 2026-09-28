@@ -1,0 +1,119 @@
+{
+  "runId": "d2-live-20260928T091513199Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "live",
+  "driver": "pi",
+  "startedAt": "2026-09-28T09:15:13.199Z",
+  "endedAt": "2026-09-28T09:15:21.562Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 9,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "id": "live-scenario-basic",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "messageLength": 5
+      },
+      "durationMs": 784
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "groundTruthMatched": true,
+        "toolEvents": 1
+      },
+      "durationMs": 1848
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "steerEnqueued": 1,
+        "agentStarts": 1,
+        "finalMessage": "steered"
+      },
+      "durationMs": 1351
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "aborted": true,
+        "recovered": true
+      },
+      "durationMs": 1369
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "restored": true,
+        "followUpLength": 5,
+        "sessionFile": "<recorded in run evidence>"
+      },
+      "durationMs": 1257
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "navigatedBack": true,
+        "forkAdvanced": true,
+        "answer": "A"
+      },
+      "durationMs": 1364
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "real-driver run; credentials via controlled env injection only"
+  ]
+}

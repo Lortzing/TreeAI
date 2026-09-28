@@ -114,3 +114,38 @@ or the owner can commission the underlying fix.
     No private subpath imports, no source patches, no `latest`. Pi
     modification governance follows `docs/adr/ADR-002-pi-modification-governance.md`
     and the D1 decision record (ADR-001 SDK route accepted, 2026-09-20).
+
+## D2 live closure update (2026-09-28)
+
+The live factory/session mismatch described in item 4 is resolved in the
+current implementation. The live framework now passes valid runtime factory
+options, supplies `sessionDir`/`cwd` to every new session, and uses the
+ignored local `.pi-d2-live/` directory as the controlled `agentDir` rather
+than allowing Pi to resolve the user's normal `~/.pi/agent`.
+
+The real `runtime-pi` port applies the controlled provider key through Pi's
+public `ModelRuntime.setRuntimeApiKey()` after
+`createAgentSessionServices()` loads provider extensions. The key is held in
+memory and is not placed in TreeAI contracts, Pi session references, evidence,
+or as a credential value in `auth.json`. A provider that depends on an extension or model definition
+must have that provider material available in the controlled `agentDir`; the
+verifier does not copy or discover the user's global Pi configuration.
+
+This update records the implementation state only; historical blocked runs
+and their evidence remain unchanged. A real six-scenario PASS still requires
+valid controlled environment values and a provider available from the
+controlled agent directory.
+
+## D2 gate execution update (2026-09-28)
+
+The authorized D1 repro was executed through `npm run verify:d2 -- --d1-repro`
+and passed: `21 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`, exit 0. The real Pi
+six-scenario gate was also invoked, but this session had none of the controlled
+`TREEAI_LIVE_PROVIDER_ID`, `TREEAI_LIVE_MODEL_ID`, or `TREEAI_LIVE_API_KEY`
+values, so it correctly recorded six `BLOCKED` scenarios and exit 3 without
+reading the user's Pi configuration.
+
+A later controlled rerun passed: `9 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`,
+exit 0. It exercised all six real scenarios and produced six redacted session
+snapshots in the evidence run directory. Earlier blocked and failed runs remain
+historical evidence and are not rewritten.

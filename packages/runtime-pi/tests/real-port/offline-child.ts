@@ -45,7 +45,12 @@ async function main(): Promise<void> {
   const port = createRealPiSdkPort();
   report("port-version-pinned", port.version === "0.85.1", `version=${port.version}`);
 
-  const runtime = createPiRuntime({ agentDir, defaultCwd: workdir });
+  const credential = "offline-test-key";
+  const runtime = createPiRuntime({
+    agentDir,
+    defaultCwd: workdir,
+    credentials: { providerId: "treeai-offline", apiKey: credential },
+  });
   report("runtime-pi-version", runtime.piVersion === "0.85.1");
 
   // provider 注册表来自沙箱 agentDir/models.json（createAgentSessionServices）。
@@ -72,6 +77,10 @@ async function main(): Promise<void> {
     runtimeFile !== "" && runtimeFile.startsWith(sessionDir),
     `sessionFile=${runtimeFile}`,
   );
+  const authContents = existsSync(join(agentDir, "auth.json"))
+    ? readFileSync(join(agentDir, "auth.json"), "utf8")
+    : "";
+  report("credential-bridge-in-memory", !authContents.includes(credential));
   // Pi 0.85.1 懒 flush：无 assistant 消息时创建期条目只驻内存，文件不落盘。
   report("lazy-file-before-assistant", !existsSync(runtimeFile));
   report("fresh-entry-nonempty", snapshot.reference.entryId.length > 0);
