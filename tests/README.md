@@ -181,11 +181,11 @@ REJECTED — a schema that loses a constraint fails the gate.
   `LIVE_API_KEY`), optional `--driver` input and optional D1 repro step.
   Secrets appear only in the live step's env mapping and are never echoed.
 
-## Known interface deviations (see coordination/d2/agent-f-handoff.md)
+## Current live integration notes (2026-09-28)
 
-- `@treeai/runtime-pi` currently has no resolvable entry point (no
-  `main`/`exports`/`types`), so `loadPiDriver()` reports NOT_RUN rather
-  than pretending; the factory discovery list is
-  `createPiRuntime | createPiRuntimeForVerification | createRuntime`.
-- Root `package.json` script wiring (`verify:d2`, `verify:d2:live`) is the
-  Integrator's job; run the scripts directly with node until then.
+`@treeai/runtime-pi` exposes a resolvable package entry and
+`loadPiDriver()` resolves `createPiRuntime`. The live verifier supplies the
+factory's valid options, controlled in-memory credentials, and the public Pi
+`tool_call` extension hook used to connect the host ToolPolicy decision path.
+Credentialless runs remain BLOCKED by design; controlled evidence is recorded
+under `evidence/d2/runs/`.

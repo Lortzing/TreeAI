@@ -508,7 +508,7 @@ def run_python_tests(cwd, timeout=900):
     return "FAIL", "unittest discover exited %s" % rc, tail(se or so)
 
 
-def check_unit_tests(checks, impl):
+def check_unit_tests(checks, impl, install_missing=False):
     cid = "unit-tests-" + impl
     desc = "Unit tests for %s" % impl
     d = os.path.join(ROOT, impl)
@@ -529,6 +529,32 @@ def check_unit_tests(checks, impl):
         if shutil.which("npm") is None:
             checks.add(cid, desc, "BLOCKED", "npm not available on PATH")
             return
+        required = [
+            os.path.join(d, "node_modules", ".bin", "tsx"),
+            os.path.join(d, "node_modules", "@earendil-works", "pi-coding-agent", "package.json"),
+        ]
+        missing = [path for path in required if not os.path.exists(path)]
+        if missing:
+            if not install_missing:
+                checks.add(
+                    cid,
+                    desc,
+                    "NOT_RUN",
+                    "sdk-node dependencies are absent; execute scripts/verify-d1 --repro to install and rerun",
+                )
+                return
+            install_rc, install_out, install_err, install_timeout = run_cmd(
+                ["npm", "ci"], cwd=d, timeout=900
+            )
+            if install_timeout or install_rc != 0:
+                checks.add(
+                    cid,
+                    desc,
+                    "FAIL",
+                    "npm ci for direct unit tests failed (exit=%s): %s"
+                    % (install_rc, tail(install_err or install_out)),
+                )
+                return
         rc, so, se, to = run_cmd(["npm", "test", "--silent"], cwd=d, timeout=900)
         if to:
             checks.add(cid, desc, "FAIL", "npm test timed out (900s)")
@@ -1399,7 +1425,7 @@ def main(argv):
 
     # 3. unit tests
     for impl in ("sdk-node", "rpc-python"):
-        guarded(check_unit_tests, checks, impl)
+        guarded(check_unit_tests, checks, impl, args.repro)
 
     # 3b. clean-room reproduction (only executes with --repro)
     ts = stamp(started)

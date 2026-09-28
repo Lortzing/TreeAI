@@ -49,6 +49,8 @@ async function main(): Promise<void> {
   const runtime = createPiRuntime({
     agentDir,
     defaultCwd: workdir,
+    thinkingLevel: "off",
+    tools: ["read"],
     credentials: { providerId: "treeai-offline", apiKey: credential },
   });
   report("runtime-pi-version", runtime.piVersion === "0.85.1");

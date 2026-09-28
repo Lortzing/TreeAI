@@ -35,6 +35,8 @@ import type {
 
 /** 从根导出值推导的 Pi 公开类型（不 import 内部模块）。 */
 type PiServices = Awaited<ReturnType<typeof Pi.createAgentSessionServices>>;
+type PiCreateAgentSessionServicesOptions = Parameters<typeof Pi.createAgentSessionServices>[0];
+type PiResourceLoaderOptions = NonNullable<PiCreateAgentSessionServicesOptions["resourceLoaderOptions"]>;
 type PiCreateSessionOptions = Parameters<typeof Pi.createAgentSessionFromServices>[0];
 type PiCreateSessionResult = Awaited<ReturnType<typeof Pi.createAgentSessionFromServices>>;
 type PiSession = PiCreateSessionResult["session"];
@@ -96,10 +98,12 @@ export interface PiRuntimeCredentials {
 
 export interface PiRealSdkPortOptions {
   readonly credentials?: PiRuntimeCredentials;
+  readonly extensionFactories?: readonly unknown[];
 }
 
 export function createRealPiSdkPort(options: PiRealSdkPortOptions = {}): PiSdkPort {
   const credentials = options.credentials;
+  const extensionFactories = options.extensionFactories;
   return {
     version: Pi.VERSION,
 
@@ -107,6 +111,14 @@ export function createRealPiSdkPort(options: PiRealSdkPortOptions = {}): PiSdkPo
       const services = await Pi.createAgentSessionServices({
         cwd,
         agentDir: agentDir === undefined ? undefined : agentDir,
+        ...(extensionFactories === undefined
+          ? {}
+          : {
+              resourceLoaderOptions: {
+                extensionFactories:
+                  extensionFactories as PiResourceLoaderOptions["extensionFactories"],
+              },
+            }),
       });
       if (credentials !== undefined) {
         await services.modelRuntime.setRuntimeApiKey(credentials.providerId, credentials.apiKey);

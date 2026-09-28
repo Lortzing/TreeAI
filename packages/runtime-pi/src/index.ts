@@ -44,6 +44,8 @@ export type PiRuntimeOptions = Omit<PiRuntimeConfig, "port"> & {
   readonly port?: PiRuntimeConfig["port"];
   /** 仅内存中的 provider credential；credential value 不会写入 Pi auth.json。 */
   readonly credentials?: PiRuntimeCredentials;
+  /** Pi public extension factories used by a host-level integration seam. */
+  readonly extensionFactories?: readonly unknown[];
 };
 
 /**
@@ -53,11 +55,14 @@ export type PiRuntimeOptions = Omit<PiRuntimeConfig, "port"> & {
  * 不一致抛 PiVersionMismatchError（明确失败，绝不带病运行）。
  */
 export function createPiRuntime(options?: PiRuntimeOptions): PiRuntime {
-  const { port, credentials, ...rest } = options ?? {};
+  const { port, credentials, extensionFactories, ...rest } = options ?? {};
   return createPiRuntimeFromConfig({
     ...rest,
     port:
       port ??
-      createRealPiSdkPort(credentials === undefined ? undefined : { credentials }),
+      createRealPiSdkPort({
+        ...(credentials === undefined ? {} : { credentials }),
+        ...(extensionFactories === undefined ? {} : { extensionFactories }),
+      }),
   });
 }

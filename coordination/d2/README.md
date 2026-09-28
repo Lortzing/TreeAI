@@ -34,7 +34,7 @@
 | 2 | 至少一项 FAIL |
 | 3 | 无 FAIL，但存在 BLOCKED 或 NOT_RUN |
 
-Gate 0 期间 `npm test` / `npm run test:integration` / `npm run verify:d2` / `npm run verify:d2:live` 由 `scripts/gate0-status.js` 占位，输出 `NOT_IMPLEMENTED` 并退出 3。Agent F 交付 `scripts/verify-d2*` 后，由 Integrator 切换根 `package.json` 的 script 指向；根 `package.json`、`package-lock.json`、`tsconfig.base.json` 只由 Integrator 修改。
+Gate 0 期间的占位状态已被 Wave 2 实际脚本替换：根 `package.json` 现在接入 `verify:d2`、`verify:d2:live` 与 `verify:d2:selftest`；退出码纪律仍保持不变，所有运行结果必须以证据为准。
 
 ## 新依赖流程（任务书 §2.2）
 

@@ -34,15 +34,15 @@ Dependency direction: `apps/runtime-smoke` → { runtime-pi, persistence, tool-p
 
 ## Commands
 
-| Command | Status (2026-09-21, Wave 2 offline closure) |
+| Command | Status (2026-09-28, D2 live conditional closeout) |
 |---|---|
 | `npm ci` | working — clean install from the lockfile |
 | `npm run typecheck` | working — all six workspaces with TypeScript sources checked |
 | `npm test` | working — five package suites + Agent F unit (75) / integration (8) / live selftest (3, offline fake driver) |
 | `npm run test:integration` | working — `apps/runtime-smoke` (Wave 2 offline integration, 2/2) + Agent F integration (8/8) |
-| `npm run verify:d2` | working — offline acceptance verifier: 20 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN (`d1-repro` needs explicit `--d1-repro` + network + d1-spikes write authorization) → exit 3 is the honest offline terminal state |
+| `npm run verify:d2` | working — default offline run records the optional `d1-repro` as NOT_RUN (exit 3); `npm run verify:d2 -- --d1-repro` passed 21/21 checks (exit 0) |
 | `npm run verify:d2:selftest` | working — verifier failure-injection selftest, 4/4 |
-| `npm run verify:d2:live` | wired — without credentials all six live scenarios are BLOCKED (exit 3); never a faked live PASS |
+| `npm run verify:d2:live` | working — controlled real-Pi run passed 9/9 checks; credentialless runs remain BLOCKED (exit 3) by design |
 
 Exit-code convention (shared with the D2 verifier): `0` all PASS · `1` tool error · `2` at least one FAIL · `3` no FAIL but BLOCKED/NOT_RUN present.
 

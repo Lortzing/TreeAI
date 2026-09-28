@@ -19,6 +19,8 @@
     "test": "npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts",
     "test:integration": "npm test --workspace @treeai/runtime-smoke && node --test tests/integration/*.test.ts",
     "verify:d2": "node scripts/verify-d2.js",
+    "build:live-policy": "tsc -p apps/runtime-smoke/tsconfig.tool-policy-build.json",
+    "preverify:d2:live": "npm run build:live-policy",
     "verify:d2:live": "node scripts/verify-d2-live.js",
     "verify:d2:selftest": "node scripts/verify-d2-selftest.js"
   },

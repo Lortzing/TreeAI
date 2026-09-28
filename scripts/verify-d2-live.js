@@ -34,6 +34,7 @@
  * Root package.json wiring (verify:d2:live) is the Integrator's job.
  */
 
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -166,9 +167,39 @@ function copySessionEvidence(sourceDir, scenarioId) {
 /* Environment record                                                  */
 /* ------------------------------------------------------------------ */
 
+function sha256(text) {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+function collectGitBinding() {
+  const commit = runCommand("git", ["rev-parse", "HEAD"], { cwd: ROOT });
+  const tree = runCommand("git", ["rev-parse", "HEAD^{tree}"], { cwd: ROOT });
+  const status = runCommand(
+    "git",
+    ["status", "--porcelain=v1", "--untracked-files=all"],
+    { cwd: ROOT },
+  );
+  const diff = runCommand("git", ["diff", "--no-ext-diff", "--binary", "HEAD"], {
+    cwd: ROOT,
+    maxBufferBytes: 8 * 1024 * 1024,
+  });
+  const statusText = status.stdout;
+  const diffText = diff.stdout;
+  const statusLines = statusText.split("\n").filter((line) => line.length > 0);
+  const trackedDiff = diff.status === 0 && diffText.length > 0;
+  return {
+    ...(commit.status === 0 ? { commit: commit.stdout.trim() } : {}),
+    ...(tree.status === 0 ? { tree: tree.stdout.trim() } : {}),
+    trackedDirty: trackedDiff,
+    untrackedCount: statusLines.filter((line) => line.startsWith("??")).length,
+    statusSha256: sha256(statusText),
+    diffSha256: sha256(diffText),
+  };
+}
+
 function collectEnvironment(driverName, credentialPolicy) {
   const npmVersion = runCommand("npm", ["--version"], { cwd: ROOT });
-  const gitHead = runCommand("git", ["rev-parse", "HEAD"], { cwd: ROOT });
+  const gitBinding = collectGitBinding();
   const tsPkg = readJson(join(ROOT, "node_modules", "typescript", "package.json"));
   const installedPiPkg = readJson(
     join(ROOT, "node_modules", "@earendil-works", "pi-coding-agent", "package.json"),
@@ -197,7 +228,7 @@ function collectEnvironment(driverName, credentialPolicy) {
         : {}),
     },
     credentialPolicy,
-    ...(gitHead.status === 0 ? { git: { commit: gitHead.stdout.trim() } } : {}),
+    git: gitBinding,
     verifier: { name: VERIFIER_NAME, version: VERIFIER_VERSION },
   };
 }
@@ -315,6 +346,13 @@ async function main() {
         copySessionEvidence(scenarioSessionDir, scenario.id);
         writeJsonUltraGuarded(`logs/${record.id}.json`, record);
         records.push(record);
+        const toolDecisions =
+          record.meta && Array.isArray(record.meta.toolDecisions)
+            ? record.meta.toolDecisions
+            : [];
+        for (const decision of toolDecisions) {
+          writer.journal({ type: "verify.tool-decision", payload: decision });
+        }
         writer.journal({
           type: "verify.scenario-finished",
           payload: {

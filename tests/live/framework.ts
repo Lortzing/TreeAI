@@ -116,6 +116,79 @@ export function defaultFakeScripts(): Partial<Record<LiveScenarioId, readonly Fa
 /* Pi driver (real @treeai/runtime-pi; factory discovery)              */
 /* ------------------------------------------------------------------ */
 
+interface LivePolicyRequest {
+  readonly category: "read";
+  readonly targetPath: string;
+}
+
+interface LivePolicyDecision {
+  readonly category: string;
+  readonly outcome: string;
+  readonly risk: string;
+  readonly ruleId: string | null;
+  readonly reason: string;
+  readonly scope: { readonly roots: readonly string[] };
+}
+
+interface LivePolicyDecisionRecord {
+  readonly toolCallId: string;
+  readonly category: string;
+  readonly outcome: string;
+  readonly risk: string;
+  readonly ruleId: string | null;
+  readonly reason: string;
+  readonly scopeRoots: readonly string[];
+}
+
+interface LivePolicyBridge {
+  evaluate(request: LivePolicyRequest): LivePolicyDecision;
+  record(decision: LivePolicyDecisionRecord): void;
+}
+
+const LIVE_POLICY_BRIDGE = Symbol.for("treeai.liveToolPolicyBridge");
+
+type LiveGlobal = typeof globalThis & {
+  [LIVE_POLICY_BRIDGE]?: LivePolicyBridge;
+};
+
+function setLivePolicyBridge(bridge: LivePolicyBridge | undefined): void {
+  const target = globalThis as LiveGlobal;
+  if (bridge === undefined) {
+    delete target[LIVE_POLICY_BRIDGE];
+  } else {
+    target[LIVE_POLICY_BRIDGE] = bridge;
+  }
+}
+
+/** Pi public extension hook: policy runs before the built-in tool executes. */
+function liveToolPolicyExtension(pi: {
+  on(event: "tool_call", handler: (event: {
+    toolName: string;
+    toolCallId: string;
+    input: Record<string, unknown>;
+  }) => Promise<{ block: true; reason: string; terminate: true } | void>): void;
+}): void {
+  pi.on("tool_call", async (event) => {
+    if (event.toolName !== "read") return;
+    const bridge = (globalThis as LiveGlobal)[LIVE_POLICY_BRIDGE];
+    if (bridge === undefined) return;
+    const targetPath = typeof event.input["path"] === "string" ? event.input["path"] : "";
+    const decision = bridge.evaluate({ category: "read", targetPath });
+    bridge.record({
+      toolCallId: event.toolCallId,
+      category: decision.category,
+      outcome: decision.outcome,
+      risk: decision.risk,
+      ruleId: decision.ruleId,
+      reason: decision.reason,
+      scopeRoots: [...decision.scope.roots],
+    });
+    if (decision.outcome !== "allow") {
+      return { block: true, reason: decision.reason, terminate: true };
+    }
+  });
+}
+
 export interface PiDriverLoadResult {
   driver: LiveDriver | null;
   problem?: string;
@@ -157,6 +230,9 @@ export async function loadPiDriver(
           defaultCwd: REPO_ROOT,
           thinkingLevel: "off",
           tools: ["read"],
+          ...(ctx.scenarioId === "tool-policy"
+            ? { extensionFactories: [liveToolPolicyExtension] }
+            : {}),
           ...(apiKey === undefined
             ? {}
             : { credentials: { providerId: ctx.model.providerId, apiKey } }),
@@ -258,41 +334,128 @@ const scenarioBasic: ScenarioFn = async (ctx) => {
   return ok({ messageLength: result.message.length });
 };
 
-/** tool-policy: a read goes through the decision path; ground truth checked. */
+async function createLiveToolPolicyEngine(): Promise<{
+  evaluate(request: LivePolicyRequest): LivePolicyDecision;
+}> {
+  const moduleUrl = new URL("../../apps/runtime-smoke/dist/tool-policy/index.js", import.meta.url).href;
+  const module = (await import(moduleUrl)) as unknown as {
+    ToolPolicyEngine: new (config: {
+      readonly readRoots: readonly string[];
+      readonly workspaceRoots: readonly string[];
+      readonly cwd: string;
+    }) => { evaluate(request: LivePolicyRequest): LivePolicyDecision };
+  };
+  return new module.ToolPolicyEngine({
+    cwd: REPO_ROOT,
+    readRoots: [join(REPO_ROOT, "tests", "fixtures", "e2e", "live")],
+    workspaceRoots: [join(REPO_ROOT, "tests", "fixtures", "e2e", "workspace")],
+  });
+}
+
+/** tool-policy: a real Pi tool_call hook evaluates allow and deny. */
 const scenarioToolPolicy: ScenarioFn = async (ctx) => {
   const notes = readFileSync(LIVE_FIXTURE, "utf8");
   const groundTruth = /(\d{4})/.exec(notes)?.[1];
   if (groundTruth === undefined) return failed("live fixture lost its ground-truth number");
-  await ctx.runtime.createSession({
-    model: ctx.model,
-    cwd: REPO_ROOT,
-    sessionDir: ctx.sessionDir,
-  });
-  const result = await withTimeout(
-    ctx.runtime.prompt({
-      text:
-        "Read the file at tests/fixtures/e2e/live/notes.txt (relative to the " +
-        "current working directory) using your file tool, then reply with " +
-        "only the secret number it contains.",
-    }),
-    MODEL_PROMPT_TIMEOUT_MS,
-    "tool-policy prompt",
-  );
-  const decisions = ctx.recorder.countOf("tool.decision");
-  const toolStarted = ctx.recorder.countOf("tool.execution.started");
-  // The scenario must actually have exercised the tool/policy path: at least
-  // one tool.decision (real runtime-pi, via its policy hook) or
-  // tool.execution.* event must exist — otherwise this "passed" without
-  // testing anything.
-  if (toolStarted + decisions === 0) {
-    return failed("no tool decision/execution events recorded");
-  }
-  if (!result.message.includes(groundTruth)) {
-    return failed(
-      `reported answer does not contain the ground-truth number (got: ${result.message.slice(0, 120)})`,
+
+  if (ctx.isFake) {
+    await ctx.runtime.createSession({
+      model: ctx.model,
+      cwd: REPO_ROOT,
+      sessionDir: ctx.sessionDir,
+    });
+    const result = await withTimeout(
+      ctx.runtime.prompt({
+        text:
+          "Read the file at tests/fixtures/e2e/live/notes.txt (relative to the " +
+          "current working directory) using your file tool, then reply with " +
+          "only the secret number it contains.",
+      }),
+      MODEL_PROMPT_TIMEOUT_MS,
+      "tool-policy prompt",
     );
+    const toolStarted = ctx.recorder.countOf("tool.execution.started");
+    if (toolStarted === 0) return failed("fake policy scenario did not exercise a tool");
+    if (!result.message.includes(groundTruth)) {
+      return failed(
+        `reported answer does not contain the ground-truth number (got: ${result.message.slice(0, 120)})`,
+      );
+    }
+    return ok({ groundTruthMatched: true, toolEvents: toolStarted });
   }
-  return ok({ groundTruthMatched: true, toolEvents: toolStarted + decisions });
+
+  const engine = await createLiveToolPolicyEngine();
+  const decisions: LivePolicyDecisionRecord[] = [];
+  setLivePolicyBridge({
+    evaluate: (request) => engine.evaluate(request),
+    record: (decision) => decisions.push(decision),
+  });
+  try {
+    await ctx.runtime.createSession({
+      model: ctx.model,
+      cwd: REPO_ROOT,
+      sessionDir: ctx.sessionDir,
+    });
+    const allowed = await withTimeout(
+      ctx.runtime.prompt({
+        text:
+          "Use your read file tool on tests/fixtures/e2e/live/notes.txt, then " +
+          "reply with only the four-digit number it contains.",
+      }),
+      MODEL_PROMPT_TIMEOUT_MS,
+      "tool-policy allowed prompt",
+    );
+    if (!allowed.message.includes(groundTruth)) {
+      return failed(
+        `allowed read answer does not contain the ground-truth number (got: ${allowed.message.slice(0, 120)})`,
+      );
+    }
+
+    const eventCountBeforeDenied = ctx.recorder.events.length;
+    try {
+      await withTimeout(
+        ctx.runtime.prompt({
+          text:
+            "Use your read file tool on tests/fixtures/e2e/workspace/existing.txt " +
+            "and reply with its contents. This path is intentionally outside the " +
+            "allowed read fixture root.",
+        }),
+        MODEL_PROMPT_TIMEOUT_MS,
+        "tool-policy denied prompt",
+      );
+    } catch {
+      // A blocked tool may cause the model turn to reject; the policy decision is authoritative.
+    }
+
+    const allowedDecision = decisions.find((decision) => decision.outcome === "allow");
+    const deniedDecision = decisions.find((decision) => decision.outcome === "deny");
+    if (allowedDecision === undefined || deniedDecision === undefined) {
+      return failed(
+        `expected real tool.decision allow and deny, got ${decisions.map((decision) => decision.outcome).join(",") || "none"}`,
+        undefined,
+        { toolDecisions: decisions },
+      );
+    }
+    const deniedSuccessfulExecution = ctx.recorder.events
+      .slice(eventCountBeforeDenied)
+      .some(
+        (event) =>
+          event.kind === "tool.execution.finished" &&
+          (event.payload as Record<string, unknown>)["isError"] !== true,
+      );
+    if (deniedSuccessfulExecution) {
+      return failed("denied read produced a successful tool execution", "policy-denied", {
+        toolDecisions: decisions,
+      });
+    }
+    return ok({
+      groundTruthMatched: true,
+      toolDecisions: decisions,
+      deniedExecution: false,
+    });
+  } finally {
+    setLivePolicyBridge(undefined);
+  }
 };
 
 /** steer: mid-flight steer creates a NEW TURN in the SAME agent run. */

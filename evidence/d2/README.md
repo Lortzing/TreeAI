@@ -19,4 +19,4 @@
 
 3. **秘密扫描**：任何日志写盘前和写盘后均须扫描；发现泄露按验收器规则处理，原始记录不删除。
 4. **d1-spikes 只读**：D1 证据区不因 D2 验收被修改；D1 回归通过 `./d1-spikes/scripts/verify-d1 --repro` 原样执行（版本升级门禁）。
-5. 当前状态：Gate 0。本目录尚无 verify 运行；Integrator 的 Gate 0 脚手架验证记录见 `gate-0/`（手写记录，非 verify-d2 运行产物）。
+5. 当前状态：D2 conditional closeout 已有真实 controlled live run；最终 run 目录包含 `environment.json`、`result.json`、`checks.json`、`events.jsonl`、`logs/` 与脱敏 `sessions/`。历史 Gate 0 与 blocked/failed run 保持追加式不变。

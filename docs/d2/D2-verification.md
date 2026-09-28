@@ -138,3 +138,23 @@ here so the owner can decide whether to normalize them.
   d1-spikes write authorization (owner action).
 - No production-release approval — D2 delivers offline-verified components
   only; see `D2-owner-checklist.md`.
+
+## 7. Current conditional closeout (2026-09-28)
+
+The historical records above describe the 2026-09-21 offline closure and are
+not rewritten. The current committed implementation and controlled evidence
+are recorded separately:
+
+- `npm run verify:d2 -- --d1-repro`: `21 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`, exit 0.
+- `npm run verify:d2:live` with the controlled local provider: `9 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`, exit 0.
+- The real tool-policy scenario now records an `allow` decision for the live
+  fixture read and a `deny` decision for an out-of-root read, with no
+  successful execution of the denied call.
+- `environment.json` binds the run to the commit/tree hash and records tracked
+  dirty state plus status/diff hashes. Session JSONL is copied into evidence
+  only after home-path and secret redaction.
+- The live workflow allows the offline verifier's expected exit 3 to continue
+  to the live step; FAIL and verifier-error exits still stop the job.
+
+Final controlled live evidence:
+`evidence/d2/runs/d2-live-20260928T095728991Z/`.

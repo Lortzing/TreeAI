@@ -149,3 +149,12 @@ A later controlled rerun passed: `9 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN`,
 exit 0. It exercised all six real scenarios and produced six redacted session
 snapshots in the evidence run directory. Earlier blocked and failed runs remain
 historical evidence and are not rewritten.
+
+The controlled live tool-policy run now has an actual Pi `tool_call` preflight
+hook backed by `ToolPolicyEngine`: the fixture read records `allow`, an
+out-of-root read records `deny`, and the denied call has no successful tool
+execution. Live evidence records the source commit/tree and worktree hashes.
+The workflow treats offline exit 3 as an expected incomplete state so it still
+reaches the live step; FAIL and verifier errors remain blocking. D1 direct unit
+checks install missing sdk-node dependencies when `--repro` is explicitly
+requested, while ordinary offline runs do not perform a network install.

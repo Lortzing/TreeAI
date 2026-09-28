@@ -10,8 +10,8 @@
 | Area | State |
 |---|---|
 | D1 facts (SDK route, Pi 0.85.1 pin, navigation evidence) | closed in D1 (ADR-001 accepted 2026-09-20) |
-| D2 offline verification | closed honestly: all offline checks PASS; `d1-repro` NOT_RUN by design |
-| D2 live verification | BLOCKED (credentials + factory-shape mismatch) |
+| D2 offline verification | closed: default offline run keeps optional `d1-repro` NOT_RUN (exit 3); explicit `--d1-repro` passed 21/21 (exit 0) |
+| D2 live verification | controlled real-Pi evidence PASS: 9/9 checks, including tool-policy allow/deny; credentialless invocation remains BLOCKED by design |
 | Production release | **NOT approved** (see §4) |
 
 ## 1. Owner decisions needed (blocking live verification)
@@ -98,3 +98,16 @@ at minimum:
   (this closure); future edits append, never overwrite history.
 - `d1-spikes/**` — read-only D1 record; writing requires explicit owner
   authorization (e.g. for `--d1-repro`).
+
+## 6. Current evidence and resolved historical blockers (2026-09-28)
+
+The open checkboxes in §1 preserve the historical owner-decision record; the
+factory-shape mismatch and initial credentialless state were resolved for the
+controlled run. Final live evidence is
+`evidence/d2/runs/d2-live-20260928T095728991Z/`, bound to the committed source
+via its environment commit/tree hashes. The live workflow now lets expected
+offline exit 3 reach the live step while preserving failure semantics.
+
+The production-release requirements in §4 remain intentionally open: D2
+acceptance is not production approval, and real-SDK soak/operations review are
+separate gates.
