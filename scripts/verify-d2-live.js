@@ -185,14 +185,19 @@ function collectGitBinding() {
   });
   const statusText = status.stdout;
   const diffText = diff.stdout;
-  const statusLines = statusText.split("\n").filter((line) => line.length > 0);
+  const currentRunMarker = `evidence/d2/runs/${writer.runId}`;
+  const bindingStatusText = statusText
+    .split("\n")
+    .filter((line) => !line.includes(currentRunMarker))
+    .join("\n");
+  const statusLines = bindingStatusText.split("\n").filter((line) => line.length > 0);
   const trackedDiff = diff.status === 0 && diffText.length > 0;
   return {
     ...(commit.status === 0 ? { commit: commit.stdout.trim() } : {}),
     ...(tree.status === 0 ? { tree: tree.stdout.trim() } : {}),
     trackedDirty: trackedDiff,
     untrackedCount: statusLines.filter((line) => line.startsWith("??")).length,
-    statusSha256: sha256(statusText),
+    statusSha256: sha256(bindingStatusText),
     diffSha256: sha256(diffText),
   };
 }
