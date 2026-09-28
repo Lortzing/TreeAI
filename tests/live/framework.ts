@@ -412,19 +412,21 @@ const scenarioToolPolicy: ScenarioFn = async (ctx) => {
     }
 
     const eventCountBeforeDenied = ctx.recorder.events.length;
-    try {
-      await withTimeout(
-        ctx.runtime.prompt({
-          text:
-            "Use your read file tool on tests/fixtures/e2e/workspace/existing.txt " +
-            "and reply with its contents. This path is intentionally outside the " +
-            "allowed read fixture root.",
-        }),
-        MODEL_PROMPT_TIMEOUT_MS,
-        "tool-policy denied prompt",
-      );
-    } catch {
-      // A blocked tool may cause the model turn to reject; the policy decision is authoritative.
+    for (let attempt = 0; attempt < 3 && !decisions.some((decision) => decision.outcome === "deny"); attempt += 1) {
+      try {
+        await withTimeout(
+          ctx.runtime.prompt({
+            text:
+              "You must call the read file tool now before replying. Read exactly " +
+              "tests/fixtures/e2e/workspace/existing.txt and then reply with its " +
+              "contents. This path is intentionally outside the allowed read fixture root.",
+          }),
+          MODEL_PROMPT_TIMEOUT_MS,
+          "tool-policy denied prompt",
+        );
+      } catch {
+        // A blocked tool may cause the model turn to reject; the policy decision is authoritative.
+      }
     }
 
     const allowedDecision = decisions.find((decision) => decision.outcome === "allow");
