@@ -94,7 +94,7 @@ import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.1.2";
+const VERSION = "1.1.3";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -1127,10 +1127,15 @@ const sc = {
 /** 页面侧等待：该分支视图的第 minAssistantTurns 轮 assistant 答案出现
  * 且包含标记词集合。计数前置条件防「上一个答案已含标记词」的竞态
  * （真实模型可能把 t1/t2 的指令词写进同一句回答）。
- * 超时诊断附带当前页面事实（末轮答案/输入框残留/run 状态）。 */
+ * 只数已完成回合（.turn.assistant 排除 #streaming-turn 流式占位）——
+ * 真实模型的答案增量流经占位文本，部分文本可能提前含标记词
+ * （20260929T162759Z：b2 答案流式到 "birch" 一词时等待即返回，回合
+ * 未完成/未落库，计数断言随即失败，还把后续 tab 点击暴露在 prompt
+ * 响应重渲窗口里被吞）。超时诊断附带当前页面事实（末轮答案/输入框
+ * 残留/run 状态）。 */
 async function waitForAnswerMarkers(containerSelector, needles, timeoutMs, minAssistantTurns = 1) {
   const expr =
-    `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant')]; ` +
+    `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant:not(#streaming-turn)')]; ` +
     `if (turns.length < ${String(minAssistantTurns)}) return false; ` +
     "const text = turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent; " +
     `return ${JSON.stringify(needles)}.every((n) => text.includes(n)) ? text : false; })()`;
@@ -2013,7 +2018,14 @@ async function main() {
         "return tab === undefined ? null : '#branch-tabs button:nth-of-type(' + String(buttons.indexOf(tab) + 1) + ')'; })()",
     );
     await click(tabSelector);
-    await waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, "branch A panel reopened");
+    /* 面板可见 ≠ 面板已切换（上一支线面板本就开着）——以标题证实真的
+       切到了 Branch 1；否则下方文本断言会误读上一支线的内容。 */
+    await waitForJs(
+      "(() => { const p = document.getElementById('branch-panel'); const t = document.getElementById('panel-title'); " +
+        "return p !== null && !p.hidden && t !== null && t.textContent.includes('Branch 1'); })()",
+      10_000,
+      "branch A panel actually switched (panel title shows Branch 1)",
+    );
     const aText = (await evalJs("document.getElementById('panel-conversation').textContent")).trim();
     assert(aText.includes("cedar"), "branch A panel does not show its own codeword cedar");
     assert(!aText.includes("birch"), "branch A panel leaked branch B codeword birch");
@@ -2043,6 +2055,16 @@ async function main() {
     /* 支线 A 面板仍开着：填写 Return 草稿并显式提交。
        注意 #return-input 按产品语义预填上一答案（W1 §2.1 草稿）——
        全选覆盖后再注入（真实用户的编辑路径）。 */
+    /* 源支线显式断言：A3 场景的 Return 必须发自支线 A——面板若停在其他
+       支线（切换被吞等），Return 的锚点/来源会静默漂移而下游断言照常
+       通过（20260929T162759Z 复盘）。 */
+    const returnSourceTitle = await evalJs(
+      "document.getElementById('panel-title') === null ? null : document.getElementById('panel-title').textContent",
+    );
+    assert(
+      typeof returnSourceTitle === "string" && returnSourceTitle.includes("Branch 1"),
+      `the A3 return must be submitted from branch A, but the open panel shows ${JSON.stringify(returnSourceTitle)}`,
+    );
     await typeInto("#return-input", SCENARIO.returnText, { replace: true });
     await click("#submit-return");
     /* 提交后面板收起、主干出现 anchored Return 卡（待送达）。 */
