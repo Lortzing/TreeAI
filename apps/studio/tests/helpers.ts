@@ -31,15 +31,23 @@ export function cleanupDir(dir: string): void {
   rmSync(dir, { recursive: true, force: true });
 }
 
+/** 实例级选项（测试用）：拉宽 echo 驱动的在途窗口，供 abort 类测试确定性观测。 */
+export interface StudioInstanceOptions {
+  readonly echoTurnDelayMs?: number;
+}
+
 /** 在给定数据目录上构建一套 service（同一目录可重复调用 = 模拟重启）。 */
-export function makeStudioInstance(dir: string): StudioInstance {
+export function makeStudioInstance(dir: string, options?: StudioInstanceOptions): StudioInstance {
   const sessionsDir = join(dir, "sessions");
   const workspace = join(dir, "workspace");
   mkdirSync(sessionsDir, { recursive: true });
   mkdirSync(workspace, { recursive: true });
 
   const repository = TreeRepository.open({ path: join(dir, "treeai.db") });
-  const echoPort = new EchoSdkPort();
+  const echoPort =
+    options?.echoTurnDelayMs === undefined
+      ? new EchoSdkPort()
+      : new EchoSdkPort({ turnDelayMs: options.echoTurnDelayMs });
   const runtime = createPiRuntimeFromConfig({ port: echoPort, defaultCwd: workspace });
   const service = new TreeStudioService({
     repository,

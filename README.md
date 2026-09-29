@@ -61,11 +61,15 @@ npm run start --workspace @treeai/studio   # http://127.0.0.1:8787
 Options: `--port N`, `--data DIR` (default `./treeai-studio-data/` under
 `apps/studio/` — SQLite DB + Pi session files, survives restarts). The default
 driver is the offline **echo** driver: deterministic, no network, no
-credentials. Real Pi is optional and credentialed —
-`--driver pi --provider ID --model ID` — and fails explicitly without valid
-credentials. Tests: `npm test --workspace @treeai/studio` (also part of
-`npm test`). D3 status: offline echo vertical slice only — Gate 2 / real-Pi
-acceptance and user trials are **not** complete.
+credentials, no `~/.pi` access. Real Pi is optional and credentialed —
+`--driver pi --provider ID --model ID` — with the API key supplied **only**
+through `TREEAI_STUDIO_API_KEY` (in-memory injection via runtime-pi credentials;
+never a CLI flag, never logged or persisted). The controlled Pi agent directory
+is `--agent-dir DIR`, defaulting to `<data>/pi-agent/`; Studio never silently
+reads `~/.pi`. Missing provider, model, API key, or an unusable agent directory
+fails at startup. Tests: `npm test --workspace @treeai/studio` (also part of
+`npm test`). D3 status: offline Echo vertical slice only — Gate 2 / real-Pi
+acceptance and user trials are not complete.
 
 ## Coordination & evidence
 

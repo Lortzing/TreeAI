@@ -20,22 +20,39 @@
  *     同 session 文件 → navigateTree（D2 回归能力，同 session 不换文件）；
  *     不同文件/无活动会话 → restoreSession。
  *
- * 已知范围（诚实声明）：不做流式 UI 推送（prompt 请求同步等待收敛）、
- * 不做并发 prompt 串行化（单用户本地工具，UI 禁用重复提交）、
- * 不做 event-journal 集成（D2 审计面留待后续接入）。
+ * 诊断面（A5，最小诚实）：getTreeDiagnostics 提供安全投影——运行面状态
+ *   （idle/streaming/aborting）、在途 run 定位、DB 全量 run 行
+ *   （runId/branchId/episodeId/state/failure code+message/createdAt/
+ *   terminalAt）。session 引用（sessionFile/sessionId/entryId/piVersion/
+ *   availability）、failure.details、原始 cause、命令、主机与目标路径
+ *   一律不外泄；Studio 无工具执行器（prompt 以空工具 allowlist 运行），
+ *   如实报告“未观测策略决策”，绝不伪造 policy 判定。
+ *   abort(treeId, runId) 只接受该树当前在途的 run（否则按操作冲突拒绝），
+ *   调用 runtime.abort()，由 prompt 的收敛路径把 run 落库为 aborted
+ *   （user-abort 绝不改写为 failed）。
+ *
+ * 已知范围（诚实声明）：不做流式 UI 推送（prompt 请求同步等待收敛；
+ *   UI 在 prompt 在途时轮询诊断面）、并发 prompt 以冲突拒绝不排队
+ *   （TypeError → 409，单用户语义）、不做 event-journal 集成
+ *   （D2 审计面留待后续接入）。
  */
 
 import type {
   Branch,
   BranchId,
   BranchOrigin,
+  EpisodeId,
   Forest,
+  IsoTimestamp,
   PiModelSelector,
   PiRuntime,
   Run,
+  RunId,
+  RunState,
   SessionReference,
   Tree,
   TreeAIError,
+  TreeAIErrorCode,
   TreeId,
   Turn,
   TurnId,
@@ -54,6 +71,7 @@ import {
 export interface BranchView {
   readonly branch: Branch;
   readonly origin: BranchOrigin | null;
+  readonly originStatus: AnchorStatus | null;
   readonly turns: readonly Turn[];
 }
 
@@ -83,6 +101,76 @@ export interface BranchCreation {
   readonly origin: BranchOrigin;
 }
 
+export type AnchorStatus = "available" | "changed" | "unavailable";
+
+export interface AnchorLocation {
+  readonly sourceBranchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  readonly status: AnchorStatus;
+  readonly selection: TurnSelection;
+}
+
+/* ------------------------------------------------------------------ */
+/* 诊断读模型（A5：安全投影，只含可安全外泄的字段）                     */
+/* ------------------------------------------------------------------ */
+
+/** 运行面状态：idle（无在途 prompt）/ streaming（在途）/ aborting（已请求中止）。 */
+export type StudioRuntimeState = "idle" | "streaming" | "aborting";
+
+/** 在途 run 的定位（不含任何 Pi 会话细节）。 */
+export interface ActiveRunInfo {
+  readonly runId: RunId;
+  readonly branchId: BranchId;
+  readonly episodeId: EpisodeId;
+}
+
+/**
+ * Run 行的诊断投影。刻意只保留定位 + 状态 + 失败码与消息 + 时间戳；
+ * session 引用、failure.details、原始 cause、命令、主机与目标路径
+ * 一律不进入本形状（防字段外泄回归由测试锁定键集合）。
+ */
+export interface RunDiagnostics {
+  readonly runId: RunId;
+  readonly branchId: BranchId;
+  readonly episodeId: EpisodeId;
+  readonly state: RunState;
+  readonly failure: { readonly code: TreeAIErrorCode; readonly message: string } | null;
+  readonly createdAt: IsoTimestamp;
+  readonly terminalAt: IsoTimestamp | null;
+}
+
+/**
+ * 策略决策观测（诚实边界）：Studio 的 prompt 以空工具 allowlist 运行
+ * （runtime-pi 默认零工具），没有工具执行器——因此没有工具执行事件，
+ * 也就没有任何策略决策可观测。诊断面绝不伪造 policy 判定。
+ */
+export interface PolicyDiagnostics {
+  readonly observed: false;
+  readonly reason: string;
+}
+
+export const NO_POLICY_DECISIONS_REASON =
+  "studio prompts run with an empty tool allowlist; no tool executions occur, so no policy decisions are observed";
+
+/** 一棵树的诊断读模型（只读、安全投影）。 */
+export interface TreeDiagnostics {
+  readonly treeId: TreeId;
+  readonly runtimeState: StudioRuntimeState;
+  readonly activeRun: ActiveRunInfo | null;
+  readonly runs: readonly RunDiagnostics[];
+  readonly policyDecisions: PolicyDiagnostics;
+}
+
+/** abort 目标不是该树当前在途的 run（已终态/无在途/另有在途）→ 操作冲突（409）。 */
+export class RunNotActiveError extends Error {
+  constructor(runId: RunId, state: RunState) {
+    super(
+      `run ${runId} is not the active in-flight run (state: ${state}); only the active run of a tree can be aborted`,
+    );
+    this.name = "RunNotActiveError";
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* 服务                                                                */
 /* ------------------------------------------------------------------ */
@@ -101,6 +189,13 @@ interface Cursor {
   readonly treeId: TreeId;
   readonly branchId: BranchId;
   readonly reference: SessionReference;
+}
+
+/** 在途 prompt 的服务侧簿记（诊断面与 abort 校验的事实源；进程内即失效）。 */
+interface ActiveRunRecord extends ActiveRunInfo {
+  readonly treeId: TreeId;
+  /** 已通过 abort() 请求中止（运行面状态 → aborting）。 */
+  abortRequested: boolean;
 }
 
 type Continuation =
@@ -134,6 +229,10 @@ export class TreeStudioService {
   readonly cwd: string;
   #cursor: Cursor | null = null;
   #forest: Forest | null = null;
+  /** 单 prompt 操作锁：同一时刻至多一个 prompt 操作（含会话对准阶段）。 */
+  #promptInFlight: boolean = false;
+  /** 当前在途的 run（run 落库并置 running 后才有值；收敛即清除）。 */
+  #activeRun: ActiveRunRecord | null = null;
 
   constructor(options: TreeStudioServiceOptions) {
     this.repository = options.repository;
@@ -184,11 +283,15 @@ export class TreeStudioService {
     const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
     const branches = this.repository.listBranches(tree.id);
     const trunk = branches.find((b) => b.parentBranchId === null) ?? null;
-    const views: BranchView[] = branches.map((branch) => ({
-      branch,
-      origin: this.repository.findBranchOrigin(branch.id),
-      turns: this.repository.listTurns(branch.id),
-    }));
+    const views: BranchView[] = branches.map((branch) => {
+      const origin = this.repository.findBranchOrigin(branch.id);
+      return {
+        branch,
+        origin,
+        originStatus: origin === null ? null : this.#anchorStatus(origin),
+        turns: this.repository.listTurns(branch.id),
+      };
+    });
     return {
       tree,
       trunkBranchId: trunk !== null ? trunk.id : null,
@@ -213,7 +316,26 @@ export class TreeStudioService {
     this.repository.saveActiveNavigation(treeId, branchId, reference);
   }
 
-  /* ------------------------------ 会话连续性 ------------------------------ */
+  #anchorStatus(origin: BranchOrigin): AnchorStatus {
+    const sourceBranch = this.repository.findBranch(origin.sourceBranchId);
+    const anchorTurn = this.repository.findTurn(origin.anchorTurnId);
+    if (sourceBranch === null || anchorTurn === null) return "unavailable";
+    if (anchorTurn.branchId !== sourceBranch.id || anchorTurn.role !== "assistant" || anchorTurn.piEntryId !== origin.anchorEntryId) {
+      return "changed";
+    }
+    if (
+      origin.selection.start < 0 ||
+      origin.selection.end < origin.selection.start ||
+      origin.selection.end > anchorTurn.text.length ||
+      anchorTurn.text.slice(origin.selection.start, origin.selection.end) !== origin.selection.text
+    ) {
+      return "changed";
+    }
+    if (anchorTurn.runId === null) return "changed";
+    const run = this.repository.findRun(anchorTurn.runId);
+    return run === null || run.session.availability.status === "unavailable" ? "unavailable" : "available";
+  }
+
 
   /** 分支的续聊点（全部可从 DB 重建）。 */
   #resolveContinuation(branch: Branch): Continuation {
@@ -289,7 +411,17 @@ export class TreeStudioService {
 
   /* ------------------------------ 对话 ------------------------------ */
 
-  /** 在分支上执行一轮 prompt（Episode + Run + user/assistant Turn 落库）。 */
+  /**
+   * 在分支上执行一轮 prompt（Episode + Run + user/assistant Turn 落库）。
+   *
+   * 单用户冲突语义：同一时刻至多一个在途 prompt 操作（与 PiRuntime 契约
+   * 一致）；冲突的第二个 prompt 以 TypeError 拒绝（HTTP 层映射 409），
+   * 且不产生任何 run/turn 写入。
+   *
+   * 中止收敛：prompt 被中止（runtime TreeAIError code "user-abort"）时，
+   * run 以单事务 running → aborting → aborted 收敛（run-state I4），
+   * 绝不改写为 failed；其他失败仍按既有语义收敛 failed 并记录 failure。
+   */
   async prompt(treeId: TreeId, branchId: BranchId, text: string): Promise<PromptOutcome> {
     if (typeof text !== "string" || text.trim().length === 0) {
       throw new InvalidArgumentError("prompt text must be a non-empty string");
@@ -299,60 +431,170 @@ export class TreeStudioService {
     if (branch.treeId !== tree.id) {
       throw new InvalidArgumentError(`branch ${branchId} belongs to tree ${branch.treeId}, not ${tree.id}`);
     }
-
-    const continuation = this.#resolveContinuation(branch);
-    const preRef = await this.#ensureSessionAt(tree.id, branch.id, continuation);
-
-    // 未送达的 return 在这次 prompt 送入 Pi 上下文。
-    const pendingReturns = this.repository
-      .listTurns(branch.id)
-      .filter((turn) => turn.role === "return" && turn.deliveredRunId === null);
-    const composedText = composePromptText(pendingReturns, text);
-
-    const episode = this.repository.createEpisode(branch.id);
-    const run = this.repository.createRun(episode.id, preRef);
-    this.repository.updateRunState(run.id, "running");
-
-    let result: Awaited<ReturnType<PiRuntime["prompt"]>>;
-    try {
-      result = await this.runtime.prompt({ text: composedText });
-    } catch (err) {
-      this.repository.updateRunState(run.id, "failed", { failure: toTreeAIError(err) });
-      throw err;
+    if (this.#promptInFlight) {
+      throw new TypeError("a prompt is already in flight on this service; wait for it to settle or abort it first");
     }
+    this.#promptInFlight = true;
+    try {
+      const continuation = this.#resolveContinuation(branch);
+      const preRef = await this.#ensureSessionAt(tree.id, branch.id, continuation);
 
-    const outcome = this.repository.transaction(() => {
-      this.repository.updateRunState(run.id, "succeeded");
-      this.repository.updateRunSessionReference(run.id, result.reference);
-      const userTurn = this.repository.createTurn({
+      // 未送达的 return 在这次 prompt 送入 Pi 上下文。
+      const pendingReturns = this.repository
+        .listTurns(branch.id)
+        .filter((turn) => turn.role === "return" && turn.deliveredRunId === null);
+      const composedText = composePromptText(pendingReturns, text);
+
+      const episode = this.repository.createEpisode(branch.id);
+      const run = this.repository.createRun(episode.id, preRef);
+      this.repository.updateRunState(run.id, "running");
+      this.#activeRun = {
         treeId: tree.id,
         branchId: branch.id,
         episodeId: episode.id,
         runId: run.id,
-        role: "user",
-        text,
-      });
-      const assistantTurn = this.repository.createTurn({
-        treeId: tree.id,
-        branchId: branch.id,
-        episodeId: episode.id,
-        runId: run.id,
-        role: "assistant",
-        text: result.message,
-        piEntryId: result.reference.entryId,
-      });
-      for (const pending of pendingReturns) {
-        this.repository.markReturnDelivered(pending.id, run.id);
+        abortRequested: false,
+      };
+
+      let result: Awaited<ReturnType<PiRuntime["prompt"]>>;
+      try {
+        result = await this.runtime.prompt({ text: composedText });
+      } catch (err) {
+        const error = toTreeAIError(err);
+        const record = this.#activeRun;
+        this.#activeRun = null;
+        if (error.code === "user-abort") {
+          // 用户/宿主主动中止（abort、会话替换、dispose）：收敛为 aborted。
+          this.repository.transaction(() => {
+            this.repository.updateRunState(run.id, "aborting");
+            this.repository.updateRunState(run.id, "aborted");
+          });
+          if (record !== null && record.abortRequested && preRef.entryId !== "") {
+            // 会话叶指针回位到本次 prompt 的续聊点（append-only 树不删条目），
+            // 保证中止后同进程续聊与重启后语义一致；尽力而为，失败时清空
+            // 内存 cursor，让下一次 prompt 走 restoreSession 自愈。
+            try {
+              await this.runtime.navigateTree({ entryId: preRef.entryId });
+            } catch {
+              this.#cursor = null;
+            }
+          }
+        } else {
+          this.repository.updateRunState(run.id, "failed", { failure: error });
+        }
+        throw err;
       }
-      return { userTurn, assistantTurn };
-    });
+      this.#activeRun = null;
 
-    this.#setCursor(tree.id, branch.id, result.reference);
+      const outcome = this.repository.transaction(() => {
+        this.repository.updateRunState(run.id, "succeeded");
+        this.repository.updateRunSessionReference(run.id, result.reference);
+        const userTurn = this.repository.createTurn({
+          treeId: tree.id,
+          branchId: branch.id,
+          episodeId: episode.id,
+          runId: run.id,
+          role: "user",
+          text,
+        });
+        const assistantTurn = this.repository.createTurn({
+          treeId: tree.id,
+          branchId: branch.id,
+          episodeId: episode.id,
+          runId: run.id,
+          role: "assistant",
+          text: result.message,
+          piEntryId: result.reference.entryId,
+        });
+        for (const pending of pendingReturns) {
+          this.repository.markReturnDelivered(pending.id, run.id);
+        }
+        return { userTurn, assistantTurn };
+      });
+
+      this.#setCursor(tree.id, branch.id, result.reference);
+      return {
+        run: this.repository.getRun(run.id),
+        userTurn: outcome.userTurn,
+        assistantTurn: outcome.assistantTurn,
+        deliveredReturns: pendingReturns.length,
+      };
+    } finally {
+      this.#promptInFlight = false;
+    }
+  }
+
+  /* ------------------------------ 中止 ------------------------------ */
+
+  /**
+   * 请求中止该树当前在途的 run。校验目标确为该树的活动 run（未知树/run →
+   * EntityNotFoundError；空 id/跨树 run → InvalidArgumentError；非活动 run
+   * → RunNotActiveError，均为操作冲突语义），然后调用 runtime.abort()；
+   * 在途 prompt 随后以 TreeAIError（code "user-abort"）收敛，run 落库为
+   * aborted（见 prompt 的收敛路径）。幂等；若 prompt 已先一步 settle，
+   * 本次请求不产生效果（不撒谎、不改写结果）。
+   */
+  async abort(treeId: TreeId, runId: RunId): Promise<void> {
+    const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
+    const run = this.repository.getRun(runId); // 空 id → InvalidArgumentError；未知 → 404
+    const episode = this.repository.getEpisode(run.episodeId);
+    const branch = this.repository.getBranch(episode.branchId);
+    if (branch.treeId !== tree.id) {
+      throw new InvalidArgumentError(`run ${runId} belongs to tree ${branch.treeId}, not ${tree.id}`);
+    }
+    const active = this.#activeRun;
+    if (active === null || active.runId !== run.id) {
+      throw new RunNotActiveError(runId, run.state);
+    }
+    // 同步置位：abort() 返回前，诊断面即可观测到 aborting。
+    active.abortRequested = true;
+    await this.runtime.abort();
+  }
+
+  /* ------------------------------ 诊断（A5 安全投影） ------------------------------ */
+
+  /**
+   * 一棵树的诊断读模型：运行面状态（idle/streaming/aborting）、在途 run
+   * 定位、DB 全量 run 的安全投影。刻意排除 session 引用（sessionFile/
+   * sessionId/entryId/piVersion/availability）、failure.details、原始
+   * cause、命令、主机与目标路径；策略决策如实报告未观测（Studio 无
+   * 工具执行器），绝不伪造 policy 判定。
+   */
+  getTreeDiagnostics(treeId: TreeId): TreeDiagnostics {
+    const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
+    const runs: RunDiagnostics[] = [];
+    for (const branch of this.repository.listBranches(tree.id)) {
+      for (const episode of this.repository.listEpisodes(branch.id)) {
+        for (const run of this.repository.listRuns(episode.id)) {
+          runs.push({
+            runId: run.id,
+            branchId: branch.id,
+            episodeId: episode.id,
+            state: run.state,
+            failure:
+              run.failure === undefined ? null : { code: run.failure.code, message: run.failure.message },
+            createdAt: run.createdAt,
+            terminalAt: run.terminalAt,
+          });
+        }
+      }
+    }
+    // 跨 episode/branch 的稳定全序（createdAt 同毫秒时以 runId 决胜）。
+    runs.sort((a, b) =>
+      a.createdAt === b.createdAt ? (a.runId < b.runId ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1,
+    );
+    const active = this.#activeRun;
+    const activeForTree = active !== null && active.treeId === tree.id ? active : null;
     return {
-      run: this.repository.getRun(run.id),
-      userTurn: outcome.userTurn,
-      assistantTurn: outcome.assistantTurn,
-      deliveredReturns: pendingReturns.length,
+      treeId: tree.id,
+      runtimeState:
+        activeForTree === null ? "idle" : activeForTree.abortRequested ? "aborting" : "streaming",
+      activeRun:
+        activeForTree === null
+          ? null
+          : { runId: activeForTree.runId, branchId: activeForTree.branchId, episodeId: activeForTree.episodeId },
+      runs,
+      policyDecisions: { observed: false, reason: NO_POLICY_DECISIONS_REASON },
     };
   }
 
@@ -404,6 +646,45 @@ export class TreeStudioService {
     }
     await this.#ensureSessionAt(tree.id, branch.id, continuation);
     return this.#cursorInfo(treeId);
+  }
+
+  async revealBranchOrigin(treeId: TreeId, branchId: BranchId): Promise<AnchorLocation> {
+    const tree = this.repository.getTree(treeId);
+    const branch = this.repository.getBranch(branchId);
+    if (branch.treeId !== tree.id) {
+      throw new InvalidArgumentError(`branch ${branchId} belongs to tree ${branch.treeId}, not ${treeId}`);
+    }
+    const origin = this.repository.findBranchOrigin(branch.id);
+    if (origin === null) {
+      throw new InvalidArgumentError(`branch ${branchId} has no anchor origin`);
+    }
+    const source = this.repository.findBranch(origin.sourceBranchId);
+    let status = this.#anchorStatus(origin);
+    if (status === "available" && source !== null) {
+      const anchorTurn = this.repository.findTurn(origin.anchorTurnId);
+      if (anchorTurn !== null && anchorTurn.runId !== null) {
+        const anchorRun = this.repository.getRun(anchorTurn.runId);
+        const target: SessionReference = { ...anchorRun.session, entryId: origin.anchorEntryId };
+        try {
+          const cursor = this.#cursor;
+          const reference =
+            cursor !== null && cursor.reference.sessionFile === target.sessionFile
+              ? await this.runtime.navigateTree({ entryId: target.entryId })
+              : (await this.runtime.restoreSession(target)).reference;
+          this.#setCursor(tree.id, source.id, reference);
+        } catch {
+          status = "unavailable";
+        }
+      } else {
+        status = "unavailable";
+      }
+    }
+    return {
+      sourceBranchId: origin.sourceBranchId,
+      anchorTurnId: origin.anchorTurnId,
+      status,
+      selection: origin.selection,
+    };
   }
 
   /* ------------------------------ Return ------------------------------ */
@@ -458,6 +739,7 @@ export class TreeStudioService {
 
   async dispose(): Promise<void> {
     this.#cursor = null;
+    this.#activeRun = null;
     await this.runtime.dispose();
   }
 }

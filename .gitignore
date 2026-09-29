@@ -23,6 +23,9 @@ out/
 secrets.json
 credentials.json
 
+# Local Studio data (SQLite, Pi sessions, controlled agent directory)
+treeai-studio-data/
+
 # npm noise
 npm-debug.log*
 .npm/

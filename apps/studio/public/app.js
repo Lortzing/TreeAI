@@ -1,12 +1,15 @@
 /* TreeAI Studio — D3 Core MVP 前端（vanilla JS，无构建步骤）。
  *
- * 范围（诚实声明）：无流式推送（每次操作后整树状态刷新）、无 Markdown
- * 渲染、无自动摘要。核心交互：
+ * 范围（诚实声明）：无流式推送（每次操作后整树状态刷新；prompt 在途时
+ * 轮询诊断面）、无 Markdown 渲染、无自动摘要。核心交互：
  *  - 创建/打开 Tree；
  *  - Trunk/Branch 对话展示；
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
  *  - 分支续聊；切回 Trunk；
- *  - 编辑并显式提交 Return 到 Trunk。
+ *  - 编辑并显式提交 Return 到 Trunk；
+ *  - 诊断/状态条：当前 run 状态、失败码与消息、在途时 Abort、
+ *    “未观测策略决策”的如实呈现（Studio 无工具执行器——绝不声称
+ *    未接入的策略执行）。
  */
 
 "use strict";
@@ -17,14 +20,22 @@
 /** @typedef {{id:string, treeId:string, branchId:string, episodeId:string, runId:string|null, role:"user"|"assistant"|"return", text:string, piEntryId:string|null, fromBranchId:string|null, deliveredRunId:string|null, createdAt:string}} TurnT */
 /** @typedef {{branch:BranchT, origin:OriginT|null, turns:TurnT[]}} BranchViewT */
 /** @typedef {{tree:TreeT, trunkBranchId:string|null, branches:BranchViewT[], cursor:{treeId:string,branchId:string,entryId:string}|null}} TreeStateT */
+/** @typedef {{runId:string, branchId:string, episodeId:string, state:string, failure:{code:string,message:string}|null, createdAt:string, terminalAt:string|null}} RunDiagnosticsT */
+/** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:{observed:boolean, reason:string}}} TreeDiagnosticsT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
   /** @type {string|null} */ currentTreeId: null,
   /** @type {string|null} */ currentBranchId: null,
   /** @type {TreeStateT|null} */ treeState: null,
+  /** @type {TreeDiagnosticsT|null} */ diagnostics: null,
+  /** @type {{turnId:string,start:number,end:number}|null} */ sourceHighlight: null,
   busy: false,
 };
+
+/** Diagnostics poll timer — only runs while a prompt is active. */
+let diagnosticsTimer = null;
+const DIAGNOSTICS_POLL_MS = 500;
 
 const $ = (id) => document.getElementById(id);
 
@@ -42,7 +53,11 @@ async function api(path, method = "GET", body = undefined) {
   }
   if (!response.ok) {
     const message = payload && payload.error ? `${payload.error.code}: ${payload.error.message}` : `HTTP ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message);
+    if (payload && payload.error && typeof payload.error.code === "string") {
+      error.code = payload.error.code;
+    }
+    throw error;
   }
   return payload;
 }
@@ -115,7 +130,8 @@ function renderBranchTabs() {
     const label = branchLabel(view.branch.id);
     button.textContent = label;
     if (view.origin !== null) {
-      button.title = `branched from ${branchLabel(view.origin.sourceBranchId)} · “${view.origin.selection.text}”`;
+      const anchorStatus = view.originStatus ?? "unavailable";
+      button.title = `branched from ${branchLabel(view.origin.sourceBranchId)} · “${view.origin.selection.text}” · source ${anchorStatus}`;
       const dot = document.createElement("span");
       dot.className = "dot";
       dot.textContent = " °";
@@ -145,7 +161,14 @@ function renderOriginBanner() {
   const sel = document.createElement("span");
   sel.className = "sel";
   sel.textContent = `“${view.origin.selection.text}”`;
-  banner.append(label, sel);
+  const status = document.createElement("span");
+  status.className = `origin-status ${view.originStatus ?? "unavailable"}`;
+  status.textContent = ` · source ${view.originStatus ?? "unavailable"}`;
+  const sourceButton = document.createElement("button");
+  sourceButton.className = "source-button";
+  sourceButton.textContent = "View source";
+  sourceButton.addEventListener("click", () => guard(() => revealOrigin(view.branch.id)));
+  banner.append(label, sel, status, sourceButton);
   banner.hidden = false;
 }
 
@@ -201,7 +224,26 @@ function renderConversation() {
       continue;
     }
 
-    div.textContent = turn.text;
+    const highlight = state.sourceHighlight;
+    if (
+      turn.role === "assistant" &&
+      highlight !== null &&
+      highlight.turnId === turn.id &&
+      highlight.start >= 0 &&
+      highlight.end > highlight.start &&
+      highlight.end <= turn.text.length
+    ) {
+      const marked = document.createElement("mark");
+      marked.className = "source-highlight";
+      marked.textContent = turn.text.slice(highlight.start, highlight.end);
+      div.append(
+        document.createTextNode(turn.text.slice(0, highlight.start)),
+        marked,
+        document.createTextNode(turn.text.slice(highlight.end)),
+      );
+    } else {
+      div.textContent = turn.text;
+    }
 
     if (turn.role === "assistant") {
       const hint = document.createElement("span");
@@ -252,6 +294,77 @@ function renderReturnPanel() {
   }
 }
 
+/* ------------------------------ 诊断面 ------------------------------ */
+
+function renderDiagnostics() {
+  const diag = state.diagnostics;
+  const bar = $("diagnostics-bar");
+  if (diag === null || state.treeState === null) {
+    bar.hidden = true;
+    return;
+  }
+  bar.hidden = false;
+
+  const status = $("run-status");
+  status.textContent = diag.runtimeState;
+  status.className = `run-status ${diag.runtimeState}`;
+
+  const parts = [];
+  if (diag.activeRun !== null) {
+    parts.push(`active run on ${branchLabel(diag.activeRun.branchId)}`);
+  }
+  const last = diag.runs.length > 0 ? diag.runs[diag.runs.length - 1] : null;
+  parts.push(last === null ? "no runs yet" : `last run: ${last.state}`);
+  $("run-detail").textContent = parts.join(" · ");
+
+  const failure = $("run-failure");
+  if (last !== null && last.failure !== null) {
+    failure.textContent = `failure ${last.failure.code}: ${last.failure.message}`;
+    failure.hidden = false;
+  } else {
+    failure.hidden = true;
+  }
+
+  const abortButton = $("abort-run");
+  const isActive = diag.activeRun !== null;
+  abortButton.hidden = !isActive;
+  abortButton.textContent = diag.runtimeState === "aborting" ? "Aborting…" : "Abort run";
+  abortButton.disabled = diag.runtimeState === "aborting";
+
+  /* 如实呈现：无工具执行器 → 未观测任何策略决策（不声称未接入的执行）。 */
+  $("policy-note").textContent =
+    diag.policyDecisions.observed === false
+      ? `policy: no decisions observed — ${diag.policyDecisions.reason}`
+      : "policy: decisions observed";
+}
+
+async function refreshDiagnostics() {
+  if (state.currentTreeId === null) {
+    state.diagnostics = null;
+    renderDiagnostics();
+    return;
+  }
+  const diagnostics = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/diagnostics`);
+  if (state.currentTreeId !== diagnostics.treeId) return; /* stale after a tree switch */
+  state.diagnostics = diagnostics;
+  renderDiagnostics();
+}
+
+function startDiagnosticsPolling() {
+  if (diagnosticsTimer !== null) return;
+  diagnosticsTimer = window.setInterval(() => {
+    void refreshDiagnostics().catch(() => {
+      /* 轮询失败不打断在途 prompt；收尾刷新会呈现最终状态 */
+    });
+  }, DIAGNOSTICS_POLL_MS);
+}
+
+function stopDiagnosticsPolling() {
+  if (diagnosticsTimer === null) return;
+  window.clearInterval(diagnosticsTimer);
+  diagnosticsTimer = null;
+}
+
 /* ------------------------------ 动作 ------------------------------ */
 
 async function refreshTrees() {
@@ -265,7 +378,9 @@ async function openTree(treeId) {
   state.currentTreeId = treeId;
   state.treeState = treeState;
   state.currentBranchId = treeState.cursor !== null ? treeState.cursor.branchId : treeState.trunkBranchId;
+  state.sourceHighlight = null;
   await refreshTrees();
+  await refreshDiagnostics();
   renderAll();
 }
 
@@ -274,8 +389,35 @@ async function createTree() {
   state.currentTreeId = payload.tree.id;
   state.treeState = payload.state;
   state.currentBranchId = payload.trunkBranchId;
+  state.sourceHighlight = null;
   await refreshTrees();
+  await refreshDiagnostics();
   renderAll();
+}
+
+async function revealOrigin(branchId) {
+  const payload = await api(
+    `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}/source`,
+    "POST",
+  );
+  state.sourceHighlight = null;
+  if (payload.source.status !== "available") {
+    renderAll();
+    showError(`Source reference ${payload.source.status}; saved excerpt remains available.`);
+    return;
+  }
+  state.treeState = payload.state;
+  state.currentBranchId = payload.source.sourceBranchId;
+  state.sourceHighlight = {
+    turnId: payload.source.anchorTurnId,
+    start: payload.source.selection.start,
+    end: payload.source.selection.end,
+  };
+  renderAll();
+  const sourceTurn = [...document.querySelectorAll("[data-turn-id]")].find(
+    (element) => element.dataset.turnId === payload.source.anchorTurnId,
+  );
+  sourceTurn?.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 async function switchBranch(branchId) {
@@ -284,6 +426,7 @@ async function switchBranch(branchId) {
   });
   state.treeState = payload.state;
   state.currentBranchId = branchId;
+  state.sourceHighlight = null;
   renderAll();
 }
 
@@ -291,13 +434,44 @@ async function sendPrompt() {
   const input = $("prompt-input");
   const text = input.value;
   if (text.trim() === "") return;
-  const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/prompt`, "POST", {
-    branchId: state.currentBranchId,
-    text,
-  });
-  state.treeState = payload.state;
-  input.value = "";
+  /* prompt 在途：轮询诊断面（当前唯一的活动性观测途径——无流式推送）。 */
+  startDiagnosticsPolling();
+  try {
+    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/prompt`, "POST", {
+      branchId: state.currentBranchId,
+      text,
+    });
+    state.treeState = payload.state;
+    input.value = "";
+  } catch (err) {
+    if (err === null || typeof err !== "object" || err.code !== "user-abort") throw err;
+    /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
+       刷新树状态与诊断面后如常呈现。 */
+    state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+  } finally {
+    stopDiagnosticsPolling();
+  }
   renderAll();
+  await refreshDiagnostics();
+}
+
+/** Abort the active run. Bypasses the busy guard on purpose: the whole point
+ *  is to be clickable while a prompt is in flight. */
+async function abortActiveRun() {
+  const diag = state.diagnostics;
+  if (diag === null || diag.activeRun === null || state.currentTreeId === null) return;
+  const button = $("abort-run");
+  button.disabled = true;
+  button.textContent = "Aborting…";
+  try {
+    await api(
+      `/api/trees/${encodeURIComponent(state.currentTreeId)}/runs/${encodeURIComponent(diag.activeRun.runId)}/abort`,
+      "POST",
+    );
+  } catch (err) {
+    showError(String(err && err.message ? err.message : err));
+  }
+  await refreshDiagnostics();
 }
 
 async function branchFromTurn(turnElement, turn) {
@@ -344,6 +518,7 @@ $("prompt-input").addEventListener("keydown", (event) => {
   }
 });
 $("submit-return").addEventListener("click", () => guard(submitReturn));
+$("abort-run").addEventListener("click", () => void abortActiveRun());
 
 void (async () => {
   try {

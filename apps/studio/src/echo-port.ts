@@ -186,11 +186,15 @@ export class EchoPiSession {
   constructor(
     manager: EchoSessionManager,
     model: { provider: string; id: string } | undefined,
+    turnDelayMs: number = 1,
   ) {
     this.sessionManager = manager;
     this.modelRef = model;
+    this.turnDelayMs = turnDelayMs;
     this.rebuildMessages();
   }
+
+  private readonly turnDelayMs: number;
 
   get sessionId(): string {
     return this.sessionManager.getSessionId();
@@ -250,7 +254,7 @@ export class EchoPiSession {
   async abort(): Promise<void> {
     if (!this.active) return;
     this.aborted = true;
-    await delay(1);
+    await delay(this.turnDelayMs);
   }
 
   dispose(): void {
@@ -306,7 +310,7 @@ export class EchoPiSession {
     this.emit({ type: "message_start", message: { role: "user" } });
     this.emit({ type: "message_end", message: { role: "user" } });
     this.sessionManager.append({ type: "message", role: "user", text });
-    await delay(1);
+    await delay(this.turnDelayMs);
 
     this.emit({ type: "message_start", message: { role: "assistant" } });
 
@@ -332,7 +336,7 @@ export class EchoPiSession {
         message: { role: "assistant" },
         assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta },
       });
-      await delay(1);
+      await delay(this.turnDelayMs);
     }
     this.emit({ type: "message_end", message: { role: "assistant", stopReason: "stop" } });
     this.emit({ type: "turn_end", message: { role: "assistant", stopReason: "stop" } });
@@ -399,6 +403,17 @@ function nextEchoSessionId(): string {
   return `echo-session-${echoSessionCounter}`;
 }
 
+/** Options for the offline echo SDK port. */
+export interface EchoSdkPortOptions {
+  /** Model the port resolves for the studio selector. */
+  readonly model?: { readonly providerId: string; readonly modelId: string };
+  /**
+   * Per-step delay inside a simulated turn (ms, default 1). Tests that need a
+   * deterministic in-flight window (abort) raise this to widen it.
+   */
+  readonly turnDelayMs?: number;
+}
+
 /**
  * Offline echo SDK port. Answers are always deterministic echoes — the studio
  * MVP runs fully offline; swap in the real Pi port with --driver pi.
@@ -407,12 +422,14 @@ export class EchoSdkPort {
   readonly version = "0.85.1";
   private readonly providerId: string;
   private readonly modelId: string;
+  private readonly turnDelayMs: number;
   readonly createdManagers: EchoSessionManager[] = [];
   readonly createdSessions: EchoPiSession[] = [];
 
-  constructor(model?: { readonly providerId: string; readonly modelId: string }) {
-    this.providerId = model?.providerId ?? "studio-provider";
-    this.modelId = model?.modelId ?? "studio-model";
+  constructor(options?: EchoSdkPortOptions) {
+    this.providerId = options?.model?.providerId ?? "studio-provider";
+    this.modelId = options?.model?.modelId ?? "studio-model";
+    this.turnDelayMs = options?.turnDelayMs ?? 1;
   }
 
   async createServices(
@@ -522,7 +539,7 @@ export class EchoSdkPort {
       manager.append({ type: "thinking_level_change" });
     }
 
-    const session = new EchoPiSession(manager, model);
+    const session = new EchoPiSession(manager, model, this.turnDelayMs);
     this.createdSessions.push(session);
     return { session, modelFallbackMessage };
   }

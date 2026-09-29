@@ -14,15 +14,37 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { BranchId, PiEntryId, PiSessionId, PiVersion, TreeId, TurnId } from "@treeai/contracts";
+import type {
+  BranchId,
+  PiEntryId,
+  PiSessionId,
+  PiVersion,
+  RunId,
+  TreeId,
+  TurnId,
+} from "@treeai/contracts";
 import { EntityNotFoundError, InvalidArgumentError } from "@treeai/persistence";
 import type { TreeState } from "../src/service.ts";
-import { composePromptText } from "../src/service.ts";
+import { composePromptText, RunNotActiveError } from "../src/service.ts";
+import type { TreeStudioService } from "../src/service.ts";
 import { cleanupDir, makeStudioInstance, makeTempDataDir } from "./helpers.ts";
 function findBranchView(state: TreeState, branchId: BranchId) {
   const view = state.branches.find((v) => v.branch.id === branchId);
   assert.ok(view !== undefined, `branch view for ${branchId} must exist`);
   return view;
+}
+
+/**
+ * 等待服务的在途 run 出现（prompt 的同步链在微任务中推进到
+ * runtime.prompt 的第一个计时器步进；setImmediate 轮询足以确定性观测）。
+ */
+async function waitForActiveRun(service: TreeStudioService, treeId: TreeId) {
+  for (let i = 0; i < 200; i += 1) {
+    const activeRun = service.getTreeDiagnostics(treeId).activeRun;
+    if (activeRun !== null) return activeRun;
+    await new Promise<void>((resolve) => setImmediate(resolve));
+  }
+  throw new Error("active run never appeared in diagnostics");
 }
 
 test("full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload", async () => {
@@ -301,6 +323,239 @@ test("startup recovery converges interrupted runs to failed (I6 host-interrupt s
     assert.equal(recovered.failure?.code, "unknown");
     assert.deepEqual(recovered.failure?.details, { hostInterrupted: true });
     assert.ok(recovered.terminalAt !== null);
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("diagnostics read model: safe projection only (no session refs, details, causes, paths)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+    await service.prompt(treeId, trunkId, "q1");
+
+    // 制造一个携带敏感 details/cause 的 failed run（上游失败语义）。
+    const episode = repository.createEpisode(trunkId);
+    const sensitiveRun = repository.createRun(episode.id, {
+      sessionId: "session-secret-id" as PiSessionId,
+      sessionFile: "/Users/tal/Projects/secret-session.jsonl",
+      entryId: "entry-secret" as PiEntryId,
+      piVersion: "0.85.1" as PiVersion,
+      availability: { status: "available" },
+    });
+    repository.updateRunState(sensitiveRun.id, "running");
+    repository.updateRunState(sensitiveRun.id, "failed", {
+      failure: {
+        code: "upstream",
+        message: "upstream request failed",
+        details: { secretPath: "/Users/tal/secret-target.txt", token: "sk-secret" },
+        cause: new Error("cause-with-secret"),
+      },
+    });
+
+    const diagnostics = service.getTreeDiagnostics(treeId);
+    assert.equal(diagnostics.treeId, treeId);
+    assert.equal(diagnostics.runtimeState, "idle");
+    assert.equal(diagnostics.activeRun, null);
+    assert.equal(diagnostics.policyDecisions.observed, false);
+
+    // 键集合精确锁定（多一个键即失败：防字段外泄回归）。
+    assert.deepEqual(
+      Object.keys(diagnostics).sort(),
+      ["activeRun", "policyDecisions", "runs", "runtimeState", "treeId"],
+    );
+    const failed = diagnostics.runs.find((r) => r.runId === sensitiveRun.id);
+    assert.ok(failed !== undefined);
+    assert.deepEqual(
+      Object.keys(failed).sort(),
+      ["branchId", "createdAt", "episodeId", "failure", "runId", "state", "terminalAt"],
+    );
+    assert.equal(failed.state, "failed");
+    assert.deepEqual(Object.keys(failed.failure!).sort(), ["code", "message"]);
+    assert.equal(failed.failure!.code, "upstream");
+    assert.equal(failed.failure!.message, "upstream request failed");
+    assert.equal(failed.branchId, trunkId);
+    assert.ok(failed.terminalAt !== null);
+
+    const succeeded = diagnostics.runs.find((r) => r.state === "succeeded");
+    assert.ok(succeeded !== undefined);
+    assert.equal(succeeded.failure, null);
+    assert.ok(succeeded.terminalAt !== null);
+
+    // 全文扫描：敏感材料与被排除的字段名一律不得出现。
+    const serialized = JSON.stringify(diagnostics);
+    for (const forbidden of [
+      "session-secret-id",
+      "secret-session.jsonl",
+      "entry-secret",
+      "secretPath",
+      "secret-target.txt",
+      "sk-secret",
+      "cause-with-secret",
+      "sessionFile",
+      "sessionId",
+      "entryId",
+      "piVersion",
+      "availability",
+      "details",
+      "cause",
+    ]) {
+      assert.ok(!serialized.includes(forbidden), `diagnostics must not expose '${forbidden}'`);
+    }
+
+    // 未知树 → 404 语义（EntityNotFoundError）。
+    assert.throws(() => service.getTreeDiagnostics("tree-missing" as TreeId), EntityNotFoundError);
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed", async () => {
+  const dir = makeTempDataDir();
+  try {
+    // 拉宽 echo 在途窗口（turnDelayMs），保证 abort 类观测确定性。
+    const studio = makeStudioInstance(dir, { echoTurnDelayMs: 25 });
+    const { service, repository } = studio;
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+
+    const t1 = await service.prompt(treeId, trunkId, "q1");
+    const priorRunId = t1.run.id;
+
+    /* 校验映射（HTTP 前置）：未知树/run → 404；空 runId/跨树 run → 400；
+       非活动 run（已终态）→ RunNotActiveError（409）。 */
+    await assert.rejects(() => service.abort("tree-missing" as TreeId, priorRunId), EntityNotFoundError);
+    await assert.rejects(() => service.abort(treeId, "run-missing" as RunId), EntityNotFoundError);
+    await assert.rejects(() => service.abort(treeId, "" as RunId), InvalidArgumentError);
+    await assert.rejects(() => service.abort(treeId, priorRunId), RunNotActiveError);
+
+    const other = service.createTree();
+    const otherPrompt = await service.prompt(other.tree.id, other.trunkBranch.id, "q-other");
+    await assert.rejects(() => service.abort(treeId, otherPrompt.run.id), InvalidArgumentError);
+
+    /* 在途 prompt：诊断面 streaming + activeRun 定位；abort 后 prompt 以
+       user-abort 拒绝，run 单事务收敛 aborted（running → aborting → aborted）。
+       拒绝断言先挂接（prompt 在 abort 后随时可能 settle）。 */
+    const promptPromise = service.prompt(treeId, trunkId, "please-abort-me");
+    const rejectionAssertion = assert.rejects(
+      () => promptPromise,
+      (err: unknown) => err instanceof Error && (err as { code?: unknown }).code === "user-abort",
+    );
+    const activeRun = await waitForActiveRun(service, treeId);
+    assert.equal(activeRun.branchId, trunkId);
+    assert.notEqual(activeRun.runId, priorRunId);
+
+    const during = service.getTreeDiagnostics(treeId);
+    assert.equal(during.runtimeState, "streaming");
+    assert.deepEqual(during.activeRun, activeRun);
+
+    /* abort() 的同步前缀已置 abortRequested：prompt 收敛前诊断面可观测 aborting。 */
+    const abortPromise = service.abort(treeId, activeRun.runId);
+    assert.equal(service.getTreeDiagnostics(treeId).runtimeState, "aborting");
+    await abortPromise;
+
+    await rejectionAssertion;
+
+    const aborted = repository.getRun(activeRun.runId);
+    assert.equal(aborted.state, "aborted");
+    assert.equal(aborted.failure, undefined);
+    assert.ok(aborted.terminalAt !== null);
+
+    /* 中止不产生 turn；诊断面回到 idle，run 行为 aborted 且无 failure。 */
+    assert.deepEqual(
+      repository.listTurns(trunkId).map((t) => t.role),
+      ["user", "assistant"],
+      "the aborted prompt persists no turns",
+    );
+    const after = service.getTreeDiagnostics(treeId);
+    assert.equal(after.runtimeState, "idle");
+    assert.equal(after.activeRun, null);
+    const abortedView = after.runs.find((r) => r.runId === activeRun.runId);
+    assert.ok(abortedView !== undefined);
+    assert.equal(abortedView.state, "aborted");
+    assert.equal(abortedView.failure, null);
+
+    /* 中止后续聊：会话叶已回位到续聊点，被中止的提问不进入上下文。 */
+    const t2 = await service.prompt(treeId, trunkId, "q2");
+    assert.equal(t2.assistantTurn.text, "echo:[q1|q2]");
+    assert.ok(!t2.assistantTurn.text.includes("please-abort-me"));
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+
+
+test("concurrent prompt is rejected as a conflict and leaves no phantom run", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir, { echoTurnDelayMs: 25 });
+    const { service } = studio;
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+
+    // 服务侧单 prompt 操作锁在同步前缀内置位：紧随其后的第二个 prompt
+    // 确定性冲突（TypeError → HTTP 409），且不产生任何写入。
+    const first = service.prompt(treeId, trunkId, "first");
+    await assert.rejects(() => service.prompt(treeId, trunkId, "second"), TypeError);
+    const outcome = await first;
+    assert.equal(outcome.assistantTurn.text, "echo:[first]");
+
+    const diagnostics = service.getTreeDiagnostics(treeId);
+    assert.equal(diagnostics.runs.length, 1, "the rejected concurrent prompt creates no run");
+    assert.equal(diagnostics.runs[0]!.state, "succeeded");
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("anchor status preserves duplicate and cross-line selections and degrades when source is unavailable", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const created = service.createTree();
+    const answer = await service.prompt(created.tree.id, created.trunkBranch.id, "repeat repeat\nrepeat");
+    const text = answer.assistantTurn.text;
+    const first = text.indexOf("repeat");
+    const last = text.lastIndexOf("repeat");
+    assert.ok(first >= 0 && last > first, "echo answer contains duplicate anchor text");
+
+    const duplicateBranch = service.createBranchFromSelection(
+      created.tree.id,
+      created.trunkBranch.id,
+      answer.assistantTurn.id,
+      { start: last, end: last + "repeat".length, text: "repeat" },
+    );
+    const crossLineStart = text.indexOf("repeat\nrepeat");
+    assert.ok(crossLineStart >= 0, "echo answer contains a cross-line anchor");
+    const crossLineBranch = service.createBranchFromSelection(
+      created.tree.id,
+      created.trunkBranch.id,
+      answer.assistantTurn.id,
+      { start: crossLineStart, end: crossLineStart + "repeat\nrepeat".length, text: "repeat\nrepeat" },
+    );
+
+    const available = service.getTreeState(created.tree.id);
+    assert.equal(available.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus, "available");
+    assert.equal(available.branches.find((v) => v.branch.id === crossLineBranch.branch.id)?.originStatus, "available");
+
+    repository.updateSessionAvailability(answer.run.id, { status: "unavailable", reason: "missing-file" });
+    const unavailable = service.getTreeState(created.tree.id);
+    assert.equal(
+      unavailable.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus,
+      "unavailable",
+    );
     await studio.shutdown();
   } finally {
     cleanupDir(dir);

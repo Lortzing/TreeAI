@@ -5,21 +5,23 @@
  * 让最小 UI 无需本地状态同步逻辑。
  *
  * 错误映射：EntityNotFoundError → 404；InvalidArgumentError/
- * ConstraintViolationError → 400；运行期 TreeAIError → 502（上游失败）；
- * 契约违规（如并发 prompt，TypeError）→ 409；其余 → 500。
+ * ConstraintViolationError → 400；RunNotActiveError/契约违规（如并发
+ * prompt，TypeError）/用户中止（TreeAIError code "user-abort"）→ 409；
+ * 其余运行期 TreeAIError → 502（上游失败）；PersistenceError → 500；
+ * 其余 → 500。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { BranchId, TreeId } from "@treeai/contracts";
+import type { BranchId, RunId, TreeId } from "@treeai/contracts";
 import {
   ConstraintViolationError,
   EntityNotFoundError,
   InvalidArgumentError,
   PersistenceError,
 } from "@treeai/persistence";
-import type { TreeStudioService, TreeState } from "./service.ts";
+import { RunNotActiveError, type TreeStudioService, type TreeState } from "./service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 
@@ -65,6 +67,11 @@ function sendError(res: ServerResponse, err: unknown): void {
     sendJson(res, 400, { error: { code: "invalid-argument", message: err.message } } satisfies ApiErrorBody);
     return;
   }
+  if (err instanceof RunNotActiveError) {
+    // abort 目标不是该树当前在途 run（已终态/无在途/另有在途）——操作冲突。
+    sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
   if (err instanceof TypeError) {
     // 调用方契约违规（如并发 prompt）——单用户本地工具下按操作冲突呈现。
     sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
@@ -73,6 +80,11 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err !== null && typeof err === "object" && "code" in err && "message" in err) {
     const candidate = err as { code: unknown; message: unknown };
     if (typeof candidate.code === "string" && typeof candidate.message === "string") {
+      if (candidate.code === "user-abort") {
+        // 用户/宿主主动中止，不是上游失败：按操作冲突呈现（run 已收敛 aborted）。
+        sendJson(res, 409, { error: { code: "user-abort", message: candidate.message } } satisfies ApiErrorBody);
+        return;
+      }
       // TreeAIError（运行期失败：auth/upstream/session-corrupt/…）
       sendJson(res, 502, { error: { code: candidate.code, message: candidate.message } } satisfies ApiErrorBody);
       return;
@@ -174,7 +186,19 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         return;
       }
 
-      const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return))?$/.exec(pathname);
+      const sourceMatch = /^\/api\/trees\/([^/]+)\/branches\/([^/]+)\/source$/.exec(pathname);
+      if (sourceMatch !== null) {
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(sourceMatch[1]!);
+        const source = await service.revealBranchOrigin(treeId, decodeURIComponent(sourceMatch[2]!) as BranchId);
+        sendJson(res, 200, { source, state: service.getTreeState(treeId) });
+        return;
+      }
+
+      const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics))?$/.exec(pathname);
       if (treeMatch !== null) {
         const treeId = asTreeId(treeMatch[1]!);
         const action = treeMatch[2];
@@ -185,6 +209,11 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         }
         if (action === "state" && method === "GET") {
           sendJson(res, 200, service.getTreeState(treeId));
+          return;
+        }
+        if (action === "diagnostics" && method === "GET") {
+          // A5 诊断面：安全投影（无 session 引用/详情/cause/路径；策略决策如实未观测）。
+          sendJson(res, 200, service.getTreeDiagnostics(treeId));
           return;
         }
         if (action === "prompt" && method === "POST") {
@@ -231,6 +260,20 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           return;
         }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* POST /api/trees/:treeId/runs/:runId/abort —— 请求中止该树当前在途的 run。
+         404 未知树/run；400 空 id/跨树 run；409 非活动 run（RunNotActiveError）
+         或 prompt 已以 user-abort 收敛。 */
+      const runAbortMatch = /^\/api\/trees\/([^/]+)\/runs\/([^/]+)\/abort$/.exec(pathname);
+      if (runAbortMatch !== null) {
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        await service.abort(asTreeId(runAbortMatch[1]!), runAbortMatch[2]! as RunId);
+        sendJson(res, 200, { ok: true });
         return;
       }
 

@@ -6,6 +6,10 @@
  * （同一数据目录上重建 server + service + repo 后树状态与续聊能力完整）。
  * 外加 return 失败/重试一致性回归：session 文件缺失时 502 发生在任何
  * Return 落库之前，同一失败上重试不产生重复 Return。
+ * 外加 A5 诊断面：GET diagnostics 安全投影（无 session 引用/详情/cause）、
+ * POST runs/:runId/abort 的 404/400/409 映射、在途 abort 的 user-abort
+ * 收敛（409 + run 落库 aborted）、并发 prompt 冲突、I6 恢复 run 的
+ * 失败码+消息投影。
  */
 
 import { test } from "node:test";
@@ -13,9 +17,15 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { BranchId } from "@treeai/contracts";
+import type { BranchId, PiEntryId, PiSessionId, PiVersion } from "@treeai/contracts";
 import { createStudioServer } from "../src/server.ts";
-import { cleanupDir, makeStudioInstance, makeTempDataDir, type StudioInstance } from "./helpers.ts";
+import {
+  cleanupDir,
+  makeStudioInstance,
+  makeTempDataDir,
+  type StudioInstance,
+  type StudioInstanceOptions,
+} from "./helpers.ts";
 
 const staticDir = fileURLToPath(new URL("../public/", import.meta.url));
 
@@ -51,8 +61,12 @@ interface RunningStudio {
  * 启动一个 studio 实例并登记到 registry；测试的 finally 里统一关闭，
  * 保证断言失败时监听中的 server 不会挂住测试进程。
  */
-async function startStudio(dir: string, registry: RunningStudio[]): Promise<RunningStudio> {
-  const studio = makeStudioInstance(dir);
+async function startStudio(
+  dir: string,
+  registry: RunningStudio[],
+  options?: StudioInstanceOptions,
+): Promise<RunningStudio> {
+  const studio = makeStudioInstance(dir, options);
   const server = createStudioServer({ service: studio.service, staticDir });
   const port = await server.listen(0);
   let closed = false;
@@ -130,6 +144,16 @@ test("HTTP API serves the UI and the full D3 flow, surviving a restart", async (
     const b1 = await call(studio.url(treePath("prompt")), "POST", { branchId, text: "b1" });
     assert.equal(b1.status, 200);
     assert.equal(b1.body.outcome.assistantTurn.text, "echo:[hi|b1]");
+
+    const source = await call(
+      studio.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/source`),
+      "POST",
+    );
+    assert.equal(source.status, 200);
+    assert.equal(source.body.source.status, "available");
+    assert.equal(source.body.source.sourceBranchId, trunkBranchId);
+    assert.equal(source.body.source.anchorTurnId, anchorTurnId);
+    assert.equal(source.body.state.cursor.branchId, trunkBranchId);
 
     /* 切回 Trunk 并提交 return。 */
     const switchRes = await call(studio.url(treePath("switch")), "POST", { branchId: trunkBranchId });
@@ -330,6 +354,185 @@ test("HTTP layer rejects malformed bodies and unknown routes predictably", async
     /* 未知静态文件仍走 API 404。 */
     const unknownStatic = await fetch(studio.url("/unknown.js"));
     assert.equal(unknownStatic.status, 404);
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    // 拉宽 echo 在途窗口（turnDelayMs），让在途观测/abort 确定性成立。
+    const studio = await startStudio(dir, running, { echoTurnDelayMs: 25 });
+
+    const created = await call(studio.url("/api/trees"), "POST", {});
+    const treeId: string = created.body.tree.id;
+    const trunkBranchId: string = created.body.trunkBranchId;
+    const treePath = (action?: string) => `/api/trees/${encodeURIComponent(treeId)}${action ?? ""}`;
+
+    /* 新树诊断面：idle、无在途、无 run、如实报告未观测策略决策。 */
+    const diag0 = await call(studio.url(treePath("/diagnostics")), "GET");
+    assert.equal(diag0.status, 200);
+    assert.equal(diag0.body.runtimeState, "idle");
+    assert.equal(diag0.body.activeRun, null);
+    assert.deepEqual(diag0.body.runs, []);
+    assert.equal(diag0.body.policyDecisions.observed, false);
+    assert.ok(
+      typeof diag0.body.policyDecisions.reason === "string" && diag0.body.policyDecisions.reason.length > 0,
+    );
+
+    /* 一次成功 prompt → 诊断面出现安全投影的 run 行（键集合精确锁定）。 */
+    const t1 = await call(studio.url(treePath("/prompt")), "POST", { branchId: trunkBranchId, text: "hi" });
+    assert.equal(t1.status, 200);
+    const diag1 = await call(studio.url(treePath("/diagnostics")), "GET");
+    assert.equal(diag1.body.runs.length, 1);
+    const runView = diag1.body.runs[0];
+    assert.deepEqual(
+      Object.keys(runView).sort(),
+      ["branchId", "createdAt", "episodeId", "failure", "runId", "state", "terminalAt"],
+    );
+    assert.equal(runView.state, "succeeded");
+    assert.equal(runView.failure, null);
+    assert.equal(runView.branchId, trunkBranchId);
+    const serialized = JSON.stringify(diag1.body);
+    for (const forbidden of ["sessionFile", "sessionId", "entryId", "piVersion", "availability", "details", "cause"]) {
+      assert.ok(!serialized.includes(forbidden), `diagnostics must not expose '${forbidden}'`);
+    }
+
+    /* 404 / 405 映射。 */
+    const unknownTreeDiag = await call(
+      studio.url(`/api/trees/${encodeURIComponent("tree-missing")}/diagnostics`),
+      "GET",
+    );
+    assert.equal(unknownTreeDiag.status, 404);
+    assert.equal((await call(studio.url(treePath("/diagnostics")), "POST", {})).status, 405);
+    const abortUnknownTree = await call(
+      studio.url(`/api/trees/${encodeURIComponent("tree-missing")}/runs/${encodeURIComponent("run-x")}/abort`),
+      "POST",
+    );
+    assert.equal(abortUnknownTree.status, 404);
+    const abortUnknownRun = await call(
+      studio.url(treePath(`/runs/${encodeURIComponent("run-missing")}/abort`)),
+      "POST",
+    );
+    assert.equal(abortUnknownRun.status, 404);
+
+    /* 已终态 run 的 abort → 409 conflict；错误动词 → 405。 */
+    const doneRunId: string = diag1.body.runs[0].runId;
+    const abortTerminal = await call(
+      studio.url(treePath(`/runs/${encodeURIComponent(doneRunId)}/abort`)),
+      "POST",
+    );
+    assert.equal(abortTerminal.status, 409);
+    assert.equal(abortTerminal.body.error.code, "conflict");
+    const abortWrongMethod = await call(
+      studio.url(treePath(`/runs/${encodeURIComponent(doneRunId)}/abort`)),
+      "GET",
+    );
+    assert.equal(abortWrongMethod.status, 405);
+
+    /* 跨树 run 的 abort → 400。 */
+    const other = await call(studio.url("/api/trees"), "POST", {});
+    const otherPrompt = await call(
+      studio.url(`/api/trees/${encodeURIComponent(other.body.tree.id)}/prompt`),
+      "POST",
+      { branchId: other.body.trunkBranchId, text: "x" },
+    );
+    assert.equal(otherPrompt.status, 200);
+    const crossTree = await call(
+      studio.url(treePath(`/runs/${encodeURIComponent(otherPrompt.body.outcome.run.id)}/abort`)),
+      "POST",
+    );
+    assert.equal(crossTree.status, 400);
+
+    /* 在途 run：诊断面 streaming；abort 200；prompt 以 409 user-abort
+       收敛（不改写为 failed/502），run 落库 aborted，无 turn。 */
+    const promptPromise = call(studio.url(treePath("/prompt")), "POST", {
+      branchId: trunkBranchId,
+      text: "in-flight",
+    });
+    let activeRunId: string | null = null;
+    for (let i = 0; i < 100 && activeRunId === null; i += 1) {
+      const diag = await call(studio.url(treePath("/diagnostics")), "GET");
+      if (diag.body.activeRun !== null) {
+        assert.equal(diag.body.runtimeState, "streaming");
+        assert.equal(diag.body.activeRun.branchId, trunkBranchId);
+        activeRunId = diag.body.activeRun.runId;
+      }
+    }
+    assert.ok(activeRunId !== null, "diagnostics must expose the in-flight run");
+
+    const abortRes = await call(
+      studio.url(treePath(`/runs/${encodeURIComponent(activeRunId)}/abort`)),
+      "POST",
+    );
+    assert.equal(abortRes.status, 200);
+    assert.deepEqual(abortRes.body, { ok: true });
+
+    const promptRes = await promptPromise;
+    assert.equal(promptRes.status, 409);
+    assert.equal(promptRes.body.error.code, "user-abort");
+
+    const diag2 = await call(studio.url(treePath("/diagnostics")), "GET");
+    assert.equal(diag2.body.runtimeState, "idle");
+    assert.equal(diag2.body.activeRun, null);
+    const abortedView = diag2.body.runs.find((r: any) => r.runId === activeRunId);
+    assert.ok(abortedView !== undefined);
+    assert.equal(abortedView.state, "aborted");
+    assert.equal(abortedView.failure, null);
+
+    const stateAfter = await call(studio.url(treePath("/state")), "GET");
+    const trunkTurns = stateAfter.body.branches.find((v: any) => v.branch.id === trunkBranchId).turns;
+    assert.deepEqual(
+      trunkTurns.map((t: any) => t.role),
+      ["user", "assistant"],
+      "the aborted prompt persists no turns",
+    );
+
+    /* 并发 prompt → 409（单用户冲突语义），且不产生幽灵 run。 */
+    const runsBefore: number = diag2.body.runs.length;
+    const p1 = call(studio.url(treePath("/prompt")), "POST", { branchId: trunkBranchId, text: "c1" });
+    let concurrentActive: string | null = null;
+    for (let i = 0; i < 100 && concurrentActive === null; i += 1) {
+      const diag = await call(studio.url(treePath("/diagnostics")), "GET");
+      if (diag.body.activeRun !== null) concurrentActive = diag.body.activeRun.runId;
+    }
+    assert.ok(concurrentActive !== null);
+    const concurrent = await call(studio.url(treePath("/prompt")), "POST", {
+      branchId: trunkBranchId,
+      text: "c2",
+    });
+    assert.equal(concurrent.status, 409);
+    assert.equal(concurrent.body.error.code, "conflict");
+    const r1 = await p1;
+    assert.equal(r1.status, 200);
+    const diag3 = await call(studio.url(treePath("/diagnostics")), "GET");
+    assert.equal(diag3.body.runs.length, runsBefore + 1, "the rejected concurrent prompt creates no phantom run");
+
+    /* 失败投影 + I6 恢复：宿主崩溃残留 run 重启后收敛 failed，
+       诊断面只投影 code+message（details/路径不外泄）。 */
+    const episode = studio.instance.repository.createEpisode(trunkBranchId as BranchId);
+    const interrupted = studio.instance.repository.createRun(episode.id, {
+      sessionId: "session-secret-id" as PiSessionId,
+      sessionFile: "/Users/tal/Projects/secret-session.jsonl",
+      entryId: "entry-secret" as PiEntryId,
+      piVersion: "0.85.1" as PiVersion,
+      availability: { status: "available" },
+    });
+    await studio.close();
+
+    const studio2 = await startStudio(dir, running, { echoTurnDelayMs: 25 });
+    const diag4 = await call(studio2.url(treePath("/diagnostics")), "GET");
+    const recovered = diag4.body.runs.find((r: any) => r.runId === interrupted.id);
+    assert.ok(recovered !== undefined);
+    assert.equal(recovered.state, "failed");
+    assert.deepEqual(Object.keys(recovered.failure).sort(), ["code", "message"]);
+    assert.equal(recovered.failure.code, "unknown");
+    const serialized4 = JSON.stringify(diag4.body);
+    assert.ok(!serialized4.includes("hostInterrupted"), "failure details must not leak");
+    assert.ok(!serialized4.includes("secret-session"), "session file paths must not leak");
   } finally {
     await closeAll(running);
     cleanupDir(dir);
