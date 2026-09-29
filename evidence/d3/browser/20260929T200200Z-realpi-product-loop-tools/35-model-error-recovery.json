@@ -1,0 +1,77 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 5,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": "Run run_06bcaf4f… failed — unknown: Error: Connection error.Dismiss"
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_5d790823-b8f7-4456-9b0d-2ee1d71c1bb3",
+        "text": "Reply with the single word: online."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_6738c0f6-e1d5-4ca1-955c-7c8b4fd7c1ee",
+        "text": "online."
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

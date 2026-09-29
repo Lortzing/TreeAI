@@ -1,0 +1,66 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 5,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: failed",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": false,
+      "text": "Run run_06bcaf4f… failed — unknown: Error: Connection error.Dismiss"
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": false,
+      "role": "alert",
+      "text": "unknown: Error: Connection error."
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": []
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}
