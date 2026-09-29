@@ -25,6 +25,7 @@ import type { DatabaseSync } from "node:sqlite";
 import type {
   Branch,
   BranchId,
+  BranchOrigin,
   Episode,
   EpisodeId,
   Forest,
@@ -39,6 +40,10 @@ import type {
   Tree,
   TreeAIError,
   TreeId,
+  Turn,
+  TurnId,
+  TurnRole,
+  TurnSelection,
 } from "@treeai/contracts";
 import {
   BackupError,
@@ -60,18 +65,24 @@ import {
 } from "./database.ts";
 import {
   encodeFailure,
+  rowToActiveNavigation,
   rowToBranch,
+  rowToBranchOrigin,
   rowToEpisode,
   rowToForest,
   rowToRun,
   rowToSessionReference,
   rowToTree,
+  rowToTurn,
+  type ActiveNavigationRow,
+  type BranchOriginRow,
   type BranchRow,
   type EpisodeRow,
   type ForestRow,
   type RunRow,
   type SessionReferenceRow,
   type TreeRow,
+  type TurnRow,
 } from "./serialization.ts";
 
 /* ------------------------------------------------------------------ */
@@ -121,6 +132,43 @@ export interface CreateBranchInput {
 export interface UpdateRunStateOptions {
   /** state === "failed" 时必填；其他终态/非终态必须缺省（contracts：failure iff failed）。 */
   readonly failure?: TreeAIError;
+}
+
+/* --------------------- D3 产品层（turns / branch_origins） --------------------- */
+
+const TURN_ROLES: readonly TurnRole[] = ["user", "assistant", "return"];
+
+/** 创建 Turn 的输入（contracts product.ts 不变量的仓储层校验）。 */
+export interface CreateTurnInput {
+  readonly id?: TurnId;
+  readonly treeId: TreeId;
+  readonly branchId: BranchId;
+  readonly episodeId: EpisodeId;
+  /** role "user"/"assistant" 必填；role "return" 必须为 null/缺省。 */
+  readonly runId?: RunId | null;
+  readonly role: TurnRole;
+  readonly text: string;
+  /** assistant turn 的 Pi 叶条目锚点；user/return turn 为 null。 */
+  readonly piEntryId?: string | null;
+  /** role "return" 必填（出处分支）；其他 role 必须为 null/缺省。 */
+  readonly fromBranchId?: BranchId | null;
+}
+
+/** 设置 Branch 出处锚点（每分支至多一条）。 */
+export interface SetBranchOriginInput {
+  readonly branchId: BranchId;
+  readonly sourceBranchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  /** 必须等于 anchorTurn.piEntryId。 */
+  readonly anchorEntryId: string;
+  readonly selection: TurnSelection;
+}
+
+export interface ActiveNavigation {
+  readonly treeId: TreeId;
+  readonly branchId: BranchId;
+  readonly reference: SessionReference;
+  readonly updatedAt: IsoTimestamp;
 }
 
 export interface EpisodeRecovery {
@@ -832,6 +880,304 @@ export class TreeRepository {
       .prepare("SELECT * FROM session_references WHERE session_file = ? ORDER BY created_at, rowid")
       .all(sessionFile) as unknown as SessionReferenceRow[];
     return rows.map((row) => ({ runId: row.run_id as RunId, reference: rowToSessionReference(row) }));
+  }
+
+  /* --------------------- D3 产品层：Turn（turns 表） --------------------- */
+
+  /**
+   * 创建 Turn（contracts product.ts 不变量的仓储层防御；
+   * schema CHECK 为第二层）。分支/回合/Run 的存在性与归属先显式校验，
+   * 给出可定位的错误而非裸外键失败。
+   */
+  createTurn(input: CreateTurnInput): Turn {
+    this.#assertOpen();
+    assertNonEmptyString(input.treeId, "tree id");
+    assertNonEmptyString(input.branchId, "branch id");
+    assertNonEmptyString(input.episodeId, "episode id");
+    if (typeof input.text !== "string" || (input.role !== "assistant" && input.text.trim().length === 0)) {
+      throw new InvalidArgumentError(`turn text must be a non-empty string for role '${input.role}'`);
+    }
+    if (!TURN_ROLES.includes(input.role)) {
+      throw new InvalidArgumentError(`turn role must be one of {${TURN_ROLES.join(", ")}}`);
+    }
+    const branch = this.findBranch(input.branchId);
+    if (branch === null) throw new EntityNotFoundError("branch", input.branchId);
+    if (branch.treeId !== input.treeId) {
+      throw new InvalidArgumentError(
+        `branch ${input.branchId} belongs to tree ${branch.treeId}, not ${input.treeId}`,
+      );
+    }
+    const episode = this.findEpisode(input.episodeId);
+    if (episode === null) throw new EntityNotFoundError("episode", input.episodeId);
+    if (episode.branchId !== input.branchId) {
+      throw new InvalidArgumentError(
+        `episode ${input.episodeId} belongs to branch ${episode.branchId}, not ${input.branchId}`,
+      );
+    }
+    const runId = input.runId ?? null;
+    const fromBranchId = input.fromBranchId ?? null;
+    const piEntryId = input.piEntryId ?? null;
+    if (input.role === "return") {
+      if (runId !== null) {
+        throw new InvalidArgumentError("a return turn must not reference a run (returns are not model-executed)");
+      }
+      if (fromBranchId === null) {
+        throw new InvalidArgumentError("a return turn requires fromBranchId (its originating branch)");
+      }
+      if (piEntryId !== null) {
+        throw new InvalidArgumentError("a return turn carries no Pi entry anchor");
+      }
+    } else {
+      if (runId === null) {
+        throw new InvalidArgumentError(`a '${input.role}' turn requires runId`);
+      }
+      if (fromBranchId !== null) {
+        throw new InvalidArgumentError("fromBranchId is only valid for return turns");
+      }
+      if (this.findRun(runId) === null) throw new EntityNotFoundError("run", runId);
+    }
+    if (fromBranchId !== null && this.findBranch(fromBranchId) === null) {
+      throw new EntityNotFoundError("branch", fromBranchId);
+    }
+    const id = input.id ?? (this.#newId("turn") as TurnId);
+    assertNonEmptyString(id, "turn id");
+    const createdAt = this.now();
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO turns
+             (id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
+        )
+        .run(id, input.treeId, input.branchId, input.episodeId, runId, input.role, input.text, piEntryId, fromBranchId, createdAt);
+    } catch (error) {
+      throw mapSqliteError(error, "creating turn");
+    }
+    return this.getTurn(id);
+  }
+
+  getTurn(id: TurnId): Turn {
+    const found = this.findTurn(id);
+    if (found === null) throw new EntityNotFoundError("turn", id);
+    return found;
+  }
+
+  findTurn(id: TurnId): Turn | null {
+    this.#assertOpen();
+    assertNonEmptyString(id, "turn id");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at
+         FROM turns WHERE id = ?`,
+      )
+      .get(id) as TurnRow | undefined;
+    return row ? rowToTurn(row) : null;
+  }
+
+  /** 分支上的全部 Turn，按追加序（created_at, rowid）。 */
+  listTurns(branchId: BranchId): Turn[] {
+    this.#assertOpen();
+    assertNonEmptyString(branchId, "branch id");
+    const rows = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at
+         FROM turns WHERE branch_id = ? ORDER BY created_at, rowid`,
+      )
+      .all(branchId) as unknown as TurnRow[];
+    return rows.map(rowToTurn);
+  }
+
+  /* --------------------- D3 产品层：BranchOrigin（branch_origins 表） --------------------- */
+
+  /**
+   * 设置分支出处锚点。锚点完整性（选区切片一致、anchorEntryId 与
+   * anchor turn 的 piEntryId 相等）在此校验；每分支至多一条。
+   */
+  setBranchOrigin(input: SetBranchOriginInput): BranchOrigin {
+    this.#assertOpen();
+    assertNonEmptyString(input.branchId, "branch id");
+    assertNonEmptyString(input.sourceBranchId, "source branch id");
+    assertNonEmptyString(input.anchorTurnId, "anchor turn id");
+    assertNonEmptyString(input.anchorEntryId, "anchor entry id");
+    const branch = this.findBranch(input.branchId);
+    if (branch === null) throw new EntityNotFoundError("branch", input.branchId);
+    const source = this.findBranch(input.sourceBranchId);
+    if (source === null) throw new EntityNotFoundError("branch", input.sourceBranchId);
+    if (source.treeId !== branch.treeId) {
+      throw new InvalidArgumentError(
+        `source branch ${input.sourceBranchId} belongs to tree ${source.treeId}, not ${branch.treeId}`,
+      );
+    }
+    if (source.id === branch.id) {
+      throw new InvalidArgumentError(`branch ${input.branchId} cannot anchor to itself`);
+    }
+    const anchorTurn = this.findTurn(input.anchorTurnId);
+    if (anchorTurn === null) throw new EntityNotFoundError("turn", input.anchorTurnId);
+    if (anchorTurn.branchId !== input.sourceBranchId) {
+      throw new InvalidArgumentError(
+        `anchor turn ${input.anchorTurnId} belongs to branch ${anchorTurn.branchId}, not source branch ${input.sourceBranchId}`,
+      );
+    }
+    if (anchorTurn.role !== "assistant") {
+      throw new InvalidArgumentError("branch anchors must reference an assistant turn (an answer)");
+    }
+    if (anchorTurn.piEntryId === null) {
+      throw new InvalidArgumentError(`anchor turn ${input.anchorTurnId} has no Pi entry id`);
+    }
+    if (anchorTurn.piEntryId !== input.anchorEntryId) {
+      throw new InvalidArgumentError("anchorEntryId must equal the anchor turn's piEntryId");
+    }
+    const selection = input.selection;
+    if (
+      typeof selection !== "object" ||
+      selection === null ||
+      !Number.isInteger(selection.start) ||
+      !Number.isInteger(selection.end) ||
+      selection.start < 0 ||
+      selection.end < selection.start ||
+      selection.end > anchorTurn.text.length
+    ) {
+      throw new InvalidArgumentError(
+        `selection [${String(selection?.start)}, ${String(selection?.end)}) is out of bounds for the anchor answer (${anchorTurn.text.length} chars)`,
+      );
+    }
+    if (anchorTurn.text.slice(selection.start, selection.end) !== selection.text) {
+      throw new InvalidArgumentError(
+        "selection text does not match the anchor answer at the given offsets (anchor integrity violation)",
+      );
+    }
+    if (this.findBranchOrigin(input.branchId) !== null) {
+      throw new InvalidArgumentError(`branch ${input.branchId} already has an origin`);
+    }
+    const createdAt = this.now();
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO branch_origins
+             (branch_id, source_branch_id, anchor_turn_id, anchor_entry_id, sel_start, sel_end, sel_text, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          input.branchId,
+          input.sourceBranchId,
+          input.anchorTurnId,
+          input.anchorEntryId,
+          selection.start,
+          selection.end,
+          selection.text,
+          createdAt,
+        );
+    } catch (error) {
+      throw mapSqliteError(error, "setting branch origin");
+    }
+    return this.getBranchOrigin(input.branchId);
+  }
+
+  getBranchOrigin(branchId: BranchId): BranchOrigin {
+    const found = this.findBranchOrigin(branchId);
+    if (found === null) throw new EntityNotFoundError("branch origin", branchId);
+    return found;
+  }
+
+  findBranchOrigin(branchId: BranchId): BranchOrigin | null {
+    this.#assertOpen();
+    assertNonEmptyString(branchId, "branch id");
+    const row = this.#db!
+      .prepare(
+        `SELECT branch_id, source_branch_id, anchor_turn_id, anchor_entry_id, sel_start, sel_end, sel_text, created_at
+         FROM branch_origins WHERE branch_id = ?`,
+      )
+      .get(branchId) as BranchOriginRow | undefined;
+    return row ? rowToBranchOrigin(row) : null;
+  }
+
+  /** 标记 return turn 已由某次主干 Run 送入 Pi 上下文（不可二次送达）。 */
+  markReturnDelivered(turnId: TurnId, runId: RunId): void {
+    this.#assertOpen();
+    assertNonEmptyString(turnId, "turn id");
+    assertNonEmptyString(runId, "run id");
+    const turn = this.findTurn(turnId);
+    if (turn === null) throw new EntityNotFoundError("turn", turnId);
+    if (turn.role !== "return") {
+      throw new InvalidArgumentError(`turn ${turnId} is not a return`);
+    }
+    if (this.findRun(runId) === null) throw new EntityNotFoundError("run", runId);
+    const result = this.#db!
+      .prepare(
+        `UPDATE turns SET delivered_run_id = ? WHERE id = ? AND delivered_run_id IS NULL AND role = 'return'`,
+      )
+      .run(runId, turnId);
+    if (Number(result.changes) === 0) {
+      if (turn.deliveredRunId !== null) {
+        throw new InvalidArgumentError(
+          `return ${turnId} was already delivered by run ${turn.deliveredRunId}`,
+        );
+      }
+      throw new DatabaseCorruptError(`turn ${turnId} not updatable (schema integrity violation)`);
+    }
+  }
+
+  saveActiveNavigation(treeId: TreeId, branchId: BranchId, reference: SessionReference): ActiveNavigation {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    assertNonEmptyString(branchId, "branch id");
+    assertValidSessionReference(reference, "active navigation reference");
+    const tree = this.findTree(treeId);
+    if (tree === null) throw new EntityNotFoundError("tree", treeId);
+    const branch = this.findBranch(branchId);
+    if (branch === null) throw new EntityNotFoundError("branch", branchId);
+    if (branch.treeId !== tree.id) {
+      throw new InvalidArgumentError(`branch ${branchId} belongs to tree ${branch.treeId}, not ${treeId}`);
+    }
+    const availability = availabilityToColumns(reference.availability);
+    const updatedAt = this.now();
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO tree_active_navigation
+             (tree_id, branch_id, session_id, session_file, entry_id, pi_version,
+              availability_status, availability_reason, availability_detail, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(tree_id) DO UPDATE SET
+             branch_id = excluded.branch_id,
+             session_id = excluded.session_id,
+             session_file = excluded.session_file,
+             entry_id = excluded.entry_id,
+             pi_version = excluded.pi_version,
+             availability_status = excluded.availability_status,
+             availability_reason = excluded.availability_reason,
+             availability_detail = excluded.availability_detail,
+             updated_at = excluded.updated_at`,
+        )
+        .run(
+          treeId,
+          branchId,
+          reference.sessionId,
+          reference.sessionFile,
+          reference.entryId,
+          reference.piVersion,
+          availability.status,
+          availability.reason,
+          availability.detail,
+          updatedAt,
+        );
+    } catch (error) {
+      throw mapSqliteError(error, "saving active navigation");
+    }
+    return this.findActiveNavigation(treeId)!;
+  }
+
+  findActiveNavigation(treeId: TreeId): ActiveNavigation | null {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    const row = this.#db!
+      .prepare(
+        `SELECT tree_id, branch_id, session_id, session_file, entry_id, pi_version,
+                availability_status, availability_reason, availability_detail, updated_at
+         FROM tree_active_navigation WHERE tree_id = ?`,
+      )
+      .get(treeId) as ActiveNavigationRow | undefined;
+    return row ? rowToActiveNavigation(row) : null;
   }
 
   /* ------------------------------ 恢复查询 ------------------------------ */

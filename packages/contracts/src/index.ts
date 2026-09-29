@@ -34,3 +34,6 @@ export type * from "./tool-decision.js";
 
 /* PiRuntime 领域接口（唯一实现方：packages/runtime-pi） */
 export type * from "./pi-runtime.js";
+
+/* D3 产品层共享形状（纯新增，不改动上方冻结内容） */
+export type * from "./product.js";

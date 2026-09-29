@@ -8,12 +8,14 @@
 import type {
   Branch,
   BranchId,
+  BranchOrigin,
   Episode,
   EpisodeId,
   Forest,
   ForestId,
   IsoTimestamp,
   JsonRecord,
+  PiEntryId,
   Run,
   RunId,
   RunState,
@@ -24,6 +26,9 @@ import type {
   TreeAIError,
   TreeAIErrorCode,
   TreeId,
+  Turn,
+  TurnId,
+  TurnRole,
 } from "@treeai/contracts";
 import { DatabaseCorruptError } from "./errors.ts";
 
@@ -68,6 +73,41 @@ export interface SessionReferenceRow {
   availability_reason: string | null;
   availability_detail: string | null;
   created_at: string;
+  updated_at: string;
+}
+export interface TurnRow {
+  id: string;
+  tree_id: string;
+  branch_id: string;
+  episode_id: string;
+  run_id: string | null;
+  role: string;
+  text: string;
+  pi_entry_id: string | null;
+  from_branch_id: string | null;
+  delivered_run_id: string | null;
+  created_at: string;
+}
+export interface BranchOriginRow {
+  branch_id: string;
+  source_branch_id: string;
+  anchor_turn_id: string;
+  anchor_entry_id: string;
+  sel_start: number;
+  sel_end: number;
+  sel_text: string;
+  created_at: string;
+}
+export interface ActiveNavigationRow {
+  tree_id: string;
+  branch_id: string;
+  session_id: string;
+  session_file: string;
+  entry_id: string;
+  pi_version: string;
+  availability_status: string;
+  availability_reason: string | null;
+  availability_detail: string | null;
   updated_at: string;
 }
 
@@ -196,4 +236,76 @@ export function rowToRun(run: RunRow, sessionRow: SessionReferenceRow | undefine
     return { ...base, failure };
   }
   return base;
+}
+
+/* ------------------------------ D3 产品层 ------------------------------ */
+
+const TURN_ROLES: readonly string[] = ["user", "assistant", "return"];
+
+export function isTurnRole(value: string): value is TurnRole {
+  return TURN_ROLES.includes(value);
+}
+
+/** 断言行内 role 是合法 TurnRole（schema CHECK 之外的双保险）。 */
+export function assertTurnRole(role: string, context: string): TurnRole {
+  if (!isTurnRole(role)) {
+    throw new DatabaseCorruptError(`invalid turn role '${role}' in database (${context})`);
+  }
+  return role;
+}
+
+export function rowToTurn(row: TurnRow): Turn {
+  return {
+    id: row.id as TurnId,
+    treeId: row.tree_id as TreeId,
+    branchId: row.branch_id as BranchId,
+    episodeId: row.episode_id as EpisodeId,
+    runId: (row.run_id as RunId | null) ?? null,
+    role: assertTurnRole(row.role, `turn ${row.id}`),
+    text: row.text,
+    piEntryId: (row.pi_entry_id as PiEntryId | null) ?? null,
+    fromBranchId: (row.from_branch_id as BranchId | null) ?? null,
+    deliveredRunId: (row.delivered_run_id as RunId | null) ?? null,
+    createdAt: row.created_at as IsoTimestamp,
+  };
+}
+
+export function rowToBranchOrigin(row: BranchOriginRow): BranchOrigin {
+  return {
+    branchId: row.branch_id as BranchId,
+    sourceBranchId: row.source_branch_id as BranchId,
+    anchorTurnId: row.anchor_turn_id as TurnId,
+    anchorEntryId: row.anchor_entry_id as PiEntryId,
+    selection: {
+      start: Number(row.sel_start),
+      end: Number(row.sel_end),
+      text: row.sel_text,
+    },
+    createdAt: row.created_at as IsoTimestamp,
+  };
+}
+
+export function rowToActiveNavigation(row: ActiveNavigationRow): {
+  treeId: TreeId;
+  branchId: BranchId;
+  reference: SessionReference;
+  updatedAt: IsoTimestamp;
+} {
+  return {
+    treeId: row.tree_id as TreeId,
+    branchId: row.branch_id as BranchId,
+    reference: rowToSessionReference({
+      run_id: "",
+      session_id: row.session_id,
+      session_file: row.session_file,
+      entry_id: row.entry_id,
+      pi_version: row.pi_version,
+      availability_status: row.availability_status,
+      availability_reason: row.availability_reason,
+      availability_detail: row.availability_detail,
+      created_at: row.updated_at,
+      updated_at: row.updated_at,
+    }),
+    updatedAt: row.updated_at as IsoTimestamp,
+  };
 }

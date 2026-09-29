@@ -16,12 +16,15 @@
 
 export {
   TreeRepository,
+  type ActiveNavigation,
   type CreateBackupOptions,
   type CreateBranchInput,
+  type CreateTurnInput,
   type EpisodeRecovery,
   type BranchRecovery,
   type RestoreOptions,
   type SessionFileSweepResult,
+  type SetBranchOriginInput,
   type TreeRecovery,
   type TreeRepositoryOptions,
   type UpdateRunStateOptions,

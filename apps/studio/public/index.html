@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TreeAI Studio</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <h1>TreeAI Studio</h1>
+      <p class="subtitle">D3 Core MVP · trusted-local</p>
+      <button id="new-tree" class="primary">＋ New Tree</button>
+      <ul id="tree-list" aria-label="Trees"></ul>
+      <p id="driver-note" class="muted"></p>
+    </aside>
+    <main id="main">
+      <div id="empty-state" hidden>
+        <p>No Tree open.</p>
+        <p class="muted">Create a Tree to start a Trunk conversation.</p>
+      </div>
+      <section id="tree-view" hidden>
+        <header id="branch-bar">
+          <nav id="branch-tabs" aria-label="Branches"></nav>
+          <span id="cursor-note" class="muted"></span>
+        </header>
+        <div id="origin-banner" hidden></div>
+        <div id="conversation" aria-live="polite"></div>
+        <div id="error-banner" hidden></div>
+        <div id="composer">
+          <textarea id="prompt-input" rows="3" placeholder="Ask on this branch…"></textarea>
+          <div class="composer-actions">
+            <button id="send" class="primary">Send</button>
+          </div>
+        </div>
+        <div id="return-panel" hidden>
+          <h2>Return to Trunk</h2>
+          <p class="muted">Edit the branch result, then explicitly submit it to the Trunk.</p>
+          <textarea id="return-input" rows="4"></textarea>
+          <div class="composer-actions">
+            <button id="submit-return" class="accent">Submit Return to Trunk</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
