@@ -14,6 +14,11 @@
       <p class="subtitle">D3 Core MVP · trusted-local</p>
       <button id="new-tree" class="primary">＋ New Tree</button>
       <ul id="tree-list" aria-label="Trees"></ul>
+      <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
+      <div id="list-load-error" hidden>
+        <p id="list-load-message"></p>
+        <button id="list-retry">Retry</button>
+      </div>
       <p id="driver-note" class="muted"></p>
     </aside>
     <main id="main">
@@ -38,7 +43,8 @@
         <div id="reading-area">
           <div id="main-pane">
             <div id="conversation" aria-live="polite" aria-label="Trunk conversation"></div>
-            <div id="error-banner" hidden></div>
+            <!-- 错误横幅朗读语义（W2 §2.4）：role=alert（隐式 aria-live）+ 可 Tab 触达。 -->
+            <div id="error-banner" role="alert" tabindex="0" hidden></div>
             <div id="composer">
               <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
               <div class="composer-actions">
@@ -52,7 +58,8 @@
             <header id="panel-header">
               <div id="panel-heading">
                 <p id="panel-title"></p>
-                <p id="panel-anchor-context"></p>
+                <!-- 揭示降级焦点的说明区（W2 §2.6）：摘录 + 状态徽标，常驻可读，可程序聚焦。 -->
+                <p id="panel-anchor-context" tabindex="-1"></p>
               </div>
               <div id="panel-fixed-actions">
                 <button id="panel-view-source" class="source-button">⌖ View source</button>
@@ -61,7 +68,7 @@
               <div id="panel-session-note" hidden tabindex="-1"></div>
             </header>
             <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
-            <div id="panel-error-banner" hidden></div>
+            <div id="panel-error-banner" role="alert" tabindex="0" hidden></div>
             <div id="panel-composer">
               <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
               <div class="composer-actions">

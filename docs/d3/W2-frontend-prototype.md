@@ -22,6 +22,22 @@
 
 ## 更新记录
 
+- **2026-09-29 · issue #6 P1 前端偏差修复波次（本条）**：按 issue #6 No Go
+  的 P1 要求，把待裁决偏差中「向源设计靠拢」的一组落地（owner 仍可改判）：
+  §2.1 列表加载失败重试（侧栏常驻重试面 + 在途禁用态 + 恢复后补齐启动
+  语义，不整页刷新）、§2.1 初始焦点编程设定到「新建」（仅启动一次，重渲
+  不夺焦）、§2.1 窄窗「新建」按钮全宽；§2.4 错误横幅朗读语义
+  （`role="alert"` + `tabindex="0"`，`showError` 先置可见再写文本）；§2.6
+  揭示降级焦点移到面板锚点上下文（取舍：横幅 8 秒自动隐藏会连焦点丢掉，
+  锚点上下文才是持久说明区——取舍在 §2.6 行内明示）；§2.7 窄窗抽屉自底
+  向上（`translateY` 整幅上滑，宽窗右侧滑入不变，纯 CSS 变更）。§4 A2
+  三场景补脚本化 DOM 断言：数千字符长答案后段选区、重复词**第二处**、
+  跨换行选区（精确偏移提交 + 揭示切片落位，非整条回退 / 非首处顶替）。
+  相应行状态改为已实现（一律读作「待 owner 验收」）；`ui-probe`/
+  `ui-regressions` 同步扩充（22 → 29 测试）。仍开放（如实保留，待 owner
+  裁决）：§2.6 窄窗摘录换行呈现 vs 源设计横向滚动；§2.7 上滑幅度口径
+  （本波按侧栏抽屉整幅滑入语汇实现）；§4 目标 Mac 各项。本条为实现波次
+  记录，不构成任何验收结论。
 - **2026-09-29 · issue #5 同步收口（随实现波次更新，`5891c0d` 波次）**：
   承下一逐行同步之后的两个实现波次，把 §1–§4 相应行更新到位，并明示
   记录两处事实性更正——§2.5 流式推送（SSE 早已随 `6ff7146` 落地，旧文
@@ -113,11 +129,11 @@
 | 项目 | 约定 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
 | 用途 | 首次进入引导建树；既有树的选择与打开 | 已实现 | `index.html` `#new-tree` / `#tree-list` / `#empty-state`（L15–23）；`app.js` `renderTrees()`（L276）、`createTree()`（L1352）、启动 IIFE 自动打开首棵树（L2049–2060） | `apps/studio/tests/ui-probe.test.ts`（文件级：启动自动打开首棵树场景）；api.test.ts「HTTP API serves the UI and the full D3 flow…」（GET/POST `/api/trees`） | — |
-| 状态 | 空库（无任何 Tree → 引导文案，"新建"为唯一主操作）；列表（非空，显示可区分的树标识）；加载失败（错误条 + 重试，不空白） | 部分 | 空库与列表已实现（同上行）；加载失败为**通用错误横幅**（`showError()`，L204–211，8 秒自动隐藏；启动/开树失败经 guard 呈现）——**无专门"重试"按钮**，重试 = 刷新页面或重选树 | 列表/空库见上行；加载失败**无自动 UI 断言** | 断网/后端失效场景实机验证；是否补重试按钮待 owner 裁决 |
+| 状态 | 空库（无任何 Tree → 引导文案，"新建"为唯一主操作）；列表（非空，显示可区分的树标识）；加载失败（错误条 + 重试，不空白） | 已实现 | 空库与列表已实现（同上行）；加载失败 = 侧栏**常驻重试面**（`#list-load-error`：错误事实 + Retry 按钮，`index.html` 侧栏 L18–21；`style.css` L64 起）——`refreshTrees()` 失败经 `showListLoadError()`（`app.js` L1328–1336，不自动隐藏）落位，重试走 `retryTreesLoad()`（L1351–1371：重新 GET `/api/trees` **不整页刷新**；在途禁用 + "Retrying…"；持久失败保持错误 + 重试可用；启动即失败的情形恢复后补齐启动语义——自动打开首棵树）；通用 8 秒横幅仍照常呈现（`showError` L214–222） | `apps/studio/tests/ui-probe.test.ts`（文件级：启动失败常驻重试面、在途禁用态、持久失败、恢复后自动开树场景） | 断网/后端失效场景实机验证；已按源设计实现，待 owner 复核 |
 | 转场 | 新建成功 → 进入主线阅读（无过场动画或仅透明度） | 已实现 | `createTree()` → `renderAll()` 即时重渲，无过场动画（符合"无过场动画"的克制口径） | `apps/studio/tests/ui-probe.test.ts`（文件级：各场景经同一渲染路径，间接覆盖） | 录屏确认 |
 | 数据来源 | `GET /api/trees`；`POST /api/trees` | 已实现 | `app.js` `refreshTrees()`（L1316）、`createTree()`（L1352） | api.test.ts 主流程 + 「HTTP layer rejects malformed bodies…」（404/405 映射） | — |
-| 键盘焦点顺序 | 初始焦点在"新建"；Tab 序 = 新建 → 列表项（Enter 打开） | 部分 | Tab 序天然符合 DOM 序（`#new-tree` 在列表前，均为原生 button，Enter 即激活——`index.html` L15–16）；**初始焦点未编程设定**（启动后焦点在 body，非"新建"按钮） | 无自动断言 | 键盘实机核查；是否补初始焦点待 owner 裁决 |
-| 窄窗 <720px | 列表单列，主操作按钮全宽 | 部分 | 列表单列天然成立（`ul/li`）；树侧栏收进抽屉 + 顶部开关（`style.css` L521–534；`app.js` `closeSidebar()`/侧栏开关 L1978–1986；`index.html` L11，含 `aria-expanded`）；**"新建"按钮未设全宽**（无 `width:100%` 规则） | 侧栏抽屉开关/Esc/选树收起行为与 <720px `@media` 规则存在性均有仓内断言（`apps/studio/tests/ui-probe.test.ts`，文件级）；实机布局未验 | 窄窗实机；全宽口径待 owner 对照源设计 |
+| 键盘焦点顺序 | 初始焦点在"新建"；Tab 序 = 新建 → 列表项（Enter 打开） | 已实现 | Tab 序天然符合 DOM 序（`#new-tree` 在列表前，均为原生 button，Enter 即激活——`index.html`）；初始焦点已编程设定——启动 IIFE 收尾 `$("new-tree").focus()`（`app.js` L2139；成功 / 失败路径一致落位），**仅启动一次**：后续重渲（SSE 终态刷新、面板开合）走 `renderAll`，不触碰焦点 | `apps/studio/tests/ui-probe.test.ts`（文件级：启动焦点在「新建」、终态重渲不夺焦点、显式交互照常移焦场景） | 键盘实机核查；已按源设计实现，待 owner 复核 |
+| 窄窗 <720px | 列表单列，主操作按钮全宽 | 已实现 | 列表单列天然成立（`ul/li`）；树侧栏收进抽屉 + 顶部开关（`style.css` 窄窗 `@media`；`app.js` `closeSidebar()`/侧栏开关；`index.html`，含 `aria-expanded`）；"新建"按钮全宽——窄窗 `@media` 内 `#new-tree { width: 100% }`（`style.css` L572） | 侧栏抽屉开关/Esc/选树收起行为与 <720px `@media` 规则（含 `#new-tree` 全宽）存在性均有仓内断言（`apps/studio/tests/ui-probe.test.ts`，文件级）；实机布局未验 | 窄窗实机；已按源设计实现，待 owner 复核 |
 | prefers-reduced-motion | 列表更新即时呈现（无进入动画） | 已实现 | 列表更新本无动画（`replaceChildren` 即时重渲）——按构造成立；全局降级块兜底 | 无专属断言 | 实机抽查 |
 
 ### 2.2 主线阅读（Trunk 主视图）
@@ -150,10 +166,10 @@
 | 项目 | 约定 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
 | 用途 | 在支线上整理结论并**显式提交**回主干；已提交的 Return 卡在主干 `targetAnchor` 原分叉点附近呈现 | 已实现 | `#return-panel`（`index.html` L71–78，编辑 + 显式提交按钮）；Return 卡定位见 §1 第三行 | `apps/studio/tests/ui-probe.test.ts`（文件级：Return 提交流程场景） | — |
-| 状态 | 草稿（客户端、未持久化、未生效；空 / 已编辑）；提交在途（按钮禁用 + 单飞，防双击）；导航失败（`502`，草稿保留，同键可重试）；`confirmed`（卡呈现"待送达"）；`delivered`（卡呈现送达 + `deliveredRunId` 反查入口）；`409 return-conflict`（提示内容已改，引导用新键重提） | 已实现 | 草稿 ✓（localStorage + 会话内，见下"持久草稿"行）；提交在途 ✓（`updateComposerLocks` 禁用 `#submit-return` + `guard` 单飞，L231–243/L213–225）；失败保留草稿 + 同键重试 ✓（`submitReturn` catch，L1727–1751）；confirmed 待送达徽标 ✓ / delivered + 反查入口 ✓（`returnCard` L510–539，点击开抽屉定位该 run）；`409` 同键异容 = **显式冲突提示** ✓（`returnConflictError` L1684–1698：冲突事实 + 草稿保留 + 「编辑换新键」引导；对账命中条件为「幂等键 + 来源分支 + 文本」全同，`returnMatchesDraft`/`findReconciledReturn` L1662–1681）。**残余缺口**：错误/冲突横幅为普通 `div`、无 `tabindex`/`role`/`aria-live`（`index.html` L41/L64），服务端消息经 8 秒自动隐藏横幅呈现（`showError` L204–211） | `apps/studio/tests/ui-probe.test.ts`（文件级：防双击恰一次 POST、失败保留草稿、改写换键场景）+ `apps/studio/tests/ui-regressions.test.ts`（文件级：409 冲突保留草稿与面板、对账三元谓词、面板打开对账、收起失败呈现在主线）；服务端 409/502 语义见 api.test.ts「return idempotency over HTTP…」「return with a missing Pi session file…」 | 409/502 实机呈现口径；横幅朗读语义补建为后续实现项（owner 排期） |
+| 状态 | 草稿（客户端、未持久化、未生效；空 / 已编辑）；提交在途（按钮禁用 + 单飞，防双击）；导航失败（`502`，草稿保留，同键可重试）；`confirmed`（卡呈现"待送达"）；`delivered`（卡呈现送达 + `deliveredRunId` 反查入口）；`409 return-conflict`（提示内容已改，引导用新键重提） | 已实现 | 草稿 ✓（localStorage + 会话内，见下"持久草稿"行）；提交在途 ✓（`updateComposerLocks` 禁用 `#submit-return` + `guard` 单飞，L231–243/L213–225）；失败保留草稿 + 同键重试 ✓（`submitReturn` catch，L1727–1751）；confirmed 待送达徽标 ✓ / delivered + 反查入口 ✓（`returnCard` L510–539，点击开抽屉定位该 run）；`409` 同键异容 = **显式冲突提示** ✓（`returnConflictError` L1684–1698：冲突事实 + 草稿保留 + 「编辑换新键」引导；对账命中条件为「幂等键 + 来源分支 + 文本」全同，`returnMatchesDraft`/`findReconciledReturn` L1662–1681）。错误/冲突横幅具朗读语义（issue #6 P1 补齐）：`#error-banner`/`#panel-error-banner` `role="alert"`（隐式 aria-live）+ `tabindex="0"`（`index.html` L47/L71），`showError` 先置可见再写文本（内容变化落在可访问性树内）；8 秒自动隐藏的既有行为不变 | `apps/studio/tests/ui-probe.test.ts`（文件级：防双击恰一次 POST、失败保留草稿、改写换键场景）+ `apps/studio/tests/ui-regressions.test.ts`（文件级：409 冲突保留草稿与面板、对账三元谓词、面板打开对账、收起失败呈现在主线、横幅 role/tabindex）；服务端 409/502 语义见 api.test.ts「return idempotency over HTTP…」「return with a missing Pi session file…」 | 409/502 实机呈现口径；读屏器实机朗读（属性面已锁定） |
 | 转场 | 卡插入 ≤200ms（高度 + 透明度）；confirmed → delivered 仅改卡片徽标 | 已实现 | M3 `return-insert`（`style.css` L276–281 + `returnCard` insert class 与 `MOTION_EPOCH_MS` 观测窗口 L479–499）；M4 `badge-change`（L282–288 + `seenDeliveredRunIds` 变化检测 L513–523） | 结构面：`apps/studio/tests/ui-probe.test.ts`（文件级：卡与徽标文案断言）；动效类名/时序无断言 | 录屏对照动效 |
 | 数据来源 | `POST /api/trees/:treeId/return`（`{fromBranchId, text, idempotencyKey}`）；`GET /api/trees/:treeId`（对账与渲染）；`GET /api/trees/:treeId/diagnostics`（`deliveredRunId` 反查） | 已实现 | `submitReturn()`（L1709–1766：POST `/return` → 失败时 GET `/state` 对账，`findReturnByKey` L1644 + 三元谓词）；反查经 `openDrawer({focusRunId})` + `renderDrawer` runs 列表（L1782–1798、L1959–1966） | `apps/studio/tests/ui-probe.test.ts`（文件级：POST 载荷与对账场景）+ api.test.ts「return idempotency over HTTP…」「response-loss resubmit and double-click…」 | 真实 Pi 送达一次验证（W1 R4 人工列） |
-| 键盘焦点顺序 | 提交成功后焦点回主线输入框（回程）；冲突 / 失败提示可 Tab 触达并朗读 | 部分 | 提交成功焦点回主线 ✓（`closePanel({focus:"main-input"})` L1756 + `$("prompt-input").focus()`）；**缺口**：`#panel-error-banner`/`#error-banner` 为普通 `div`，无 `tabindex`/`role`/`aria-live`（`index.html` L41/L64）——不可 Tab 触达、不朗读 | 回程断言于 `apps/studio/tests/ui-probe.test.ts`（文件级：提交后 `activeElement === #prompt-input`）；横幅朗读语义无断言（未实现） | 朗读语义补建为后续实现项（owner 排期） |
+| 键盘焦点顺序 | 提交成功后焦点回主线输入框（回程）；冲突 / 失败提示可 Tab 触达并朗读 | 已实现 | 提交成功焦点回主线 ✓（`closePanel({focus:"main-input"})` + `$("prompt-input").focus()`）；冲突/失败提示可 Tab 触达并朗读 ✓——两横幅 `role="alert"`（隐式 aria-live）+ `tabindex="0"`（`index.html` L47/L71；`showError` L214–222 先置可见再写文本，朗读触发更可靠） | 回程断言于 `apps/studio/tests/ui-probe.test.ts`（文件级：提交后 `activeElement === #prompt-input`）；横幅 role/tabindex 有仓内断言（ui-probe 视觉基线 + ui-regressions，文件级） | 读屏器实机朗读核查（属性面已锁定）；已按源设计实现，待 owner 复核 |
 | 窄窗 <720px | 草稿编辑与 Return 卡全宽 | 已实现 | Return 卡基础样式即全宽（`.turn.return { align-self:stretch; max-width:none }`，`style.css` L266–271）；textarea 全宽（L494–503）；窄窗 `.turn` 100% | <720px `@media` 规则存在性已有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；实机布局未验 | 窄窗实机 |
 | prefers-reduced-motion | 卡插入即时 | 已实现 | 全局降级块（M3 即时化，L551–561） | 降级块存在性已有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；M3 动画实效无断言 | 实机对照 |
 | 持久草稿 | 草稿跨视图切换 / 刷新保留（客户端本地存储；不进 TreeAI DB、不生效——见 W1 §2.1） | 已实现 | localStorage key `treeai-return-draft:<tree>:<branch>`（L777–781）；`readPersistedDraft`/`persistReturnDraft`/`removePersistedDraft`（L787–831，隐私模式静默降级为会话内草稿）；面板重开恢复 `syncReturnDraftForBranch()`（L853–898：**先对账**——已按「键 + 来源分支 + 文本」落库的草稿直接丢弃并呈现 confirmed/delivered 卡；空草稿不覆盖预填惯例） | `apps/studio/tests/ui-probe.test.ts`（文件级：草稿持久化、携带幂等键、成功清除场景）+ `apps/studio/tests/ui-regressions.test.ts`（文件级：面板打开对账已落库草稿） | 刷新/跨视图实机确认 |
@@ -179,7 +195,7 @@
 | 状态 | `available`（定位 + 高亮 + 滚动到锚点）；`changed`（显示保存的摘录 + "原文已变化"说明，拒绝定位）；`unavailable`（显示保存的摘录 + 不可用原因，拒绝定位）——降级不伪造（W1 §1.3） | 已实现 | available → `state.sourceHighlight` + `revealAnchorTurn()`（L1305–1312：滚动 + 焦点）；changed/unavailable → 面板错误提示"Source reference …; saved excerpt remains available."（L1475–1478）+ 摘录恒在面板头部可读（`renderPanelAnchorContext` L701–719） | 三态判定：service.test.ts「anchor status preserves duplicate and cross-line selections and degrades…」（available/unavailable；**changed 无直接用例**——无 turn 改写路径，见 W1 §6-3）；UI 降级呈现（如实横幅 + 不伪造高亮 + 摘录可读）已有仓内 DOM 断言（`apps/studio/tests/ui-probe.test.ts` 文件级） | 实机降级变体（真实 session 缺失抽查，W1 R2 人工列） |
 | 转场 | 高亮一次性强调（脉冲 1–2 次）后保持静态高亮 | 已实现 | M6 `anchor-pulse` 900ms 单次（`style.css` L125–134）+ `pulsedHighlightKey` 防重播（L607–612） | 脉冲类名与静态高亮已有仓内断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；时序无断言 | 录屏对照 |
 | 数据来源 | `POST /api/trees/:treeId/branches/:branchId/source`；`GET /api/trees/:treeId` | 已实现 | `revealOrigin()` POST `/source`（L1469–1472）；`/state` 刷新 | api.test.ts 主流程（source 200 + state.cursor） | — |
-| 键盘焦点顺序 | 揭示后焦点移至锚点 turn；降级时焦点到说明区 | 部分 | 揭示后焦点移至锚点 turn ✓（`revealAnchorTurn` `el.focus()`，锚点 turn `tabindex=-1` + `.anchor-focus`，L619–621/`style.css` L325）；**缺口**：降级路径走 `showError` 横幅，**不移焦点**到说明区（L1475–1478） | 揭示路径焦点移至锚点 turn 已有仓内断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；降级路径焦点（缺口）无断言 | 键盘实机（含降级路径）；降级焦点归属待 owner 裁决 |
+| 键盘焦点顺序 | 揭示后焦点移至锚点 turn；降级时焦点到说明区 | 已实现 | 揭示后焦点移至锚点 turn ✓（`revealAnchorTurn` `el.focus()`，锚点 turn `tabindex=-1` + `.anchor-focus`，`style.css` `.turn.anchor-focus`）；降级时焦点到说明区 ✓——`revealOrigin` 降级分支收尾 `$("panel-anchor-context").focus()`（`app.js` L1550；说明区 = 面板头部锚点上下文，摘录 + 状态徽标，常驻可读、`tabindex=-1` 程序聚焦，`index.html` L62）。**实现取舍（明示，owner 可改判）**：不取错误横幅——横幅 8 秒自动隐藏会连焦点一起丢，锚点上下文才是持久的说明区 | 揭示与降级两条路径的焦点落位均有仓内断言（`apps/studio/tests/ui-probe.test.ts` / `apps/studio/tests/ui-regressions.test.ts` 文件级） | 键盘实机（含降级路径）；降级焦点归属的实现取舍待 owner 复核 |
 | 窄窗 <720px | 高亮全宽；摘录横向滚动（不截断换行） | 部分（有偏差） | 高亮全宽 ✓（`.turn` 100%，L542）；**摘录为换行呈现而非横向滚动**——`#panel-anchor-context { overflow-wrap: anywhere }`（`style.css` L366–371），与源设计约定"横向滚动不截断换行"不同（实现取舍：避免窄窗横向滚动条） | <720px `@media` 规则存在性已有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；实机布局未验 | 窄窗实机；与源设计的偏差待 owner 裁决 |
 | prefers-reduced-motion | 平滑滚动改直接跳转；脉冲改静态高亮 | 已实现 | `scrollBehavior()` reduce → `auto`（揭示滚动 L1309）；脉冲经全局降级块即时化（静态高亮直接出现） | `apps/studio/tests/ui-probe.test.ts`（文件级：reduced-motion 即时定位场景） | 实机对照 |
 
@@ -192,7 +208,7 @@
 | 转场 | 抽屉滑入 150–200ms（见 §3） | 已实现 | `showDrawer()`/`hideDrawer()`（L1224–1260）+ `style.css` `#source-drawer.enter/exit`（L444–445，与面板同一动效语汇） | 无时序断言 | 录屏对照 |
 | 数据来源 | `GET /api/trees/:treeId/diagnostics`（run 溯源）；`GET /api/trees/:treeId/journal?limit=N`（Journal 读面，保守投影） | 已实现 | `/diagnostics`（runs 列表，`state.diagnostics`）；`/journal?limit=20`（`loadJournal` L1804–1815，journal 投影经 `service.ts` `getTreeJournal`/`summarizeJournalEvent` 保守摘要）；工具活动经 SSE `tool-activity` | events.test.ts「journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping」「policy boundary…」（保守投影，参数/路径不外泄） | 真实 Pi 工具活动呈现（离线驱动如实为空） |
 | 键盘焦点顺序 | 打开后焦点入抽屉；Esc 关闭并还原焦点到触发元素 | 已实现 | 打开 `$("source-drawer").focus()`（L1796，容器 `tabindex=-1`）；Esc 还原 `drawerFocusReturn`（`closeDrawer` L1818–1826 + document keydown L2031–2047） | `apps/studio/tests/ui-probe.test.ts`（文件级：焦点入抽屉 + Esc 还原场景） | 键盘实机 |
-| 窄窗 <720px | 抽屉全宽（自底向上） | 部分（有偏差） | 全宽 ✓（`#source-drawer { width:100% }`，L545）；**自底向上 ✗**——实现为右侧全宽滑入（与面板同一动效语汇），非约定的底部上滑 | <720px `@media` 规则存在性已有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；实机布局未验 | 窄窗实机；方向与源设计的偏差待 owner 裁决 |
+| 窄窗 <720px | 抽屉全宽（自底向上） | 已实现 | 全宽 ✓（窄窗 `@media` 内 `#source-drawer { width:100%; max-width:100% }`）；自底向上 ✓——窄窗 `@media` 内 `#source-drawer.enter/.exit` 改用 `drawer-up-in`/`drawer-up-out` keyframes（`translateY(100%) ↔ 0` **整幅上滑/下滑**，`style.css` L588–589 + keyframes L473–479；幅度口径：同窄窗侧栏抽屉的整幅滑入语汇，时长沿用 `--motion-panel`/150ms）。宽窗右侧滑入（`panel-in`/`panel-out`）不变；reduced-motion 全局降级块照常即时化；Esc/焦点语义不变（纯 CSS 变更，JS 开合路径不动） | 窄窗 `@media` 内 enter/exit 规则（drawer-up keyframes + translateY）、keyframes 定义与宽窗 `panel-in/out` 规则并存均有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；实机布局未验 | 窄窗实机；整幅上滑的幅度口径已按侧栏抽屉语汇实现，待 owner 对照源设计复核 |
 | prefers-reduced-motion | 透明度过渡或直接出现 | 已实现 | 全局降级块（滑入即时化） | 降级块存在性已有词法断言（`apps/studio/tests/ui-probe.test.ts` 文件级）；动画实效无断言 | 实机对照 |
 
 ### 2.8 缺失 session 降级视图
@@ -237,9 +253,9 @@ owner（均见 `apps/studio/tests/ui-probe.test.ts`，文件级）。
 
 | 项 | 现状 | 验证步骤 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 长答案 | service 层选区不变量已覆盖；UI 渲染 `pre-wrap` | 在数千字符多段答案的**后段**选区建支线 → 揭示回锚点：高亮位置准确、无布局位移、滚动到位 | 部分 | 渲染保多段换行：`.turn { white-space: pre-wrap }`（`style.css` L263）；选区/高亮均按绝对偏移（见下两行） | service.test.ts「branch anchoring is validated (answer role, slice integrity, bounds)」（偏移不变量） | 数千字符后段选区的 UI 定位与目标 Mac 完整操作未验 |
-| 重复词（绝对偏移） | 服务层已覆盖；UI 渲染走偏移 | 答案中同一词出现 ≥2 次，选**第二处**建支线 → 揭示必须高亮第二处（绝不允许首个字符串匹配顶替） | 部分（服务层已测；UI 级选区偏移已有仓内场景，重复词第二处揭示与实机未验） | UI 选区计算 `selectionOffsetsWithin()`（以 Range 前缀长度求绝对偏移，非字符串搜索，L454–467）；高亮按偏移切片渲染（L597–618）；揭示拒绝字符串搜索定位（W1 §1.1） | service.test.ts「anchor status preserves duplicate and cross-line selections and degrades when source is unavailable」（重复词第二处偏移）；`apps/studio/tests/ui-probe.test.ts`（文件级：中段选区精确偏移提交场景） | 重复词第二处揭示的 UI 级断言缺口；目标 Mac 验证 |
-| 跨行选区 | 服务层已覆盖；UI 未验 | 选区跨换行 → 建支线 → 揭示高亮跨行完整、不截断 | 部分（同上） | 同上（偏移跨换行天然成立；`pre-wrap` 保换行渲染） | 同上（跨行 `repeat\nrepeat` 选区用例） | 同上 |
+| 长答案 | service 层选区不变量已覆盖；UI 渲染 `pre-wrap` | 在数千字符多段答案的**后段**选区建支线 → 揭示回锚点：高亮位置准确、无布局位移、滚动到位 | 已实现（脚本化 DOM 面；布局/滚动物理归实机） | 渲染保多段换行：`.turn { white-space: pre-wrap }`（`style.css` L263）；选区/高亮均按绝对偏移（见下两行） | service.test.ts「branch anchoring is validated (answer role, slice integrity, bounds)」（偏移不变量）+ `apps/studio/tests/ui-probe.test.ts`（文件级：数千字符多段答案后段选区——精确 {start,end,text} 提交、揭示按偏移切片落位（前缀/后缀恰切两侧）、非整条回退） | 布局位移与滚动到位的实机验证；目标 Mac 完整操作 |
+| 重复词（绝对偏移） | 服务层已覆盖；UI 渲染走偏移 | 答案中同一词出现 ≥2 次，选**第二处**建支线 → 揭示必须高亮第二处（绝不允许首个字符串匹配顶替） | 已实现（脚本化 DOM 面；实机归 owner） | UI 选区计算 `selectionOffsetsWithin()`（以 Range 前缀长度求绝对偏移，非字符串搜索）；高亮按偏移切片渲染（`renderTurnsInto`）；揭示拒绝字符串搜索定位（W1 §1.1） | service.test.ts「anchor status preserves duplicate and cross-line selections and degrades when source is unavailable」（重复词第二处偏移）+ `apps/studio/tests/ui-probe.test.ts`（文件级：中段选区精确偏移提交、重复词**第二处**——提交偏移即第二处位置、揭示前缀恰好切到第二处之前（首处顶替会使前缀为空）场景） | 目标 Mac 验证 |
+| 跨行选区 | 服务层已覆盖；UI 渲染走偏移（换行经 `pre-wrap` 呈现） | 选区跨换行 → 建支线 → 揭示高亮跨行完整、不截断 | 已实现（脚本化 DOM 面；实机归 owner） | 同上（偏移跨换行天然成立；`pre-wrap` 保换行渲染） | service.test.ts（跨行 `repeat\nrepeat` 选区用例）+ `apps/studio/tests/ui-probe.test.ts`（文件级：跨换行选区——偏移跨换行精确、文本含 `\n` 不截断、揭示切片含换行完整场景） | 目标 Mac 验证 |
 | 每分支滚动位置恢复 | 已实现（见 §2.2 阅读位置行） | 在支线 A 滚到中部 → 切到支线 B / 回主线 → 返回 A：A 的阅读位置恢复 | 已实现 | `state.scrollPositions` + scroll 监听 + `renderTurnsInto` 恢复（§2.2 阅读位置行的路径） | `apps/studio/tests/ui-probe.test.ts`（文件级：滚动纪律与阈值场景；双支线交叉切换下各分支阅读位置恢复、主线位置不动均有断言） | 实机三视图往返 |
 | 目标 Mac 完整操作 | 未验 | 在目标 Mac 上按 §2 逐屏完整操作一遍（含全部状态与降级变体），录屏归档 | 未开始 | — | — | owner：按 §2 逐屏操作 + 录屏归 `evidence/d3/real-pi/`（用 `evidence/d3/templates/run-record.md`） |
 

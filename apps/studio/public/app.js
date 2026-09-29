@@ -37,6 +37,13 @@
  *    时清除）。prompt 失败（含 session-corrupt）的终局渲染是硬保证：
  *    流式占位清除、恢复横幅/降级提示、最终树态与诊断面都在错误上抛前
  *    落位（不依赖 SSE 事件收尾）。
+ *  - W2 §2.1/§2.4/§2.6/§2.7 补齐（issue #6 P1 偏差修复，向源设计靠拢）：
+ *    启动初始焦点编程设定到“新建”（仅启动一次，重渲不夺焦点）；树列表
+ *    加载失败呈侧栏常驻重试面（错误 + Retry——在途禁用明示，持久失败
+ *    保持可用，不整页刷新；无树打开时恢复后补齐启动语义）；错误横幅
+ *    role="alert" + tabindex="0"（可 Tab 触达并朗读）；锚点揭示降级时
+ *    焦点移到面板头部锚点上下文（持久说明区，取舍见 revealOrigin 注释）；
+ *    窄窗抽屉自底向上为纯 CSS 变更（见 style.css 窄窗 @media）。
  *
  * 动效分镜（W2 §3，M1–M7）：全部短促、无循环装饰；streaming 指示为静态
  * caret（不闪烁）；每个动效在 prefers-reduced-motion 下即时化（CSS 全局
@@ -200,11 +207,14 @@ async function api(path, method = "GET", body = undefined) {
   return payload;
 }
 
-/** 错误横幅按视图落位：面板内动作的失败呈现在面板（W2 §2.3），其余主线。 */
+/** 错误横幅按视图落位：面板内动作的失败呈现在面板（W2 §2.3），其余主线。
+ *  横幅具朗读语义（W2 §2.4：role="alert" 隐式 aria-live + tabindex="0"
+ *  可 Tab 触达）：先置可见再写入文本——内容变化发生在可访问性树内，
+ *  朗读触发更可靠；8 秒自动隐藏的既有行为不变。 */
 function showError(message, view = "main") {
   const banner = $(view === "panel" ? "panel-error-banner" : "error-banner");
-  banner.textContent = message;
   banner.hidden = false;
+  banner.textContent = message;
   window.setTimeout(() => {
     banner.hidden = true;
   }, 8000);
@@ -1311,13 +1321,71 @@ function revealAnchorTurn(turnId) {
   el.focus();
 }
 
-/* ------------------------------ 动作 ------------------------------ */
+/* ------------------------------ 树列表加载失败重试（W2 §2.1） ------------------------------ */
+
+/** 列表加载失败态：侧栏常驻重试面（错误事实 + 可用重试）——与 8 秒自动
+    隐藏横幅不同，失败不消失，重试入口一直可用（“错误条 + 重试，不空白”）。 */
+function showListLoadError(message) {
+  $("list-load-message").textContent = `Failed to load the tree list — ${message}`;
+  const retryButton = $("list-retry");
+  retryButton.disabled = false;
+  retryButton.textContent = "Retry";
+  $("list-load-error").hidden = false;
+}
+
+/** 重试在途态：按钮禁用 + 明示“重试中”（诚实待态；禁用兼作防重入）。 */
+function showListLoadPending() {
+  $("list-load-message").textContent = "Retrying the tree list…";
+  const retryButton = $("list-retry");
+  retryButton.disabled = true;
+  retryButton.textContent = "Retrying…";
+}
+
+/**
+ * 列表重试（W2 §2.1）：重新走 GET /api/trees，**不整页刷新**。在途呈
+ * 禁用 + “Retrying…”；持久失败由 refreshTrees 把重试面落回失败态（错误 +
+ * 重试保持可用，不再额外弹横幅——重试面就是该错误的呈现面）。启动列表
+ * 加载即失败（无树打开）→ 恢复后补齐启动语义：自动打开首棵树 / 空库呈
+ * 空态；已有树打开（如开树后的列表刷新失败）只刷新列表，不打断当前阅读。
+ */
+async function retryTreesLoad() {
+  const retryButton = $("list-retry");
+  if (retryButton.disabled) return; /* 在途防重入 */
+  showListLoadPending();
+  try {
+    await refreshTrees();
+  } catch {
+    return; /* 列表仍失败：重试面已呈失败态（常驻） */
+  }
+  if (state.currentTreeId === null) {
+    if (state.trees.length > 0) {
+      try {
+        await openTree(state.trees[0].id);
+      } catch (err) {
+        showError(String(err && err.message ? err.message : err));
+      }
+    } else {
+      renderAll();
+    }
+  }
+}
 
 async function refreshTrees() {
-  const payload = await api("/api/trees");
+  let payload;
+  try {
+    payload = await api("/api/trees");
+  } catch (err) {
+    /* 列表加载失败：侧栏常驻重试面落位；错误照常上抛（调用方呈现路径
+       不变——guard / 启动横幅）。 */
+    showListLoadError(String(err && err.message ? err.message : err));
+    throw err;
+  }
   state.trees = payload.trees;
+  $("list-load-error").hidden = true;
   renderTrees();
 }
+
+/* ------------------------------ 动作 ------------------------------ */
 
 function resetTransientView() {
   state.sourceHighlight = null;
@@ -1475,6 +1543,11 @@ async function revealOrigin(branchId) {
   if (payload.source.status !== "available") {
     renderAll();
     showError(`Source reference ${payload.source.status}; saved excerpt remains available.`, "panel");
+    /* 降级焦点（W2 §2.6 键盘焦点行）：焦点移到说明区。取面板头部锚点
+       上下文（摘录 + 状态徽标，常驻可读、tabindex=-1 程序聚焦）而非错误
+       横幅——横幅 8 秒自动隐藏会连焦点一起丢，锚点上下文才是持久的说明
+       区（实现取舍已记入 W2 §2.6 行内，owner 可改判）。 */
+    $("panel-anchor-context").focus();
     return;
   }
   state.sourceHighlight = {
@@ -2003,6 +2076,8 @@ $("panel-conversation").addEventListener("scroll", () => {
 /* ------------------------------ 启动 ------------------------------ */
 
 $("new-tree").addEventListener("click", () => guard(createTree));
+/* 列表重试（W2 §2.1）：不整页刷新，重新走 GET /api/trees。 */
+$("list-retry").addEventListener("click", () => void retryTreesLoad());
 $("send").addEventListener("click", () => guard(() => sendPrompt("main")));
 $("panel-send").addEventListener("click", () => guard(() => sendPrompt("panel"), "panel"));
 $("prompt-input").addEventListener("keydown", (event) => {
@@ -2047,6 +2122,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 void (async () => {
+  let bootError = null;
   try {
     await refreshTrees();
     if (state.trees.length > 0) {
@@ -2055,6 +2131,13 @@ void (async () => {
       renderAll();
     }
   } catch (err) {
-    showError(String(err && err.message ? err.message : err));
+    bootError = err;
+  }
+  /* 初始焦点（W2 §2.1 键盘焦点顺序）：启动完成后编程设定到“新建”按钮
+     （成功 / 失败路径一致落位）。仅启动这一次——后续重渲（SSE 终态刷新、
+     面板开合）走 renderAll，不触碰焦点，绝不夺焦。 */
+  $("new-tree").focus();
+  if (bootError !== null) {
+    showError(String(bootError && bootError.message ? bootError.message : bootError));
   }
 })();

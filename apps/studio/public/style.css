@@ -58,6 +58,31 @@ body {
 #tree-list button.active { background: var(--accent-soft); border-color: var(--accent); }
 #tree-list .tree-date { display: block; font-size: 11px; color: var(--muted); }
 
+/* 树列表加载失败态（W2 §2.1 状态行）：常驻错误 + 重试——与 8 秒自动
+   隐藏横幅不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
+   “Retrying…” 文案（诚实待态）。 */
+#list-load-error {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: #fbeae7;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 12px;
+}
+#list-load-error[hidden] { display: none; }
+#list-load-error p { margin: 0 0 6px; }
+#list-load-error button {
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 5px;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+#list-load-error button:hover:not(:disabled) { background: #f6dbd6; }
+
 #driver-note { margin-top: 18px; }
 
 /* 窄窗（<720px）树侧栏收进抽屉，顶部只留一个开关（W2 §2.1 窄窗行）。 */
@@ -443,6 +468,16 @@ button.drawer-toggle:hover { background: var(--bg); }
 }
 #source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
 #source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
+/* 窄窗 <720px 的自底向上变体（W2 §2.7 窄窗行，见文件末尾 @media 块）：
+   整幅位移（全高抽屉从底部滑入/滑出），同侧栏抽屉的整幅滑入语汇。 */
+@keyframes drawer-up-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes drawer-up-out {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
 #source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
 #source-drawer h3 { font-size: 12px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
@@ -533,6 +568,9 @@ button:disabled { opacity: 0.5; cursor: wait; }
   }
   body.sidebar-open #sidebar { transform: translateX(0); }
 
+  /* 主操作按钮全宽（W2 §2.1 窄窗行：主操作按钮全宽）。 */
+  #new-tree { width: 100%; }
+
   #branch-bar { padding-left: 64px; }
 
   /* 状态条压缩：状态点 + 短文案（run-status 本身即为短词），详情收起。 */
@@ -543,6 +581,12 @@ button:disabled { opacity: 0.5; cursor: wait; }
 
   /* 支线面板与来源抽屉全宽（W2 §2.3/§2.7 窄窗行）。 */
   #branch-panel, #source-drawer { width: 100%; max-width: 100%; }
+
+  /* 窄窗抽屉自底向上（W2 §2.7 窄窗行）：全宽抽屉自底部整幅滑入/滑出
+     （translateY，同侧栏抽屉语汇）；宽窗右侧滑入（panel-in/out）不变；
+     reduced-motion 由全局降级块照常即时化。 */
+  #source-drawer.enter { animation: drawer-up-in var(--motion-panel) ease-out; }
+  #source-drawer.exit { animation: drawer-up-out 150ms ease-in forwards; }
 }
 
 /* --------------------- prefers-reduced-motion 全局等价 --------------------- */

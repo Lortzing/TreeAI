@@ -26,6 +26,9 @@
  *     与降级错误一致，绝不「错误说降级、徽标仍 available」（缺陷 4）。
  *  7. submitReturn 收尾（closePanel / 游标对齐）失败呈现在主线可见横幅，
  *     不落进已收起面板的隐藏横幅、也不吞错（缺陷 5）。
+ *  8. issue #6 P1 补齐面的回归锁定：错误横幅朗读语义（role="alert" +
+ *     tabindex="0"，可见时可 Tab 触达并朗读——§2.4）；揭示降级焦点移到
+ *     说明区（面板锚点上下文，常驻——§2.6）。
  *
  * 边界（如实声明）：同 ui-probe——不是真实浏览器 E2E；全局桩是与无类型
  * 前端脚本的唯一动态接面。
@@ -1085,6 +1088,8 @@ test("trunk prompt failure: streaming placeholder cleared, recovery banner rende
   assert.equal(error.hidden, false, "the original session-corrupt error is visible");
   assert.ok(error.textContent.includes("session-corrupt"), "the visible error carries the failure code");
   assert.ok(error.textContent.includes("session file for this branch is missing"), "the visible error carries the failure message");
+  assert.equal(error.getAttribute("role"), "alert", "§2.4: the visible main banner carries role=alert (announced)");
+  assert.equal(error.getAttribute("tabindex"), "0", "§2.4: the visible main banner is Tab-reachable");
 
   /* 输入文本保留（改写重发）；fail-closed：session 不可用后续聊入口禁用。 */
   assert.equal(input.value, "Please continue.", "the unsent prompt text is retained for editing");
@@ -1123,6 +1128,8 @@ test("panel prompt failure with zero SSE events: degraded note with executable r
   const error = world.el("panel-error-banner");
   assert.equal(error.hidden, false, "the original error is visible in the panel banner");
   assert.ok(error.textContent.includes("session-corrupt"), "the visible error carries the failure code");
+  assert.equal(error.getAttribute("role"), "alert", "§2.4: the visible panel banner carries role=alert (announced)");
+  assert.equal(error.getAttribute("tabindex"), "0", "§2.4: the visible panel banner is Tab-reachable");
   assert.equal(input.value, "Continue here.", "the unsent prompt text is retained for editing");
   assert.equal(world.el("panel-send").disabled, true, "fail-closed: panel composer disabled after session-corrupt");
 });
@@ -1372,6 +1379,13 @@ test("degraded revealOrigin applies the server-returned state: badges and degrad
   const error = world.el("panel-error-banner");
   assert.equal(error.hidden, false, "degraded reveal reports the changed status");
   assert.ok(error.textContent.includes("Source reference changed"), "the error names the degraded status");
+  /* §2.6 降级焦点（issue #6 P1）：焦点移到说明区——面板锚点上下文
+     （常驻；横幅 8 秒自动隐藏会丢焦点，取舍见 W2 §2.6 行内注记）。 */
+  assert.equal(
+    world.document.activeElement,
+    world.el("panel-anchor-context"),
+    "the degraded reveal moves focus to the persistent explanation area (panel anchor context)",
+  );
   /* 服务端返回的 state 已落地：徽标 / 降级提示与错误一致。 */
   assert.equal(world.el("panel-session-note").hidden, false, "the server-returned degraded availability renders the panel note");
   assert.ok(world.tabButton("branch-1")!.textContent.includes("session missing"), "the branch tab badge reflects the server-returned degraded state");

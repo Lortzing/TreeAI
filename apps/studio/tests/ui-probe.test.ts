@@ -42,6 +42,17 @@
  * 12. 贴底阈值边界：距底 47px（阈值 48px 内）跟随、49px 不动。
  * 13. 键盘提交：Cmd/Ctrl+Enter（主线 / 面板双 composer）提交；普通 Enter
  *     留给换行，不提交。
+ * 14. §2.1 列表加载失败重试（issue #6 P1）：侧栏常驻重试面（错误 + Retry）
+ *     + 在途禁用态 + 持久失败保持可用 + 恢复后补齐启动语义（无树打开时
+ *     自动打开首棵树，不整页刷新）。
+ * 15. §2.1 初始焦点（issue #6 P1）：启动后焦点在“新建”按钮；SSE 终态
+ *     重渲不夺焦点（boot-only 语义）。
+ * 16. §2.4/§2.5 结构面（issue #6 P1）：错误横幅 role="alert" + tabindex
+ *     （可 Tab 触达并朗读）与揭示降级说明区（面板锚点上下文 tabindex=-1）
+ *     的属性断言；降级揭示焦点移到说明区的行为断言（§2.6）。
+ * 17. A2 选区锚点三场景（issue #6 P1 / W2 §4）：数千字符多段长答案的
+ *     后段选区、重复词的**第二处**、跨换行选区——精确 {start,end,text}
+ *     提交与揭示切片落位（非整条回退、非首处字符串匹配顶替）。
  *
  * 边界（如实声明）：本套件不是真实浏览器 E2E——像素级视觉基线、布局合成、
  * 真实滚动物理、键盘/读屏器实机行为不在覆盖范围；CSS 不执行，媒体查询按
@@ -76,6 +87,20 @@ const B1_R1_TEXT = "Branch one, round one.";
 const B2_R1_TEXT = "Branch two, round one.";
 const B1_R2_TEXT = "Branch one, round two.";
 const B2_R2_TEXT = "Branch two, round two.";
+
+/* A2 选区锚点三场景（issue #6 P1 / W2 §4）的 trunk 答案文本：
+ * - LONG_A2：数千字符多段长答案（换行分段），选区落在后段；
+ * - DUP_A2：“alpha” 恰好出现两次，选**第二处**（绝不允许首处顶替）；
+ * - CROSS_A2：三行文本，选区横跨一个换行符。 */
+const LONG_A2_PARAGRAPH =
+  "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
+const LONG_A2 = [
+  "A long trunk answer follows, composed of many paragraphs separated by newlines.",
+  ...Array.from({ length: 36 }, (_, i) => `Paragraph ${i + 1}: ${LONG_A2_PARAGRAPH.repeat(3)}`),
+  "The closing paragraph carries the late anchor target phrase.",
+].join("\n");
+const DUP_A2 = "alpha opens the list, beta follows, alpha closes the list.";
+const CROSS_A2 = "first line\nsecond line\nthird line";
 
 interface Selection {
   start: number;
@@ -223,14 +248,14 @@ function makeBranchView(
   return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns };
 }
 
-function freshBackendState(initialTrunkReturn: boolean): TreeState {
+function freshBackendState(initialTrunkReturn: boolean, a2Text: string = A2_TEXT): TreeState {
   const trunkBranch: Branch = { id: "trunk-1", treeId: TREE, parentBranchId: null, createdAt: ISO };
   const b1Branch: Branch = { id: "branch-1", treeId: TREE, parentBranchId: "trunk-1", createdAt: ISO };
   const trunkTurns: Turn[] = [
     makeTurn("u1", "trunk-1", "user", "First trunk question."),
     makeTurn("a1", "trunk-1", "assistant", "First trunk answer."),
     makeTurn("u2", "trunk-1", "user", "Second trunk question."),
-    makeTurn("a2", "trunk-1", "assistant", A2_TEXT),
+    makeTurn("a2", "trunk-1", "assistant", a2Text),
   ];
   if (initialTrunkReturn) {
     /* 预置一张已确认（未送达）的锚点 Return 卡：渲染定位断言用。 */
@@ -362,6 +387,8 @@ interface RecordedRequest {
 
 interface Backend {
   trees: Tree[];
+  /** GET /api/trees 的脚本化失败（列表加载失败重试场景；运行中可翻回 ok）。 */
+  treesMode: "ok" | "fail";
   treeState: TreeState;
   diagnostics: TreeDiagnostics;
   journalMode: "fail" | "ok-events" | "ok-empty";
@@ -401,6 +428,21 @@ function readPersistedDraft(raw: string | null | undefined): PersistedDraft | nu
   if (record === null) return null;
   if (typeof record.idempotencyKey !== "string" || typeof record.text !== "string") return null;
   return { idempotencyKey: record.idempotencyKey, text: record.text, failed: record.failed === true };
+}
+
+/** 揭示定位断言辅助（A2 场景）：揭示后的锚点 turn 渲染为
+ *  [前缀文本, mark 高亮, 后缀文本, …]——前后缀与高亮必须恰为 turn 文本按
+ *  绝对偏移的三段切片（偏移定位的 UI 级证明，非字符串搜索近似）。 */
+function assertRevealSlices(turn: StubElement, text: string, start: number, end: number): void {
+  const mark = turn.querySelector(".source-highlight");
+  assert.ok(mark !== null, "the revealed turn carries the highlight mark");
+  assert.equal(mark.textContent, text.slice(start, end), "the highlight is exactly the anchored selection text");
+  const prefix = turn.children[0];
+  assert.ok(prefix instanceof StubText, "the node before the mark is the prefix text node");
+  assert.equal(prefix.data, text.slice(0, start), "the prefix ends exactly at the anchor start offset");
+  const suffix = turn.children[2];
+  assert.ok(suffix instanceof StubText, "the node after the mark is the suffix text node");
+  assert.equal(suffix.data, text.slice(end), "the suffix resumes exactly at the anchor end offset");
 }
 
 /* ------------------------------ 事件轮转 / 短等待 ------------------------------ */
@@ -933,6 +975,10 @@ interface World {
 interface WorldOptions {
   journalMode?: Backend["journalMode"];
   returnMode?: Backend["returnMode"];
+  /** GET /api/trees 脚本化失败（§2.1 列表加载失败重试场景）。 */
+  treesMode?: Backend["treesMode"];
+  /** 覆盖 trunk 第二条答案（a2）的文本（A2 长答案 / 重复词 / 跨行场景）。 */
+  a2Text?: string;
   /** 预置一张锚定于 a1 的已确认 Return 卡（渲染定位断言用）。 */
   initialTrunkReturn?: boolean;
   /** A1 双支线初始态（Trunk + branch-1/branch-2，各锚定不同 trunk 答案）。 */
@@ -1002,8 +1048,11 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 
   const backend: Backend = {
     trees: [{ id: TREE, createdAt: ISO, forestId: "forest-1" }],
+    treesMode: options.treesMode ?? "ok",
     treeState:
-      options.twoBranches === true ? freshTwoBranchBackendState() : freshBackendState(options.initialTrunkReturn === true),
+      options.twoBranches === true
+        ? freshTwoBranchBackendState()
+        : freshBackendState(options.initialTrunkReturn === true, options.a2Text ?? A2_TEXT),
     diagnostics: {
       treeId: TREE,
       runtimeState: "idle",
@@ -1037,7 +1086,12 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       json: async () => payload,
     });
 
-    if (p === "/api/trees" && method === "GET") return respond(200, { trees: backend.trees });
+    if (p === "/api/trees" && method === "GET") {
+      if (backend.treesMode === "fail") {
+        return respond(500, { error: { code: "internal", message: "trees backend boom" } });
+      }
+      return respond(200, { trees: backend.trees });
+    }
     if (p === "/api/trees" && method === "POST") {
       return respond(201, { tree: backend.treeState.tree, trunkBranchId: "trunk-1", state: backend.treeState });
     }
@@ -1272,6 +1326,8 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
     "diagnostics-bar",
     "failure-panel",
     "session-banner",
+    "list-load-error",
+    "list-retry",
   ];
   for (const id of requiredIds) {
     assert.equal(world.document.querySelectorAll(`#${id}`).length, 1, `#${id} must appear exactly once`);
@@ -1295,6 +1351,18 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   assert.equal(world.el("prompt-input").getAttribute("placeholder"), "Ask on the Trunk…");
   assert.equal(world.el("panel-prompt-input").getAttribute("placeholder"), "Continue this branch…");
   assert.equal(world.el("return-input").getAttribute("aria-label"), "Return draft");
+
+  /* §2.4 冲突/失败提示可 Tab 触达并朗读（issue #6 P1）：两横幅 role=alert
+     （隐式 aria-live）+ tabindex=0；§2.6 降级说明区（面板锚点上下文）可
+     程序聚焦（tabindex=-1，不入 Tab 序）。 */
+  for (const bannerId of ["error-banner", "panel-error-banner"]) {
+    assert.equal(world.el(bannerId).getAttribute("role"), "alert", `#${bannerId} carries role=alert (implicit aria-live)`);
+    assert.equal(world.el(bannerId).getAttribute("tabindex"), "0", `#${bannerId} is Tab-reachable`);
+  }
+  assert.equal(world.el("panel-anchor-context").getAttribute("tabindex"), "-1", "the anchor context is programmatically focusable");
+
+  /* §2.1 列表加载失败重试面常驻侧栏（默认隐藏，失败时经 JS 呈现）。 */
+  assert.equal(world.el("list-load-error").hidden, true, "the list retry affordance is hidden while the list loads fine");
 
   /* 引导：自动打开第一棵树 → 主视图可见、每分支恰好一个 tab。 */
   assert.equal(world.el("tree-view").hidden, false, "tree view visible after auto-open");
@@ -1997,6 +2065,13 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
     world.el("panel-anchor-context").textContent.includes("“latest”"),
     "the saved excerpt stays readable in the anchor card",
   );
+  /* §2.6 降级焦点（issue #6 P1）：焦点移到说明区——面板头部锚点上下文
+     （常驻；取舍：横幅 8 秒自动隐藏会丢焦点，见 W2 §2.6 行内注记）。 */
+  assert.equal(
+    world.document.activeElement,
+    world.el("panel-anchor-context"),
+    "the degraded reveal moves focus to the explanation area (panel anchor context)",
+  );
 });
 
 /* ------------------------------------------------------------------ */
@@ -2021,6 +2096,7 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
     narrowDecl("body.sidebar-open #sidebar").includes("transform: translateX(0)"),
     "body.sidebar-open slides the drawer in",
   );
+  assert.ok(narrowDecl("#new-tree").includes("width: 100%"), "the primary New Tree button goes full width (§2.1)");
   assert.ok(narrowDecl("#branch-bar").includes("padding-left"), "the branch bar clears the fixed toggle");
   assert.ok(
     narrowDecl("#diagnostics-bar #run-detail, #diagnostics-bar #policy-note").includes("display: none"),
@@ -2031,6 +2107,34 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
   assert.ok(
     overlaysDecl.includes("width: 100%") && overlaysDecl.includes("max-width: 100%"),
     "the branch panel and source drawer go full width",
+  );
+
+  /* §2.7 窄窗抽屉自底向上（issue #6 P1）：窄窗块内 enter/exit 改用自底
+     向上的 drawer-up keyframes（translateY）；宽窗右侧滑入规则
+     （panel-in/out）保持不变；整幅上滑的 keyframes 按词法锁定。 */
+  const drawerEnterDecl = narrowDecl("#source-drawer.enter");
+  assert.ok(drawerEnterDecl.includes("drawer-up-in"), "the narrow drawer enters bottom-up (drawer-up-in)");
+  assert.ok(drawerEnterDecl.includes("var(--motion-panel)"), "the bottom-up enter keeps the panel motion timing");
+  const drawerExitDecl = narrowDecl("#source-drawer.exit");
+  assert.ok(drawerExitDecl.includes("drawer-up-out"), "the narrow drawer exits downward (drawer-up-out)");
+  assert.ok(drawerExitDecl.includes("forwards"), "the exit keeps the forwards fill (hidden lands after the animation)");
+  assert.ok(
+    /@keyframes drawer-up-in\s*\{\s*from\s*\{[^}]*transform:\s*translateY\(100%\)[^}]*\}/.test(STYLE_CSS),
+    "drawer-up-in slides in from beyond the bottom edge (translateY(100%))",
+  );
+  assert.ok(
+    /@keyframes drawer-up-out\s*\{\s*from\s*\{[^}]*\}\s*to\s*\{[^}]*transform:\s*translateY\(100%\)[^}]*\}/.test(
+      STYLE_CSS,
+    ),
+    "drawer-up-out slides back below the bottom edge",
+  );
+  assert.ok(
+    /#source-drawer\.enter\s*\{[^}]*animation:\s*panel-in/.test(STYLE_CSS),
+    "the wide-viewport drawer keeps the right-side panel-in entrance (unchanged)",
+  );
+  assert.ok(
+    /#source-drawer\.exit\s*\{[^}]*animation:\s*panel-out/.test(STYLE_CSS),
+    "the wide-viewport drawer keeps the panel-out exit (unchanged)",
   );
 
   /* JS 行为（scripted DOM）：开关状态 + aria、选树自动收起、Esc 分层。 */
@@ -2254,4 +2358,212 @@ test("keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel c
   assert.equal(panelBody.branchId, "branch-1");
   assert.equal(panelBody.text, "Branch question via keyboard.");
   assert.equal(panelInput.value, "", "a successful submit clears the panel composer");
+});
+
+/* ------------------------------------------------------------------ */
+/* 16. §2.1 列表加载失败重试（issue #6 P1）：常驻重试面 + 在途态 + 恢复   */
+/* ------------------------------------------------------------------ */
+
+test("tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload)", async () => {
+  const world = await createWorld({ treesMode: "fail" });
+  const box = world.el("list-load-error");
+  const retry = world.el("list-retry");
+  const message = world.el("list-load-message");
+
+  /* 启动即失败：侧栏常驻重试面（错误事实 + 可用重试），非只有 8 秒横幅。 */
+  assert.equal(box.hidden, false, "a boot-time list failure shows the persistent sidebar affordance");
+  assert.ok(message.textContent.includes("Failed to load the tree list"), "the message names the list failure");
+  assert.ok(message.textContent.includes("trees backend boom"), "the message carries the backend error verbatim");
+  assert.equal(retry.disabled, false, "retry is available immediately after the failure");
+  assert.equal(retry.textContent, "Retry");
+  assert.equal(world.el("error-banner").hidden, false, "the transient banner still reports the boot error (existing path)");
+  assert.equal(
+    world.document.activeElement,
+    world.el("new-tree"),
+    "boot focus lands on New Tree even on the list-failure path (§2.1)",
+  );
+
+  /* 重试在途：禁用 + Retrying…（诚实待态）；持久失败 → 回到失败态，重试仍可用。 */
+  retry.click();
+  assert.equal(retry.disabled, true, "the in-flight retry is disabled (pending state)");
+  assert.equal(retry.textContent, "Retrying…");
+  assert.ok(message.textContent.includes("Retrying the tree list"), "the pending state is stated in the message area");
+  assert.equal(box.hidden, false, "the affordance stays visible while retrying");
+  await settle();
+  assert.equal(box.hidden, false, "a persistent failure keeps the affordance visible");
+  assert.ok(message.textContent.includes("trees backend boom"), "the failure message returns after the failed retry");
+  assert.equal(retry.disabled, false, "retry is available again after a persistent failure");
+  assert.equal(retry.textContent, "Retry");
+  assert.equal(world.requestsOf("/api/trees").length, 2, "boot fetch + one retry fetch (no page reload)");
+
+  /* 后端恢复 → 重试成功：重试面消失、列表渲染、补齐启动语义（自动打开首棵树）。 */
+  world.backend.treesMode = "ok";
+  retry.click();
+  await settle();
+  assert.equal(box.hidden, true, "a successful retry clears the affordance");
+  assert.equal(world.el("tree-list").querySelectorAll("button").length, 1, "the tree list renders");
+  assert.equal(world.el("tree-view").hidden, false, "boot semantics complete after recovery: the first tree auto-opens");
+  assert.equal(world.el("branch-tabs").querySelectorAll("button").length, 2, "tabs render for the auto-opened tree");
+  assert.equal(
+    world.requestsOf("/api/trees").length,
+    4,
+    "the recovery retry re-fetched the list twice (retry itself + the auto-open's list refresh)",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 17. §2.1 初始焦点（issue #6 P1）：启动设定一次，重渲不夺              */
+/* ------------------------------------------------------------------ */
+
+test("boot focus: initial focus lands on the New Tree button and re-renders never steal it", async () => {
+  const world = await createWorld();
+  assert.equal(
+    world.document.activeElement,
+    world.el("new-tree"),
+    "boot programmatically sets initial focus to New Tree (§2.1 键盘焦点顺序)",
+  );
+
+  /* boot-only 语义：SSE 终态刷新走 renderAll，焦点不动（不夺焦）。 */
+  world.liveSse().emit("run-terminal", { runId: "run-x" });
+  await settle();
+  assert.equal(
+    world.document.activeElement,
+    world.el("new-tree"),
+    "a run-terminal re-render does not move focus away from New Tree",
+  );
+
+  /* 显式交互照常移动焦点（面板打开 → 面板输入框）——这不属于夺焦。 */
+  world.tabButton("branch-1")!.click();
+  await settle();
+  assert.equal(
+    world.document.activeElement,
+    world.el("panel-prompt-input"),
+    "explicit interactions still move focus as before (panel open focuses the panel input)",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 18. A2 长答案（issue #6 P1 / W2 §4）：后段选区的精确偏移与揭示切片     */
+/* ------------------------------------------------------------------ */
+
+test("A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback)", async () => {
+  const world = await createWorld({ a2Text: LONG_A2 });
+  assert.ok(LONG_A2.length > 5000, "the scripted answer is multi-thousand-character");
+
+  /* 后段选区（最后一段内的目标短语，距末尾 <10%）。 */
+  const phrase = "late anchor target phrase";
+  const start = LONG_A2.lastIndexOf(phrase);
+  assert.ok(start > LONG_A2.length * 0.9, "the selection sits in the late tail of the answer");
+  const end = start + phrase.length;
+
+  const a2 = world.turnElement("conversation", "a2");
+  const textNode = a2.firstChild;
+  assert.ok(textNode instanceof StubText, "the assistant turn's leading child is its full-text node");
+  world.setSelection(new StubTextRange(textNode, start, end));
+  a2.dispatchEvent("mouseup", {});
+  assert.ok(a2.classList.contains("has-selection"), "mouseup arms the selection affordance");
+  a2.querySelector(".branch-here")!.click();
+  await settle();
+
+  /* 精确 {start,end,text} 提交——非整条答案回退。 */
+  const post = world.lastRequest("/branches");
+  assert.ok(post !== null && post.method === "POST", "branching issues POST /branches");
+  const body = asRecord(post.body);
+  assert.ok(body !== null);
+  assert.equal(body.anchorTurnId, "a2");
+  const selection = asRecord(body.selection);
+  assert.ok(selection !== null);
+  assert.equal(selection.start, start, "the anchor start is the exact late offset");
+  assert.equal(selection.end, end);
+  assert.equal(selection.text, phrase);
+  assert.ok(Number(selection.end) - Number(selection.start) < LONG_A2.length, "not the whole-answer fallback");
+  assert.ok(world.el("panel-anchor-context").textContent.includes(phrase), "the anchor card carries the exact excerpt");
+
+  /* 揭示：高亮按服务端偏移切片落位（前缀/后缀恰好切在偏移两侧）。 */
+  world.el("panel-view-source").click();
+  await settle();
+  const revealed = world.turnElement("conversation", "a2");
+  assertRevealSlices(revealed, LONG_A2, start, end);
+  assert.equal(world.document.activeElement, revealed, "focus moves to the anchor turn");
+});
+
+/* ------------------------------------------------------------------ */
+/* 19. A2 重复词（issue #6 P1 / W2 §4）：第二处偏移，绝不允许首处顶替     */
+/* ------------------------------------------------------------------ */
+
+test("A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match)", async () => {
+  const world = await createWorld({ a2Text: DUP_A2 });
+  const first = DUP_A2.indexOf("alpha");
+  const second = DUP_A2.indexOf("alpha", first + 1);
+  assert.ok(first === 0 && second > first, "“alpha” occurs at least twice in the scripted answer");
+
+  const a2 = world.turnElement("conversation", "a2");
+  const textNode = a2.firstChild;
+  assert.ok(textNode instanceof StubText);
+  world.setSelection(new StubTextRange(textNode, second, second + "alpha".length));
+  a2.dispatchEvent("mouseup", {});
+  a2.querySelector(".branch-here")!.click();
+  await settle();
+
+  /* 偏移瞄准第二处：start = 第二次出现的位置（绝不允许首处字符串匹配顶替）。 */
+  const post = world.lastRequest("/branches");
+  assert.ok(post !== null && post.method === "POST", "branching issues POST /branches");
+  const body = asRecord(post.body);
+  assert.ok(body !== null);
+  const selection = asRecord(body.selection);
+  assert.ok(selection !== null);
+  assert.equal(selection.start, second, "the anchor offset targets the SECOND occurrence");
+  assert.equal(selection.end, second + "alpha".length);
+  assert.equal(selection.text, "alpha");
+
+  /* 揭示必须高亮第二处：前缀文本恰好切到第二处之前（若顶替为首处，前缀
+     会短得多——前缀内容即位置证明）。 */
+  world.el("panel-view-source").click();
+  await settle();
+  const revealed = world.turnElement("conversation", "a2");
+  assertRevealSlices(revealed, DUP_A2, second, second + "alpha".length);
+  const prefix = revealed.children[0];
+  assert.ok(prefix instanceof StubText);
+  assert.notEqual(prefix.data, "", "the highlight is not standing in for the FIRST occurrence (whose prefix is empty)");
+  assert.ok(prefix.data.endsWith("beta follows, "), "the highlighted occurrence follows beta — the second one");
+});
+
+/* ------------------------------------------------------------------ */
+/* 20. A2 跨行选区（issue #6 P1 / W2 §4）：偏移与文本含换行不截断         */
+/* ------------------------------------------------------------------ */
+
+test("A2 cross-line selection: offsets and the revealed text span the line break intact", async () => {
+  const world = await createWorld({ a2Text: CROSS_A2 });
+  const start = CROSS_A2.indexOf("second");
+  const end = CROSS_A2.indexOf("third") + "third".length;
+  const selected = CROSS_A2.slice(start, end);
+  assert.ok(selected.includes("\n"), "the scripted selection spans a line break");
+
+  const a2 = world.turnElement("conversation", "a2");
+  const textNode = a2.firstChild;
+  assert.ok(textNode instanceof StubText);
+  world.setSelection(new StubTextRange(textNode, start, end));
+  a2.dispatchEvent("mouseup", {});
+  a2.querySelector(".branch-here")!.click();
+  await settle();
+
+  const post = world.lastRequest("/branches");
+  assert.ok(post !== null && post.method === "POST", "branching issues POST /branches");
+  const body = asRecord(post.body);
+  assert.ok(body !== null);
+  const selection = asRecord(body.selection);
+  assert.ok(selection !== null);
+  assert.equal(selection.start, start, "the start offset is measured across the preceding newline");
+  assert.equal(selection.end, end);
+  assert.equal(selection.text, selected, "the anchored text keeps the newline intact (not truncated at the line break)");
+  assert.ok(world.el("panel-anchor-context").textContent.includes("second line"), "the anchor card excerpt spans the break");
+
+  /* 揭示：跨行高亮完整（前缀 = 第一行 + 换行；后缀 = 第三行余文）。 */
+  world.el("panel-view-source").click();
+  await settle();
+  const revealed = world.turnElement("conversation", "a2");
+  assertRevealSlices(revealed, CROSS_A2, start, end);
+  const mark = revealed.querySelector(".source-highlight");
+  assert.ok(mark !== null);
+  assert.ok(mark.textContent.includes("\n"), "the highlighted mark text carries the newline");
 });
