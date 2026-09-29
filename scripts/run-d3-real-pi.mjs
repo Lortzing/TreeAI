@@ -87,7 +87,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-real-pi";
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -659,6 +659,10 @@ const sc = {
   anchorATurnId: null,
   anchorBTurnId: null,
   answers: {},
+  /* a2/b2 prompt 的 session 文件引用（真实模式 no-context-bleed 的
+     parentId 路径证明用；echo 模式维持答案面断言，不使用）。 */
+  a2SessionFile: null,
+  b2SessionFile: null,
   runIds: new Set(),
   failedRunId: null,
   composedT3: null,
@@ -741,6 +745,50 @@ function assertAbsentMarkers(text, needles, what) {
   for (const needle of needles) {
     assert(!containsIgnoreCase(text, needle), `${what}: must NOT mention '${needle}' — context bleed signal (got: ${truncate(text, 200)})`);
   }
+}
+
+/** session entry 树的可见性路径（真实模型下列举措辞有方差——浏览器面
+ *  跑批器 20260929T161646Z 实测 b2 只回 "birch"，模型行为不构成串扰
+ *  证据）：从含 promptNeedle 的用户 entry 沿 parentId 走到根，收集路径
+ *  上全部 message 文本。这条链正是 navigateTree 续聊点的完整可见上下文
+ *  ——标记词在/不在路径上即上下文可见性的机械证明，与模型措辞无关
+ *  （与 run-d3-browser.mjs v1.1.2 同法）。 */
+function sessionEntryPathText(sessionFile, promptNeedle) {
+  assert(typeof sessionFile === "string" && sessionFile.length > 0, "scenario wiring: probe prompt carried no session file reference");
+  assert(existsSync(sessionFile), "the tree session file does not exist");
+  let entries;
+  try {
+    entries = readFileSync(sessionFile, "utf8")
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => JSON.parse(line));
+  } catch (err) {
+    throw new Error(`the tree session file could not be read/parsed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  const byId = new Map(entries.filter((e) => typeof e.id === "string").map((e) => [e.id, e]));
+  const leaf = entries.find(
+    (e) =>
+      e.type === "message" &&
+      e.message !== null &&
+      typeof e.message === "object" &&
+      e.message.role === "user" &&
+      JSON.stringify(e.message.content ?? "").includes(promptNeedle),
+  );
+  if (leaf === undefined) {
+    throw new Error(`no user entry carrying the ${JSON.stringify(promptNeedle)} prompt found in the tree session file`);
+  }
+  const texts = [];
+  let current = leaf;
+  while (current !== undefined) {
+    if (current.type === "message" && Array.isArray(current.message?.content)) {
+      for (const part of current.message.content) {
+        if (typeof part?.text === "string") texts.push(part.text);
+      }
+    }
+    const parent = current.parentId;
+    current = typeof parent === "string" ? byId.get(parent) : undefined;
+  }
+  return texts.join("\n");
 }
 
 function selectionOf(text) {
@@ -1041,6 +1089,7 @@ async function phaseBranchA() {
     assertEchoMode(sc.answers.a1, echoAnswer(SCENARIO.t1, SCENARIO.a1), "branch A turn 1");
     const a2 = await promptOk(sc.branchA, SCENARIO.a2);
     sc.answers.a2 = a2.outcome.assistantTurn.text;
+    sc.a2SessionFile = a2.outcome.run.session?.sessionFile ?? null;
     assertEchoMode(sc.answers.a2, echoAnswer(SCENARIO.t1, SCENARIO.a1, SCENARIO.a2), "branch A turn 2");
     const state = await fetchState();
     assert(turnCount(state, sc.branchA) === 4, `branch A must hold 4 turns after two follow-ups (got ${String(turnCount(state, sc.branchA))})`);
@@ -1087,6 +1136,7 @@ async function phaseBranchB() {
     assertEchoMode(sc.answers.b1, echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1), "branch B turn 1");
     const b2 = await promptOk(sc.branchB, SCENARIO.b2);
     sc.answers.b2 = b2.outcome.assistantTurn.text;
+    sc.b2SessionFile = b2.outcome.run.session?.sessionFile ?? null;
     assertEchoMode(sc.answers.b2, echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1, SCENARIO.b2), "branch B turn 2");
     const state = await fetchState();
     assert(turnCount(state, sc.branchB) === 4, `branch B must hold 4 turns (got ${String(turnCount(state, sc.branchB))})`);
@@ -1098,17 +1148,35 @@ async function phaseNoBleed() {
   await runCheck("no-context-bleed", async () => {
     assert(typeof sc.answers.a2 === "string" && sc.answers.a2.length > 0, "scenario wiring: branch A probe answer missing");
     assert(typeof sc.answers.b2 === "string" && sc.answers.b2.length > 0, "scenario wiring: branch B probe answer missing");
-    /* 分支 A：可见锚点前主干历史（maple）+ 自己的 cedar；不可见锚点后的
-       主干第二轮（4127）与分支 B（birch）。 */
-    assertContainsMarkers(sc.answers.a2, ["cedar", "maple"], "branch A probe answer");
-    assertAbsentMarkers(sc.answers.a2, ["4127", "birch"], "branch A probe answer");
-    /* 分支 B：锚点在主干第二轮答案上——两轮主干历史（maple + 4127）+ 自己
-       的 birch 都可见；分支 A 的 cedar 不可见。 */
-    assertContainsMarkers(sc.answers.b2, ["birch", "maple", "4127"], "branch B probe answer");
-    assertAbsentMarkers(sc.answers.b2, ["cedar"], "branch B probe answer");
+    /* echo 模式：回声答案确定（回声携带本支线可见的全部用户文本），
+       维持答案面断言。 */
+    if (MODE === "echo-selftest") {
+      /* 分支 A：可见锚点前主干历史（maple）+ 自己的 cedar；不可见锚点后的
+         主干第二轮（4127）与分支 B（birch）。 */
+      assertContainsMarkers(sc.answers.a2, ["cedar", "maple"], "branch A probe answer");
+      assertAbsentMarkers(sc.answers.a2, ["4127", "birch"], "branch A probe answer");
+      /* 分支 B：锚点在主干第二轮答案上——两轮主干历史（maple + 4127）+ 自己
+         的 birch 都可见；分支 A 的 cedar 不可见。 */
+      assertContainsMarkers(sc.answers.b2, ["birch", "maple", "4127"], "branch B probe answer");
+      assertAbsentMarkers(sc.answers.b2, ["cedar"], "branch B probe answer");
+      return {
+        detail:
+          "branch A sees cedar+maple only; branch B sees birch+maple+4127 only; no cross-branch or post-anchor trunk leakage (echo answer surface)",
+      };
+    }
+    /* 真实模型：「列举可见词」措辞有方差（b2 可能只回 "birch"——模型行为，
+       非串扰证据）。正向可见性改为 session entry 树的 parentId 路径机械证明
+       （= 续聊点可见的完整上下文）；负向（绝不见 cedar/birch 跨支线、A 不见
+       锚点后 4127）同路径断言。 */
+    const aPath = sessionEntryPathText(sc.a2SessionFile, "Branch A, turn two");
+    assertContainsMarkers(aPath, ["cedar", "maple"], "branch A session path");
+    assertAbsentMarkers(aPath, ["4127", "birch"], "branch A session path");
+    const bPath = sessionEntryPathText(sc.b2SessionFile, "Branch B, turn two");
+    assertContainsMarkers(bPath, ["birch", "maple", "4127"], "branch B session path");
+    assertAbsentMarkers(bPath, ["cedar"], "branch B session path");
     return {
       detail:
-        "branch A sees cedar+maple only; branch B sees birch+maple+4127 only; no cross-branch or post-anchor trunk leakage",
+        "branch A sees cedar+maple only; branch B sees birch+maple+4127 only (session entry path proof — model wording decoupled); no cross-branch or post-anchor trunk leakage",
     };
   });
 }
