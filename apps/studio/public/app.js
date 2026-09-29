@@ -11,8 +11,11 @@
  *    confirmed → delivered 状态变化只改徽标；delivered 卡的 deliveredRunId
  *    可反查来源抽屉中该 run 的出处条目；
  *  - Return 草稿持久化于 localStorage（key = tree+branch；W1 §2.1：draft
- *    仅客户端，不落 TreeAI DB、未显式提交前永不生效）；提交成功 / 响应丢失
- *    对账命中即清除；失败保留草稿与幂等键供同键重试；
+ *    仅客户端，不落 TreeAI DB、未显式提交前永不生效）；提交成功 / 响应
+ *    丢失对账命中（幂等键 + 来源分支 + 文本全同）即清除；面板打开时先对
+ *    账，已落库的草稿直接丢弃并呈现 confirmed/delivered 卡；同键异容 =
+ *    显式冲突（保留草稿与面板，编辑换新键）；失败保留草稿与幂等键供同键
+ *    重试；
  *  - 每分支阅读位置恢复（W2 §4）：滚动位置按 tree:branch 记忆，切走再回
  *    恢复原位；接收新 turn / 流式增量的视图只在用户本就贴底时跟随贴底
  *    （已向上阅读绝不强制滚底，issue #3 P1；首次打开无记录直接落底）。
@@ -29,7 +32,11 @@
  *  - 缺失 session 降级（A4/W2 §2.8）：分支徽标 + 横幅（树保持可读、续聊
  *    fail-closed 且入口禁用并说明原因），恢复方式是可直接执行的按钮
  *    （从 session 仍可用的最新 assistant 答案整条建支线——近似说明见
- *    findSessionRecoveryAnchor），session-corrupt 失败时同样提示。
+ *    findSessionRecoveryAnchor），session-corrupt 失败时同样提示。横幅
+ *    dismiss 为页面级持久状态（重渲不复活；主干恢复可用或执行恢复动作
+ *    时清除）。prompt 失败（含 session-corrupt）的终局渲染是硬保证：
+ *    流式占位清除、恢复横幅/降级提示、最终树态与诊断面都在错误上抛前
+ *    落位（不依赖 SSE 事件收尾）。
  *
  * 动效分镜（W2 §3，M1–M7）：全部短促、无循环装饰；streaming 指示为静态
  * caret（不闪烁）；每个动效在 prefers-reduced-motion 下即时化（CSS 全局
@@ -98,6 +105,13 @@ const state = {
   forceSessionBanner: false,
   /** 面板分支 prompt 失败 session-corrupt 后强制显示降级提示（成功后清除）。 */
   forcePanelSessionNote: false,
+  /**
+   * 已被用户 dismiss 的 session 横幅（按 trunk 分支 id 记忆，页面级持久——
+   * 不是一次性 DOM hidden，重渲不复活）。仅当该主干 session 恢复可用、或
+   * 用户执行了恢复动作时清除记录（届时横幅按最新事实重新呈现）。
+   * @type {Set<string>}
+   */
+  dismissedSessionBannerTrunks: new Set(),
   /** 来源抽屉。 */
   drawerOpen: false,
   /** journal 三态（null = 加载中；W2 §2.7 / issue #3 P1——拉取失败绝不
@@ -339,12 +353,28 @@ function renderBranchTabs() {
  * 的恢复按钮（sessionRecoveryControls，从 session 仍可用的 turn 建新
  * 分支）或新建 Tree。session-corrupt 的 Trunk prompt 失败同样强制显示
  * （forceSessionBanner，下一次成功 Trunk prompt 清除）。
+ *
+ * dismiss 是页面级持久状态（dismissedSessionBannerTrunks，按 trunk 分支
+ * 记忆）：重渲（SSE 终态刷新 / 面板开合 / 树面动作）不复活已关闭的横幅；
+ * 仅当该主干 session 恢复可用（触发条件消失）、或用户执行恢复动作时清除
+ * 记录——未来再次不可用时横幅可重新出现。
  */
 function renderSessionBanner() {
   const banner = $("session-banner");
-  const view = branchView(trunkBranchId());
+  const trunk = trunkBranchId();
+  const view = branchView(trunk);
   const unavailable = view !== null && view.sessionAvailability === "unavailable";
-  if (!unavailable && !state.forceSessionBanner) {
+  const forced = state.forceSessionBanner;
+  if (!unavailable && !forced) {
+    /* 触发条件消失（主干恢复可用 / 成功 Trunk prompt 清除 force）：清除该
+       主干的 dismiss 记录，横幅回到「可出现」状态。 */
+    if (trunk !== null) state.dismissedSessionBannerTrunks.delete(trunk);
+    banner.hidden = true;
+    return;
+  }
+  if (trunk !== null && state.dismissedSessionBannerTrunks.has(trunk)) {
+    /* 用户已 dismiss：本次条件仍成立也不复活（页面级记忆，非一次性 DOM
+       hidden——renderAll 重建 DOM 不会把它带回来）。 */
     banner.hidden = true;
     return;
   }
@@ -360,6 +390,7 @@ function renderSessionBanner() {
   dismiss.className = "session-banner-dismiss";
   dismiss.textContent = "Dismiss";
   dismiss.addEventListener("click", () => {
+    if (trunk !== null) state.dismissedSessionBannerTrunks.add(trunk);
     banner.hidden = true;
   });
   banner.append(dismiss);
@@ -807,7 +838,11 @@ function lastAnswerText(branchId) {
 }
 
 /**
- * 面板草稿同步（每次面板渲染调用，幂等）：
+ * 面板草稿同步（每次面板渲染调用，幂等）。先对账（W1 §2.5 客户端侧）：
+ * 草稿对应的 Return 已按（幂等键 + 来源分支 + 文本）落库（如提交成功但
+ * 本地未清账、或另一标签页已提交）→ 草稿使命已完成，丢弃（会话内 +
+ * localStorage），树面呈现已提交的 confirmed/delivered 卡，不把陈旧草稿
+ * 恢复进输入框——编辑陈旧草稿会换新键，等于把已提交内容重复提交。其余：
  * 1) 该分支已有会话内草稿 → 原样维持；空草稿且分支已有回答 → 预填
  *    （W2 §2.4：空持久草稿不得覆盖“prefill from last answer”惯例）；
  * 2) 无会话草稿但 localStorage 有持久草稿（非空）→ 恢复文本与幂等键
@@ -817,20 +852,39 @@ function lastAnswerText(branchId) {
 function syncReturnDraftForBranch(branchId) {
   const input = $("return-input");
   if (state.returnDraft !== null && state.returnDraft.branchId === branchId) {
-    if (state.returnDraft.text.trim() === "" && input.value.trim() === "") {
-      const prefill = lastAnswerText(branchId);
-      if (prefill !== null && prefill.trim() !== "") {
-        state.returnDraft.text = prefill;
-        input.value = prefill;
+    if (
+      findReconciledReturn(
+        state.treeState,
+        state.returnDraft.idempotencyKey,
+        branchId,
+        state.returnDraft.text,
+      ) !== null
+    ) {
+      removePersistedDraft(state.currentTreeId, branchId);
+      state.returnDraft = null;
+    } else {
+      if (state.returnDraft.text.trim() === "" && input.value.trim() === "") {
+        const prefill = lastAnswerText(branchId);
+        if (prefill !== null && prefill.trim() !== "") {
+          state.returnDraft.text = prefill;
+          input.value = prefill;
+        }
       }
+      return;
     }
-    return;
   }
   const persisted = readPersistedDraft(state.currentTreeId, branchId);
   if (persisted !== null && persisted.text.trim() !== "") {
-    state.returnDraft = persisted;
-    input.value = persisted.text;
-    return;
+    if (
+      findReconciledReturn(state.treeState, persisted.idempotencyKey, branchId, persisted.text) ===
+      null
+    ) {
+      state.returnDraft = persisted;
+      input.value = persisted.text;
+      return;
+    }
+    /* 对账命中：持久草稿已落库 → 丢弃（localStorage 一并清除），走预填。 */
+    removePersistedDraft(state.currentTreeId, branchId);
   }
   const prefill = lastAnswerText(branchId) ?? "";
   state.returnDraft = {
@@ -1396,7 +1450,9 @@ function restoreFocusRef(ref) {
  * 锚点揭示（W2 §2.6）：available → 定位 + 一次性脉冲高亮 + 滚动 + 焦点
  * 移至锚点 turn；锚点在主线 → 主面板内揭示（面板保持打开）；锚点在其他
  * 支线 → 打开该支线面板呈现。changed/unavailable → 降级不伪造：摘录仍在
- * 面板头部可读，如实报告状态。
+ * 面板头部可读，如实报告状态。降级路径同样先落地服务端返回的 state——
+ * 徽标 / 降级提示必须与服务端判定一致（W1 §3.4 如实呈现），绝不能出现
+ * 「错误说降级、徽标仍 available」的矛盾 UI。
  */
 async function revealOrigin(branchId) {
   if (branchId === null || state.currentTreeId === null) return;
@@ -1404,13 +1460,13 @@ async function revealOrigin(branchId) {
     `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}/source`,
     "POST",
   );
+  state.treeState = payload.state;
   state.sourceHighlight = null;
   if (payload.source.status !== "available") {
     renderAll();
     showError(`Source reference ${payload.source.status}; saved excerpt remains available.`, "panel");
     return;
   }
-  state.treeState = payload.state;
   state.sourceHighlight = {
     branchId: payload.source.sourceBranchId,
     turnId: payload.source.anchorTurnId,
@@ -1434,6 +1490,11 @@ async function revealOrigin(branchId) {
  * 发送 prompt（主线 or 面板）：branchId 显式携带（prompt 端点自导航，
  * 不依赖游标）；在途观测走 SSE（不可用时降级轮询）；接收新 turn 的视图
  * 贴底，另一视图恢复原位；发送后焦点保持在发送视图的输入框（W2 §2.2）。
+ *
+ * 终局渲染是硬保证（成功 / 中止 / 失败共用收尾）：流式占位清除、
+ * session-corrupt 后的恢复横幅/降级提示、最终树态与诊断面都在错误上抛
+ * 之前落位——即使 SSE 全程无事件（无 run-terminal 推送收尾），失败后
+ * 页面也绝不停留在「占位悬空 / 横幅缺失」的中间态。
  */
 async function sendPrompt(viewKind) {
   const isPanel = viewKind === "panel";
@@ -1442,6 +1503,7 @@ async function sendPrompt(viewKind) {
   const text = input.value;
   if (branchId === null || text.trim() === "") return;
   if (!sseHealthy) startDiagnosticsPolling();
+  let promptError = null;
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/prompt`, "POST", {
       branchId,
@@ -1455,24 +1517,41 @@ async function sendPrompt(viewKind) {
     if (err !== null && typeof err === "object" && err.code === "user-abort") {
       /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
          刷新树状态与诊断面后如常呈现。 */
-      state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+      await refreshTreeStateQuietly();
     } else {
+      promptError = err;
       if (err !== null && typeof err === "object" && err.code === "session-corrupt") {
         /* A4：缺失/损坏 session 的可执行恢复提示（不只有瞬时错误横幅）。 */
         if (isPanel) state.forcePanelSessionNote = true;
         else state.forceSessionBanner = true;
-        state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+        await refreshTreeStateQuietly();
       }
-      throw err;
     }
   } finally {
     stopDiagnosticsPolling();
     state.activeRunInfo = null;
     state.streaming = null;
   }
+  /* 终局渲染（所有收尾路径共用）：清掉流式占位、呈现恢复横幅与最终树态。
+     失败路径的诊断面刷新尽力而为——刷新失败不得掩盖原始 prompt 错误。 */
   renderAll({ stick: branchId });
-  await refreshDiagnostics();
-  input.focus();
+  if (promptError === null) {
+    await refreshDiagnostics();
+    input.focus();
+  } else {
+    await refreshDiagnostics().catch(() => {});
+    throw promptError;
+  }
+}
+
+/** 失败收尾的尽力状态刷新：刷新失败不掩盖/替换原始错误（保留既有树态照常渲染）。 */
+async function refreshTreeStateQuietly() {
+  if (state.currentTreeId === null) return;
+  try {
+    state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+  } catch {
+    /* 保留当前树态；原始错误照常上抛由 guard 呈现 */
+  }
 }
 
 /** Abort the active run. Bypasses the busy guard on purpose: the whole point
@@ -1541,13 +1620,17 @@ async function branchFromLatestAvailableAnswer() {
     },
   );
   state.treeState = payload.state;
+  /* 用户选择了恢复动作：清除主横幅的 dismiss 记录——横幅此后按当前事实
+     呈现（主干仍不可用则如实继续显示），不因旧 dismiss 被压制。 */
+  const trunk = trunkBranchId();
+  if (trunk !== null) state.dismissedSessionBannerTrunks.delete(trunk);
   await openBranchPanel(payload.branch.id, {
     alignCursor: false,
     trigger: { kind: "main-input" },
   });
 }
 
-/** 在树状态里按幂等键找已落库的 Return（响应丢失探查）。 */
+/** 在树状态里按幂等键找已落库的 Return（同键探查；内容比对见 returnMatchesDraft）。 */
 function findReturnByKey(treeState, idempotencyKey) {
   for (const view of treeState.branches) {
     for (const turn of view.turns) {
@@ -1560,11 +1643,58 @@ function findReturnByKey(treeState, idempotencyKey) {
 }
 
 /**
+ * 对账命中判定（W1 §2.3/§2.5 的客户端镜像）：幂等键 + fromBranchId + text
+ * 三者全同才视为「同一逻辑提交已落库」（响应丢失对账命中 / 服务端 200
+ * 重放语义）。同键异容 = 冲突（服务端 409 return-conflict：旧键已绑定
+ * 另一内容，同键重试必然再被拒）——绝不能只按键命中就当成功，否则会把
+ * 旧 Return 伪装成已提交、清掉用户刚编辑的文本。
+ */
+function returnMatchesDraft(turn, idempotencyKey, fromBranchId, text) {
+  return (
+    turn.role === "return" &&
+    turn.idempotencyKey === idempotencyKey &&
+    turn.fromBranchId === fromBranchId &&
+    turn.text === text
+  );
+}
+
+/** 按（键, 来源分支, 文本）全同找已落库 Return：命中 = 可按已提交处理。 */
+function findReconciledReturn(treeState, idempotencyKey, fromBranchId, text) {
+  for (const view of treeState.branches) {
+    for (const turn of view.turns) {
+      if (returnMatchesDraft(turn, idempotencyKey, fromBranchId, text)) {
+        return turn;
+      }
+    }
+  }
+  return null;
+}
+
+/** 同键异容冲突的显式提示（面板横幅）：冲突事实 + 草稿保留的后续动作。 */
+function returnConflictError(existing, fromBranchId, text) {
+  const differences = [];
+  if (existing.fromBranchId !== fromBranchId) {
+    differences.push(`fromBranchId ${fromBranchId} does not match ${existing.fromBranchId}`);
+  }
+  if (existing.text !== text) {
+    differences.push("text differs");
+  }
+  const error = new Error(
+    `Return conflict: this draft's idempotency key is already bound to a different Return ` +
+      `(${differences.join("; ")}). Your draft is kept in the panel — edit the text to submit it as a new Return.`,
+  );
+  error.code = "return-conflict";
+  return error;
+}
+
+/**
  * 显式提交 Return（面板分支 → 主干；W2 §2.4）：幂等键跨失败重试稳定；
- * 200 重放与 201 新建同为成功。响应丢失先按 /state 对账（同键命中 → 按
- * 成功处理，不重复提交）。提交成功 → 草稿清除、面板收起、焦点回主线
- * 输入框（回程），主线滚到新 Return 卡（原分叉点附近）。失败 → 草稿与
- * 键保留（localStorage 持久化），同键可重试、改写即换新键。
+ * 200 重放与 201 新建同为成功。响应丢失先按 /state 对账（键 + 来源分支 +
+ * 文本全同命中 → 按成功处理，不重复提交；同键异容 → 显式冲突：保留草稿
+ * 与面板、不清空已编辑文本、不把旧 Return 伪装成成功，编辑即换新键）。
+ * 提交成功 → 草稿清除、面板收起、焦点回主线输入框（回程），主线滚到新
+ * Return 卡（原分叉点附近）。失败 → 草稿与键保留（localStorage 持久化），
+ * 同键可重试、改写即换新键。
  */
 async function submitReturn() {
   const branchId = state.panelBranchId;
@@ -1585,23 +1715,38 @@ async function submitReturn() {
     submittedTurnId = payload.returnTurn.id;
     clearReturnDraft();
   } catch (err) {
-    /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态，
-       同键 Return 已落库 → 按成功处理；否则保留草稿与键（输入文本不动并
-       落 localStorage），刷新后的状态照常呈现，错误交由 guard 呈现——
-       用户可直接重试（同键）或改写（改写即换新键）。 */
+    /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态。
+       同键且（来源分支 + 文本）全同 → 按成功处理；同键异容 → 显式冲突
+       （草稿保留、面板不收、输入文本不动，编辑换新键后即为新的逻辑提交）；
+       未命中 → 保留草稿与键（输入文本不动并落 localStorage），刷新后的
+       状态照常呈现，错误交由 guard 呈现——用户可直接重试（同键）或改写
+       （改写即换新键）。 */
     const refreshed = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
-    if (findReturnByKey(refreshed, draft.idempotencyKey) !== null) {
-      state.treeState = refreshed;
+    state.treeState = refreshed;
+    const existing = findReturnByKey(refreshed, draft.idempotencyKey);
+    if (existing !== null && !returnMatchesDraft(existing, draft.idempotencyKey, branchId, text)) {
+      draft.failed = true;
+      persistReturnDraft();
+      renderAll();
+      throw returnConflictError(existing, branchId, text);
+    }
+    if (existing !== null) {
       clearReturnDraft();
     } else {
-      state.treeState = refreshed;
       draft.failed = true;
       persistReturnDraft();
       renderAll();
       throw err;
     }
   }
-  await closePanel({ focus: "main-input" });
+  /* 收尾（回主干 + 滚到新 Return 卡）：Return 本身已成功；面板此刻正在
+     收起，收尾（游标对齐）失败呈现在主线横幅（可见面）——不吞错，也不把
+     已成功的提交伪装成失败（面板已收起，面板横幅不可见）。 */
+  try {
+    await closePanel({ focus: "main-input" });
+  } catch (err) {
+    showError(String(err && err.message ? err.message : err));
+  }
   if (submittedTurnId !== null) {
     const card = turnElements.get(submittedTurnId);
     if (card !== undefined && typeof card.scrollIntoView === "function") {
