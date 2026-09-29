@@ -19,6 +19,7 @@ import { join } from "node:path";
 import type {
   BranchId,
   PiEntryId,
+  PiRuntime,
   PiSessionId,
   PiVersion,
   RunId,
@@ -26,9 +27,11 @@ import type {
   TurnId,
 } from "@treeai/contracts";
 import { EntityNotFoundError, InvalidArgumentError } from "@treeai/persistence";
+import { classifyPiFailure, createPiRuntimeFromConfig } from "@treeai/runtime-pi";
 import type { TreeState } from "../src/service.ts";
 import { composePromptText, ReturnConflictError, RunNotActiveError } from "../src/service.ts";
 import type { TreeStudioService } from "../src/service.ts";
+import { EchoSdkPort, ECHO_FAILURE_MESSAGE } from "../src/echo-port.ts";
 import { cleanupDir, makeStudioInstance, makeTempDataDir } from "./helpers.ts";
 function findBranchView(state: TreeState, branchId: BranchId) {
   const view = state.branches.find((v) => v.branch.id === branchId);
@@ -728,6 +731,110 @@ test("missing session: submit rejects with no return persisted; restore + same-k
     assert.equal(retried.turn.idempotencyKey, "key-missing-session");
     assert.equal(countReturns(), 1, "exactly one return after restore + same-key retry");
     await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    /* 失败注入（问二裁决后的补测，关上 W1 §6-4 的证据缺口）：echo 的
+       /fail 前缀钩子在此不可用——待送达 Return 会让 composePromptText
+       先行加前缀，组合文本不再以 /fail 开头（钩子只看原文开头）。因此
+       在 runtime 层注入：真实 echo 栈（EchoSdkPort +
+       createPiRuntimeFromConfig，与 helpers.ts 同款装配）外包一层代理，
+       PiRuntime 全成员原样转发（箭头函数闭包固定被包装实例，this 绑定
+       正确），仅 prompt 文本命中哨兵时以「真实 /fail 路径同款」的错误
+       拒绝——classifyPiFailure 对 ECHO_FAILURE_MESSAGE 的归一结果与
+       runtime-pi drivePrompt 对 stopReason "error" 终态的分类逐字节一致
+       （"500" 命中 upstream 模式 → TreeAIError code "upstream"）。 */
+    const FAILURE_SENTINEL = "TRIGGER-UPSTREAM-FAILURE";
+    const echoRuntime = createPiRuntimeFromConfig({
+      port: new EchoSdkPort(),
+      defaultCwd: join(dir, "workspace"),
+    });
+    const runtime: PiRuntime = {
+      get piVersion() {
+        return echoRuntime.piVersion;
+      },
+      createSession: (init) => echoRuntime.createSession(init),
+      restoreSession: (reference) => echoRuntime.restoreSession(reference),
+      prompt: (input) =>
+        input.text.includes(FAILURE_SENTINEL)
+          ? Promise.reject(classifyPiFailure(new Error(ECHO_FAILURE_MESSAGE), "Pi run failed"))
+          : echoRuntime.prompt(input),
+      steer: (input) => echoRuntime.steer(input),
+      abort: () => echoRuntime.abort(),
+      navigateTree: (target) => echoRuntime.navigateTree(target),
+      subscribe: (listener) => echoRuntime.subscribe(listener),
+      dispose: () => echoRuntime.dispose(),
+    };
+    const studio = makeStudioInstance(dir, { runtime });
+    const { service } = studio;
+    const { treeId, trunkId, branchId } = await makeTreeWithAnchoredBranch(service);
+
+    /* 1. 提交 Return：confirmed（deliveredRunId === null）。 */
+    const returnText = "RETURN: the branch settled on approach B";
+    const submission = await service.submitReturn(treeId, branchId, returnText, "key-failed-prompt-delivery");
+    assert.equal(submission.created, true);
+    assert.equal(submission.turn.role, "return");
+    assert.equal(submission.turn.deliveredRunId, null, "confirmed, not yet delivered");
+
+    /* 2. 带哨兵的 Trunk prompt：以真实 echo /fail 同款的上游错误拒绝。 */
+    await assert.rejects(
+      () => service.prompt(treeId, trunkId, `${FAILURE_SENTINEL}: will this one fail?`),
+      (err: unknown) =>
+        err instanceof Error &&
+        (err as { code?: unknown }).code === "upstream" &&
+        /simulated upstream failure/.test(err.message),
+    );
+
+    /* 3. 失败诊断：该 run 收敛 failed（failure.code "upstream"）；运行面
+       回到 idle；失败的 prompt 不落任何 turn（Trunk 视图 turn 序不变）。 */
+    const diagnostics = service.getTreeDiagnostics(treeId);
+    assert.equal(diagnostics.runtimeState, "idle");
+    assert.equal(diagnostics.activeRun, null);
+    const failedRuns = diagnostics.runs.filter((r) => r.state === "failed");
+    assert.equal(failedRuns.length, 1, "exactly the sentinel prompt's run failed");
+    const failedRun = failedRuns[0]!;
+    assert.equal(failedRun.branchId, trunkId);
+    assert.equal(failedRun.failure?.code, "upstream");
+    assert.match(failedRun.failure?.message ?? "", /simulated upstream failure/);
+    assert.deepEqual(
+      findBranchView(service.getTreeState(treeId), trunkId).turns.map((t) => t.role),
+      ["user", "assistant", "return"],
+      "the failed prompt persists no turns",
+    );
+
+    /* 4. Return 仍待送达：失败的 run 绝不标记送达。 */
+    const stillPending = findBranchView(service.getTreeState(treeId), trunkId).turns.find(
+      (t) => t.role === "return",
+    );
+    assert.ok(stillPending !== undefined);
+    assert.equal(stillPending.deliveredRunId, null, "the failed run must not deliver the return");
+
+    /* 5. 下一次成功的 Trunk prompt 送达恰一次（同一 runtime 实例：无哨兵
+       的 prompt 原样转发给 echo）。 */
+    const next = await service.prompt(treeId, trunkId, "next-q");
+    assert.equal(next.run.state, "succeeded");
+    assert.equal(next.deliveredReturns, 1);
+    assert.ok(
+      next.assistantTurn.text.includes(returnText),
+      `the delivered return is composed into the trunk prompt: ${next.assistantTurn.text}`,
+    );
+    assert.ok(next.assistantTurn.text.includes("next-q"));
+    const delivered = findBranchView(service.getTreeState(treeId), trunkId).turns.find(
+      (t) => t.role === "return",
+    );
+    assert.ok(delivered !== undefined);
+    assert.equal(delivered.deliveredRunId, next.run.id, "delivery is bound to the successful run");
+    assert.notEqual(delivered.deliveredRunId, failedRun.runId, "never bound to the failed run");
+
+    /* 6. 再一次 Trunk prompt：不重送（送达恰一次）。 */
+    const final = await service.prompt(treeId, trunkId, "final-q");
+    assert.equal(final.deliveredReturns, 0, "the return is never re-sent after delivery");
+    await studio.shutdown();
   } finally {
     cleanupDir(dir);
   }
