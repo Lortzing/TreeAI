@@ -1,0 +1,865 @@
+{
+  "script": "run-d3-browser",
+  "version": "1.0.0",
+  "mode": "real-pi",
+  "generatedAt": "2026-09-29T14:44:13.821Z",
+  "git": {
+    "head": "fcfae525cbc091a689c7c9e9a20a609c47a5eb46",
+    "dirty": true
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "page-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tree-create",
+      "status": "PASS"
+    },
+    {
+      "id": "trunk-main-line",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-anchoring",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "switch-navigation",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "no-context-bleed",
+      "status": "PASS"
+    },
+    {
+      "id": "return-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "return-delivery",
+      "status": "PASS"
+    },
+    {
+      "id": "model-error-convergence",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "server-restart-recovery",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-session-degradation",
+      "status": "PASS"
+    },
+    {
+      "id": "response-loss-midstream",
+      "status": "PASS"
+    },
+    {
+      "id": "a11y-semantics",
+      "status": "PASS"
+    },
+    {
+      "id": "narrow-window-layout",
+      "status": "PASS"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "PASS"
+    }
+  ],
+  "pageFinalState": {
+    "url": "/",
+    "readyState": "complete",
+    "activeElementId": "source-drawer-toggle",
+    "sidebar": {
+      "toggleExpanded": "false",
+      "treeCount": 1,
+      "driverNote": ""
+    },
+    "main": {
+      "emptyStateVisible": false,
+      "treeViewVisible": true,
+      "runStatus": "idle",
+      "runDetail": "last run: succeeded",
+      "abortVisible": false,
+      "failurePanel": {
+        "hidden": true,
+        "text": ""
+      },
+      "sessionBanner": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "role": "alert",
+        "text": ""
+      }
+    },
+    "panel": {
+      "hidden": true,
+      "title": "",
+      "anchorContext": "",
+      "sessionNote": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "text": ""
+      }
+    },
+    "conversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_4ff20208-7d60-4dfc-a70f-495e70d91571",
+          "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_163c932b-15dd-4ffd-a216-5fa9dedd40cb",
+          "text": "understood — the trunk topic is apples and the codeword is maple."
+        },
+        {
+          "role": "return",
+          "turnId": "turn_c8f53807-0eba-48ec-9cbd-77b5df4941c6",
+          "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+        },
+        {
+          "role": "user",
+          "turnId": "turn_f3da5e22-10dc-4eee-8b8e-7011c4fe9a10",
+          "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_c71c04d9-517a-4bec-b69c-48a3571c3430",
+          "text": "noted — the secret number 4127 is registered on the main line."
+        },
+        {
+          "role": "user",
+          "turnId": "turn_aeb965d9-ce67-4026-8b2a-b0b7c8c04a14",
+          "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_2e4f1780-0acc-4491-b472-fa9c78f9a741",
+          "text": "Yes — a branch returned a delivery marker. It was quoted exactly as: aspen"
+        },
+        {
+          "role": "user",
+          "turnId": "turn_5c4fe3d9-22aa-42c7-952e-a6ed008245d7",
+          "text": "After the restart, the main line continues. Reply with: restart-ok."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_3799242d-09d9-42bc-bac6-2b376a2e6797",
+          "text": "restart-ok"
+        },
+        {
+          "role": "user",
+          "turnId": "turn_ac9a6298-8dbe-453c-b5f1-9f77741454c6",
+          "text": "Please write a short paragraph (about 80 words) about tides. Then reply with: done-tides."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_6f931418-d9d5-43e3-82d7-9fbb01092ac1",
+          "text": ""
+        }
+      ]
+    },
+    "panelConversation": {
+      "turns": []
+    },
+    "branchTabs": [
+      {
+        "text": "Trunk",
+        "ariaCurrent": null
+      },
+      {
+        "text": "Branch 1 °",
+        "ariaCurrent": null
+      },
+      {
+        "text": "Branch 2 °",
+        "ariaCurrent": null
+      }
+    ],
+    "returnCards": [
+      {
+        "text": "↩ Return from Branch 1 · anchored on “understood — the trunk topic is apples and the codew” from Trunkdelivered into Trunk context (run run_6b2f7000…)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+        "delivered": true,
+        "deliveryText": "delivered into Trunk context (run run_6b2f7000…)"
+      }
+    ],
+    "drawer": {
+      "open": false,
+      "toggleExpanded": "false",
+      "text": "SourcesRunsTrunk · run run_ee077aa1… · succeeded · 22:43:52 → 22:43:53Trunk · run run_0e1f4376… · succeeded · 22:43:53 → 22:43:54Branch 1 · run run_7d220a30… · succeeded · 22:43:55 → 22:43:55Branch 1 · run run_5f212603… · succeeded · 22:43:56 → 22:43:57Branch 2 · run run_93478283… · succeeded · 22:43:58 → 22:43:59Branch 2 · run run_586d3e6d… · succeeded · 22:43:59 → 22:44:02Trunk · run run_6b2f7000… · succeeded · 22:44:04 → 22:44:04Trunk · run run_6affad1b… · succeeded · 22:44:07 → 22:44:08Trunk · run run_eaeb068f… · succeeded · 22:44:09 → 22:44:11Returnsfrom Branch 1 · anchored on “understood — the trunk topic is apples and the codew” from Trunk · delivered into run run_6b2f7000…Journal (latest 20)22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.updated — message update received22:44:11 message.completed — message completed (assistant), stop: stop22:44:11 turn.completed — turn completed (stop: stop)22:44:11 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+    },
+    "composers": {
+      "trunkDisabled": false,
+      "panelDisabled": false,
+      "returnDisabled": false
+    }
+  },
+  "pageErrors": [],
+  "netLog": [
+    {
+      "id": "979A0AACD965B02F119876DF527EDEC3",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.2",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.3",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.6",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.8",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "55939.9",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.10",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.11",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "55939.12",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.13",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.14",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.15",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.16",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.17",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.18",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.19",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.20",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "55939.21",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.22",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.23",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.24",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.25",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.26",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.27",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.28",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.29",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.30",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.31",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.32",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "55939.33",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.34",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.35",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.36",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.37",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.38",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.39",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.40",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.41",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.42",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/return",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "55939.43",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.44",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.45",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.46",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.47",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.48",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.49",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "55939.50",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "55939.51",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "A369AB5EF906EDB2ADB39733608034E5",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.53",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.54",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.57",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.58",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.59",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.60",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.61",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.62",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.63",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.64",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.65",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "E12A1C1F19511680BD9AE58240443F26",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.67",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.68",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.71",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.72",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.73",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.74",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.75",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "5D55208E0A34EFBDEABFF50683F8D642",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.77",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.78",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.81",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.82",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.83",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.84",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.85",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.86",
+      "method": "POST",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/prompt",
+      "status": null,
+      "failed": null
+    },
+    {
+      "id": "9C515CF38382E1294015AFEDA1AE0225",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.89",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.90",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.93",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.94",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.95",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.96",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.97",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.98",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.99",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.100",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.101",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "55939.102",
+      "method": "GET",
+      "url": "http://127.0.0.1:62111/api/trees/tree_906b0567-f6e5-4542-9285-e68b80634739/journal?limit=20",
+      "status": 200,
+      "failed": null
+    }
+  ]
+}

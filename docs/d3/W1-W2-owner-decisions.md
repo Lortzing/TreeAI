@@ -477,6 +477,19 @@ W1 §6 现无对应条目，该事项也不在 issue #6 P0-1 五问与本清单 
 | --- | --- | --- |
 |  |  |  |
 
+### 浏览器面新发现（issue #6 浏览器波，2026-09-29，`fcfae52`）
+
+浏览器 UI 级跑批器（`scripts/run-d3-browser.mjs`，真实 Chrome 驱动真实
+UI）在真实渲染面上发现的偏差——非 W2 自记项，属新增裁决面。同波的
+`closeDrawer` aria 陈旧缺陷已修复（`279e86a`，`closeDrawer` 补
+`renderDrawer()` 对齐开关状态；ui-probe 断言两向立即翻转），不列裁决：
+
+| # | W2 位置 | 现状（事实） | 选项与代价 | 裁决 / 日期 / 备注 |
+| --- | --- | --- | --- | --- |
+| 附-4 | §2.7 来源抽屉（宽窗行） | 抽屉为 fixed 右侧整幅覆盖层（`#source-drawer` `z-index:20`、宽 360px、`top/right/bottom:0`）。打开时**同时盖住**主线 composer 的 Send 按钮（`.composer-actions` 右对齐）与 Sources 开关自身（branch-bar 最右）——鼠标用户关闭抽屉的唯一路径是 **Esc**；开关上的「× Close sources」文案对鼠标不可达。窄窗全幅抽屉同理盖住整幅视口 | A 接受现状（键盘 Esc 为唯一关闭路径；W2 §2.7 键盘行已列 Esc 逐层关闭语义；代价为零）；B 抽屉加自身关闭按钮（抽屉头部加「×」按钮 + 点击关闭；改动点：`renderDrawer()` 头部 + `closeDrawer` 复用 + ui-probe/browser 断言）；C 抽屉改非覆盖布局（主线让位；动效与阅读位置语义需重设计，代价最高） |  |
+
+证据：`evidence/d3/browser/20260929T144428Z-echo-product-loop.md`（elementFromPoint 覆盖防护在抽屉打开时拒绝 Send/开关点击，逐项复现）；同 SHA 真实 Pi 浏览器录制同现。
+
 ---
 
 ## 第三部分：签署路径
