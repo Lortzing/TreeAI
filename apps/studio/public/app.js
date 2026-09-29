@@ -1,20 +1,35 @@
 /* TreeAI Studio — D3 Core MVP 前端（vanilla JS，无构建步骤）。
  *
- * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。核心交互：
- *  - 创建/打开 Tree；
- *  - Trunk/Branch 对话展示（P1：prompt 在途时经 SSE 流式占位回显
- *    message-delta；run-terminal 后以 /state 整树刷新——/state 是权威
- *    读模型，流式回显是瞬态展示）；
+ * 交互模型（W2 §1–§2，issue #2 P1「主线阅读 + 局部支线」）：
+ *  - 主阅读面板始终跟随主线（Trunk）：阅读、续聊、Return 卡渲染都在主线；
+ *  - 支线以锚点作用域的局部侧板打开（覆盖层，不做整页 tab 切换）——
+ *    面板开合与转场期间主线布局与阅读位置不动；面板头部固定常驻
+ *    「来源揭示 / 回主干」操作（不随滚动消失）；
+ *  - 分支 tab 保留为切换器：支线 tab = 打开该支线面板；Trunk tab = 收起
+ *    面板回主线。切换仍 POST /switch（服务端对齐 Pi 游标），UI 不再整页换视图；
+ *  - 锚点 Return 卡渲染在主干 targetAnchor 原分叉点附近（W1 §2.2）；
+ *    confirmed → delivered 状态变化只改徽标；delivered 卡的 deliveredRunId
+ *    可反查来源抽屉中该 run 的出处条目；
+ *  - Return 草稿持久化于 localStorage（key = tree+branch；W1 §2.1：draft
+ *    仅客户端，不落 TreeAI DB、未显式提交前永不生效）；提交成功 / 响应丢失
+ *    对账命中即清除；失败保留草稿与幂等键供同键重试；
+ *  - 每分支阅读位置恢复（W2 §4）：滚动位置按 tree:branch 记忆，切走再回
+ *    恢复原位；接收新 turn 的视图贴底。
+ *
+ * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。其余既有事实面：
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
- *  - 分支续聊；切回 Trunk；
- *  - 编辑并显式提交 Return 到 Trunk；
  *  - 诊断/状态条：当前 run 状态、失败码与消息（失败面板不自动消失）、
  *    在途时 Abort、“未观测策略决策”的如实呈现（Studio 无工具执行器
  *    ——绝不声称未接入的策略执行）；
- *  - 来源抽屉（P1）：per-run 出处、Return 出处与 journal 尾部的保守
- *    摘要（工具活动如实空态——Studio 离线以空工具 allowlist 运行）；
- *  - 缺失 session 降级（A4）：分支徽标 + 可关闭横幅（树保持可读、续聊
- *    fail-closed、可执行的恢复方式），session-corrupt 失败时同样提示。
+ *  - 来源抽屉：per-run 出处、Return 出处与 journal 尾部的保守摘要（工具
+ *    活动如实空态——Studio 离线以空工具 allowlist 运行）；
+ *  - 缺失 session 降级（A4/W2 §2.8）：分支徽标 + 横幅（树保持可读、续聊
+ *    fail-closed 且入口禁用并说明原因、可执行的恢复方式），
+ *    session-corrupt 失败时同样提示。
+ *
+ * 动效分镜（W2 §3，M1–M7）：全部短促、无循环装饰；streaming 指示为静态
+ * caret（不闪烁）；每个动效在 prefers-reduced-motion 下即时化（CSS 全局
+ * 降级 + JS 侧 matchMedia 控制滚动 behavior）。
  *
  * 事件流：EventSource 订阅 /api/trees/:id/events（snapshot 后推送
  * run-started / message-delta / abort-requested / run-terminal /
@@ -37,18 +52,31 @@
 /** @typedef {{eventId:string, runId:string, seq:number, occurredAt:string, type:string, summary:string}} JournalEventT */
 /** @typedef {{runId:string, branchId:string, episodeId:string}} ActiveRunInfoT */
 /** @typedef {{runId:string, branchId:string, text:string}} StreamingT */
+/** @typedef {{branchId:string, turnId:string, start:number, end:number}} SourceHighlightT */
+/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}} FocusReturnRefT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
   /** @type {string|null} */ currentTreeId: null,
-  /** @type {string|null} */ currentBranchId: null,
   /** @type {TreeStateT|null} */ treeState: null,
   /** @type {TreeDiagnosticsT|null} */ diagnostics: null,
-  /** @type {{turnId:string,start:number,end:number}|null} */ sourceHighlight: null,
   /**
-   * Return 草稿（draft 态，未持久化）：幂等键标识一次逻辑提交，跨失败
-   * 重试保持稳定；失败后编辑文本即视为新的逻辑提交（重新生成键——旧键
-   * 可能已被服务端绑定到旧文本）。随分支切换重置。
+   * 支线局部面板打开的分支（null = 纯主线阅读）。主阅读面板始终显示
+   * Trunk（W2 §2.2）；面板分支切换只换面板内容，主线不动（W2 §2.3）。
+   * @type {string|null}
+   */
+  panelBranchId: null,
+  /**
+   * 锚点揭示高亮（主线或面板内）：偏移只信任服务端判定的绝对偏移
+   * （W1 §1.1——重复词/跨行场景禁用字符串搜索定位）。
+   * @type {SourceHighlightT|null}
+   */
+  sourceHighlight: null,
+  /**
+   * Return 草稿（draft 态，未持久化到 TreeAI DB）：幂等键标识一次逻辑提交，
+   * 跨失败重试保持稳定；失败后编辑文本即视为新的逻辑提交（重新生成键——
+   * 旧键可能已被服务端绑定到旧文本）。跨视图切换 / 页面刷新经 localStorage
+   * 恢复（W2 §2.4 持久草稿行）。
    * @type {ReturnDraftT|null}
    */
   returnDraft: null,
@@ -59,13 +87,28 @@ const state = {
   streaming: null,
   /** 失败面板已关闭的 run（dismiss 后不再复显；新失败重新出现）。 */
   dismissedFailureRunIds: new Set(),
-  /** session-corrupt 失败后强制显示可执行恢复横幅（下一次成功 prompt 清除）。 */
+  /** 主线 prompt 失败 session-corrupt 后强制显示恢复横幅（下一次成功 trunk prompt 清除）。 */
   forceSessionBanner: false,
+  /** 面板分支 prompt 失败 session-corrupt 后强制显示降级提示（成功后清除）。 */
+  forcePanelSessionNote: false,
   /** 来源抽屉。 */
   drawerOpen: false,
   /** @type {JournalEventT[]|null} */ journalEvents: null,
   /** 最近工具活动（真实 Pi 驱动才会有；离线如实为空）。 */
   toolActivity: [],
+  /** 每分支阅读位置（`${treeId}:${branchId}` → scrollTop；W2 §2.2/§4）。 */
+  scrollPositions: new Map(),
+  /** 已渲染过的 Return 卡（`${treeId}:${turnId}`）：M3 插入动效只播一次。 */
+  knownReturnIds: new Set(),
+  /** Return 送达状态观测（`${treeId}:${turnId}` → deliveredRunId|null）：M4 检测变化。 */
+  seenDeliveredRunIds: new Map(),
+  /** 最近一次脉冲过的锚点（避免重渲重复脉冲）。 */
+  pulsedHighlightKey: null,
+  /** 面板 / 抽屉关闭时的焦点还原引用（W2 键盘焦点行）。 @type {FocusReturnRefT|null} */
+  panelFocusReturn: null,
+  /** @type {FocusReturnRefT|null} */ drawerFocusReturn: null,
+  /** 打开抽屉时定位到的 run（delivered 卡反查）。 @type {string|null} */
+  drawerFocusRunId: null,
 };
 
 /** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
@@ -76,7 +119,29 @@ const DIAGNOSTICS_POLL_MS = 500;
 let eventSource = null;
 let sseHealthy = false;
 
+/** 面板 / 抽屉进出场动画的收尾 timer（M1/M2：退出播完后才真正 hidden）。 */
+let panelAnimTimer = null;
+let drawerAnimTimer = null;
+const PANEL_ENTER_MS = 240; /* CSS 180ms + 收尾余量 */
+const PANEL_EXIT_MS = 170;
+
+/* 渲染期元素注册表（renderAll 重建）：焦点还原与锚点定位按 id 取最新 DOM。 */
+const tabButtons = new Map();
+const branchHereButtons = new Map();
+const turnElements = new Map();
+const drawerRunItems = new Map();
+
 const $ = (id) => document.getElementById(id);
+
+/* ------------------------------ 动效辅助（M7 / reduced-motion） ------------------------------ */
+
+/** W2 §3：JS 侧滚动定位尊重 prefers-reduced-motion（reduce → auto 直接跳转）。 */
+function prefersReducedMotion() {
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function scrollBehavior() {
+  return prefersReducedMotion() ? "auto" : "smooth";
+}
 
 async function api(path, method = "GET", body = undefined) {
   const response = await fetch(path, {
@@ -101,8 +166,9 @@ async function api(path, method = "GET", body = undefined) {
   return payload;
 }
 
-function showError(message) {
-  const banner = $("error-banner");
+/** 错误横幅按视图落位：面板内动作的失败呈现在面板（W2 §2.3），其余主线。 */
+function showError(message, view = "main") {
+  const banner = $(view === "panel" ? "panel-error-banner" : "error-banner");
   banner.textContent = message;
   banner.hidden = false;
   window.setTimeout(() => {
@@ -110,24 +176,57 @@ function showError(message) {
   }, 8000);
 }
 
-async function guard(fn) {
+async function guard(fn, view = "main") {
   if (state.busy) return;
   state.busy = true;
-  setBusy(true);
+  updateComposerLocks();
   try {
     await fn();
   } catch (err) {
-    showError(String(err && err.message ? err.message : err));
+    showError(String(err && err.message ? err.message : err), view);
   } finally {
     state.busy = false;
-    setBusy(false);
+    updateComposerLocks();
   }
 }
 
-function setBusy(busy) {
-  for (const id of ["send", "submit-return", "new-tree"]) {
-    $(id).disabled = busy;
-  }
+/**
+ * 续聊入口锁定（W2 §2.2 在途锁定 + §2.8 fail-closed）：
+ * busy（单在途 prompt）或目标分支 session 不可用时禁用输入与发送。
+ */
+function updateComposerLocks() {
+  const busy = state.busy;
+  const trunkView = state.treeState === null ? null : branchView(trunkBranchId());
+  const trunkLocked = busy || (trunkView !== null && trunkView.sessionAvailability === "unavailable");
+  $("prompt-input").disabled = trunkLocked;
+  $("send").disabled = trunkLocked;
+  const panelView = state.panelBranchId === null ? null : branchView(state.panelBranchId);
+  const panelLocked = busy || (panelView !== null && panelView.sessionAvailability === "unavailable");
+  $("panel-prompt-input").disabled = panelLocked;
+  $("panel-send").disabled = panelLocked;
+  $("submit-return").disabled = busy;
+  $("new-tree").disabled = busy;
+}
+
+/* ------------------------------ 视图辅助 ------------------------------ */
+
+function trunkBranchId() {
+  return state.treeState === null ? null : state.treeState.trunkBranchId;
+}
+
+function branchView(branchId) {
+  if (state.treeState === null || branchId === null) return null;
+  return state.treeState.branches.find((view) => view.branch.id === branchId) ?? null;
+}
+
+/** 每分支阅读位置键（W2 §4：切树/切分支后回来恢复原位）。 */
+function scrollKey(branchId) {
+  return `${state.currentTreeId}:${branchId}`;
+}
+
+/** 流式占位 turn 所属的滚动容器（主线 or 面板）。 */
+function conversationContainerId(branchId) {
+  return branchId === trunkBranchId() ? "conversation" : "panel-conversation";
 }
 
 /* ------------------------------ 渲染 ------------------------------ */
@@ -153,7 +252,10 @@ function renderTrees() {
     date.className = "tree-date";
     date.textContent = new Date(tree.createdAt).toLocaleString();
     button.append(name, date);
-    button.addEventListener("click", () => guard(() => openTree(tree.id)));
+    button.addEventListener("click", () => {
+      closeSidebar(); /* 窄窗：选树后收起侧栏抽屉 */
+      guard(() => openTree(tree.id));
+    });
     li.append(button);
     list.append(li);
   }
@@ -163,9 +265,14 @@ function renderBranchTabs() {
   const st = state.treeState;
   const tabs = $("branch-tabs");
   tabs.replaceChildren();
+  tabButtons.clear();
   for (const view of st.branches) {
+    const isTrunk = view.branch.id === st.trunkBranchId;
     const button = document.createElement("button");
-    if (view.branch.id === state.currentBranchId) button.classList.add("active");
+    button.dataset.branchId = view.branch.id;
+    /* 主线 tab 恒为 active（主阅读面板）；打开的支线 tab 呈 panel-open。 */
+    if (isTrunk) button.classList.add("active");
+    else if (view.branch.id === state.panelBranchId) button.classList.add("panel-open");
     const label = document.createElement("span");
     label.textContent = branchLabel(view.branch.id);
     button.append(label);
@@ -177,7 +284,7 @@ function renderBranchTabs() {
       dot.textContent = " °";
       button.append(dot);
     }
-    /* A4 缺失 session：分支徽标（续聊将 fail-closed；详情见横幅）。 */
+    /* A4 缺失 session：分支徽标（续聊将 fail-closed；详情见降级提示）。 */
     if (view.sessionAvailability === "unavailable") {
       const badge = document.createElement("span");
       badge.className = "session-badge";
@@ -185,7 +292,19 @@ function renderBranchTabs() {
       badge.title = "the session file for this branch's continuation point is missing; the tree stays readable but continuing here will fail";
       button.append(badge);
     }
-    button.addEventListener("click", () => guard(() => switchBranch(view.branch.id)));
+    /* 切换语义保留：tab 点击仍 POST /switch（服务端对齐 Pi 游标）；
+       UI 层面支线只开局部面板、Trunk tab 收面板回主线（不整页换视图）。
+       失败时面板可能未开/已收 → 错误呈现在主线横幅。 */
+    button.addEventListener("click", () => {
+      if (isTrunk) {
+        void guard(() => returnToTrunk(view.branch.id));
+      } else {
+        void guard(() =>
+          openBranchPanel(view.branch.id, { trigger: { kind: "tab", branchId: view.branch.id } }),
+        );
+      }
+    });
+    tabButtons.set(view.branch.id, button);
     tabs.append(button);
   }
   const cursor = st.cursor;
@@ -195,46 +314,16 @@ function renderBranchTabs() {
       : `session @ ${branchLabel(cursor.branchId)} · ${cursor.entryId}`;
 }
 
-function renderOriginBanner() {
-  const st = state.treeState;
-  const banner = $("origin-banner");
-  const view = st.branches.find((v) => v.branch.id === state.currentBranchId);
-  if (view === undefined || view.origin === null) {
-    banner.hidden = true;
-    return;
-  }
-  banner.replaceChildren();
-  const label = document.createElement("span");
-  label.textContent = `Branched from ${branchLabel(view.origin.sourceBranchId)} — anchored selection: `;
-  const sel = document.createElement("span");
-  sel.className = "sel";
-  sel.textContent = `“${view.origin.selection.text}”`;
-  const status = document.createElement("span");
-  status.className = `origin-status ${view.originStatus ?? "unavailable"}`;
-  status.textContent = ` · source ${view.originStatus ?? "unavailable"}`;
-  const sourceButton = document.createElement("button");
-  sourceButton.className = "source-button";
-  sourceButton.textContent = "View source";
-  sourceButton.addEventListener("click", () => guard(() => revealOrigin(view.branch.id)));
-  banner.append(label, sel, status, sourceButton);
-  banner.hidden = false;
-}
-
 /**
- * A4 缺失 session 横幅（可关闭、不自动消失）：树保持完全可读（数据库
- * 是事实源），该分支续聊将 fail-closed；可执行恢复方式 = 从 session 仍
- * 可用的 turn 建新分支 / 新建 Tree。session-corrupt 的 prompt 失败同样
- * 强制显示（forceSessionBanner，下一次成功 prompt 清除）。
+ * A4 缺失 session 横幅（主线视角，可关闭、不自动消失）：树保持完全可读
+ * （数据库是事实源），Trunk 续聊将 fail-closed；可执行恢复方式 = 从 session
+ * 仍可用的 turn 建新分支 / 新建 Tree。session-corrupt 的 Trunk prompt 失败
+ * 同样强制显示（forceSessionBanner，下一次成功 Trunk prompt 清除）。
  */
 function renderSessionBanner() {
   const banner = $("session-banner");
-  const st = state.treeState;
-  if (st === null) {
-    banner.hidden = true;
-    return;
-  }
-  const view = st.branches.find((v) => v.branch.id === state.currentBranchId);
-  const unavailable = view !== undefined && view.sessionAvailability === "unavailable";
+  const view = branchView(trunkBranchId());
+  const unavailable = view !== null && view.sessionAvailability === "unavailable";
   if (!unavailable && !state.forceSessionBanner) {
     banner.hidden = true;
     return;
@@ -271,16 +360,36 @@ function selectionOffsetsWithin(element, text) {
 }
 
 /**
- * Return 卡片：锚点答案在当前视图内 → 紧随其后渲染（meta 含选区摘录，
- * 满足“原分叉点附近”）；锚点缺失（历史 Return 或锚点在其他分支）→
- * 由调用方按时间顺序原位渲染并降级标注。delivered 时 deliveredRunId
- * 呈现在文本与 title 中，便于在诊断面反查该 Run。
+ * Return 卡片（W2 §2.4 + M3/M4）：锚点答案在当前视图内 → 紧随其后渲染
+ * （meta 含选区摘录，满足“原分叉点附近”）；锚点缺失（历史 Return 或锚点在
+ * 其他分支）→ 按时间顺序原位渲染并降级标注。confirmed 呈“待送达”；
+ * delivered 呈送达 + deliveredRunId 反查入口（点击打开来源抽屉定位该 run）。
+ *
+ * M3/M4 的动效 class 在插入/状态变化后的短观测窗口（MOTION_EPOCH_MS）内
+ * 随重渲保持——状态刷新（SSE 终态 + prompt 响应）可能在一个动效周期内
+ * 连发两次 renderAll，窗口外不再携带（渲染幂等，不重播）。
  */
+const MOTION_EPOCH_MS = 260;
+const returnInsertedAt = new Map(); /* `${treeId}:${turnId}` → epoch ms */
+const deliveredChangedAt = new Map(); /* `${treeId}:${turnId}` → epoch ms */
+
 function returnCard(turn, anchor) {
+  const treeKey = `${state.currentTreeId}:${turn.id}`;
+  const nowMs = Date.now();
   const div = document.createElement("div");
   div.className = "turn return";
   div.dataset.turnId = turn.id;
   div.dataset.turnText = turn.text;
+  turnElements.set(turn.id, div); /* 供提交后滚动定位 / 反查焦点还原 */
+  /* M3：插入动效（高度展开 + 淡入 ≤200ms）只在首次出现的卡上播放。 */
+  if (!state.knownReturnIds.has(treeKey)) {
+    state.knownReturnIds.add(treeKey);
+    returnInsertedAt.set(treeKey, nowMs);
+  }
+  const insertedAt = returnInsertedAt.get(treeKey);
+  if (insertedAt !== undefined && nowMs - insertedAt < MOTION_EPOCH_MS) {
+    div.classList.add("insert");
+  }
 
   const meta = document.createElement("span");
   meta.className = "meta";
@@ -290,33 +399,55 @@ function returnCard(turn, anchor) {
       ? ` · anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`
       : " · original anchor unavailable";
   meta.append(document.createTextNode(`↩ Return from ${from}${anchorNote}`));
-  const delivery = document.createElement("span");
-  if (turn.deliveredRunId !== null) {
-    delivery.className = "delivered";
-    delivery.textContent = ` · delivered into Trunk context (run ${turn.deliveredRunId})`;
-  } else {
-    delivery.textContent = " · not yet delivered (delivered on the next Trunk prompt)";
+
+  const delivered = turn.deliveredRunId !== null;
+  const delivery = document.createElement(delivered ? "button" : "span");
+  delivery.className = `delivery${delivered ? " delivered delivery-link" : ""}`;
+  /* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡；只在已见
+     confirmed 的卡上检测到状态变化时播放；reduced-motion 即时）。
+     观测窗口内随重渲保持 class（见函数头注释）。 */
+  const seenRun = state.seenDeliveredRunIds.get(treeKey);
+  if (delivered && seenRun === null) {
+    deliveredChangedAt.set(treeKey, nowMs);
   }
-  meta.append(delivery);
-  if (turn.deliveredRunId !== null) {
+  const changedAt = deliveredChangedAt.get(treeKey);
+  if (delivered && changedAt !== undefined && nowMs - changedAt < MOTION_EPOCH_MS) {
+    delivery.classList.add("badge-change");
+  }
+  if (delivered) {
+    delivery.textContent = `delivered into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…)`;
+    delivery.title = `delivered into Trunk run ${turn.deliveredRunId} — open sources`;
+    div.dataset.deliveredRunId = turn.deliveredRunId;
     div.title = `delivered into Trunk run ${turn.deliveredRunId}`;
+    delivery.addEventListener("click", () =>
+      void openDrawer({
+        focusRunId: turn.deliveredRunId,
+        trigger: { kind: "return-card", turnId: turn.id },
+      }),
+    );
+  } else {
+    delivery.textContent = "confirmed — delivered on the next Trunk prompt";
   }
+  state.seenDeliveredRunIds.set(treeKey, turn.deliveredRunId);
+  meta.append(delivery);
   div.append(meta, document.createTextNode(turn.text));
   return div;
 }
 
-function renderConversation() {
+/**
+ * 共享对话渲染（主线 / 面板）：turn 列表、按 targetAnchor 定位的 Return 卡、
+ * 锚点高亮（M6 一次性脉冲）、流式占位（M5 静态指示）。
+ * 滚动策略（W2 §2.2/§4）：接收新内容的视图贴底（平滑；reduced-motion 直接
+ * 定位）；其余渲染恢复该分支已记忆的阅读位置；无记录（首次打开）贴底。
+ */
+function renderTurnsInto(container, view, branchId, stick) {
   const st = state.treeState;
-  const container = $("conversation");
   container.replaceChildren();
-  const view = st.branches.find((v) => v.branch.id === state.currentBranchId);
-  if (view === undefined) return;
-
   if (view.turns.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
     empty.textContent =
-      view.branch.id === st.trunkBranchId
+      branchId === st.trunkBranchId
         ? "Empty Trunk — send the first prompt."
         : "Empty branch — continue it with a prompt.";
     container.append(empty);
@@ -350,24 +481,33 @@ function renderConversation() {
     div.className = `turn ${turn.role}`;
     div.dataset.turnId = turn.id;
     div.dataset.turnText = turn.text;
+    turnElements.set(turn.id, div);
 
     const highlight = state.sourceHighlight;
     if (
       turn.role === "assistant" &&
       highlight !== null &&
+      highlight.branchId === branchId &&
       highlight.turnId === turn.id &&
       highlight.start >= 0 &&
       highlight.end > highlight.start &&
       highlight.end <= turn.text.length
     ) {
+      /* M6：一次性脉冲（1–2 次）后保持静态高亮；重渲不重复脉冲。 */
+      const pulseKey = `${state.currentTreeId}:${highlight.turnId}:${highlight.start}-${highlight.end}`;
+      const pulse = state.pulsedHighlightKey !== pulseKey;
+      if (pulse) state.pulsedHighlightKey = pulseKey;
       const marked = document.createElement("mark");
-      marked.className = "source-highlight";
+      marked.className = pulse ? "source-highlight pulse" : "source-highlight";
       marked.textContent = turn.text.slice(highlight.start, highlight.end);
       div.append(
         document.createTextNode(turn.text.slice(0, highlight.start)),
         marked,
         document.createTextNode(turn.text.slice(highlight.end)),
       );
+      /* 揭示后焦点可移至锚点 turn（W2 §2.6 键盘焦点行）。 */
+      div.setAttribute("tabindex", "-1");
+      div.classList.add("anchor-focus");
     } else {
       div.textContent = turn.text;
     }
@@ -379,8 +519,9 @@ function renderConversation() {
       const branchButton = document.createElement("button");
       branchButton.className = "branch-here";
       branchButton.textContent = "⑃ Branch from here";
+      branchHereButtons.set(turn.id, branchButton);
       branchButton.addEventListener("click", () =>
-        guard(() => branchFromTurn(div, turn)),
+        guard(() => branchFromTurn(div, turn), branchId === st.trunkBranchId ? "main" : "panel"),
       );
       div.append(document.createElement("br"), branchButton, hint);
       div.addEventListener("mouseup", () => {
@@ -399,65 +540,224 @@ function renderConversation() {
     }
   }
 
-  /* P1 流式占位回显：在途 run 位于当前分支时追加瞬态占位 turn
-     （run-terminal 后由 /state 权威刷新取代；跨分支的在途 run 不显示）。 */
+  /* P1 流式占位回显：在途 run 位于本视图分支时追加瞬态占位 turn
+     （run-terminal 后由 /state 权威刷新取代）。 */
   const streaming = state.streaming;
-  if (streaming !== null && streaming.branchId === state.currentBranchId) {
+  if (streaming !== null && streaming.branchId === branchId) {
     const placeholder = document.createElement("div");
     placeholder.id = "streaming-turn";
     placeholder.className = "turn assistant streaming-turn";
-    placeholder.textContent = streaming.text;
+    placeholder.append(document.createTextNode(streaming.text));
+    /* M5：静态 streaming 指示——无循环动画（caret 不闪烁）。 */
     const caret = document.createElement("span");
     caret.className = "streaming-caret";
-    caret.textContent = " ▍";
+    caret.textContent = " ▍ streaming…";
     placeholder.append(caret);
     container.append(placeholder);
   }
-  container.scrollTop = container.scrollHeight;
+
+  const saved = state.scrollPositions.get(scrollKey(branchId));
+  if (stick || saved === undefined) {
+    /* 接收新内容 → 贴底（平滑；reduced-motion 直接定位）；
+       首次打开（无阅读位置记录）→ 直接定位（不做过场滚动）。 */
+    container.scrollTo({ top: container.scrollHeight, behavior: stick ? scrollBehavior() : "auto" });
+  } else {
+    container.scrollTop = Math.min(saved, container.scrollHeight);
+  }
 }
 
-function renderAll() {
+/** 主线（Trunk）主阅读面板渲染。 */
+function renderMainConversation(stick) {
+  const container = $("conversation");
+  const trunk = trunkBranchId();
+  const view = branchView(trunk);
+  if (view === null) {
+    container.replaceChildren();
+    const note = document.createElement("p");
+    note.className = "muted";
+    note.textContent = "No trunk branch in this tree.";
+    container.append(note);
+    return;
+  }
+  renderTurnsInto(container, view, trunk, stick);
+}
+
+/** 面板头部：锚点上下文（摘录 + originStatus 徽标；降级不伪造——摘录始终可读）。 */
+function renderPanelAnchorContext(view) {
+  const el = $("panel-anchor-context");
+  el.replaceChildren();
+  if (view.origin === null) {
+    el.textContent = "no anchor recorded for this branch";
+    return;
+  }
+  const status = view.originStatus ?? "unavailable";
+  el.append(
+    document.createTextNode(`Branched from ${branchLabel(view.origin.sourceBranchId)} — anchored selection: `),
+  );
+  const sel = document.createElement("span");
+  sel.className = "sel";
+  sel.textContent = `“${view.origin.selection.text}”`;
+  const statusSpan = document.createElement("span");
+  statusSpan.className = `origin-status ${status}`;
+  statusSpan.textContent = ` · source ${status}`;
+  el.append(sel, statusSpan);
+}
+
+/**
+ * 支线 session 不可用降级提示（W2 §2.8）：常驻（非 dismissible——它解释
+ * 的是被禁用的续聊入口这一事实状态），并作为降级视图的首个焦点。
+ */
+function renderPanelSessionNote(view) {
+  const note = $("panel-session-note");
+  const unavailable = view.sessionAvailability === "unavailable" || state.forcePanelSessionNote;
+  if (!unavailable) {
+    note.hidden = true;
+    return;
+  }
+  note.textContent =
+    "Session missing on this branch — the branch stays fully readable (the database is the source of truth), " +
+    "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.";
+  note.hidden = false;
+}
+
+/** 支线局部面板渲染（可见性由 showPanel/hidePanel 管理，此处只填内容）。 */
+function renderPanel(stick) {
+  if (state.panelBranchId === null) return;
+  const view = branchView(state.panelBranchId);
+  if (view === null) return;
+  $("panel-title").textContent = branchLabel(view.branch.id);
+  renderPanelAnchorContext(view);
+  renderPanelSessionNote(view);
+  renderTurnsInto($("panel-conversation"), view, view.branch.id, stick);
+  syncReturnDraftForBranch(view.branch.id);
+}
+
+function renderAll(opts = {}) {
+  const stickBranch = opts.stick ?? null;
+  /* 渲染期注册表重建（焦点还原 / 锚点定位取最新 DOM）。 */
+  tabButtons.clear();
+  branchHereButtons.clear();
+  turnElements.clear();
   const hasTree = state.treeState !== null;
   $("empty-state").hidden = hasTree;
   $("tree-view").hidden = !hasTree;
   if (hasTree) {
     renderBranchTabs();
-    renderOriginBanner();
     renderSessionBanner();
-    renderConversation();
-    renderReturnPanel();
+    renderMainConversation(stickBranch !== null && stickBranch === trunkBranchId());
+    renderPanel(stickBranch !== null && stickBranch === state.panelBranchId);
+    updateComposerLocks();
   }
   renderTrees();
 }
 
-function renderReturnPanel() {
-  const st = state.treeState;
-  const isBranch = state.currentBranchId !== null && state.currentBranchId !== st.trunkBranchId;
-  $("return-panel").hidden = !isBranch;
-  if (!isBranch) return;
-  const view = st.branches.find((v) => v.branch.id === state.currentBranchId);
-  const lastAnswer = [...(view ? view.turns : [])].reverse().find((t) => t.role === "assistant");
-  const input = $("return-input");
-  if (input.value.trim() === "" && lastAnswer !== undefined) {
-    input.value = lastAnswer.text;
-  }
-  /* 草稿随“面板在当前分支打开”开始；同一分支上跨渲染保持（失败重试
-     复用同一键）。切换到其他分支 = 新的逻辑提交上下文 → 重置。 */
-  if (state.returnDraft === null || state.returnDraft.branchId !== state.currentBranchId) {
-    state.returnDraft = {
-      branchId: state.currentBranchId,
-      idempotencyKey: crypto.randomUUID(),
-      text: input.value,
-      failed: false,
+/* ------------------------------ Return 草稿（持久化） ------------------------------ */
+
+const RETURN_DRAFT_STORAGE_PREFIX = "treeai-return-draft:";
+
+function returnDraftStorageKey(treeId, branchId) {
+  return `${RETURN_DRAFT_STORAGE_PREFIX}${treeId}:${branchId}`;
+}
+
+/**
+ * 持久草稿读取（localStorage；W1 §2.1：draft 仅客户端，不进 TreeAI DB）。
+ * localStorage 不可用（隐私模式等）时静默降级为会话内草稿。
+ */
+function readPersistedDraft(treeId, branchId) {
+  if (treeId === null) return null;
+  try {
+    const raw = window.localStorage.getItem(returnDraftStorageKey(treeId, branchId));
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object") return null;
+    if (typeof parsed.idempotencyKey !== "string" || typeof parsed.text !== "string") return null;
+    return {
+      branchId,
+      idempotencyKey: parsed.idempotencyKey,
+      text: parsed.text,
+      failed: parsed.failed === true,
     };
+  } catch {
+    return null;
   }
 }
 
-/** 提交前兜底：草稿不存在（面板未经渲染等边角）时以当前输入开一份。 */
-function ensureReturnDraft() {
-  if (state.returnDraft === null) {
+function persistReturnDraft() {
+  const draft = state.returnDraft;
+  if (draft === null) return;
+  if (state.currentTreeId === null) return;
+  try {
+    if (draft.text.trim() === "") {
+      window.localStorage.removeItem(returnDraftStorageKey(state.currentTreeId, draft.branchId));
+      return;
+    }
+    window.localStorage.setItem(
+      returnDraftStorageKey(state.currentTreeId, draft.branchId),
+      JSON.stringify({ idempotencyKey: draft.idempotencyKey, text: draft.text, failed: draft.failed }),
+    );
+  } catch {
+    /* 存储不可用：会话内草稿仍有效（刷新后不恢复，如实如此） */
+  }
+}
+
+function removePersistedDraft(treeId, branchId) {
+  if (treeId === null) return;
+  try {
+    window.localStorage.removeItem(returnDraftStorageKey(treeId, branchId));
+  } catch {
+    /* 同上 */
+  }
+}
+
+/** 分支最近一条 assistant 回答（草稿预填惯例）。 */
+function lastAnswerText(branchId) {
+  const view = branchView(branchId);
+  if (view === null) return null;
+  const lastAnswer = [...view.turns].reverse().find((t) => t.role === "assistant");
+  return lastAnswer === undefined ? null : lastAnswer.text;
+}
+
+/**
+ * 面板草稿同步（每次面板渲染调用，幂等）：
+ * 1) 该分支已有会话内草稿 → 原样维持；空草稿且分支已有回答 → 预填
+ *    （W2 §2.4：空持久草稿不得覆盖“prefill from last answer”惯例）；
+ * 2) 无会话草稿但 localStorage 有持久草稿（非空）→ 恢复文本与幂等键
+ *    （跨视图切换 / 页面刷新）；
+ * 3) 都没有 → 以预填（或空）开一份新草稿。
+ */
+function syncReturnDraftForBranch(branchId) {
+  const input = $("return-input");
+  if (state.returnDraft !== null && state.returnDraft.branchId === branchId) {
+    if (state.returnDraft.text.trim() === "" && input.value.trim() === "") {
+      const prefill = lastAnswerText(branchId);
+      if (prefill !== null && prefill.trim() !== "") {
+        state.returnDraft.text = prefill;
+        input.value = prefill;
+      }
+    }
+    return;
+  }
+  const persisted = readPersistedDraft(state.currentTreeId, branchId);
+  if (persisted !== null && persisted.text.trim() !== "") {
+    state.returnDraft = persisted;
+    input.value = persisted.text;
+    return;
+  }
+  const prefill = lastAnswerText(branchId) ?? "";
+  state.returnDraft = {
+    branchId,
+    idempotencyKey: crypto.randomUUID(),
+    text: prefill,
+    failed: false,
+  };
+  input.value = prefill;
+}
+
+/** 提交前兜底：草稿不存在（面板未经同步等边角）时以当前输入开一份。 */
+function ensureReturnDraft(branchId) {
+  if (state.returnDraft === null || state.returnDraft.branchId !== branchId) {
     state.returnDraft = {
-      branchId: state.currentBranchId,
+      branchId,
       idempotencyKey: crypto.randomUUID(),
       text: $("return-input").value,
       failed: false,
@@ -466,12 +766,17 @@ function ensureReturnDraft() {
   return state.returnDraft;
 }
 
+/** 提交成功 / 响应丢失对账命中：清空草稿（会话内 + localStorage）。 */
 function clearReturnDraft() {
+  const draft = state.returnDraft;
+  if (draft !== null) removePersistedDraft(state.currentTreeId, draft.branchId);
   state.returnDraft = null;
+  $("return-input").value = "";
 }
 
 /* 失败后编辑 = 新的逻辑提交：旧键可能已被服务端绑定到旧文本（同键异容
-   会被 409 拒绝），故文本一变即换新键；未失败的编辑仍属同一草稿。 */
+   会被 409 拒绝），故文本一变即换新键；未失败的编辑仍属同一草稿。
+   每次编辑落 localStorage（持久草稿）。 */
 $("return-input").addEventListener("input", () => {
   const draft = state.returnDraft;
   if (draft === null) return;
@@ -481,6 +786,7 @@ $("return-input").addEventListener("input", () => {
     draft.failed = false;
   }
   draft.text = value;
+  persistReturnDraft();
 });
 
 /* ------------------------------ 诊断面 ------------------------------ */
@@ -635,9 +941,10 @@ function connectEvents(treeId) {
         episodeId: info.episodeId,
       };
     }
-    if (info.branchId === state.currentBranchId) {
+    /* 流式占位：在途 run 位于主线或打开的面板分支时呈现（接收视图贴底）。 */
+    if (info.branchId === trunkBranchId() || info.branchId === state.panelBranchId) {
       state.streaming = { runId: info.runId, branchId: info.branchId, text: "" };
-      renderConversation();
+      renderAll({ stick: info.branchId });
     }
     renderDiagnostics();
   });
@@ -646,7 +953,9 @@ function connectEvents(treeId) {
     const delta = JSON.parse(event.data);
     const active = state.activeRunInfo;
     if (active === null || delta.runId !== active.runId) return;
-    if (active.branchId !== state.currentBranchId) return; /* 在途 run 不在当前视图 */
+    if (active.branchId !== trunkBranchId() && active.branchId !== state.panelBranchId) {
+      return; /* 在途 run 不在可见视图（如面板已收起）：不呈现占位 */
+    }
     if (state.streaming === null || state.streaming.runId !== delta.runId) {
       state.streaming = { runId: delta.runId, branchId: active.branchId, text: "" };
     }
@@ -663,14 +972,16 @@ function connectEvents(treeId) {
   });
   source.addEventListener("run-terminal", (event) => {
     if (!isCurrent()) return;
-    const terminal = JSON.parse(event.data);
+    JSON.parse(event.data);
+    const terminalBranchId = state.activeRunInfo === null ? null : state.activeRunInfo.branchId;
     state.activeRunInfo = null;
     state.streaming = null;
-    /* /state 是权威读模型：终态后整树刷新（prompt 响应也会刷新，幂等）。 */
+    /* /state 是权威读模型：终态后整树刷新（prompt 响应也会刷新，幂等）。
+       接收新 turn 的视图贴底；另一视图恢复其阅读位置。 */
     void (async () => {
       try {
         state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
-        renderAll();
+        renderAll({ stick: terminalBranchId });
       } catch {
         /* 刷新失败不打断；sendPrompt 的收尾刷新会重试 */
       }
@@ -685,18 +996,155 @@ function connectEvents(treeId) {
   });
 }
 
-/** 流式占位回显：增量到达时只更新占位节点（不整树重渲）。 */
+/** 流式占位回显：增量到达时只更新占位文本节点（不整树重渲），贴底滚动。 */
 function updateStreamingPlaceholder() {
   const streaming = state.streaming;
   if (streaming === null) return;
+  const visible =
+    streaming.branchId === trunkBranchId() || streaming.branchId === state.panelBranchId;
+  if (!visible) return;
   let node = document.getElementById("streaming-turn");
-  if (node === null) {
-    renderConversation();
+  const containerId = conversationContainerId(streaming.branchId);
+  if (node === null || node.parentElement === null || node.parentElement.id !== containerId) {
+    renderAll({ stick: streaming.branchId });
     return;
   }
-  node.textContent = streaming.text;
-  const container = $("conversation");
-  container.scrollTop = container.scrollHeight;
+  const textNode = node.firstChild;
+  if (textNode !== null && typeof textNode.data === "string") {
+    textNode.data = streaming.text;
+  }
+  node.parentElement.scrollTo({ top: node.parentElement.scrollHeight, behavior: scrollBehavior() });
+}
+
+/* ------------------------------ 面板 / 抽屉进出场（M1/M2） ------------------------------ */
+
+/**
+ * M1/M2：面板进入（侧滑 + 淡入 150–200ms ease-out）与对称退出。退出播完
+ * 才置 hidden；reduced-motion 下 CSS 全局降级为即时（无位移）。转场期间
+ * 主线为覆盖层下的原布局——阅读位置不动。
+ */
+function showPanel() {
+  const panel = $("branch-panel");
+  if (panelAnimTimer !== null) {
+    window.clearTimeout(panelAnimTimer);
+    panelAnimTimer = null;
+  }
+  panel.classList.remove("exit");
+  if (panel.hidden) {
+    panel.hidden = false;
+    void panel.offsetHeight; /* reflow：确保 enter 动画从初始态播放 */
+    panel.classList.add("enter");
+    panelAnimTimer = window.setTimeout(() => {
+      panel.classList.remove("enter");
+      panelAnimTimer = null;
+    }, PANEL_ENTER_MS);
+  }
+}
+
+function hidePanel(opts = {}) {
+  const panel = $("branch-panel");
+  if (panelAnimTimer !== null) {
+    window.clearTimeout(panelAnimTimer);
+    panelAnimTimer = null;
+  }
+  panel.classList.remove("enter");
+  if (opts.instant || panel.hidden) {
+    panel.hidden = true;
+    panel.classList.remove("exit");
+    return;
+  }
+  panel.classList.add("exit");
+  panelAnimTimer = window.setTimeout(() => {
+    panel.hidden = true;
+    panel.classList.remove("exit");
+    panelAnimTimer = null;
+  }, PANEL_EXIT_MS);
+}
+
+function showDrawer() {
+  const drawer = $("source-drawer");
+  if (drawerAnimTimer !== null) {
+    window.clearTimeout(drawerAnimTimer);
+    drawerAnimTimer = null;
+  }
+  drawer.classList.remove("exit");
+  if (drawer.hidden) {
+    drawer.hidden = false;
+    void drawer.offsetHeight;
+    drawer.classList.add("enter");
+    drawerAnimTimer = window.setTimeout(() => {
+      drawer.classList.remove("enter");
+      drawerAnimTimer = null;
+    }, PANEL_ENTER_MS);
+  }
+}
+
+function hideDrawer(opts = {}) {
+  const drawer = $("source-drawer");
+  if (drawerAnimTimer !== null) {
+    window.clearTimeout(drawerAnimTimer);
+    drawerAnimTimer = null;
+  }
+  drawer.classList.remove("enter");
+  if (opts.instant || drawer.hidden) {
+    drawer.hidden = true;
+    drawer.classList.remove("exit");
+    return;
+  }
+  drawer.classList.add("exit");
+  drawerAnimTimer = window.setTimeout(() => {
+    drawer.hidden = true;
+    drawer.classList.remove("exit");
+    drawerAnimTimer = null;
+  }, PANEL_EXIT_MS);
+}
+
+/* ------------------------------ 焦点管理（W2 键盘焦点行） ------------------------------ */
+
+/** 按语义引用解析焦点还原目标（注册表随 renderAll 重建，取最新 DOM）。 */
+function resolveFocusRef(ref) {
+  if (ref === null || ref === undefined) return null;
+  if (ref.kind === "element") return ref.element;
+  if (ref.kind === "tab") return tabButtons.get(ref.branchId) ?? null;
+  if (ref.kind === "branch-button") return branchHereButtons.get(ref.turnId) ?? null;
+  if (ref.kind === "return-card") return turnElements.get(ref.turnId) ?? null;
+  return null;
+}
+
+/** 面板打开 → 焦点移入面板：常规 = 支线输入框（面板主操作面）；
+    session 不可用降级 = 降级提示为首个焦点（W2 §2.8）。
+    busy 的瞬态禁用期间（动作未收尾）延迟到解锁后再移入。 */
+function focusIntoPanel() {
+  const view = branchView(state.panelBranchId);
+  if (view !== null && (view.sessionAvailability === "unavailable" || state.forcePanelSessionNote)) {
+    $("panel-session-note").focus();
+    return;
+  }
+  const input = $("panel-prompt-input");
+  if (!input.disabled) {
+    input.focus();
+    return;
+  }
+  if (state.busy) {
+    window.setTimeout(() => {
+      if (state.panelBranchId === null) return;
+      const current = $("panel-prompt-input");
+      if (!current.disabled) current.focus();
+      else $("panel-close").focus();
+    }, 0);
+    return;
+  }
+  $("panel-close").focus(); /* 持久禁用（session 不可用）时的兜底 */
+}
+
+/** 揭示到位：滚动到锚点 turn 并把焦点移过去（W2 §2.6）。 */
+function revealAnchorTurn(turnId) {
+  const el = turnElements.get(turnId);
+  if (el === undefined) return;
+  if (typeof el.scrollIntoView === "function") {
+    el.scrollIntoView({ block: "center", behavior: scrollBehavior() });
+  }
+  el.focus();
 }
 
 /* ------------------------------ 动作 ------------------------------ */
@@ -707,14 +1155,30 @@ async function refreshTrees() {
   renderTrees();
 }
 
+function resetTransientView() {
+  state.sourceHighlight = null;
+  state.activeRunInfo = null;
+  state.streaming = null;
+  state.forceSessionBanner = false;
+  state.forcePanelSessionNote = false;
+}
+
 async function openTree(treeId) {
   const treeState = await api(`/api/trees/${encodeURIComponent(treeId)}/state`);
   state.currentTreeId = treeId;
   state.treeState = treeState;
-  state.currentBranchId = treeState.cursor !== null ? treeState.cursor.branchId : treeState.trunkBranchId;
-  state.sourceHighlight = null;
-  state.activeRunInfo = null;
-  state.streaming = null;
+  /* 树切换：面板/抽屉收起、草稿回到会话外（持久草稿仍在 localStorage，
+     面板重开时恢复）。阅读位置按 tree:branch 记忆，切回可恢复。 */
+  state.panelBranchId = null;
+  state.returnDraft = null;
+  resetTransientView();
+  hidePanel({ instant: true });
+  if (state.drawerOpen) {
+    state.drawerOpen = false;
+    state.drawerFocusRunId = null;
+    state.drawerFocusReturn = null;
+    hideDrawer({ instant: true });
+  }
   await refreshTrees();
   await refreshDiagnostics();
   connectEvents(treeId);
@@ -725,17 +1189,117 @@ async function createTree() {
   const payload = await api("/api/trees", "POST", {});
   state.currentTreeId = payload.tree.id;
   state.treeState = payload.state;
-  state.currentBranchId = payload.trunkBranchId;
-  state.sourceHighlight = null;
-  state.activeRunInfo = null;
-  state.streaming = null;
+  state.panelBranchId = null;
+  state.returnDraft = null;
+  resetTransientView();
+  hidePanel({ instant: true });
+  if (state.drawerOpen) {
+    state.drawerOpen = false;
+    state.drawerFocusRunId = null;
+    state.drawerFocusReturn = null;
+    hideDrawer({ instant: true });
+  }
   await refreshTrees();
   await refreshDiagnostics();
   connectEvents(payload.tree.id);
   renderAll();
 }
 
+/**
+ * 打开支线局部面板（W2 §2.3）。面板分支已在面板中（重复点击）只重对齐游标。
+ * opts.alignCursor = false 用于建支线（首次续聊由 prompt 显式导航——与既有
+ * 行为一致）与锚点揭示（reveal 内服务端已对准 source 分支）。
+ */
+async function openBranchPanel(branchId, opts = {}) {
+  const st = state.treeState;
+  if (st === null || branchId === null || branchId === st.trunkBranchId) return;
+  const wasOpen = state.panelBranchId !== null;
+  const switching = state.panelBranchId !== branchId;
+  if (opts.alignCursor !== false) {
+    /* 切换语义保留：打开支线面板 = 服务端游标对齐该分支（POST /switch）。 */
+    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
+      branchId,
+    });
+    state.treeState = payload.state;
+  }
+  if (switching) {
+    state.panelBranchId = branchId;
+    state.forcePanelSessionNote = false;
+  }
+  if (opts.trigger !== undefined) state.panelFocusReturn = opts.trigger;
+  renderAll();
+  if (!wasOpen) showPanel();
+  /* 键盘焦点：面板打开 / 分支切换 → 焦点移入面板（W2 §2.3）。 */
+  if (opts.focus === "anchor") {
+    /* 揭示打开：焦点交给锚点 turn（由调用方随后 revealAnchorTurn）。 */
+  } else {
+    focusIntoPanel();
+  }
+}
+
+/**
+ * 收起支线面板、回主线（W2 §1 固定回程）。面板内容与阅读位置按分支记忆，
+ * 重开可恢复；回主线同时把服务端游标对齐回 Trunk（POST /switch）。
+ * 收起即开始退出动效（M2），树面渲染在游标对齐返回后统一刷新一次
+ * （避免双次 renderAll 掐断 Return 卡插入/徽标动效）。
+ */
+async function closePanel(opts = {}) {
+  if (state.panelBranchId === null) return;
+  state.panelBranchId = null;
+  state.forcePanelSessionNote = false;
+  hidePanel();
+  /* 回主线：对齐游标到 Trunk（失败不阻断收起——错误交由 guard 呈现，
+     树照常可读；游标以服务端状态为准）。 */
+  const trunk = trunkBranchId();
+  let switchError = null;
+  if (trunk !== null && state.currentTreeId !== null) {
+    try {
+      const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
+        branchId: trunk,
+      });
+      state.treeState = payload.state;
+    } catch (err) {
+      switchError = err;
+    }
+  }
+  renderAll();
+  /* 焦点还原（W2 §2.3）：显式指定（如 Trunk tab / 主线输入框）优先；
+     默认回触发元素；无引用 → 主线输入框（常驻主焦点）。 */
+  if (opts.focus === "main-input") {
+    $("prompt-input").focus();
+  } else if (opts.focus !== "none") {
+    restoreFocusRef(opts.focus === undefined ? state.panelFocusReturn : opts.focus);
+  }
+  state.panelFocusReturn = null;
+  if (switchError !== null) throw switchError;
+}
+
+/** Trunk tab：收面板回主线；已在主线时重复点击仍对齐游标（旧行为）。 */
+async function returnToTrunk(trunkId) {
+  if (state.panelBranchId !== null) {
+    await closePanel({ focus: { kind: "tab", branchId: trunkId } });
+    return;
+  }
+  const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
+    branchId: trunkId,
+  });
+  state.treeState = payload.state;
+  renderAll();
+}
+
+function restoreFocusRef(ref) {
+  const target = resolveFocusRef(ref);
+  (target ?? $("prompt-input")).focus();
+}
+
+/**
+ * 锚点揭示（W2 §2.6）：available → 定位 + 一次性脉冲高亮 + 滚动 + 焦点
+ * 移至锚点 turn；锚点在主线 → 主面板内揭示（面板保持打开）；锚点在其他
+ * 支线 → 打开该支线面板呈现。changed/unavailable → 降级不伪造：摘录仍在
+ * 面板头部可读，如实报告状态。
+ */
 async function revealOrigin(branchId) {
+  if (branchId === null || state.currentTreeId === null) return;
   const payload = await api(
     `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}/source`,
     "POST",
@@ -743,48 +1307,50 @@ async function revealOrigin(branchId) {
   state.sourceHighlight = null;
   if (payload.source.status !== "available") {
     renderAll();
-    showError(`Source reference ${payload.source.status}; saved excerpt remains available.`);
+    showError(`Source reference ${payload.source.status}; saved excerpt remains available.`, "panel");
     return;
   }
   state.treeState = payload.state;
-  state.currentBranchId = payload.source.sourceBranchId;
   state.sourceHighlight = {
+    branchId: payload.source.sourceBranchId,
     turnId: payload.source.anchorTurnId,
     start: payload.source.selection.start,
     end: payload.source.selection.end,
   };
-  renderAll();
-  const sourceTurn = [...document.querySelectorAll("[data-turn-id]")].find(
-    (element) => element.dataset.turnId === payload.source.anchorTurnId,
-  );
-  sourceTurn?.scrollIntoView({ block: "center", behavior: "smooth" });
-}
-
-async function switchBranch(branchId) {
-  const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
-    branchId,
+  if (payload.source.sourceBranchId === trunkBranchId()) {
+    renderAll();
+    revealAnchorTurn(payload.source.anchorTurnId);
+    return;
+  }
+  await openBranchPanel(payload.source.sourceBranchId, {
+    alignCursor: false,
+    focus: "anchor",
+    trigger: { kind: "element", element: $("panel-view-source") },
   });
-  state.treeState = payload.state;
-  state.currentBranchId = branchId;
-  state.sourceHighlight = null;
-  renderAll();
+  revealAnchorTurn(payload.source.anchorTurnId);
 }
 
-async function sendPrompt() {
-  const input = $("prompt-input");
+/**
+ * 发送 prompt（主线 or 面板）：branchId 显式携带（prompt 端点自导航，
+ * 不依赖游标）；在途观测走 SSE（不可用时降级轮询）；接收新 turn 的视图
+ * 贴底，另一视图恢复原位；发送后焦点保持在发送视图的输入框（W2 §2.2）。
+ */
+async function sendPrompt(viewKind) {
+  const isPanel = viewKind === "panel";
+  const branchId = isPanel ? state.panelBranchId : trunkBranchId();
+  const input = $(isPanel ? "panel-prompt-input" : "prompt-input");
   const text = input.value;
-  if (text.trim() === "") return;
-  /* prompt 在途观测：SSE 健康时由事件流驱动（run-started/message-delta/
-     run-terminal）；SSE 不可用/未就绪时降级为轮询诊断面（既有行为）。 */
+  if (branchId === null || text.trim() === "") return;
   if (!sseHealthy) startDiagnosticsPolling();
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/prompt`, "POST", {
-      branchId: state.currentBranchId,
+      branchId,
       text,
     });
     state.treeState = payload.state;
     input.value = "";
-    state.forceSessionBanner = false;
+    if (isPanel) state.forcePanelSessionNote = false;
+    else state.forceSessionBanner = false;
   } catch (err) {
     if (err !== null && typeof err === "object" && err.code === "user-abort") {
       /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
@@ -793,7 +1359,8 @@ async function sendPrompt() {
     } else {
       if (err !== null && typeof err === "object" && err.code === "session-corrupt") {
         /* A4：缺失/损坏 session 的可执行恢复提示（不只有瞬时错误横幅）。 */
-        state.forceSessionBanner = true;
+        if (isPanel) state.forcePanelSessionNote = true;
+        else state.forceSessionBanner = true;
         state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
       }
       throw err;
@@ -803,8 +1370,9 @@ async function sendPrompt() {
     state.activeRunInfo = null;
     state.streaming = null;
   }
-  renderAll();
+  renderAll({ stick: branchId });
   await refreshDiagnostics();
+  input.focus();
 }
 
 /** Abort the active run. Bypasses the busy guard on purpose: the whole point
@@ -826,6 +1394,11 @@ async function abortActiveRun() {
   await refreshDiagnostics();
 }
 
+/**
+ * 从某条 assistant turn 建支线（W2 §2.3）：无选区 = 整条答案；选区以
+ * 绝对偏移提交（W1 §1.1）。新支线以局部面板打开（主线不动）；建支线
+ * 不对齐游标（首次续聊由 prompt 显式导航——与既有行为一致）。
+ */
 async function branchFromTurn(turnElement, turn) {
   const selection =
     selectionOffsetsWithin(turnElement, turn.text) ??
@@ -834,15 +1407,16 @@ async function branchFromTurn(turnElement, turn) {
     `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches`,
     "POST",
     {
-      sourceBranchId: state.currentBranchId,
+      sourceBranchId: turn.branchId,
       anchorTurnId: turn.id,
       selection,
     },
   );
   state.treeState = payload.state;
-  state.currentBranchId = payload.branch.id;
-  $("return-input").value = "";
-  renderAll();
+  await openBranchPanel(payload.branch.id, {
+    alignCursor: false,
+    trigger: { kind: "branch-button", turnId: turn.id },
+  });
 }
 
 /** 在树状态里按幂等键找已落库的 Return（响应丢失探查）。 */
@@ -857,77 +1431,121 @@ function findReturnByKey(treeState, idempotencyKey) {
   return null;
 }
 
+/**
+ * 显式提交 Return（面板分支 → 主干；W2 §2.4）：幂等键跨失败重试稳定；
+ * 200 重放与 201 新建同为成功。响应丢失先按 /state 对账（同键命中 → 按
+ * 成功处理，不重复提交）。提交成功 → 草稿清除、面板收起、焦点回主线
+ * 输入框（回程），主线滚到新 Return 卡（原分叉点附近）。失败 → 草稿与
+ * 键保留（localStorage 持久化），同键可重试、改写即换新键。
+ */
 async function submitReturn() {
+  const branchId = state.panelBranchId;
+  if (branchId === null) return;
   const input = $("return-input");
   const text = input.value;
   if (text.trim() === "") return;
-  const draft = ensureReturnDraft();
+  const draft = ensureReturnDraft(branchId);
+  let submittedTurnId = null;
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/return`, "POST", {
-      fromBranchId: state.currentBranchId,
+      fromBranchId: branchId,
       text,
       idempotencyKey: draft.idempotencyKey,
     });
-    /* 200（同键重放）与 201（新建）同为成功：清空草稿，回到 Trunk。 */
+    /* 200（同键重放）与 201（新建）同为成功：清空草稿，回主线。 */
     state.treeState = payload.state;
-    state.currentBranchId = payload.state.trunkBranchId;
+    submittedTurnId = payload.returnTurn.id;
     clearReturnDraft();
-    input.value = "";
   } catch (err) {
     /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态，
-       同键 Return 已落库 → 按成功处理；否则保留草稿与键（输入文本不动），
-       刷新后的状态照常呈现，错误交由 guard 呈现——用户可直接重试（同键）
-       或改写（改写即换新键）。 */
+       同键 Return 已落库 → 按成功处理；否则保留草稿与键（输入文本不动并
+       落 localStorage），刷新后的状态照常呈现，错误交由 guard 呈现——
+       用户可直接重试（同键）或改写（改写即换新键）。 */
     const refreshed = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
     if (findReturnByKey(refreshed, draft.idempotencyKey) !== null) {
       state.treeState = refreshed;
-      state.currentBranchId = refreshed.trunkBranchId;
       clearReturnDraft();
-      input.value = "";
     } else {
       state.treeState = refreshed;
       draft.failed = true;
+      persistReturnDraft();
       renderAll();
       throw err;
     }
   }
-  renderAll();
-}
-
-/* ------------------------------ 来源抽屉（P1） ------------------------------ */
-
-/** 打开/关闭来源抽屉；打开时拉取 journal 尾部（保守摘要）。 */
-async function toggleDrawer() {
-  state.drawerOpen = !state.drawerOpen;
-  if (state.drawerOpen) {
-    state.journalEvents = null;
-    renderDrawer();
-    try {
-      const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/journal?limit=20`);
-      state.journalEvents = payload.events;
-    } catch {
-      state.journalEvents = []; /* 诚实空态：拉取失败也如实呈现为空 */
+  await closePanel({ focus: "main-input" });
+  if (submittedTurnId !== null) {
+    const card = turnElements.get(submittedTurnId);
+    if (card !== undefined && typeof card.scrollIntoView === "function") {
+      card.scrollIntoView({ block: "center", behavior: scrollBehavior() });
     }
-    renderDrawer();
-  } else {
-    renderDrawer();
   }
 }
 
+/* ------------------------------ 来源抽屉（P1 + 反查） ------------------------------ */
+
+async function toggleDrawer() {
+  if (state.drawerOpen) {
+    closeDrawer();
+    return;
+  }
+  await openDrawer({ trigger: { kind: "element", element: $("source-drawer-toggle") } });
+}
+
 /**
- * 来源抽屉：per-run 出处（分支/定位/状态/失败码/时间戳）、Return 出处
- * （from-branch/锚点摘录/送达 run）、journal 尾部（保守摘要）与工具活动
- * （离线如实空态——Studio 以空工具 allowlist 运行，无工具事件）。
+ * 打开来源抽屉；opts.focusRunId = delivered 卡反查定位的 run（渲染后滚动
+ * 到该 run 的出处条目）。打开时拉取 journal 尾部（保守摘要）。
+ */
+async function openDrawer(opts = {}) {
+  if (state.drawerOpen) {
+    /* 已开（如 delivered 卡点击时抽屉已开）：只更新定位目标。 */
+    state.drawerFocusRunId = opts.focusRunId ?? null;
+    if (opts.trigger !== undefined) state.drawerFocusReturn = opts.trigger;
+    renderDrawer();
+    return;
+  }
+  state.drawerOpen = true;
+  state.drawerFocusRunId = opts.focusRunId ?? null;
+  state.drawerFocusReturn = opts.trigger ?? { kind: "element", element: $("source-drawer-toggle") };
+  state.journalEvents = null;
+  renderDrawer();
+  showDrawer();
+  $("source-drawer").focus(); /* 焦点入抽屉（W2 §2.7） */
+  try {
+    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/journal?limit=20`);
+    state.journalEvents = payload.events;
+  } catch {
+    state.journalEvents = []; /* 诚实空态：拉取失败也如实呈现为空 */
+  }
+  renderDrawer();
+}
+
+/** 关闭抽屉：焦点还原到触发元素（W2 §2.7）。 */
+function closeDrawer() {
+  if (!state.drawerOpen) return;
+  state.drawerOpen = false;
+  state.drawerFocusRunId = null;
+  hideDrawer();
+  const ref = state.drawerFocusReturn;
+  state.drawerFocusReturn = null;
+  restoreFocusRef(ref);
+}
+
+/**
+ * 来源抽屉：per-run 出处（分支/定位/状态/失败码/时间戳；条目带
+ * data-run-id 供 delivered 卡反查定位）、Return 出处（from-branch/锚点
+ * 摘录/送达 run）、journal 尾部（保守摘要）与工具活动（离线如实空态——
+ * Studio 以空工具 allowlist 运行，无工具事件）。
  */
 function renderDrawer() {
   const drawer = $("source-drawer");
   const toggle = $("source-drawer-toggle");
-  drawer.hidden = !state.drawerOpen;
   toggle.textContent = state.drawerOpen ? "× Close sources" : "⑂ Sources";
   toggle.setAttribute("aria-expanded", state.drawerOpen ? "true" : "false");
   if (!state.drawerOpen) return;
 
   drawer.replaceChildren();
+  drawerRunItems.clear();
   const title = document.createElement("h2");
   title.textContent = "Sources";
   drawer.append(title);
@@ -944,6 +1562,7 @@ function renderDrawer() {
     list.className = "drawer-list";
     for (const run of diag.runs) {
       const li = document.createElement("li");
+      li.dataset.runId = run.runId;
       const failureNote = run.failure === null ? "" : ` · failure ${run.failure.code}`;
       const time =
         run.terminalAt === null
@@ -951,6 +1570,7 @@ function renderDrawer() {
           : `${new Date(run.createdAt).toLocaleTimeString()} → ${new Date(run.terminalAt).toLocaleTimeString()}`;
       li.textContent =
         `${branchLabel(run.branchId)} · run ${run.runId.slice(0, 12)}… · ${run.state}${failureNote} · ${time}`;
+      drawerRunItems.set(run.runId, li);
       list.append(li);
     }
     drawer.append(list);
@@ -1022,6 +1642,15 @@ function renderDrawer() {
     }
     drawer.append(list);
   }
+
+  /* delivered 卡反查定位：滚动到该 run 的出处条目。 */
+  const focusRunId = state.drawerFocusRunId;
+  if (focusRunId !== null) {
+    const li = drawerRunItems.get(focusRunId);
+    if (li !== undefined && typeof li.scrollIntoView === "function") {
+      li.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+    }
+  }
 }
 
 function mutedLine(text) {
@@ -1031,19 +1660,78 @@ function mutedLine(text) {
   return p;
 }
 
+/* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */
+
+function closeSidebar() {
+  document.body.classList.remove("sidebar-open");
+  $("sidebar-toggle").setAttribute("aria-expanded", "false");
+}
+
+$("sidebar-toggle").addEventListener("click", () => {
+  const open = document.body.classList.toggle("sidebar-open");
+  $("sidebar-toggle").setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+/* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
+
+$("conversation").addEventListener("scroll", () => {
+  const trunk = trunkBranchId();
+  if (trunk !== null) {
+    state.scrollPositions.set(scrollKey(trunk), $("conversation").scrollTop);
+  }
+});
+
+$("panel-conversation").addEventListener("scroll", () => {
+  if (state.panelBranchId !== null) {
+    state.scrollPositions.set(scrollKey(state.panelBranchId), $("panel-conversation").scrollTop);
+  }
+});
+
 /* ------------------------------ 启动 ------------------------------ */
 
 $("new-tree").addEventListener("click", () => guard(createTree));
-$("send").addEventListener("click", () => guard(sendPrompt));
+$("send").addEventListener("click", () => guard(() => sendPrompt("main")));
+$("panel-send").addEventListener("click", () => guard(() => sendPrompt("panel"), "panel"));
 $("prompt-input").addEventListener("keydown", (event) => {
   if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
     event.preventDefault();
-    guard(sendPrompt);
+    guard(() => sendPrompt("main"));
   }
 });
-$("submit-return").addEventListener("click", () => guard(submitReturn));
+$("panel-prompt-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    event.preventDefault();
+    guard(() => sendPrompt("panel"), "panel");
+  }
+});
+$("submit-return").addEventListener("click", () => guard(submitReturn, "panel"));
 $("abort-run").addEventListener("click", () => void abortActiveRun());
 $("source-drawer-toggle").addEventListener("click", () => void toggleDrawer());
+/* 面板收起动作的失败呈现在主线横幅（面板此刻已收起/未开）。 */
+$("panel-close").addEventListener("click", () => void guard(() => closePanel()));
+$("panel-view-source").addEventListener("click", () =>
+  void guard(() => revealOrigin(state.panelBranchId), "panel"),
+);
+
+/* Esc 语义（W2 逐屏键盘焦点行）：抽屉 → 支线面板 → 侧栏抽屉逐层关闭，
+   每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。 */
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (state.drawerOpen) {
+    event.preventDefault();
+    closeDrawer();
+    return;
+  }
+  if (state.panelBranchId !== null) {
+    event.preventDefault();
+    void guard(() => closePanel());
+    return;
+  }
+  if (document.body.classList.contains("sidebar-open")) {
+    event.preventDefault();
+    closeSidebar();
+  }
+});
 
 void (async () => {
   try {

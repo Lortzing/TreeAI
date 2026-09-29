@@ -8,7 +8,8 @@
 </head>
 <body>
   <div id="app">
-    <aside id="sidebar">
+    <button id="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">☰ Trees</button>
+    <aside id="sidebar" aria-label="Trees">
       <h1>TreeAI Studio</h1>
       <p class="subtitle">D3 Core MVP · trusted-local</p>
       <button id="new-tree" class="primary">＋ New Tree</button>
@@ -27,33 +28,59 @@
           <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ Sources</button>
         </header>
         <div id="diagnostics-bar">
-          <span id="run-status" class="run-status idle">idle</span>
+          <span id="run-status" class="run-status idle" aria-live="polite">idle</span>
           <span id="run-detail" class="muted"></span>
           <button id="abort-run" class="danger" hidden>Abort run</button>
           <span id="policy-note" class="muted"></span>
         </div>
         <div id="failure-panel" hidden></div>
-        <div id="origin-banner" hidden></div>
         <div id="session-banner" hidden></div>
-        <div id="conversation" aria-live="polite"></div>
-        <div id="error-banner" hidden></div>
-        <div id="composer">
-          <textarea id="prompt-input" rows="3" placeholder="Ask on this branch…"></textarea>
-          <div class="composer-actions">
-            <button id="send" class="primary">Send</button>
+        <div id="reading-area">
+          <div id="main-pane">
+            <div id="conversation" aria-live="polite" aria-label="Trunk conversation"></div>
+            <div id="error-banner" hidden></div>
+            <div id="composer">
+              <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
+              <div class="composer-actions">
+                <button id="send" class="primary">Send</button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div id="return-panel" hidden>
-          <h2>Return to Trunk</h2>
-          <p class="muted">Edit the branch result, then explicitly submit it to the Trunk.</p>
-          <textarea id="return-input" rows="4"></textarea>
-          <div class="composer-actions">
-            <button id="submit-return" class="accent">Submit Return to Trunk</button>
-          </div>
+          <!-- 支线局部面板（W2 §2.3）：锚点作用域；固定“来源/回程”操作；
+               覆盖层形态——主线阅读位置在开合与转场期间不动。 -->
+          <aside id="branch-panel" hidden aria-label="Branch side panel">
+            <header id="panel-header">
+              <div id="panel-heading">
+                <p id="panel-title"></p>
+                <p id="panel-anchor-context"></p>
+              </div>
+              <div id="panel-fixed-actions">
+                <button id="panel-view-source" class="source-button">⌖ View source</button>
+                <button id="panel-close" class="panel-close">↩ Back to Trunk</button>
+              </div>
+              <div id="panel-session-note" hidden tabindex="-1"></div>
+            </header>
+            <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
+            <div id="panel-error-banner" hidden></div>
+            <div id="panel-composer">
+              <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
+              <div class="composer-actions">
+                <button id="panel-send" class="primary">Send</button>
+              </div>
+            </div>
+            <div id="return-panel">
+              <h2>Return to Trunk</h2>
+              <p class="muted">Edit the branch result, then explicitly submit it to the Trunk.</p>
+              <textarea id="return-input" rows="4" aria-label="Return draft"></textarea>
+              <div class="composer-actions">
+                <button id="submit-return" class="accent">Submit Return to Trunk</button>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
     </main>
-    <aside id="source-drawer" hidden aria-label="Sources"></aside>
+    <aside id="source-drawer" hidden aria-label="Sources" tabindex="-1"></aside>
   </div>
   <script src="/app.js"></script>
 </body>

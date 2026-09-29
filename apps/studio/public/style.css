@@ -9,6 +9,11 @@
   --user: #e8eee9;
   --return: #fdf3e0;
   --danger: #a33b2e;
+  /* 动效分镜（W2 §3）：短促、少而克制；全部动效在 prefers-reduced-motion
+     下有即时等价物（见文件末尾的全局降级块）。 */
+  --motion-state: 100ms;
+  --motion-panel: 180ms;
+  --motion-card: 200ms;
 }
 
 * { box-sizing: border-box; }
@@ -19,6 +24,9 @@ body {
   background: var(--bg);
   color: var(--ink);
 }
+
+/* 键盘焦点可见（W2 逐屏键盘焦点要求）。 */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 #app { display: flex; min-height: 100vh; }
 
@@ -52,9 +60,33 @@ body {
 
 #driver-note { margin-top: 18px; }
 
+/* 窄窗（<720px）树侧栏收进抽屉，顶部只留一个开关（W2 §2.1 窄窗行）。 */
+#sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 40;
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
 #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
 #empty-state { margin: auto; text-align: center; font-size: 15px; }
+
+/* 作者 display 规则会覆盖 hidden 属性的 UA 样式——显式守卫（JS 以
+   hidden 切换可见性的元素都需要）。 */
+#tree-view[hidden],
+#branch-panel[hidden],
+#diagnostics-bar[hidden],
+#source-drawer[hidden] {
+  display: none;
+}
 
 #tree-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
@@ -76,35 +108,30 @@ body {
   background: var(--panel);
   cursor: pointer;
 }
+/* 主线 tab 恒为当前主阅读面（W2 §2.2）；打开的支线 tab 以描边呈现。 */
 #branch-tabs button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+#branch-tabs button.panel-open { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 #branch-tabs button .dot { color: var(--accent); }
 #branch-tabs button.active .dot { color: #fff; }
+#branch-tabs button.panel-open .dot { color: var(--accent); }
 
-#origin-banner {
-  margin: 10px 18px 0;
-  padding: 8px 12px;
-  font-size: 13px;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
+/* 支线 session 不可用徽标（A4 / W2 §2.8）。 */
+#branch-tabs button .session-badge {
+  font-size: 10px;
+  color: #b07d2b;
+  margin-left: 4px;
 }
-#origin-banner .sel { font-style: italic; }
-#origin-banner .origin-status { margin-left: 6px; font-size: 11px; }
-#origin-banner .origin-status.changed,
-#origin-banner .origin-status.unavailable { color: var(--danger); }
-#origin-banner .origin-status.available { color: var(--accent); }
-#origin-banner .source-button {
-  margin-left: 10px;
-  padding: 3px 8px;
-  border: 1px solid var(--accent);
-  border-radius: 5px;
-  background: var(--panel);
-  color: var(--accent);
-  cursor: pointer;
-  font-size: 12px;
-}
-#origin-banner .source-button:hover { background: var(--accent-soft); }
+
+/* 锚点高亮：静态底色 + 揭示时一次性脉冲（M6；reduced-motion 见文件末尾）。 */
 .source-highlight { background: #f3d36a; color: inherit; padding: 1px 2px; border-radius: 2px; }
+.source-highlight.pulse { animation: anchor-pulse 900ms ease-out 1; }
+@keyframes anchor-pulse {
+  0% { background: #f3d36a; }
+  25% { background: #ffe9a3; }
+  50% { background: #f3d36a; }
+  75% { background: #ffe9a3; }
+  100% { background: #f3d36a; }
+}
 
 /* Diagnostics bar (A5): run status, failure, abort, honest policy note. */
 #diagnostics-bar {
@@ -119,6 +146,7 @@ body {
 }
 #diagnostics-bar #policy-note { margin-left: auto; text-align: right; }
 
+/* Run 状态指示（M5）：状态切换以 ~100ms 颜色/文案过渡；无循环动画。 */
 .run-status {
   display: inline-block;
   padding: 2px 10px;
@@ -127,6 +155,19 @@ body {
   border: 1px solid var(--line);
   color: var(--muted);
   background: var(--bg);
+  transition: color var(--motion-state) ease-out, background-color var(--motion-state) ease-out,
+    border-color var(--motion-state) ease-out;
+}
+/* 状态点（窄窗下与短文案一起构成压缩状态条）。 */
+.run-status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
 }
 .run-status.streaming { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .run-status.aborting { color: #b07d2b; border-color: #b07d2b; background: var(--return); }
@@ -160,7 +201,7 @@ body {
 }
 #failure-panel .failure-panel-dismiss:hover { background: #f6dbd6; }
 
-/* A4 missing-session banner: persistent, dismissible. */
+/* A4 missing-session banner (main view): persistent, dismissible. */
 #session-banner {
   display: flex;
   align-items: baseline;
@@ -187,62 +228,18 @@ body {
 }
 #session-banner .session-banner-dismiss:hover { background: #f6e8cd; }
 
-/* Branch tab badge for a missing session (A4). */
-#branch-tabs button .session-badge {
-  font-size: 10px;
-  color: #b07d2b;
-  margin-left: 4px;
-}
+/* 阅读区：主线面板 + 支线局部覆盖层（W2 §2.2/§2.3）。 */
+#reading-area { position: relative; flex: 1; min-height: 0; display: flex; }
+#main-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
-/* P1 streaming placeholder turn. */
-.turn.streaming-turn { border-style: dashed; color: var(--muted); }
-.streaming-caret { animation: blink 1s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-
-/* Source drawer toggle (branch bar). */
-button.drawer-toggle {
-  font-size: 12px;
-  padding: 4px 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  cursor: pointer;
-}
-button.drawer-toggle:hover { background: var(--bg); }
-
-/* P1 source drawer: fixed side panel, functional surfaces only. */
-#source-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 360px;
-  max-width: 90vw;
+#conversation, #panel-conversation {
+  flex: 1;
   overflow-y: auto;
-  padding: 16px 18px;
-  background: var(--panel);
-  border-left: 1px solid var(--line);
-  box-shadow: -4px 0 14px rgba(0, 0, 0, 0.06);
-  z-index: 20;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-#source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
-#source-drawer h3 { font-size: 12px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
-.drawer-list li { margin: 4px 0; line-height: 1.45; }
-.drawer-list.journal-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
-
-button.danger {
-  font-size: 12px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--danger);
-  background: none;
-  color: var(--danger);
-  cursor: pointer;
-}
-button.danger:hover:not(:disabled) { background: #fbeae7; }
-
-#conversation { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
 
 .turn { max-width: 76%; padding: 9px 13px; border-radius: 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
 .turn.user { align-self: flex-end; background: var(--user); }
@@ -254,7 +251,40 @@ button.danger:hover:not(:disabled) { background: #fbeae7; }
   border: 1px solid #e3c98f;
 }
 .turn .meta { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.turn .delivered { color: var(--accent); }
+.turn .meta .delivery { color: #7a5a20; }
+.turn .meta .delivery.delivered { color: var(--accent); }
+
+/* M3：Return 卡插入（高度展开 + 淡入，≤200ms；仅新插入的卡播放）。 */
+.turn.return.insert { animation: return-insert var(--motion-card) ease-out; }
+@keyframes return-insert {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+/* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡）。 */
+.turn .meta .delivery { transition: color var(--motion-state) ease-out; }
+.turn .meta .delivery.badge-change { animation: badge-change var(--motion-state) ease-out; }
+@keyframes badge-change {
+  from { color: #7a5a20; background: #f6e8cd; }
+  to { color: var(--accent); background: transparent; }
+}
+/* delivered 卡的 deliveredRunId 反查入口（可 Tab 触达；点击打开来源抽屉）。 */
+button.delivery-link {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+button.delivery-link:hover { background: var(--accent-soft); }
+
+/* 流式占位 turn：静态指示（M5——无循环动画，caret 不闪烁）。 */
+.turn.streaming-turn { border-style: dashed; color: var(--muted); }
+.streaming-caret { color: var(--muted); }
 
 .turn .branch-here {
   display: inline-block;
@@ -272,7 +302,146 @@ button.danger:hover:not(:disabled) { background: #fbeae7; }
 .turn .selection-hint { display: none; font-size: 11px; color: var(--muted); margin-left: 6px; }
 .turn.has-selection .selection-hint { display: inline; }
 
-#error-banner {
+/* 揭示后聚焦的锚点 turn（tabindex=-1）。 */
+.turn.anchor-focus { border-color: var(--accent); }
+
+/* 支线局部面板（W2 §2.3）：右侧覆盖层——主阅读面板布局不动，
+   开合与转场期间主线阅读位置不位移。 */
+#branch-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(460px, 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -4px 0 14px rgba(0, 0, 0, 0.06);
+  z-index: 15;
+}
+/* M1/M2：侧滑 + 淡入（150–200ms，ease-out），退出对称。 */
+#branch-panel.enter { animation: panel-in var(--motion-panel) ease-out; }
+#branch-panel.exit { animation: panel-out 150ms ease-in forwards; }
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+#panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px 8px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+/* 面板头部不随内容滚动：固定来源 / 回程操作常驻（W2 §1）。 */
+#panel-heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#panel-title { margin: 0; font-size: 14px; font-weight: 600; }
+#panel-anchor-context {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+#panel-anchor-context .sel { font-style: italic; }
+#panel-anchor-context .origin-status { margin-left: 6px; font-size: 11px; }
+#panel-anchor-context .origin-status.changed,
+#panel-anchor-context .origin-status.unavailable { color: var(--danger); }
+#panel-anchor-context .origin-status.available { color: var(--accent); }
+#panel-fixed-actions { display: flex; gap: 8px; flex-shrink: 0; }
+#panel-fixed-actions .source-button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--accent);
+  cursor: pointer;
+}
+#panel-fixed-actions .source-button:hover { background: var(--accent-soft); }
+#panel-fixed-actions .panel-close {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  cursor: pointer;
+}
+#panel-fixed-actions .panel-close:hover { background: var(--bg); }
+
+/* 支线 session 不可用降级提示（W2 §2.8）：常驻（不 dismissible），
+   因为它解释的是被禁用的续聊入口这一事实状态。 */
+#panel-session-note {
+  padding: 7px 10px;
+  font-size: 12px;
+  background: #fdf3e0;
+  border: 1px solid #b07d2b;
+  border-radius: 6px;
+  color: #7a5a20;
+}
+#panel-session-note[hidden] { display: none; }
+
+#panel-composer, #return-panel {
+  padding: 12px 14px 14px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+#return-panel h2 { font-size: 14px; margin: 0 0 2px; }
+#return-panel { border-top: 2px solid #e3c98f; }
+
+/* 来源抽屉开关（branch bar）。 */
+button.drawer-toggle {
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  cursor: pointer;
+}
+button.drawer-toggle:hover { background: var(--bg); }
+
+/* 来源抽屉：固定侧板，滑入 150–200ms（W2 §2.7）。 */
+#source-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: 90vw;
+  overflow-y: auto;
+  padding: 16px 18px;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -4px 0 14px rgba(0, 0, 0, 0.06);
+  z-index: 20;
+}
+#source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
+#source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
+#source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
+#source-drawer h3 { font-size: 12px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+.drawer-list li { margin: 4px 0; line-height: 1.45; }
+.drawer-list.journal-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+
+button.danger {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--danger);
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+button.danger:hover:not(:disabled) { background: #fbeae7; }
+
+#error-banner, #panel-error-banner {
   margin: 0 18px;
   padding: 8px 12px;
   background: #fbeae7;
@@ -281,14 +450,13 @@ button.danger:hover:not(:disabled) { background: #fbeae7; }
   color: var(--danger);
   font-size: 13px;
 }
+#panel-error-banner { margin: 0 14px; }
 
-#composer, #return-panel {
+#composer {
   padding: 12px 18px 16px;
   background: var(--panel);
   border-top: 1px solid var(--line);
 }
-#return-panel h2 { font-size: 14px; margin: 0 0 2px; }
-#return-panel { border-top: 2px solid #e3c98f; }
 
 textarea {
   width: 100%;
@@ -315,3 +483,47 @@ button.primary, button.accent {
 }
 button.accent { background: #b07d2b; border-color: #b07d2b; }
 button:disabled { opacity: 0.5; cursor: wait; }
+
+/* ------------------------------ 窄窗 <720px ------------------------------ */
+
+@media (max-width: 719px) {
+  #sidebar-toggle { display: block; }
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 35;
+    transform: translateX(-100%);
+    transition: transform var(--motion-panel) ease-out;
+    box-shadow: 4px 0 14px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;
+  }
+  body.sidebar-open #sidebar { transform: translateX(0); }
+
+  #branch-bar { padding-left: 64px; }
+
+  /* 状态条压缩：状态点 + 短文案（run-status 本身即为短词），详情收起。 */
+  #diagnostics-bar #run-detail, #diagnostics-bar #policy-note { display: none; }
+
+  /* 消息全宽；输入区吸底（flex 列内 conversation flex:1 已保证）。 */
+  .turn { max-width: 100%; }
+
+  /* 支线面板与来源抽屉全宽（W2 §2.3/§2.7 窄窗行）。 */
+  #branch-panel, #source-drawer { width: 100%; max-width: 100%; }
+}
+
+/* --------------------- prefers-reduced-motion 全局等价 --------------------- */
+/* M1–M7 的 reduced-motion 变体：全部动效即时化（直接出现/切换/跳转）；
+   JS 侧滚动定位配合 matchMedia("(prefers-reduced-motion: reduce)") 用 auto。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  #sidebar { transition: none; }
+}
