@@ -18,7 +18,12 @@
  * Usage:
  *   npm run build:live-policy
  *   node --experimental-strip-types scripts/run-d3-real-pi-tool-policy.mjs \
- *     [outTranscriptJson]
+ *     [--agent-dir DIR] [outTranscriptJson]
+ *   (--agent-dir: the controlled agent dir — the non-secret provider/model
+ *    registry — default <repoRoot>/.pi-d2-live, mirroring the sibling
+ *    runners' --agent-dir convention; pass it when running from a worktree
+ *    whose registry lives in the main checkout, instead of planting a
+ *    .pi-d2-live symlink inside the worktree)
  *
  * Output: sanitized transcript JSON (booleans, event whitelists, timings —
  * no file contents, no absolute paths, no credentials).
@@ -33,8 +38,63 @@ const ENV_API_KEY = "TREEAI_LIVE_API_KEY";
 const providerId = process.env[ENV_PROVIDER];
 const modelId = process.env[ENV_MODEL];
 const apiKey = process.env[ENV_API_KEY];
-const outPath = process.argv[2] ?? "/tmp/treeai-realpi/transcript-tool-policy.json";
 const ROOT = new URL("..", import.meta.url).pathname;
+
+/* --- CLI（--agent-dir 旗标镜像 run-d3-real-pi.mjs / run-d3-browser.mjs 的
+   同名旗标约定：用法文本 + existsSync 明确报错；缺省沿用既有仓库根
+   .pi-d2-live。worktree 内运行时直接指向主检出里的受控目录即可，
+   无需再向 worktree 植入 .pi-d2-live 符号链接——既往记录披露的临时
+   手法（如 20260929T223349Z-tool-policy-sdk.md）随之退役）。 --- */
+
+const DEFAULT_AGENT_DIR = join(ROOT, ".pi-d2-live");
+const DEFAULT_OUT_PATH = "/tmp/treeai-realpi/transcript-tool-policy.json";
+const USAGE = [
+  "usage: node --experimental-strip-types scripts/run-d3-real-pi-tool-policy.mjs [--agent-dir DIR] [outTranscriptJson]",
+  "  --agent-dir DIR    controlled agent dir (non-secret provider/model registry);",
+  `                     default <repoRoot>/.pi-d2-live — pass it when running from a`,
+  "                     worktree whose registry lives in the main checkout",
+  "  outTranscriptJson  sanitized transcript output path",
+  `                     (default: ${DEFAULT_OUT_PATH})`,
+].join("\n");
+
+const argv = process.argv.slice(2);
+let agentDir = DEFAULT_AGENT_DIR;
+let outPath = DEFAULT_OUT_PATH;
+let outPathGiven = false;
+for (let i = 0; i < argv.length; i += 1) {
+  const arg = argv[i];
+  if (arg === "--help" || arg === "-h") {
+    console.log(USAGE);
+    process.exit(0);
+  }
+  if (arg === "--agent-dir") {
+    const value = argv[i + 1];
+    if (value === undefined || value.startsWith("--")) {
+      console.error(`${USAGE}\nbad or missing value for '--agent-dir'`);
+      process.exit(2);
+    }
+    agentDir = value;
+    i += 1;
+  } else if (arg.startsWith("-")) {
+    console.error(`${USAGE}\nunknown flag: ${arg}`);
+    process.exit(2);
+  } else if (outPathGiven) {
+    console.error(`${USAGE}\nunexpected extra positional argument (only the transcript output path is positional): ${arg}`);
+    process.exit(2);
+  } else {
+    outPath = arg;
+    outPathGiven = true;
+  }
+}
+if (!existsSync(agentDir)) {
+  console.error(
+    `agent dir does not exist: ${agentDir}` +
+      (agentDir === DEFAULT_AGENT_DIR
+        ? " (the default <repoRoot>/.pi-d2-live is not present in this checkout — pass --agent-dir DIR to point at the controlled registry)"
+        : ""),
+  );
+  process.exit(2);
+}
 
 const missing = [ENV_PROVIDER, ENV_MODEL, ENV_API_KEY].filter((n) => {
   const v = process.env[n];
@@ -78,7 +138,7 @@ const engine = new ToolPolicyEngine({
 
 const runtime = createPiRuntime({
   credentials: { providerId, apiKey },
-  agentDir: join(ROOT, ".pi-d2-live"),
+  agentDir,
   defaultCwd: workspace,
   tools: ["read"],
   toolPolicy: engine,
