@@ -106,8 +106,11 @@ const USAGE = [
 /* ------------------------------------------------------------------ */
 
 const SCENARIO = {
-  t1: "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with: understood.",
-  t2: "Main line, turn two. The trunk secret number is 4127. Reply with: noted.",
+  /* 指令要求「逐字短语」——真实模型照办；短语长度保证浏览器面拖选有
+     稳定的字符区间（真实模型对 "Reply with: understood." 只回一个词，
+     拖选会被钳到整条答案，锚定区间失真）。 */
+  t1: "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.",
+  t2: "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.",
   t3: "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.",
   a1: "We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1.",
   a2: "Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else.",
@@ -876,15 +879,18 @@ const sc = {
   returnIdempotencyKey: null,
 };
 
-/** 页面侧等待：某分支视图的最后一轮 assistant 答案包含标记词集合。
+/** 页面侧等待：该分支视图的第 minAssistantTurns 轮 assistant 答案出现
+ * 且包含标记词集合。计数前置条件防「上一个答案已含标记词」的竞态
+ * （真实模型可能把 t1/t2 的指令词写进同一句回答）。
  * 超时诊断附带当前页面事实（末轮答案/输入框残留/run 状态）。 */
-async function waitForAnswerMarkers(containerSelector, needles, timeoutMs) {
+async function waitForAnswerMarkers(containerSelector, needles, timeoutMs, minAssistantTurns = 1) {
   const expr =
     `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant')]; ` +
-    "if (turns.length === 0) return false; const text = turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent; " +
+    `if (turns.length < ${String(minAssistantTurns)}) return false; ` +
+    "const text = turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent; " +
     `return ${JSON.stringify(needles)}.every((n) => text.includes(n)) ? text : false; })()`;
   try {
-    return await waitForJs(expr, timeoutMs, `assistant answer containing ${needles.join(",")}`);
+    return await waitForJs(expr, timeoutMs, `assistant answer #${String(minAssistantTurns)} containing ${needles.join(",")}`);
   } catch (err) {
     const context = await evalJs(
       `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant')]; ` +
@@ -1011,10 +1017,11 @@ async function main() {
 
   await runCheck("trunk-main-line", async () => {
     await sendTrunkPrompt(SCENARIO.t1, { keyboard: false });
-    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["maple"] : ["understood"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["maple"] : ["apples", "maple"], CLI.promptTimeoutMs, 1);
     await sendTrunkPrompt(SCENARIO.t2, { keyboard: true });
-    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["4127"] : ["noted"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["4127"] : ["4127"], CLI.promptTimeoutMs, 2);
     const summary = await snap("trunk-main-line");
+    sc.trunkTurnCount = 4; /* 断言前登记：后续检查不因本检查失败而失去基线 */
     const turns = summary.conversation.turns;
     assert(turns.length === 4, `trunk conversation has ${String(turns.length)} turns (expected 4: 2 user + 2 assistant)`);
     assert(turns.filter((t) => t.role === "user").length === 2 && turns.filter((t) => t.role === "assistant").length === 2,
@@ -1024,7 +1031,7 @@ async function main() {
     assert(stateRes.status === 200, `state fetch ${String(stateRes.status)}`);
     const serverTurns = stateRes.body?.branches?.[0]?.turns?.length ?? -1;
     assert(serverTurns === 4, `server trunk view has ${String(serverTurns)} turns (expected 4)`);
-    sc.trunkTurnCount = 4;
+    sc.trunkTurnCount = 4; /* 断言前登记：后续检查不因本检查失败而失去基线 */
     return { detail: `two trunk prompts (t2 via ⌘+Enter keyboard path); 4 turns rendered; API state agrees (4 turns server-side)` };
   });
 
@@ -1061,9 +1068,9 @@ async function main() {
 
   await runCheck("branch-a-followups", async () => {
     await sendPanelPrompt(SCENARIO.a1, { keyboard: false });
-    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["cedar"] : ["ok-a1"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["cedar"] : ["ok-a1"], CLI.promptTimeoutMs, 1);
     await sendPanelPrompt(SCENARIO.a2, { keyboard: true });
-    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["cedar", "maple"] : ["cedar", "maple"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["cedar", "maple"] : ["cedar", "maple"], CLI.promptTimeoutMs, 2);
     const summary = await snap("branch-a-followups");
     const turns = summary.panelConversation.turns;
     assert(turns.length === 4, `branch A panel shows ${String(turns.length)} turns (expected 4: 2 rounds of user+assistant)`);
@@ -1115,9 +1122,9 @@ async function main() {
 
   await runCheck("branch-b-followups", async () => {
     await sendPanelPrompt(SCENARIO.b1, { keyboard: false });
-    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["birch"] : ["ok-b1"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["birch"] : ["ok-b1"], CLI.promptTimeoutMs, 1);
     await sendPanelPrompt(SCENARIO.b2, { keyboard: false });
-    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["birch"] : ["birch"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#panel-conversation", MODE === "selftest" ? ["birch"] : ["birch"], CLI.promptTimeoutMs, 2);
     const summary = await snap("branch-b-followups");
     assert(summary.panelConversation.turns.length === 4, `branch B panel shows ${String(summary.panelConversation.turns.length)} turns (expected 4)`);
     return { detail: "branch B two follow-up rounds; 6 turns rendered in panel" };
@@ -1186,7 +1193,7 @@ async function main() {
   await runCheck("return-delivery", async () => {
     /* 主干第 3 轮：下一次 Trunk prompt 必须采用已送达的 Return。 */
     await sendTrunkPrompt(SCENARIO.t3, { keyboard: false });
-    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["aspen"] : ["aspen"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["aspen"] : ["aspen"], CLI.promptTimeoutMs, 3);
     const cardState = await evalJs(
       `(() => { const cards = [...document.querySelectorAll('#conversation .turn.return')]; ` +
       "const card = cards[cards.length - 1]; const delivery = card === undefined ? null : card.querySelector('.delivery'); " +
@@ -1234,12 +1241,12 @@ async function main() {
     const composerEnabled = await evalJs("document.getElementById('prompt-input').disabled === false");
     assert(composerEnabled === true, "trunk composer stayed disabled after the failed run converged");
     await sendTrunkPrompt(SCENARIO.recovery, { keyboard: false });
-    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["back-online"] : ["back-online"], CLI.promptTimeoutMs);
+    await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["back-online"] : ["back-online"], CLI.promptTimeoutMs, 4);
+    sc.trunkTurnCount += 2; /* /fail 零回合落库；恢复 prompt 落 1 对回合（断言前登记） */
     const runs = (await api("GET", `/api/trees/${encodeURIComponent(sc.treeId)}/diagnostics`)).body?.runs ?? [];
     const failedRun = runs.find((r) => r.state === "failed");
     assert(failedRun !== undefined, "no failed run recorded server-side after /fail");
     assert((failedRun.failure?.code ?? "") === "upstream", `failed run code is ${String(failedRun.failure?.code)}`);
-    sc.trunkTurnCount += 2; /* /fail 零回合落库；恢复 prompt 落 1 对回合 */
     await snap("model-error-recovered");
     return { detail: `/fail converged as a failed run (banner role=alert text upstream, persistent failure panel, composer re-enabled); follow-up prompt succeeded; server shows the failed run (upstream)` };
   });
@@ -1272,7 +1279,7 @@ async function main() {
       assert(branchCount === 3, `branch count after restart is ${String(branchCount)} (expected 3: trunk + A + B)`);
       /* 重启后主线续聊可用。 */
       await sendTrunkPrompt("After the restart, the main line continues. Reply with: restart-ok.", { keyboard: false });
-      await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["restart-ok"] : ["restart-ok"], CLI.promptTimeoutMs);
+      await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["restart-ok"] : ["restart-ok"], CLI.promptTimeoutMs, MODE === "selftest" ? 5 : 4);
     } finally {
       chrome.expectPageErrors = false;
     }
