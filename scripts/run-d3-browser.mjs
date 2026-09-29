@@ -116,7 +116,7 @@ import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.3.1";
+const VERSION = "1.3.2";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -3460,9 +3460,12 @@ async function main() {
   await runCheck("tool-policy-deny-provenance", stepToolPolicyDenyProvenance);
   await runCheck("tool-policy-canary-never-read", stepToolPolicyCanaryNeverRead);
 
+  /* v1.3.2：summary 写盘移出本检查体（检查体保持纯断言），改在 main()
+     全部检查登记后的统一收尾执行（见文件尾 try/catch 块）——修复写盘
+     时点早于本行登记、summary.json 的 checks 数组恒比 stdout 少 1 行的
+     既知 off-by-one。 */
   await runCheck("console-clean", async () => {
     const unexpected = chrome.pageErrors; /* expectPageErrors 窗口内的已在采集处跳过 */
-    await writeSummaryArtifact();
     assert(unexpected.length === 0, `page errors observed: ${JSON.stringify(unexpected.slice(0, 5))}`);
     return { detail: "zero unexpected page console/Log errors across the whole run" };
   });
@@ -3470,7 +3473,13 @@ async function main() {
   return 0;
 }
 
-/** 汇总 artifacts：全检查结果 + 页面终态摘要 + 网络事实（脱敏写盘）。 */
+/** 汇总 artifacts：全检查结果 + 页面终态摘要 + 网络事实（脱敏写盘）。
+ *  v1.3.2：调用点从 console-clean 检查体内移至 main() 之后的统一收尾
+ *  （成功路径在全部检查登记后写盘；失败路径同样尽力写盘，写盘自身的
+ *  失败绝不掩盖原始错误）——修复写盘时点早于最后一项检查登记、checks
+ *  数组恒少 1 行（console-clean）的 off-by-one；例外：chrome 缺失的
+ *  BLOCKED 早退发生在 artifacts 目录创建之前，本就无落盘位置（stdout
+ *  全量 BLOCKED 报告为准）。 */
 async function writeSummaryArtifact() {
   const summary = await evalJs(pageSummaryExpression()).catch(() => null);
   const payload = {
@@ -3545,18 +3554,30 @@ process.on("exit", () => {
 
 try {
   const code = await main();
+  /* v1.3.2：summary 在全部检查登记后、cleanup 之前写盘——checks 数组
+     与 stdout 全量一致（含 console-clean 行）；页面终态摘要在 chrome
+     存活时采集。检查 FAIL 不抛出 main（runCheck 就地登记），故本写盘
+     覆盖「有 FAIL 的完整跑」；写盘自身失败按跑批器自身失败如实上报。 */
+  await writeSummaryArtifact();
   await cleanup();
   finish(code === 0 && results.some((r) => r.status === "FAIL") ? 2 : code);
 } catch (err) {
   /* 任何失败路径同样走清理（镜像 API 跑批器的 finally 纪律：不留孤儿
-     进程/临时目录，canary/marker 的操作者目录残留同样处置）。 */
-  await cleanup().catch(() => { /* 尽力而为 */ });
+     进程/临时目录，canary/marker 的操作者目录残留同样处置）。
+     v1.3.2：失败路径在清理前同样尽力写盘 summary（已登记的检查行如实
+     入盘；写盘自身的失败被吞掉，绝不掩盖原始错误——artifacts 目录
+     尚未建立或 chrome 已死时自然跳过）。 */
   const message = sanitizeText(err instanceof Error ? err.message : String(err));
+  const writeSummaryBestEffort = () => writeSummaryArtifact().catch(() => { /* 尽力而为 */ });
   if (message.startsWith("BLOCKED:")) {
     console.error(message);
     sweepBlocked(message.replace(/^BLOCKED:\s*/, ""));
+    await writeSummaryBestEffort();
+    await cleanup().catch(() => { /* 尽力而为 */ });
     finish(3);
   } else {
+    await writeSummaryBestEffort();
+    await cleanup().catch(() => { /* 尽力而为 */ });
     console.error(`${SCRIPT_NAME} self-failure: ${message}`);
     process.exit(1);
   }
