@@ -14,6 +14,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { DatabaseSync } from "node:sqlite";
 import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type {
@@ -603,6 +604,118 @@ test("anchor status preserves duplicate and cross-line selections and degrades w
   }
 });
 
+test("changed anchor (DB-constructed): originStatus reports changed, the excerpt stays readable, reveal refuses without fallback, nothing is silently repaired (W1 §6-3)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+    const t1 = await service.prompt(treeId, trunkId, "q1");
+    const answer = t1.assistantTurn;
+    assert.equal(answer.text, "echo:[q1]");
+
+    /* 同一答案上的两个锚：prefix 选区（改写后切片失配 → changed）与
+       tail 选区（改写后仍逐字匹配 → available 对照组，证明判定按各 origin
+       逐条计算，不是一刀切降级）。 */
+    const changedCreation = service.createBranchFromSelection(treeId, trunkId, answer.id, {
+      start: 0,
+      end: 5,
+      text: "echo:",
+    });
+    const controlCreation = service.createBranchFromSelection(treeId, trunkId, answer.id, {
+      start: 6,
+      end: 9,
+      text: "q1]",
+    });
+    let state = service.getTreeState(treeId);
+    assert.equal(findBranchView(state, changedCreation.branch.id).originStatus, "available");
+    assert.equal(findBranchView(state, controlCreation.branch.id).originStatus, "available");
+    await studio.shutdown();
+
+    /* 不变量破坏（W1 §6-3 认可的补测路线）：产品没有改写 turn 文本的路径，
+       `changed` 态只能直改 DB 构造——同长度前缀改写锚点答案（"echo:" →
+       "ECHO:"），令 prefix 选区在原偏移处失配、tail 选区不变。仓储层
+       （setBranchOrigin 写入校验）与产品流都拒绝这种状态，直改 SQL 是
+       唯一入口。 */
+    const db = new DatabaseSync(join(dir, "treeai.db"));
+    db.prepare("UPDATE turns SET text = ? WHERE id = ?").run("ECHO:[q1]", answer.id);
+    db.close();
+
+    /* 整实例重启（新 repo + 新 runtime + 新 service）后读改写后的库。 */
+    const studio2 = makeStudioInstance(dir);
+    const { service: service2, repository: repository2 } = studio2;
+
+    /* 三态判定（真实 #anchorStatus 对真实 DB 事实）：失配选区如实报
+       `changed`（既不伪造 available，也不降格为 unavailable）；同一 turn
+       上仍匹配的选区仍 available。 */
+    state = service2.getTreeState(treeId);
+    const changedView = findBranchView(state, changedCreation.branch.id);
+    const controlView = findBranchView(state, controlCreation.branch.id);
+    assert.equal(changedView.originStatus, "changed", "the rewritten slice reports changed");
+    assert.equal(controlView.originStatus, "available", "the still-matching slice on the same turn stays available");
+    /* 摘录始终可读（§1.3）：降级不删除、不遮蔽落库的选区快照；树照常
+       可读，改写后的答案文本按 DB 事实原样呈现（不遮蔽、不修复）。 */
+    assert.ok(changedView.origin !== null);
+    assert.deepEqual(changedView.origin.selection, changedCreation.origin.selection, "the saved excerpt stays readable");
+    const mutatedAnswer = findBranchView(state, trunkId).turns.find((t) => t.id === answer.id);
+    assert.ok(mutatedAnswer !== undefined);
+    assert.equal(mutatedAnswer.text, "ECHO:[q1]", "the read model shows the DB truth");
+
+    /* 揭示拒绝且如实报告（§1.3）：changed → 不定位；返回的 selection 是
+       落库快照原文（不是改写后文本的切片——无 whole-answer 回退，也无
+       按首次出现重新定位），且导航零副作用（游标不动）。 */
+    const cursorBeforeReveal = state.cursor;
+    const reveal = await service2.revealBranchOrigin(treeId, changedCreation.branch.id);
+    assert.equal(reveal.status, "changed", "reveal reports the degraded status honestly");
+    assert.equal(reveal.sourceBranchId, trunkId);
+    assert.equal(reveal.anchorTurnId, answer.id);
+    assert.deepEqual(reveal.selection, changedCreation.origin.selection, "reveal returns the saved excerpt verbatim");
+    assert.deepEqual(
+      service2.getTreeState(treeId).cursor,
+      cursorBeforeReveal,
+      "the refused reveal navigates nothing",
+    );
+
+    /* 对照：同一答案上仍匹配的选区照常可揭示（拒绝源于该 origin 的
+       changed 判定，不是揭示路径整体失灵）。 */
+    const controlReveal = await service2.revealBranchOrigin(treeId, controlCreation.branch.id);
+    assert.equal(controlReveal.status, "available");
+    assert.deepEqual(controlReveal.selection, controlCreation.origin.selection);
+
+    /* 续聊边界（如实锁定实际行为，非契约背书）：服务层续聊（prompt /
+       switchBranch）只由「续聊点可解析 + session 可用性」门控，不查锚点
+       状态——changed 锚点不阻断分支首聊：分支仍从记录在案的锚点条目分叉
+       （echo 上下文 = 锚点前主干 + 分支自身，与锚点完好时逐字一致，无
+       whole-answer / 首次出现回退）。W1 §1.3 字面的「changed → 续聊拒绝」
+       未在服务层实现（§1.3 实现对照本身把续聊 fail-closed 指向 §3.4 的
+       session 不可用路径）；按实现如实断言，偏差随 §6-3 呈报 owner。 */
+    const branchPrompt = await service2.prompt(treeId, changedCreation.branch.id, "b1-q");
+    assert.equal(branchPrompt.run.state, "succeeded", "a changed anchor does not block branch continuation");
+    assert.equal(
+      branchPrompt.assistantTurn.text,
+      "echo:[q1|b1-q]",
+      "continuation forks from the recorded anchor entry (no re-anchoring fallback)",
+    );
+
+    /* 无静默修复：改写后的 DB 事实与落库选区快照原样保留；重复读取判定
+       稳定（不自我恢复、不改写事实、不隐瞒降级）。 */
+    assert.equal(repository2.getTurn(answer.id).text, "ECHO:[q1]", "the mutated fact is preserved, not repaired");
+    assert.deepEqual(
+      repository2.findBranchOrigin(changedCreation.branch.id)?.selection,
+      changedCreation.origin.selection,
+      "the anchored selection snapshot is never rewritten",
+    );
+    const finalState = service2.getTreeState(treeId);
+    assert.equal(findBranchView(finalState, changedCreation.branch.id).originStatus, "changed");
+    assert.equal(findBranchView(finalState, controlCreation.branch.id).originStatus, "available");
+    await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
 test("return idempotency: same key+content replays the same turn; different content conflicts", async () => {
   const dir = makeTempDataDir();
   try {
@@ -731,6 +844,112 @@ test("missing session: submit rejects with no return persisted; restore + same-k
     assert.equal(retried.turn.idempotencyKey, "key-missing-session");
     assert.equal(countReturns(), 1, "exactly one return after restore + same-key retry");
     await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("empty-trunk return: submit persists directly without a session; the first trunk prompt creates the session and delivers it exactly once (W1 §6-7)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const sessionsDir = join(dir, "sessions");
+
+    /* 「主干尚无 session + 已存在锚定分支」在产品流里不可达（任何树的
+       首个 prompt 必然落在主干——锚点答案先要有 prompt 才存在），唯一
+       构造途径是仓储层铺设锚点（与 legacy-shape / startup-recovery 用例
+       同款）：主干零 episode / 零 run，锚点回合挂在非主干分支上。 */
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+    const sourceBranch = repository.createBranch(treeId, { parentBranchId: trunkId });
+    const anchorEpisode = repository.createEpisode(sourceBranch.id);
+    const anchorRun = repository.createRun(anchorEpisode.id, {
+      sessionId: "sess-anchor-only" as PiSessionId,
+      sessionFile: "sessions/anchor-only.jsonl", // 只作锚点记录，从不恢复（磁盘上不存在）
+      entryId: "entry-anchor" as PiEntryId,
+      piVersion: "0.85.1" as PiVersion,
+      availability: { status: "available" },
+    });
+    const anchorTurn = repository.createTurn({
+      treeId,
+      branchId: sourceBranch.id,
+      episodeId: anchorEpisode.id,
+      runId: anchorRun.id,
+      role: "assistant",
+      text: "anchor answer with a selectable part",
+      piEntryId: "entry-anchor",
+    });
+    const branchCreation = service.createBranchFromSelection(treeId, sourceBranch.id, anchorTurn.id, {
+      start: 0,
+      end: 6,
+      text: "anchor",
+    });
+    const branchId = branchCreation.branch.id;
+
+    /* 前置：主干无 episode / 无 session / 无导航；锚定分支判定 available
+       （铺设本身是完好的锚，不是意外降级态）。 */
+    assert.equal(repository.listEpisodes(trunkId).length, 0, "the trunk has never been prompted");
+    assert.equal(readdirSync(sessionsDir).length, 0, "no Pi session file exists yet");
+    let state = service.getTreeState(treeId);
+    assert.equal(state.cursor, null, "no navigation has happened");
+    assert.equal(findBranchView(state, trunkId).sessionAvailability, null, "the trunk has no session yet");
+    assert.equal(findBranchView(state, branchId).originStatus, "available", "the fabricated anchor is well-formed");
+
+    /* 提交 Return（W1 §2.4 直落库分支）：switchBranch 对主干的
+       new-session 续聊点显式不导航、不建会话，Return 直接落库。 */
+    const returnText = "RETURN: the branch settled this before the trunk ever started";
+    const submission = await service.submitReturn(treeId, branchId, returnText, "key-empty-trunk");
+    assert.equal(submission.created, true);
+    assert.equal(submission.turn.role, "return");
+    assert.equal(submission.turn.branchId, trunkId, "the return lands on the Trunk");
+    assert.equal(submission.turn.fromBranchId, branchId);
+    assert.equal(submission.turn.deliveredRunId, null, "confirmed, not yet delivered");
+    assert.deepEqual(submission.turn.targetAnchor, {
+      sourceBranchId: branchCreation.origin.sourceBranchId,
+      anchorTurnId: branchCreation.origin.anchorTurnId,
+      anchorEntryId: branchCreation.origin.anchorEntryId,
+      selection: branchCreation.origin.selection,
+    });
+
+    /* 不建会话、不导航、不建 run：session 目录仍空、游标仍 null；Return
+       落在主干自己的首个 episode 里，但该 episode 无 run（session 由首次
+       主干 prompt 创建，不由 Return 创建）。 */
+    assert.equal(readdirSync(sessionsDir).length, 0, "submitting the return creates no Pi session");
+    state = service.getTreeState(treeId);
+    assert.equal(state.cursor, null, "submitting the return navigates nothing (new-session trunk)");
+    const trunkEpisodes = repository.listEpisodes(trunkId);
+    assert.equal(trunkEpisodes.length, 1, "the return's episode is the trunk's first");
+    assert.deepEqual(
+      trunkEpisodes.flatMap((episode) => repository.listRuns(episode.id)),
+      [],
+      "no run is created by the return",
+    );
+    assert.equal(service.getTreeDiagnostics(treeId).runs.length, 1, "only the fabricated anchor run exists");
+
+    /* 首次主干 prompt：此刻才建 session，并把 pending Return 送入 Pi
+       上下文（送达恰一次，deliveredRunId 绑定本次 run）。 */
+    const first = await service.prompt(treeId, trunkId, "first trunk question");
+    assert.equal(first.run.state, "succeeded");
+    assert.equal(first.deliveredReturns, 1, "the pending return is delivered by the first trunk prompt");
+    assert.equal(readdirSync(sessionsDir).length, 1, "the session is created exactly now");
+    assert.ok(
+      first.assistantTurn.text.includes(returnText),
+      `the composed context carries the return: ${first.assistantTurn.text}`,
+    );
+    assert.ok(first.assistantTurn.text.includes("first trunk question"));
+    state = service.getTreeState(treeId);
+    assert.notEqual(state.cursor, null, "the first prompt navigates the fresh session");
+    assert.equal(state.cursor?.branchId, trunkId);
+    const delivered = findBranchView(state, trunkId).turns.find((t) => t.role === "return");
+    assert.ok(delivered !== undefined);
+    assert.equal(delivered.deliveredRunId, first.run.id, "delivery is bound to the first trunk run");
+
+    /* 再一次主干 prompt：不重送（送达恰一次）。 */
+    const second = await service.prompt(treeId, trunkId, "second trunk question");
+    assert.equal(second.deliveredReturns, 0, "the return is never re-sent after delivery");
+    await studio.shutdown();
   } finally {
     cleanupDir(dir);
   }
