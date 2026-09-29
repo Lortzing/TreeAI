@@ -1,0 +1,16 @@
+{
+  "kind": "d3-real-pi-faults-2-phase2",
+  "result": "FAIL",
+  "error": "ASSERTION FAILED: recovery branch prompt accepted",
+  "steps": [
+    {
+      "step": "restart-convergence",
+      "journalEvents": 50
+    },
+    {
+      "step": "fail-closed-prompt",
+      "status": 502,
+      "errorCode": "session-corrupt"
+    }
+  ]
+}

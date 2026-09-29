@@ -1,0 +1,14 @@
+{
+  "kind": "d3-real-pi-faults-2-phase1",
+  "baseUrl": "http://127.0.0.1:8791",
+  "steps": [
+    {
+      "step": "phase1",
+      "treeId": "tree_a886bb62-26b4-4b52-9b10-d86a9e68781a",
+      "trunk": "branch_29f17ae1-c135-4e0c-89c1-f79fbc44d89c",
+      "brokenBranchId": "branch_b5c44079-760e-469e-b675-0ec0ad2b0b68",
+      "movedCount": 1
+    }
+  ],
+  "result": "PASS"
+}
