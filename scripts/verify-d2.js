@@ -440,6 +440,10 @@ const CHECKS = [
     },
   },
   {
+    id: "unit-tests-studio",
+    fn: moduleTestCheck("unit-tests-studio", join("apps", "studio"), "@treeai/studio"),
+  },
+  {
     id: "pi-version-pin",
     fn: async () => {
       const runtimePiPkg = readJson(join(ROOT, "packages", "runtime-pi", "package.json"));

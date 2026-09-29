@@ -67,9 +67,10 @@ through `TREEAI_STUDIO_API_KEY` (in-memory injection via runtime-pi credentials;
 never a CLI flag, never logged or persisted). The controlled Pi agent directory
 is `--agent-dir DIR`, defaulting to `<data>/pi-agent/`; Studio never silently
 reads `~/.pi`. Missing provider, model, API key, or an unusable agent directory
-fails at startup. Tests: `npm test --workspace @treeai/studio` (also part of
-`npm test`). D3 status: offline Echo vertical slice only — Gate 2 / real-Pi
-acceptance and user trials are not complete.
+fails at startup. Tests: `npm test --workspace @treeai/studio` (part of
+`npm test` and of the `verify:d2` offline CI gate). D3 status: offline Echo
+vertical slice only — Gate 2 / real-Pi acceptance and user trials are not
+complete.
 
 ## Coordination & evidence
 
