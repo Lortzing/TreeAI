@@ -13,7 +13,9 @@
  *   - A5 诊断面与 journal 保守投影（安全键集合 + 剧本 canary 词不外泄）；
  *   - A5 产品面 ToolPolicy（issue #6 P0-3 工程后半；仅 real-pi 且
  *     --pi-tools 含 read 时运行，否则按模式/门控 NOT_RUN）：经真实产品
- *     进程驱动请求时策略门——
+ *     进程驱动请求时策略门——在**独立探针树**（全新 session，镜像 SDK
+ *     级驱动的已证条件；主剧本树的长上下文会让真实模型偶发不发起工具
+ *     调用）上运行：
  *       · allow 对照：读取根内标记文件 → 工具真实执行（SSE
  *         tool-activity started/finished + journal tool.execution 行），
  *         标记内容进入回答与会话文件；
@@ -22,8 +24,10 @@
  *         （502、无回合落库），拒绝 provenance 经 SSE tool-activity
  *         (denied)（键集锁定：tool/outcome/reason/ruleId，无路径/参数）、
  *         journal tool.decision 行与诊断面 policyDecisions(observed)
- *         呈现；canary 内容绝不进入任何会话文件（受控 agent 目录 +
- *         数据目录全树扫描；镜像 SDK 级驱动
+ *         呈现；真实模型的工具调用合规性有方差，最多 3 次尝试逐次加硬
+ *         指令，逃逸轮（模型未发起读取即作答）如实登记——PASS 仅要求
+ *         其中一次收敛 policy-denied；canary 内容绝不进入任何会话文件
+ *         （受控 agent 目录 + 数据目录全树扫描；镜像 SDK 级驱动
  *         scripts/run-d3-real-pi-tool-policy.mjs 的 canary 纪律）；
  *   - SSE 事件面（snapshot / run-started / message-delta / run-terminal）；
  *   - A4 宿主重启（SIGKILL 后同数据目录重启：树/分支/回合/cursor 完整、
@@ -682,6 +686,36 @@ async function promptOk(branchId, text) {
   return res.body;
 }
 
+/* ---------------- A5 探针树助手（独立于主剧本树） ---------------- */
+
+/** A5 探针树的 API 路径。 */
+function tpPath(action) {
+  const tp = sc.toolPolicy;
+  assert(tp !== null && tp.treeId !== null, "scenario wiring: A5 probe tree missing (see A5-product-tool-policy)");
+  return `/api/trees/${encodeURIComponent(tp.treeId)}${action === undefined ? "" : `/${action}`}`;
+}
+
+/** A5 探针树的成功 prompt 助手（不登记进主树的 SSE run 集合）。 */
+async function tpPromptOk(text) {
+  const res = await api(sc.port, "POST", tpPath("prompt"), { branchId: sc.toolPolicy.trunkId, text }, CLI.promptTimeoutMs);
+  assert(res.status === 200, `prompt HTTP ${String(res.status)}: ${errDetail(res)}`);
+  const outcome = res.body?.outcome;
+  assert(outcome !== undefined && outcome !== null, "prompt response has no outcome");
+  assert(outcome.run?.state === "succeeded", `run state is ${String(outcome.run?.state)} (expected succeeded)`);
+  assert(
+    typeof outcome.assistantTurn?.text === "string" && outcome.assistantTurn.text.trim().length > 0,
+    "assistant message is empty",
+  );
+  return res.body;
+}
+
+/** A5 探针树的状态读取。 */
+async function tpFetchState() {
+  const res = await api(sc.port, "GET", tpPath("state"));
+  assert(res.status === 200, `GET state failed: ${errDetail(res)}`);
+  return res.body;
+}
+
 /** echo 模式的精确回声断言（echo 答案即分支隔离的机械证明）。 */
 function assertEchoMode(actual, expected, what) {
   if (MODE !== "echo-selftest") return;
@@ -743,6 +777,15 @@ async function main() {
     canaryToken: null,
     allowRunId: null,
     denyRunId: null,
+    /* 独立探针树：A5 提示走全新 session（干净上下文，镜像 SDK 级驱动的
+       已证条件），不沾染主剧本回合——主树的 SSE/诊断/重启计数因此与
+       无工具基线完全一致。 */
+    treeId: null,
+    trunkId: null,
+    sse: null,
+    /* overreach 尝试记录（真实模型的合规性有方差：未发起工具调用的
+       「逃逸」轮如实登记，最多 3 次尝试，逐次加硬指令）。 */
+    attempts: null,
   };
   if (piToolsEnabled) {
     console.log(
@@ -1186,13 +1229,16 @@ async function phaseModelError() {
 /* 诊断面 + 会话文件）表达。                                             */
 /*                                                                      */
 /* 场景布局（canary 可证地在所有读取根之外）：                            */
+/*   - **独立探针树**：A5 全部提示走全新 session（干净上下文——SDK 级驱动  */
+/*     的已证条件；首跑实录显示主剧本树的长上下文会让真实模型偶发不发起    */
+/*     工具调用即作答）。主树的 SSE/诊断/重启计数与无工具基线完全一致；    */
 /*   - 读取根 = studio 横幅报告的生效根（显式 --policy-read-roots 或缺省   */
 /*     数据目录 workspace/）——横幅是子进程装配的权威事实，不重复 CLI 的    */
 /*     缺省推导；                                                        */
 /*   - 标记文件 marker：首个读取根内（非秘密、随机 token 内容）→ allow；   */
 /*   - canary 文件：数据目录之外的兄弟临时目录（随机 token 内容，文件名    */
 /*     不含 token）→ realpath 两侧（镜像策略引擎 canonical 语义）逐根证明  */
-/*     在外 → overreach；                                                */
+/*     在外 → overreach（最多 3 次尝试逐次加硬指令，逃逸轮如实登记）；     */
 /*   - 受控 agent 目录自横幅解析；canary 内容绝不许出现在其下任何文件，     */
 /*     连同数据目录全树（sessions/journal.jsonl/treeai.db——DB 回合正文与  */
 /*     journal 消息增量同样是内容可能现身处）一并扫描。                    */
@@ -1255,6 +1301,17 @@ async function stepToolPolicySetup() {
   const agentMatch = /pi agent-dir=(.+?) \(controlled/.exec(banner);
   assert(agentMatch !== null, "studio banner does not report the controlled agent dir");
 
+  /* 独立探针树：A5 的 allow/overreach 提示走全新 session（干净上下文——
+     镜像 SDK 级驱动的已证条件；主剧本回合上的长上下文会让真实模型
+     偶发不发起工具调用）。主树的 SSE/诊断/重启计数不受影响。 */
+  const probe = await api(sc.port, "POST", "/api/trees");
+  assert(probe.status === 201, `A5 probe tree creation failed: ${errDetail(probe)}`);
+  const probeTreeId = probe.body?.tree?.id;
+  const probeTrunkId = probe.body?.trunkBranchId;
+  assert(typeof probeTreeId === "string" && probeTreeId.length > 0, "no tree id in the A5 probe creation response");
+  assert(typeof probeTrunkId === "string" && probeTrunkId.length > 0, "no trunk branch id in the A5 probe creation response");
+  const probeSse = await openSse(sc.port, `/api/trees/${encodeURIComponent(probeTreeId)}/events`);
+
   Object.assign(sc.toolPolicy, {
     readRoots,
     agentDir: agentMatch[1],
@@ -1266,11 +1323,15 @@ async function stepToolPolicySetup() {
     canaryPath,
     canaryName,
     canaryToken,
+    treeId: probeTreeId,
+    trunkId: probeTrunkId,
+    sse: probeSse,
+    attempts: [],
   });
   return {
     detail:
       `gate wired through the product CLI: tools=${bannerTools.join(",")}, ${String(readRoots.length)} read root(s); ` +
-      "marker inside roots[0], canary physically outside every read root",
+      "marker inside roots[0], canary physically outside every read root; A5 runs on a fresh probe tree (clean session)",
   };
 }
 
@@ -1281,7 +1342,7 @@ async function stepToolPolicyAllowRead() {
   const promptText =
     `Use the read tool to read the file named ${tp.markerName} in the directory ${tp.readRoots[0]}, ` +
     "then reply with its exact first line only.";
-  const allow = await promptOk(sc.trunkId, promptText);
+  const allow = await tpPromptOk(promptText);
   tp.allowRunId = allow.outcome.run.id;
   const answer = allow.outcome.assistantTurn.text;
   assertContainsMarkers(answer, [tp.markerToken], "allow-scenario answer");
@@ -1289,18 +1350,18 @@ async function stepToolPolicyAllowRead() {
      机械证明，镜像 SDK 驱动的 allow-fixture-entered-session）。 */
   const sessionFile = allow.outcome.run.session?.sessionFile;
   assert(typeof sessionFile === "string" && sessionFile.length > 0, "prompt outcome carries no session file reference");
-  assert(existsSync(sessionFile), "the trunk session file does not exist");
+  assert(existsSync(sessionFile), "the probe trunk session file does not exist");
   const sessionText = readFileSync(sessionFile, "utf8");
   assert(sessionText.includes(tp.markerFirstLine), "marker content never entered the session file (did the read actually execute?)");
   /* 产品面可见的执行生命周期：SSE tool-activity started + journal
      tool.execution 行（allow 的决定以 tool.decision 行 + 诊断面观测呈现）。 */
-  await sc.sse.drain();
-  const allowFrames = sc.sse.frames.filter((frame) => frame.event === "tool-activity" && frame.data?.runId === tp.allowRunId);
+  await tp.sse.drain();
+  const allowFrames = tp.sse.frames.filter((frame) => frame.event === "tool-activity" && frame.data?.runId === tp.allowRunId);
   assert(
     allowFrames.some((frame) => frame.data?.phase === "started" && typeof frame.data?.tool === "string"),
     "no tool-activity started frame for the allowed read (SSE surface)",
   );
-  const journal = await api(sc.port, "GET", `${treePath("journal")}?limit=500`);
+  const journal = await api(sc.port, "GET", `${tpPath("journal")}?limit=500`);
   const allowRows = (journal.body?.events ?? []).filter((event) => event.runId === tp.allowRunId);
   assert(
     allowRows.some((event) => event.type === "tool.execution.started" && /tool execution started: /.test(String(event.summary))),
@@ -1315,30 +1376,55 @@ async function stepToolPolicyAllowRead() {
   };
 }
 
-/** overreach 核心：执行前拦截 + policy-denied fail-closed 收敛 + 零回合落库。 */
+/** overreach 核心：执行前拦截 + policy-denied fail-closed 收敛 + 零回合落库。
+ *
+ * 真实模型的工具调用合规性有方差（首跑实录：模型未发起越权读取即作答
+ * ——「逃逸」，是模型行为而非产品缺陷）。本检查在探针树上最多尝试 3 次、
+ * 逐次加硬指令；每次尝试的结局如实登记进 attempts（记录与 detail 呈现），
+ * PASS 仅要求其中一次收敛 policy-denied。canary 绝不落库由
+ * A5-product-tool-policy-canary-never-read 兜底核查。 */
 async function stepToolPolicyDenyFailClosed() {
   const tp = sc.toolPolicy;
   assert(tp.canaryPath !== null, "scenario wiring: tool-policy layout missing (see A5-product-tool-policy)");
-  const turnsBefore = turnCount(await fetchState(), sc.trunkId);
-  const promptText =
-    `Use the read tool to read the file named ${tp.canaryName} in the directory ${tp.canaryDir}, ` +
-    "then reply with its exact first line only.";
-  const denied = await api(sc.port, "POST", treePath("prompt"), { branchId: sc.trunkId, text: promptText }, CLI.promptTimeoutMs);
-  assert(denied.status === 502, `overreach prompt must settle as 502 (got ${String(denied.status)}): ${errDetail(denied)}`);
+  const attemptPrompts = [
+    `Use the read tool to read the file named ${tp.canaryName} in the directory ${tp.canaryDir}, then reply with its exact first line only.`,
+    `Use the read tool to read the file at the absolute path ${tp.canaryPath}, then reply with its exact first line only. You must call the read tool with exactly this absolute path before answering; do not answer from memory, do not guess, and do not describe the file without reading it.`,
+    `Read the file at the absolute path ${tp.canaryPath} using the read tool now. Calling the read tool with exactly this path is required; replying without the tool call is not acceptable. Then reply with its exact first line only.`,
+  ];
+  let denied = null;
+  for (let attempt = 1; attempt <= attemptPrompts.length; attempt += 1) {
+    const turnsBefore = turnCount(await tpFetchState(), tp.trunkId);
+    const res = await api(sc.port, "POST", tpPath("prompt"), { branchId: tp.trunkId, text: attemptPrompts[attempt - 1] }, CLI.promptTimeoutMs);
+    if (res.status === 502 && res.body?.error?.code === "policy-denied") {
+      const turnsAfter = turnCount(await tpFetchState(), tp.trunkId);
+      assert(turnsAfter === turnsBefore, "a policy-denied prompt must persist no turns");
+      denied = res;
+      break;
+    }
+    /* 逃逸/异常轮如实登记：模型未发起越权工具调用即作答（200），或上游
+       偶发错误（非 200 非 policy-denied）——均非破坏性（canary 未被读
+       取，canary-never-read 兜底核查）。 */
+    tp.attempts.push({
+      attempt,
+      outcome:
+        res.status === 200
+          ? `escape: run ${String(res.body?.outcome?.run?.id ?? "?").slice(0, 12)}… ${String(res.body?.outcome?.run?.state ?? "?")}`
+          : `http ${String(res.status)} code ${String(res.body?.error?.code ?? "?")}`,
+    });
+  }
   assert(
-    denied.body?.error?.code === "policy-denied",
-    `overreach error code is ${String(denied.body?.error?.code)} (expected policy-denied)`,
+    denied !== null,
+    `overreach not denied in ${String(attemptPrompts.length)} attempts (the model never issued the out-of-roots read): ${JSON.stringify(tp.attempts)}`,
   );
-  const diag = await api(sc.port, "GET", treePath("diagnostics"));
+  const diag = await api(sc.port, "GET", tpPath("diagnostics"));
   assert(diag.body?.runtimeState === "idle", "runtimeState is not idle after the denied prompt");
   const failedRun = (diag.body?.runs ?? []).find((run) => run.state === "failed" && run.failure?.code === "policy-denied");
   assert(failedRun !== undefined, "diagnostics shows no run converged failed with code policy-denied");
   tp.denyRunId = failedRun.runId;
-  sc.runIds.add(failedRun.runId);
-  const turnsAfter = turnCount(await fetchState(), sc.trunkId);
-  assert(turnsAfter === turnsBefore, "a policy-denied prompt must persist no turns");
   return {
-    detail: `overreach read denied BEFORE execution: run ${String(tp.denyRunId).slice(0, 12)}… converged failed(policy-denied) (fail closed), no turns persisted`,
+    detail:
+      `overreach read denied BEFORE execution: run ${String(tp.denyRunId).slice(0, 12)}… converged failed(policy-denied) (fail closed), no turns persisted` +
+      (tp.attempts.length > 0 ? `; ${String(tp.attempts.length)} earlier model-escape attempt(s) recorded honestly` : ""),
   };
 }
 
@@ -1346,10 +1432,10 @@ async function stepToolPolicyDenyFailClosed() {
 async function stepToolPolicyDenyProvenance() {
   const tp = sc.toolPolicy;
   assert(tp.denyRunId !== null, "scenario wiring: deny run id missing (see A5-product-tool-policy-deny-fail-closed)");
-  await sc.sse.drain();
+  await tp.sse.drain();
   /* SSE tool-activity denied 相位：键集锁定 + provenance（工具名/outcome/
      reason/ruleId），路径/参数绝不外泄（与离线波次锁定的形状一致）。 */
-  const deniedFrames = sc.sse.frames.filter(
+  const deniedFrames = tp.sse.frames.filter(
     (frame) => frame.event === "tool-activity" && frame.data?.runId === tp.denyRunId && frame.data?.phase === "denied",
   );
   assert(deniedFrames.length >= 1, "no tool-activity denied frame for the overreach run (SSE surface)");
@@ -1379,7 +1465,7 @@ async function stepToolPolicyDenyProvenance() {
     assert(!frameBlob.includes(leak), "denied tool-activity frame leaks a target path fragment (paths/params must never surface)");
   }
   /* journal：tool.decision 拒绝行 + 即时 runtime.error(policy-denied) 行。 */
-  const journal = await api(sc.port, "GET", `${treePath("journal")}?limit=500`);
+  const journal = await api(sc.port, "GET", `${tpPath("journal")}?limit=500`);
   const denyRows = (journal.body?.events ?? []).filter((event) => event.runId === tp.denyRunId);
   assert(
     denyRows.some((event) => event.type === "tool.decision" && /deny/.test(String(event.summary)) && /no rule/.test(String(event.summary))),
@@ -1390,7 +1476,7 @@ async function stepToolPolicyDenyProvenance() {
     "journal has no runtime.error(policy-denied) row for the overreach run",
   );
   /* 诊断面：policyDecisions observed=true，allow + deny 决定的脱敏投影。 */
-  const diag = await api(sc.port, "GET", treePath("diagnostics"));
+  const diag = await api(sc.port, "GET", tpPath("diagnostics"));
   const policy = diag.body?.policyDecisions;
   assert(policy?.observed === true, "diagnostics policyDecisions.observed is not true after a real denial");
   const views = policy.decisions ?? [];
@@ -1415,6 +1501,8 @@ async function stepToolPolicyDenyProvenance() {
   for (const leak of [tp.canaryName, tp.markerName, tp.canaryDir, tp.readRoots[0]]) {
     assert(!diagBlob.includes(leak), "diagnostics policy decisions leak a target path fragment");
   }
+  /* 探针树 SSE 流使命完成（重启阶段前显式关闭）。 */
+  await tp.sse.close();
   return {
     detail:
       "denial provenance visible across the product surface: SSE denied phase (locked key set) + journal tool.decision/runtime.error rows + diagnostics observed decisions; no paths/params leaked",
@@ -1472,8 +1560,8 @@ async function phaseSse() {
     const deltas = frames.filter((frame) => frame.event === "message-delta");
     const aborts = frames.filter((frame) => frame.event === "abort-requested");
     const tools = frames.filter((frame) => frame.event === "tool-activity");
-    /* A5 产品面场景增加两个 run（allow 成功 + deny 以 policy-denied 失败）。 */
-    const expectedRuns = MODE === "echo-selftest" ? 9 : sc.toolPolicy.applicable ? 9 : 7;
+    /* A5 产品面场景在独立探针树上运行——主树计数与无工具基线一致。 */
+    const expectedRuns = MODE === "echo-selftest" ? 9 : 7;
     assert(snapshots.length === 1, `expected exactly one snapshot frame (got ${String(snapshots.length)})`);
     assert(snapshots[0].data?.treeId === sc.treeId, "snapshot frame is not for this tree");
     assert(started.length === expectedRuns, `expected ${String(expectedRuns)} run-started frames (got ${String(started.length)})`);
@@ -1485,34 +1573,27 @@ async function phaseSse() {
       stateMix[state] = (stateMix[state] ?? 0) + 1;
       assert(frame.data?.treeId === sc.treeId, "run-terminal frame for a different tree");
     }
-    const expectedMix =
-      MODE === "echo-selftest" || sc.toolPolicy.applicable
-        ? { succeeded: 8, failed: 1 }
-        : { succeeded: 7 };
+    const expectedMix = MODE === "echo-selftest" ? { succeeded: 8, failed: 1 } : { succeeded: 7 };
     for (const [state, count] of Object.entries(expectedMix)) {
       assert((stateMix[state] ?? 0) === count, `run-terminal state mix: ${state} x ${String(stateMix[state] ?? 0)} (expected ${String(count)})`);
     }
     if (MODE === "echo-selftest") {
       assert(deltas.length === 16, `expected 16 message-delta frames (2 per echo answer; got ${String(deltas.length)})`);
     } else {
-      /* 每个成功 run 至少一个文本增量；失败 run（policy-denied）可能无
-         文本增量（模型直接发起工具调用），故按成功数断言下界。 */
-      const expectedTextRuns = sc.toolPolicy.applicable ? 8 : 7;
-      assert(deltas.length >= expectedTextRuns, `expected >= ${String(expectedTextRuns)} message-delta frames (got ${String(deltas.length)})`);
+      /* 每个成功 run 至少一个文本增量（real-pi 主树 7 个 run 全部成功）。 */
+      assert(deltas.length >= 7, `expected >= 7 message-delta frames (got ${String(deltas.length)})`);
     }
     assert(aborts.length === 0, "unexpected abort-requested frames");
     if (MODE === "real-pi" && CLI.piTools !== null) {
-      /* 工具缝已开：tool-activity 帧合法（形态校验；A5 场景的 provenance
-         细节由 A5-product-tool-policy-* 各检查负责）。 */
+      /* 工具缝已开：主树上出现的任何 tool-activity 帧做形态校验（模型可
+         能自发使用被允许的工具；A5 场景的 provenance 细节在探针树上由
+         A5-product-tool-policy-* 各检查负责——这里不断言数量）。 */
       for (const frame of tools) {
         assert(typeof frame.data?.tool === "string" && frame.data.tool.length > 0, "tool-activity frame without a tool name");
         assert(
           ["started", "finished", "denied"].includes(frame.data?.phase),
           `tool-activity frame with unknown phase: ${String(frame.data?.phase)}`,
         );
-      }
-      if (sc.toolPolicy.applicable) {
-        assert(tools.length > 0, "expected tool-activity frames from the A5 product tool-policy runs");
       }
     } else {
       assert(tools.length === 0, "unexpected tool-activity frames (studio prompts run with an empty tool allowlist)");
@@ -1538,8 +1619,8 @@ async function phaseDiagnostics() {
     const body = diag.body;
     assert(body?.runtimeState === "idle", `runtimeState is ${String(body?.runtimeState)} (expected idle at rest)`);
     assert(body?.activeRun === null, "activeRun is not null at rest");
-    /* A5 产品面场景增加两个 run（allow 成功 + deny 以 policy-denied 失败）。 */
-    const expectedRuns = MODE === "echo-selftest" ? 9 : sc.toolPolicy.applicable ? 9 : 7;
+    /* A5 产品面场景在独立探针树上运行——主树计数与无工具基线一致。 */
+    const expectedRuns = MODE === "echo-selftest" ? 9 : 7;
     assert(body?.runs?.length === expectedRuns, `diagnostics lists ${String(body?.runs?.length)} runs (expected ${String(expectedRuns)})`);
     const stateMix = {};
     for (const run of body.runs) {
@@ -1552,7 +1633,7 @@ async function phaseDiagnostics() {
       assert(run.terminalAt !== null, `run ${String(run.runId)} has no terminalAt`);
       if (run.state !== "failed") assert(run.failure === null, `non-failed run ${String(run.runId)} carries a failure`);
     }
-    const expectedMix = MODE === "echo-selftest" || sc.toolPolicy.applicable ? { succeeded: 8, failed: 1 } : { succeeded: 7 };
+    const expectedMix = MODE === "echo-selftest" ? { succeeded: 8, failed: 1 } : { succeeded: 7 };
     for (const [state, count] of Object.entries(expectedMix)) {
       assert((stateMix[state] ?? 0) === count, `run state mix: ${state} x ${String(stateMix[state] ?? 0)} (expected ${String(count)})`);
     }
@@ -1564,25 +1645,10 @@ async function phaseDiagnostics() {
         "failure projection key set mismatch",
       );
     }
-    if (MODE === "real-pi" && sc.toolPolicy.applicable) {
-      /* A5 场景的唯一失败 run 即 overreach 拒绝（policy-denied）。 */
-      const failedRun = body.runs.find((run) => run.state === "failed");
-      assert(failedRun?.failure?.code === "policy-denied", "the single failed run is not policy-denied");
-      assert(
-        JSON.stringify(Object.keys(failedRun.failure).sort()) === JSON.stringify(["code", "message"]),
-        "failure projection key set mismatch",
-      );
-    }
-    if (sc.toolPolicy.applicable) {
-      /* A5 已观测真实决定：observed 必须如实为 true（细节断言归
-         A5-product-tool-policy-deny-provenance，这里只锁方向与诚实性）。 */
-      assert(
-        body?.policyDecisions?.observed === true,
-        "policyDecisions.observed must be true after the A5 product tool-policy phase (a real denial was observed)",
-      );
-    } else if (MODE === "real-pi" && CLI.piTools !== null) {
-      /* 工具已开但 A5 未运行（未含 read）：只做形态校验，不断言方向
-         （模型可能自发用过被允许的工具）。 */
+    if (MODE === "real-pi" && CLI.piTools !== null) {
+      /* 工具已开但 A5 在独立探针树上：主树只做形态校验，不断言方向
+         （主树 run 未用过工具则 observed 如实为 false；模型若自发用过
+         被允许的工具则 observed 为 true——两种都诚实）。 */
       const policy = body?.policyDecisions;
       if (policy?.observed === false) {
         assert(typeof policy.reason === "string" && policy.reason.length > 0, "policyDecisions.reason missing");
@@ -1617,13 +1683,24 @@ async function phaseJournal() {
     }
     const text = blob.join("\n");
     /* A5 产品面场景运行过时，其标记/canary 内容同样不得进入任何 journal
-       摘要（summary 是白名单构造；消息正文只以长度出现）。 */
+       摘要（summary 是白名单构造；消息正文只以长度出现）——主树与探针
+       树两份 journal 都扫。 */
     const toolPolicyCanaries =
       sc.toolPolicy !== null && sc.toolPolicy.canaryToken !== null
         ? [sc.toolPolicy.canaryToken, sc.toolPolicy.markerToken]
         : [];
     for (const canary of [...CANARIES, ...toolPolicyCanaries]) {
       assert(!containsIgnoreCase(text, canary), `journal projection leaks the scenario canary '${canary}'`);
+    }
+    if (sc.toolPolicy !== null && sc.toolPolicy.treeId !== null) {
+      const probe = await api(sc.port, "GET", `${tpPath("journal")}?limit=500`);
+      assert(probe.status === 200, `probe tree journal endpoint failed: ${errDetail(probe)}`);
+      const probeEvents = probe.body?.events ?? [];
+      assert(Array.isArray(probeEvents), "probe tree journal response has no events array");
+      const probeText = probeEvents.map((event) => `${String(event.type)} ${String(event.summary)}`).join("\n");
+      for (const canary of toolPolicyCanaries) {
+        assert(!containsIgnoreCase(probeText, canary), `probe tree journal projection leaks the scenario canary '${canary}'`);
+      }
     }
     return { detail: `${String(events.length)} journal events, whitelist key set exact, no scenario canary leakage` };
   });
@@ -1638,13 +1715,11 @@ async function phaseRestart() {
       [sc.branchA]: turnCount(pre, sc.branchA),
       [sc.branchB]: turnCount(pre, sc.branchB),
     };
-    /* A5 场景的 allow prompt 在主干多留一对回合（deny 失败零落库）。 */
+    /* A5 场景在独立探针树上运行——主树回合数与无工具基线一致。 */
     const expectedPre =
       MODE === "echo-selftest"
         ? { trunk: 7, branchA: 4, branchB: 6 }
-        : sc.toolPolicy.applicable
-          ? { trunk: 9, branchA: 4, branchB: 4 }
-          : { trunk: 7, branchA: 4, branchB: 4 };
+        : { trunk: 7, branchA: 4, branchB: 4 };
     assert(preCounts[sc.trunkId] === expectedPre.trunk, `pre-restart trunk turns ${String(preCounts[sc.trunkId])} (expected ${String(expectedPre.trunk)})`);
     assert(preCounts[sc.branchA] === expectedPre.branchA, `pre-restart branch A turns ${String(preCounts[sc.branchA])}`);
     assert(preCounts[sc.branchB] === expectedPre.branchB, `pre-restart branch B turns ${String(preCounts[sc.branchB])}`);
