@@ -530,13 +530,16 @@ test("e2e error-convergence: model error, user abort, dispose, host crash each r
 
   // 6b. User abort -> aborted (via the legal running->aborting->aborted path).
   {
-    const ctx = await newScenario("err-abort");
+    /* 确定性：in-flight 窗口拉宽到 100ms/步，且 prompt() 的 flight 在调用
+       返回前同步建立——中断（abort/dispose）与 prompt 调用之间不跨宏任务，
+       内部计时器不可能先行触发（此前 3ms sleep vs 1ms 链式延迟是纯竞态，
+       负载高的机器上会间歇性失败，见 D3 验收 issue #5）。 */
+    const ctx = await newScenario("err-abort", { turnDelayMs: 100 });
     const runId = "err-abort";
     try {
       await ctx.runtime.createSession({ model: MODEL });
       ctx.registry.transition(runId, "running");
       const pending = ctx.runtime.prompt({ text: "long work" });
-      await new Promise((r) => setTimeout(r, 3));
       await ctx.runtime.abort();
       await assert.rejects(() => pending, (err: unknown) => {
         assert.equal((err as TreeAIErrorShape).code, "user-abort");
@@ -555,13 +558,12 @@ test("e2e error-convergence: model error, user abort, dispose, host crash each r
 
   // 6c. Dispose with an in-flight run -> aborted semantics.
   {
-    const ctx = await newScenario("err-dispose");
+    const ctx = await newScenario("err-dispose", { turnDelayMs: 100 });
     const runId = "err-dispose";
     try {
       await ctx.runtime.createSession({ model: MODEL });
       ctx.registry.transition(runId, "running");
       const pending = ctx.runtime.prompt({ text: "will be disposed" });
-      await new Promise((r) => setTimeout(r, 3));
       const disposeP = ctx.runtime.dispose();
       await assert.rejects(() => pending, (err: unknown) => {
         assert.equal((err as TreeAIErrorShape).code, "user-abort");
@@ -578,13 +580,12 @@ test("e2e error-convergence: model error, user abort, dispose, host crash each r
 
   // 6d. Host crash (no dispose) -> recovery sweep converges to failed/unknown.
   {
-    const ctx = await newScenario("err-crash");
+    const ctx = await newScenario("err-crash", { turnDelayMs: 100 });
     const runId = "err-crash";
     try {
       await ctx.runtime.createSession({ model: MODEL });
       ctx.registry.transition(runId, "running");
       const pending = ctx.runtime.prompt({ text: "host dies now" });
-      await new Promise((r) => setTimeout(r, 3));
       // No abort, no dispose: the host process just ends. The recovery sweep
       // must resolve the non-terminal state.
       void pending.catch(() => undefined); // avoid unhandled rejection
