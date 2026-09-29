@@ -1,0 +1,137 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "Branch 1",
+    "anchorContext": "Branched from Trunk — anchored selection: “opic is apples and the codew” · source available",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_e010545e-5d76-411e-b149-cb4ebb2e19b0",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_cf7e082b-1e1e-4506-9350-d13b48bf2208",
+        "text": "understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "return",
+        "turnId": "turn_e3a985c4-b1d0-431c-818a-889f11c2de11",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_567f2dbf-b2ee-47ed-a26c-dc6f3b138b58",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_006c91c0-89be-421a-936b-a861cbd1b9f6",
+        "text": "noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_a6224178-d93b-4e68-9f0b-1453e7cd1b70",
+        "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_8d4ac6df-b5d1-4413-b682-da147d9196ef",
+        "text": "Yes — branch A returned: \"the agreed delivery marker is aspen.\""
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_804fe86b-7bfa-4bb7-9b54-f08704ae4ded",
+        "text": "We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_ba8f7319-54b3-4c7f-91e1-329c041b949d",
+        "text": "ok-a1"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_8079b964-7cf6-4235-9207-dc540cdd2723",
+        "text": "Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_c6fc04df-aed8-4d71-aa9a-313b3e1db1e7",
+        "text": "maple, cedar"
+      }
+    ]
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · anchored on “opic is apples and the codew” from Trunkdelivered into Trunk context (run run_57cc9f7a…)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": true,
+      "deliveryText": "delivered into Trunk context (run run_57cc9f7a…)"
+    }
+  ],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": "Sources× CloseRunsTrunk · run run_19437609… · succeeded · 02:21:58 → 02:21:58Trunk · run run_66827624… · succeeded · 02:21:59 → 02:21:59Branch 1 · run run_6f401038… · succeeded · 02:22:00 → 02:22:01Branch 1 · run run_f295b751… · succeeded · 02:22:02 → 02:22:02Branch 2 · run run_a45b28a0… · succeeded · 02:22:04 → 02:22:05Branch 2 · run run_c32938db… · succeeded · 02:22:05 → 02:22:07Returnsfrom Branch 1 · anchored on “opic is apples and the codew” from Trunk · not yet deliveredJournal (latest 20)02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.updated — message delta received (3 chars)02:22:07 message.updated — message delta received (2 chars)02:22:07 message.updated — message update received02:22:07 message.updated — message update received02:22:07 message.completed — message completed (assistant), stop: stop02:22:07 turn.completed — turn completed (stop: stop)02:22:07 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

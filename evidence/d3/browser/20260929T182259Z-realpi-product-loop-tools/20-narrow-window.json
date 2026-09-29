@@ -1,0 +1,136 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "source-drawer",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_e010545e-5d76-411e-b149-cb4ebb2e19b0",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_cf7e082b-1e1e-4506-9350-d13b48bf2208",
+        "text": "understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "return",
+        "turnId": "turn_e3a985c4-b1d0-431c-818a-889f11c2de11",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_567f2dbf-b2ee-47ed-a26c-dc6f3b138b58",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_006c91c0-89be-421a-936b-a861cbd1b9f6",
+        "text": "noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_a6224178-d93b-4e68-9f0b-1453e7cd1b70",
+        "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_8d4ac6df-b5d1-4413-b682-da147d9196ef",
+        "text": "Yes — branch A returned: \"the agreed delivery marker is aspen.\""
+      },
+      {
+        "role": "user",
+        "turnId": "turn_7ed149f8-8e2b-4c17-ad01-68fa0ce13052",
+        "text": "After the restart, the main line continues. Reply with: restart-ok."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_534820a2-9faa-4920-87aa-66b00d983b31",
+        "text": "restart-ok"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_68aea8fc-801c-4b24-9f51-6e858cf95043",
+        "text": "Please write a short paragraph (about 80 words) about tides. Then reply with: done-tides."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_4c5f4a05-1e64-458f-a2fc-9831efe997ae",
+        "text": "Tides are the regular rise and fall of sea levels caused mainly by the gravitational pull of the Moon, and to a lesser extent the Sun, on Earth's oceans. As the Moon orbits, its gravity creates two bulges of water — one facing the Moon and one opposite. Earth's rotation carries coastlines through these bulges, producing roughly two high and two low tides each day. Coastal geography, water depth, and weather can alter their timing and height considerably.\n\ndone-tides"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · anchored on “opic is apples and the codew” from Trunkdelivered into Trunk context (run run_57cc9f7a…)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": true,
+      "deliveryText": "delivered into Trunk context (run run_57cc9f7a…)"
+    }
+  ],
+  "drawer": {
+    "open": true,
+    "toggleExpanded": "true",
+    "text": "Sources× CloseRunsTrunk · run run_19437609… · succeeded · 02:21:58 → 02:21:58Trunk · run run_66827624… · succeeded · 02:21:59 → 02:21:59Branch 1 · run run_6f401038… · succeeded · 02:22:00 → 02:22:01Branch 1 · run run_f295b751… · succeeded · 02:22:02 → 02:22:02Branch 2 · run run_a45b28a0… · succeeded · 02:22:04 → 02:22:05Branch 2 · run run_c32938db… · succeeded · 02:22:05 → 02:22:07Trunk · run run_57cc9f7a… · succeeded · 02:22:09 → 02:22:10Trunk · run run_983755d5… · succeeded · 02:22:12 → 02:22:13Trunk · run run_76a9f7a0… · succeeded · 02:22:14 → 02:22:15Returnsfrom Branch 1 · anchored on “opic is apples and the codew” from Trunk · delivered into run run_57cc9f7a…Journal (latest 20)02:22:15 message.updated — message delta received (6 chars)02:22:15 message.updated — message delta received (1 chars)02:22:15 message.updated — message delta received (4 chars)02:22:15 message.updated — message delta received (8 chars)02:22:15 message.updated — message delta received (4 chars)02:22:15 message.updated — message delta received (6 chars)02:22:15 message.updated — message delta received (6 chars)02:22:15 message.updated — message delta received (7 chars)02:22:15 message.updated — message delta received (4 chars)02:22:15 message.updated — message delta received (7 chars)02:22:15 message.updated — message delta received (13 chars)02:22:15 message.updated — message delta received (3 chars)02:22:15 message.updated — message delta received (4 chars)02:22:15 message.updated — message delta received (2 chars)02:22:15 message.updated — message delta received (4 chars)02:22:15 message.updated — message update received02:22:15 message.updated — message update received02:22:15 message.completed — message completed (assistant), stop: stop02:22:15 turn.completed — turn completed (stop: stop)02:22:15 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

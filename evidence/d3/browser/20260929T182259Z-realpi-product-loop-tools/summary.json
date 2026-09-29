@@ -1,0 +1,1314 @@
+{
+  "script": "run-d3-browser",
+  "version": "1.2.0",
+  "mode": "real-pi",
+  "generatedAt": "2026-09-29T18:22:59.804Z",
+  "git": {
+    "head": "699b2d883e11a29a7dc0c4b4f4ce43e530b0cdd2",
+    "dirty": true
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "page-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tree-create",
+      "status": "PASS"
+    },
+    {
+      "id": "trunk-main-line",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-anchoring",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "switch-navigation",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "no-context-bleed",
+      "status": "PASS"
+    },
+    {
+      "id": "return-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "return-delivery",
+      "status": "PASS"
+    },
+    {
+      "id": "model-error-convergence",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "server-restart-recovery",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-session-degradation",
+      "status": "PASS"
+    },
+    {
+      "id": "response-loss-midstream",
+      "status": "PASS"
+    },
+    {
+      "id": "a11y-semantics",
+      "status": "PASS"
+    },
+    {
+      "id": "narrow-window-layout",
+      "status": "PASS"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-long",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-duplicate",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-cross-line",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-allow-read",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-deny-fail-closed",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-deny-provenance",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-canary-never-read",
+      "status": "PASS"
+    }
+  ],
+  "pageFinalState": {
+    "url": "/",
+    "readyState": "complete",
+    "activeElementId": "source-drawer",
+    "sidebar": {
+      "toggleExpanded": "false",
+      "treeCount": 5,
+      "driverNote": ""
+    },
+    "main": {
+      "emptyStateVisible": false,
+      "treeViewVisible": true,
+      "runStatus": "idle",
+      "runDetail": "last run: failed",
+      "abortVisible": false,
+      "failurePanel": {
+        "hidden": false,
+        "text": "Run run_dd8df5e4… failed — policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows itDismiss"
+      },
+      "sessionBanner": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": false,
+        "role": "alert",
+        "text": "policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it"
+      }
+    },
+    "panel": {
+      "hidden": true,
+      "title": "",
+      "anchorContext": "",
+      "sessionNote": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "text": ""
+      }
+    },
+    "conversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_25ef484e-444f-47cc-93db-f4b34ab8acc1",
+          "text": "Use the read tool to read the file named treeai-d3-product-marker.txt in the directory <dir>/workspace/policy-allowed, then reply with its exact first line only."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_1b052f1a-1715-4ed9-88c4-65efd018ff15",
+          "text": "TreeAI D3 browser tool-policy marker treeai-d3-marker-j7hdap740k"
+        }
+      ]
+    },
+    "panelConversation": {
+      "turns": []
+    },
+    "branchTabs": [
+      {
+        "text": "Trunk",
+        "ariaCurrent": null
+      }
+    ],
+    "returnCards": [],
+    "drawer": {
+      "open": true,
+      "toggleExpanded": "true",
+      "text": "Sources× CloseRunsTrunk · run run_c29164c5… · succeeded · 02:22:56 → 02:22:57Trunk · run run_dd8df5e4… · failed · failure policy-denied · 02:22:58 → 02:22:59Returnsno returns submitted for this tree yetJournal (latest 20)02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.completed — message completed (assistant), stop: toolUse02:22:59 tool.execution.started — tool execution started: read02:22:59 tool.decision — tool policy decision on read: deny (no rule)02:22:59 runtime.error — runtime error policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it02:22:59 tool.execution.finished — tool execution finished: read (error)02:22:59 message.started — message started (toolResult)02:22:59 message.completed — message completed (toolResult)02:22:59 turn.completed — turn completed (stop: toolUse)02:22:59 agent.settled — agent run settledTool activityrun run_c29164c5… · read startedrun run_c29164c5… · read finishedrun run_dd8df5e4… · read startedrun run_dd8df5e4… · read denied — read target resolves outside every configured read root; no rule allows it [no rule]run run_dd8df5e4… · read finished"
+    },
+    "composers": {
+      "trunkDisabled": false,
+      "panelDisabled": false,
+      "returnDisabled": false
+    }
+  },
+  "pageErrors": [],
+  "netLog": [
+    {
+      "id": "892A6E571B34CB3FFC1C1C7A2F3D1901",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.2",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.3",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.6",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.8",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.9",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.10",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.11",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "35588.12",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.13",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.14",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.15",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.16",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.17",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.18",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.19",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.20",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.21",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.22",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.23",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.24",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.25",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.26",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.27",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.28",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.29",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.30",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.31",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.32",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.33",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.34",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.35",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.36",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.37",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.38",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.39",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.40",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.41",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.42",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/return",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.43",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.44",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.45",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.46",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.47",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.48",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.49",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "35588.50",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "35588.51",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "1837D0C79DD391A11703BAA2F5146157",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.53",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.54",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.57",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.58",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.59",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.60",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.61",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.62",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.63",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.64",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.65",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "DCFBD4413E06DB578F1C2AAEEA3945BF",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.67",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.68",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.71",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.72",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.73",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.74",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.75",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "0A159BE82E0B09CBE39EB59FD80C318E",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.77",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.78",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.81",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.82",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.83",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.84",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.85",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.86",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/prompt",
+      "status": null,
+      "failed": null
+    },
+    {
+      "id": "DB955BEDF33C5698F7C63A5AF6A7CCF0",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.88",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.89",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.92",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.93",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.94",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.95",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.96",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "35588.97",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.98",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.99",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.100",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.101",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.102",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.103",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.104",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.105",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "35588.106",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.107",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.108",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.109",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.110",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.111",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/branches/branch_adc3e82b-c6bf-4172-9fb6-931aaebbacc0/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.112",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.113",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.114",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.115",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.116",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_983cf3de-4a1e-431e-ab8d-7618f07abc65/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.117",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.118",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.119",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.120",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "35588.121",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.122",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.123",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.124",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.125",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.126",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/branches/branch_24d31818-230e-45c2-8b0d-24468afcbb3a/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.127",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.128",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.129",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.130",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.131",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_472cf7f4-067e-44b1-8bab-091ac6e02d9d/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.132",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.133",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.134",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.135",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "35588.136",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.137",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.138",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.139",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.140",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.141",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/branches/branch_801bbfec-c100-4e42-b0b9-e6e1b3ad9d8c/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.142",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.143",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.144",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.145",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.146",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.147",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_be736403-ecf1-447a-ba98-18eafed38c93/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "2221F6B1444224C3EAF0F775DF8445E5",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.149",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.150",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.153",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.154",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.155",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.156",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.157",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_7074c0c7-cba9-4b49-b2b3-4393847dd6ce/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "35588.158",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "35588.159",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.160",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.161",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.162",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.163",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.164",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.165",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.166",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.167",
+      "method": "POST",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/prompt",
+      "status": 502,
+      "failed": null
+    },
+    {
+      "id": "35588.168",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.169",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.170",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "35588.171",
+      "method": "GET",
+      "url": "http://127.0.0.1:62275/api/trees/tree_f6f7f65c-c6ec-43a7-a6b9-0bcea1ae8178/journal?limit=20",
+      "status": 200,
+      "failed": null
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "source-drawer",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 5,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: failed",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": false,
+      "text": "Run run_dd8df5e4… failed — policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows itDismiss"
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": false,
+      "role": "alert",
+      "text": "policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it"
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_25ef484e-444f-47cc-93db-f4b34ab8acc1",
+        "text": "Use the read tool to read the file named treeai-d3-product-marker.txt in the directory <dir>/workspace/policy-allowed, then reply with its exact first line only."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_1b052f1a-1715-4ed9-88c4-65efd018ff15",
+        "text": "TreeAI D3 browser tool-policy marker treeai-d3-marker-j7hdap740k"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [],
+  "drawer": {
+    "open": true,
+    "toggleExpanded": "true",
+    "text": "Sources× CloseRunsTrunk · run run_c29164c5… · succeeded · 02:22:56 → 02:22:57Trunk · run run_dd8df5e4… · failed · failure policy-denied · 02:22:58 → 02:22:59Returnsno returns submitted for this tree yetJournal (latest 20)02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.updated — message update received02:22:59 message.completed — message completed (assistant), stop: toolUse02:22:59 tool.execution.started — tool execution started: read02:22:59 tool.decision — tool policy decision on read: deny (no rule)02:22:59 runtime.error — runtime error policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it02:22:59 tool.execution.finished — tool execution finished: read (error)02:22:59 message.started — message started (toolResult)02:22:59 message.completed — message completed (toolResult)02:22:59 turn.completed — turn completed (stop: toolUse)02:22:59 agent.settled — agent run settledTool activityrun run_c29164c5… · read startedrun run_c29164c5… · read finishedrun run_dd8df5e4… · read startedrun run_dd8df5e4… · read denied — read target resolves outside every configured read root; no rule allows it [no rule]run run_dd8df5e4… · read finished"
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

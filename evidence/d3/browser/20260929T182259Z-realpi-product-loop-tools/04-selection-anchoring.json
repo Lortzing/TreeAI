@@ -1,0 +1,87 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_e010545e-5d76-411e-b149-cb4ebb2e19b0",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_cf7e082b-1e1e-4506-9350-d13b48bf2208",
+        "text": "understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_567f2dbf-b2ee-47ed-a26c-dc6f3b138b58",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_006c91c0-89be-421a-936b-a861cbd1b9f6",
+        "text": "noted — the secret number 4127 is registered on the main line."
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}
