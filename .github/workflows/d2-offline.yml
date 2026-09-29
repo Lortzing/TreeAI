@@ -61,5 +61,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: d2-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: evidence/d2/
+          path: |
+            evidence/d2/
+            evidence/d3/offline/
           retention-days: 14

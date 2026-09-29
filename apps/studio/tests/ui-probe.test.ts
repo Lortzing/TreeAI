@@ -18,11 +18,20 @@
  *     /branches 载荷：整条最新 assistant 答案），fail-closed 禁用不放松。
  *  4. Return：草稿持久化（localStorage + 幂等键）、双击防抖、失败保留
  *     草稿 + 改写换键 + 同键重试、响应丢失对账（/state 同键命中即按成功）。
- *  5. 流式滚动纪律：向上阅读绝不强制滚底；贴底跟随；终态权威刷新贴底保持。
+ *  5. 流式滚动纪律：向上阅读绝不强制滚底；贴底跟随；终态权威刷新贴底保持；
+ *     48px 贴底阈值的 47/49 边界；reduced-motion 下贴底跟随即时定位。
  *  6. Esc 焦点还原（抽屉 / 面板 → 触发元素）。
+ *  7. 选区建支线（issue #5 P1 回归面）：assistant 答案内选区 → mouseup 重
+ *     标注「⑃ Branch from selection」→ 点击建支线（精确绝对偏移载荷）；
+ *     无选区点击同一按钮 = 整条答案。
+ *  8. 双分支交叉切换：两条分支来自两个不同锚点；tab / 面板标题 / turns /
+ *     Return 草稿键（treeai-return-draft:<tree>:<branch>）互不串扰。
+ *  9. 窄窗侧栏抽屉（toggle + aria-expanded/aria-controls + Esc / 选树收起）
+ *     与 Cmd/Ctrl+Enter 键盘提交。
  *
  * 边界（如实声明）：本套件不是真实浏览器 E2E——像素级视觉基线、布局合成、
- * 真实滚动物理、键盘/读屏器实机行为不在覆盖范围；引入 Playwright /
+ * 真实滚动物理、键盘/读屏器实机行为不在覆盖范围；reduced-motion 只断言
+ * JS 侧滚动 behavior（CSS 动效降级不在 DOM 桩内）；引入 Playwright /
  * Puppeteer 属 owner 依赖决策（本仓库零新依赖约束下不可行），真实浏览器
  * 证据归 evidence/d3/real-pi/ 与 trials/ 口径（evidence/d3/README.md）。
  * 另见下方 globals 注入处：全局桩是与无类型前端脚本的唯一动态接面。
@@ -43,6 +52,7 @@ const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
 
 const TREE = "tree-1";
 const ISO = "2026-09-29T00:00:00.000Z";
+const A1_TEXT = "First trunk answer.";
 const A2_TEXT = "Second trunk answer — the latest one.";
 const BA1_TEXT = "Branch one answer.";
 
@@ -185,7 +195,7 @@ function freshBackendState(initialTrunkReturn: boolean): TreeState {
   const b1Branch: Branch = { id: "branch-1", treeId: TREE, parentBranchId: "trunk-1", createdAt: ISO };
   const trunkTurns: Turn[] = [
     makeTurn("u1", "trunk-1", "user", "First trunk question."),
-    makeTurn("a1", "trunk-1", "assistant", "First trunk answer."),
+    makeTurn("a1", "trunk-1", "assistant", A1_TEXT),
     makeTurn("u2", "trunk-1", "user", "Second trunk question."),
     makeTurn("a2", "trunk-1", "assistant", A2_TEXT),
   ];
@@ -456,7 +466,14 @@ class StubElement {
   set textContent(value: string) {
     for (const c of this.children) c.parentElement = null;
     this.children = [];
-    if (value !== "") this.children.push(new StubText(value));
+    if (value !== "") {
+      /* 与真实 DOM 一致：textContent 生成的文本节点也持有父引用——
+         selectionOffsetsWithin 的 element.contains(文本节点) 判定沿
+         parentElement 上行，缺失父引用会把真选区误判为不在锚点内。 */
+      const text = new StubText(value);
+      text.parentElement = this;
+      this.children.push(text);
+    }
   }
 
   setAttribute(key: string, value: string): void {
@@ -523,6 +540,89 @@ class StubElement {
   querySelectorAll(sel: string): StubElement[] {
     return queryAll(this, sel);
   }
+}
+
+/* ------------------------------ Range 桩（选区 → 锚点） ------------------------------ */
+
+/** 极简 DOM Range：只建模 selectionOffsetsWithin 实际使用的面——用户选区
+ *  （单文本节点内 getRangeAt(0)）与 cloneRange + selectNodeContents +
+ *  setEnd 组出的「锚点元素起点 → 选区起点」前缀测距。toString 只支持这
+ *  两种边界形态，其余如实抛错（不做静默错误近似）。 */
+class StubRange {
+  startContainer: StubNode;
+  startOffset: number;
+  endContainer: StubNode;
+  endOffset: number;
+
+  constructor(startContainer: StubNode, startOffset: number, endContainer: StubNode, endOffset: number) {
+    this.startContainer = startContainer;
+    this.startOffset = startOffset;
+    this.endContainer = endContainer;
+    this.endOffset = endOffset;
+  }
+
+  get commonAncestorContainer(): StubNode {
+    const ancestors: StubNode[] = [];
+    for (let node: StubNode | null = this.startContainer; node !== null; node = node.parentElement) {
+      ancestors.push(node);
+    }
+    let node: StubNode | null = this.endContainer;
+    while (node !== null) {
+      if (ancestors.includes(node)) return node;
+      node = node.parentElement;
+    }
+    return this.startContainer;
+  }
+
+  cloneRange(): StubRange {
+    return new StubRange(this.startContainer, this.startOffset, this.endContainer, this.endOffset);
+  }
+
+  selectNodeContents(node: StubNode): void {
+    this.startContainer = node;
+    this.startOffset = 0;
+    this.endContainer = node;
+    this.endOffset = node instanceof StubElement ? node.children.length : node.data.length;
+  }
+
+  setEnd(container: StubNode, offset: number): void {
+    this.endContainer = container;
+    this.endOffset = offset;
+  }
+
+  toString(): string {
+    if (this.startContainer === this.endContainer) {
+      return this.startContainer instanceof StubText
+        ? this.startContainer.data.slice(this.startOffset, this.endOffset)
+        : "";
+    }
+    if (this.startContainer instanceof StubElement && this.endContainer instanceof StubText) {
+      return (
+        textBeforeWithin(this.startContainer, this.endContainer) + this.endContainer.data.slice(0, this.endOffset)
+      );
+    }
+    throw new Error("StubRange.toString(): unsupported boundary shape for this harness");
+  }
+}
+
+/** root 子树内、目标文本节点之前的全部文本（前缀测距用）。 */
+function textBeforeWithin(root: StubElement, target: StubText): string {
+  let out = "";
+  const visit = (node: StubNode): boolean => {
+    if (node === target) return false;
+    if (node instanceof StubText) {
+      out += node.data;
+      return true;
+    }
+    for (const child of node.children) {
+      if (!visit(child)) return false;
+    }
+    return true;
+  };
+  for (const child of root.children) {
+    if (!visit(child)) break;
+  }
+  return out;
 }
 
 /* 极简选择器引擎：#id / tag / .class / tag.class（app.js 与本套件所用
@@ -686,6 +786,12 @@ class StubEventSource {
 
 /* ------------------------------ window 桩形状 ------------------------------ */
 
+/** Selection 桩形状：app.js 只读 rangeCount / getRangeAt(0)。 */
+interface StubSelection {
+  rangeCount: number;
+  getRangeAt(index: number): StubRange;
+}
+
 interface StubWindow {
   matchMedia(query: string): { matches: boolean; media: string; addEventListener(): void; removeEventListener(): void };
   setTimeout(fn: () => void, ms: number): NodeJS.Timeout;
@@ -698,7 +804,7 @@ interface StubWindow {
     removeItem(key: string): void;
     clear(): void;
   };
-  getSelection(): { rangeCount: number };
+  getSelection(): StubSelection;
 }
 
 /* ------------------------------ world 工厂 ------------------------------ */
@@ -715,6 +821,10 @@ interface World {
   tabButton(branchId: string): StubElement | null;
   liveSse(): StubEventSource;
   setAvailability(branchId: string, value: "available" | "unavailable" | null): void;
+  /** 模拟用户在元素首文本节点内的选区（app.js 在 mouseup 与点击时读取
+      当前值——桩选区只随设置/清除变化，模拟真实 DOM 的读时机）。 */
+  setSelectionWithin(element: StubElement, start: number, end: number): void;
+  clearSelection(): void;
 }
 
 interface WorldOptions {
@@ -722,6 +832,8 @@ interface WorldOptions {
   returnMode?: Backend["returnMode"];
   /** 预置一张锚定于 a1 的已确认 Return 卡（渲染定位断言用）。 */
   initialTrunkReturn?: boolean;
+  /** prefers-reduced-motion: reduce（JS 侧滚动 behavior 即时化）。 */
+  reducedMotion?: boolean;
 }
 
 let appLoadCounter = 0;
@@ -740,6 +852,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   /* ---------------- window / localStorage 桩 ---------------- */
 
   const localStorageStore = new Map<string, string>();
+  /* 当前选区（null = 无选区）。测试经 world.setSelectionWithin /
+     clearSelection 模拟用户选区；app.js 在 mouseup 与点击时读取当前值。 */
+  let selectionRange: StubRange | null = null;
   const windowStub: StubWindow = {
     /* 桩计时器一律 unref：测试结束后残留的动效/横幅计时器不得拖住进程。 */
     setTimeout: (fn, ms) => setTimeout(fn, ms).unref(),
@@ -747,7 +862,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     setInterval: (fn, ms) => setInterval(fn, ms).unref(),
     clearInterval: (id) => clearInterval(id),
     matchMedia: (query) => ({
-      matches: false,
+      matches: options.reducedMotion === true && query === "(prefers-reduced-motion: reduce)",
       media: query,
       addEventListener(): void {},
       removeEventListener(): void {},
@@ -764,8 +879,16 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         localStorageStore.clear();
       },
     },
-    /* 无选区 → app.js 的 selectionOffsetsWithin 回退整条答案语义。 */
-    getSelection: () => ({ rangeCount: 0 }),
+    /* 默认无选区 → app.js 的 selectionOffsetsWithin 回退整条答案语义。 */
+    getSelection: (): StubSelection => ({
+      rangeCount: selectionRange === null ? 0 : 1,
+      getRangeAt: (index) => {
+        if (index !== 0 || selectionRange === null) {
+          throw new Error(`stub selection has no range at index ${index}`);
+        }
+        return selectionRange;
+      },
+    }),
   };
 
   /* ---------------- 脚本化 echo 后端 ---------------- */
@@ -854,7 +977,15 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         selection,
         createdAt: ISO,
       };
-      backend.treeState.branches.push(makeBranchView(branch, origin, "available", []));
+      /* 服务端脚本：新建分支随即「续聊过一轮」——交叉切换场景需要非空
+         分支视图做面板内容隔离断言（echo 驱动的场景数据；真实服务端
+         新建分支为空，此处差异不影响任何被测行为）。 */
+      backend.treeState.branches.push(
+        makeBranchView(branch, origin, "available", [
+          makeTurn(`cu-${branchId}`, branchId, "user", "Continued on the new branch."),
+          makeTurn(`ca-${branchId}`, branchId, "assistant", "Answer grown on the new branch."),
+        ]),
+      );
       return respond(201, { branch, origin, state: backend.treeState });
     }
     m = /^\/api\/trees\/([^/]+)\/return$/.exec(p);
@@ -947,6 +1078,14 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       const view = viewByBranch(branchId);
       assert.ok(view !== undefined, `unknown branch ${branchId}`);
       view.sessionAvailability = value;
+    },
+    setSelectionWithin: (element, start, end) => {
+      const first = element.firstChild;
+      assert.ok(first instanceof StubText, "selection target must lead with a text node");
+      selectionRange = new StubRange(first, start, first, end);
+    },
+    clearSelection: () => {
+      selectionRange = null;
     },
   };
 }
@@ -1407,4 +1546,363 @@ test("trunk session banner: disabled with reason when nothing is available; cros
   assert.equal(world.document.activeElement, world.el("panel-prompt-input"), "focus moves into the recovered branch's composer");
   assert.equal(world.el("send").disabled, true, "recovery does NOT unlock the fail-closed trunk composer");
   assert.equal(world.el("session-banner").hidden, false, "banner persists (trunk still unavailable) until the trunk recovers");
+});
+
+/* ------------------------------------------------------------------ */
+/* 9. 选区建支线：mouseup 重标注 + 精确绝对偏移载荷 + 无选区整条回退      */
+/* ------------------------------------------------------------------ */
+
+test("selection anchoring: a mid-answer selection relabels the branch button and posts exact offsets; no selection posts the whole answer", async () => {
+  const world = await createWorld();
+  const conversation = world.el("conversation");
+  const turnWith = (turnId: string): StubElement => {
+    const found = conversation.querySelectorAll(".turn").find((t) => t.dataset.turnId === turnId);
+    assert.ok(found !== undefined, `assistant turn ${turnId} renders`);
+    return found;
+  };
+
+  /* 初始文案：无选区 = 整条答案语义。 */
+  const a2 = turnWith("a2");
+  const branchButton = a2.querySelector(".branch-here");
+  assert.ok(branchButton !== null, "assistant turns carry a .branch-here button");
+  assert.equal(branchButton.textContent, "⑃ Branch from here");
+
+  /* mouseup + 答案中部选区 → has-selection + 重标注。 */
+  const start = 7;
+  const end = 19;
+  const selected = A2_TEXT.slice(start, end); /* “trunk answer” */
+  world.setSelectionWithin(a2, start, end);
+  a2.dispatchEvent("mouseup", {});
+  assert.ok(a2.classList.contains("has-selection"), "mouseup with a live selection marks the turn");
+  assert.equal(branchButton.textContent, "⑃ Branch from selection", "the button announces the selection affordance");
+
+  /* 选区消失后的 mouseup → 回到整条答案文案。 */
+  world.clearSelection();
+  a2.dispatchEvent("mouseup", {});
+  assert.ok(!a2.classList.contains("has-selection"), "clearing the selection unmarks the turn");
+  assert.equal(branchButton.textContent, "⑃ Branch from here");
+
+  /* 点击（选区在场）→ 精确 POST /branches 载荷：绝对偏移（W1 §1.1——
+     重复词/跨行场景禁用字符串搜索定位）。 */
+  world.setSelectionWithin(a2, start, end);
+  a2.dispatchEvent("mouseup", {});
+  const switchBefore = world.backend.switchCount;
+  branchButton.click();
+  await settle();
+
+  const branchPost = world.lastRequest("/branches");
+  assert.ok(branchPost !== null && branchPost.method === "POST", "Branch-from-selection issues POST /branches");
+  const body = asRecord(branchPost.body);
+  assert.ok(body !== null);
+  assert.equal(body.sourceBranchId, "trunk-1");
+  assert.equal(body.anchorTurnId, "a2");
+  const selection = asRecord(body.selection);
+  assert.ok(selection !== null);
+  assert.equal(selection.start, start);
+  assert.equal(selection.end, end);
+  assert.equal(selection.text, selected);
+  assert.equal(world.backend.switchCount, switchBefore, "branching from a turn does not POST /switch (alignCursor:false)");
+  assert.equal(world.el("branch-panel").hidden, false, "the new branch opens in the side panel");
+  assert.equal(world.el("panel-title").textContent, "Branch 2");
+  assert.ok(
+    world.el("panel-anchor-context").textContent.includes(`“${selected}”`),
+    "panel header carries the anchored selection excerpt",
+  );
+
+  /* 同一按钮、无选区点击 → 整条答案回退（branchFromTurn 的 fallback 路径）。 */
+  world.clearSelection();
+  const a1 = turnWith("a1");
+  const a1Button = a1.querySelector(".branch-here");
+  assert.ok(a1Button !== null);
+  assert.equal(a1Button.textContent, "⑃ Branch from here", "a fresh render resets to the whole-answer affordance");
+  a1Button.click();
+  await settle();
+
+  const wholePost = world.lastRequest("/branches");
+  assert.ok(wholePost !== null && wholePost.method === "POST");
+  const wholeBody = asRecord(wholePost.body);
+  assert.ok(wholeBody !== null);
+  assert.equal(wholeBody.sourceBranchId, "trunk-1");
+  assert.equal(wholeBody.anchorTurnId, "a1");
+  const wholeSelection = asRecord(wholeBody.selection);
+  assert.ok(wholeSelection !== null);
+  assert.equal(wholeSelection.start, 0);
+  assert.equal(wholeSelection.end, A1_TEXT.length);
+  assert.equal(wholeSelection.text, A1_TEXT);
+});
+
+/* ------------------------------------------------------------------ */
+/* 10. 双分支交叉切换：两个锚点 → tab / 标题 / turns / 草稿键互不串扰     */
+/* ------------------------------------------------------------------ */
+
+test("two branches from two anchors: tab cross-switching keeps titles, turns, and per-branch return drafts isolated", async () => {
+  const world = await createWorld();
+  const panelTurnIds = (): string[] =>
+    world.el("panel-conversation").querySelectorAll(".turn").map((t) => t.dataset.turnId!);
+  const openBranch = (branchId: string): void => {
+    const tab = world.tabButton(branchId);
+    assert.ok(tab !== null, `tab for ${branchId} present`);
+    tab.click();
+  };
+
+  /* 第一条分支（fixture：锚定 trunk a1 的选区 “First”）。 */
+  openBranch("branch-1");
+  await settle();
+  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.deepEqual(panelTurnIds(), ["bu1", "ba1"], "branch-1 panel shows exactly its own turns");
+
+  /* 第二条分支、不同锚点：从 branch-1 自己的最新答案（ba1）中部选区建支线。 */
+  const ba1 = world.el("panel-conversation").querySelectorAll(".turn").find((t) => t.dataset.turnId === "ba1");
+  assert.ok(ba1 !== undefined);
+  const bStart = 7;
+  const bEnd = 18;
+  const bSelected = BA1_TEXT.slice(bStart, bEnd); /* “one answer” */
+  world.setSelectionWithin(ba1, bStart, bEnd);
+  ba1.dispatchEvent("mouseup", {});
+  const ba1Button = ba1.querySelector(".branch-here");
+  assert.ok(ba1Button !== null);
+  assert.equal(ba1Button.textContent, "⑃ Branch from selection", "panel-side turns relabel the same way");
+  const switchBeforeCreate = world.backend.switchCount;
+  ba1Button.click();
+  await settle();
+
+  const branchPost = world.lastRequest("/branches");
+  assert.ok(branchPost !== null && branchPost.method === "POST");
+  const body = asRecord(branchPost.body);
+  assert.ok(body !== null);
+  assert.equal(body.sourceBranchId, "branch-1", "the second branch anchors on branch-1's own turn");
+  assert.equal(body.anchorTurnId, "ba1");
+  const selection = asRecord(body.selection);
+  assert.ok(selection !== null);
+  assert.equal(selection.start, bStart);
+  assert.equal(selection.end, bEnd);
+  assert.equal(selection.text, bSelected);
+  assert.equal(world.backend.switchCount, switchBeforeCreate, "creating the branch does not POST /switch");
+
+  /* 三个 tab：Trunk + 两条分支，dataset.branchId 逐一正确。 */
+  const tabs = world.el("branch-tabs").querySelectorAll("button");
+  assert.deepEqual(
+    tabs.map((t) => t.dataset.branchId),
+    ["trunk-1", "branch-1", "branch-recovered-1"],
+  );
+  assert.ok(
+    world.tabButton("branch-recovered-1")!.title.includes(`“${bSelected}”`),
+    "the new tab carries its anchor excerpt",
+  );
+  assert.equal(world.el("panel-title").textContent, "Branch 2");
+  assert.deepEqual(panelTurnIds(), ["cu-branch-recovered-1", "ca-branch-recovered-1"], "no bleed of branch-1's turns");
+  assert.ok(
+    !world.el("panel-conversation").textContent.includes("Branch one question."),
+    "no branch-1 user turn text bleeds into the branch-2 panel",
+  );
+  assert.deepEqual(
+    world.el("conversation").querySelectorAll(".turn").map((t) => t.dataset.turnId),
+    ["u1", "a1", "u2", "a2"],
+    "the main Trunk view is untouched by the panel switch",
+  );
+
+  /* per-branch Return 草稿键：treeai-return-draft:<tree>:<branch>。 */
+  const returnInput = world.el("return-input");
+  returnInput.value = "Draft kept for Branch 2.";
+  returnInput.dispatchEvent("input", {});
+  const draftKey2 = "treeai-return-draft:tree-1:branch-recovered-1";
+  const draft2 = readPersistedDraft(world.localStorageStore.get(draftKey2));
+  assert.ok(draft2 !== null, "the branch-2 draft persists under its own tree:branch key");
+  assert.ok(draft2.text.includes("Draft kept for Branch 2."));
+
+  /* 交叉切换 branch-1 → branch-2 → branch-1：标题 / turns / 草稿各自恢复。 */
+  openBranch("branch-1");
+  await settle();
+  assert.equal(world.backend.switchCount, switchBeforeCreate + 1, "each tab switch aligns the cursor exactly once");
+  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.deepEqual(panelTurnIds(), ["bu1", "ba1"], "switching back to branch-1 shows only branch-1's turns");
+  assert.ok(
+    !world.el("panel-conversation").textContent.includes("Answer grown on the new branch."),
+    "no branch-2 turn text bleeds into the branch-1 panel",
+  );
+  assert.ok(world.tabButton("branch-1")!.classList.contains("panel-open"), "the open panel's tab is marked");
+  assert.ok(!world.tabButton("branch-recovered-1")!.classList.contains("panel-open"), "the other branch's tab is not");
+  returnInput.value = "Draft kept for Branch 1.";
+  returnInput.dispatchEvent("input", {});
+  const draftKey1 = "treeai-return-draft:tree-1:branch-1";
+  const draft1 = readPersistedDraft(world.localStorageStore.get(draftKey1));
+  assert.ok(draft1 !== null, "the branch-1 draft persists under its own key");
+  assert.ok(draft1.text.includes("Draft kept for Branch 1."));
+
+  openBranch("branch-recovered-1");
+  await settle();
+  assert.equal(world.backend.switchCount, switchBeforeCreate + 2);
+  assert.equal(world.el("panel-title").textContent, "Branch 2");
+  assert.deepEqual(panelTurnIds(), ["cu-branch-recovered-1", "ca-branch-recovered-1"]);
+  assert.equal(returnInput.value, "Draft kept for Branch 2.", "switching back restores the branch-2 draft");
+
+  openBranch("branch-1");
+  await settle();
+  assert.equal(world.backend.switchCount, switchBeforeCreate + 3);
+  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(returnInput.value, "Draft kept for Branch 1.", "switching back restores the branch-1 draft");
+  /* 两份草稿同时落盘、互不覆盖。 */
+  assert.ok(world.localStorageStore.get(draftKey1) !== undefined);
+  assert.ok(world.localStorageStore.get(draftKey2) !== undefined);
+});
+
+/* ------------------------------------------------------------------ */
+/* 11. 窄窗侧栏抽屉：toggle + aria 契约 + Esc / 选树收起                 */
+/* ------------------------------------------------------------------ */
+
+test("narrow window: the sidebar drawer toggles with aria state, closes on Escape and on tree selection", async () => {
+  const world = await createWorld();
+  const toggle = world.el("sidebar-toggle");
+  const body = world.document.body;
+  assert.ok(body !== null);
+
+  /* DOM 契约（解析自真实 index.html）：按钮声明其控制目标与初始态。 */
+  assert.equal(toggle.getAttribute("aria-controls"), "sidebar", "#sidebar-toggle declares aria-controls=sidebar");
+  assert.equal(toggle.getAttribute("aria-expanded"), "false", "sidebar starts collapsed");
+  assert.ok(!body.classList.contains("sidebar-open"));
+
+  /* 打开：body.sidebar-open + aria-expanded 同步。 */
+  toggle.click();
+  assert.ok(body.classList.contains("sidebar-open"), "click opens the sidebar drawer");
+  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  /* 再点收起（toggle 语义）。 */
+  toggle.click();
+  assert.ok(!body.classList.contains("sidebar-open"));
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+
+  /* 文档级 Esc 收起（窄窗抽屉是 Esc 逐层关闭链的一层）。 */
+  toggle.click();
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.ok(!body.classList.contains("sidebar-open"), "document-level Escape closes the open sidebar");
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+
+  /* 窄窗收起惯例：选树后侧栏自动收起。 */
+  toggle.click();
+  const treeButton = world.el("tree-list").querySelectorAll("button")[0];
+  assert.ok(treeButton !== undefined);
+  treeButton.click();
+  assert.ok(!body.classList.contains("sidebar-open"), "selecting a tree collapses the sidebar drawer");
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+  await settle();
+});
+
+/* ------------------------------------------------------------------ */
+/* 12. reduced-motion：贴底跟随即时定位（auto），不再是 smooth           */
+/* ------------------------------------------------------------------ */
+
+test("reduced motion: at-bottom stick and delta follows land instantly instead of animating", async () => {
+  /* 对照（未声明 reduce）：同一路径走 smooth——证明断言点确实经过
+     matchMedia 分支（saved ≠ undefined，非首次渲染的 auto 路径）。
+     顺序约束：全局桩按 world 覆盖，创建第二个 world 后第一个不再可
+     驱动，故对照组的全部断言先于 reduce 组完成。 */
+  const plain = await createWorld();
+  const plainConversation = plain.el("conversation");
+  plainConversation.scrollHeight = 4000;
+  plainConversation.clientHeight = 600;
+  plainConversation.scrollTop = 3400; /* 已记忆阅读位置（saved）+ 贴底（≥3352） */
+  plain.liveSse().emit("run-started", { runId: "run-s", branchId: "trunk-1", episodeId: "ep-1" });
+  assert.equal(
+    plainConversation.lastScrollBehavior,
+    "smooth",
+    "control: with motion allowed the stick-follow scroll is smooth",
+  );
+  plain.liveSse().emit("message-delta", { runId: "run-s", delta: "Alpha " });
+  assert.equal(
+    plainConversation.lastScrollBehavior,
+    "smooth",
+    "control: with motion allowed the delta-follow scroll is smooth",
+  );
+
+  /* prefers-reduced-motion: reduce → 贴底跟随直接定位（auto）。 */
+  const world = await createWorld({ reducedMotion: true });
+  const conversation = world.el("conversation");
+  conversation.scrollHeight = 4000;
+  conversation.clientHeight = 600;
+  conversation.scrollTop = 3400; /* scroll 记忆 → saved = 3400（非首次渲染） */
+  world.liveSse().emit("run-started", { runId: "run-s", branchId: "trunk-1", episodeId: "ep-1" });
+  assert.ok(world.byId("streaming-turn") !== null, "run-started renders the streaming placeholder");
+  assert.equal(
+    conversation.lastScrollBehavior,
+    "auto",
+    "reduced motion: the stick render with a saved reading position lands instantly",
+  );
+  assert.equal(conversation.scrollTop, 4000, "the reader still follows to the bottom");
+  world.liveSse().emit("message-delta", { runId: "run-s", delta: "Alpha" });
+  assert.equal(
+    conversation.lastScrollBehavior,
+    "auto",
+    "reduced motion: an at-bottom message-delta follow lands instantly",
+  );
+  assert.ok(world.el("streaming-turn").textContent.includes("Alpha"), "the delta text still renders");
+});
+
+/* ------------------------------------------------------------------ */
+/* 13. 贴底阈值边界：47px 跟随 / 49px 不动（AT_BOTTOM_PX = 48）          */
+/* ------------------------------------------------------------------ */
+
+test("scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move", async () => {
+  const world = await createWorld();
+  const conversation = world.el("conversation");
+  conversation.scrollHeight = 4000;
+  conversation.clientHeight = 600;
+
+  world.liveSse().emit("run-started", { runId: "run-s", branchId: "trunk-1", episodeId: "ep-1" });
+  assert.equal(conversation.scrollTop, 0, "control: a scrolled-up reader is not yanked by the stick render");
+
+  /* 距底 47px（阈值 48px 内）：message-delta 跟随到底。 */
+  conversation.scrollTop = 4000 - 600 - 47;
+  world.liveSse().emit("message-delta", { runId: "run-s", delta: "Alpha " });
+  assert.equal(conversation.scrollTop, 4000, "47px from the bottom still counts as at-bottom and follows");
+
+  /* 距底 49px（阈值外）：正在阅读，不移动。 */
+  conversation.scrollTop = 4000 - 600 - 49;
+  world.liveSse().emit("message-delta", { runId: "run-s", delta: "Beta" });
+  assert.equal(conversation.scrollTop, 4000 - 600 - 49, "49px from the bottom is reading, not following — no scroll");
+  assert.ok(
+    world.el("streaming-turn").textContent.includes("Alpha Beta"),
+    "both deltas still render into the placeholder",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 14. 键盘提交：Cmd/Ctrl+Enter（主线 / 面板）；普通 Enter 不提交        */
+/* ------------------------------------------------------------------ */
+
+test("keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not", async () => {
+  const world = await createWorld();
+
+  /* 普通 Enter：多行输入留给换行，不提交。 */
+  const promptInput = world.el("prompt-input");
+  promptInput.value = "Trunk question via keyboard.";
+  promptInput.dispatchEvent("keydown", { key: "Enter" });
+  await settle();
+  assert.equal(world.requestsOf("/prompt").length, 0, "plain Enter does not submit");
+
+  /* Cmd+Enter（主线）：恰好一次 POST /prompt，载荷携带分支与文本。 */
+  promptInput.dispatchEvent("keydown", { key: "Enter", metaKey: true });
+  await settle();
+  const prompts = world.requestsOf("/prompt");
+  assert.equal(prompts.length, 1, "Cmd+Enter fires exactly one POST /prompt");
+  const mainBody = asRecord(prompts[0]!.body);
+  assert.ok(mainBody !== null);
+  assert.equal(mainBody.branchId, "trunk-1");
+  assert.equal(mainBody.text, "Trunk question via keyboard.");
+  assert.equal(promptInput.value, "", "a successful submit clears the main composer");
+
+  /* Ctrl+Enter（面板）：同一端点，分支随面板。 */
+  const tab = world.tabButton("branch-1");
+  assert.ok(tab !== null);
+  tab.click();
+  await settle();
+  const panelInput = world.el("panel-prompt-input");
+  panelInput.value = "Branch question via keyboard.";
+  panelInput.dispatchEvent("keydown", { key: "Enter", ctrlKey: true });
+  await settle();
+  const allPrompts = world.requestsOf("/prompt");
+  assert.equal(allPrompts.length, 2, "Ctrl+Enter on the panel composer fires exactly one more POST /prompt");
+  const panelBody = asRecord(allPrompts[1]!.body);
+  assert.ok(panelBody !== null);
+  assert.equal(panelBody.branchId, "branch-1");
+  assert.equal(panelBody.text, "Branch question via keyboard.");
+  assert.equal(panelInput.value, "", "a successful submit clears the panel composer");
 });
