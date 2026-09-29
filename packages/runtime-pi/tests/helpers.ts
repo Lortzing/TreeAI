@@ -10,7 +10,11 @@
  *   返回 editorText；其他目标 → 叶移到目标自身；同 session、追加式；
  * - 新建持久化 session 时追加 model_change + thinking_level_change
  *   条目（Pi sdk.js 的新会话路径行为，restore 据此恢复模型）；条目在
- *   首条 assistant 消息前只驻内存（懒 flush，已镜像真实 _persist）。
+ *   首条 assistant 消息前只驻内存（懒 flush，已镜像真实 _persist）；
+ * - 脚本化工具调用（FakeTurnScript.toolCalls）：镜像 Pi 0.85.1 agent
+ *   loop 的执行顺序——每次调用先发 tool_execution_start，再咨询已安装
+ *   的工具执行门（Agent.beforeToolCall 等价缝），block=true 则不执行
+ *   （tool_execution_end isError=true）；放行则「执行」并记录。
  *
  * Fake 的 session 文件格式是测试私有 JSONL（首行 header +
  * 条目行），只服务于 fake 端口的 open/close 往返；真实 Pi 文件格式的
@@ -32,10 +36,17 @@ import type {
   PiPortServices,
   PiPortSession,
   PiPortSessionManager,
+  PiPortToolExecutionGate,
   PiSdkPort,
 } from "../src/pi-sdk-port.ts";
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** 一次脚本化工具调用（fake 的「模型请求工具」形态）。 */
+export interface FakeToolCall {
+  readonly name: string;
+  readonly args?: Readonly<Record<string, unknown>>;
+}
 
 /** 一次 fake run 的行为脚本。 */
 export interface FakeTurnScript {
@@ -53,6 +64,14 @@ export interface FakeTurnScript {
   readonly hang?: boolean;
   /** 邪恶模式：abort() 被调用也不收敛（用于安全计时器测试）。 */
   readonly ignoreAbort?: boolean;
+  /**
+   * 本 turn 的脚本化工具调用（回声回答前依次「请求」）。镜像 Pi 0.85.1
+   * agent loop：每次调用先发 tool_execution_start，再咨询已安装的
+   * 工具执行门（Agent.beforeToolCall 等价缝），block=true 则**不执行**
+   * （tool_execution_end isError=true）；否则「执行」并记录到
+   * executedToolCalls。
+   */
+  readonly toolCalls?: readonly FakeToolCall[];
 }
 
 export interface FakeEntry {
@@ -240,7 +259,13 @@ export class FakePiSession implements PiPortSession {
   private disposed = false;
   private readonly steeringQueue: string[] = [];
   private runResolvers: Array<() => void> = [];
+  private toolGate: PiPortToolExecutionGate | null = null;
+  private toolCallCounter = 0;
   readonly turnInputs: string[] = [];
+  /** 经门放行后「执行」的工具名序列（断言 denied 工具从未出现于此）。 */
+  readonly executedToolCalls: string[] = [];
+  /** 被门阻止（未执行）的工具名序列。 */
+  readonly blockedToolCalls: string[] = [];
 
   constructor(manager: FakeSessionManager, script: FakeTurnScript, model: PiPortModelHandle | undefined) {
     this.sessionManager = manager;
@@ -370,6 +395,11 @@ export class FakePiSession implements PiPortSession {
     this.script = script;
   }
 
+  /** 安装请求时工具执行门（PiPortSession 缝；runtime 注入）。 */
+  installToolExecutionGate(gate: PiPortToolExecutionGate): void {
+    this.toolGate = gate;
+  }
+
   private async executeRun(text: string): Promise<void> {
     this.emit({ type: "agent_start" });
     await this.executeTurn(text);
@@ -416,6 +446,23 @@ export class FakePiSession implements PiPortSession {
       this.emitSyntheticAborted();
       this.emit({ type: "turn_end", message: { role: "assistant", stopReason: "aborted" } });
       return;
+    }
+
+    // 脚本化工具调用（镜像 Pi agent loop：start → 门 → 执行/阻止 → end）。
+    for (const call of this.script.toolCalls ?? []) {
+      this.toolCallCounter += 1;
+      const toolCallId = `fake-tool-call-${this.toolCallCounter}`;
+      this.emit({ type: "tool_execution_start", toolCallId, toolName: call.name, args: call.args });
+      const gate = this.toolGate;
+      const verdict = gate === null ? undefined : await gate({ toolName: call.name, args: call.args });
+      if (verdict !== undefined && verdict.block) {
+        this.blockedToolCalls.push(call.name);
+        this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: true });
+      } else {
+        this.executedToolCalls.push(call.name);
+        this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: false });
+      }
+      await delay(delayMs);
     }
 
     const answer = this.script.answer;

@@ -82,7 +82,7 @@ test("real Pi SDK offline battery in a sandboxed child process", () => {
     0,
     `child exited with ${String(result.status)}\nstdout:\n${result.stdout ?? ""}\nstderr:\n${result.stderr ?? ""}`,
   );
-  assert.ok(checks.length >= 19, `expected the full battery, got ${checks.length} checks`);
+  assert.ok(checks.length >= 30, `expected the full battery, got ${checks.length} checks`);
   for (const check of checks) {
     assert.ok(check.ok, `child check failed: ${check.check} (${check.detail ?? "no detail"})`);
   }
@@ -110,6 +110,18 @@ test("real Pi SDK offline battery in a sandboxed child process", () => {
     "corrupt-rejected",
     "abort-dispose-offline",
     "sandbox-home-untouched",
+    /* ToolPolicy 请求时门（真实 agent loop + 真实内建工具 + 真实引擎） */
+    "policy-allow-executes",
+    "policy-allow-provenance",
+    "policy-allow-execution-events",
+    "policy-deny-read-rejected",
+    "policy-deny-read-never-executed",
+    "policy-deny-read-decision",
+    "policy-deny-runtime-error",
+    "policy-grant-write-executes",
+    "policy-grant-provenance",
+    "policy-require-approval-fail-closed",
+    "policy-engine-audited",
   ]) {
     assert.ok(names.has(required), `child battery missing check: ${required}`);
   }

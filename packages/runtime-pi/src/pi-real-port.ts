@@ -12,6 +12,9 @@
  *   branch/resetLeaf）
  * - `AgentSession` 实例成员：prompt/steer/abort/dispose/subscribe/
  *   navigateTree/getLastAssistantText/state/messages/model/sessionManager
+ * - `AgentSession.agent.beforeToolCall`（pi-agent-core `Agent` 的公开可变
+ *   实例字段；请求时工具执行门的安装点——先于每次实际工具执行被 agent
+ *   loop 调用，返回 {block:true} 即不执行）
  *
  * 类型一律从根导出值推导（Parameters/ReturnType/Awaited/InstanceType），
  * 避免依赖 Pi 内部模块路径。适配器把 Pi 具体类型收在本文件内，
@@ -29,6 +32,7 @@ import type {
   PiPortServices,
   PiPortSession,
   PiPortSessionManager,
+  PiPortToolExecutionGate,
   PiSdkPort,
   PiThinkingLevel,
 } from "./pi-sdk-port.ts";
@@ -40,6 +44,11 @@ type PiResourceLoaderOptions = NonNullable<PiCreateAgentSessionServicesOptions["
 type PiCreateSessionOptions = Parameters<typeof Pi.createAgentSessionFromServices>[0];
 type PiCreateSessionResult = Awaited<ReturnType<typeof Pi.createAgentSessionFromServices>>;
 type PiSession = PiCreateSessionResult["session"];
+/** pi-agent-core Agent（经公开成员 session.agent 推导，不 import 内部模块）。 */
+type PiAgent = PiSession["agent"];
+type PiAgentBeforeToolCall = NonNullable<PiAgent["beforeToolCall"]>;
+type PiBeforeToolCallContext = Parameters<PiAgentBeforeToolCall>[0];
+type PiBeforeToolCallResult = Awaited<ReturnType<PiAgentBeforeToolCall>>;
 /** SessionManager 的构造函数是 private，从公开静态工厂推导实例类型。 */
 type PiManager = ReturnType<typeof Pi.SessionManager.create>;
 
@@ -50,8 +59,18 @@ function assertRawServices(services: PiPortServices): PiServices {
   return services.raw as PiServices;
 }
 
-/** 把 AgentSession 适配为端口会话（getter 保持活引用，不冻结快照）。 */
-function adaptSession(session: PiSession): PiPortSession {
+/**
+ * 把 AgentSession 适配为端口会话（getter 保持活引用，不冻结快照）。
+ * 导出供真实端口离线电池使用：测试以自定义端口包装真实端口并替换
+ * `Agent.streamFunction`（离线脚本化模型驱动），随后用本适配器把自建的
+ * 真实会话接回 PiSdkPort 缝——门安装/事件/收敛走与生产完全相同的路径。
+ */
+export function adaptSession(session: PiSession): PiPortSession {
+  // AgentSession 构造期在公开可变的 Agent.beforeToolCall 上安装了扩展
+  // 拦截钩子（_installAgentToolHooks）；捕获为 base，保证门安装后扩展的
+  // tool_call 拦截继续工作（门先评估：策略拒绝时扩展钩子不再被调用）。
+  const baseBeforeToolCall = session.agent.beforeToolCall?.bind(session.agent);
+  let gate: PiPortToolExecutionGate | null = null;
   return {
     get sessionId(): string {
       return session.sessionId;
@@ -88,6 +107,31 @@ function adaptSession(session: PiSession): PiPortSession {
     navigateTree: (targetId: string) =>
       session.navigateTree(targetId) as unknown as Promise<PiPortNavigateResult>,
     getLastAssistantText: () => session.getLastAssistantText(),
+    installToolExecutionGate: (nextGate: PiPortToolExecutionGate) => {
+      gate = nextGate;
+      // agent loop 在参数校验后、执行前调用该字段；{block:true} 即不执行
+      // （loop 以 error tool result 收敛，模型可见 reason）。
+      session.agent.beforeToolCall = async (
+        context: PiBeforeToolCallContext,
+        signal?: AbortSignal,
+      ): Promise<PiBeforeToolCallResult | undefined> => {
+        const currentGate = gate;
+        if (currentGate !== null) {
+          const verdict = await currentGate({
+            toolName: context.toolCall.name,
+            args: context.args,
+          });
+          if (verdict !== undefined && verdict.block) {
+            return {
+              block: true,
+              ...(verdict.reason === undefined ? {} : { reason: verdict.reason }),
+              ...(verdict.terminate === true ? { terminate: true } : {}),
+            };
+          }
+        }
+        return baseBeforeToolCall === undefined ? undefined : baseBeforeToolCall(context, signal);
+      };
+    },
   };
 }
 

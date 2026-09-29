@@ -38,6 +38,7 @@ npm run typecheck # 仅 tsc --noEmit
 | `Pi.SessionManager.open(path)` | 打开既有会话文件（恢复路径） |
 | `SessionManager` 实例方法 | `getCwd/getSessionId/getSessionFile/getLeafId/getEntry/getEntries/branch/resetLeaf`（读 + 叶移动）；测试另用公开 `appendMessage/appendModelChange` 构造真实文件 |
 | `AgentSession` 实例成员 | `sessionId/sessionFile/isStreaming/state/messages/model/sessionManager/prompt/steer/abort/dispose/subscribe/navigateTree/getLastAssistantText` |
+| `AgentSession.agent.beforeToolCall`（pi-agent-core `Agent` 公开可变字段） | 请求时工具执行门安装点：agent loop 在**每次实际工具执行前**（参数校验后）调用；返回 `{block:true}` 即不执行（loop 以 error tool result 收敛）。适配器捕获 AgentSession 构造期安装的扩展拦截钩子并链在其前——门先评估，扩展拦截保持工作 |
 
 ## 架构
 
@@ -49,8 +50,9 @@ src/pi-real-port.ts   真实端口适配器（唯一 import Pi 的文件）
 src/errors.ts         TreeAIError 实现 + classifyPiFailure（8 类归一）
 src/redact.ts         脱敏（消息/详情构造期脱敏；家目录 → ~）
 src/events.ts         Pi 事件 → PiRuntimeEvent 归一（白名单字段提取）
+src/tool-policy.ts    请求时工具策略缝：Pi 工具调用 → 策略请求映射 + 结构评估器
 tests/helpers.ts      Fake Pi 端口（镜像 D1 实测语义）
-tests/unit/           fake 单测（49 项）
+tests/unit/           fake 单测（58 项）
 tests/real-port/      真实 SDK 离线测试（沙箱子进程，2 项）
 ```
 
@@ -85,6 +87,41 @@ tests/real-port/      真实 SDK 离线测试（沙箱子进程，2 项）
    失败在拒绝前推送 `runtime.error`（code + 脱敏 message）。
 5. **最小权限默认**：`tools: []`（零工具）、`thinkingLevel: "off"`、
    `abortConvergenceMs: 10000`（均可配置）。
+6. **请求时工具策略门**（issue #5 P0 离线段）：`PiRuntimeConfig.toolPolicy`
+   注入结构评估器（`@treeai/tool-policy` 的 `ToolPolicyEngine` 结构满足
+   `PiToolPolicyEvaluator`；依赖图保持 contracts + Pi SDK，引擎由宿主注入）。
+   注入后，本运行时创建/恢复的**每个**会话都在实际工具执行前（参数校验
+   后、`tool.execute` 之前）经 `evaluate()` 评估（映射见
+   `classifyPiToolCall`：内建 read/ls/find/grep→read、write/edit→write、
+   bash/powershell→shell，**未知工具一律 other-high-risk 无路径 → 引擎
+   deny，fail closed**）：
+   - **allow → 执行**（`tool.execution.started/finished` 照常上报）；
+   - **deny / require-approval → 不执行**（require-approval 在本路径没有
+     审批 UI，按拒绝处理——与 contracts "policy-denied" 的冻结语义一致），
+     并以 `tool.decision` 事件上报决定。载荷是白名单投影：
+     `{toolName, decision, category, risk, reason, ruleId}`——工具参数、
+     目标路径、命令、主机**绝不**进入；完整审计（含规范化 targetPath）
+     留在引擎自身的审计环形日志。首次拒绝同时即时推送
+     `runtime.error`（code `policy-denied`；必须先于无 status 的
+     `agent.settled` 到达 journal，否则投影器会先把 run 收敛 succeeded
+     再产生 double-terminal 异常）。
+   - **终态语义（本文档化的选择，fail closed）**：发生请求时拒绝的 run
+     以 `TreeAIError("policy-denied")` 拒绝收敛（DB/journal 终态
+     failed + failure code policy-denied；abort 请求仍优先于策略拒绝，
+     模型错误次于策略拒绝）。这严于 Pi 原生「模型看到 error tool result
+     后可继续」的语义；是否放宽为「允许模型继续、run 不失败」是
+     owner 侧未决问题。已知竞态：拒绝后、收敛前收到 abort 请求时，
+     journal 中已有的 runtime.error(failed) 与随后的 user-abort 收敛会
+     产生一条可审计的投影异常（无状态破坏）。
+   - 安全表述：ToolPolicy 是应用层策略，**不是 OS 沙箱，不构成安全
+     边界**；本门只约束「经本运行时会话的实际工具执行请求先经评估」
+     这一调用纪律（绕过面见 tool-policy README「不能防御的风险」）。
+   - 离线验证：unit（结构评估器）+ tests/real-port/（**真实 SDK 离线**：
+     沙箱 HOME + 不可路由 provider + 公开可变 `Agent.streamFunction` 换成
+     脚本化模型流，驱动真实 agent loop 与真实内建 read/write 工具、
+     真实 ToolPolicyEngine——allow 执行、deny 不执行、授权流、
+     require-approval fail-closed、引擎审计）+ apps/runtime-smoke 场景
+     （假 Pi 驱动 + 真实引擎的端到端 journal/DB 一致性）。
 
 ## 已知限制（Pi 0.85.1 实证行为）
 
@@ -133,5 +170,9 @@ tests/real-port/      真实 SDK 离线测试（沙箱子进程，2 项）
 ## 治理记录
 
 - 无需修改 Pi SDK 源码/私有路径：公开 API 足够（无 PI-CHANGE 提案）。
-- 未新增任何依赖（Node 内置 test runner）。
+- 未新增任何 npm registry 依赖（Node 内置 test runner）。测试管线新增
+  一步：`#tool-policy` 子路径导入映射到本包 `dist/` 下的
+  `@treeai/tool-policy` 编译产物（与 apps/runtime-smoke 同一模式）——
+  仅为让真实 SDK 离线电池能以**真实** ToolPolicyEngine 走请求路径；
+  `src/` 产物零依赖该编译步骤。
 - 独占写入范围遵守：`packages/runtime-pi/**`、`coordination/d2/agent-b-*.md`。

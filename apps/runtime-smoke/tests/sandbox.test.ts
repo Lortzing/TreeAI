@@ -53,7 +53,7 @@ test("scenario child process runs offline under a sandboxed HOME without touchin
 
     assert.equal(exitCode, 0, `scenario child must exit 0 (stderr length: ${stderr.length})`);
     assert.ok(stdout.includes("runtime-smoke:scenario ok"), "child must report scenario success");
-    assert.ok(stdout.includes("runtime-smoke:runs 8"), "child must report 8 runs");
+    assert.ok(stdout.includes("runtime-smoke:runs 9"), "child must report 9 runs");
     assert.ok(!existsSync(join(sandboxHome, ".pi")), "sandbox HOME must not gain a .pi directory");
     assert.ok(!stdout.includes("Bearer"), "stdout must not contain credential-shaped strings");
   } finally {

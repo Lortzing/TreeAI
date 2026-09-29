@@ -50,6 +50,36 @@ export interface PiPortNavigateResult {
   readonly editorText?: string;
 }
 
+/**
+ * 一次实际工具执行请求（参数校验后、执行前；策略评估的结构化输入）。
+ * `args` 是模型产出的不可信输入：只用于提取结构化策略字段
+ * （path/command），绝不整体外泄。
+ */
+export interface PiPortToolCallRequest {
+  readonly toolName: string;
+  readonly args: unknown;
+}
+
+/**
+ * 工具执行门的裁决（Pi 0.85.1 Agent.beforeToolCall 的 BeforeToolCallResult
+ * 结构子集）：`block: true` 表示**不执行**该工具调用（底层运行时以 error
+ * tool result 收敛，模型可见 reason 文本）；`terminate: true` 建议当前
+ * 工具批次后提前结束本次 run。
+ */
+export interface PiPortToolGateVerdict {
+  readonly block: boolean;
+  readonly reason?: string;
+  readonly terminate?: boolean;
+}
+
+/**
+ * 请求时工具执行门：每次实际工具执行前由底层运行时调用。
+ * 返回 undefined / {block: false} = 放行执行。
+ */
+export type PiPortToolExecutionGate = (
+  request: PiPortToolCallRequest,
+) => Promise<PiPortToolGateVerdict | undefined>;
+
 /** Pi 会话管理器（SessionManager 的消费子集，均为公开实例方法）。 */
 export interface PiPortSessionManager {
   getCwd(): string;
@@ -81,6 +111,15 @@ export interface PiPortSession {
   subscribe(listener: (event: PiEventLike) => void): () => void;
   navigateTree(targetId: string): Promise<PiPortNavigateResult>;
   getLastAssistantText(): string | undefined;
+  /**
+   * 安装请求时工具执行门（Pi 0.85.1 集成缝：真实端口包装公开可变的
+   * `Agent.beforeToolCall`，并链上 AgentSession 构造期安装的扩展拦截钩子；
+   * fake 端口在脚本化工具执行前调用）。此后每次实际工具执行请求
+   * （参数校验后、执行前）先经 gate；`block: true` 则不执行。
+   * 重复安装替换上一个门（真实端口：新链只含 AgentSession 原生钩子 +
+   * 最新 gate）。
+   */
+  installToolExecutionGate(gate: PiPortToolExecutionGate): void;
 }
 
 /**

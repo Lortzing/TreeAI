@@ -22,12 +22,17 @@
  *  7. journal 端点：按树过滤、最新在后、limit 生效、未知树 404、非法
  *     limit 400；
  *  8. 服务级事件面：tool-activity 只投影工具名+阶段（脚本化 runtime 注入
- *     携带敏感参数的工具事件，断言不外泄）；退订生效。
+ *     携带敏感参数的工具事件，断言不外泄）；退订生效；
+ *  9. 请求时策略门（issue #5 P0）：真实 ToolPolicyEngine 注入 runtime，
+ *     echo 驱动的工具调用脚本经真实请求路径评估——allow 执行、deny 不
+ *     执行；拒绝以 tool-activity(denied)+provenance / journal
+ *     tool.decision / 诊断面观测呈现；run 收敛 failed(policy-denied)
+ *     （fail closed）；目标路径/参数绝不外泄。
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
@@ -42,6 +47,9 @@ import type {
   TreeId,
 } from "@treeai/contracts";
 import { EventRecorder, JsonlEventJournal, MemoryEventJournal } from "@treeai/event-journal";
+import { createPiRuntimeFromConfig } from "@treeai/runtime-pi";
+import { ToolPolicyEngine } from "#tool-policy";
+import { EchoSdkPort } from "../src/echo-port.ts";
 import { createStudioServer } from "../src/server.ts";
 import {
   cleanupDir,
@@ -941,6 +949,146 @@ test("session availability derivation: live probe refines the cached assessment 
     /* 未知树 → 404 语义。 */
     assert.throws(() => service.getTreeState("tree-missing" as TreeId), /not found/);
     await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* 9. 请求时策略门（issue #5 P0）：真实 ToolPolicyEngine 经 runtime 门    */
+/* ------------------------------------------------------------------ */
+
+test("policy request-time gate: denial surfaces provenance, fails the run, and reports honestly", async () => {
+  const dir = makeTempDataDir();
+  const workspace = join(dir, "workspace");
+  const readRoot = join(dir, "read-root");
+  mkdirSync(readRoot, { recursive: true });
+  const outsideName = "secret-outside.txt";
+  const journal = new MemoryEventJournal();
+  try {
+    /* 真实 ToolPolicyEngine（#tool-policy 编译产物）注入真实 PiRuntime；
+       echo 驱动以 toolCalls 测试钩「请求」两次 read：root 内（allow）与
+       root 外（deny）。决策发生在请求路径上——不是合成事件。 */
+    const engine = new ToolPolicyEngine({
+      cwd: workspace,
+      readRoots: [readRoot],
+      workspaceRoots: [workspace],
+    });
+    const port = new EchoSdkPort({
+      toolCalls: [
+        { name: "read", args: { path: join(readRoot, "notes.txt") } },
+        { name: "read", args: { path: join(dir, outsideName) } },
+      ],
+    });
+    const runtime = createPiRuntimeFromConfig({
+      port,
+      defaultCwd: workspace,
+      toolPolicy: engine,
+    });
+    const studio = makeStudioInstance(dir, { runtime, journal });
+    const created = studio.service.createTree();
+    const treeId = created.tree.id;
+
+    const collected: any[] = [];
+    const unsubscribe = studio.service.subscribeStudioEvents((event) => {
+      collected.push(event);
+    });
+
+    /* 越权 prompt 被拒（fail closed），DB run 收敛 failed(policy-denied)。 */
+    await assert.rejects(
+      studio.service.prompt(treeId, created.trunkBranch.id, "overreach"),
+      (err: unknown) => {
+        assert.equal((err as { code?: string }).code, "policy-denied");
+        return true;
+      },
+    );
+
+    /* 执行面（echo 驱动日志）：allow 的 read 执行了，deny 的没有。 */
+    const session = port.createdSessions[0]!;
+    assert.deepEqual(session.executedToolCalls, ["read"]);
+    assert.deepEqual(session.blockedToolCalls, ["read"]);
+
+    /* SSE：tool-activity —— allow 调用走 started/finished；被拒调用在
+       started 与（error）finished 之间收到 phase "denied" + 决定
+       provenance（键集锁定，无参数/路径/命令；denied 是唯一携带
+       decision 的事件）。 */
+    const toolEvents = collected.filter((event) => event.type === "tool-activity");
+    assert.deepEqual(
+      toolEvents.map((event) => ({ tool: event.tool, phase: event.phase })),
+      [
+        { tool: "read", phase: "started" },
+        { tool: "read", phase: "finished" },
+        { tool: "read", phase: "started" },
+        { tool: "read", phase: "denied" },
+        { tool: "read", phase: "finished" },
+      ],
+    );
+    toolEvents.forEach((event, index) => {
+      const expectedKeys =
+        event.phase === "denied"
+          ? ["decision", "phase", "runId", "tool", "treeId", "type"]
+          : ["phase", "runId", "tool", "treeId", "type"];
+      assert.deepEqual(
+        Object.keys(event).sort(),
+        expectedKeys,
+        `tool-activity[${index}] key set`,
+      );
+    });
+    const denied = toolEvents[3];
+    assert.deepEqual(Object.keys(denied).sort(), [
+      "decision",
+      "phase",
+      "runId",
+      "tool",
+      "treeId",
+      "type",
+    ]);
+    assert.equal(denied.decision.outcome, "deny");
+    assert.equal(denied.decision.ruleId, null);
+    assert.match(denied.decision.reason, /outside every configured read root/);
+
+    /* run-terminal：failed + policy-denied 失败码。 */
+    const terminal = collected.find((event) => event.type === "run-terminal");
+    assert.ok(terminal !== undefined);
+    assert.equal(terminal.state, "failed");
+    assert.equal(terminal.failure.code, "policy-denied");
+
+    /* journal：两条 tool.decision（allow + deny）带 provenance summary。 */
+    const journalView = studio.service.getTreeJournal(treeId);
+    const decisions = journalView.filter((event) => event.type === "tool.decision");
+    assert.equal(decisions.length, 2);
+    assert.match(decisions[0]!.summary, /read/);
+    assert.match(decisions[0]!.summary, /allow/);
+    assert.match(decisions[1]!.summary, /deny/);
+    assert.match(decisions[1]!.summary, /no rule/);
+
+    /* 诊断面（A5）：观测如实——observed=true，含两条决定的脱敏投影；
+       DB run 行 failed/policy-denied。 */
+    const diag = studio.service.getTreeDiagnostics(treeId);
+    assert.ok(diag.policyDecisions.observed === true);
+    const views = diag.policyDecisions.decisions;
+    assert.equal(views.length, 2);
+    assert.deepEqual(
+      views.map((view) => ({ tool: view.tool, outcome: view.outcome, ruleId: view.ruleId })),
+      [
+        { tool: "read", outcome: "allow", ruleId: "allow-read-configured-roots" },
+        { tool: "read", outcome: "deny", ruleId: null },
+      ],
+    );
+    assert.equal(diag.runs.length, 1);
+    assert.equal(diag.runs[0]!.state, "failed");
+    assert.equal(diag.runs[0]!.failure!.code, "policy-denied");
+
+    /* 脱敏终检：目标路径/参数绝不进入任何界面面。 */
+    const serialized =
+      JSON.stringify(collected) + JSON.stringify(journalView) + JSON.stringify(diag);
+    assert.ok(!serialized.includes(outsideName), "target paths never surface");
+    assert.ok(!serialized.includes("notes.txt"), "target paths never surface");
+    assert.ok(!serialized.includes("\"path\""), "raw argument keys never surface");
+
+    unsubscribe();
+    await studio.shutdown();
+    await journal.close();
   } finally {
     cleanupDir(dir);
   }

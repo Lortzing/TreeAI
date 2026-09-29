@@ -6,10 +6,13 @@
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
+  "imports": {
+    "#tool-policy": "./dist/tool-policy/index.js"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node src/index.ts",
-    "build:deps": "npm run --workspace @treeai/event-journal build:test",
+    "build:deps": "tsc -p tsconfig.tool-policy-build.json && npm run --workspace @treeai/event-journal build:test",
     "test": "npm run build:deps && npm run typecheck && node --test tests/*.test.ts"
   },
   "dependencies": {

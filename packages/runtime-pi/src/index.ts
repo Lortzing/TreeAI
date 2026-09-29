@@ -30,6 +30,13 @@ export {
 } from "./errors.ts";
 export { redactText, redactJsonValue } from "./redact.ts";
 export type { PiSdkPort } from "./pi-sdk-port.ts";
+export type {
+  PiPortToolCallRequest,
+  PiPortToolExecutionGate,
+  PiPortToolGateVerdict,
+} from "./pi-sdk-port.ts";
+export { classifyPiToolCall } from "./tool-policy.ts";
+export type { PiToolPolicyEvaluator, PiToolPolicyRequest } from "./tool-policy.ts";
 
 import type { PiRuntime } from "@treeai/contracts";
 import { createRealPiSdkPort, type PiRuntimeCredentials } from "./pi-real-port.ts";

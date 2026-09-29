@@ -80,6 +80,7 @@ export function piRuntimeEventKindToType(kind: PiRuntimeEventKind): TreeAIEventT
     case "message.completed":
     case "tool.execution.started":
     case "tool.execution.finished":
+    case "tool.decision":
     case "runtime.error":
     case "tree.navigated":
       return kind;

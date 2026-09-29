@@ -23,14 +23,14 @@ test("wave-2 offline scenario: full eleven-step integration flow", async () => {
   const root = await mkdtemp(join(tmpdir(), "runtime-smoke-test-"));
   const report = await runWave2Scenario(root);
 
-  // Eight runs: 5 succeeded / 2 failed (host-crash recovery + degraded
-  // session) / 1 aborted.
-  assert.equal(report.runs, 8, "scenario run count");
+  // Nine runs: 5 succeeded / 3 failed (host-crash recovery + policy-denied
+  // overreach + degraded session) / 1 aborted.
+  assert.equal(report.runs, 9, "scenario run count");
   assert.equal(report.succeeded, 5, "succeeded run count");
-  assert.equal(report.failed, 2, "failed run count");
+  assert.equal(report.failed, 3, "failed run count");
   assert.equal(report.aborted, 1, "aborted run count");
   assert.equal(report.recoveredRuns, 1, "exactly one host-crash recovery");
-  assert.equal(report.policyDecisions, 8, "eight policy probe decisions");
+  assert.equal(report.policyDecisions, 5, "five request-path policy decisions");
   assert.equal(report.sessionFilesCreated, 2, "two sessions were created");
   assert.equal(report.sessionFilesPersisted, 1, "only session A persists (B was deleted)");
   assert.ok(report.journalEventsGen1 >= 5, "generation-1 journal must hold events");

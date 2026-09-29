@@ -24,7 +24,9 @@
  *   - message-delta   {treeId, runId, delta}
  *   - abort-requested {treeId, runId}
  *   - run-terminal    {treeId, runId, state, failure|null}
- *   - tool-activity   {treeId, runId, tool|null, phase}
+ *   - tool-activity   {treeId, runId, tool|null, phase, decision?}
+ *     （phase: started|finished|denied；denied 时 decision 携带
+ *      {outcome, reason, ruleId} 策略 provenance——参数/路径/命令绝不出境）
  * SSE 是瞬态推送：连接只过滤转发，不落任何状态；/state 与 /diagnostics
  * 仍是权威读模型。
  *

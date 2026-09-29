@@ -27,7 +27,12 @@
  *     prompt rejected with code "user-abort".
  *  8. Session-missing degradation: deleted session file -> availability
  *     unavailable/missing-file + restore rejected session-corrupt.
- *  9. ToolPolicy: read/write/shell/network decisions incl. grant flow.
+ *  9. ToolPolicy REQUEST-TIME gating (issue #5 P0): the real ToolPolicyEngine
+ *     injected into the runtime; a scripted overreach turn drives five actual
+ *     tool execution requests through the runtime-installed gate — allowed
+ *     calls execute, denied/require-approval calls never execute, every
+ *     decision reaches the journal as tool.decision with rule provenance,
+ *     and the run converges failed (policy-denied, fail closed).
  * 10. Journal discipline: per-run strict contiguous seq, duplicate-seq and
  *     duplicate-eventId rejections (the latter demonstrates the documented
  *     journal-global eventId x per-instance pi-runtime-<seq> collision —
@@ -188,6 +193,7 @@ export interface ScenarioReport {
   readonly journalEventsGen1: number;
   readonly journalEventsGen2: number;
   readonly recoveredRuns: number;
+  /** 请求路径上真实经门评估并落 journal 的 tool.decision 数（非合成）。 */
   readonly policyDecisions: number;
   readonly sessionFilesCreated: number;
   readonly sessionFilesPersisted: number;
@@ -401,11 +407,44 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
     journalGen2 = await JsonlEventJournal.open(journalGen2Path);
     const recorder2 = new EventRecorder(journalGen2);
 
-    const port2 = new SmokeSdkPort(["echo", "echo", "hang"]);
+    // ToolPolicy request-time gating config (issue #5 P0): the REAL engine,
+    // injected into the runtime; every actual tool execution request on any
+    // session of this runtime is evaluated BEFORE execution (allow executes;
+    // deny / require-approval block, fail closed). The write grant is
+    // single-use and consumed by the gated write below.
+    const policyEngine = new ToolPolicyEngine({
+      cwd: workspace,
+      readRoots: [readRoot],
+      workspaceRoots: [workspace],
+    });
+    policyEngine.authorizations.issue({
+      category: "write",
+      targetPath: join(workspace, "granted.txt"),
+      expiresInMs: 60_000,
+    });
+
+    // Behavior queue: main turn (echo), second turn (echo), abort run (hang),
+    // then the policy-gate run (scripted tool calls through the real gate).
+    const port2 = new SmokeSdkPort([
+      "echo",
+      "echo",
+      "hang",
+      {
+        kind: "tool-calls",
+        calls: [
+          { name: "read", args: { path: join(readRoot, "notes.txt") } },
+          { name: "read", args: { path: join(elsewhere, "outside.txt") } },
+          { name: "write", args: { path: join(workspace, "granted.txt"), content: "smoke-granted-content" } },
+          { name: "write", args: { path: join(workspace, "draft.txt"), content: "smoke-draft-content" } },
+          { name: "bash", args: { command: "printf treeai-smoke-policy" } },
+        ],
+      },
+    ]);
     const runtime2 = createPiRuntimeFromConfig({
       port: port2,
       agentDir,
       defaultCwd: workspace,
+      toolPolicy: policyEngine,
     });
     forwarder2 = new EventForwarder();
     forwarder2.attach(runtime2);
@@ -502,7 +541,7 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
     await forwarder2.flush(recorder2, repo, runAbort, "runAbort settle");
     repo.updateRunState(runAbort, "aborted");
 
-    // Step 14: session-missing degradation + ToolPolicy probes (one run).
+    // Step 14: ToolPolicy request-time gating + session-missing degradation.
     const episodeGuard = repo.createEpisode(secondBranch.id);
     const snapB = await runtime2.createSession({
       model: { providerId: "smoke-provider", modelId: "smoke-model" },
@@ -510,17 +549,77 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
       sessionDir: sessionsDir,
     });
     const refB = snapB.reference;
-    const runGuard = track(repo.createRun(episodeGuard.id, refB).id, "guardrail-run", "failed");
-    await forwarder2.flush(recorder2, repo, runGuard, "runGuard prelude");
+    const sessionB = port2.createdSessions[port2.createdSessions.length - 1]!;
+    const runPolicy = track(repo.createRun(episodeGuard.id, refB).id, "policy-gate-run", "failed");
+    await forwarder2.flush(recorder2, repo, runPolicy, "runPolicy prelude");
 
-    // 14a: ToolPolicy matrix (default deny; explicit roots/grants only).
-    const policyDecisions = await runToolPolicyProbes(recorder2, runGuard, {
-      workspace,
-      readRoot,
-      elsewhere,
+    // 14a: ToolPolicy REQUEST-TIME gating over the real request path (issue
+    // #5 P0: "单纯合成 tool event 不算" — the decisions below come from the
+    // runtime-installed gate evaluating every actual tool execution request
+    // through the REAL ToolPolicyEngine; nothing is synthesized). The fake
+    // model requests five tool calls; the gate evaluates each BEFORE any
+    // execution.
+    const policyOutcome = await settlePrompt(runtime2, "policy-probe@gate");
+    assert.ok(policyOutcome.error !== undefined, "the overreach prompt must be rejected");
+    assert.equal(policyOutcome.error.code, "policy-denied", "policy denial rejects the prompt");
+    await forwarder2.flush(recorder2, repo, runPolicy, "runPolicy prompt");
+
+    // (a)/(b) allow executes, deny never executes: the read inside readRoot
+    // and the granted write executed; the outside read, the ungranted write
+    // (require-approval, fail closed) and bash (shell denied by default)
+    // never did.
+    assert.deepEqual(sessionB.executedToolCalls, ["read", "write"]);
+    assert.deepEqual(sessionB.blockedToolCalls, ["read", "write", "bash"]);
+
+    // (c) the decisions reach the journal with provenance: the tool.decision
+    // event type, outcome, and the rule that produced each decision (ruleId;
+    // null = default deny). Payload discipline: tool arguments, paths and
+    // commands never enter the journal.
+    const policyEvents = journalGen2.getRunEvents(runPolicy);
+    const decisionEvents = policyEvents.filter((event) => event.type === "tool.decision");
+    assert.equal(decisionEvents.length, 5, "every gated call must record its decision");
+    assert.deepEqual(
+      decisionEvents.map((event) => (event.payload as { decision?: string }).decision),
+      ["allow", "deny", "allow", "require-approval", "deny"],
+    );
+    const denyDecision = decisionEvents[1]!.payload as Record<string, unknown>;
+    assert.equal(denyDecision["toolName"], "read");
+    assert.equal(denyDecision["ruleId"], null);
+    assert.equal(
+      denyDecision["reason"],
+      "read target resolves outside every configured read root; no rule allows it",
+    );
+    const grantDecision = decisionEvents[2]!.payload as Record<string, unknown>;
+    assert.equal(grantDecision["toolName"], "write");
+    assert.ok(
+      typeof grantDecision["ruleId"] === "string" &&
+        (grantDecision["ruleId"] as string).startsWith("authorization-grant:"),
+      "the granted write is attributable to its authorization grant",
+    );
+    const policyEventsText = JSON.stringify(policyEvents);
+    assert.ok(!policyEventsText.includes("printf treeai-smoke-policy"), "commands never enter the journal");
+    assert.ok(!policyEventsText.includes("outside.txt"), "target paths never enter the journal");
+    assert.ok(!policyEventsText.includes("notes.txt"), "target paths never enter the journal");
+
+    // The REAL engine was on the request path: its audit ring recorded all
+    // five decisions (not synthesized by this host).
+    const audited = policyEngine.audit.records.filter((record) => record.kind === "decision");
+    assert.equal(audited.length, 5, "the engine itself evaluated every request");
+    assert.deepEqual(
+      audited.map((record) => record.outcome),
+      ["allow", "deny", "allow", "require-approval", "deny"],
+    );
+
+    // (d) run terminal state: the runtime's runtime.error (policy-denied)
+    // arrived before the statusless agent.settled, so the journal projection
+    // converges failed without anomalies; the DB mirrors it.
+    repo.updateRunState(runPolicy, "failed", {
+      failure: { code: "policy-denied", message: policyOutcome.error.message },
     });
 
-    // 14b: session file goes missing -> degraded availability + rejected restore.
+    // 14b: session file goes missing -> degraded availability + rejected
+    // restore (its own run; the policy run above is already terminal).
+    const runDegrade = track(repo.createRun(episodeGuard.id, refB).id, "degrade-run", "failed");
     rmSync(refB.sessionFile, { force: true });
     const marked = repo.markSessionFileAvailability(refB.sessionFile, false);
     assert.ok(marked >= 1, "the deleted session file must mark at least one reference");
@@ -528,8 +627,8 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
     const sweptB = sweep.find((entry) => entry.sessionFile === refB.sessionFile);
     assert.ok(sweptB !== undefined && sweptB.updatedReferences >= 1, "sweep must cover the file");
     const refsByFile = repo.getSessionReferencesByFile(refB.sessionFile);
-    const guardRef = refsByFile.find((entry) => entry.runId === runGuard);
-    assert.ok(guardRef !== undefined, "guard run reference must be found by file");
+    const guardRef = refsByFile.find((entry) => entry.runId === runDegrade);
+    assert.ok(guardRef !== undefined, "degrade run reference must be found by file");
     assert.equal(guardRef.reference.availability.status, "unavailable");
     assert.equal(
       (guardRef.reference.availability as { reason?: string }).reason,
@@ -556,16 +655,16 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
     // event (prompt-path failures emit it; precheck failures do not), so the
     // host records the observed failure itself — recorder.recordError
     // produces the projector-compatible {error: {...}} payload.
-    const degradeOutcome = await recorder2.recordError(runGuard, degradeError);
+    const degradeOutcome = await recorder2.recordError(runDegrade, degradeError);
     assert.equal(degradeOutcome.status, "appended", "degradation error must be journaled");
-    await forwarder2.flush(recorder2, repo, runGuard, "runGuard degradation");
-    repo.updateRunState(runGuard, "failed", { failure: degradeError });
+    await forwarder2.flush(recorder2, repo, runDegrade, "runDegrade degradation");
+    repo.updateRunState(runDegrade, "failed", { failure: degradeError });
 
     // Step 15: journal discipline — strict seq + duplicate rejections.
-    await assertJournalDiscipline(journalGen2, recorder2, runGuard);
+    await assertJournalDiscipline(journalGen2, recorder2, runPolicy);
 
     // Step 16: redaction — planted credential never reaches disk.
-    await assertRedaction(journalGen2, recorder2, runGuard, journalGen2Path);
+    await assertRedaction(journalGen2, recorder2, runPolicy, journalGen2Path);
 
     /* ================================================================
      * Final cross-consistency: projection state === DB state, no anomalies.
@@ -627,7 +726,7 @@ export async function runWave2Scenario(root: string): Promise<ScenarioReport> {
       journalEventsGen1: eventsGen1,
       journalEventsGen2: eventsGen2,
       recoveredRuns: recovery.recovered.length,
-      policyDecisions,
+      policyDecisions: decisionEvents.length,
       sessionFilesCreated: 2,
       sessionFilesPersisted,
     };
@@ -660,98 +759,6 @@ async function settleAbort(promise: Promise<PiPromptResult>): Promise<{ code: st
     }
     return { code: (err as TreeAIError).code };
   }
-}
-
-/* ------------------------------------------------------------------ */
-/* Step 14a: ToolPolicy probe matrix                                   */
-/* ------------------------------------------------------------------ */
-
-async function runToolPolicyProbes(
-  recorder: EventRecorder,
-  runId: RunId,
-  dirs: { readonly workspace: string; readonly readRoot: string; readonly elsewhere: string },
-): Promise<number> {
-  const engine = new ToolPolicyEngine({
-    cwd: dirs.workspace,
-    readRoots: [dirs.readRoot],
-    workspaceRoots: [dirs.workspace],
-  });
-
-  engine.authorizations.issue({
-    category: "write",
-    targetPath: join(dirs.workspace, "granted.txt"),
-    expiresInMs: 60_000,
-  });
-
-  const probes: ReadonlyArray<{
-    readonly label: string;
-    readonly request: Parameters<ToolPolicyEngine["evaluate"]>[0];
-    readonly expect: "allow" | "deny" | "require-approval";
-  }> = [
-    {
-      label: "read-inside-roots",
-      request: { category: "read", targetPath: join(dirs.readRoot, "notes.txt") },
-      expect: "allow",
-    },
-    {
-      label: "read-outside-roots",
-      request: { category: "read", targetPath: join(dirs.elsewhere, "outside.txt") },
-      expect: "deny",
-    },
-    {
-      label: "write-outside-workspace",
-      request: { category: "write", targetPath: join(dirs.elsewhere, "x.txt") },
-      expect: "deny",
-    },
-    {
-      label: "write-inside-without-grant",
-      request: { category: "write", targetPath: join(dirs.workspace, "draft.txt") },
-      expect: "require-approval",
-    },
-    {
-      label: "write-inside-with-grant",
-      request: { category: "write", targetPath: join(dirs.workspace, "granted.txt") },
-      expect: "allow",
-    },
-    {
-      label: "write-inside-after-grant-consumed",
-      request: { category: "write", targetPath: join(dirs.workspace, "granted.txt") },
-      expect: "require-approval",
-    },
-    {
-      label: "shell-denied-by-default",
-      request: { category: "shell", command: "printf treeai-smoke" },
-      expect: "deny",
-    },
-    {
-      label: "network-denied-by-default",
-      request: { category: "network", host: "treeai-smoke.invalid" },
-      expect: "deny",
-    },
-  ];
-
-  let recorded = 0;
-  for (const probe of probes) {
-    const decision = engine.evaluate(probe.request);
-    assert.equal(
-      decision.outcome,
-      probe.expect,
-      `policy probe ${probe.label} outcome`,
-    );
-    assert.equal(decision.category, probe.request.category);
-    const outcome = await recorder.recordCustom(runId, "tool.decision", {
-      probe: probe.label,
-      category: decision.category,
-      outcome: decision.outcome,
-      risk: decision.risk,
-      ruleId: decision.ruleId,
-    });
-    assert.equal(outcome.status, "appended", `policy probe ${probe.label} must be journaled`);
-    recorded += 1;
-  }
-  assert.ok(engine.audit.records.length >= probes.length, "audit log must record the probes");
-  assert.equal(engine.audit.droppedCount, 0, "no audit records may be dropped");
-  return recorded;
 }
 
 /* ------------------------------------------------------------------ */
