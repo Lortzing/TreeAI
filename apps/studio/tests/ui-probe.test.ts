@@ -1419,12 +1419,18 @@ test("journal drawer: failure with retry, honest empty state, Esc focus restore"
   assert.ok(retryButton !== null, "failure state renders a Retry button");
   assert.equal(retryButton.textContent, "Retry");
   assert.equal(world.document.activeElement, drawer, "drawer open moves focus into the drawer");
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "true", "toggle announces expanded while open");
 
   /* Esc 关抽屉：焦点还原到触发元素。 */
   world.document.dispatchEvent("keydown", { key: "Escape" });
   assert.equal(world.document.activeElement, world.el("source-drawer-toggle"), "Esc restores focus to the toggle");
   await sleep(220);
   assert.equal(drawer.hidden, true, "drawer closed after Esc");
+  /* Esc 关闭不经过 renderAll——开关 aria-expanded/文案必须就地对齐，
+     读屏器不得持续播报已展开（浏览器面跑批器发现的陈旧态缺陷）。 */
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
+    "Esc close flips the toggle aria-expanded immediately (no stale expanded announcement)");
+  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources", "toggle label restored on close");
 
   /* 重试路径：再开仍失败 → 后端恢复 → Retry 回到加载中 → 列表渲染。 */
   world.el("source-drawer-toggle").click();

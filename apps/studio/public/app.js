@@ -1893,6 +1893,11 @@ function closeDrawer() {
   state.drawerOpen = false;
   state.drawerFocusRunId = null;
   hideDrawer();
+  /* 开关的 aria-expanded / 文案只在 renderDrawer 对齐——Esc 关闭不经过
+     renderAll，不补一次则读屏器持续播报已展开（浏览器面跑批器发现：
+     关闭后 3 秒仍为 true，直到下一次无关重渲）。drawerOpen 已为 false，
+     renderDrawer 更新开关后立即返回，不触碰抽屉内容/退出动画。 */
+  renderDrawer();
   const ref = state.drawerFocusReturn;
   state.drawerFocusReturn = null;
   restoreFocusRef(ref);
