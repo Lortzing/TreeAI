@@ -1,0 +1,1258 @@
+#!/usr/bin/env node
+/**
+ * run-d3-real-pi — D3 Studio 真实 Pi 场景跑批器（scripts/，零 npm 依赖）。
+ *
+ * 目的：把 issue #2 Go 条件中「真实 Pi Studio 操作」里可脚本化的核心场景，
+ * 按固定剧本跑在**真实产品进程**上（spawn apps/studio/src/index.ts：真实
+ * CLI 边界 + HTTP API + TreeAI DB + journal），逐项登记 PASS / FAIL /
+ * BLOCKED / NOT_RUN。覆盖：
+ *   - A1 主线两轮 + 两条**不同锚点**支线、各 ≥2 轮追问、无上下文串扰；
+ *   - A2 锚点操作（origin/selection 落库、reveal source、switch 导航）；
+ *   - A3 Return：显式提交、幂等（同键同内容 200 重放 / 同键异容 409
+ *     return-conflict）、下一次主干 prompt 送达（deliveredReturns=1）；
+ *   - A5 诊断面与 journal 保守投影（安全键集合 + 剧本 canary 词不外泄）；
+ *   - SSE 事件面（snapshot / run-started / message-delta / run-terminal）；
+ *   - A4 宿主重启（SIGKILL 后同数据目录重启：树/分支/回合/cursor 完整、
+ *     续聊可用）；
+ *   - 模型错误收敛（echo 模式经 /fail 确定性注入；real-pi 模式 NOT_RUN）；
+ *   - 在途中止（real-pi 模式真实模型时延窗口；echo 模式 NOT_RUN）。
+ *
+ * 两种模式（同一剧本、同一断言面）：
+ *   --mode echo-selftest（默认）离线确定性 echo 驱动：零凭据、零网络、
+ *     完全确定（echo 答案 = 当前分支可见用户文本的精确回声，本身就是
+ *     分支上下文隔离的机械证明）。用于跑批器自检与确定性回归。
+ *   --mode real-pi      真实 Pi 驱动（负责人/授权操作者运行）：
+ *     API key 仅经 TREEAI_STUDIO_API_KEY 环境注入——本脚本只检查变量
+ *     **名**是否存在，值从不进入本进程内存（由 studio 子进程自行读取）；
+ *     --provider/--model 必填；受控 agent 目录默认 <data>/pi-agent
+ *     （studio CLI 自建，绝不回落 ~/.pi）。运行前需按
+ *     evidence/d3/real-pi/20260929T063342Z-deepseek-studio.md 的做法，
+ *     在受控 agent 目录放入非秘密的 provider/model registry。
+ *
+ * 证据纪律（evidence/d3/README.md）：
+ *   - 本脚本**不写 evidence/**：结果只登 stdout 事实；真实 Pi 运行的记录
+ *     由负责人按 evidence/d3/templates/run-record.md 手工追加到
+ *     evidence/d3/real-pi/（echo 结果永远不能冒充真实 Pi 证据——rule 5）。
+ *   - 秘密纪律：API key 值绝不读取、绝不打印；子进程输出回显前做字面值
+ *     剥离（belt and braces）；输出只允许出现环境变量名。
+ *
+ * 退出码（沿用 D2 冻结纪律，coordination/d2/README.md）：
+ *   0 — 当前模式适用的全部检查 PASS（模式门控的 NOT_RUN 属预期并列出）
+ *   1 — 用法错误 / 跑批器自身失败（studio 无法启动按检查 FAIL 计，见下）
+ *   2 — 至少一项适用检查 FAIL（含 studio-boot 失败；其后检查如实 NOT_RUN）
+ *   3 — 无 FAIL 但存在 BLOCKED（如 real-pi 模式缺少 TREEAI_STUDIO_API_KEY）
+ *
+ * 用法：
+ *   node scripts/run-d3-real-pi.mjs --mode echo-selftest
+ *   TREEAI_STUDIO_API_KEY=… node scripts/run-d3-real-pi.mjs --mode real-pi \
+ *     --provider deepseek --model deepseek-flash [--agent-dir DIR] \
+ *     [--data DIR] [--keep-data] [--prompt-timeout-ms 120000]
+ */
+
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const SCRIPT_NAME = "run-d3-real-pi";
+const VERSION = "1.0.0";
+const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
+/** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
+const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
+const MODES = ["echo-selftest", "real-pi"];
+const BOOT_TIMEOUT_MS = 60_000;
+const DEFAULT_PROMPT_TIMEOUT_MS = 120_000;
+const GET_TIMEOUT_MS = 15_000;
+const USAGE = [
+  `usage: node scripts/run-d3-real-pi.mjs [--mode ${MODES.join("|")}]`,
+  "       real-pi mode additionally requires:",
+  `         --provider ID --model ID  (and the ${PI_API_KEY_ENV} env var)`,
+  "       optional: [--agent-dir DIR] [--data DIR] [--keep-data] [--prompt-timeout-ms N]",
+].join("\n");
+
+/* ------------------------------------------------------------------ */
+/* 剧本（固定文本；canary 标记词用于真实模型的上下文串扰探针）           */
+/* ------------------------------------------------------------------ */
+
+const SCENARIO = {
+  t1: "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with: understood.",
+  t2: "Main line, turn two. The trunk secret number is 4127. Reply with: noted.",
+  a1: "We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1.",
+  a2: "Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else.",
+  b1: "We are now on branch B, about batteries. Remember branch B's codeword: birch. Reply with: ok-b1.",
+  b2: "Branch B, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else.",
+  returnText:
+    "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+  returnKey: "d3-real-pi-return-key-1",
+  t3: "Back on the main line, turn three. If a return note was delivered to you, reply with its delivery marker word and the trunk codeword, comma-separated.",
+  fail: "/fail simulated upstream outage for the deterministic echo hook",
+  recoverB: "Branch B again, after the previous error. Reply with: recovered-b.",
+  t4: "The host process restarted. Reply with the trunk codeword, the trunk secret number, and any delivered return marker word, comma-separated.",
+  abortEssay: "Write a 400-word essay about the history of the bicycle, then stop.",
+  abortRecovered: "Reply with the single word: recovered.",
+};
+
+/** journal/诊断面 canary：这些词绝不允许出现在任何投影 summary 里。 */
+const CANARIES = ["maple", "4127", "cedar", "birch", "aspen"];
+
+const RUN_ROW_KEYS = ["branchId", "createdAt", "episodeId", "failure", "runId", "state", "terminalAt"];
+const JOURNAL_EVENT_KEYS = ["eventId", "occurredAt", "runId", "seq", "summary", "type"];
+
+/* ------------------------------------------------------------------ */
+/* 检查清单（id → 适用模式；门控原因逐模式登记）                        */
+/* ------------------------------------------------------------------ */
+
+const BOTH = MODES;
+const CHECK_DEFS = [
+  { id: "studio-boot", modes: BOTH },
+  { id: "tree-create", modes: BOTH },
+  { id: "trunk-main-line", modes: BOTH },
+  { id: "branch-a-create", modes: BOTH },
+  { id: "branch-a-followups", modes: BOTH },
+  { id: "switch-navigation", modes: BOTH },
+  { id: "branch-b-create", modes: BOTH },
+  { id: "branch-b-followups", modes: BOTH },
+  { id: "no-context-bleed", modes: BOTH },
+  { id: "anchor-reveal", modes: BOTH },
+  { id: "return-submit", modes: BOTH },
+  { id: "return-idempotency", modes: BOTH },
+  { id: "return-delivery", modes: BOTH },
+  {
+    id: "model-error-convergence",
+    modes: ["echo-selftest"],
+    notRun: {
+      "real-pi":
+        "no safe deterministic model-error injection against a real provider; the owner injects it once by misconfiguration per evidence/d3/real-pi/README.md (fault class: model error); the echo /fail hook covers the convergence mechanics offline",
+    },
+  },
+  { id: "sse-event-surface", modes: BOTH },
+  { id: "diagnostics-projection", modes: BOTH },
+  { id: "journal-no-leak", modes: BOTH },
+  { id: "restart-persistence", modes: BOTH },
+  {
+    id: "mid-flight-abort",
+    modes: ["real-pi"],
+    notRun: {
+      "echo-selftest":
+        "the echo driver's ~1ms turn delay leaves no deterministic in-flight window through the production CLI (no delay flag); abort semantics are covered offline by the studio suite with a widened echo window and run for real in --mode real-pi",
+    },
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* CLI                                                                 */
+/* ------------------------------------------------------------------ */
+
+function parseCli(argv) {
+  const options = {
+    mode: "echo-selftest",
+    provider: null,
+    model: null,
+    agentDir: null,
+    data: null,
+    keepData: false,
+    promptTimeoutMs: DEFAULT_PROMPT_TIMEOUT_MS,
+    help: false,
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const flag = argv[i];
+    const next = argv[i + 1];
+    const valueOf = () => {
+      if (next === undefined || next.startsWith("--")) {
+        throw new Error(`${USAGE}\nbad or missing value for '${flag}'`);
+      }
+      i += 1;
+      return next;
+    };
+    if (flag === "--help" || flag === "-h") options.help = true;
+    else if (flag === "--mode") options.mode = valueOf();
+    else if (flag === "--provider") options.provider = valueOf();
+    else if (flag === "--model") options.model = valueOf();
+    else if (flag === "--agent-dir") options.agentDir = valueOf();
+    else if (flag === "--data") options.data = valueOf();
+    else if (flag === "--keep-data") options.keepData = true;
+    else if (flag === "--prompt-timeout-ms") options.promptTimeoutMs = Number(valueOf());
+    else throw new Error(`${USAGE}\nunknown flag: ${flag}`);
+  }
+  if (!MODES.includes(options.mode)) {
+    throw new Error(`${USAGE}\n--mode must be one of: ${MODES.join(", ")} (got '${options.mode}')`);
+  }
+  if (!Number.isInteger(options.promptTimeoutMs) || options.promptTimeoutMs < 1000) {
+    throw new Error(`${USAGE}\n--prompt-timeout-ms must be an integer >= 1000`);
+  }
+  if (options.mode === "real-pi") {
+    if (typeof options.provider !== "string" || options.provider.length === 0) {
+      throw new Error(`${USAGE}\n--mode real-pi requires --provider`);
+    }
+    if (typeof options.model !== "string" || options.model.length === 0) {
+      throw new Error(`${USAGE}\n--mode real-pi requires --model`);
+    }
+  }
+  if (options.data !== null) {
+    if (existsSync(options.data) && readdirSync(options.data).length > 0) {
+      throw new Error(`--data directory exists and is not empty (append-only discipline needs a fresh run): ${options.data}`);
+    }
+  }
+  return options;
+}
+
+/* ------------------------------------------------------------------ */
+/* 小工具                                                              */
+/* ------------------------------------------------------------------ */
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function truncate(text, maxLength) {
+  const value = String(text);
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, Math.floor(maxLength / 2))}…[${value.length - maxLength} chars omitted]…${value.slice(-40)}`;
+}
+
+/** API key 值的字面剥离（belt and braces：值本就不进入本进程，仅防御子进程输出回显）。 */
+const SECRET_VALUE = process.env[PI_API_KEY_ENV];
+function stripSecret(text) {
+  if (typeof SECRET_VALUE !== "string" || SECRET_VALUE.length < 8) return text;
+  return text.split(SECRET_VALUE).join("[REDACTED]");
+}
+
+function containsIgnoreCase(haystack, needle) {
+  return haystack.toLowerCase().includes(needle.toLowerCase());
+}
+
+function echoAnswer(...userTexts) {
+  return `echo:[${userTexts.join("|")}]`;
+}
+
+function gitInfo() {
+  try {
+    const commit = spawnSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" });
+    const status = spawnSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf8" });
+    return {
+      commit: commit.status === 0 ? commit.stdout.trim() : null,
+      dirty: status.status === 0 ? status.stdout.trim().length > 0 : null,
+    };
+  } catch {
+    return { commit: null, dirty: null };
+  }
+}
+
+function npmVersion() {
+  try {
+    const res = spawnSync("npm", ["--version"], { cwd: ROOT, encoding: "utf8", timeout: 60_000 });
+    return res.status === 0 ? res.stdout.trim() : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Studio 子进程                                                       */
+/* ------------------------------------------------------------------ */
+
+function studioArgv(dataDir) {
+  const args = [STUDIO_ENTRY, "--port", "0", "--data", dataDir];
+  if (CLI.mode === "real-pi") {
+    args.push("--driver", "pi", "--provider", CLI.provider, "--model", CLI.model);
+    if (CLI.agentDir !== null) args.push("--agent-dir", CLI.agentDir);
+  }
+  return args;
+}
+
+async function startStudio(dataDir) {
+  const child = spawn(process.execPath, studioArgv(dataDir), {
+    cwd: ROOT,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString("utf8");
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString("utf8");
+  });
+  const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  for (;;) {
+    const match = /listening http:\/\/127\.0\.0\.1:(\d+)/.exec(stdout);
+    if (match !== null) {
+      return { child, port: Number(match[1]), stdout, stderr };
+    }
+    if (hasExited(child)) {
+      throw new Error(
+        `studio process exited before listening (code ${String(child.exitCode)}, signal ${String(child.signalCode)}); stderr tail: ${truncate(stripSecret(stderr), 800)}`,
+      );
+    }
+    if (Date.now() > deadline) {
+      ensureKilled(child);
+      throw new Error(
+        `studio process did not report a listening port within ${String(BOOT_TIMEOUT_MS)}ms; ` +
+          `stdout so far: ${truncate(stripSecret(stdout), 400)}; stderr tail: ${truncate(stripSecret(stderr), 800)}`,
+      );
+    }
+    await sleep(25);
+  }
+}
+
+/** A child is gone when it exited with a code OR was terminated by a signal. */
+function hasExited(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function waitForExit(child, timeoutMs) {
+  return new Promise((resolve) => {
+    if (hasExited(child)) {
+      resolve(child.exitCode);
+      return;
+    }
+    const killTimer = setTimeout(() => {
+      child.kill("SIGKILL");
+    }, timeoutMs);
+    child.once("exit", (code) => {
+      clearTimeout(killTimer);
+      resolve(code);
+    });
+  });
+}
+
+function ensureKilled(child) {
+  if (hasExited(child)) return;
+  child.kill("SIGKILL");
+}
+
+async function stopStudio(studio) {
+  if (studio === null || hasExited(studio.child)) return;
+  studio.child.kill("SIGTERM");
+  await waitForExit(studio.child, 10_000);
+}
+
+/* ------------------------------------------------------------------ */
+/* HTTP / SSE                                                          */
+/* ------------------------------------------------------------------ */
+
+async function api(port, method, path, body, timeoutMs = GET_TIMEOUT_MS) {
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+    method,
+    ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  let parsed = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    /* 非 JSON 响应体 */
+  }
+  return { status: response.status, body: parsed };
+}
+
+function errDetail(res) {
+  const error = res?.body?.error;
+  if (error !== undefined && error !== null) {
+    return `${String(error.code)}: ${truncate(String(error.message), 200)}`;
+  }
+  return `HTTP ${String(res?.status)} body=${truncate(JSON.stringify(res?.body), 200)}`;
+}
+
+function parseSseBlock(block) {
+  let event;
+  let dataRaw;
+  for (const line of block.split("\n")) {
+    if (line.startsWith(":")) continue;
+    if (line.startsWith("event:")) event = line.slice(6).trim();
+    else if (line.startsWith("data:")) dataRaw = line.slice(5).trim();
+  }
+  if (event === undefined || dataRaw === undefined) return null;
+  let data;
+  try {
+    data = JSON.parse(dataRaw);
+  } catch {
+    data = dataRaw;
+  }
+  return { event, data };
+}
+
+async function openSse(port, path) {
+  const controller = new AbortController();
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+    signal: controller.signal,
+    headers: { accept: "text/event-stream" },
+  });
+  if (!response.ok) {
+    controller.abort();
+    throw new Error(`SSE endpoint returned HTTP ${String(response.status)}`);
+  }
+  const reader = response.body.getReader();
+  const frames = [];
+  let buffer = "";
+  const pump = (async () => {
+    try {
+      const decoder = new TextDecoder();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        for (;;) {
+          const idx = buffer.indexOf("\n\n");
+          if (idx === -1) break;
+          const block = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+          const frame = parseSseBlock(block);
+          if (frame !== null) frames.push(frame);
+        }
+      }
+    } catch {
+      /* aborted or connection reset — the collected frames remain valid */
+    }
+  })();
+  void pump;
+  return {
+    frames,
+    /** Drain until no new frames arrive for a few quiet rounds (loopback flush). */
+    async drain(quietMs = 100, quietRounds = 3) {
+      let quiet = 0;
+      while (quiet < quietRounds) {
+        const before = frames.length;
+        await sleep(quietMs);
+        if (frames.length === before) quiet += 1;
+        else quiet = 0;
+      }
+    },
+    async close() {
+      controller.abort();
+      try {
+        await reader.cancel();
+      } catch {
+        /* already closed */
+      }
+      await pump.catch(() => undefined);
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* 检查登记                                                            */
+/* ------------------------------------------------------------------ */
+
+let CLI = null;
+let MODE = null;
+let booted = false;
+const results = [];
+const byId = new Map(CHECK_DEFS.map((def) => [def.id, def]));
+
+function report(entry) {
+  results.push(entry);
+  const mark = entry.status;
+  const tail =
+    entry.reason !== undefined
+      ? ` — ${entry.reason}`
+      : entry.detail !== undefined
+        ? ` — ${entry.detail}`
+        : entry.error !== undefined
+          ? ` — ${truncate(entry.error.message, 400)}`
+          : "";
+  console.log(`  [${mark}] ${entry.id}${tail}`);
+}
+
+async function runCheck(id, fn) {
+  const def = byId.get(id);
+  if (!def.modes.includes(MODE)) {
+    report({ id, status: "NOT_RUN", reason: def.notRun?.[MODE] ?? `not applicable in --mode ${MODE}` });
+    return null;
+  }
+  if (!booted && id !== "studio-boot") {
+    report({ id, status: "NOT_RUN", reason: "studio process did not boot (see studio-boot)" });
+    return null;
+  }
+  const startedAt = Date.now();
+  try {
+    const outcome = (await fn()) ?? {};
+    report({
+      id,
+      status: "PASS",
+      ...(outcome.detail !== undefined ? { detail: outcome.detail } : {}),
+      durationMs: Date.now() - startedAt,
+    });
+    return outcome;
+  } catch (err) {
+    report({
+      id,
+      status: "FAIL",
+      error: { message: stripSecret(err instanceof Error ? err.message : String(err)) },
+      durationMs: Date.now() - startedAt,
+    });
+    return null;
+  }
+}
+
+function sweepBlocked(reason) {
+  for (const def of CHECK_DEFS) {
+    report({ id: def.id, status: "BLOCKED", reason });
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 场景上下文与断言助手                                                */
+/* ------------------------------------------------------------------ */
+
+const sc = {
+  dataDir: null,
+  studios: [],
+  port: 0,
+  sse: null,
+  treeId: null,
+  trunkId: null,
+  branchA: null,
+  branchB: null,
+  anchorATurnId: null,
+  anchorBTurnId: null,
+  answers: {},
+  runIds: new Set(),
+  failedRunId: null,
+  composedT3: null,
+};
+
+function treePath(action) {
+  return `/api/trees/${encodeURIComponent(sc.treeId)}${action === undefined ? "" : `/${action}`}`;
+}
+
+function branchView(state, branchId) {
+  const view = state?.branches?.find((candidate) => candidate.branch.id === branchId);
+  assert(view !== undefined, `state has no branch view for ${branchId}`);
+  return view;
+}
+
+async function fetchState() {
+  const res = await api(sc.port, "GET", treePath("state"));
+  assert(res.status === 200, `GET state failed: ${errDetail(res)}`);
+  return res.body;
+}
+
+function turnCount(state, branchId) {
+  return branchView(state, branchId).turns.length;
+}
+
+function returnTurns(state) {
+  return branchView(state, sc.trunkId).turns.filter((turn) => turn.role === "return");
+}
+
+/** 成功 prompt 助手：200 + run succeeded + 非空回答；登记 runId。 */
+async function promptOk(branchId, text) {
+  const res = await api(sc.port, "POST", treePath("prompt"), { branchId, text }, CLI.promptTimeoutMs);
+  assert(res.status === 200, `prompt HTTP ${String(res.status)}: ${errDetail(res)}`);
+  const outcome = res.body?.outcome;
+  assert(outcome !== undefined && outcome !== null, "prompt response has no outcome");
+  assert(outcome.run?.state === "succeeded", `run state is ${String(outcome.run?.state)} (expected succeeded)`);
+  assert(
+    typeof outcome.assistantTurn?.text === "string" && outcome.assistantTurn.text.trim().length > 0,
+    "assistant message is empty",
+  );
+  sc.runIds.add(outcome.run.id);
+  return res.body;
+}
+
+/** echo 模式的精确回声断言（echo 答案即分支隔离的机械证明）。 */
+function assertEchoMode(actual, expected, what) {
+  if (MODE !== "echo-selftest") return;
+  assert(
+    actual === expected,
+    `${what}: echo mismatch\n    expected: ${truncate(expected, 240)}\n    actual:   ${truncate(actual, 240)}`,
+  );
+}
+
+function assertContainsMarkers(text, needles, what) {
+  for (const needle of needles) {
+    assert(containsIgnoreCase(text, needle), `${what}: expected to mention '${needle}' (got: ${truncate(text, 200)})`);
+  }
+}
+
+function assertAbsentMarkers(text, needles, what) {
+  for (const needle of needles) {
+    assert(!containsIgnoreCase(text, needle), `${what}: must NOT mention '${needle}' — context bleed signal (got: ${truncate(text, 200)})`);
+  }
+}
+
+function selectionOf(text) {
+  const end = Math.min(16, text.length);
+  return { start: 0, end, text: text.slice(0, end) };
+}
+
+/* ------------------------------------------------------------------ */
+/* 主流程                                                              */
+/* ------------------------------------------------------------------ */
+
+async function main() {
+  console.log(`${SCRIPT_NAME} ${VERSION} — D3 real-Pi scenario runner`);
+  console.log(`root: ${ROOT}`);
+  console.log(`mode: ${CLI.mode} (${MODE === "real-pi" ? "real Pi driver" : "offline deterministic echo driver"})`);
+
+  const git = gitInfo();
+  console.log(
+    `bound commit: ${git.commit === null ? "unknown" : git.commit.slice(0, 12)} (gitDirty: ${git.dirty === null ? "unknown" : git.dirty ? "true" : "false"})`,
+  );
+  console.log(`environment: Node ${process.version} / npm ${npmVersion()} / ${process.platform} ${process.arch}`);
+  console.log("");
+
+  /* real-pi 预检：凭据缺失 → 全部 BLOCKED（只登变量名，绝登值）。 */
+  if (MODE === "real-pi") {
+    const apiKey = process.env[PI_API_KEY_ENV];
+    if (typeof apiKey !== "string" || apiKey.trim().length === 0) {
+      console.log(`credentials: ${PI_API_KEY_ENV} is not set — all checks BLOCKED (exit 3)`);
+      console.log("(the value is never read by this script; only the variable NAME is ever logged)\n");
+      sweepBlocked(
+        `real-pi credentials missing: set the ${PI_API_KEY_ENV} environment variable (env var NAME only is logged; the user's real Pi config is NOT read as a shortcut)`,
+      );
+      finish();
+      return;
+    }
+    console.log(`credentials: ${PI_API_KEY_ENV} present (in-memory only; the value is never logged)\n`);
+  } else {
+    console.log("credentials: none needed (echo driver; zero network)\n");
+  }
+
+  sc.dataDir = CLI.data ?? mkdtempSync(join(tmpdir(), "treeai-d3-run-"));
+  console.log(`data dir: ${sc.dataDir}${CLI.data === null ? " (temporary)" : ""}`);
+  console.log("");
+
+  let verifierError = null;
+  let cleanupError = null;
+  try {
+    await phaseBoot();
+    if (booted) {
+      console.log("    studio banner (sanitized):");
+      for (const line of stripSecret(sc.studios[0].stdout).trim().split("\n")) {
+        console.log(`      ${line}`);
+      }
+    }
+    await phaseTrunk();
+    await phaseBranchA();
+    await phaseSwitch();
+    await phaseBranchB();
+    await phaseNoBleed();
+    await phaseAnchorReveal();
+    await phaseReturn();
+    await phaseModelError();
+    await phaseSse();
+    await phaseDiagnostics();
+    await phaseJournal();
+    await phaseRestart();
+    await phaseAbort();
+  } catch (err) {
+    verifierError = err;
+    VERIFIER_ERROR_HAPPENED = true;
+  } finally {
+    try {
+      await cleanup();
+    } catch (err) {
+      cleanupError = err;
+    }
+  }
+
+  if (cleanupError !== null) {
+    console.error(`[${SCRIPT_NAME}] cleanup error: ${stripSecret(String(cleanupError))}`);
+  }
+  if (verifierError !== null) {
+    console.error(
+      `[${SCRIPT_NAME}] VERIFIER_ERROR: ${stripSecret(verifierError instanceof Error ? verifierError.stack ?? verifierError.message : String(verifierError))}`,
+    );
+    process.exit(1);
+  }
+
+  finish();
+}
+
+async function cleanup() {
+  try {
+    await sc.sse?.close();
+  } catch {
+    /* already closed */
+  }
+  for (const studio of sc.studios) {
+    await stopStudio(studio);
+  }
+  const failed = results.some((entry) => entry.status === "FAIL") || VERIFIER_ERROR_HAPPENED;
+  if (CLI.keepData || failed) {
+    console.log(`data dir kept for inspection: ${sc.dataDir}`);
+  } else if (CLI.data === null) {
+    rmSync(sc.dataDir, { recursive: true, force: true });
+  }
+}
+
+let VERIFIER_ERROR_HAPPENED = false;
+
+function finish() {
+  const counts = { PASS: 0, FAIL: 0, BLOCKED: 0, NOT_RUN: 0 };
+  for (const entry of results) counts[entry.status] += 1;
+  const notRunIds = results.filter((entry) => entry.status === "NOT_RUN").map((entry) => entry.id);
+  let exitCode = 0;
+  if (counts.FAIL > 0) exitCode = 2;
+  else if (counts.BLOCKED > 0) exitCode = 3;
+
+  console.log("");
+  console.log(`${SCRIPT_NAME} summary:`);
+  console.log(`  mode: ${CLI.mode}`);
+  console.log(
+    `  checks: ${counts.PASS} PASS, ${counts.FAIL} FAIL, ${counts.BLOCKED} BLOCKED, ${counts.NOT_RUN} NOT_RUN`,
+  );
+  if (notRunIds.length > 0) {
+    console.log(`  NOT_RUN: ${notRunIds.join(", ")} (reasons above)`);
+  }
+  const verdict =
+    exitCode === 0
+      ? "PASS"
+      : exitCode === 2
+        ? "HAS_FAIL"
+        : exitCode === 3
+          ? "BLOCKED"
+          : "VERIFIER_ERROR";
+  console.log(`  verdict: ${verdict} (exit ${exitCode})`);
+  if (MODE === "real-pi") {
+    console.log("  next (owner): record this run in evidence/d3/real-pi/ using");
+    console.log("    evidence/d3/templates/run-record.md (environment + bound SHA above; sanitized ids only)");
+  } else {
+    console.log("  note: this was an offline echo selftest — echo results are never real-Pi evidence");
+    console.log("    (evidence/d3/README.md rule 5)");
+  }
+  process.exit(exitCode);
+}
+
+/* ------------------------------------------------------------------ */
+/* 阶段实现                                                            */
+/* ------------------------------------------------------------------ */
+
+async function phaseBoot() {
+  await runCheck("studio-boot", async () => {
+    const studio = await startStudio(sc.dataDir);
+    sc.studios.push(studio);
+    sc.port = studio.port;
+    const health = await api(sc.port, "GET", "/api/health");
+    assert(health.status === 200 && health.body?.ok === true, `health check failed: ${errDetail(health)}`);
+    const banner = studio.stdout;
+    const driver = MODE === "real-pi" ? "pi" : "echo";
+    assert(banner.includes(`driver=${driver}`), `banner does not report driver=${driver}: ${truncate(stripSecret(banner), 300)}`);
+    if (MODE === "real-pi") {
+      assert(banner.includes("pi agent-dir="), "banner does not report the controlled agent dir");
+      assert(banner.includes(`pi api key=${PI_API_KEY_ENV} env`), `banner does not report the ${PI_API_KEY_ENV} env seam`);
+    }
+    booted = true;
+    return { detail: `${driver} driver on 127.0.0.1:${sc.port}, /api/health ok` };
+  });
+}
+
+async function phaseTrunk() {
+  await runCheck("tree-create", async () => {
+    const created = await api(sc.port, "POST", "/api/trees");
+    assert(created.status === 201, `tree creation failed: ${errDetail(created)}`);
+    sc.treeId = created.body?.tree?.id;
+    sc.trunkId = created.body?.trunkBranchId;
+    assert(typeof sc.treeId === "string" && sc.treeId.length > 0, "no tree id in creation response");
+    assert(typeof sc.trunkId === "string" && sc.trunkId.length > 0, "no trunk branch id in creation response");
+    const state = created.body.state;
+    assert(state?.branches?.length === 1, "a fresh tree must have exactly one (trunk) branch");
+    assert(state.branches[0].branch.id === sc.trunkId, "the single branch is not the trunk");
+    assert(state.cursor === null, "cursor must be null before the first prompt");
+    const listed = await api(sc.port, "GET", "/api/trees");
+    assert(listed.status === 200 && listed.body?.trees?.length === 1, "tree list does not show exactly one tree");
+    /* 订阅 SSE（在任何 prompt 之前，捕获全部事件）。 */
+    sc.sse = await openSse(sc.port, treePath("events"));
+    return { detail: `tree + trunk created; SSE stream attached before any prompt` };
+  });
+
+  await runCheck("trunk-main-line", async () => {
+    const t1 = await promptOk(sc.trunkId, SCENARIO.t1);
+    sc.answers.t1 = t1.outcome.assistantTurn.text;
+    sc.anchorATurnId = t1.outcome.assistantTurn.id;
+    assertEchoMode(sc.answers.t1, echoAnswer(SCENARIO.t1), "trunk turn 1");
+    const t2 = await promptOk(sc.trunkId, SCENARIO.t2);
+    sc.answers.t2 = t2.outcome.assistantTurn.text;
+    sc.anchorBTurnId = t2.outcome.assistantTurn.id;
+    assertEchoMode(sc.answers.t2, echoAnswer(SCENARIO.t1, SCENARIO.t2), "trunk turn 2");
+    const state = await fetchState();
+    assert(turnCount(state, sc.trunkId) === 4, `trunk must hold 4 turns after two prompts (got ${String(turnCount(state, sc.trunkId))})`);
+    assert(state.cursor?.branchId === sc.trunkId, "cursor is not on the trunk after trunk prompts");
+    return { detail: "two trunk prompts succeeded; cursor on trunk; 4 turns persisted" };
+  });
+}
+
+async function phaseBranchA() {
+  await runCheck("branch-a-create", async () => {
+    const selection = selectionOf(sc.answers.t1);
+    const res = await api(sc.port, "POST", treePath("branches"), {
+      sourceBranchId: sc.trunkId,
+      anchorTurnId: sc.anchorATurnId,
+      selection,
+    });
+    assert(res.status === 201, `branch A creation failed: ${errDetail(res)}`);
+    sc.branchA = res.body?.branch?.id;
+    const origin = res.body?.origin;
+    assert(typeof sc.branchA === "string", "no branch id in branch creation response");
+    assert(origin?.sourceBranchId === sc.trunkId, "branch A origin source is not the trunk");
+    assert(origin?.anchorTurnId === sc.anchorATurnId, "branch A origin anchor is not the trunk turn-1 answer");
+    assert(
+      origin?.selection?.start === selection.start &&
+        origin.selection.end === selection.end &&
+        origin.selection.text === selection.text,
+      "branch A origin selection mismatch",
+    );
+    const state = await fetchState();
+    assert(state.branches.length === 2, `expected 2 branches after creating branch A (got ${String(state.branches.length)})`);
+    const view = branchView(state, sc.branchA);
+    assert(view.originStatus === "available", `branch A anchor status is ${String(view.originStatus)} (expected available)`);
+    return { detail: "branch A forked from the trunk turn-1 answer anchor (origin + selection recorded)" };
+  });
+
+  await runCheck("branch-a-followups", async () => {
+    const a1 = await promptOk(sc.branchA, SCENARIO.a1);
+    sc.answers.a1 = a1.outcome.assistantTurn.text;
+    assertEchoMode(sc.answers.a1, echoAnswer(SCENARIO.t1, SCENARIO.a1), "branch A turn 1");
+    const a2 = await promptOk(sc.branchA, SCENARIO.a2);
+    sc.answers.a2 = a2.outcome.assistantTurn.text;
+    assertEchoMode(sc.answers.a2, echoAnswer(SCENARIO.t1, SCENARIO.a1, SCENARIO.a2), "branch A turn 2");
+    const state = await fetchState();
+    assert(turnCount(state, sc.branchA) === 4, `branch A must hold 4 turns after two follow-ups (got ${String(turnCount(state, sc.branchA))})`);
+    return { detail: "two branch-A follow-ups succeeded (>= 2 turns per branch)" };
+  });
+}
+
+async function phaseSwitch() {
+  await runCheck("switch-navigation", async () => {
+    const res = await api(sc.port, "POST", treePath("switch"), { branchId: sc.trunkId });
+    assert(res.status === 200, `switch to trunk failed: ${errDetail(res)}`);
+    assert(res.body?.cursor?.branchId === sc.trunkId, "switch response cursor is not the trunk");
+    const state = await fetchState();
+    assert(state.cursor?.branchId === sc.trunkId, "state cursor is not the trunk after switching back");
+    return { detail: "explicit switch back to the trunk (session leaf re-navigated)" };
+  });
+}
+
+async function phaseBranchB() {
+  await runCheck("branch-b-create", async () => {
+    const selection = selectionOf(sc.answers.t2);
+    const res = await api(sc.port, "POST", treePath("branches"), {
+      sourceBranchId: sc.trunkId,
+      anchorTurnId: sc.anchorBTurnId,
+      selection,
+    });
+    assert(res.status === 201, `branch B creation failed: ${errDetail(res)}`);
+    sc.branchB = res.body?.branch?.id;
+    const origin = res.body?.origin;
+    assert(typeof sc.branchB === "string", "no branch id in branch creation response");
+    assert(origin?.sourceBranchId === sc.trunkId, "branch B origin source is not the trunk");
+    assert(origin?.anchorTurnId === sc.anchorBTurnId, "branch B origin anchor is not the trunk turn-2 answer");
+    assert(origin.anchorTurnId !== sc.anchorATurnId, "branch B must anchor on a DIFFERENT turn than branch A");
+    const state = await fetchState();
+    assert(state.branches.length === 3, `expected 3 branches after creating branch B (got ${String(state.branches.length)})`);
+    const view = branchView(state, sc.branchB);
+    assert(view.originStatus === "available", `branch B anchor status is ${String(view.originStatus)} (expected available)`);
+    return { detail: "branch B forked from the trunk turn-2 answer anchor (different anchor from branch A)" };
+  });
+
+  await runCheck("branch-b-followups", async () => {
+    const b1 = await promptOk(sc.branchB, SCENARIO.b1);
+    sc.answers.b1 = b1.outcome.assistantTurn.text;
+    assertEchoMode(sc.answers.b1, echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1), "branch B turn 1");
+    const b2 = await promptOk(sc.branchB, SCENARIO.b2);
+    sc.answers.b2 = b2.outcome.assistantTurn.text;
+    assertEchoMode(sc.answers.b2, echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1, SCENARIO.b2), "branch B turn 2");
+    const state = await fetchState();
+    assert(turnCount(state, sc.branchB) === 4, `branch B must hold 4 turns (got ${String(turnCount(state, sc.branchB))})`);
+    return { detail: "two branch-B follow-ups succeeded (>= 2 turns per branch)" };
+  });
+}
+
+async function phaseNoBleed() {
+  await runCheck("no-context-bleed", async () => {
+    assert(typeof sc.answers.a2 === "string" && sc.answers.a2.length > 0, "scenario wiring: branch A probe answer missing");
+    assert(typeof sc.answers.b2 === "string" && sc.answers.b2.length > 0, "scenario wiring: branch B probe answer missing");
+    /* 分支 A：可见锚点前主干历史（maple）+ 自己的 cedar；不可见锚点后的
+       主干第二轮（4127）与分支 B（birch）。 */
+    assertContainsMarkers(sc.answers.a2, ["cedar", "maple"], "branch A probe answer");
+    assertAbsentMarkers(sc.answers.a2, ["4127", "birch"], "branch A probe answer");
+    /* 分支 B：锚点在主干第二轮答案上——两轮主干历史（maple + 4127）+ 自己
+       的 birch 都可见；分支 A 的 cedar 不可见。 */
+    assertContainsMarkers(sc.answers.b2, ["birch", "maple", "4127"], "branch B probe answer");
+    assertAbsentMarkers(sc.answers.b2, ["cedar"], "branch B probe answer");
+    return {
+      detail:
+        "branch A sees cedar+maple only; branch B sees birch+maple+4127 only; no cross-branch or post-anchor trunk leakage",
+    };
+  });
+}
+
+async function phaseAnchorReveal() {
+  await runCheck("anchor-reveal", async () => {
+    const res = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(sc.treeId)}/branches/${encodeURIComponent(sc.branchA)}/source`,
+    );
+    assert(res.status === 200, `reveal branch A origin failed: ${errDetail(res)}`);
+    const source = res.body?.source;
+    assert(source?.status === "available", `anchor status is ${String(source?.status)} (expected available)`);
+    assert(source?.sourceBranchId === sc.trunkId, "revealed source branch is not the trunk");
+    assert(source?.anchorTurnId === sc.anchorATurnId, "revealed anchor turn is not the trunk turn-1 answer");
+    assert(
+      source?.selection?.text === sc.answers.t1.slice(0, Math.min(16, sc.answers.t1.length)),
+      "revealed selection text does not match the anchor answer slice",
+    );
+    assert(res.body?.state?.cursor?.branchId === sc.trunkId, "reveal did not re-align the cursor to the source branch");
+    return { detail: "branch A origin revealed: anchor available, selection intact, cursor re-aligned" };
+  });
+}
+
+async function phaseReturn() {
+  await runCheck("return-submit", async () => {
+    const res = await api(sc.port, "POST", treePath("return"), {
+      fromBranchId: sc.branchA,
+      text: SCENARIO.returnText,
+      idempotencyKey: SCENARIO.returnKey,
+    });
+    assert(res.status === 201, `return submission failed: ${errDetail(res)}`);
+    const turn = res.body?.returnTurn;
+    assert(turn?.branchId === sc.trunkId, "return turn is not recorded on the trunk");
+    assert(turn?.fromBranchId === sc.branchA, "return turn fromBranch is not branch A");
+    assert(turn?.idempotencyKey === SCENARIO.returnKey, "return turn idempotency key mismatch");
+    assert(turn?.deliveredRunId === null, "a fresh return must not be delivered yet");
+    assert(turn?.targetAnchor?.anchorTurnId === sc.anchorATurnId, "return targetAnchor is not the branch A anchor");
+    assert(turn?.targetAnchor?.sourceBranchId === sc.trunkId, "return targetAnchor source is not the trunk");
+    const state = await fetchState();
+    assert(returnTurns(state).length === 1, "exactly one return turn expected on the trunk");
+    return { detail: "return submitted (201) with targetAnchor snapshot; deliveredRunId null (confirmed, not delivered)" };
+  });
+
+  await runCheck("return-idempotency", async () => {
+    /* 同键同内容重放 → 200，同一 returnTurn，零新写入。 */
+    const replay = await api(sc.port, "POST", treePath("return"), {
+      fromBranchId: sc.branchA,
+      text: SCENARIO.returnText,
+      idempotencyKey: SCENARIO.returnKey,
+    });
+    assert(replay.status === 200, `same-key replay must be 200 (got ${String(replay.status)})`);
+    const first = returnTurns(await fetchState())[0];
+    assert(replay.body?.returnTurn?.id === first.id, "same-key replay must return the SAME return turn");
+    /* 同键不同内容 → 409 return-conflict，既有 Return 不变。 */
+    const conflict = await api(sc.port, "POST", treePath("return"), {
+      fromBranchId: sc.branchA,
+      text: `${SCENARIO.returnText} TAMPERED`,
+      idempotencyKey: SCENARIO.returnKey,
+    });
+    assert(conflict.status === 409, `same-key different-content must be 409 (got ${String(conflict.status)})`);
+    assert(conflict.body?.error?.code === "return-conflict", `conflict code is ${String(conflict.body?.error?.code)}`);
+    const after = returnTurns(await fetchState());
+    assert(after.length === 1 && after[0].id === first.id, "conflict must leave the existing return unchanged");
+    assert(after[0].text === SCENARIO.returnText, "conflict must not modify the return text");
+    return { detail: "replay 200 (same turn), same-key different-content 409 return-conflict, exactly one return row" };
+  });
+
+  await runCheck("return-delivery", async () => {
+    sc.composedT3 = `[Return from branch ${sc.branchA}]\n${SCENARIO.returnText}\n\n${SCENARIO.t3}`;
+    const t3 = await promptOk(sc.trunkId, SCENARIO.t3);
+    sc.answers.t3 = t3.outcome.assistantTurn.text;
+    assert(t3.outcome.deliveredReturns === 1, `deliveredReturns is ${String(t3.outcome.deliveredReturns)} (expected 1)`);
+    if (MODE === "echo-selftest") {
+      assertEchoMode(sc.answers.t3, echoAnswer(SCENARIO.t1, SCENARIO.t2, sc.composedT3), "trunk turn 3 (return delivery)");
+    } else {
+      assertContainsMarkers(sc.answers.t3, ["aspen", "maple"], "trunk turn 3 answer");
+      assertAbsentMarkers(sc.answers.t3, ["cedar", "birch"], "trunk turn 3 answer");
+    }
+    const state = await fetchState();
+    const returns = returnTurns(state);
+    assert(returns.length === 1 && returns[0].deliveredRunId === t3.outcome.run.id, "the return turn is not marked delivered by the T3 run");
+    assert(turnCount(state, sc.trunkId) === 7, `trunk must hold 7 turns after delivery (got ${String(turnCount(state, sc.trunkId))})`);
+    return { detail: "return delivered exactly once with the next trunk prompt (deliveredRunId set)" };
+  });
+}
+
+async function phaseModelError() {
+  await runCheck("model-error-convergence", async () => {
+    const before = turnCount(await fetchState(), sc.branchB);
+    const failed = await api(sc.port, "POST", treePath("prompt"), { branchId: sc.branchB, text: SCENARIO.fail }, CLI.promptTimeoutMs);
+    assert(failed.status === 502, `/fail prompt must map to 502 (got ${String(failed.status)})`);
+    assert(failed.body?.error?.code === "upstream", `error code is ${String(failed.body?.error?.code)} (expected upstream)`);
+    assert(/simulated upstream failure/.test(String(failed.body?.error?.message ?? "")), "error message does not match the echo failure hook");
+    const midState = await fetchState();
+    assert(turnCount(midState, sc.branchB) === before, "a failed prompt must persist no turns");
+    const diag = await api(sc.port, "GET", treePath("diagnostics"));
+    const failedRun = (diag.body?.runs ?? []).find((run) => run.state === "failed");
+    assert(failedRun !== undefined, "diagnostics shows no failed run");
+    assert(failedRun.failure?.code === "upstream", "diagnostics failed run code is not upstream");
+    sc.failedRunId = failedRun.runId;
+    sc.runIds.add(failedRun.runId);
+    /* 错误后的恢复：同一分支续聊可用。 */
+    const recovery = await promptOk(sc.branchB, SCENARIO.recoverB);
+    sc.answers.recoverB = recovery.outcome.assistantTurn.text;
+    assertEchoMode(
+      sc.answers.recoverB,
+      echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1, SCENARIO.b2, SCENARIO.fail, SCENARIO.recoverB),
+      "branch B recovery turn",
+    );
+    const after = turnCount(await fetchState(), sc.branchB);
+    assert(after === before + 2, `branch B must hold ${String(before + 2)} turns after recovery (got ${String(after)})`);
+    return { detail: "injected upstream failure converged failed (502, no turns); branch B usable again afterwards" };
+  });
+}
+
+async function phaseSse() {
+  await runCheck("sse-event-surface", async () => {
+    assert(sc.sse !== null, "scenario wiring: SSE stream missing");
+    await sc.sse.drain();
+    const frames = sc.sse.frames;
+    const snapshots = frames.filter((frame) => frame.event === "snapshot");
+    const started = frames.filter((frame) => frame.event === "run-started");
+    const terminal = frames.filter((frame) => frame.event === "run-terminal");
+    const deltas = frames.filter((frame) => frame.event === "message-delta");
+    const aborts = frames.filter((frame) => frame.event === "abort-requested");
+    const tools = frames.filter((frame) => frame.event === "tool-activity");
+    const expectedRuns = MODE === "echo-selftest" ? 9 : 7;
+    assert(snapshots.length === 1, `expected exactly one snapshot frame (got ${String(snapshots.length)})`);
+    assert(snapshots[0].data?.treeId === sc.treeId, "snapshot frame is not for this tree");
+    assert(started.length === expectedRuns, `expected ${String(expectedRuns)} run-started frames (got ${String(started.length)})`);
+    assert(terminal.length === expectedRuns, `expected ${String(expectedRuns)} run-terminal frames (got ${String(terminal.length)})`);
+    const stateMix = {};
+    for (const frame of terminal) {
+      const state = frame.data?.state;
+      assert(typeof state === "string", "run-terminal frame without a state");
+      stateMix[state] = (stateMix[state] ?? 0) + 1;
+      assert(frame.data?.treeId === sc.treeId, "run-terminal frame for a different tree");
+    }
+    const expectedMix =
+      MODE === "echo-selftest" ? { succeeded: 8, failed: 1 } : { succeeded: 7 };
+    for (const [state, count] of Object.entries(expectedMix)) {
+      assert((stateMix[state] ?? 0) === count, `run-terminal state mix: ${state} x ${String(stateMix[state] ?? 0)} (expected ${String(count)})`);
+    }
+    if (MODE === "echo-selftest") {
+      assert(deltas.length === 16, `expected 16 message-delta frames (2 per echo answer; got ${String(deltas.length)})`);
+    } else {
+      assert(deltas.length >= expectedRuns, `expected >= ${String(expectedRuns)} message-delta frames (got ${String(deltas.length)})`);
+    }
+    assert(aborts.length === 0, "unexpected abort-requested frames");
+    assert(tools.length === 0, "unexpected tool-activity frames (studio prompts run with an empty tool allowlist)");
+    const startedIds = new Set(started.map((frame) => frame.data?.runId));
+    const terminalIds = new Set(terminal.map((frame) => frame.data?.runId));
+    assert(startedIds.size === expectedRuns && terminalIds.size === expectedRuns, "duplicate run ids in SSE frames");
+    const missing = [...sc.runIds].filter((id) => !startedIds.has(id));
+    assert(missing.length === 0, `runs missing from the SSE stream: ${missing.join(", ")}`);
+    const extra = [...startedIds].filter((id) => !sc.runIds.has(id));
+    assert(extra.length === 0, `unknown runs in the SSE stream: ${extra.join(", ")}`);
+    await sc.sse.close();
+    return {
+      detail: `${String(started.length)} run-started / ${String(terminal.length)} run-terminal (mix ${JSON.stringify(stateMix)}) / ${String(deltas.length)} message-delta / 0 abort`,
+    };
+  });
+}
+
+async function phaseDiagnostics() {
+  await runCheck("diagnostics-projection", async () => {
+    const diag = await api(sc.port, "GET", treePath("diagnostics"));
+    assert(diag.status === 200, `diagnostics failed: ${errDetail(diag)}`);
+    const body = diag.body;
+    assert(body?.runtimeState === "idle", `runtimeState is ${String(body?.runtimeState)} (expected idle at rest)`);
+    assert(body?.activeRun === null, "activeRun is not null at rest");
+    const expectedRuns = MODE === "echo-selftest" ? 9 : 7;
+    assert(body?.runs?.length === expectedRuns, `diagnostics lists ${String(body?.runs?.length)} runs (expected ${String(expectedRuns)})`);
+    const stateMix = {};
+    for (const run of body.runs) {
+      const keys = Object.keys(run).sort();
+      assert(
+        JSON.stringify(keys) === JSON.stringify(RUN_ROW_KEYS),
+        `run row key set mismatch: ${JSON.stringify(keys)}`,
+      );
+      stateMix[run.state] = (stateMix[run.state] ?? 0) + 1;
+      assert(run.terminalAt !== null, `run ${String(run.runId)} has no terminalAt`);
+      if (run.state !== "failed") assert(run.failure === null, `non-failed run ${String(run.runId)} carries a failure`);
+    }
+    const expectedMix = MODE === "echo-selftest" ? { succeeded: 8, failed: 1 } : { succeeded: 7 };
+    for (const [state, count] of Object.entries(expectedMix)) {
+      assert((stateMix[state] ?? 0) === count, `run state mix: ${state} x ${String(stateMix[state] ?? 0)} (expected ${String(count)})`);
+    }
+    if (MODE === "echo-selftest") {
+      const failedRun = body.runs.find((run) => run.state === "failed");
+      assert(failedRun?.failure?.code === "upstream", "failed run code is not upstream");
+      assert(
+        JSON.stringify(Object.keys(failedRun.failure).sort()) === JSON.stringify(["code", "message"]),
+        "failure projection key set mismatch",
+      );
+    }
+    assert(body?.policyDecisions?.observed === false, "policyDecisions.observed must be false (no tool allowlist)");
+    assert(typeof body?.policyDecisions?.reason === "string" && body.policyDecisions.reason.length > 0, "policyDecisions.reason missing");
+    return { detail: `safe projection verified for ${String(body.runs.length)} runs; honest no-policy note present` };
+  });
+}
+
+async function phaseJournal() {
+  await runCheck("journal-no-leak", async () => {
+    const res = await api(sc.port, "GET", `${treePath("journal")}?limit=500`);
+    assert(res.status === 200, `journal endpoint failed: ${errDetail(res)}`);
+    const events = res.body?.events;
+    assert(Array.isArray(events), "journal response has no events array");
+    const minimum = MODE === "echo-selftest" ? 50 : 10;
+    assert(events.length >= minimum, `journal lists only ${String(events.length)} events (expected >= ${String(minimum)})`);
+    const blob = [];
+    for (const event of events) {
+      const keys = Object.keys(event).sort();
+      assert(
+        JSON.stringify(keys) === JSON.stringify(JOURNAL_EVENT_KEYS),
+        `journal event key set mismatch: ${JSON.stringify(keys)}`,
+      );
+      assert(typeof event.summary === "string" && event.summary.length > 0, "journal event without a summary");
+      blob.push(`${String(event.type)} ${event.summary}`);
+    }
+    const text = blob.join("\n");
+    for (const canary of CANARIES) {
+      assert(!containsIgnoreCase(text, canary), `journal projection leaks the scenario canary '${canary}'`);
+    }
+    return { detail: `${String(events.length)} journal events, whitelist key set exact, no scenario canary leakage` };
+  });
+}
+
+async function phaseRestart() {
+  await runCheck("restart-persistence", async () => {
+    /* 重启前的权威状态快照。 */
+    const pre = await fetchState();
+    const preCounts = {
+      [sc.trunkId]: turnCount(pre, sc.trunkId),
+      [sc.branchA]: turnCount(pre, sc.branchA),
+      [sc.branchB]: turnCount(pre, sc.branchB),
+    };
+    const expectedPre =
+      MODE === "echo-selftest"
+        ? { trunk: 7, branchA: 4, branchB: 6 }
+        : { trunk: 7, branchA: 4, branchB: 4 };
+    assert(preCounts[sc.trunkId] === expectedPre.trunk, `pre-restart trunk turns ${String(preCounts[sc.trunkId])} (expected ${String(expectedPre.trunk)})`);
+    assert(preCounts[sc.branchA] === expectedPre.branchA, `pre-restart branch A turns ${String(preCounts[sc.branchA])}`);
+    assert(preCounts[sc.branchB] === expectedPre.branchB, `pre-restart branch B turns ${String(preCounts[sc.branchB])}`);
+    const preBranchIds = pre.branches.map((view) => view.branch.id).sort();
+
+    /* 宿主重启（kill -9，无优雅关闭）→ 同数据目录重启。 */
+    const first = sc.studios[0];
+    first.child.kill("SIGKILL");
+    await waitForExit(first.child, 10_000);
+    const second = await startStudio(sc.dataDir);
+    sc.studios.push(second);
+    sc.port = second.port;
+
+    const listed = await api(sc.port, "GET", "/api/trees");
+    assert(listed.status === 200 && listed.body?.trees?.length === 1, "tree list after restart is not exactly one tree");
+    assert(listed.body.trees[0].id === sc.treeId, "the surviving tree is not the scenario tree");
+
+    const post = await fetchState();
+    assert(post.trunkBranchId === sc.trunkId, "trunkBranchId changed across the restart");
+    assert(post.branches.length === 3, `branch count after restart is ${String(post.branches.length)}`);
+    const postBranchIds = post.branches.map((view) => view.branch.id).sort();
+    assert(JSON.stringify(postBranchIds) === JSON.stringify(preBranchIds), "branch ids changed across the restart");
+    for (const view of post.branches) {
+      assert(view.sessionAvailability === "available", `branch ${String(view.branch.id)} sessionAvailability is ${String(view.sessionAvailability)} after restart`);
+    }
+    for (const [branchId, count] of Object.entries(preCounts)) {
+      assert(turnCount(post, branchId) === count, `turn count for ${branchId} changed across the restart`);
+    }
+    assert(JSON.stringify(post.cursor) === JSON.stringify(pre.cursor), "cursor (persisted navigation) changed across the restart");
+
+    /* 重启后主干续聊（restoreSession 路径）。 */
+    const t4 = await promptOk(sc.trunkId, SCENARIO.t4);
+    sc.answers.t4 = t4.outcome.assistantTurn.text;
+    if (MODE === "echo-selftest") {
+      assertEchoMode(sc.answers.t4, echoAnswer(SCENARIO.t1, SCENARIO.t2, sc.composedT3, SCENARIO.t4), "post-restart trunk turn");
+    } else {
+      assertContainsMarkers(sc.answers.t4, ["maple", "4127", "aspen"], "post-restart trunk answer");
+      assertAbsentMarkers(sc.answers.t4, ["cedar", "birch"], "post-restart trunk answer");
+    }
+    const diag = await api(sc.port, "GET", treePath("diagnostics"));
+    assert(diag.body?.runtimeState === "idle", "runtimeState is not idle after the restart prompt");
+    for (const run of diag.body?.runs ?? []) {
+      assert(run.terminalAt !== null, `run ${String(run.runId)} is not terminal after the restart`);
+    }
+    return { detail: "SIGKILL + same-data restart: tree/branches/turns/cursor intact; trunk continuation works" };
+  });
+}
+
+async function phaseAbort() {
+  await runCheck("mid-flight-abort", async () => {
+    const trunkTurnsBefore = turnCount(await fetchState(), sc.trunkId);
+    /* 发起长生成但不等待；轮询诊断面直到 streaming。 */
+    const essayPromise = api(
+      sc.port,
+      "POST",
+      treePath("prompt"),
+      { branchId: sc.trunkId, text: SCENARIO.abortEssay },
+      CLI.promptTimeoutMs + 30_000,
+    ).catch((err) => ({
+      status: -1,
+      body: { error: { code: "fetch-error", message: String(err instanceof Error ? err.message : err) } },
+    }));
+    let activeRunId = null;
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const diag = await api(sc.port, "GET", treePath("diagnostics"), undefined, 5_000);
+      if (diag.body?.runtimeState === "streaming" && diag.body?.activeRun?.runId !== undefined) {
+        activeRunId = diag.body.activeRun.runId;
+        break;
+      }
+      await sleep(150);
+    }
+    assert(activeRunId !== null, "never observed the in-flight run in the streaming state (model settled too fast?)");
+    const abortRes = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(sc.treeId)}/runs/${encodeURIComponent(activeRunId)}/abort`,
+    );
+    assert(abortRes.status === 200 && abortRes.body?.ok === true, `abort request failed: ${errDetail(abortRes)}`);
+    const essay = await essayPromise;
+    assert(essay.status === 409, `aborted prompt must settle as 409 (got ${String(essay.status)})`);
+    assert(essay.body?.error?.code === "user-abort", `aborted prompt code is ${String(essay.body?.error?.code)} (expected user-abort)`);
+    const diag = await api(sc.port, "GET", treePath("diagnostics"));
+    assert(diag.body?.runtimeState === "idle", "runtimeState is not idle after the abort");
+    const abortedRun = (diag.body?.runs ?? []).find((run) => run.runId === activeRunId);
+    assert(abortedRun?.state === "aborted", `aborted run state is ${String(abortedRun?.state)}`);
+    assert(abortedRun.failure === null, "an aborted run must not carry a failure (user-abort is not a failure)");
+    const turnsAfterAbort = turnCount(await fetchState(), sc.trunkId);
+    assert(turnsAfterAbort === trunkTurnsBefore, "an aborted prompt must persist no turns");
+    /* 中止后的恢复：同一主干续聊可用。 */
+    const recovery = await promptOk(sc.trunkId, SCENARIO.abortRecovered);
+    const turnsAfterRecovery = turnCount(await fetchState(), sc.trunkId);
+    assert(turnsAfterRecovery === trunkTurnsBefore + 2, "recovery prompt did not persist its turn pair");
+    return {
+      detail: `in-flight run ${String(activeRunId).slice(0, 12)}… aborted (409 user-abort, no turns); trunk usable again afterwards`,
+    };
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* 入口                                                                */
+/* ------------------------------------------------------------------ */
+
+try {
+  CLI = parseCli(process.argv.slice(2));
+} catch (err) {
+  console.error(`${SCRIPT_NAME}: ${err instanceof Error ? err.message : String(err)}`);
+  process.exit(1);
+}
+
+if (CLI.help) {
+  console.log(USAGE);
+  console.log("");
+  console.log("modes:");
+  console.log("  echo-selftest  offline deterministic echo driver (default; zero credentials)");
+  console.log("  real-pi        real Pi driver via the studio CLI (owner-run; env-injected key)");
+  console.log("");
+  console.log("examples:");
+  console.log("  node scripts/run-d3-real-pi.mjs --mode echo-selftest");
+  console.log(`  TREEAI_STUDIO_API_KEY=… node scripts/run-d3-real-pi.mjs --mode real-pi \\`);
+  console.log("      --provider deepseek --model deepseek-flash");
+  process.exit(0);
+}
+
+MODE = CLI.mode;
+
+main().catch((err) => {
+  console.error(`[${SCRIPT_NAME}] VERIFIER_ERROR: ${stripSecret(err instanceof Error ? err.stack ?? err.message : String(err))}`);
+  process.exit(1);
+});

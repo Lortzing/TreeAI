@@ -20,6 +20,7 @@
     "test:integration": "npm test --workspace @treeai/runtime-smoke && node --test tests/integration/*.test.ts",
     "verify:d2": "node scripts/verify-d2.js",
     "record:d3": "node scripts/record-d3-evidence.mjs",
+    "run:d3-real-pi": "node scripts/run-d3-real-pi.mjs",
     "build:live-policy": "tsc -p apps/runtime-smoke/tsconfig.tool-policy-build.json",
     "preverify:d2:live": "npm run build:live-policy",
     "verify:d2:live": "node scripts/verify-d2-live.js",
