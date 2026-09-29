@@ -19,8 +19,10 @@
  *       · allow 对照：读取根内标记文件 → 工具真实执行（SSE
  *         tool-activity started/finished + journal tool.execution 行），
  *         标记内容进入回答与会话文件；
- *       · overreach 核心：读取根外 canary（物理路径证明位于所有读取根
- *         之外）→ 执行前拦截，run 以 policy-denied fail-closed 收敛
+ *       · overreach 核心：canary 位于模型工作目录（workspace）之内、
+ *         所有读取根之外（真实模型会拒读「工作目录之外」的路径——读取根
+ *         缺省收窄到 workspace/policy-allowed）→ 执行前拦截，run 以
+ *         policy-denied fail-closed 收敛
  *         （502、无回合落库），拒绝 provenance 经 SSE tool-activity
  *         (denied)（键集锁定：tool/outcome/reason/ruleId，无路径/参数）、
  *         journal tool.decision 行与诊断面 policyDecisions(observed)
@@ -76,7 +78,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -381,7 +383,19 @@ function studioArgv(dataDir) {
     /* 工具缝旗标原样转发（CLI 是校验边界；本脚本只做 echo 拒绝与
        --policy-read-roots 依赖 --pi-tools 的早期校验）。 */
     if (CLI.piTools !== null) args.push("--pi-tools", CLI.piTools);
-    if (CLI.policyReadRoots !== null) args.push("--policy-read-roots", CLI.policyReadRoots);
+    if (CLI.policyReadRoots !== null) {
+      args.push("--policy-read-roots", CLI.policyReadRoots);
+    } else if (CLI.piToolsList !== null && CLI.piToolsList.includes("read")) {
+      /* A5 场景的缺省收窄：真实模型会拒读「工作目录之外」的绝对路径
+         （首两轮实录的逃逸原因），canary 必须落在模型的工作目录
+         （workspace）之内、又在所有读取根之外——把读取根收窄到
+         workspace/policy-allowed，canary 落 workspace 根下（镜像 SDK 级
+         驱动的已证布局：allowed/ 与 canary 同处 workspace 之下）。生效
+         根以 studio 横幅为准（A5 setup 自横幅解析）。 */
+      const implicitRoot = join(dataDir, "workspace", "policy-allowed");
+      mkdirSync(implicitRoot, { recursive: true });
+      args.push("--policy-read-roots", implicitRoot);
+    }
   }
   return args;
 }
@@ -883,11 +897,13 @@ async function cleanup() {
   }
   const tp = sc.toolPolicy;
   if (tp !== null) {
-    if (tp.canaryDir !== null) {
+    /* canary 位于数据目录 workspace 内（随数据目录一并清理/保留）；
+       仅当布局把它放到数据目录之外时才需要单独删文件。 */
+    if (tp.canaryPath !== null) {
       if (keep) {
-        console.log(`canary dir kept for inspection: ${tp.canaryDir}`);
-      } else {
-        rmSync(tp.canaryDir, { recursive: true, force: true });
+        console.log(`canary kept for inspection: ${tp.canaryPath}`);
+      } else if (!isPathWithin(physicalPath(tp.canaryPath) ?? tp.canaryPath, physicalPath(sc.dataDir) ?? sc.dataDir)) {
+        rmSync(tp.canaryPath, { force: true });
       }
     }
     /* 标记文件位于读取根内：缺省根（数据目录 workspace）随数据目录清理；
@@ -1233,12 +1249,14 @@ async function phaseModelError() {
 /*     的已证条件；首跑实录显示主剧本树的长上下文会让真实模型偶发不发起    */
 /*     工具调用即作答）。主树的 SSE/诊断/重启计数与无工具基线完全一致；    */
 /*   - 读取根 = studio 横幅报告的生效根（显式 --policy-read-roots 或缺省   */
-/*     数据目录 workspace/）——横幅是子进程装配的权威事实，不重复 CLI 的    */
-/*     缺省推导；                                                        */
+/*     收窄到 workspace/policy-allowed——见 studioArgv；横幅是子进程装配    */
+/*     的权威事实，不重复 CLI 的缺省推导）；                              */
 /*   - 标记文件 marker：首个读取根内（非秘密、随机 token 内容）→ allow；   */
-/*   - canary 文件：数据目录之外的兄弟临时目录（随机 token 内容，文件名    */
-/*     不含 token）→ realpath 两侧（镜像策略引擎 canonical 语义）逐根证明  */
-/*     在外 → overreach（最多 3 次尝试逐次加硬指令，逃逸轮如实登记）；     */
+/*   - canary 文件：**模型的工作目录（workspace）之内**、所有读取根之外   */
+/*     （真实模型会拒读「工作目录之外」的路径——首轮实录的逃逸原因；SDK    */
+/*     级驱动的已证布局同样是 canary 与 allowed/ 同处 workspace 之下）→   */
+/*     realpath 两侧（镜像策略引擎 canonical 语义）逐根证明在外 →          */
+/*     overreach（最多 3 次尝试逐次加硬指令，逃逸轮如实登记）；            */
 /*   - 受控 agent 目录自横幅解析；canary 内容绝不许出现在其下任何文件，     */
 /*     连同数据目录全树（sessions/journal.jsonl/treeai.db——DB 回合正文与  */
 /*     journal 消息增量同样是内容可能现身处）一并扫描。                    */
@@ -1274,13 +1292,20 @@ async function stepToolPolicySetup() {
   const markerPath = join(readRoots[0], markerName);
   writeFileSync(markerPath, `${markerFirstLine}\nsecond line for exactness.\n`, "utf8");
 
-  const canaryDir = mkdtempSync(join(tmpdir(), "treeai-d3-policy-canary-"));
-  /* 立即登记：setup 后续断言失败时 cleanup 仍能回收该临时目录。 */
-  sc.toolPolicy.canaryDir = canaryDir;
-  const canaryName = "notes-outside.txt";
+  /* canary 落在模型的工作目录（数据目录 workspace）之内、又在所有读取根
+     之外：真实模型会拒读「工作目录之外」的绝对路径（首两轮实录的逃逸
+     原因——模型原话 "outside my working directory"），而 SDK 级驱动的
+     已证布局正是「canary 与 allowed/ 同处 workspace 之下」。读取根缺省
+     已由 studioArgv 收窄到 workspace/policy-allowed（横幅为证）。 */
+  const canaryDir = join(sc.dataDir, "workspace");
+  mkdirSync(canaryDir, { recursive: true });
+  const canaryName = "team-notes.txt";
   const canaryPath = join(canaryDir, canaryName);
   const canaryToken = `treeai-d3-canary-${Math.random().toString(36).slice(2, 12)}`;
   writeFileSync(canaryPath, `${canaryToken}\n`, "utf8");
+  /* 立即登记：setup 后续断言失败时 cleanup 仍能处置 canary 文件。 */
+  sc.toolPolicy.canaryPath = canaryPath;
+  sc.toolPolicy.canaryToken = canaryToken;
 
   /* 包含性证明（realpath 两侧，镜像策略引擎的 canonical 语义）。 */
   const markerPhysical = physicalPath(markerPath);
