@@ -22,6 +22,32 @@
 
 ## 更新记录
 
+- **2026-09-30 · 视觉重构波（源设计 §二/§三 落地；解释性决策提请 owner
+  裁决，见决策表附-6）**：把信息架构与版式向源设计《前端设计总体方案》
+  靠拢（owner 仍可改判）：§2.2 顶栏——58px 全局顶栏（品牌 + **如实位置
+  路径**：`app.js` `renderTopbarPath()` 渲染 `<treeId> / Trunk`，支线面板
+  打开时追加 `Branch N`，无树为空，**无硬编码假路径**）+ 诊断面内联 +
+  Sources 入口随树显隐（`renderAll`）；§2.1 左栏——Forest/Branches 分区
+  （分支层级导航入侧栏，源设计 §三 改版项 1）+ 空态「新建」主操作直达
+  按钮；§1/§2.3 支线并置——≥1180px 视口 `#branch-column` 常驻并置列
+  （面板打开恰好覆盖列、**主干阅读宽度不随面板开合变化**；收起时为受控
+  空态；<1180px 列退化为 `display:contents`、面板回落改版前的右侧覆盖
+  层；窄窗 <720px 全宽覆盖不变）；**附-5 选项 A 同波落地**——限高骨架
+  （`#app` `height:100dvh` + `overflow:hidden` + `#workspace` 分栏），
+  `#conversation` 成为真实内部滚动器，每枝阅读位置记忆与 at-bottom 纪律
+  在真实浏览器按设计生效。本波承接并行会话的未完成视觉重构（其自身
+  studio 套件 90/90 绿但浏览器面 11 项失败——面板/抽屉被未接线的
+  `.open` 类门控、`#workspace` 骨架缺失、12 项 W2 锁定 CSS 规则被静默
+  删除、假面包屑），经全量审计后修复补全：全部锁定规则自 HEAD 恢复
+  （M3/M4 动效、`--motion-*` 变量、列表失败重试面、session 恢复控件、
+  抽屉关闭按钮、静态 caret）。验证三层绿：studio 套件 **95/95**（新增
+  5 项：路径状态机、空态按钮建树、入口随树显隐、≥1180 并置列 + 限高链
+  词法锁定、恢复规则在场与假路径/`.open` 门控/闪烁 caret 缺席锁定；
+  ui-probe 20 → 25）、浏览器 echo 自测 **24/0/0/6 ×3**（1280×900 并置
+  布局下全编排 + 480px 窄窗 + reduced-motion 计算样式）、全仓 `npm
+  test` 绿。仍开放（如实保留）：附-6（并置列断点 1180 与 1180–1450
+  频带阅读列宽取舍、树名暂用 `tree.id`）；W2 §5 逐屏实机对照、录屏与
+  签收归 owner。本条为实现波次记录，不构成任何验收结论。
 - **2026-09-29 · issue #6 P1 前端偏差修复波次（本条）**：按 issue #6 No Go
   的 P1 要求，把待裁决偏差中「向源设计靠拢」的一组落地（owner 仍可改判）：
   §2.1 列表加载失败重试（侧栏常驻重试面 + 在途禁用态 + 恢复后补齐启动
@@ -116,7 +142,7 @@
 
 | 原则 | 含义 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
-| 主线阅读 + 局部支线 | 主阅读面板始终跟随**主线**（Trunk / 当前主分支）；支线以**锚点作用域的局部侧板**打开，不做整页 tab 切换 | 已实现 | `app.js` `state.panelBranchId`（L83）+ `renderMainConversation()` 恒渲染 Trunk（L685）+ `openBranchPanel()`/`closePanel()`（L1377/L1410）；tab 点击 = 开面板而非换视图（`renderBranchTabs` L332–340）；面板为右侧覆盖层：`index.html` `#branch-panel`（L51）、`style.css` `#branch-panel` `position:absolute`（L329–342）；服务端游标对齐仍走 `POST /switch`（改版落地于 `d061b5f`） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板结构、开合与 tab 交叉切换场景） | — |
+| 主线阅读 + 局部支线 | 主阅读面板始终跟随**主线**（Trunk / 当前主分支）；支线以**锚点作用域的局部侧板**打开，不做整页 tab 切换 | 已实现 | `app.js` `state.panelBranchId` + `renderMainConversation()` 恒渲染 Trunk + `openBranchPanel()`/`closePanel()`；tab 点击 = 开面板而非换视图（`renderBranchTabs`；2026-09-30 视觉重构波起 tab 列入侧栏 `#branch-section`，分支层级导航入左栏——源设计 §三 改版项 1）；面板形态（2026-09-30 视觉重构波）：≥1180px `#branch-column` 常驻并置列，`#branch-panel`（`position:absolute`，基准 = 列）打开恰好覆盖列、主干阅读宽度不随开合变化，收起时列为受控空态（`#branch-empty`）；<1180px 列 `display:contents`、面板回落为 `#reading-area` 右侧覆盖层（改版前行为）；服务端游标对齐仍走 `POST /switch`（改版落地于 `d061b5f`） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板结构、开合与 tab 交叉切换场景；2026-09-30 波补 ≥1180 并置列词法锁定） | — |
 | 固定来源 / 回程 | 来源（锚点出处揭示）与回程（回主干）操作**固定位置常驻**，不随滚动 / 切换消失 | 已实现 | `index.html` `#panel-fixed-actions`（⌖ View source / ↩ Back to Trunk，L57–60）；`style.css` `#panel-header` 为面板头固定区、不随内容滚动（L355–363）；`app.js` `revealOrigin()`（L1467）/ `closePanel()`（L1410） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板结构断言） | 实机确认滚动/转场期间常驻可见 |
 | 锚点 Return 卡 | Return 卡渲染在其 `targetAnchor` **原分叉点附近**（见 W1 §2.2），不是孤立列表项 | 已实现 | `app.js` `renderTurnsInto()` 按 `targetAnchor.anchorTurnId` 把 Return 卡排在锚点答案之后（L567–582、L647–651）+ `returnCard()`（L483）；锚点不在当前视图 → 原位降级标注（L584–588） | `apps/studio/tests/ui-probe.test.ts`（文件级：Return 卡锚点定位场景）；service.test.ts「return persists its target anchor snapshot of the branch origin」 | 对照源设计的卡片样式 |
 | 状态转场克制 | 转场明确而克制，**减少动态效果**；全部动效有 `prefers-reduced-motion` 等价物 | 已实现 | 动效仅 M1–M7（见 §3）：`style.css` 时长变量（L14–16）+ 全局 `prefers-reduced-motion` 即时化块（L551–561）；JS 侧 `prefersReducedMotion()`/`scrollBehavior()`（`app.js` L163–168）；streaming 指示为静态 caret（L662–666；`style.css` L304–306 无循环动画） | `apps/studio/tests/ui-probe.test.ts`（文件级：静态 caret 形态与 reduced-motion 滚动即时落位场景）；**CSS 动效时序无自动断言**（桩 DOM 不求值 CSS） | reduced-motion 开关实机对照；逐动效对照源设计 |
@@ -131,7 +157,7 @@
 
 | 项目 | 约定 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
-| 用途 | 首次进入引导建树；既有树的选择与打开 | 已实现 | `index.html` `#new-tree` / `#tree-list` / `#empty-state`（L15–23）；`app.js` `renderTrees()`（L276）、`createTree()`（L1352）、启动 IIFE 自动打开首棵树（L2049–2060） | `apps/studio/tests/ui-probe.test.ts`（文件级：启动自动打开首棵树场景）；api.test.ts「HTTP API serves the UI and the full D3 flow…」（GET/POST `/api/trees`） | — |
+| 用途 | 首次进入引导建树；既有树的选择与打开 | 已实现 | `index.html` `#new-tree` / `#tree-list` / `#empty-state`；`app.js` `renderTrees()`、`createTree()`、启动 IIFE 自动打开首棵树；2026-09-30 视觉重构波：左栏 Forest/Branches 分区（`.sidebar-section`，分支层级导航入左栏）+ 空态 `#empty-new-tree` 主操作直达（与 `#new-tree` 同一 `createTree` 动作，ui-probe 空态建树场景锁定） | `apps/studio/tests/ui-probe.test.ts`（文件级：启动自动打开首棵树场景）；api.test.ts「HTTP API serves the UI and the full D3 flow…」（GET/POST `/api/trees`） | — |
 | 状态 | 空库（无任何 Tree → 引导文案，"新建"为唯一主操作）；列表（非空，显示可区分的树标识）；加载失败（错误条 + 重试，不空白） | 已实现 | 空库与列表已实现（同上行）；加载失败 = 侧栏**常驻重试面**（`#list-load-error`：错误事实 + Retry 按钮，`index.html` 侧栏 L18–21；`style.css` L64 起）——`refreshTrees()` 失败经 `showListLoadError()`（`app.js` L1328–1336，不自动隐藏）落位，重试走 `retryTreesLoad()`（L1351–1371：重新 GET `/api/trees` **不整页刷新**；在途禁用 + "Retrying…"；持久失败保持错误 + 重试可用；启动即失败的情形恢复后补齐启动语义——自动打开首棵树）；通用 8 秒横幅仍照常呈现（`showError` L214–222） | `apps/studio/tests/ui-probe.test.ts`（文件级：启动失败常驻重试面、在途禁用态、持久失败、恢复后自动开树场景） | 断网/后端失效场景实机验证；已按源设计实现，待 owner 复核 |
 | 转场 | 新建成功 → 进入主线阅读（无过场动画或仅透明度） | 已实现 | `createTree()` → `renderAll()` 即时重渲，无过场动画（符合"无过场动画"的克制口径） | `apps/studio/tests/ui-probe.test.ts`（文件级：各场景经同一渲染路径，间接覆盖） | 录屏确认 |
 | 数据来源 | `GET /api/trees`；`POST /api/trees` | 已实现 | `app.js` `refreshTrees()`（L1316）、`createTree()`（L1352） | api.test.ts 主流程 + 「HTTP layer rejects malformed bodies…」（404/405 映射） | — |
@@ -143,7 +169,7 @@
 
 | 项目 | 约定 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
-| 用途 | 主线（Trunk / 当前主分支）的连续阅读与对话；所有支线从这里分出、回到这里 | 已实现 | `renderMainConversation()` 恒渲染 Trunk（L685–698）；`#main-pane` 常驻（`index.html` L39–48） | `apps/studio/tests/ui-probe.test.ts`（文件级：主线渲染与滚动纪律场景） | — |
+| 用途 | 主线（Trunk / 当前主分支）的连续阅读与对话；所有支线从这里分出、回到这里 | 已实现 | `renderMainConversation()` 恒渲染 Trunk；`#main-pane` 常驻；顶栏位置路径如实呈现（2026-09-30 视觉重构波：`app.js` `renderTopbarPath()`——`<treeId> / Trunk`，支线面板打开追加分支标签，无树为空，无硬编码假路径；ui-probe 路径状态机场景锁定） | `apps/studio/tests/ui-probe.test.ts`（文件级：主线渲染与滚动纪律场景） | — |
 | 状态 | 空 Trunk（无 turn → 引导首个 prompt）；正常阅读；prompt 在途（输入锁定 + 运行状态条）；prompt 失败（错误条 + 失败码，输入解锁可重试）；aborted（如实呈现 aborted 终态，非失败） | 已实现 | 空 Trunk 文案（`renderTurnsInto` L557–564）；在途锁定 `updateComposerLocks()`（L231–243）+ 流式占位（L656–668）+ 运行状态条 `renderDiagnostics()`（L938–997）；失败 = 常驻失败面板（`renderFailurePanel` L999–1019，不自动消失、可 dismiss）+ 错误横幅 + 输入解锁；**prompt 失败的终局渲染为硬保证**（`sendPrompt` 收尾：流式占位清除、恢复横幅/降级提示、最终树态先于错误上抛落位，L1540–1554）；aborted 终态独立着色（L965–969；`style.css` `.last-run-state.aborted` L176–178） | 在途/失败/aborted 的服务与 HTTP 面已测（api.test.ts「diagnostics and abort endpoints…」、events.test.ts「model error injection…」）；失败终局渲染与失败面板有 DOM 级回归（`apps/studio/tests/ui-regressions.test.ts`，文件级） | 实机逐状态变体操作（空/在途/失败/中止） |
 | 转场 | turn 追加即时；在途 → 终态仅改状态指示器（见 2.5） | 已实现 | turn 重渲即时（`renderTurnsInto` `replaceChildren`）；在途→终态仅改 `#run-status` 与失败面板（M5） | `apps/studio/tests/ui-probe.test.ts`（文件级：占位 → 终态权威刷新场景，间接覆盖） | 录屏确认 |
 | 数据来源 | `GET /api/trees/:treeId`；`POST /api/trees/:treeId/prompt`；`GET /api/trees/:treeId/events`（SSE 推送，断流降级诊断轮询） | 已实现 | `openTree()`（L1330）、`sendPrompt()`（L1518–1521，branchId 显式携带）、`connectEvents()`（L1063） | api.test.ts 主流程；events.test.ts SSE 套件 | — |
@@ -156,7 +182,7 @@
 
 | 项目 | 约定 | 状态 | 实现路径 | 自动证据 | 待人工项 |
 | --- | --- | --- | --- | --- | --- |
-| 用途 | 从主线某锚点分出的支线的**局部**阅读与续聊；作用域限定在其锚点，不替换主视图 | 已实现 | `openBranchPanel()`（L1377–1402，含 `alignCursor:false` 例外：建支线/揭示不预对齐）；面板渲染 `renderPanel()`（L745–754）；主线不动（覆盖层，`style.css` L329–342） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板开合、降级与 Esc 场景） | — |
+| 用途 | 从主线某锚点分出的支线的**局部**阅读与续聊；作用域限定在其锚点，不替换主视图 | 已实现 | `openBranchPanel()`（含 `alignCursor:false` 例外：建支线/揭示不预对齐）；面板渲染 `renderPanel()`；主线不动（2026-09-30 视觉重构波：≥1180px 并置列内打开——列常驻、主干阅读宽度不随开合变化；<1180px 阅读区右侧覆盖层；改版前为全宽覆盖层） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板开合、降级与 Esc 场景） | — |
 | 状态 | 打开（正常）；支线空（无后续 turn → 引导续聊）；锚点徽标 available / changed / unavailable；session 不可用降级（只读 + 恢复提示，见 2.8）；在途 prompt（面板内输入锁定） | 已实现 | 支线空文案（L557–564）；锚点徽标 `renderPanelAnchorContext()`（origin-status 三态着色，L701–719）；session 降级 `renderPanelSessionNote()`（L726–742）+ fail-closed `updateComposerLocks()`；面板内在途锁定 + 面板内流式占位（`renderTurnsInto` streaming 分支 L657） | `apps/studio/tests/ui-probe.test.ts`（文件级：面板降级场景） | changed/unavailable 变体实机（changed 态正常产品流不可构造，见 W1 §6-3） |
 | 转场 | 进入侧滑/淡入 150–200ms（见 §3）；退出对称；转场期间主视图阅读位置不动 | 已实现 | M1/M2：`showPanel()`/`hidePanel()`（L1186–1222）+ `style.css` `panel-in`/`panel-out`（L343–353）；覆盖层保证主线布局与阅读位置不动 | `apps/studio/tests/ui-probe.test.ts`（文件级：退场收尾后 `hidden` 结构断言）；时序无自动断言 | 录屏对照（转场期间主线不动） |
 | 数据来源 | `GET /api/trees/:treeId`；`POST /api/trees/:treeId/prompt`（`branchId` = 支线）；`POST /api/trees/:treeId/branches`（从主线选区开支线） | 已实现 | 面板打开 `POST /switch`（`openBranchPanel` L1382–1387）；`sendPrompt("panel")`（L1509–1521）；`branchFromTurn()` POST `/branches`（L1591–1609） | `apps/studio/tests/ui-probe.test.ts`（文件级：tab 开面板 `/switch`、建支线与恢复路径载荷场景） | — |
