@@ -7,8 +7,17 @@
  *   - 从“锚定的答案选区”创建 Branch：Pi 会话树内在锚点条目处分叉
  *     （navigateTree，不新建 session 文件——D2 已验证的分叉方式）；
  *   - 继续分支、切回 Trunk（同一 session 文件内移动叶指针）；
- *   - 编辑并显式提交 Return：记录在 Trunk 上（含出处分支），
- *     并在下一次 Trunk prompt 时送入 Pi 上下文（可送达、只送达一次）；
+ *   - 编辑并显式提交 Return：记录在 Trunk 上（含出处分支与提交时的
+ *     分叉锚点快照 targetAnchor），并在下一次 Trunk prompt 时送入 Pi
+ *     上下文（可送达、只送达一次）；
+ *   - Return 幂等（响应丢失/双击/并发同键安全）：提交方提供稳定
+ *     idempotencyKey。同键同内容重试零写入返回既有 Return
+ *     （created === false）；同键不同内容（fromBranchId/text）以
+ *     ReturnConflictError 拒绝；并发同键由 turns.idempotency_key 部分
+ *     唯一索引裁决，判负事务整体回滚（无悬挂 episode）后重读对齐。
+ *     Return 状态词汇：draft（客户端草稿，未持久化）/ confirmed
+ *     （已落库、deliveredRunId === null）/ delivered（deliveredRunId
+ *     !== null）——持久态由 deliveredRunId 派生，无独立状态列；
  *   - 全部产品状态即时写入 TreeAI DB（事实源）；重启后由 DB 重建。
  *
  * 会话连续性模型（全部可从 DB 重建，cursor 只是缓存）：
@@ -46,6 +55,7 @@ import type {
   IsoTimestamp,
   PiModelSelector,
   PiRuntime,
+  ReturnTargetAnchor,
   Run,
   RunId,
   RunState,
@@ -59,6 +69,7 @@ import type {
   TurnSelection,
 } from "@treeai/contracts";
 import {
+  ConstraintViolationError,
   EntityNotFoundError,
   InvalidArgumentError,
   TreeRepository,
@@ -169,6 +180,28 @@ export class RunNotActiveError extends Error {
     );
     this.name = "RunNotActiveError";
   }
+}
+
+/**
+ * 相同 idempotencyKey 已绑定到内容不同的 Return（fromBranchId 或 text 与
+ * 已落库 Return 不一致）→ 重试语义冲突（409）。既有 Return 保持不变；
+ * 新的逻辑提交必须携带新键。
+ */
+export class ReturnConflictError extends Error {
+  constructor(idempotencyKey: string, existingTurnId: TurnId, difference: string) {
+    super(
+      `return idempotency key '${idempotencyKey}' is already bound to return ${existingTurnId} ` +
+        `with different content (${difference}); use a new idempotency key for a new submission`,
+    );
+    this.name = "ReturnConflictError";
+  }
+}
+
+/** submitReturn 的结果：turn 为新建或幂等重放的 Return；created 标记本次调用是否新建落库。 */
+export interface ReturnSubmission {
+  readonly turn: Turn;
+  /** false = 幂等重放（同键同内容的既有 Return，本次调用零写入）。 */
+  readonly created: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -690,25 +723,47 @@ export class TreeStudioService {
   /* ------------------------------ Return ------------------------------ */
 
   /**
-   * 编辑后显式提交 Return：先把活动会话导航回 Trunk 续聊点，成功后才把
-   * Return 记录在 Trunk（含出处分支）；下一次 Trunk prompt 时送入 Pi 上下文
-   * （deliveredRunId 落库）。
+   * 编辑后显式提交 Return（幂等）：idempotencyKey 标识一次逻辑提交
+   * （客户端生成，跨失败重试保持稳定），targetAnchor 为提交时出处分支
+   * origin 的快照（原分叉点的展示定位）。
    *
-   * 失败/重试一致性（写入顺序即契约）：导航失败（如 Pi session 文件缺失
-   * → session-corrupt）在任何 Return 落库之前抛出，因此同一失败上重试
-   * 不会产生重复的 Return turn；导航成功后写入失败时，重试只会补写一次。
+   * 写入顺序即契约（先导航后落库的既有次序不变）：
+   * 1. 幂等重放检查（先于导航、零写入）：同键同内容（fromBranchId +
+   *    text）→ 直接返回既有 Return（created === false）；同键不同内容
+   *    → ReturnConflictError。响应丢失后的客户端重试因此不会产生第二条
+   *    Return；
+   * 2. 导航回 Trunk 续聊点：导航失败（如 Pi session 文件缺失 →
+   *    session-corrupt）在任何 Return 落库之前抛出 → 同键重试不重复；
+   * 3. 单事务落库（episode + return turn）。并发同键竞争由
+   *    turns.idempotency_key 部分唯一索引裁决：判负方事务整体回滚
+   *    （无悬挂 episode），按键重读——同内容返回既有 Return
+   *    （created === false），不同内容 ReturnConflictError。
+   *
    * Trunk 尚无 session（new-session）时不导航、不建 session（与
    * switchBranch 语义一致），Return 直接落库，待首次 Trunk prompt 时建
-   * session 并送达。
+   * session 并送达（送达恰一次，见 prompt / markReturnDelivered）。
    */
-  async submitReturn(treeId: TreeId, fromBranchId: BranchId, text: string): Promise<Turn> {
+  async submitReturn(
+    treeId: TreeId,
+    fromBranchId: BranchId,
+    text: string,
+    idempotencyKey: string,
+  ): Promise<ReturnSubmission> {
     if (typeof text !== "string" || text.trim().length === 0) {
       throw new InvalidArgumentError("return text must be a non-empty string");
+    }
+    if (typeof idempotencyKey !== "string" || idempotencyKey.trim().length === 0) {
+      throw new InvalidArgumentError("return idempotencyKey must be a non-empty string");
     }
     const tree = this.repository.getTree(treeId);
     const branch = this.repository.getBranch(fromBranchId);
     if (branch.treeId !== tree.id) {
       throw new InvalidArgumentError(`branch ${fromBranchId} belongs to tree ${branch.treeId}, not ${tree.id}`);
+    }
+    // 幂等重放（先于导航与任何写入）：同键同内容 → 既有 Return；同键异容 → 冲突。
+    const replay = this.repository.findReturnByIdempotencyKey(tree.id, idempotencyKey);
+    if (replay !== null) {
+      return { turn: this.#alignWithExistingReturn(idempotencyKey, replay, branch.id, text), created: false };
     }
     const origin = this.repository.findBranchOrigin(branch.id);
     if (origin === null) {
@@ -724,15 +779,59 @@ export class TreeStudioService {
     // 先导航后写入：导航失败（运行期 TreeAIError，如 session 文件缺失）
     // 在任何 Return 持久化之前抛出 → 重试不产生重复 Return。
     await this.switchBranch(tree.id, trunk.id);
-    const episode = this.repository.createEpisode(trunk.id);
-    return this.repository.createTurn({
-      treeId: tree.id,
-      branchId: trunk.id,
-      episodeId: episode.id,
-      role: "return",
-      text,
-      fromBranchId: branch.id,
-    });
+    const targetAnchor: ReturnTargetAnchor = {
+      sourceBranchId: origin.sourceBranchId,
+      anchorTurnId: origin.anchorTurnId,
+      anchorEntryId: origin.anchorEntryId,
+      selection: origin.selection,
+    };
+    try {
+      // 单事务：唯一索引判负时 episode 随 return 一并回滚，不留悬挂回合。
+      const turn = this.repository.transaction(() => {
+        const episode = this.repository.createEpisode(trunk.id);
+        return this.repository.createTurn({
+          treeId: tree.id,
+          branchId: trunk.id,
+          episodeId: episode.id,
+          role: "return",
+          text,
+          fromBranchId: branch.id,
+          idempotencyKey,
+          targetAnchor,
+        });
+      });
+      return { turn, created: true };
+    } catch (error) {
+      // 并发同键竞争：唯一索引判负 → 事务已回滚，按键重读并按内容对齐；
+      // 非同键竞争的约束失败（重读为空）原样上抛。
+      if (error instanceof ConstraintViolationError) {
+        const raced = this.repository.findReturnByIdempotencyKey(tree.id, idempotencyKey);
+        if (raced !== null) {
+          return { turn: this.#alignWithExistingReturn(idempotencyKey, raced, branch.id, text), created: false };
+        }
+      }
+      throw error;
+    }
+  }
+
+  /** 同键内容比对：与既有 Return 一致则返回它，否则抛 ReturnConflictError（差异定位进消息）。 */
+  #alignWithExistingReturn(
+    idempotencyKey: string,
+    existing: Turn,
+    fromBranchId: BranchId,
+    text: string,
+  ): Turn {
+    if (existing.fromBranchId === fromBranchId && existing.text === text) {
+      return existing;
+    }
+    const differences: string[] = [];
+    if (existing.fromBranchId !== fromBranchId) {
+      differences.push(`fromBranchId ${fromBranchId} does not match ${existing.fromBranchId}`);
+    }
+    if (existing.text !== text) {
+      differences.push("text differs");
+    }
+    throw new ReturnConflictError(idempotencyKey, existing.id, differences.join("; "));
   }
 
   /* ------------------------------ 生命周期 ------------------------------ */

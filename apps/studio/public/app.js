@@ -17,11 +17,13 @@
 /** @typedef {{id:string, createdAt:string, forestId:string}} TreeT */
 /** @typedef {{id:string, treeId:string, parentBranchId:string|null, createdAt:string}} BranchT */
 /** @typedef {{branchId:string, sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}, createdAt:string}} OriginT */
-/** @typedef {{id:string, treeId:string, branchId:string, episodeId:string, runId:string|null, role:"user"|"assistant"|"return", text:string, piEntryId:string|null, fromBranchId:string|null, deliveredRunId:string|null, createdAt:string}} TurnT */
+/** @typedef {{sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}}} ReturnTargetAnchorT */
+/** @typedef {{id:string, treeId:string, branchId:string, episodeId:string, runId:string|null, role:"user"|"assistant"|"return", text:string, piEntryId:string|null, fromBranchId:string|null, deliveredRunId:string|null, idempotencyKey:string|null, targetAnchor:ReturnTargetAnchorT|null, createdAt:string}} TurnT */
 /** @typedef {{branch:BranchT, origin:OriginT|null, turns:TurnT[]}} BranchViewT */
 /** @typedef {{tree:TreeT, trunkBranchId:string|null, branches:BranchViewT[], cursor:{treeId:string,branchId:string,entryId:string}|null}} TreeStateT */
 /** @typedef {{runId:string, branchId:string, episodeId:string, state:string, failure:{code:string,message:string}|null, createdAt:string, terminalAt:string|null}} RunDiagnosticsT */
 /** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:{observed:boolean, reason:string}}} TreeDiagnosticsT */
+/** @typedef {{branchId:string, idempotencyKey:string, text:string, failed:boolean}} ReturnDraftT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
@@ -30,6 +32,13 @@ const state = {
   /** @type {TreeStateT|null} */ treeState: null,
   /** @type {TreeDiagnosticsT|null} */ diagnostics: null,
   /** @type {{turnId:string,start:number,end:number}|null} */ sourceHighlight: null,
+  /**
+   * Return 草稿（draft 态，未持久化）：幂等键标识一次逻辑提交，跨失败
+   * 重试保持稳定；失败后编辑文本即视为新的逻辑提交（重新生成键——旧键
+   * 可能已被服务端绑定到旧文本）。随分支切换重置。
+   * @type {ReturnDraftT|null}
+   */
+  returnDraft: null,
   busy: false,
 };
 
@@ -187,6 +196,41 @@ function selectionOffsetsWithin(element, text) {
   return { start, end: start + selected.length, text: selected };
 }
 
+/**
+ * Return 卡片：锚点答案在当前视图内 → 紧随其后渲染（meta 含选区摘录，
+ * 满足“原分叉点附近”）；锚点缺失（历史 Return 或锚点在其他分支）→
+ * 由调用方按时间顺序原位渲染并降级标注。delivered 时 deliveredRunId
+ * 呈现在文本与 title 中，便于在诊断面反查该 Run。
+ */
+function returnCard(turn, anchor) {
+  const div = document.createElement("div");
+  div.className = "turn return";
+  div.dataset.turnId = turn.id;
+  div.dataset.turnText = turn.text;
+
+  const meta = document.createElement("span");
+  meta.className = "meta";
+  const from = branchLabel(turn.fromBranchId ?? "");
+  const anchorNote =
+    anchor !== null
+      ? ` · anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`
+      : " · original anchor unavailable";
+  meta.append(document.createTextNode(`↩ Return from ${from}${anchorNote}`));
+  const delivery = document.createElement("span");
+  if (turn.deliveredRunId !== null) {
+    delivery.className = "delivered";
+    delivery.textContent = ` · delivered into Trunk context (run ${turn.deliveredRunId})`;
+  } else {
+    delivery.textContent = " · not yet delivered (delivered on the next Trunk prompt)";
+  }
+  meta.append(delivery);
+  if (turn.deliveredRunId !== null) {
+    div.title = `delivered into Trunk run ${turn.deliveredRunId}`;
+  }
+  div.append(meta, document.createTextNode(turn.text));
+  return div;
+}
+
 function renderConversation() {
   const st = state.treeState;
   const container = $("conversation");
@@ -204,25 +248,34 @@ function renderConversation() {
     container.append(empty);
   }
 
+  /* Return 按目标锚点定位：targetAnchor.anchorTurnId 命中当前视图内的
+     assistant turn → 该锚点之后渲染；锚点不在当前视图（历史 Return 或
+     锚点位于其他分支）→ 按时间顺序原位渲染并降级标注。 */
+  const turnIds = new Set(view.turns.map((turn) => turn.id));
+  const anchoredReturns = new Map();
   for (const turn of view.turns) {
+    if (turn.role !== "return" || turn.targetAnchor === null) continue;
+    if (!turnIds.has(turn.targetAnchor.anchorTurnId)) continue;
+    const list = anchoredReturns.get(turn.targetAnchor.anchorTurnId) ?? [];
+    list.push(turn);
+    anchoredReturns.set(turn.targetAnchor.anchorTurnId, list);
+  }
+  const isAnchored = (turn) =>
+    turn.role === "return" &&
+    turn.targetAnchor !== null &&
+    (anchoredReturns.get(turn.targetAnchor.anchorTurnId) ?? []).includes(turn);
+
+  for (const turn of view.turns) {
+    if (turn.role === "return") {
+      if (isAnchored(turn)) continue; /* 已随锚点答案渲染 */
+      container.append(returnCard(turn, null)); /* 降级：锚点不在当前视图 */
+      continue;
+    }
+
     const div = document.createElement("div");
     div.className = `turn ${turn.role}`;
     div.dataset.turnId = turn.id;
     div.dataset.turnText = turn.text;
-
-    if (turn.role === "return") {
-      const meta = document.createElement("span");
-      meta.className = "meta";
-      const from = branchLabel(turn.fromBranchId ?? "");
-      const delivered =
-        turn.deliveredRunId !== null
-          ? ` · <span class="delivered">delivered into Trunk context</span>`
-          : ` · not yet delivered (delivered on the next Trunk prompt)`;
-      meta.innerHTML = `↩ Return from ${from}${delivered}`;
-      div.append(meta, document.createTextNode(turn.text));
-      container.append(div);
-      continue;
-    }
 
     const highlight = state.sourceHighlight;
     if (
@@ -264,6 +317,12 @@ function renderConversation() {
       });
     }
     container.append(div);
+
+    if (turn.role === "assistant") {
+      for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
+        container.append(returnCard(returnTurn, returnTurn.targetAnchor));
+      }
+    }
   }
   container.scrollTop = container.scrollHeight;
 }
@@ -292,7 +351,47 @@ function renderReturnPanel() {
   if (input.value.trim() === "" && lastAnswer !== undefined) {
     input.value = lastAnswer.text;
   }
+  /* 草稿随“面板在当前分支打开”开始；同一分支上跨渲染保持（失败重试
+     复用同一键）。切换到其他分支 = 新的逻辑提交上下文 → 重置。 */
+  if (state.returnDraft === null || state.returnDraft.branchId !== state.currentBranchId) {
+    state.returnDraft = {
+      branchId: state.currentBranchId,
+      idempotencyKey: crypto.randomUUID(),
+      text: input.value,
+      failed: false,
+    };
+  }
 }
+
+/** 提交前兜底：草稿不存在（面板未经渲染等边角）时以当前输入开一份。 */
+function ensureReturnDraft() {
+  if (state.returnDraft === null) {
+    state.returnDraft = {
+      branchId: state.currentBranchId,
+      idempotencyKey: crypto.randomUUID(),
+      text: $("return-input").value,
+      failed: false,
+    };
+  }
+  return state.returnDraft;
+}
+
+function clearReturnDraft() {
+  state.returnDraft = null;
+}
+
+/* 失败后编辑 = 新的逻辑提交：旧键可能已被服务端绑定到旧文本（同键异容
+   会被 409 拒绝），故文本一变即换新键；未失败的编辑仍属同一草稿。 */
+$("return-input").addEventListener("input", () => {
+  const draft = state.returnDraft;
+  if (draft === null) return;
+  const value = $("return-input").value;
+  if (draft.failed && value !== draft.text) {
+    draft.idempotencyKey = crypto.randomUUID();
+    draft.failed = false;
+  }
+  draft.text = value;
+});
 
 /* ------------------------------ 诊断面 ------------------------------ */
 
@@ -493,17 +592,52 @@ async function branchFromTurn(turnElement, turn) {
   renderAll();
 }
 
+/** 在树状态里按幂等键找已落库的 Return（响应丢失探查）。 */
+function findReturnByKey(treeState, idempotencyKey) {
+  for (const view of treeState.branches) {
+    for (const turn of view.turns) {
+      if (turn.role === "return" && turn.idempotencyKey === idempotencyKey) {
+        return turn;
+      }
+    }
+  }
+  return null;
+}
+
 async function submitReturn() {
   const input = $("return-input");
   const text = input.value;
   if (text.trim() === "") return;
-  const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/return`, "POST", {
-    fromBranchId: state.currentBranchId,
-    text,
-  });
-  state.treeState = payload.state;
-  state.currentBranchId = payload.state.trunkBranchId;
-  input.value = "";
+  const draft = ensureReturnDraft();
+  try {
+    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/return`, "POST", {
+      fromBranchId: state.currentBranchId,
+      text,
+      idempotencyKey: draft.idempotencyKey,
+    });
+    /* 200（同键重放）与 201（新建）同为成功：清空草稿，回到 Trunk。 */
+    state.treeState = payload.state;
+    state.currentBranchId = payload.state.trunkBranchId;
+    clearReturnDraft();
+    input.value = "";
+  } catch (err) {
+    /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态，
+       同键 Return 已落库 → 按成功处理；否则保留草稿与键（输入文本不动），
+       刷新后的状态照常呈现，错误交由 guard 呈现——用户可直接重试（同键）
+       或改写（改写即换新键）。 */
+    const refreshed = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+    if (findReturnByKey(refreshed, draft.idempotencyKey) !== null) {
+      state.treeState = refreshed;
+      state.currentBranchId = refreshed.trunkBranchId;
+      clearReturnDraft();
+      input.value = "";
+    } else {
+      state.treeState = refreshed;
+      draft.failed = true;
+      renderAll();
+      throw err;
+    }
+  }
   renderAll();
 }
 

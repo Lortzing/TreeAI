@@ -16,6 +16,7 @@ import type {
   IsoTimestamp,
   JsonRecord,
   PiEntryId,
+  ReturnTargetAnchor,
   Run,
   RunId,
   RunState,
@@ -29,6 +30,7 @@ import type {
   Turn,
   TurnId,
   TurnRole,
+  TurnSelection,
 } from "@treeai/contracts";
 import { DatabaseCorruptError } from "./errors.ts";
 
@@ -86,6 +88,8 @@ export interface TurnRow {
   pi_entry_id: string | null;
   from_branch_id: string | null;
   delivered_run_id: string | null;
+  idempotency_key: string | null;
+  target_anchor: string | null;
   created_at: string;
 }
 export interface BranchOriginRow {
@@ -254,6 +258,48 @@ export function assertTurnRole(role: string, context: string): TurnRole {
   return role;
 }
 
+/** 序列化 return 目标锚点快照（null 保持 null；不进 JSON 的字段不存在）。 */
+export function encodeTargetAnchor(anchor: ReturnTargetAnchor | null): string | null {
+  if (anchor === null) return null;
+  return JSON.stringify(anchor);
+}
+
+/** 反序列化 return 目标锚点快照（无锚点为 null；损坏 JSON 按库损坏处理）。 */
+export function decodeTargetAnchor(json: string | null | undefined): ReturnTargetAnchor | null {
+  if (json === null || json === undefined) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch (error) {
+    throw new DatabaseCorruptError(`stored target_anchor is not valid JSON`, { cause: error });
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new DatabaseCorruptError(`stored target_anchor is not an object`);
+  }
+  const record = parsed as Record<string, unknown>;
+  const selection = record.selection as Partial<TurnSelection> | undefined;
+  if (
+    typeof record.sourceBranchId !== "string" ||
+    typeof record.anchorTurnId !== "string" ||
+    typeof record.anchorEntryId !== "string" ||
+    typeof selection !== "object" ||
+    selection === null ||
+    !Number.isInteger(selection.start) ||
+    !Number.isInteger(selection.end) ||
+    typeof selection.text !== "string"
+  ) {
+    throw new DatabaseCorruptError(
+      `stored target_anchor lacks the ReturnTargetAnchor shape {sourceBranchId, anchorTurnId, anchorEntryId, selection}`,
+    );
+  }
+  return {
+    sourceBranchId: record.sourceBranchId as BranchId,
+    anchorTurnId: record.anchorTurnId as TurnId,
+    anchorEntryId: record.anchorEntryId,
+    selection: selection as TurnSelection,
+  };
+}
+
 export function rowToTurn(row: TurnRow): Turn {
   return {
     id: row.id as TurnId,
@@ -266,6 +312,8 @@ export function rowToTurn(row: TurnRow): Turn {
     piEntryId: (row.pi_entry_id as PiEntryId | null) ?? null,
     fromBranchId: (row.from_branch_id as BranchId | null) ?? null,
     deliveredRunId: (row.delivered_run_id as RunId | null) ?? null,
+    idempotencyKey: row.idempotency_key ?? null,
+    targetAnchor: decodeTargetAnchor(row.target_anchor),
     createdAt: row.created_at as IsoTimestamp,
   };
 }

@@ -14,6 +14,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type {
   BranchId,
   PiEntryId,
@@ -25,7 +27,7 @@ import type {
 } from "@treeai/contracts";
 import { EntityNotFoundError, InvalidArgumentError } from "@treeai/persistence";
 import type { TreeState } from "../src/service.ts";
-import { composePromptText, RunNotActiveError } from "../src/service.ts";
+import { composePromptText, ReturnConflictError, RunNotActiveError } from "../src/service.ts";
 import type { TreeStudioService } from "../src/service.ts";
 import { cleanupDir, makeStudioInstance, makeTempDataDir } from "./helpers.ts";
 function findBranchView(state: TreeState, branchId: BranchId) {
@@ -45,6 +47,22 @@ async function waitForActiveRun(service: TreeStudioService, treeId: TreeId) {
     await new Promise<void>((resolve) => setImmediate(resolve));
   }
   throw new Error("active run never appeared in diagnostics");
+}
+
+/** 造一棵带锚定分支的树（Trunk 一问一答 + 分支一轮），供 Return 类测试复用。 */
+async function makeTreeWithAnchoredBranch(service: TreeStudioService) {
+  const created = service.createTree();
+  const treeId = created.tree.id;
+  const trunkId = created.trunkBranch.id;
+  const t1 = await service.prompt(treeId, trunkId, "q1");
+  const answer = t1.assistantTurn;
+  const creation = service.createBranchFromSelection(treeId, trunkId, answer.id, {
+    start: 0,
+    end: 5,
+    text: answer.text.slice(0, 5),
+  });
+  await service.prompt(treeId, creation.branch.id, "b1");
+  return { treeId, trunkId, branchId: creation.branch.id, origin: creation.origin, anchorAnswer: answer };
 }
 
 test("full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload", async () => {
@@ -113,13 +131,22 @@ test("full D3 vertical slice: trunk → anchored branch → continue → navigat
     }
     assert.equal(sessionFiles.size, 1, "one session file per tree (fork-in-session)");
 
-    /* 6. 编辑并显式提交 Return（记录在 Trunk，含出处；先导航后落库）。 */
+    /* 6. 编辑并显式提交 Return（记录在 Trunk，含出处与锚点快照；先导航后落库）。 */
     const returnText = `RETURN: use ${selection.text} as the answer`;
-    const returnTurn = await service.submitReturn(treeId, branchId, returnText);
+    const returnSubmission = await service.submitReturn(treeId, branchId, returnText, "key-vertical-slice");
+    assert.equal(returnSubmission.created, true, "the first submission creates the return");
+    const returnTurn = returnSubmission.turn;
     assert.equal(returnTurn.role, "return");
     assert.equal(returnTurn.branchId, trunkId, "the return lands on the Trunk");
     assert.equal(returnTurn.fromBranchId, branchId);
     assert.equal(returnTurn.deliveredRunId, null, "not yet delivered");
+    assert.equal(returnTurn.idempotencyKey, "key-vertical-slice");
+    assert.deepEqual(returnTurn.targetAnchor, {
+      sourceBranchId: creation.origin.sourceBranchId,
+      anchorTurnId: creation.origin.anchorTurnId,
+      anchorEntryId: creation.origin.anchorEntryId,
+      selection: creation.origin.selection,
+    });
 
     /* 下一次 Trunk prompt 把 return 送入 Pi 上下文（echo 可见）。 */
     const t4 = await service.prompt(treeId, trunkId, "t4-q");
@@ -281,8 +308,8 @@ test("return and prompt validation errors", async () => {
       EntityNotFoundError,
     );
     // Trunk 无 origin，不能提交 return（submitReturn 为 async 方法）。
-    await assert.rejects(() => service.submitReturn(treeId, trunkId, "text"), InvalidArgumentError);
-    // return 文本不能为空；跨树引用被拒绝。
+    await assert.rejects(() => service.submitReturn(treeId, trunkId, "text", "key-a"), InvalidArgumentError);
+    // return 文本不能为空；幂等键必填（空白同缺失）；跨树引用被拒绝。
     const other = service.createTree();
     const t = await service.prompt(other.tree.id, other.trunkBranch.id, "q");
     const branch = service.createBranchFromSelection(other.tree.id, other.trunkBranch.id, t.assistantTurn.id, {
@@ -290,9 +317,20 @@ test("return and prompt validation errors", async () => {
       end: 2,
       text: t.assistantTurn.text.slice(0, 2),
     });
-    await assert.rejects(() => service.submitReturn(other.tree.id, branch.branch.id, "  "), InvalidArgumentError);
     await assert.rejects(
-      () => service.submitReturn(treeId, branch.branch.id, "cross-tree"),
+      () => service.submitReturn(other.tree.id, branch.branch.id, "  ", "key-b"),
+      InvalidArgumentError,
+    );
+    await assert.rejects(
+      () => service.submitReturn(other.tree.id, branch.branch.id, "text", ""),
+      InvalidArgumentError,
+    );
+    await assert.rejects(
+      () => service.submitReturn(other.tree.id, branch.branch.id, "text", "   "),
+      InvalidArgumentError,
+    );
+    await assert.rejects(
+      () => service.submitReturn(treeId, branch.branch.id, "cross-tree", "key-c"),
       InvalidArgumentError,
     );
     await studio.shutdown();
@@ -556,6 +594,191 @@ test("anchor status preserves duplicate and cross-line selections and degrades w
       unavailable.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus,
       "unavailable",
     );
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("return idempotency: same key+content replays the same turn; different content conflicts", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const { treeId, trunkId, branchId, anchorAnswer } = await makeTreeWithAnchoredBranch(service);
+    const countReturns = () =>
+      repository.listTurns(trunkId).filter((t) => t.role === "return").length;
+
+    /* 首次提交：新建（created true）。 */
+    const first = await service.submitReturn(treeId, branchId, "RETURN: use hi", "key-replay");
+    assert.equal(first.created, true);
+    assert.equal(first.turn.role, "return");
+    assert.equal(first.turn.idempotencyKey, "key-replay");
+
+    /* 同键同内容重试（响应丢失场景）：零写入返回同一条 Return。 */
+    const replay = await service.submitReturn(treeId, branchId, "RETURN: use hi", "key-replay");
+    assert.equal(replay.created, false);
+    assert.equal(replay.turn.id, first.turn.id, "replay resolves to the same turn id");
+    assert.equal(countReturns(), 1, "exactly one return row after the replay");
+
+    /* 同键不同文本 → 冲突；消息含键、既有 turn id 与“内容不同”。 */
+    await assert.rejects(
+      () => service.submitReturn(treeId, branchId, "RETURN: different text", "key-replay"),
+      (err: unknown) =>
+        err instanceof ReturnConflictError &&
+        err.message.includes("key-replay") &&
+        err.message.includes(first.turn.id) &&
+        err.message.includes("different content"),
+    );
+
+    /* 同键不同出处分支 → 冲突。 */
+    const second = service.createBranchFromSelection(treeId, trunkId, anchorAnswer.id, {
+      start: 0,
+      end: 4,
+      text: anchorAnswer.text.slice(0, 4),
+    });
+    await assert.rejects(
+      () => service.submitReturn(treeId, second.branch.id, "RETURN: use hi", "key-replay"),
+      ReturnConflictError,
+    );
+
+    assert.equal(countReturns(), 1, "conflicts persist nothing");
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("concurrent same-key submits converge to one return (race-safe, no dangling episode)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const { treeId, trunkId, branchId } = await makeTreeWithAnchoredBranch(service);
+    const countReturns = () =>
+      repository.listTurns(trunkId).filter((t) => t.role === "return").length;
+
+    /* 同键同内容并发：两个提交都成功，解析到同一条 Return，恰一新建。 */
+    const episodesBefore = repository.listEpisodes(trunkId).length;
+    const [a, b] = await Promise.all([
+      service.submitReturn(treeId, branchId, "RETURN: race", "key-race"),
+      service.submitReturn(treeId, branchId, "RETURN: race", "key-race"),
+    ]);
+    assert.equal(a.turn.id, b.turn.id, "both concurrent submits resolve to the same return turn");
+    assert.notEqual(a.created, b.created, "exactly one of the two created the row");
+    assert.equal(countReturns(), 1, "exactly one return row after the race");
+    assert.equal(
+      repository.listEpisodes(trunkId).length,
+      episodesBefore + 1,
+      "the loser's transaction rolled back (no dangling episode)",
+    );
+
+    /* 同键不同内容并发：恰一胜一败，败者以 ReturnConflictError 拒绝。 */
+    const settled = await Promise.allSettled([
+      service.submitReturn(treeId, branchId, "RETURN: conflict A", "key-race-conflict"),
+      service.submitReturn(treeId, branchId, "RETURN: conflict B", "key-race-conflict"),
+    ]);
+    let fulfilled = 0;
+    let conflict: unknown = null;
+    for (const result of settled) {
+      if (result.status === "fulfilled") fulfilled += 1;
+      else conflict = result.reason;
+    }
+    assert.equal(fulfilled, 1, "exactly one concurrent submit wins");
+    assert.ok(conflict instanceof ReturnConflictError, "the loser is rejected with ReturnConflictError");
+    assert.equal(countReturns(), 2, "one new return row from the winner (2 total)");
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("missing session: submit rejects with no return persisted; restore + same-key retry lands exactly once", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const { treeId, trunkId, branchId } = await makeTreeWithAnchoredBranch(service);
+
+    /* 整实例重启（内存 cursor 清空）+ session 文件缺失（保留内容供恢复）。 */
+    const sessionsDir = join(dir, "sessions");
+    const sessionFiles = readdirSync(sessionsDir);
+    assert.equal(sessionFiles.length, 1, "one session file per tree");
+    const sessionFile = join(sessionsDir, sessionFiles[0]!);
+    const sessionContent = readFileSync(sessionFile, "utf8");
+    await studio.shutdown();
+    rmSync(sessionFile);
+
+    const studio2 = makeStudioInstance(dir);
+    const countReturns = () =>
+      studio2.repository.listTurns(trunkId).filter((t) => t.role === "return").length;
+
+    /* 导航回 Trunk 无法恢复缺失的 session 文件 → session-corrupt，
+       且 Return 未落库。 */
+    await assert.rejects(
+      () => studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session"),
+      (err: unknown) => (err as { code?: unknown }).code === "session-corrupt",
+    );
+    assert.equal(countReturns(), 0, "no return persisted when navigation fails");
+
+    /* session 文件恢复后同键重试：恰好落库一次（不因先前失败产生重复）。 */
+    writeFileSync(sessionFile, sessionContent, "utf8");
+    const retried = await studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session");
+    assert.equal(retried.created, true);
+    assert.equal(retried.turn.idempotencyKey, "key-missing-session");
+    assert.equal(countReturns(), 1, "exactly one return after restore + same-key retry");
+    await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("return persists its target anchor snapshot of the branch origin", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const { treeId, trunkId, branchId, origin } = await makeTreeWithAnchoredBranch(service);
+
+    const submission = await service.submitReturn(treeId, branchId, "RETURN: anchored", "key-anchor");
+    assert.equal(submission.turn.idempotencyKey, "key-anchor");
+    assert.deepEqual(submission.turn.targetAnchor, {
+      sourceBranchId: origin.sourceBranchId,
+      anchorTurnId: origin.anchorTurnId,
+      anchorEntryId: origin.anchorEntryId,
+      selection: origin.selection,
+    });
+
+    /* 读模型同样携带（前端据此在锚点答案附近渲染）。 */
+    const state = service.getTreeState(treeId);
+    const persisted = findBranchView(state, trunkId).turns.find((t) => t.role === "return");
+    assert.ok(persisted !== undefined);
+    assert.deepEqual(persisted.targetAnchor, submission.turn.targetAnchor);
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("repository-level return without a key still round-trips (legacy shape)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service, repository } = studio;
+    const created = service.createTree();
+    const branch = repository.createBranch(created.tree.id, { parentBranchId: created.trunkBranch.id });
+    const episode = repository.createEpisode(created.trunkBranch.id);
+    const turn = repository.createTurn({
+      treeId: created.tree.id,
+      branchId: created.trunkBranch.id,
+      episodeId: episode.id,
+      role: "return",
+      text: "legacy return without a key",
+      fromBranchId: branch.id,
+    });
+    assert.equal(turn.idempotencyKey, null);
+    assert.equal(turn.targetAnchor, null);
+    assert.equal(repository.findReturnByIdempotencyKey(created.tree.id, "any-key"), null);
     await studio.shutdown();
   } finally {
     cleanupDir(dir);

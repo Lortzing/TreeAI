@@ -31,6 +31,7 @@ import type {
   Forest,
   ForestId,
   IsoTimestamp,
+  ReturnTargetAnchor,
   Run,
   RunId,
   RunState,
@@ -65,6 +66,7 @@ import {
 } from "./database.ts";
 import {
   encodeFailure,
+  encodeTargetAnchor,
   rowToActiveNavigation,
   rowToBranch,
   rowToBranchOrigin,
@@ -152,6 +154,10 @@ export interface CreateTurnInput {
   readonly piEntryId?: string | null;
   /** role "return" 必填（出处分支）；其他 role 必须为 null/缺省。 */
   readonly fromBranchId?: BranchId | null;
+  /** role "return" 专属提交幂等键（非空；同键唯一索引强制至多一条）；其他 role 必须为 null/缺省。 */
+  readonly idempotencyKey?: string | null;
+  /** role "return" 专属目标锚点快照（提交时 BranchOrigin 的拷贝）；其他 role 必须为 null/缺省。 */
+  readonly targetAnchor?: ReturnTargetAnchor | null;
 }
 
 /** 设置 Branch 出处锚点（每分支至多一条）。 */
@@ -216,6 +222,25 @@ export interface SessionFileSweepResult {
 function assertNonEmptyString(value: string, field: string): void {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new InvalidArgumentError(`${field} must be a non-empty string`);
+  }
+}
+
+/** 校验 Return 目标锚点快照形状（定位字段非空 + 选区整数偏移有序）。 */
+function assertValidTargetAnchor(anchor: ReturnTargetAnchor): void {
+  assertNonEmptyString(anchor.sourceBranchId, "targetAnchor.sourceBranchId");
+  assertNonEmptyString(anchor.anchorTurnId, "targetAnchor.anchorTurnId");
+  assertNonEmptyString(anchor.anchorEntryId, "targetAnchor.anchorEntryId");
+  const selection = anchor.selection;
+  if (
+    typeof selection !== "object" ||
+    selection === null ||
+    !Number.isInteger(selection.start) ||
+    !Number.isInteger(selection.end) ||
+    selection.start < 0 ||
+    selection.end < selection.start ||
+    typeof selection.text !== "string"
+  ) {
+    throw new InvalidArgumentError("targetAnchor.selection must be a TurnSelection {start, end, text}");
   }
 }
 
@@ -917,6 +942,8 @@ export class TreeRepository {
     const runId = input.runId ?? null;
     const fromBranchId = input.fromBranchId ?? null;
     const piEntryId = input.piEntryId ?? null;
+    const idempotencyKey = input.idempotencyKey ?? null;
+    const targetAnchor = input.targetAnchor ?? null;
     if (input.role === "return") {
       if (runId !== null) {
         throw new InvalidArgumentError("a return turn must not reference a run (returns are not model-executed)");
@@ -927,12 +954,24 @@ export class TreeRepository {
       if (piEntryId !== null) {
         throw new InvalidArgumentError("a return turn carries no Pi entry anchor");
       }
+      if (idempotencyKey !== null) {
+        assertNonEmptyString(idempotencyKey, "idempotency key");
+      }
+      if (targetAnchor !== null) {
+        assertValidTargetAnchor(targetAnchor);
+      }
     } else {
       if (runId === null) {
         throw new InvalidArgumentError(`a '${input.role}' turn requires runId`);
       }
       if (fromBranchId !== null) {
         throw new InvalidArgumentError("fromBranchId is only valid for return turns");
+      }
+      if (idempotencyKey !== null) {
+        throw new InvalidArgumentError("idempotencyKey is only valid for return turns");
+      }
+      if (targetAnchor !== null) {
+        throw new InvalidArgumentError("targetAnchor is only valid for return turns");
       }
       if (this.findRun(runId) === null) throw new EntityNotFoundError("run", runId);
     }
@@ -946,10 +985,24 @@ export class TreeRepository {
       this.#db!
         .prepare(
           `INSERT INTO turns
-             (id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
+             (id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id,
+              delivered_run_id, idempotency_key, target_anchor, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)`,
         )
-        .run(id, input.treeId, input.branchId, input.episodeId, runId, input.role, input.text, piEntryId, fromBranchId, createdAt);
+        .run(
+          id,
+          input.treeId,
+          input.branchId,
+          input.episodeId,
+          runId,
+          input.role,
+          input.text,
+          piEntryId,
+          fromBranchId,
+          idempotencyKey,
+          encodeTargetAnchor(targetAnchor),
+          createdAt,
+        );
     } catch (error) {
       throw mapSqliteError(error, "creating turn");
     }
@@ -967,7 +1020,8 @@ export class TreeRepository {
     assertNonEmptyString(id, "turn id");
     const row = this.#db!
       .prepare(
-        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at
+        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id,
+                delivered_run_id, idempotency_key, target_anchor, created_at
          FROM turns WHERE id = ?`,
       )
       .get(id) as TurnRow | undefined;
@@ -980,11 +1034,31 @@ export class TreeRepository {
     assertNonEmptyString(branchId, "branch id");
     const rows = this.#db!
       .prepare(
-        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id, delivered_run_id, created_at
+        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id,
+                delivered_run_id, idempotency_key, target_anchor, created_at
          FROM turns WHERE branch_id = ? ORDER BY created_at, rowid`,
       )
       .all(branchId) as unknown as TurnRow[];
     return rows.map(rowToTurn);
+  }
+
+  /**
+   * 按幂等键查找 return turn（树内定位；无键/无匹配为 null）。
+   * 同键唯一由部分唯一索引保证（idx_turns_idempotency_key），本查询是
+   * 幂等重放与并发竞争后对齐的读取路径。
+   */
+  findReturnByIdempotencyKey(treeId: TreeId, idempotencyKey: string): Turn | null {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    assertNonEmptyString(idempotencyKey, "idempotency key");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id, from_branch_id,
+                delivered_run_id, idempotency_key, target_anchor, created_at
+         FROM turns WHERE tree_id = ? AND idempotency_key = ? AND role = 'return'`,
+      )
+      .get(treeId, idempotencyKey) as TurnRow | undefined;
+    return row ? rowToTurn(row) : null;
   }
 
   /* --------------------- D3 产品层：BranchOrigin（branch_origins 表） --------------------- */

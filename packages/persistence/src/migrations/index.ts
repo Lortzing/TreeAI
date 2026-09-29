@@ -15,6 +15,7 @@ import { DatabaseCorruptError, MigrationFailedError, UnsupportedDatabaseVersionE
 import { initialSchemaMigration } from "./0001-initial-schema.ts";
 import { productStateMigration } from "./0002-product-state.ts";
 import { navigationStateMigration } from "./0003-navigation-state.ts";
+import { returnIdempotencyMigration } from "./0004-return-idempotency.ts";
 
 /** 一条版本化 migration。`up` 必须只含幂等性不要求的 DDL（事务保护下执行一次）。 */
 export interface Migration {
@@ -24,7 +25,12 @@ export interface Migration {
 }
 
 /** 已交付的 migration 注册表（有序）。 */
-export const MIGRATIONS: readonly Migration[] = [initialSchemaMigration, productStateMigration, navigationStateMigration];
+export const MIGRATIONS: readonly Migration[] = [
+  initialSchemaMigration,
+  productStateMigration,
+  navigationStateMigration,
+  returnIdempotencyMigration,
+];
 
 /** 当前代码支持的最高 schema 版本。 */
 export const LATEST_SCHEMA_VERSION: number = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0;

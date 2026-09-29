@@ -5,10 +5,14 @@
  * 让最小 UI 无需本地状态同步逻辑。
  *
  * 错误映射：EntityNotFoundError → 404；InvalidArgumentError/
- * ConstraintViolationError → 400；RunNotActiveError/契约违规（如并发
- * prompt，TypeError）/用户中止（TreeAIError code "user-abort"）→ 409；
- * 其余运行期 TreeAIError → 502（上游失败）；PersistenceError → 500；
- * 其余 → 500。
+ * ConstraintViolationError → 400；RunNotActiveError/ReturnConflictError
+ * （同幂等键不同内容）/契约违规（如并发 prompt，TypeError）/用户中止
+ * （TreeAIError code "user-abort"）→ 409；其余运行期 TreeAIError → 502
+ * （上游失败）；PersistenceError → 500；其余 → 500。
+ *
+ * POST /api/trees/:id/return 幂等语义：新建 Return → 201；同
+ * idempotencyKey 同内容重放 → 200（同一 returnTurn，零新写入）；同键
+ * 不同内容 → 409 return-conflict。两种成功均返回 {returnTurn, state}。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -21,7 +25,7 @@ import {
   InvalidArgumentError,
   PersistenceError,
 } from "@treeai/persistence";
-import { RunNotActiveError, type TreeStudioService, type TreeState } from "./service.ts";
+import { RunNotActiveError, ReturnConflictError, type TreeStudioService, type TreeState } from "./service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 
@@ -70,6 +74,11 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof RunNotActiveError) {
     // abort 目标不是该树当前在途 run（已终态/无在途/另有在途）——操作冲突。
     sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof ReturnConflictError) {
+    // 同幂等键已绑定不同内容的 Return——重试语义冲突（既有 Return 不变）。
+    sendJson(res, 409, { error: { code: "return-conflict", message: err.message } } satisfies ApiErrorBody);
     return;
   }
   if (err instanceof TypeError) {
@@ -249,14 +258,20 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         }
         if (action === "return" && method === "POST") {
           const body = await readJsonBody(req);
-          // submitReturn 先导航回 Trunk 再落库：导航失败（如 session 文件
-          // 缺失 → 502 session-corrupt）时 Return 未写入，重试不会重复。
-          const returnTurn = await service.submitReturn(
+          // 幂等 Return：新建 201 / 同键同内容重放 200（同一 returnTurn，
+          // 零新写入）/ 同键不同内容 409 return-conflict；导航失败（如
+          // session 文件缺失 → 502 session-corrupt）时 Return 未写入，
+          // 同键重试不重复。
+          const submission = await service.submitReturn(
             treeId,
             requireString(body, "fromBranchId") as BranchId,
             requireString(body, "text"),
+            requireString(body, "idempotencyKey"),
           );
-          sendJson(res, 201, { returnTurn, state: service.getTreeState(treeId) });
+          sendJson(res, submission.created ? 201 : 200, {
+            returnTurn: submission.turn,
+            state: service.getTreeState(treeId),
+          });
           return;
         }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });

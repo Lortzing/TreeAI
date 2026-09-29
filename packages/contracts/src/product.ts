@@ -18,14 +18,30 @@
  *
  * Turn 不变量：
  * - role "user"/"assistant"：一次 Run 的两侧文本；runId 非空、
- *   fromBranchId/deliveredRunId 为空；
+ *   fromBranchId/deliveredRunId/idempotencyKey/targetAnchor 为空；
  * - role "return"：用户在分支上编辑后显式提交的回归消息，记录在主干
  *   分支上；runId 为空（不经模型执行）、fromBranchId 非空（出处分支）；
  * - piEntryId：仅 assistant turn 携带（PiPromptResult.reference.entryId，
  *   即该 Run 完成后的叶条目）；user turn 经 PiRuntime 契约拿不到自身
  *   条目 id，固定为 null；
  * - deliveredRunId：仅 return turn 使用——把它送入主干 Pi 上下文的
- *   那次主干 Run（见产品服务）；未送达为 null。
+ *   那次主干 Run（见产品服务）；未送达为 null；
+ * - idempotencyKey：仅 return turn 使用——提交方为一次逻辑提交生成的
+ *   稳定幂等键（建议 UUID）；提交重试携带同键：同键同内容（fromBranchId
+ *   与 text）重放同一条 Return，同键不同内容视为冲突。存储层以部分
+ *   唯一索引强制同键至多一条 Return；历史 Return（迁移前落库）为 null；
+ * - targetAnchor：仅 return turn 使用——提交时对出处分支 BranchOrigin
+ *   的快照（sourceBranchId/anchorTurnId/anchorEntryId/selection），
+ *   标识该 Return 的原分叉点（"原分叉点附近"的展示锚点）；历史 Return
+ *   为 null。
+ *
+ * Return 状态词汇（draft/confirmed/delivered；持久层不新增列，
+ * 持久态由 deliveredRunId 派生）：
+ * - draft：客户端编辑中的 Return 草稿（含幂等键与文本），未持久化；
+ * - confirmed：已落库、deliveredRunId === null——等待下一次主干 prompt
+ *   送入 Pi 上下文；
+ * - delivered：deliveredRunId !== null——已由该主干 Run 送入 Pi 上下文
+ *   （送达恰一次，见产品服务）。
  *
  * BranchOrigin 不变量：
  * - 每个非根分支至多一条 origin 记录（根分支/无锚点分支没有）；
@@ -75,7 +91,24 @@ export interface Turn {
   readonly fromBranchId: BranchId | null;
   /** 把该 return 送入主干 Pi 上下文的 Run；未送达为 null。 */
   readonly deliveredRunId: RunId | null;
+  /** role === "return" 时的提交幂等键（同键重试对齐同一条 Return）；其他 role 为 null。 */
+  readonly idempotencyKey: string | null;
+  /** role === "return" 时的目标锚点快照（原分叉点的展示定位）；其他 role 为 null。 */
+  readonly targetAnchor: ReturnTargetAnchor | null;
   readonly createdAt: IsoTimestamp;
+}
+
+/**
+ * Return 目标锚点：提交时对出处分支 BranchOrigin 的快照。
+ * 标识该 Return 所属的原分叉点（锚点答案内的选区）；前端据此把
+ * Return 呈现在锚点答案附近。快照只作展示定位，不参与 Pi 导航
+ * （导航仍以 BranchOrigin 为准）。
+ */
+export interface ReturnTargetAnchor {
+  readonly sourceBranchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  readonly anchorEntryId: string;
+  readonly selection: TurnSelection;
 }
 
 /** Branch 出处：从哪条分支的哪个答案选区创建。 */

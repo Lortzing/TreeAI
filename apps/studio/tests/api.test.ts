@@ -6,6 +6,9 @@
  * （同一数据目录上重建 server + service + repo 后树状态与续聊能力完整）。
  * 外加 return 失败/重试一致性回归：session 文件缺失时 502 发生在任何
  * Return 落库之前，同一失败上重试不产生重复 Return。
+ * 外加 Return 幂等（idempotencyKey 必填）：201 新建 / 200 同键同内容
+ * 重放 / 409 return-conflict（同键异容）/ 400 缺键或空白键；响应丢失
+ * 重发与双击（并发相同 POST）收敛为恰一条 Return。
  * 外加 A5 诊断面：GET diagnostics 安全投影（无 session 引用/详情/cause）、
  * POST runs/:runId/abort 的 404/400/409 映射、在途 abort 的 user-abort
  * 收敛（409 + run 落库 aborted）、并发 prompt 冲突、I6 恢复 run 的
@@ -95,6 +98,25 @@ async function closeAll(registry: RunningStudio[]): Promise<void> {
   }
 }
 
+/** 造一棵带锚定分支的树（Trunk 一问一答 + 分支一轮），供 Return 幂等类测试复用。 */
+async function makeTreeWithAnchoredBranch(studio: RunningStudio) {
+  const created = await call(studio.url("/api/trees"), "POST", {});
+  const treeId: string = created.body.tree.id;
+  const trunkBranchId: string = created.body.trunkBranchId;
+  const treePath = (action?: string) =>
+    `/api/trees/${encodeURIComponent(treeId)}${action === undefined ? "" : `/${action}`}`;
+  const t1 = await call(studio.url(treePath("prompt")), "POST", { branchId: trunkBranchId, text: "hi" });
+  const answer = t1.body.outcome.assistantTurn;
+  const branchRes = await call(studio.url(treePath("branches")), "POST", {
+    sourceBranchId: trunkBranchId,
+    anchorTurnId: answer.id,
+    selection: { start: 0, end: 2, text: answer.text.slice(0, 2) },
+  });
+  const branchId: string = branchRes.body.branch.id;
+  await call(studio.url(treePath("prompt")), "POST", { branchId, text: "b1" });
+  return { treeId, trunkBranchId, branchId, treePath };
+}
+
 test("HTTP API serves the UI and the full D3 flow, surviving a restart", async () => {
   const dir = makeTempDataDir();
   const running: RunningStudio[] = [];
@@ -163,10 +185,14 @@ test("HTTP API serves the UI and the full D3 flow, surviving a restart", async (
     const returnRes = await call(studio.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
+      idempotencyKey: "key-main-flow",
     });
     assert.equal(returnRes.status, 201);
     assert.equal(returnRes.body.returnTurn.branchId, trunkBranchId);
     assert.equal(returnRes.body.returnTurn.fromBranchId, branchId);
+    assert.equal(returnRes.body.returnTurn.idempotencyKey, "key-main-flow");
+    assert.ok(returnRes.body.returnTurn.targetAnchor !== null);
+    assert.equal(returnRes.body.returnTurn.targetAnchor.anchorTurnId, anchorTurnId);
     assert.equal(returnRes.body.state.cursor.branchId, trunkBranchId);
 
     /* 下一次 Trunk prompt 送达 return。 */
@@ -191,6 +217,7 @@ test("HTTP API serves the UI and the full D3 flow, surviving a restart", async (
     const trunkReturn = await call(studio.url(treePath("return")), "POST", {
       fromBranchId: trunkBranchId,
       text: "not allowed",
+      idempotencyKey: "key-trunk-rejected",
     });
     assert.equal(trunkReturn.status, 400);
     const unknownRoute = await call(studio.url("/api/nope"), "GET");
@@ -270,18 +297,20 @@ test("return with a missing Pi session file: 502 before any write; retry creates
       studio2.instance.repository.listTurns(trunkBranchId as BranchId).filter((turn) => turn.role === "return").length;
 
     /* 第一次提交 Return：导航回 Trunk 无法恢复缺失的 session 文件
-       → 502 session-corrupt，且 Return 尚未写入。 */
+       → 502 session-corrupt，且 Return 尚未写入（同键重试语义的前提）。 */
     const first = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
+      idempotencyKey: "key-missing-session",
     });
     assert.equal(first.status, 502);
     assert.equal(first.body.error.code, "session-corrupt");
 
-    /* 同一失败上重试：仍 502，且仍零条 Return（不产生重复）。 */
+    /* 同一失败上重试（同键同文本）：仍 502，且仍零条 Return（不产生重复）。 */
     const retry = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
+      idempotencyKey: "key-missing-session",
     });
     assert.equal(retry.status, 502);
     assert.equal(retry.body.error.code, "session-corrupt");
@@ -293,12 +322,13 @@ test("return with a missing Pi session file: 502 before any write; retry creates
       "product state agrees: no Return turns visible",
     );
 
-    /* session 文件恢复（缺失可修复）后重试：Return 恰好落库一次，
+    /* session 文件恢复（缺失可修复）后同键重试：Return 恰好落库一次，
        cursor 一致地在 Trunk，下一次 Trunk prompt 正常送达。 */
     writeFileSync(sessionFile, sessionContent, "utf8");
     const recovered = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
+      idempotencyKey: "key-missing-session",
     });
     assert.equal(recovered.status, 201);
     assert.equal(recovered.body.returnTurn.branchId, trunkBranchId);
@@ -533,6 +563,135 @@ test("diagnostics and abort endpoints: safe projection, 404/400/409, user-abort 
     const serialized4 = JSON.stringify(diag4.body);
     assert.ok(!serialized4.includes("hostInterrupted"), "failure details must not leak");
     assert.ok(!serialized4.includes("secret-session"), "session file paths must not leak");
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running);
+    const { trunkBranchId, branchId, treePath } = await makeTreeWithAnchoredBranch(studio);
+    const countReturns = () =>
+      studio.instance.repository.listTurns(trunkBranchId as BranchId).filter((t) => t.role === "return").length;
+
+    /* 新建 → 201（body 含 returnTurn 与完整 state）。 */
+    const first = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: use hi",
+      idempotencyKey: "key-api",
+    });
+    assert.equal(first.status, 201);
+    assert.equal(first.body.returnTurn.idempotencyKey, "key-api");
+    assert.ok(first.body.returnTurn.targetAnchor !== null);
+    assert.ok(first.body.state !== undefined);
+
+    /* 同键同内容重放 → 200，同一 returnTurn，仍恰一条 Return。 */
+    const replay = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: use hi",
+      idempotencyKey: "key-api",
+    });
+    assert.equal(replay.status, 200);
+    assert.equal(replay.body.returnTurn.id, first.body.returnTurn.id);
+    assert.equal(countReturns(), 1, "exactly one return row after the replay");
+
+    /* 同键不同文本 → 409 return-conflict；消息含键、既有 turn id 与内容差异。 */
+    const conflict = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: different text",
+      idempotencyKey: "key-api",
+    });
+    assert.equal(conflict.status, 409);
+    assert.equal(conflict.body.error.code, "return-conflict");
+    assert.ok(conflict.body.error.message.includes("key-api"));
+    assert.ok(conflict.body.error.message.includes(first.body.returnTurn.id));
+    assert.ok(conflict.body.error.message.includes("different content"));
+    assert.equal(countReturns(), 1, "the conflict persists nothing");
+
+    /* 幂等键缺失/空白 → 400 invalid-argument（字段名进消息）。 */
+    const missingKey = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: no key",
+    });
+    assert.equal(missingKey.status, 400);
+    assert.equal(missingKey.body.error.code, "invalid-argument");
+    assert.match(missingKey.body.error.message, /idempotencyKey/);
+    for (const badKey of ["", "   "]) {
+      const bad = await call(studio.url(treePath("return")), "POST", {
+        fromBranchId: branchId,
+        text: "RETURN: bad key",
+        idempotencyKey: badKey,
+      });
+      assert.equal(bad.status, 400);
+    }
+    assert.equal(countReturns(), 1, "invalid keys persist nothing");
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("response-loss resubmit and double-click converge to exactly one return", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running);
+    const { trunkBranchId, branchId, treePath } = await makeTreeWithAnchoredBranch(studio);
+    const countReturns = () =>
+      studio.instance.repository.listTurns(trunkBranchId as BranchId).filter((t) => t.role === "return").length;
+
+    /* 响应丢失：第一次提交服务端已成功（201），响应体按“未达客户端”
+       处理（不复用其内容）；同键同文本重发 → 200 重放，同一条 Return。 */
+    const lost = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: lost response",
+      idempotencyKey: "key-response-loss",
+    });
+    assert.equal(lost.status, 201);
+    const resubmit = await call(studio.url(treePath("return")), "POST", {
+      fromBranchId: branchId,
+      text: "RETURN: lost response",
+      idempotencyKey: "key-response-loss",
+    });
+    assert.equal(resubmit.status, 200);
+    assert.equal(resubmit.body.returnTurn.id, lost.body.returnTurn.id);
+    assert.equal(countReturns(), 1, "exactly one return after response loss + resubmit");
+
+    /* 双击：两个并发的相同 POST（同键同文本）→ 一胜（201）一重放（200），
+       恰一条 Return。 */
+    const [click1, click2] = await Promise.all([
+      call(studio.url(treePath("return")), "POST", {
+        fromBranchId: branchId,
+        text: "RETURN: double click",
+        idempotencyKey: "key-double-click",
+      }),
+      call(studio.url(treePath("return")), "POST", {
+        fromBranchId: branchId,
+        text: "RETURN: double click",
+        idempotencyKey: "key-double-click",
+      }),
+    ]);
+    assert.deepEqual(
+      [click1.status, click2.status].sort(),
+      [200, 201],
+      "one concurrent POST creates (201), the other replays (200)",
+    );
+    assert.equal(click1.body.returnTurn.id, click2.body.returnTurn.id);
+    assert.equal(countReturns(), 2, "the double click persists exactly one more return (2 total)");
+
+    /* 状态读模型一致：全树恰两条 Return（response-loss 与 double-click 各一）。 */
+    const state = await call(studio.url(treePath("state")), "GET");
+    const returnsInView = state.body.branches
+      .flatMap((view: any) => view.turns)
+      .filter((turn: any) => turn.role === "return");
+    assert.equal(returnsInView.length, 2);
+    for (const turn of returnsInView) {
+      assert.ok(turn.idempotencyKey !== null && turn.targetAnchor !== null);
+    }
   } finally {
     await closeAll(running);
     cleanupDir(dir);
