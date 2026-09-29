@@ -94,7 +94,7 @@ import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.1.1";
+const VERSION = "1.1.2";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -404,6 +404,65 @@ function walkFiles(dir) {
     else if (entry.isFile()) out.push(path);
   }
   return out;
+}
+
+/** 树的 session 文件（全树一个 .jsonl——支线经 navigateTree 在同一文件
+ *  的 entry 树上续聊，不换文件）：含指定提示词的会话文件必须恰好一个。 */
+function findTreeSessionFile(promptNeedle) {
+  const candidates = walkFiles(join(sc.dataDir, "sessions")).filter((path) => path.endsWith(".jsonl"));
+  const hits = candidates.filter((path) => {
+    try {
+      return readFileSync(path, "utf8").includes(promptNeedle);
+    } catch {
+      return false;
+    }
+  });
+  assert(
+    hits.length === 1,
+    `expected exactly one tree session file containing the ${JSON.stringify(promptNeedle)} prompt, found ${String(hits.length)}`,
+  );
+  return hits[0];
+}
+
+/** session entry 树的可见性路径（真实模型下列举措辞有方差——20260929T161646Z
+ *  的 b2 只回 "birch"，模型行为不构成串扰证据）：从含 promptNeedle 的用户
+ *  entry 沿 parentId 走到根，收集路径上全部 message 文本。这条链正是
+ *  navigateTree 续聊点的完整可见上下文——标记词在/不在路径上即上下文
+ *  可见性的机械证明，与模型怎么措辞无关。 */
+function sessionEntryPathText(sessionFile, promptNeedle) {
+  let entries;
+  try {
+    entries = readFileSync(sessionFile, "utf8")
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => JSON.parse(line));
+  } catch (err) {
+    throw new Error(`the tree session file could not be read/parsed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  const byId = new Map(entries.filter((e) => typeof e.id === "string").map((e) => [e.id, e]));
+  const leaf = entries.find(
+    (e) =>
+      e.type === "message" &&
+      e.message !== null &&
+      typeof e.message === "object" &&
+      e.message.role === "user" &&
+      JSON.stringify(e.message.content ?? "").includes(promptNeedle),
+  );
+  if (leaf === undefined) {
+    throw new Error(`no user entry carrying the ${JSON.stringify(promptNeedle)} prompt found in the tree session file`);
+  }
+  const texts = [];
+  let current = leaf;
+  while (current !== undefined) {
+    if (current.type === "message" && Array.isArray(current.message?.content)) {
+      for (const part of current.message.content) {
+        if (typeof part?.text === "string") texts.push(part.text);
+      }
+    }
+    const parent = current.parentId;
+    current = typeof parent === "string" ? byId.get(parent) : undefined;
+  }
+  return texts.join("\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -1934,21 +1993,48 @@ async function main() {
     const bText = (await evalJs("document.getElementById('panel-conversation').textContent")).trim();
     assert(bText.includes("birch"), "branch B panel does not show its own codeword birch");
     assert(!bText.includes("cedar"), "branch B panel leaked branch A codeword cedar");
-    assert(bText.includes("maple"), "branch B panel lost trunk-visible codeword maple");
+    /* 真实模型的「列举可见词」措辞有方差（b2 可能只回 "birch"——模型行为，
+       非串扰证据）：正向可见性断言改为 session entry 树的 parentId 路径
+       （= 续聊点可见的完整上下文，机械证明）；echo 模式回声语义本身确定，
+       维持面板断言不变。 */
+    if (MODE === "selftest") {
+      assert(bText.includes("maple"), "branch B panel lost trunk-visible codeword maple");
+    } else {
+      const bPath = sessionEntryPathText(findTreeSessionFile("Branch B, turn two"), "Branch B, turn two");
+      assert(bPath.includes("birch"), "branch B session path lost its own codeword birch");
+      assert(bPath.includes("maple"), "branch B session path lost trunk-visible codeword maple");
+      assert(bPath.includes("4127"), "branch B session path lost trunk-visible secret number 4127");
+      assert(!bPath.includes("cedar"), "branch B session path leaked branch A codeword cedar");
+    }
     /* 切回支线 A：A 只见 cedar + 主干词，绝不见 birch。 */
     const tabSelector = await evalJs(
       `(() => { const buttons = [...document.querySelectorAll('#branch-tabs button')]; ` +
-      "const tab = buttons.find((b) => b.textContent.includes('Branch 1')); " +
-      "return tab === undefined ? null : '#branch-tabs button:nth-of-type(' + String(buttons.indexOf(tab) + 1) + ')'; })()",
+        "const tab = buttons.find((b) => b.textContent.includes('Branch 1')); " +
+        "return tab === undefined ? null : '#branch-tabs button:nth-of-type(' + String(buttons.indexOf(tab) + 1) + ')'; })()",
     );
     await click(tabSelector);
     await waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, "branch A panel reopened");
     const aText = (await evalJs("document.getElementById('panel-conversation').textContent")).trim();
     assert(aText.includes("cedar"), "branch A panel does not show its own codeword cedar");
     assert(!aText.includes("birch"), "branch A panel leaked branch B codeword birch");
-    assert(aText.includes("maple"), "branch A panel lost trunk-visible codeword maple");
+    if (MODE === "selftest") {
+      assert(aText.includes("maple"), "branch A panel lost trunk-visible codeword maple");
+    } else {
+      /* A 的锚点在主干第 1 轮答案上：路径含 t1 史（maple）+ cedar，
+         绝不含锚点后的主干第 2 轮（4127）与支线 B（birch）。 */
+      const aPath = sessionEntryPathText(findTreeSessionFile("Branch A, turn two"), "Branch A, turn two");
+      assert(aPath.includes("cedar"), "branch A session path lost its own codeword cedar");
+      assert(aPath.includes("maple"), "branch A session path lost trunk-visible codeword maple");
+      assert(!aPath.includes("4127"), "branch A session path leaked post-anchor trunk secret number 4127");
+      assert(!aPath.includes("birch"), "branch A session path leaked branch B codeword birch");
+    }
     await snap("no-context-bleed");
-    return { detail: "rendered branch panels carry no cross-branch codewords (cedar/birch probe on both sides)" };
+    return {
+      detail:
+        MODE === "selftest"
+          ? "rendered branch panels carry no cross-branch codewords (cedar/birch probe on both sides)"
+          : "rendered panels carry no cross-branch codewords; per-branch visibility proven on the session entry path (parentId chain to the root) for both branches",
+    };
   });
 
   /* ---- A3 Return 语义 ---- */
