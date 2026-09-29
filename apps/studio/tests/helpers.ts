@@ -8,7 +8,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createPiRuntimeFromConfig } from "@treeai/runtime-pi";
 import { TreeRepository } from "@treeai/persistence";
-import type { PiModelSelector } from "@treeai/contracts";
+import type { PiModelSelector, PiRuntime } from "@treeai/contracts";
+import type { EventJournal } from "@treeai/event-journal";
 import { EchoSdkPort } from "../src/echo-port.ts";
 import { TreeStudioService } from "../src/service.ts";
 
@@ -18,7 +19,10 @@ export interface StudioInstance {
   readonly dir: string;
   readonly repository: TreeRepository;
   readonly service: TreeStudioService;
-  readonly echoPort: EchoSdkPort;
+  /** 注入的 echo 端口（runtime 覆盖注入时为 null）。 */
+  readonly echoPort: EchoSdkPort | null;
+  /** 注入的 journal（未注入时为 null）。close 由测试自己负责。 */
+  readonly journal: EventJournal | null;
   /** 释放运行时与数据库连接（保留磁盘数据，供 reload 场景复用）。 */
   shutdown(): Promise<void>;
 }
@@ -31,9 +35,14 @@ export function cleanupDir(dir: string): void {
   rmSync(dir, { recursive: true, force: true });
 }
 
-/** 实例级选项（测试用）：拉宽 echo 驱动的在途窗口，供 abort 类测试确定性观测。 */
+/** 实例级选项（测试用）：拉宽 echo 在途窗口 / 注入 journal / 覆盖 runtime。 */
 export interface StudioInstanceOptions {
+  /** 拉宽 echo 驱动的在途窗口（ms），供 abort/流式类测试确定性观测。 */
   readonly echoTurnDelayMs?: number;
+  /** 可选注入审计 journal（P1；缺省不注入 = 零 journal 行为）。 */
+  readonly journal?: EventJournal;
+  /** 可选覆盖 runtime（脚本化 runtime 的服务级测试）。 */
+  readonly runtime?: PiRuntime;
 }
 
 /** 在给定数据目录上构建一套 service（同一目录可重复调用 = 模拟重启）。 */
@@ -45,16 +54,22 @@ export function makeStudioInstance(dir: string, options?: StudioInstanceOptions)
 
   const repository = TreeRepository.open({ path: join(dir, "treeai.db") });
   const echoPort =
-    options?.echoTurnDelayMs === undefined
-      ? new EchoSdkPort()
-      : new EchoSdkPort({ turnDelayMs: options.echoTurnDelayMs });
-  const runtime = createPiRuntimeFromConfig({ port: echoPort, defaultCwd: workspace });
+    options?.runtime !== undefined
+      ? null
+      : options?.echoTurnDelayMs === undefined
+        ? new EchoSdkPort()
+        : new EchoSdkPort({ turnDelayMs: options.echoTurnDelayMs });
+  const runtime: PiRuntime =
+    options?.runtime !== undefined
+      ? options.runtime
+      : createPiRuntimeFromConfig({ port: echoPort!, defaultCwd: workspace });
   const service = new TreeStudioService({
     repository,
     runtime,
     model: STUDIO_MODEL,
     sessionDir: sessionsDir,
     cwd: workspace,
+    ...(options?.journal === undefined ? {} : { journal: options.journal }),
   });
 
   return {
@@ -62,6 +77,7 @@ export function makeStudioInstance(dir: string, options?: StudioInstanceOptions)
     repository,
     service,
     echoPort,
+    journal: options?.journal ?? null,
     async shutdown(): Promise<void> {
       await service.dispose();
       repository.close();

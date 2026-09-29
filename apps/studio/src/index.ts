@@ -17,8 +17,9 @@
  *       绝不作为 CLI 参数，值绝不进日志/TreeAI 数据库/evidence。
  *   缺失 --provider/--model/TREEAI_STUDIO_API_KEY 或 agent 目录不可用时，
  *   按清晰边界错误明确失败，不伪造结果。
- * - 产品状态全部落在 --data 目录的 TreeAI 数据库（treeai.db）与
- *   Pi session 文件（sessions/）；重启后原样恢复。
+ * - 产品状态全部落在 --data 目录的 TreeAI 数据库（treeai.db）、Pi session
+ *   文件（sessions/）与审计 journal（journal.jsonl，P1：run 生命周期
+ *   事件的追加式记录，跨重启续用）；重启后原样恢复。
  */
 
 import { mkdirSync } from "node:fs";
@@ -26,6 +27,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPiRuntime, createPiRuntimeFromConfig } from "@treeai/runtime-pi";
 import { TreeRepository } from "@treeai/persistence";
+import { JsonlEventJournal } from "@treeai/event-journal";
 import type { PiRuntime } from "@treeai/contracts";
 import {
   PI_API_KEY_ENV,
@@ -66,6 +68,10 @@ async function main(): Promise<void> {
   mkdirSync(workspace, { recursive: true });
 
   const repository = TreeRepository.open({ path: join(options.dataDir, "treeai.db") });
+  // P1 审计 journal：数据目录内的单一追加式 JSONL（与 treeai.db 同级，
+  // 跨重启复用；服务侧生成 journal eventId，无 per-instance 撞号问题）。
+  // 构造 service 时自动执行 host-crash 恢复（service.journalRecovery）。
+  const journal = await JsonlEventJournal.open(join(options.dataDir, "journal.jsonl"));
   let runtime: PiRuntime;
   if (piSetup === null) {
     runtime = createPiRuntimeFromConfig({
@@ -86,6 +92,7 @@ async function main(): Promise<void> {
     model: { providerId: options.providerId, modelId: options.modelId },
     sessionDir: sessionsDir,
     cwd: workspace,
+    journal,
   });
 
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
@@ -96,6 +103,7 @@ async function main(): Promise<void> {
     `treeai-studio: listening http://127.0.0.1:${port}`,
     `treeai-studio: driver=${options.driver} model=${options.providerId}/${options.modelId}`,
     `treeai-studio: data=${options.dataDir} (schema v${String(repository.schemaVersion)})`,
+    `treeai-studio: journal=${journal.openReport.path} (${String(journal.openReport.eventsLoaded)} events loaded)`,
   ];
   if (piSetup !== null) {
     banner.push(`treeai-studio: pi agent-dir=${piSetup.agentDir} (controlled; ~/.pi is not used)`);
@@ -112,6 +120,8 @@ async function main(): Promise<void> {
       try {
         await service.dispose();
         repository.close();
+        // journal close 排空内部写入队列后落盘（追加式文件，重启续用）。
+        await journal.close();
         await studio.close();
       } finally {
         process.exit(0);

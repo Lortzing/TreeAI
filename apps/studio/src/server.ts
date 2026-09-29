@@ -1,8 +1,8 @@
 /**
  * Studio HTTP 面（node:http，零新增依赖）。
  *
- * JSON API + 静态页面（public/）。所有写路径返回更新后的完整树状态，
- * 让最小 UI 无需本地状态同步逻辑。
+ * JSON API + 静态页面（public/）+ SSE 事件流（P1）。所有写路径返回更新后
+ * 的完整树状态，让最小 UI 无需本地状态同步逻辑。
  *
  * 错误映射：EntityNotFoundError → 404；InvalidArgumentError/
  * ConstraintViolationError → 400；RunNotActiveError/ReturnConflictError
@@ -13,6 +13,25 @@
  * POST /api/trees/:id/return 幂等语义：新建 Return → 201；同
  * idempotencyKey 同内容重放 → 200（同一 returnTurn，零新写入）；同键
  * 不同内容 → 409 return-conflict。两种成功均返回 {returnTurn, state}。
+ *
+ * GET /api/trees/:id/events —— SSE（text/event-stream, no-store）：
+ * 连接即发送 snapshot 事件（当前 getTreeDiagnostics 投影），随后转发该
+ * 树的安全 UI 事件（按事件类型命名）；~15s 心跳注释行；客户端断开
+ * （req close）即退订。未知树 → 404 JSON（切流之前）。事件词汇表
+ * （payload 即 service.ts StudioEvent）：
+ *   - snapshot        {…TreeDiagnostics}
+ *   - run-started     {treeId, branchId, episodeId, runId}
+ *   - message-delta   {treeId, runId, delta}
+ *   - abort-requested {treeId, runId}
+ *   - run-terminal    {treeId, runId, state, failure|null}
+ *   - tool-activity   {treeId, runId, tool|null, phase}
+ * SSE 是瞬态推送：连接只过滤转发，不落任何状态；/state 与 /diagnostics
+ * 仍是权威读模型。
+ *
+ * GET /api/trees/:id/journal?limit=N —— journal 保守投影（P1 来源抽屉）：
+ * {events: [{eventId, runId, seq, occurredAt, type, summary}]}，按写入顺序
+ * （最新在后）；limit 缺省 50、须为 1..500 的整数（否则 400）。未知树 →
+ * 404。未注入 journal → 空列表（诚实空态）。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -25,9 +44,12 @@ import {
   InvalidArgumentError,
   PersistenceError,
 } from "@treeai/persistence";
-import { RunNotActiveError, ReturnConflictError, type TreeStudioService, type TreeState } from "./service.ts";
+import { RunNotActiveError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
+const SSE_HEARTBEAT_MS = 15_000;
+const JOURNAL_DEFAULT_LIMIT = 50;
+const JOURNAL_MAX_LIMIT = 500;
 
 const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/": { file: "index.html", type: "text/html; charset=utf-8" },
@@ -144,6 +166,8 @@ function asTreeId(raw: string): TreeId {
 
 export function createStudioServer(options: StudioServerOptions): StudioServer {
   const { service, staticDir } = options;
+  /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
+  const sseResponses = new Set<ServerResponse>();
 
   async function serveStatic(res: ServerResponse, pathname: string): Promise<boolean> {
     const entry = STATIC_FILES[pathname];
@@ -163,18 +187,57 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
     }
   }
 
+  /**
+   * SSE 流：snapshot（连接时的诊断面投影）→ 按事件类型转发该树的安全
+   * UI 事件；~15s 心跳注释；客户端断开即退订。headers 写出后不再抛错
+   * （写失败静默——客户端已断开时 write 不 throw）。
+   */
+  function startSseStream(req: IncomingMessage, res: ServerResponse, treeId: TreeId, snapshot: TreeDiagnostics): void {
+    res.writeHead(200, {
+      "content-type": "text/event-stream; charset=utf-8",
+      "cache-control": "no-store",
+      connection: "keep-alive",
+    });
+    res.write(": connected\n\n");
+    const writeEvent = (name: string, data: unknown): void => {
+      res.write(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+    writeEvent("snapshot", snapshot);
+    const unsubscribe = service.subscribeStudioEvents((event) => {
+      if (event.treeId !== treeId) return;
+      writeEvent(event.type, event);
+    });
+    const heartbeat = setInterval(() => {
+      res.write(": heartbeat\n\n");
+    }, SSE_HEARTBEAT_MS);
+    heartbeat.unref?.();
+    sseResponses.add(res);
+    let closed = false;
+    const cleanup = (): void => {
+      if (closed) return;
+      closed = true;
+      clearInterval(heartbeat);
+      unsubscribe();
+      sseResponses.delete(res);
+      res.end();
+    };
+    req.on("close", cleanup);
+    res.on("close", cleanup);
+  }
+
   const server = createServer((req, res) => {
     void handle(req, res);
   });
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    let pathname = "/";
+    let url: URL;
     try {
-      pathname = new URL(req.url ?? "/", "http://localhost").pathname;
+      url = new URL(req.url ?? "/", "http://localhost");
     } catch {
       sendJson(res, 400, { error: { code: "invalid-argument", message: "unparseable request URL" } });
       return;
     }
+    const pathname = url.pathname;
     const method = req.method ?? "GET";
 
     try {
@@ -207,7 +270,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         return;
       }
 
-      const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics))?$/.exec(pathname);
+      const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics|events|journal))?$/.exec(pathname);
       if (treeMatch !== null) {
         const treeId = asTreeId(treeMatch[1]!);
         const action = treeMatch[2];
@@ -223,6 +286,35 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         if (action === "diagnostics" && method === "GET") {
           // A5 诊断面：安全投影（无 session 引用/详情/cause/路径；策略决策如实未观测）。
           sendJson(res, 200, service.getTreeDiagnostics(treeId));
+          return;
+        }
+        if (action === "events") {
+          // P1 SSE 事件流：先校验树（404 JSON 在切流之前），再切换到流式响应。
+          if (method !== "GET") {
+            sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+            return;
+          }
+          const snapshot = service.getTreeDiagnostics(treeId); // EntityNotFoundError → 404
+          startSseStream(req, res, treeId, snapshot);
+          return;
+        }
+        if (action === "journal") {
+          if (method !== "GET") {
+            sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+            return;
+          }
+          const limitRaw = url.searchParams.get("limit");
+          let limit = JOURNAL_DEFAULT_LIMIT;
+          if (limitRaw !== null) {
+            const parsed = Number(limitRaw);
+            if (!Number.isInteger(parsed) || parsed < 1 || parsed > JOURNAL_MAX_LIMIT) {
+              throw new InvalidArgumentError(
+                `limit must be an integer between 1 and ${String(JOURNAL_MAX_LIMIT)} (got '${limitRaw}')`,
+              );
+            }
+            limit = parsed;
+          }
+          sendJson(res, 200, { events: service.getTreeJournal(treeId, limit) });
           return;
         }
         if (action === "prompt" && method === "POST") {
@@ -320,8 +412,16 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
     },
     close(): Promise<void> {
       return new Promise((resolve, reject) => {
-        // fetch 客户端的 keep-alive 空闲连接会拖延 close()；主动关闭空闲连接。
+        // fetch 客户端的 keep-alive 空闲连接会拖延 close()；打开中的 SSE 流
+        // 是长连接（永远不空闲），且客户端单方面 abort 时（undici 保持
+        // socket 复用）服务端甚至观察不到断开——必须主动终结 SSE 响应并
+        // 兜底关闭全部连接，close() 才能及时完成。
+        for (const res of sseResponses) {
+          res.end();
+        }
+        sseResponses.clear();
         server.closeIdleConnections();
+        server.closeAllConnections();
         server.close((err) => {
           if (err !== undefined && err !== null) reject(err);
           else resolve();

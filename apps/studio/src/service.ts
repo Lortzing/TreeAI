@@ -40,21 +40,55 @@
  *   调用 runtime.abort()，由 prompt 的收敛路径把 run 落库为 aborted
  *   （user-abort 绝不改写为 failed）。
  *
- * 已知范围（诚实声明）：不做流式 UI 推送（prompt 请求同步等待收敛；
- *   UI 在 prompt 在途时轮询诊断面）、并发 prompt 以冲突拒绝不排队
- *   （TypeError → 409，单用户语义）、不做 event-journal 集成
- *   （D2 审计面留待后续接入）。
+ * 事件面（P1）：subscribeStudioEvents 暴露安全 UI 事件
+ *   （run-started / message-delta / abort-requested / run-terminal /
+ *   tool-activity；SSE 端点见 server.ts）。message-delta 只携带文本增量；
+ *   tool-activity 只投影工具名与阶段（never 参数/路径/命令——诊断面
+ *   no-leak 纪律同样约束事件面）。事件是瞬态推送；/state 与诊断面仍是
+ *   权威读模型（UI 在 run-terminal 后整树刷新）。
+ *
+ * Journal 面（P1）：可选注入 EventJournal（宿主负责 open/close/重启
+ *   恢复之外的写入均由本服务承担；本服务在构造时自动执行 host-crash
+ *   恢复，见 journalRecovery）。注入后记录 run 生命周期事件：会话对准
+ *   阶段的 session.* / tree.navigated 事件缓冲后归属该 prompt 创建的
+ *   run（域归属由消费方补齐——契约语义），运行期事件实时归属在途 run，
+ *   外加服务侧的 queued→running 显式迁移与 abort 请求记录。eventId 由
+ *   journal 生成（evt-<uuid>）而非沿用 Pi 的 per-instance
+ *   pi-runtime-<seq>——单一 journal 文件跨进程重启复用，per-instance
+ *   序号会撞 journal 全局 eventId 唯一性（D2 runtime-smoke 已知发现的
+ *   规避）；原始事件 id 经 evidence（source "pi-runtime"）保留审计链。
+ *   terminal 状态不做服务侧显式迁移（agent.settled / runtime.error 的
+ *   派生迁移已与 DB 收敛一致；事后补显式迁移只会产生 out-of-sync
+ *   投影异常）。journal 写失败不阻断产品路径（DB 是事实源），静默
+ *   丢弃并继续。getTreeJournal 提供按树过滤的保守投影
+ *   （{eventId, runId, seq, occurredAt, type, summary}，summary 为
+ *   白名单字段构造的人类可读串，绝不透出原始 payload）。
+ *   A4 缺失 session 降级：BranchView.sessionAvailability 以续聊点引用
+ *   做实时文件存在性探针（只探存在、绝不读内容）修正 DB 缓存评估后
+ *   给出——missing-file 且文件已恢复 → available；DB 因其他原因降级
+ *   （version-mismatch/corrupt）→ 维持 unavailable；树始终可读（DB 是
+ *   事实源），续聊 fail-closed。
+ *
+ * 已知范围（诚实声明）：并发 prompt 以冲突拒绝不排队（TypeError → 409，
+ *   单用户语义）；Studio 离线驱动无工具事件（tool-activity 仅真实
+ *   Pi 驱动会出现）；非 prompt 期间的运行时事件（如 switchBranch 的
+ *   导航）无 run 可归属，不进 journal。
  */
 
+import { existsSync } from "node:fs";
 import type {
   Branch,
   BranchId,
   BranchOrigin,
   EpisodeId,
+  EventId,
   Forest,
   IsoTimestamp,
+  JsonRecord,
+  JsonValue,
   PiModelSelector,
   PiRuntime,
+  PiRuntimeEvent,
   ReturnTargetAnchor,
   Run,
   RunId,
@@ -63,6 +97,8 @@ import type {
   Tree,
   TreeAIError,
   TreeAIErrorCode,
+  TreeAIEvent,
+  TreeAIEventType,
   TreeId,
   Turn,
   TurnId,
@@ -74,15 +110,24 @@ import {
   InvalidArgumentError,
   TreeRepository,
 } from "@treeai/persistence";
+import type { EventJournal, RecoveryReport } from "@treeai/event-journal";
+import { EventRecorder, parseSerializedError, piRuntimeEventKindToType } from "@treeai/event-journal";
 
 /* ------------------------------------------------------------------ */
 /* 读模型（服务 → HTTP/UI 的形状）                                      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * 分支的读模型。sessionAvailability（A4）：该分支续聊点引用的会话可用性
+ * 评估——latest run 的 session 引用（无 run 的分支用 origin 锚点 run 的
+ * 引用），以实时文件存在性探针修正 DB 缓存（见 #probeSessionAvailability；
+ * 只探存在、绝不读内容）。null = 该分支尚无会话（Trunk 从未 prompt）。
+ */
 export interface BranchView {
   readonly branch: Branch;
   readonly origin: BranchOrigin | null;
   readonly originStatus: AnchorStatus | null;
+  readonly sessionAvailability: "available" | "unavailable" | null;
   readonly turns: readonly Turn[];
 }
 
@@ -172,6 +217,71 @@ export interface TreeDiagnostics {
   readonly policyDecisions: PolicyDiagnostics;
 }
 
+/* ------------------------------------------------------------------ */
+/* 事件面（P1：安全 UI 事件；SSE 端点转发，见 server.ts）              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Studio UI 事件（瞬态推送）。安全边界：message-delta 只含文本增量；
+ * tool-activity 只投影工具名与阶段——参数/路径/命令绝不进入事件面
+ * （诊断面的 no-leak 纪律同样约束这里）。事件不是权威读模型：
+ * run-terminal 后 UI 必须从 /state 整树刷新。
+ */
+export type StudioEvent =
+  | {
+      readonly type: "run-started";
+      readonly treeId: TreeId;
+      readonly branchId: BranchId;
+      readonly episodeId: EpisodeId;
+      readonly runId: RunId;
+    }
+  | {
+      readonly type: "message-delta";
+      readonly treeId: TreeId;
+      readonly runId: RunId;
+      readonly delta: string;
+    }
+  | {
+      readonly type: "abort-requested";
+      readonly treeId: TreeId;
+      readonly runId: RunId;
+    }
+  | {
+      readonly type: "run-terminal";
+      readonly treeId: TreeId;
+      readonly runId: RunId;
+      readonly state: "succeeded" | "failed" | "aborted";
+      readonly failure: { readonly code: TreeAIErrorCode; readonly message: string } | null;
+    }
+  | {
+      readonly type: "tool-activity";
+      readonly treeId: TreeId;
+      readonly runId: RunId;
+      /** 工具名（runtime-pi 归一化白名单字段）；缺失时为 null。绝不携带参数。 */
+      readonly tool: string | null;
+      readonly phase: "started" | "finished";
+    };
+
+export type StudioEventListener = (event: StudioEvent) => void;
+
+/* ------------------------------------------------------------------ */
+/* Journal 读模型（P1：按树过滤的保守投影）                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * journal 事件的安全投影。summary 由白名单字段构造（工具名/状态码/
+ * 角色等非敏感判别字段），绝不透出原始 payload（参数、路径、命令、
+ * 消息正文、session 引用一律不进入投影）。
+ */
+export interface JournalEventView {
+  readonly eventId: EventId;
+  readonly runId: RunId;
+  readonly seq: number;
+  readonly occurredAt: IsoTimestamp;
+  readonly type: TreeAIEventType;
+  readonly summary: string;
+}
+
 /** abort 目标不是该树当前在途的 run（已终态/无在途/另有在途）→ 操作冲突（409）。 */
 export class RunNotActiveError extends Error {
   constructor(runId: RunId, state: RunState) {
@@ -216,6 +326,16 @@ export interface TreeStudioServiceOptions {
   readonly sessionDir: string;
   /** 工具执行工作目录（trusted-local 工作区）。 */
   readonly cwd: string;
+  /**
+   * 可选审计 journal（P1）：注入后服务记录 run 生命周期事件并暴露
+   * getTreeJournal。选择注入 EventJournal（而非 recorder）作为缝：
+   * journal 是存储/生命周期对象（open/close 由宿主拥有），recorder 是
+   * 无状态写入糖——服务内部自建 recorder。缺省不注入时零 journal 行为
+   * （既有测试面不变）。注入方注意：journal 文件应跨重启复用（eventId
+   * 由 journal 生成，无 per-instance 撞号问题）；close 由宿主负责
+   * （close 会排空内部写入队列，保证落盘）。
+   */
+  readonly journal?: EventJournal;
 }
 
 interface Cursor {
@@ -245,6 +365,91 @@ function toTreeAIError(err: unknown): TreeAIError {
   return { code: "unknown", message: err instanceof Error ? err.message : String(err) };
 }
 
+/** 安全读取事件 payload 上的字符串字段（缺失/非字符串 → undefined）。 */
+function payloadString(payload: JsonValue, key: string): string | undefined {
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return undefined;
+  const value = (payload as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+/**
+ * journal 事件的保守 summary：只从白名单字段构造（状态/角色/工具名/
+ * 错误码等非敏感判别字段），绝不透出原始 payload（参数、路径、命令、
+ * 消息正文、session 引用）。未知类型回退为类型字符串本身。
+ */
+export function summarizeJournalEvent(event: TreeAIEvent): string {
+  const payload = event.payload;
+  const str = (key: string): string | undefined => payloadString(payload, key);
+  switch (event.type) {
+    case "run.state-changed": {
+      const from = str("from");
+      const to = str("to");
+      return from === undefined || to === undefined
+        ? "run state change recorded"
+        : `run state changed: ${from} → ${to}`;
+    }
+    case "run.abort-requested":
+      return "abort requested";
+    case "run.steer-enqueued":
+      return "steer input enqueued";
+    case "agent.started":
+      return "agent run started";
+    case "agent.settled":
+      return `agent run settled${str("status") === undefined ? "" : ` (${str("status")})`}`;
+    case "turn.started":
+      return "turn started";
+    case "turn.completed":
+      return `turn completed${str("stopReason") === undefined ? "" : ` (stop: ${str("stopReason")})`}`;
+    case "message.started":
+      return `message started${str("role") === undefined ? "" : ` (${str("role")})`}`;
+    case "message.updated": {
+      const delta = str("delta");
+      return delta === undefined ? "message update received" : `message delta received (${delta.length} chars)`;
+    }
+    case "message.completed": {
+      const role = str("role");
+      const stop = str("stopReason");
+      const roleNote = role === undefined ? "" : ` (${role})`;
+      const stopNote = stop === undefined ? "" : `, stop: ${stop}`;
+      return `message completed${roleNote}${stopNote}`;
+    }
+    case "tool.execution.started":
+      return `tool execution started: ${str("toolName") ?? "unknown tool"}`;
+    case "tool.execution.finished": {
+      const name = str("toolName") ?? "unknown tool";
+      return `tool execution finished: ${name}${payload["isError"] === true ? " (error)" : ""}`;
+    }
+    case "tool.decision": {
+      const tool = str("toolName");
+      const decision = str("decision");
+      const toolNote = tool === undefined ? "" : ` on ${tool}`;
+      return `tool policy decision${toolNote}${decision === undefined ? "" : `: ${decision}`}`;
+    }
+    case "session.created":
+      return "session created";
+    case "session.restored":
+      return "session restored";
+    case "session.replaced":
+      return "session replaced";
+    case "tree.navigated":
+      return "session tree navigation";
+    case "runtime.error": {
+      // 复用投影器的序列化错误解析（code/message 已由上游脱敏；details 不进 summary）。
+      const error = parseSerializedError(payload, "error");
+      return error === null ? "runtime error" : `runtime error ${error.code}: ${error.message}`;
+    }
+    case "runtime.recovered": {
+      const cause = str("cause");
+      const resolved = str("resolvedTo");
+      return `run recovered after ${cause ?? "host exit"}${resolved === undefined ? "" : ` (converged to ${resolved})`}`;
+    }
+    case "pi.unknown":
+      return `unknown runtime event${str("rawKind") === undefined ? "" : ` (${str("rawKind")})`}`;
+    default:
+      return String(event.type);
+  }
+}
+
 /** 把未送达的 return 拼进下一次 prompt 文本（送入 Pi 上下文的载体）。 */
 export function composePromptText(pendingReturns: readonly Turn[], text: string): string {
   if (pendingReturns.length === 0) return text;
@@ -266,6 +471,19 @@ export class TreeStudioService {
   #promptInFlight: boolean = false;
   /** 当前在途的 run（run 落库并置 running 后才有值；收敛即清除）。 */
   #activeRun: ActiveRunRecord | null = null;
+  /** prompt 会话对准阶段（activeRun 尚未建立）缓冲的运行时事件，待 run 建立后归属。 */
+  #promptPrelude: PiRuntimeEvent[] | null = null;
+  /** journal 写入（缺省 null = 不记录）。 */
+  readonly #journal: EventJournal | null;
+  readonly #recorder: EventRecorder | null;
+  /** journal 写入串行链：保序 + prompt 收敛时 await（确定性落盘供测试断言）。 */
+  #journalTail: Promise<void> = Promise.resolve();
+  /** 构造时的 journal host-crash 恢复（未注入 journal 时为 null；拒绝不挂进程）。 */
+  readonly journalRecovery: Promise<RecoveryReport> | null;
+  /** UI 事件监听者（SSE 端点订阅）。 */
+  readonly #studioListeners = new Set<StudioEventListener>();
+  /** 运行时订阅的退订函数（dispose 时释放）。 */
+  readonly #unsubscribeRuntime: () => void;
 
   constructor(options: TreeStudioServiceOptions) {
     this.repository = options.repository;
@@ -273,6 +491,22 @@ export class TreeStudioService {
     this.model = options.model;
     this.sessionDir = options.sessionDir;
     this.cwd = options.cwd;
+    this.#journal = options.journal ?? null;
+    this.#recorder = this.#journal === null ? null : new EventRecorder(this.#journal);
+    if (this.#journal !== null) {
+      // I6 重启恢复（journal 面）：构造时把 journal 中仍非终态的 run 收敛为
+      // failed（host-crash 语义，与下方 DB 恢复一致）。失败不挂进程；测试
+      // 与宿主可经 journalRecovery await 确定性观测。
+      const recovery = this.#journal.recoverInterruptedRuns("host-crash");
+      recovery.catch(() => undefined);
+      this.journalRecovery = recovery;
+    } else {
+      this.journalRecovery = null;
+    }
+    // 事件面：订阅运行时事件（会话替换后保持有效——契约保证）。
+    this.#unsubscribeRuntime = this.runtime.subscribe((event) => {
+      this.#handleRuntimeEvent(event);
+    });
     this.recoverInterruptedRuns();
   }
 
@@ -286,6 +520,126 @@ export class TreeStudioService {
       message: "host process interrupted before the run reached a terminal state",
       details: { hostInterrupted: true },
     });
+  }
+
+  /* ------------------------------ 事件面 / journal（P1） ------------------------------ */
+
+  /**
+   * 订阅安全 UI 事件（run-started / message-delta / abort-requested /
+   * run-terminal / tool-activity）。可多订阅；返回退订函数（幂等）。
+   * dispose 后不再推送。
+   */
+  subscribeStudioEvents(listener: StudioEventListener): () => void {
+    this.#studioListeners.add(listener);
+    return () => {
+      this.#studioListeners.delete(listener);
+    };
+  }
+
+  #emitStudio(event: StudioEvent): void {
+    for (const listener of [...this.#studioListeners]) {
+      try {
+        listener(event);
+      } catch {
+        // 监听器异常不得影响服务（与 runtime 的监听纪律一致）。
+      }
+    }
+  }
+
+  /**
+   * 运行时事件入口：journal 归属（在途 run 实时归属；会话对准阶段缓冲）
+   * + 事件面投影（message-delta / tool-activity，仅在途 run）。
+   * 绝不向事件面搬运 payload 原文（工具参数/路径/命令不出境）。
+   */
+  #handleRuntimeEvent(event: PiRuntimeEvent): void {
+    const active = this.#activeRun;
+    if (active !== null) {
+      this.#journalRuntimeEvent(active.runId, event);
+    } else if (this.#promptPrelude !== null) {
+      this.#promptPrelude.push(event);
+    }
+    if (active === null) return;
+    switch (event.kind) {
+      case "message.updated": {
+        const delta = payloadString(event.payload, "delta");
+        if (delta !== undefined) {
+          this.#emitStudio({ type: "message-delta", treeId: active.treeId, runId: active.runId, delta });
+        }
+        return;
+      }
+      case "tool.execution.started":
+      case "tool.execution.finished": {
+        this.#emitStudio({
+          type: "tool-activity",
+          treeId: active.treeId,
+          runId: active.runId,
+          tool: payloadString(event.payload, "toolName") ?? null,
+          phase: event.kind === "tool.execution.started" ? "started" : "finished",
+        });
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  /**
+   * 归一化运行时事件 → journal 追加（保序串行链）。
+   * eventId 由 journal 生成（evt-<uuid>）：journal 文件跨重启复用，而
+   * runtime 的 per-instance pi-runtime-<seq> 会撞 journal 全局 eventId
+   * 唯一性；原始事件 id 经 evidence 保留审计链。runtime.error 做载荷
+   * 形状适配（顶层 {code,message} → 投影器期望的 {error:{code,message}}，
+   * D2 runtime-smoke 集成发现的同一适配）。写失败静默丢弃（DB 是事实源）。
+   */
+  #journalRuntimeEvent(runId: RunId, event: PiRuntimeEvent): void {
+    const recorder = this.#recorder;
+    if (recorder === null) return;
+    const type = piRuntimeEventKindToType(event.kind);
+    let payload: JsonRecord;
+    if (event.kind === "runtime.error") {
+      payload = {
+        error: {
+          code: payloadString(event.payload, "code") ?? "unknown",
+          message: payloadString(event.payload, "message") ?? "runtime error",
+        },
+      };
+    } else if (event.payload !== null && typeof event.payload === "object" && !Array.isArray(event.payload)) {
+      payload = { ...(event.payload as JsonRecord) };
+    } else {
+      payload = { value: event.payload };
+    }
+    this.#journalTail = this.#journalTail.then(() =>
+      recorder
+        .recordCustom(runId, type, payload, {
+          occurredAt: event.occurredAt,
+          evidence: [{ source: "pi-runtime", refId: event.eventId }],
+        })
+        .then(() => undefined, () => undefined),
+    );
+  }
+
+  /**
+   * journal 记录服务侧显式状态迁移（queued→running；agent.started 随后为幂等 no-op）。
+   * occurredAt 取**调用时刻**而非 append 时刻：append 在异步临界区内执行，
+   * 可能晚于随后运行时事件的发射时间戳，破坏 journal 插入序的时序单调性。
+   */
+  #journalStateChange(runId: RunId, from: RunState, to: RunState): void {
+    const recorder = this.#recorder;
+    if (recorder === null) return;
+    const occurredAt = new Date().toISOString();
+    this.#journalTail = this.#journalTail.then(() =>
+      recorder.recordStateChange(runId, from, to, { occurredAt }).then(() => undefined, () => undefined),
+    );
+  }
+
+  /** journal 记录服务侧中止请求（运行时自身的事件随后为幂等 no-op；调用时刻戳）。 */
+  #journalAbortRequested(runId: RunId): void {
+    const recorder = this.#recorder;
+    if (recorder === null) return;
+    const occurredAt = new Date().toISOString();
+    this.#journalTail = this.#journalTail.then(() =>
+      recorder.recordAbortRequested(runId, { occurredAt }).then(() => undefined, () => undefined),
+    );
   }
 
   /* ------------------------------ Forest / Tree ------------------------------ */
@@ -322,6 +676,7 @@ export class TreeStudioService {
         branch,
         origin,
         originStatus: origin === null ? null : this.#anchorStatus(origin),
+        sessionAvailability: this.#branchSessionAvailability(branch),
         turns: this.repository.listTurns(branch.id),
       };
     });
@@ -367,6 +722,52 @@ export class TreeStudioService {
     if (anchorTurn.runId === null) return "changed";
     const run = this.repository.findRun(anchorTurn.runId);
     return run === null || run.session.availability.status === "unavailable" ? "unavailable" : "available";
+  }
+
+  /**
+   * 分支续聊点的会话引用（只读推导；与 #resolveContinuation 同源但不抛错，
+   * 供 A4 可用性展示用）：latest run 的引用；无 run 的分支用 origin 锚点
+   * run 的引用 + anchorEntryId。返回 null = 尚无会话（或锚点退化不可读）。
+   */
+  #continuationReference(branch: Branch): SessionReference | null {
+    const episodes = this.repository.listEpisodes(branch.id);
+    let latestRun: Run | null = null;
+    for (const episode of episodes) {
+      const runs = this.repository.listRuns(episode.id);
+      if (runs.length > 0) latestRun = runs[runs.length - 1]!;
+    }
+    if (latestRun !== null) return latestRun.session;
+    const origin = this.repository.findBranchOrigin(branch.id);
+    if (origin === null) return null;
+    const anchorTurn = this.repository.findTurn(origin.anchorTurnId);
+    if (anchorTurn === null || anchorTurn.runId === null) return null;
+    const anchorRun = this.repository.findRun(anchorTurn.runId);
+    if (anchorRun === null) return null;
+    return { ...anchorRun.session, entryId: origin.anchorEntryId };
+  }
+
+  /**
+   * A4 会话可用性评估：以实时文件存在性探针（只探存在，**绝不读取
+   * session 内容**——与 persistence 默认探针同纪律）修正 DB 缓存评估：
+   * - DB available 且文件在 → available；DB available 但文件缺 → unavailable；
+   * - DB 因 missing-file 降级且文件已恢复 → available（降级可修复）；
+   * - DB 因其他原因（version-mismatch/corrupt）降级 → 维持 unavailable
+   *   （存在性探针看不见这些原因，不谎报恢复）；
+   * - 内存会话（无 sessionFile）→ unavailable（不可恢复）。
+   */
+  #probeSessionAvailability(reference: SessionReference): "available" | "unavailable" {
+    if (reference.sessionFile === "") return "unavailable";
+    if (reference.availability.status === "available") {
+      return existsSync(reference.sessionFile) ? "available" : "unavailable";
+    }
+    return reference.availability.reason === "missing-file" && existsSync(reference.sessionFile)
+      ? "available"
+      : "unavailable";
+  }
+
+  #branchSessionAvailability(branch: Branch): "available" | "unavailable" | null {
+    const reference = this.#continuationReference(branch);
+    return reference === null ? null : this.#probeSessionAvailability(reference);
   }
 
 
@@ -454,6 +855,14 @@ export class TreeStudioService {
    * 中止收敛：prompt 被中止（runtime TreeAIError code "user-abort"）时，
    * run 以单事务 running → aborting → aborted 收敛（run-state I4），
    * 绝不改写为 failed；其他失败仍按既有语义收敛 failed 并记录 failure。
+   *
+   * 事件面（P1）：run 落库后推送 run-started；收敛（成功/失败/中止）推送
+   * run-terminal。会话对准失败（如 session-corrupt）发生在 run 创建之前
+   * ——无部分写入，也无事件（HTTP 错误与 sessionAvailability 展示降级）。
+   *
+   * Journal 面（P1，注入 journal 时）：对准阶段事件（session.* /
+   * tree.navigated）缓冲后归属本次创建的 run；run 落库记录显式
+   * queued→running；运行期事件实时归属。收敛由运行时事件派生（见文件头）。
    */
   async prompt(treeId: TreeId, branchId: BranchId, text: string): Promise<PromptOutcome> {
     if (typeof text !== "string" || text.trim().length === 0) {
@@ -468,6 +877,8 @@ export class TreeStudioService {
       throw new TypeError("a prompt is already in flight on this service; wait for it to settle or abort it first");
     }
     this.#promptInFlight = true;
+    const prelude: PiRuntimeEvent[] = [];
+    this.#promptPrelude = prelude;
     try {
       const continuation = this.#resolveContinuation(branch);
       const preRef = await this.#ensureSessionAt(tree.id, branch.id, continuation);
@@ -488,6 +899,19 @@ export class TreeStudioService {
         runId: run.id,
         abortRequested: false,
       };
+      this.#promptPrelude = null;
+      // journal：对准阶段事件归属本 run + 显式 queued→running（域归属在此补齐）。
+      for (const event of prelude) {
+        this.#journalRuntimeEvent(run.id, event);
+      }
+      this.#journalStateChange(run.id, "queued", "running");
+      this.#emitStudio({
+        type: "run-started",
+        treeId: tree.id,
+        branchId: branch.id,
+        episodeId: episode.id,
+        runId: run.id,
+      });
 
       let result: Awaited<ReturnType<PiRuntime["prompt"]>>;
       try {
@@ -502,6 +926,7 @@ export class TreeStudioService {
             this.repository.updateRunState(run.id, "aborting");
             this.repository.updateRunState(run.id, "aborted");
           });
+          this.#emitStudio({ type: "run-terminal", treeId: tree.id, runId: run.id, state: "aborted", failure: null });
           if (record !== null && record.abortRequested && preRef.entryId !== "") {
             // 会话叶指针回位到本次 prompt 的续聊点（append-only 树不删条目），
             // 保证中止后同进程续聊与重启后语义一致；尽力而为，失败时清空
@@ -514,6 +939,13 @@ export class TreeStudioService {
           }
         } else {
           this.repository.updateRunState(run.id, "failed", { failure: error });
+          this.#emitStudio({
+            type: "run-terminal",
+            treeId: tree.id,
+            runId: run.id,
+            state: "failed",
+            failure: { code: error.code, message: error.message },
+          });
         }
         throw err;
       }
@@ -546,6 +978,7 @@ export class TreeStudioService {
       });
 
       this.#setCursor(tree.id, branch.id, result.reference);
+      this.#emitStudio({ type: "run-terminal", treeId: tree.id, runId: run.id, state: "succeeded", failure: null });
       return {
         run: this.repository.getRun(run.id),
         userTurn: outcome.userTurn,
@@ -553,7 +986,10 @@ export class TreeStudioService {
         deliveredReturns: pendingReturns.length,
       };
     } finally {
+      this.#promptPrelude = null;
       this.#promptInFlight = false;
+      // journal 落盘排空（确定性：prompt settle 时该 run 的全部 journal 事件已写入）。
+      await this.#journalTail;
     }
   }
 
@@ -566,6 +1002,8 @@ export class TreeStudioService {
    * 在途 prompt 随后以 TreeAIError（code "user-abort"）收敛，run 落库为
    * aborted（见 prompt 的收敛路径）。幂等；若 prompt 已先一步 settle，
    * 本次请求不产生效果（不撒谎、不改写结果）。
+   *
+   * 事件面：校验通过即推送 abort-requested（诊断面同步可见 aborting）。
    */
   async abort(treeId: TreeId, runId: RunId): Promise<void> {
     const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
@@ -581,6 +1019,8 @@ export class TreeStudioService {
     }
     // 同步置位：abort() 返回前，诊断面即可观测到 aborting。
     active.abortRequested = true;
+    this.#emitStudio({ type: "abort-requested", treeId: tree.id, runId: run.id });
+    this.#journalAbortRequested(run.id);
     await this.runtime.abort();
   }
 
@@ -629,6 +1069,48 @@ export class TreeStudioService {
       runs,
       policyDecisions: { observed: false, reason: NO_POLICY_DECISIONS_REASON },
     };
+  }
+
+  /**
+   * 一棵树的 journal 保守投影（P1 来源抽屉的数据面）：该树全部 run 的
+   * journal 事件，按写入顺序（全局时序）排列、最新在后；limit 截尾保留
+   * 最新 N 条（默认 50，钳制 1..500）。未知树 → EntityNotFoundError
+   * （HTTP 404）。未注入 journal 或该树无事件 → 空数组。summary 为
+   * 白名单构造的人类可读串（见 summarizeJournalEvent），绝不透出
+   * 原始 payload。
+   */
+  getTreeJournal(treeId: TreeId, limit = 50): readonly JournalEventView[] {
+    const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
+    const journal = this.#journal;
+    if (journal === null) return [];
+    const runIds = this.#treeRunIds(tree.id);
+    if (runIds.size === 0) return [];
+    const bounded = Math.min(Math.max(Math.floor(limit), 1), 500);
+    const events = journal
+      .listEvents()
+      .filter((event) => runIds.has(event.runId as string))
+      .slice(-bounded);
+    return events.map((event) => ({
+      eventId: event.eventId,
+      runId: event.runId,
+      seq: event.seq,
+      occurredAt: event.occurredAt,
+      type: event.type,
+      summary: summarizeJournalEvent(event),
+    }));
+  }
+
+  /** 一棵树全部 run 的 id 集合（journal 过滤用）。 */
+  #treeRunIds(treeId: TreeId): Set<string> {
+    const runIds = new Set<string>();
+    for (const branch of this.repository.listBranches(treeId)) {
+      for (const episode of this.repository.listEpisodes(branch.id)) {
+        for (const run of this.repository.listRuns(episode.id)) {
+          runIds.add(run.id as string);
+        }
+      }
+    }
+    return runIds;
   }
 
   /* ------------------------------ 分支 ------------------------------ */
@@ -836,9 +1318,18 @@ export class TreeStudioService {
 
   /* ------------------------------ 生命周期 ------------------------------ */
 
+  /**
+   * 释放服务侧资源：退订运行时事件、清空事件监听者、释放 runtime。
+   * journal 的 close 仍由宿主拥有（close 排空内部写入队列，保证剩余
+   * journal 事件落盘）——本方法只尽力等待当前已排队的写入。
+   */
   async dispose(): Promise<void> {
     this.#cursor = null;
     this.#activeRun = null;
+    this.#promptPrelude = null;
     await this.runtime.dispose();
+    this.#unsubscribeRuntime();
+    this.#studioListeners.clear();
+    await this.#journalTail;
   }
 }

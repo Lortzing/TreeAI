@@ -9,10 +9,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node src/index.ts",
-    "test": "npm run typecheck && node --test tests/*.test.ts"
+    "build:deps": "npm run --workspace @treeai/event-journal build:test",
+    "test": "npm run build:deps && npm run typecheck && node --test tests/*.test.ts"
   },
   "dependencies": {
     "@treeai/contracts": "0.1.0",
+    "@treeai/event-journal": "0.0.0",
     "@treeai/persistence": "0.0.0",
     "@treeai/runtime-pi": "0.0.0"
   }

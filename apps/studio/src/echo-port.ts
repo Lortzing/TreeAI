@@ -17,6 +17,16 @@
  * - prompt: agent_start -> turn -> agent_settled, then the promise resolves;
  *   answers are deterministic ECHOES of the user texts visible on the current
  *   branch (this is what proves branch context isolation);
+ * - failure injection (deterministic test hook, documented): a prompt whose
+ *   (composed) text starts with ECHO_FAILURE_PREFIX ("/fail") makes the
+ *   assistant turn end with stopReason "error" and a state errorMessage of
+ *   "simulated upstream failure (500)". The real PiRuntime classifies this via
+ *   the D1-validated message patterns as code "upstream" (the "500" matches
+ *   the upstream pattern), the in-flight prompt rejects, and the run converges
+ *   failed. On this path the driver omits agent_settled (see executeRun) so
+ *   the runtime's runtime.error is the single convergence signal. Note:
+ *   composePromptText may prepend pending returns, so the hook only fires
+ *   when the raw prompt text itself starts with the prefix;
  * - navigateTree: a user-message target moves the leaf to its parent (fork
  *   point); any other target (e.g. an assistant answer entry — the D3 branch
  *   anchor) moves the leaf to the target itself; never creates a new session
@@ -53,6 +63,20 @@ export interface EchoEntry {
 /** Deterministic echo answer from the user texts visible on the branch. */
 function echoAnswer(userTexts: readonly string[]): string {
   return `echo:[${userTexts.join("|")}]`;
+}
+
+/**
+ * Deterministic failure-injection hook: prompt texts starting with this
+ * prefix make the assistant turn fail with an upstream-shaped error
+ * (classified "upstream" by runtime-pi's message patterns — see header).
+ */
+export const ECHO_FAILURE_PREFIX = "/fail";
+
+/** Failure message used by the injection hook (matches the upstream pattern). */
+export const ECHO_FAILURE_MESSAGE = "simulated upstream failure (500)";
+
+function isFailureInjection(text: string): boolean {
+  return text.startsWith(ECHO_FAILURE_PREFIX);
 }
 
 /** Driver session manager: append-only entry tree + JSONL persistence. */
@@ -181,6 +205,7 @@ export class EchoPiSession {
   private active = false;
   private aborted = false;
   private disposed = false;
+  private turnFailed = false;
   private readonly stateRef: { errorMessage?: string } = {};
 
   constructor(
@@ -239,6 +264,7 @@ export class EchoPiSession {
     if (this.active) throw new Error("Agent is already processing");
     this.active = true;
     this.aborted = false;
+    this.turnFailed = false;
     this.stateRef.errorMessage = undefined;
     return new Promise<void>((resolve) => {
       void this.executeRun(text).then(resolve);
@@ -301,7 +327,14 @@ export class EchoPiSession {
       this.emitSyntheticAborted();
     }
     this.emit({ type: "agent_end" }); // dropped by the runtime's normalizer
-    this.emit({ type: "agent_settled" });
+    // On the failure-injection path the driver deliberately omits
+    // agent_settled: the authoritative convergence signals are the runtime's
+    // runtime.error event and the prompt rejection (emitting a status-less
+    // agent_settled first would project the journal run as succeeded and
+    // turn the real failure into a double-terminal anomaly).
+    if (!this.turnFailed) {
+      this.emit({ type: "agent_settled" });
+    }
     this.active = false;
   }
 
@@ -317,6 +350,26 @@ export class EchoPiSession {
     if (this.aborted) {
       this.emitSyntheticAborted();
       this.emit({ type: "turn_end", message: { role: "assistant", stopReason: "aborted" } });
+      return;
+    }
+
+    // Deterministic failure injection (test hook; see module header).
+    if (isFailureInjection(text)) {
+      this.turnFailed = true;
+      this.stateRef.errorMessage = ECHO_FAILURE_MESSAGE;
+      this.emit({
+        type: "message_end",
+        message: { role: "assistant", stopReason: "error", errorMessage: ECHO_FAILURE_MESSAGE },
+      });
+      this.emit({ type: "turn_end", message: { role: "assistant", stopReason: "error" } });
+      this.sessionManager.append({
+        type: "message",
+        role: "assistant",
+        text: "",
+        stopReason: "error",
+        errorMessage: ECHO_FAILURE_MESSAGE,
+      });
+      this.rebuildMessages();
       return;
     }
 

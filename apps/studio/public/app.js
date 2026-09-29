@@ -1,15 +1,25 @@
 /* TreeAI Studio — D3 Core MVP 前端（vanilla JS，无构建步骤）。
  *
- * 范围（诚实声明）：无流式推送（每次操作后整树状态刷新；prompt 在途时
- * 轮询诊断面）、无 Markdown 渲染、无自动摘要。核心交互：
+ * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。核心交互：
  *  - 创建/打开 Tree；
- *  - Trunk/Branch 对话展示；
+ *  - Trunk/Branch 对话展示（P1：prompt 在途时经 SSE 流式占位回显
+ *    message-delta；run-terminal 后以 /state 整树刷新——/state 是权威
+ *    读模型，流式回显是瞬态展示）；
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
  *  - 分支续聊；切回 Trunk；
  *  - 编辑并显式提交 Return 到 Trunk；
- *  - 诊断/状态条：当前 run 状态、失败码与消息、在途时 Abort、
- *    “未观测策略决策”的如实呈现（Studio 无工具执行器——绝不声称
- *    未接入的策略执行）。
+ *  - 诊断/状态条：当前 run 状态、失败码与消息（失败面板不自动消失）、
+ *    在途时 Abort、“未观测策略决策”的如实呈现（Studio 无工具执行器
+ *    ——绝不声称未接入的策略执行）；
+ *  - 来源抽屉（P1）：per-run 出处、Return 出处与 journal 尾部的保守
+ *    摘要（工具活动如实空态——Studio 离线以空工具 allowlist 运行）；
+ *  - 缺失 session 降级（A4）：分支徽标 + 可关闭横幅（树保持可读、续聊
+ *    fail-closed、可执行的恢复方式），session-corrupt 失败时同样提示。
+ *
+ * 事件流：EventSource 订阅 /api/trees/:id/events（snapshot 后推送
+ * run-started / message-delta / abort-requested / run-terminal /
+ * tool-activity）。SSE 不可用时降级为 prompt 在途时轮询诊断面（既有
+ * 行为）；/diagnostics 仍用于初始加载。
  */
 
 "use strict";
@@ -19,11 +29,14 @@
 /** @typedef {{branchId:string, sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}, createdAt:string}} OriginT */
 /** @typedef {{sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}}} ReturnTargetAnchorT */
 /** @typedef {{id:string, treeId:string, branchId:string, episodeId:string, runId:string|null, role:"user"|"assistant"|"return", text:string, piEntryId:string|null, fromBranchId:string|null, deliveredRunId:string|null, idempotencyKey:string|null, targetAnchor:ReturnTargetAnchorT|null, createdAt:string}} TurnT */
-/** @typedef {{branch:BranchT, origin:OriginT|null, turns:TurnT[]}} BranchViewT */
+/** @typedef {{branch:BranchT, origin:OriginT|null, originStatus:"available"|"changed"|"unavailable"|null, sessionAvailability:"available"|"unavailable"|null, turns:TurnT[]}} BranchViewT */
 /** @typedef {{tree:TreeT, trunkBranchId:string|null, branches:BranchViewT[], cursor:{treeId:string,branchId:string,entryId:string}|null}} TreeStateT */
 /** @typedef {{runId:string, branchId:string, episodeId:string, state:string, failure:{code:string,message:string}|null, createdAt:string, terminalAt:string|null}} RunDiagnosticsT */
 /** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:{observed:boolean, reason:string}}} TreeDiagnosticsT */
 /** @typedef {{branchId:string, idempotencyKey:string, text:string, failed:boolean}} ReturnDraftT */
+/** @typedef {{eventId:string, runId:string, seq:number, occurredAt:string, type:string, summary:string}} JournalEventT */
+/** @typedef {{runId:string, branchId:string, episodeId:string}} ActiveRunInfoT */
+/** @typedef {{runId:string, branchId:string, text:string}} StreamingT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
@@ -40,11 +53,28 @@ const state = {
    */
   returnDraft: null,
   busy: false,
+  /** 在途 run 定位（SSE run-started；run-terminal 清空）。 */
+  activeRunInfo: null,
+  /** 流式占位回显（瞬态；run-terminal 后由 /state 权威刷新取代）。 */
+  streaming: null,
+  /** 失败面板已关闭的 run（dismiss 后不再复显；新失败重新出现）。 */
+  dismissedFailureRunIds: new Set(),
+  /** session-corrupt 失败后强制显示可执行恢复横幅（下一次成功 prompt 清除）。 */
+  forceSessionBanner: false,
+  /** 来源抽屉。 */
+  drawerOpen: false,
+  /** @type {JournalEventT[]|null} */ journalEvents: null,
+  /** 最近工具活动（真实 Pi 驱动才会有；离线如实为空）。 */
+  toolActivity: [],
 };
 
-/** Diagnostics poll timer — only runs while a prompt is active. */
+/** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
 let diagnosticsTimer = null;
 const DIAGNOSTICS_POLL_MS = 500;
+
+/** SSE connection for the open tree (null when disconnected). */
+let eventSource = null;
+let sseHealthy = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -136,8 +166,9 @@ function renderBranchTabs() {
   for (const view of st.branches) {
     const button = document.createElement("button");
     if (view.branch.id === state.currentBranchId) button.classList.add("active");
-    const label = branchLabel(view.branch.id);
-    button.textContent = label;
+    const label = document.createElement("span");
+    label.textContent = branchLabel(view.branch.id);
+    button.append(label);
     if (view.origin !== null) {
       const anchorStatus = view.originStatus ?? "unavailable";
       button.title = `branched from ${branchLabel(view.origin.sourceBranchId)} · “${view.origin.selection.text}” · source ${anchorStatus}`;
@@ -145,6 +176,14 @@ function renderBranchTabs() {
       dot.className = "dot";
       dot.textContent = " °";
       button.append(dot);
+    }
+    /* A4 缺失 session：分支徽标（续聊将 fail-closed；详情见横幅）。 */
+    if (view.sessionAvailability === "unavailable") {
+      const badge = document.createElement("span");
+      badge.className = "session-badge";
+      badge.textContent = "· session missing";
+      badge.title = "the session file for this branch's continuation point is missing; the tree stays readable but continuing here will fail";
+      button.append(badge);
     }
     button.addEventListener("click", () => guard(() => switchBranch(view.branch.id)));
     tabs.append(button);
@@ -178,6 +217,41 @@ function renderOriginBanner() {
   sourceButton.textContent = "View source";
   sourceButton.addEventListener("click", () => guard(() => revealOrigin(view.branch.id)));
   banner.append(label, sel, status, sourceButton);
+  banner.hidden = false;
+}
+
+/**
+ * A4 缺失 session 横幅（可关闭、不自动消失）：树保持完全可读（数据库
+ * 是事实源），该分支续聊将 fail-closed；可执行恢复方式 = 从 session 仍
+ * 可用的 turn 建新分支 / 新建 Tree。session-corrupt 的 prompt 失败同样
+ * 强制显示（forceSessionBanner，下一次成功 prompt 清除）。
+ */
+function renderSessionBanner() {
+  const banner = $("session-banner");
+  const st = state.treeState;
+  if (st === null) {
+    banner.hidden = true;
+    return;
+  }
+  const view = st.branches.find((v) => v.branch.id === state.currentBranchId);
+  const unavailable = view !== undefined && view.sessionAvailability === "unavailable";
+  if (!unavailable && !state.forceSessionBanner) {
+    banner.hidden = true;
+    return;
+  }
+  banner.replaceChildren();
+  const text = document.createElement("span");
+  text.className = "session-banner-text";
+  text.textContent =
+    "Session missing on this branch — the tree stays fully readable (the database is the source of truth), " +
+    "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.";
+  const dismiss = document.createElement("button");
+  dismiss.className = "session-banner-dismiss";
+  dismiss.textContent = "Dismiss";
+  dismiss.addEventListener("click", () => {
+    banner.hidden = true;
+  });
+  banner.append(text, dismiss);
   banner.hidden = false;
 }
 
@@ -324,6 +398,21 @@ function renderConversation() {
       }
     }
   }
+
+  /* P1 流式占位回显：在途 run 位于当前分支时追加瞬态占位 turn
+     （run-terminal 后由 /state 权威刷新取代；跨分支的在途 run 不显示）。 */
+  const streaming = state.streaming;
+  if (streaming !== null && streaming.branchId === state.currentBranchId) {
+    const placeholder = document.createElement("div");
+    placeholder.id = "streaming-turn";
+    placeholder.className = "turn assistant streaming-turn";
+    placeholder.textContent = streaming.text;
+    const caret = document.createElement("span");
+    caret.className = "streaming-caret";
+    caret.textContent = " ▍";
+    placeholder.append(caret);
+    container.append(placeholder);
+  }
   container.scrollTop = container.scrollHeight;
 }
 
@@ -334,6 +423,7 @@ function renderAll() {
   if (hasTree) {
     renderBranchTabs();
     renderOriginBanner();
+    renderSessionBanner();
     renderConversation();
     renderReturnPanel();
   }
@@ -400,6 +490,7 @@ function renderDiagnostics() {
   const bar = $("diagnostics-bar");
   if (diag === null || state.treeState === null) {
     bar.hidden = true;
+    renderFailurePanel(null);
     return;
   }
   bar.hidden = false;
@@ -413,16 +504,25 @@ function renderDiagnostics() {
     parts.push(`active run on ${branchLabel(diag.activeRun.branchId)}`);
   }
   const last = diag.runs.length > 0 ? diag.runs[diag.runs.length - 1] : null;
-  parts.push(last === null ? "no runs yet" : `last run: ${last.state}`);
-  $("run-detail").textContent = parts.join(" · ");
-
-  const failure = $("run-failure");
-  if (last !== null && last.failure !== null) {
-    failure.textContent = `failure ${last.failure.code}: ${last.failure.message}`;
-    failure.hidden = false;
-  } else {
-    failure.hidden = true;
+  const detail = $("run-detail");
+  detail.replaceChildren();
+  if (parts.length > 0) {
+    detail.append(document.createTextNode(`${parts.join(" · ")} · `));
   }
+  if (last === null) {
+    detail.append(document.createTextNode("no runs yet"));
+  } else {
+    /* 终态呈现可区分：aborted 单独着色（中止是显式用户动作，非失败）。 */
+    const stateSpan = document.createElement("span");
+    stateSpan.className = `last-run-state ${last.state}`;
+    stateSpan.textContent = `last run: ${last.state}`;
+    detail.append(stateSpan);
+  }
+
+  /* P1 失败面板（持久、不自动消失）：最新失败 run 的 code+消息+定位，
+     可手动关闭；dismiss 后该 run 不再复显（新失败会再次出现）。 */
+  const lastFailed = [...diag.runs].reverse().find((run) => run.failure !== null) ?? null;
+  renderFailurePanel(lastFailed);
 
   const abortButton = $("abort-run");
   const isActive = diag.activeRun !== null;
@@ -435,6 +535,28 @@ function renderDiagnostics() {
     diag.policyDecisions.observed === false
       ? `policy: no decisions observed — ${diag.policyDecisions.reason}`
       : "policy: decisions observed";
+}
+
+/** 失败面板渲染（P1）。run 为 null 或已被 dismiss → 隐藏。 */
+function renderFailurePanel(run) {
+  const panel = $("failure-panel");
+  if (run === null || run.failure === null || state.dismissedFailureRunIds.has(run.runId)) {
+    panel.hidden = true;
+    return;
+  }
+  panel.replaceChildren();
+  const label = document.createElement("span");
+  label.className = "failure-panel-label";
+  label.textContent = `Run ${run.runId.slice(0, 12)}… failed — ${run.failure.code}: ${run.failure.message}`;
+  const dismiss = document.createElement("button");
+  dismiss.className = "failure-panel-dismiss";
+  dismiss.textContent = "Dismiss";
+  dismiss.addEventListener("click", () => {
+    state.dismissedFailureRunIds.add(run.runId);
+    renderFailurePanel(run);
+  });
+  panel.append(label, dismiss);
+  panel.hidden = false;
 }
 
 async function refreshDiagnostics() {
@@ -464,6 +586,119 @@ function stopDiagnosticsPolling() {
   diagnosticsTimer = null;
 }
 
+/* ------------------------------ SSE 事件流（P1） ------------------------------ */
+
+function disconnectEvents() {
+  if (eventSource !== null) {
+    eventSource.close();
+    eventSource = null;
+  }
+  sseHealthy = false;
+}
+
+/**
+ * 订阅当前树的事件流。连接即收到 snapshot（诊断面）；随后按事件类型
+ * 推送。SSE 出错时降级为轮询（EventSource 会自动重连，重连成功即恢复
+ * 事件流并停止轮询）。
+ */
+function connectEvents(treeId) {
+  disconnectEvents();
+  if (typeof EventSource === "undefined") return; /* 降级：轮询兜底 */
+  const source = new EventSource(`/api/trees/${encodeURIComponent(treeId)}/events`);
+  eventSource = source;
+  source.onopen = () => {
+    sseHealthy = true;
+    stopDiagnosticsPolling();
+  };
+  source.onerror = () => {
+    /* 断开/重连中：降级轮询；重连后 onopen 恢复。 */
+    sseHealthy = false;
+    if (state.currentTreeId === treeId) startDiagnosticsPolling();
+  };
+  const isCurrent = () => state.currentTreeId === treeId;
+  source.addEventListener("snapshot", (event) => {
+    if (!isCurrent()) return;
+    const diag = JSON.parse(event.data);
+    if (diag.treeId !== state.currentTreeId) return;
+    state.diagnostics = diag;
+    renderDiagnostics();
+  });
+  source.addEventListener("run-started", (event) => {
+    if (!isCurrent()) return;
+    const info = JSON.parse(event.data);
+    state.activeRunInfo = info;
+    if (state.diagnostics !== null) {
+      state.diagnostics.runtimeState = "streaming";
+      state.diagnostics.activeRun = {
+        runId: info.runId,
+        branchId: info.branchId,
+        episodeId: info.episodeId,
+      };
+    }
+    if (info.branchId === state.currentBranchId) {
+      state.streaming = { runId: info.runId, branchId: info.branchId, text: "" };
+      renderConversation();
+    }
+    renderDiagnostics();
+  });
+  source.addEventListener("message-delta", (event) => {
+    if (!isCurrent()) return;
+    const delta = JSON.parse(event.data);
+    const active = state.activeRunInfo;
+    if (active === null || delta.runId !== active.runId) return;
+    if (active.branchId !== state.currentBranchId) return; /* 在途 run 不在当前视图 */
+    if (state.streaming === null || state.streaming.runId !== delta.runId) {
+      state.streaming = { runId: delta.runId, branchId: active.branchId, text: "" };
+    }
+    state.streaming.text += delta.delta;
+    updateStreamingPlaceholder();
+  });
+  source.addEventListener("abort-requested", (event) => {
+    if (!isCurrent()) return;
+    const payload = JSON.parse(event.data);
+    if (state.diagnostics !== null && state.activeRunInfo !== null && payload.runId === state.activeRunInfo.runId) {
+      state.diagnostics.runtimeState = "aborting";
+    }
+    renderDiagnostics();
+  });
+  source.addEventListener("run-terminal", (event) => {
+    if (!isCurrent()) return;
+    const terminal = JSON.parse(event.data);
+    state.activeRunInfo = null;
+    state.streaming = null;
+    /* /state 是权威读模型：终态后整树刷新（prompt 响应也会刷新，幂等）。 */
+    void (async () => {
+      try {
+        state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+        renderAll();
+      } catch {
+        /* 刷新失败不打断；sendPrompt 的收尾刷新会重试 */
+      }
+      await refreshDiagnostics().catch(() => {});
+    })();
+  });
+  source.addEventListener("tool-activity", (event) => {
+    if (!isCurrent()) return;
+    const activity = JSON.parse(event.data);
+    state.toolActivity = [...state.toolActivity.slice(-19), activity];
+    if (state.drawerOpen) renderDrawer();
+  });
+}
+
+/** 流式占位回显：增量到达时只更新占位节点（不整树重渲）。 */
+function updateStreamingPlaceholder() {
+  const streaming = state.streaming;
+  if (streaming === null) return;
+  let node = document.getElementById("streaming-turn");
+  if (node === null) {
+    renderConversation();
+    return;
+  }
+  node.textContent = streaming.text;
+  const container = $("conversation");
+  container.scrollTop = container.scrollHeight;
+}
+
 /* ------------------------------ 动作 ------------------------------ */
 
 async function refreshTrees() {
@@ -478,8 +713,11 @@ async function openTree(treeId) {
   state.treeState = treeState;
   state.currentBranchId = treeState.cursor !== null ? treeState.cursor.branchId : treeState.trunkBranchId;
   state.sourceHighlight = null;
+  state.activeRunInfo = null;
+  state.streaming = null;
   await refreshTrees();
   await refreshDiagnostics();
+  connectEvents(treeId);
   renderAll();
 }
 
@@ -489,8 +727,11 @@ async function createTree() {
   state.treeState = payload.state;
   state.currentBranchId = payload.trunkBranchId;
   state.sourceHighlight = null;
+  state.activeRunInfo = null;
+  state.streaming = null;
   await refreshTrees();
   await refreshDiagnostics();
+  connectEvents(payload.tree.id);
   renderAll();
 }
 
@@ -533,8 +774,9 @@ async function sendPrompt() {
   const input = $("prompt-input");
   const text = input.value;
   if (text.trim() === "") return;
-  /* prompt 在途：轮询诊断面（当前唯一的活动性观测途径——无流式推送）。 */
-  startDiagnosticsPolling();
+  /* prompt 在途观测：SSE 健康时由事件流驱动（run-started/message-delta/
+     run-terminal）；SSE 不可用/未就绪时降级为轮询诊断面（既有行为）。 */
+  if (!sseHealthy) startDiagnosticsPolling();
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/prompt`, "POST", {
       branchId: state.currentBranchId,
@@ -542,13 +784,24 @@ async function sendPrompt() {
     });
     state.treeState = payload.state;
     input.value = "";
+    state.forceSessionBanner = false;
   } catch (err) {
-    if (err === null || typeof err !== "object" || err.code !== "user-abort") throw err;
-    /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
-       刷新树状态与诊断面后如常呈现。 */
-    state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+    if (err !== null && typeof err === "object" && err.code === "user-abort") {
+      /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
+         刷新树状态与诊断面后如常呈现。 */
+      state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+    } else {
+      if (err !== null && typeof err === "object" && err.code === "session-corrupt") {
+        /* A4：缺失/损坏 session 的可执行恢复提示（不只有瞬时错误横幅）。 */
+        state.forceSessionBanner = true;
+        state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+      }
+      throw err;
+    }
   } finally {
     stopDiagnosticsPolling();
+    state.activeRunInfo = null;
+    state.streaming = null;
   }
   renderAll();
   await refreshDiagnostics();
@@ -641,6 +894,143 @@ async function submitReturn() {
   renderAll();
 }
 
+/* ------------------------------ 来源抽屉（P1） ------------------------------ */
+
+/** 打开/关闭来源抽屉；打开时拉取 journal 尾部（保守摘要）。 */
+async function toggleDrawer() {
+  state.drawerOpen = !state.drawerOpen;
+  if (state.drawerOpen) {
+    state.journalEvents = null;
+    renderDrawer();
+    try {
+      const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/journal?limit=20`);
+      state.journalEvents = payload.events;
+    } catch {
+      state.journalEvents = []; /* 诚实空态：拉取失败也如实呈现为空 */
+    }
+    renderDrawer();
+  } else {
+    renderDrawer();
+  }
+}
+
+/**
+ * 来源抽屉：per-run 出处（分支/定位/状态/失败码/时间戳）、Return 出处
+ * （from-branch/锚点摘录/送达 run）、journal 尾部（保守摘要）与工具活动
+ * （离线如实空态——Studio 以空工具 allowlist 运行，无工具事件）。
+ */
+function renderDrawer() {
+  const drawer = $("source-drawer");
+  const toggle = $("source-drawer-toggle");
+  drawer.hidden = !state.drawerOpen;
+  toggle.textContent = state.drawerOpen ? "× Close sources" : "⑂ Sources";
+  toggle.setAttribute("aria-expanded", state.drawerOpen ? "true" : "false");
+  if (!state.drawerOpen) return;
+
+  drawer.replaceChildren();
+  const title = document.createElement("h2");
+  title.textContent = "Sources";
+  drawer.append(title);
+
+  /* per-run 出处（诊断面安全投影）。 */
+  const runsTitle = document.createElement("h3");
+  runsTitle.textContent = "Runs";
+  drawer.append(runsTitle);
+  const diag = state.diagnostics;
+  if (diag === null || diag.runs.length === 0) {
+    drawer.append(mutedLine("no runs recorded for this tree yet"));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "drawer-list";
+    for (const run of diag.runs) {
+      const li = document.createElement("li");
+      const failureNote = run.failure === null ? "" : ` · failure ${run.failure.code}`;
+      const time =
+        run.terminalAt === null
+          ? `started ${new Date(run.createdAt).toLocaleTimeString()}`
+          : `${new Date(run.createdAt).toLocaleTimeString()} → ${new Date(run.terminalAt).toLocaleTimeString()}`;
+      li.textContent =
+        `${branchLabel(run.branchId)} · run ${run.runId.slice(0, 12)}… · ${run.state}${failureNote} · ${time}`;
+      list.append(li);
+    }
+    drawer.append(list);
+  }
+
+  /* Return 出处。 */
+  const returnsTitle = document.createElement("h3");
+  returnsTitle.textContent = "Returns";
+  drawer.append(returnsTitle);
+  const st = state.treeState;
+  const returns = st === null ? [] : st.branches.flatMap((view) => view.turns.filter((t) => t.role === "return"));
+  if (returns.length === 0) {
+    drawer.append(mutedLine("no returns submitted for this tree yet"));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "drawer-list";
+    for (const turn of returns) {
+      const li = document.createElement("li");
+      const anchor = turn.targetAnchor;
+      const anchorNote =
+        anchor === null
+          ? "original anchor unavailable"
+          : `anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`;
+      const delivery =
+        turn.deliveredRunId === null
+          ? "not yet delivered"
+          : `delivered into run ${turn.deliveredRunId.slice(0, 12)}…`;
+      li.textContent = `from ${branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · ${delivery}`;
+      list.append(li);
+    }
+    drawer.append(list);
+  }
+
+  /* journal 尾部（保守摘要；最新在后）。 */
+  const journalTitle = document.createElement("h3");
+  journalTitle.textContent = "Journal (latest 20)";
+  drawer.append(journalTitle);
+  if (state.journalEvents === null) {
+    drawer.append(mutedLine("loading journal…"));
+  } else if (state.journalEvents.length === 0) {
+    drawer.append(mutedLine("no journal events recorded for this tree yet"));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "drawer-list journal-list";
+    for (const event of state.journalEvents) {
+      const li = document.createElement("li");
+      const time = document.createElement("span");
+      time.className = "muted";
+      time.textContent = `${new Date(event.occurredAt).toLocaleTimeString()} `;
+      li.append(time, document.createTextNode(`${event.type} — ${event.summary}`));
+      list.append(li);
+    }
+    drawer.append(list);
+  }
+
+  /* 工具活动（诚实边界：离线驱动无工具事件）。 */
+  const toolTitle = document.createElement("h3");
+  toolTitle.textContent = "Tool activity";
+  drawer.append(toolTitle);
+  if (state.toolActivity.length === 0) {
+    drawer.append(mutedLine("no tool activity observed — Studio runs with an empty tool allowlist"));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "drawer-list";
+    for (const activity of state.toolActivity) {
+      const li = document.createElement("li");
+      li.textContent = `run ${activity.runId.slice(0, 12)}… · ${activity.tool ?? "unknown tool"} ${activity.phase}`;
+      list.append(li);
+    }
+    drawer.append(list);
+  }
+}
+
+function mutedLine(text) {
+  const p = document.createElement("p");
+  p.className = "muted";
+  p.textContent = text;
+  return p;
+}
+
 /* ------------------------------ 启动 ------------------------------ */
 
 $("new-tree").addEventListener("click", () => guard(createTree));
@@ -653,6 +1043,7 @@ $("prompt-input").addEventListener("keydown", (event) => {
 });
 $("submit-return").addEventListener("click", () => guard(submitReturn));
 $("abort-run").addEventListener("click", () => void abortActiveRun());
+$("source-drawer-toggle").addEventListener("click", () => void toggleDrawer());
 
 void (async () => {
   try {
