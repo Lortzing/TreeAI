@@ -86,7 +86,8 @@ Checks (id → meaning):
   failing → FAIL
 - `unit-tests-agent-f`, `integration-tests-agent-f`,
   `live-framework-selftest` — this tree's suites (`node --test`)
-- `runtime-smoke` — NOT_RUN until the Integrator wires apps/runtime-smoke
+- `runtime-smoke` — apps/runtime-smoke's suite (wired; runs via
+  `npm test -w @treeai/runtime-smoke`)
 - `pi-version-pin` — `@earendil-works/pi-coding-agent` must be exactly
   `0.85.1` (declared AND installed)
 - `secret-scan-workspace` — scans tests/, schemas/d2/, .github/workflows/,

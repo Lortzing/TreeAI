@@ -423,7 +423,8 @@ const CHECKS = [
         return {
           status: "NOT_RUN",
           exitCode: null,
-          reason: "runtime-smoke is Integrator-owned Wave 2 skeleton; no test script wired yet",
+          reason:
+            "runtime-smoke has no test script wired (unexpected — check apps/runtime-smoke/package.json)",
         };
       }
       const res = runCommand("npm", ["test", "-w", "@treeai/runtime-smoke"], {
