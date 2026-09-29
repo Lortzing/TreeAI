@@ -1734,8 +1734,15 @@ async function phaseRestart() {
     sc.port = second.port;
 
     const listed = await api(sc.port, "GET", "/api/trees");
-    assert(listed.status === 200 && listed.body?.trees?.length === 1, "tree list after restart is not exactly one tree");
-    assert(listed.body.trees[0].id === sc.treeId, "the surviving tree is not the scenario tree");
+    /* A5 探针树随数据目录一同落库——重启后树列表 = 主树 + （A5 运行过的）
+       探针树，逐棵对照 ID 而非只数数量。 */
+    const expectedTreeIds = [sc.treeId, ...(sc.toolPolicy.treeId !== null ? [sc.toolPolicy.treeId] : [])].sort();
+    const listedIds = (listed.body?.trees ?? []).map((tree) => tree.id).sort();
+    assert(
+      listed.status === 200 && JSON.stringify(listedIds) === JSON.stringify(expectedTreeIds),
+      `tree list after restart is ${JSON.stringify(listedIds)} (expected ${JSON.stringify(expectedTreeIds)})`,
+    );
+    assert(listedIds.includes(sc.treeId), "the scenario tree did not survive the restart");
 
     const post = await fetchState();
     assert(post.trunkBranchId === sc.trunkId, "trunkBranchId changed across the restart");
