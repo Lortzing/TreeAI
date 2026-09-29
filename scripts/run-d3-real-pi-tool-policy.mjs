@@ -16,7 +16,6 @@
  * verify-d2-live); values are held in memory and never logged or written.
  *
  * Usage:
- *   npm run build:live-policy
  *   node --experimental-strip-types scripts/run-d3-real-pi-tool-policy.mjs \
  *     [--agent-dir DIR] [outTranscriptJson]
  *   (--agent-dir: the controlled agent dir — the non-secret provider/model
@@ -106,7 +105,7 @@ if (missing.length > 0) {
 }
 
 const { createPiRuntime } = await import(join(ROOT, "packages/runtime-pi/src/index.ts"));
-const { ToolPolicyEngine } = await import(join(ROOT, "apps/runtime-smoke/dist/tool-policy/index.js"));
+const { ToolPolicyEngine } = await import(join(ROOT, "packages/tool-policy/src/index.ts"));
 
 const report = [];
 const t0 = Date.now();
