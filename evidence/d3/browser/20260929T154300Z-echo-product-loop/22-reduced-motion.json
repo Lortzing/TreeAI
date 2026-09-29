@@ -1,0 +1,136 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "source-drawer-toggle",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": false,
+      "text": "Run run_f92dd511… failed — upstream: Error: simulated upstream failure (500)Dismiss"
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_0969bb10-5f9c-4dac-91da-a11b74561011",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_c2bf4e2e-c993-4c8f-beea-17e952ef7aaf",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.]"
+      },
+      {
+        "role": "return",
+        "turnId": "turn_47645f60-e5db-4867-aa4b-e7b1c93ff620",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_344dc7e5-ee8e-4a53-a77f-ba807ae08218",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_1c559849-6fdc-4791-8f24-70c2781fe507",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_8b6c3890-1bf1-447a-9de6-8270ce3c5c61",
+        "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_4beebada-169f-4e25-9615-5302620ffa0f",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_439e8e51-b118-4da1-b80b-54fa59c496e3]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_5f33abb4-5536-464a-9dd7-76c32877ec12",
+        "text": "After the earlier failure, the main line continues. Reply with: back-online."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_204fe916-5fe9-413e-893a-7d0dcb08c490",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_439e8e51-b118-4da1-b80b-54fa59c496e3]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.|/fail this prompt must converge as a simulated upstream model error|After the earlier failure, the main line continues. Reply with: back-online.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_a923d32b-85d2-4934-b875-aa63746bf1e5",
+        "text": "After the restart, the main line continues. Reply with: restart-ok."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_0b04b8fa-7faf-40bb-9646-40f1d72589bf",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_439e8e51-b118-4da1-b80b-54fa59c496e3]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.|/fail this prompt must converge as a simulated upstream model error|After the earlier failure, the main line continues. Reply with: back-online.|After the restart, the main line continues. Reply with: restart-ok.]"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · anchored on “echo:[This is the main line, turn one. The trunk top” from Trunkdelivered into Trunk context (run run_4f70d7bc…)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": true,
+      "deliveryText": "delivered into Trunk context (run run_4f70d7bc…)"
+    }
+  ],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": "Sources× CloseRunsTrunk · run run_dc771c4b… · succeeded · 23:43:02 → 23:43:02Trunk · run run_8732e6d4… · succeeded · 23:43:02 → 23:43:02Branch 1 · run run_bf7b0e7e… · succeeded · 23:43:03 → 23:43:03Branch 1 · run run_88f05a47… · succeeded · 23:43:04 → 23:43:04Branch 2 · run run_42945679… · succeeded · 23:43:06 → 23:43:06Branch 2 · run run_7af524dc… · succeeded · 23:43:06 → 23:43:06Trunk · run run_4f70d7bc… · succeeded · 23:43:08 → 23:43:08Trunk · run run_f92dd511… · failed · failure upstream · 23:43:08 → 23:43:08Trunk · run run_45cd42d7… · succeeded · 23:43:09 → 23:43:09Trunk · run run_f65ac7ac… · succeeded · 23:43:11 → 23:43:11Returnsfrom Branch 1 · anchored on “echo:[This is the main line, turn one. The trunk top” from Trunk · delivered into run run_4f70d7bc…Journal (latest 20)23:43:09 message.started — message started (user)23:43:09 message.completed — message completed (user)23:43:09 message.started — message started (assistant)23:43:09 message.updated — message delta received (383 chars)23:43:09 message.updated — message delta received (382 chars)23:43:09 message.completed — message completed (assistant), stop: stop23:43:09 turn.completed — turn completed (stop: stop)23:43:09 agent.settled — agent run settled23:43:11 session.restored — session restored23:43:11 run.state-changed — run state changed: queued → running23:43:11 agent.started — agent run started23:43:11 turn.started — turn started23:43:11 message.started — message started (user)23:43:11 message.completed — message completed (user)23:43:11 message.started — message started (assistant)23:43:11 message.updated — message delta received (417 chars)23:43:11 message.updated — message delta received (416 chars)23:43:11 message.completed — message completed (assistant), stop: stop23:43:11 turn.completed — turn completed (stop: stop)23:43:11 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}
