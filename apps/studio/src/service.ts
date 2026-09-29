@@ -34,8 +34,10 @@
  *   （runId/branchId/episodeId/state/failure code+message/createdAt/
  *   terminalAt）。session 引用（sessionFile/sessionId/entryId/piVersion/
  *   availability）、failure.details、原始 cause、命令、主机与目标路径
- *   一律不外泄；Studio 无工具执行器（prompt 以空工具 allowlist 运行），
- *   如实报告“未观测策略决策”，绝不伪造 policy 判定。
+ *   一律不外泄。策略决策如实报告：默认装配（prompt 以空工具 allowlist
+ *   运行）从未观测 → observed=false；runtime 注入请求时策略门
+ *   （issue #5 P0）后观测到的决定以脱敏投影列出（工具名/outcome/
+ *   reason/ruleId），绝不伪造 policy 判定，也绝不隐瞒已发生的拒绝。
  *   abort(treeId, runId) 只接受该树当前在途的 run（否则按操作冲突拒绝），
  *   调用 runtime.abort()，由 prompt 的收敛路径把 run 落库为 aborted
  *   （user-abort 绝不改写为 failed）。
@@ -70,9 +72,12 @@
  *   事实源），续聊 fail-closed。
  *
  * 已知范围（诚实声明）：并发 prompt 以冲突拒绝不排队（TypeError → 409，
- *   单用户语义）；Studio 离线驱动无工具事件（tool-activity 仅真实
- *   Pi 驱动会出现）；非 prompt 期间的运行时事件（如 switchBranch 的
- *   导航）无 run 可归属，不进 journal。
+ *   单用户语义）；默认 Studio 装配（空工具 allowlist、无策略注入）无
+ *   工具执行，tool-activity / tool.decision 仅在 runtime 配置了工具与
+ *   请求时策略门后出现（离线驱动可用 toolCalls 测试钩触发）；非 prompt
+ *   期间的运行时事件（如 switchBranch 的导航）无 run 可归属，不进
+ *   journal（策略决策观测例外：观测环形独立于 run 归属，越权决定的
+ *   provenance 不因事件缓冲而丢失）。
  */
 
 import { existsSync } from "node:fs";
@@ -196,17 +201,29 @@ export interface RunDiagnostics {
 }
 
 /**
- * 策略决策观测（诚实边界）：Studio 的 prompt 以空工具 allowlist 运行
- * （runtime-pi 默认零工具），没有工具执行器——因此没有工具执行事件，
- * 也就没有任何策略决策可观测。诊断面绝不伪造 policy 判定。
+ * 策略决策观测（诚实边界）：默认 Studio 装配的 prompt 以空工具 allowlist
+ * 运行（runtime-pi 默认零工具），没有工具执行——也就没有策略决策可观测，
+ * 诊断面如实报告 observed=false。runtime 注入了工具策略（P0 请求时门）
+ * 且实际发生决策时，observed=true 并给出**脱敏投影**的决定列表
+ * （工具名/outcome/category/risk/reason/ruleId；参数、路径、命令、主机
+ * 绝不进入）。诊断面绝不伪造 policy 判定。
  */
-export interface PolicyDiagnostics {
-  readonly observed: false;
+export type PolicyDecisionView = {
+  readonly tool: string | null;
+  readonly outcome: "allow" | "deny" | "require-approval";
+  readonly category: string;
+  readonly risk: string;
   readonly reason: string;
-}
+  readonly ruleId: string | null;
+  readonly occurredAt: IsoTimestamp;
+};
+
+export type PolicyDiagnostics =
+  | { readonly observed: false; readonly reason: string }
+  | { readonly observed: true; readonly decisions: readonly PolicyDecisionView[] };
 
 export const NO_POLICY_DECISIONS_REASON =
-  "studio prompts run with an empty tool allowlist; no tool executions occur, so no policy decisions are observed";
+  "no tool policy decisions observed in this process; the default Studio wiring runs prompts with an empty tool allowlist";
 
 /** 一棵树的诊断读模型（只读、安全投影）。 */
 export interface TreeDiagnostics {
@@ -223,9 +240,10 @@ export interface TreeDiagnostics {
 
 /**
  * Studio UI 事件（瞬态推送）。安全边界：message-delta 只含文本增量；
- * tool-activity 只投影工具名与阶段——参数/路径/命令绝不进入事件面
- * （诊断面的 no-leak 纪律同样约束这里）。事件不是权威读模型：
- * run-terminal 后 UI 必须从 /state 整树刷新。
+ * tool-activity 只投影工具名与阶段（参数/路径/命令绝不进入事件面——
+ * 诊断面的 no-leak 纪律同样约束这里）。phase "denied" 携带策略决定
+ * provenance（outcome/reason/ruleId，固定模板 reason，无用户可控内容）；
+ * 事件不是权威读模型：run-terminal 后 UI 必须从 /state 整树刷新。
  */
 export type StudioEvent =
   | {
@@ -259,7 +277,20 @@ export type StudioEvent =
       readonly runId: RunId;
       /** 工具名（runtime-pi 归一化白名单字段）；缺失时为 null。绝不携带参数。 */
       readonly tool: string | null;
-      readonly phase: "started" | "finished";
+      /**
+       * started/finished = 实际执行的生命周期；denied = 请求时策略拒绝
+       * （工具未执行；require-approval 同样按拒绝呈现——fail closed）。
+       */
+      readonly phase: "started" | "finished" | "denied";
+      /**
+       * 策略决定 provenance（仅 phase "denied" 携带）：outcome + 固定模板
+       * reason + 决定来源 ruleId（null = 默认拒绝）。绝不携带参数/路径/命令。
+       */
+      readonly decision?: {
+        readonly outcome: "deny" | "require-approval";
+        readonly reason: string;
+        readonly ruleId: string | null;
+      };
     };
 
 export type StudioEventListener = (event: StudioEvent) => void;
@@ -372,6 +403,13 @@ function payloadString(payload: JsonValue, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/** 安全读取事件 payload 上的 ruleId 字段（string → 值；否则 → null，null 即默认拒绝）。 */
+function payloadRuleId(payload: JsonValue): string | null {
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const value = (payload as Record<string, unknown>)["ruleId"];
+  return typeof value === "string" ? value : null;
+}
+
 /**
  * journal 事件的保守 summary：只从白名单字段构造（状态/角色/工具名/
  * 错误码等非敏感判别字段），绝不透出原始 payload（参数、路径、命令、
@@ -422,8 +460,15 @@ export function summarizeJournalEvent(event: TreeAIEvent): string {
     case "tool.decision": {
       const tool = str("toolName");
       const decision = str("decision");
+      const rawRule = payload["ruleId"];
+      const ruleNote =
+        typeof rawRule === "string"
+          ? ` (rule: ${rawRule})`
+          : rawRule === null
+            ? " (no rule)"
+            : "";
       const toolNote = tool === undefined ? "" : ` on ${tool}`;
-      return `tool policy decision${toolNote}${decision === undefined ? "" : `: ${decision}`}`;
+      return `tool policy decision${toolNote}${decision === undefined ? "" : `: ${decision}`}${ruleNote}`;
     }
     case "session.created":
       return "session created";
@@ -482,6 +527,8 @@ export class TreeStudioService {
   readonly journalRecovery: Promise<RecoveryReport> | null;
   /** UI 事件监听者（SSE 端点订阅）。 */
   readonly #studioListeners = new Set<StudioEventListener>();
+  /** 策略决策观测（进程内环形，最新在后；诊断面 observed=true 的数据源）。 */
+  readonly #policyObservations: PolicyDecisionView[] = [];
   /** 运行时订阅的退订函数（dispose 时释放）。 */
   readonly #unsubscribeRuntime: () => void;
 
@@ -550,6 +597,10 @@ export class TreeStudioService {
    * 运行时事件入口：journal 归属（在途 run 实时归属；会话对准阶段缓冲）
    * + 事件面投影（message-delta / tool-activity，仅在途 run）。
    * 绝不向事件面搬运 payload 原文（工具参数/路径/命令不出境）。
+   * tool.decision（P0 请求时策略门）：记入诊断观测（脱敏投影）；
+   * 拒绝类决定（deny / require-approval）以 tool-activity(phase "denied")
+   * + 决定 provenance 推送（allow 的执行生命周期由后续
+   * tool.execution.started/finished 事件表达）。
    */
   #handleRuntimeEvent(event: PiRuntimeEvent): void {
     const active = this.#activeRun;
@@ -557,6 +608,9 @@ export class TreeStudioService {
       this.#journalRuntimeEvent(active.runId, event);
     } else if (this.#promptPrelude !== null) {
       this.#promptPrelude.push(event);
+    }
+    if (event.kind === "tool.decision") {
+      this.#observePolicyDecision(event);
     }
     if (active === null) return;
     switch (event.kind) {
@@ -578,8 +632,50 @@ export class TreeStudioService {
         });
         return;
       }
+      case "tool.decision": {
+        const outcome = payloadString(event.payload, "decision");
+        if (outcome === "deny" || outcome === "require-approval") {
+          this.#emitStudio({
+            type: "tool-activity",
+            treeId: active.treeId,
+            runId: active.runId,
+            tool: payloadString(event.payload, "toolName") ?? null,
+            phase: "denied",
+            decision: {
+              outcome,
+              reason: payloadString(event.payload, "reason") ?? "tool policy decision",
+              ruleId: payloadRuleId(event.payload),
+            },
+          });
+        }
+        return;
+      }
       default:
         return;
+    }
+  }
+
+  /**
+   * 记录一条策略决策观测（白名单字段；参数/路径/命令/主机绝不进入）。
+   * 形状不符的事件按诚实边界忽略（不伪造观测）；环形上限 20 条。
+   */
+  #observePolicyDecision(event: PiRuntimeEvent): void {
+    const outcome = payloadString(event.payload, "decision");
+    if (outcome !== "allow" && outcome !== "deny" && outcome !== "require-approval") {
+      return;
+    }
+    const view: PolicyDecisionView = {
+      tool: payloadString(event.payload, "toolName") ?? null,
+      outcome,
+      category: payloadString(event.payload, "category") ?? "unknown",
+      risk: payloadString(event.payload, "risk") ?? "unknown",
+      reason: payloadString(event.payload, "reason") ?? "tool policy decision",
+      ruleId: payloadRuleId(event.payload),
+      occurredAt: event.occurredAt,
+    };
+    this.#policyObservations.push(view);
+    if (this.#policyObservations.length > 20) {
+      this.#policyObservations.splice(0, this.#policyObservations.length - 20);
     }
   }
 
@@ -1030,8 +1126,9 @@ export class TreeStudioService {
    * 一棵树的诊断读模型：运行面状态（idle/streaming/aborting）、在途 run
    * 定位、DB 全量 run 的安全投影。刻意排除 session 引用（sessionFile/
    * sessionId/entryId/piVersion/availability）、failure.details、原始
-   * cause、命令、主机与目标路径；策略决策如实报告未观测（Studio 无
-   * 工具执行器），绝不伪造 policy 判定。
+   * cause、命令、主机与目标路径。策略决策如实报告：默认装配（空工具
+   * allowlist）下从未观测 → observed=false；注入请求时策略门后观测到的
+   * 决定以脱敏投影列出（绝不伪造，也绝不隐瞒已发生的拒绝）。
    */
   getTreeDiagnostics(treeId: TreeId): TreeDiagnostics {
     const tree = this.repository.getTree(treeId); // EntityNotFoundError → 404
@@ -1067,7 +1164,10 @@ export class TreeStudioService {
           ? null
           : { runId: activeForTree.runId, branchId: activeForTree.branchId, episodeId: activeForTree.episodeId },
       runs,
-      policyDecisions: { observed: false, reason: NO_POLICY_DECISIONS_REASON },
+      policyDecisions:
+        this.#policyObservations.length > 0
+          ? { observed: true, decisions: [...this.#policyObservations] }
+          : { observed: false, reason: NO_POLICY_DECISIONS_REASON },
     };
   }
 

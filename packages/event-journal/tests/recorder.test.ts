@@ -66,6 +66,7 @@ test("piRuntimeEventKindToType maps known kinds, renames steer, and routes unkno
     "message.completed",
     "tool.execution.started",
     "tool.execution.finished",
+    "tool.decision",
     "runtime.error",
     "tree.navigated",
     "run.abort-requested",

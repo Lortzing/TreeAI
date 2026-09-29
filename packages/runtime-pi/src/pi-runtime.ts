@@ -42,12 +42,14 @@ import type {
   PiVersion,
   PinnedPiVersion,
   SessionReference,
+  ToolDecision,
   TreeAIError,
 } from "@treeai/contracts";
 import type { JsonRecord } from "@treeai/contracts";
 import {
   classifyPiFailure,
   modelUnavailableError,
+  policyDeniedError,
   sessionCorruptError,
   TreeAIRuntimeError,
   userAbortError,
@@ -62,6 +64,8 @@ import type {
   PiSdkPort,
   PiThinkingLevel,
 } from "./pi-sdk-port.ts";
+import type { PiToolPolicyEvaluator } from "./tool-policy.ts";
+import { classifyPiToolCall } from "./tool-policy.ts";
 
 /** 冻结的 Pi 精确版本（contracts.PinnedPiVersion 的运行时值）。 */
 export const PINNED_PI_VERSION: PinnedPiVersion = "0.85.1";
@@ -98,6 +102,21 @@ export interface PiRuntimeConfig {
   readonly thinkingLevel?: PiThinkingLevel;
   /** 工具 allowlist。默认 []（零工具启用，最小权限；ToolPolicy 集成时由宿主给出）。 */
   readonly tools?: readonly string[];
+  /**
+   * 请求时工具策略评估器（issue #5 P0；@treeai/tool-policy 的
+   * ToolPolicyEngine 结构满足本接口，由宿主注入）。注入后，本运行时
+   * 创建/恢复的每个会话在**实际工具执行前**（参数校验后）经
+   * evaluate() 评估（映射见 tool-policy.ts 的 classifyPiToolCall）：
+   * - allow → 放行执行（执行事件照常以 tool.execution.started/finished
+   *   上报）；
+   * - deny / require-approval → **不执行**（require-approval 在本路径没有
+   *   审批 UI，按 fail-closed 拒绝，与 contracts "policy-denied" 的语义
+   *   一致），以 `tool.decision` 事件上报决定（toolName/outcome/category/
+   *   risk/reason/ruleId 白名单字段，绝不携带参数/路径/命令），当前
+   *   in-flight run 以 TreeAIError("policy-denied") 收敛（fail closed，
+   *   见 README）。
+   */
+  readonly toolPolicy?: PiToolPolicyEvaluator;
   /** abort 收敛安全计时器（毫秒）。默认 10000。 */
   readonly abortConvergenceMs?: number;
 }
@@ -113,6 +132,8 @@ interface InFlightRun {
   readonly session: PiPortSession;
   abortRequested: boolean;
   settled: boolean;
+  /** 本次 run 期间的请求时策略拒绝（fail-closed 收敛依据；无则 null）。 */
+  policyDenial: { readonly reason: string } | null;
   timer: ReturnType<typeof setTimeout> | undefined;
   reject: (error: TreeAIError) => void;
   resolve: (result: PiPromptResult) => void;
@@ -131,6 +152,7 @@ class PiRuntimeImpl implements PiRuntime {
   private readonly defaultCwd: string;
   private readonly thinkingLevel: PiThinkingLevel;
   private readonly tools: readonly string[];
+  private readonly toolPolicy: PiToolPolicyEvaluator | undefined;
   private readonly abortConvergenceMs: number;
 
   private readonly listeners = new Set<PiRuntimeEventListener>();
@@ -151,6 +173,7 @@ class PiRuntimeImpl implements PiRuntime {
     this.defaultCwd = config.defaultCwd ?? process.cwd();
     this.thinkingLevel = config.thinkingLevel ?? "off";
     this.tools = config.tools ?? [];
+    this.toolPolicy = config.toolPolicy;
     this.abortConvergenceMs = config.abortConvergenceMs ?? DEFAULT_ABORT_CONVERGENCE_MS;
   }
 
@@ -214,6 +237,7 @@ class PiRuntimeImpl implements PiRuntime {
         );
       }
       await this.swapActiveSession(created.session, manager, "session.created");
+      this.installToolGate(created.session);
       return { reference: this.referenceFromActive() };
     } catch (err) {
       throw this.toReportedError(err, "createSession");
@@ -359,6 +383,7 @@ class PiRuntimeImpl implements PiRuntime {
         }
       }
       await this.swapActiveSession(restored.session, manager, "session.restored");
+      this.installToolGate(restored.session);
       return { reference: this.referenceFromActive() };
     } catch (err) {
       throw this.toReportedError(err, "restoreSession");
@@ -386,6 +411,7 @@ class PiRuntimeImpl implements PiRuntime {
         session: active.session,
         abortRequested: false,
         settled: false,
+        policyDenial: null,
         timer: undefined,
         reject,
         resolve,
@@ -426,6 +452,18 @@ class PiRuntimeImpl implements PiRuntime {
 
     if (run.abortRequested || stopReason === "aborted") {
       this.settleRun(run, undefined, userAbortError("prompt was aborted"));
+      return;
+    }
+    if (run.policyDenial !== null) {
+      // 请求时策略拒绝（fail closed）：工具未执行、决定已以 tool.decision
+      // 上报、runtime.error 已在拒绝发生时即时推送（见 installToolGate）；
+      // 这里只收敛 prompt（先于模型错误判定——宿主的越权拒绝是对本次
+      // run 的权威结论；abort 请求仍然优先）。
+      const error = policyDeniedError(
+        `tool execution was blocked by tool policy: ${run.policyDenial.reason}`,
+        { details: { reason: run.policyDenial.reason } },
+      );
+      this.settleRun(run, undefined, error);
       return;
     }
     if (stopReason === "error" || (typeof stateError === "string" && stateError.length > 0)) {
@@ -588,6 +626,65 @@ class PiRuntimeImpl implements PiRuntime {
   /* ---------------------------------------------------------------- */
   /* 内部：会话替换 / 事件 / 收敛                                        */
   /* ---------------------------------------------------------------- */
+
+  /**
+   * 请求时工具执行门（issue #5 P0）：评估先于执行——allow 放行；
+   * deny / require-approval 阻止执行（fail closed，require-approval 在
+   * 本路径无审批 UI，按拒绝处理）并记录到当前 in-flight run（收敛依据）。
+   * 决定以 tool.decision 事件上报（白名单字段，见 #emitToolDecision）；
+   * 首次拒绝即时推送 runtime.error（policy-denied）——必须在会话的
+   * agent.settled（无 status）之前到达 journal，否则投影器会先把 run
+   * 收敛为 succeeded 再产生 double-terminal 异常（见 README 已知限制）。
+   * 未注入 toolPolicy 时不安装（行为不变）。
+   */
+  private installToolGate(session: PiPortSession): void {
+    const evaluator = this.toolPolicy;
+    if (evaluator === undefined) {
+      return;
+    }
+    session.installToolExecutionGate(async (request) => {
+      const decision = evaluator.evaluate(classifyPiToolCall(request));
+      const isActiveSession = this.active !== null && this.active.session === session;
+      if (isActiveSession) {
+        this.emitToolDecision(request.toolName, decision);
+      }
+      if (decision.outcome === "allow") {
+        return undefined; // 放行：后续 tool.execution.started/finished 照常上报。
+      }
+      if (isActiveSession) {
+        const run = this.inFlight;
+        if (run !== null && run.session === session && !run.settled && run.policyDenial === null) {
+          run.policyDenial = { reason: decision.reason };
+          // 即时失败可见性（先于 agent.settled 到达 journal，见方法头）。
+          this.reportRuntimeError(
+            policyDeniedError(`tool execution was blocked by tool policy: ${decision.reason}`, {
+              details: { reason: decision.reason },
+            }),
+          );
+        }
+      }
+      // 阻止执行 + 提示底层运行时在当前工具批次后提前结束（确定性收敛）。
+      return { block: true, reason: decision.reason, terminate: true };
+    });
+  }
+
+  /**
+   * tool.decision 事件（journal 侧 KnownTreeAIEventType "tool.decision"）。
+   * 载荷是白名单投影：工具名 + 决定判别字段 + 固定模板 reason + 规则 id；
+   * 工具参数、目标路径、命令、主机**绝不**进入载荷（脱敏边界与
+   * tool-activity 的工具名+阶段纪律一致；完整审计含规范化路径留在
+   * 引擎自身的审计环形日志）。
+   */
+  private emitToolDecision(toolName: string, decision: ToolDecision): void {
+    this.emitEvent("tool.decision", {
+      toolName,
+      decision: decision.outcome,
+      category: decision.category,
+      risk: decision.risk,
+      reason: decision.reason,
+      ruleId: decision.ruleId,
+    });
+  }
 
   /**
    * 原子替换活跃会话：新会话已创建成功后才执行；

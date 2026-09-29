@@ -51,7 +51,8 @@
 /** @typedef {{branch:BranchT, origin:OriginT|null, originStatus:"available"|"changed"|"unavailable"|null, sessionAvailability:"available"|"unavailable"|null, turns:TurnT[]}} BranchViewT */
 /** @typedef {{tree:TreeT, trunkBranchId:string|null, branches:BranchViewT[], cursor:{treeId:string,branchId:string,entryId:string}|null}} TreeStateT */
 /** @typedef {{runId:string, branchId:string, episodeId:string, state:string, failure:{code:string,message:string}|null, createdAt:string, terminalAt:string|null}} RunDiagnosticsT */
-/** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:{observed:boolean, reason:string}}} TreeDiagnosticsT */
+/** @typedef {{tool:string|null, outcome:"allow"|"deny"|"require-approval", category:string, risk:string, reason:string, ruleId:string|null, occurredAt:string}} PolicyDecisionViewT */
+/** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:({observed:false, reason:string}|{observed:true, decisions:PolicyDecisionViewT[]})}} TreeDiagnosticsT */
 /** @typedef {{branchId:string, idempotencyKey:string, text:string, failed:boolean}} ReturnDraftT */
 /** @typedef {{eventId:string, runId:string, seq:number, occurredAt:string, type:string, summary:string}} JournalEventT */
 /** journal 拉取三态（W2 §2.7）：{ok:true} = 已载（events 可为空——如实
@@ -925,11 +926,20 @@ function renderDiagnostics() {
   abortButton.textContent = diag.runtimeState === "aborting" ? "Aborting…" : "Abort run";
   abortButton.disabled = diag.runtimeState === "aborting";
 
-  /* 如实呈现：无工具执行器 → 未观测任何策略决策（不声称未接入的执行）。 */
-  $("policy-note").textContent =
-    diag.policyDecisions.observed === false
-      ? `policy: no decisions observed — ${diag.policyDecisions.reason}`
-      : "policy: decisions observed";
+  /* 如实呈现：默认装配未观测任何策略决策；观测到的决定（含拒绝）按
+     脱敏 provenance 呈现（工具名/outcome/规则来源——参数/路径/命令
+     绝不出现在诊断面）。 */
+  const policy = diag.policyDecisions;
+  if (policy.observed === false) {
+    $("policy-note").textContent = `policy: no decisions observed — ${policy.reason}`;
+  } else {
+    const latest = policy.decisions[policy.decisions.length - 1];
+    const latestNote =
+      latest === undefined
+        ? ""
+        : ` — latest: ${latest.tool ?? "unknown tool"} ${latest.outcome} (${latest.ruleId ?? "no rule"})`;
+    $("policy-note").textContent = `policy: ${String(policy.decisions.length)} decision(s) observed${latestNote}`;
+  }
 }
 
 /** 失败面板渲染（P1）。run 为 null 或已被 dismiss → 隐藏。 */
@@ -1789,7 +1799,13 @@ function renderDrawer() {
     list.className = "drawer-list";
     for (const activity of state.toolActivity) {
       const li = document.createElement("li");
-      li.textContent = `run ${activity.runId.slice(0, 12)}… · ${activity.tool ?? "unknown tool"} ${activity.phase}`;
+      /* phase "denied" 携带策略 provenance（outcome/固定模板 reason/规则
+         来源）；其余阶段只有工具名 + 阶段（参数/路径/命令绝不出境）。 */
+      let text = `run ${activity.runId.slice(0, 12)}… · ${activity.tool ?? "unknown tool"} ${activity.phase}`;
+      if (activity.phase === "denied" && activity.decision) {
+        text += ` — ${activity.decision.reason} [${activity.decision.ruleId ?? "no rule"}]`;
+      }
+      li.textContent = text;
       list.append(li);
     }
     drawer.append(list);

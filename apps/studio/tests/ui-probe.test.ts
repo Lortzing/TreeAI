@@ -122,12 +122,24 @@ interface RunDiagnostics {
   terminalAt: string | null;
 }
 
+interface PolicyDecisionView {
+  tool: string | null;
+  outcome: "allow" | "deny" | "require-approval";
+  category: string;
+  risk: string;
+  reason: string;
+  ruleId: string | null;
+  occurredAt: string;
+}
+
 interface TreeDiagnostics {
   treeId: string;
   runtimeState: "idle" | "streaming" | "aborting";
   activeRun: { runId: string; branchId: string; episodeId: string } | null;
   runs: RunDiagnostics[];
-  policyDecisions: { observed: boolean; reason: string };
+  policyDecisions:
+    | { observed: false; reason: string }
+    | { observed: true; decisions: PolicyDecisionView[] };
 }
 
 interface JournalEvent {

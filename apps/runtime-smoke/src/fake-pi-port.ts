@@ -16,6 +16,10 @@
  *   promise resolves; answers are deterministic ECHOES of the user texts
  *   visible on the current branch (this is what proves branch context
  *   isolation in the scenario);
+ * - tool-calls behavior: the turn "requests" scripted tool calls; each goes
+ *   through the installed tool execution gate (Agent.beforeToolCall
+ *   equivalent) BEFORE any execution — blocked calls never execute and end
+ *   with an error tool result, exactly like the real Pi loop;
  * - navigateTree: user-message target moves the leaf to its parent (fork
  *   point); other targets move the leaf to the target itself; never creates
  *   a new session and never removes entries;
@@ -34,7 +38,22 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 /** Per-prompt behavior consumed from a port-level queue. */
-export type SmokePortBehavior = "echo" | "hang";
+export type SmokePortBehavior = "echo" | "hang" | SmokeToolCallBehavior;
+
+/**
+ * 脚本化工具调用行为：本 prompt 的 turn 在回声回答前依次「请求」这些
+ * 工具调用（镜像 Pi 0.85.1 agent loop 的执行顺序：每次调用先发
+ * tool_execution_start，再咨询已安装的工具执行门（Agent.beforeToolCall
+ * 等价缝），block=true 则不执行（tool_execution_end isError=true），
+ * 放行则「执行」并记录到 session.executedToolCalls）。
+ */
+export interface SmokeToolCallBehavior {
+  readonly kind: "tool-calls";
+  readonly calls: ReadonlyArray<{
+    readonly name: string;
+    readonly args?: Readonly<Record<string, unknown>>;
+  }>;
+}
 
 /** Normal (ref-counted) delay for turn pacing. */
 function delay(ms: number): Promise<void> {
@@ -209,6 +228,18 @@ export class SmokePiSession {
   private aborted = false;
   private disposed = false;
   private readonly stateRef: { errorMessage?: string } = {};
+  private toolGate: ((
+    request: {
+      readonly toolName: string;
+      readonly args: unknown;
+    },
+  ) => Promise<{ readonly block: boolean; readonly reason?: string; readonly terminate?: boolean } | undefined>) | null =
+    null;
+  private toolCallCounter = 0;
+  /** 经门放行后「执行」的工具名序列（断言 denied 工具从未出现于此）。 */
+  readonly executedToolCalls: string[] = [];
+  /** 被门阻止（未执行）的工具名序列。 */
+  readonly blockedToolCalls: string[] = [];
 
   constructor(
     manager: SmokeSessionManager,
@@ -250,6 +281,16 @@ export class SmokePiSession {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /** 安装请求时工具执行门（PiPortSession 缝；runtime 注入）。 */
+  installToolExecutionGate(
+    gate: (request: {
+      readonly toolName: string;
+      readonly args: unknown;
+    }) => Promise<{ readonly block: boolean; readonly reason?: string; readonly terminate?: boolean } | undefined>,
+  ): void {
+    this.toolGate = gate;
   }
 
   private emit(event: { type: string; [key: string]: unknown }): void {
@@ -355,6 +396,28 @@ export class SmokePiSession {
       this.emitSyntheticAborted();
       this.emit({ type: "turn_end", message: { role: "assistant", stopReason: "aborted" } });
       return;
+    }
+
+    // Scripted tool calls (mirror of the Pi 0.85.1 agent loop order):
+    // tool_execution_start → gate (Agent.beforeToolCall equivalent) →
+    // execute-or-block → tool_execution_end.
+    if (typeof mode === "object" && mode.kind === "tool-calls") {
+      for (const call of mode.calls) {
+        this.toolCallCounter += 1;
+        const toolCallId = `smoke-tool-call-${this.toolCallCounter}`;
+        this.emit({ type: "tool_execution_start", toolCallId, toolName: call.name, args: call.args });
+        const gate = this.toolGate;
+        const verdict =
+          gate === null ? undefined : await gate({ toolName: call.name, args: call.args });
+        if (verdict !== undefined && verdict.block) {
+          this.blockedToolCalls.push(call.name);
+          this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: true });
+        } else {
+          this.executedToolCalls.push(call.name);
+          this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: false });
+        }
+        await delay(1);
+      }
     }
 
     // Deterministic echo of the user texts visible on this branch.

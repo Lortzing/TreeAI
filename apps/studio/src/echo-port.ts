@@ -17,6 +17,12 @@
  * - prompt: agent_start -> turn -> agent_settled, then the promise resolves;
  *   answers are deterministic ECHOES of the user texts visible on the current
  *   branch (this is what proves branch context isolation);
+ * - optional scripted tool calls (toolCalls option, test hook for the
+ *   ToolPolicy request-time gate): each turn "requests" the configured tool
+ *   calls through the runtime-installed tool execution gate
+ *   (Agent.beforeToolCall equivalent) BEFORE any execution — blocked calls
+ *   never execute and end with an error tool result, exactly like the real
+ *   Pi loop; the default (no toolCalls) changes nothing;
  * - failure injection (deterministic test hook, documented): a prompt whose
  *   (composed) text starts with ECHO_FAILURE_PREFIX ("/fail") makes the
  *   assistant turn end with stopReason "error" and a state errorMessage of
@@ -74,6 +80,12 @@ export const ECHO_FAILURE_PREFIX = "/fail";
 
 /** Failure message used by the injection hook (matches the upstream pattern). */
 export const ECHO_FAILURE_MESSAGE = "simulated upstream failure (500)";
+
+/** 一次脚本化工具调用（离线驱动的「模型请求工具」形态）。 */
+export interface EchoToolCall {
+  readonly name: string;
+  readonly args?: Readonly<Record<string, unknown>>;
+}
 
 function isFailureInjection(text: string): boolean {
   return text.startsWith(ECHO_FAILURE_PREFIX);
@@ -206,16 +218,28 @@ export class EchoPiSession {
   private aborted = false;
   private disposed = false;
   private turnFailed = false;
+  private toolGate: ((
+    request: { readonly toolName: string; readonly args: unknown },
+  ) => Promise<{ readonly block: boolean; readonly reason?: string; readonly terminate?: boolean } | undefined>) | null =
+    null;
+  private readonly toolCalls: readonly EchoToolCall[];
+  private toolCallCounter = 0;
+  /** 经门放行后「执行」的工具名序列（断言 denied 工具从未出现于此）。 */
+  readonly executedToolCalls: string[] = [];
+  /** 被门阻止（未执行）的工具名序列。 */
+  readonly blockedToolCalls: string[] = [];
   private readonly stateRef: { errorMessage?: string } = {};
 
   constructor(
     manager: EchoSessionManager,
     model: { provider: string; id: string } | undefined,
     turnDelayMs: number = 1,
+    toolCalls: readonly EchoToolCall[] = [],
   ) {
     this.sessionManager = manager;
     this.modelRef = model;
     this.turnDelayMs = turnDelayMs;
+    this.toolCalls = toolCalls;
     this.rebuildMessages();
   }
 
@@ -250,6 +274,16 @@ export class EchoPiSession {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /** 安装请求时工具执行门（PiPortSession 缝；runtime 注入）。 */
+  installToolExecutionGate(
+    gate: (request: {
+      readonly toolName: string;
+      readonly args: unknown;
+    }) => Promise<{ readonly block: boolean; readonly reason?: string; readonly terminate?: boolean } | undefined>,
+  ): void {
+    this.toolGate = gate;
   }
 
   private emit(event: { type: string; [key: string]: unknown }): void {
@@ -373,6 +407,26 @@ export class EchoPiSession {
       return;
     }
 
+    // Scripted tool calls (mirror of the Pi 0.85.1 agent loop order):
+    // tool_execution_start → gate (Agent.beforeToolCall equivalent) →
+    // execute-or-block → tool_execution_end. Blocked calls never execute.
+    for (const call of this.toolCalls) {
+      this.toolCallCounter += 1;
+      const toolCallId = `echo-tool-call-${this.toolCallCounter}`;
+      this.emit({ type: "tool_execution_start", toolCallId, toolName: call.name, args: call.args });
+      const gate = this.toolGate;
+      const verdict =
+        gate === null ? undefined : await gate({ toolName: call.name, args: call.args });
+      if (verdict !== undefined && verdict.block) {
+        this.blockedToolCalls.push(call.name);
+        this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: true });
+      } else {
+        this.executedToolCalls.push(call.name);
+        this.emit({ type: "tool_execution_end", toolCallId, toolName: call.name, isError: false });
+      }
+      await delay(this.turnDelayMs);
+    }
+
     // Deterministic echo of the user texts visible on this branch.
     const answer = echoAnswer(
       this.sessionManager
@@ -465,6 +519,12 @@ export interface EchoSdkPortOptions {
    * deterministic in-flight window (abort) raise this to widen it.
    */
   readonly turnDelayMs?: number;
+  /**
+   * 工具调用脚本（测试钩）：每个 turn 在回声回答前依次「请求」这些工具
+   * 调用；经 runtime 安装的请求时工具执行门评估（ToolPolicy 集成测试
+   * 用）。默认空 = 不请求任何工具（产品默认行为不变）。
+   */
+  readonly toolCalls?: readonly EchoToolCall[];
 }
 
 /**
@@ -476,6 +536,7 @@ export class EchoSdkPort {
   private readonly providerId: string;
   private readonly modelId: string;
   private readonly turnDelayMs: number;
+  private readonly toolCalls: readonly EchoToolCall[];
   readonly createdManagers: EchoSessionManager[] = [];
   readonly createdSessions: EchoPiSession[] = [];
 
@@ -483,6 +544,7 @@ export class EchoSdkPort {
     this.providerId = options?.model?.providerId ?? "studio-provider";
     this.modelId = options?.model?.modelId ?? "studio-model";
     this.turnDelayMs = options?.turnDelayMs ?? 1;
+    this.toolCalls = options?.toolCalls ?? [];
   }
 
   async createServices(
@@ -592,7 +654,7 @@ export class EchoSdkPort {
       manager.append({ type: "thinking_level_change" });
     }
 
-    const session = new EchoPiSession(manager, model, this.turnDelayMs);
+    const session = new EchoPiSession(manager, model, this.turnDelayMs, this.toolCalls);
     this.createdSessions.push(session);
     return { session, modelFallbackMessage };
   }
