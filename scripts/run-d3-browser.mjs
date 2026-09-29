@@ -94,7 +94,7 @@ import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -1158,15 +1158,21 @@ function tpPath(action) {
   return `/api/trees/${encodeURIComponent(tp.probeTreeId)}${action === undefined ? "" : `/${action}`}`;
 }
 
-/** 探针树当前渲染的 assistant 回合数（探针树自动打开在主线视图）。 */
+/** 探针树当前渲染的 assistant 回合数（探针树自动打开在主线视图）。
+ * 流式占位（#streaming-turn，瞬态 .turn.assistant 元素）不是已完成回合：
+ * 真实模型首录（20260929T160209Z）证明把它计入会让结局检测在占位刚挂载
+ * 时就误读「新回答」（空文本）并误判 escape——本函数与 waitForProbeOutcome
+ * 只数已完成回合。 */
 async function probeAssistantTurnCount() {
-  return evalJs("document.querySelectorAll('#conversation .turn.assistant').length");
+  return evalJs("document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)').length");
 }
 
-/** 探针干线回合数：页面侧（#conversation .turn 总数）+ 服务器侧（state
- *  trunk turns）——policy-denied 的「零回合落库」两侧同时核对。 */
+/** 探针干线回合数：页面侧（#conversation 已完成 .turn 总数——流式占位
+ *  #streaming-turn 是瞬态 UI 回显，不是落库回合，policy-denied 断言不得
+ *  把它数进去）+ 服务器侧（state 的 trunk turns）——policy-denied 的
+ *  「零回合落库」两侧同时核对。 */
 async function probeTurnCounts() {
-  const pageTurns = await evalJs("document.querySelectorAll('#conversation .turn').length");
+  const pageTurns = await evalJs("document.querySelectorAll('#conversation .turn:not(#streaming-turn)').length");
   const state = await api("GET", tpPath("state"));
   assert(state.status === 200, `probe tree state fetch failed: ${String(state.status)}`);
   const trunkView = (state.body?.branches ?? []).find((view) => view.branch.id === sc.toolPolicy.probeTrunkId);
@@ -1215,6 +1221,8 @@ function failureErrorCode(bannerText, panelText) {
  * 探针 prompt 的结局检测（页面没有 HTTP 状态可看，结局不可知论）：
  * 轮询直到「新 assistant 回合出现」（成功或逃逸——由调用方看文本是否
  * 携带标记）或「错误横幅/常驻失败面板可见」（失败——文本携带错误码）。
+ * 只数已完成回合（.turn.assistant 排除 #streaming-turn 流式占位——真实
+ * 模型首录证明占位一挂载就满足「新回合」会把空占位误读为逃逸回答）。
  * 超时附带页面事实与服务器活性对照（镜像 waitForAnswerMarkers 的诊断）。 */
 async function waitForProbeOutcome(assistantBefore, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
@@ -1225,7 +1233,7 @@ async function waitForProbeOutcome(assistantBefore, timeoutMs) {
         const bannerVisible = banner !== null && !banner.hidden && banner.textContent.length > 0;
         const panel = document.getElementById('failure-panel');
         const panelVisible = panel !== null && !panel.hidden && panel.textContent.length > 0;
-        const turns = [...document.querySelectorAll('#conversation .turn.assistant')];
+        const turns = [...document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)')];
         return {
           bannerVisible,
           bannerText: bannerVisible ? banner.textContent : null,
