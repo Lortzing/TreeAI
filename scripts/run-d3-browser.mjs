@@ -116,7 +116,7 @@ import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.3.0";
+const VERSION = "1.3.1";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -986,9 +986,26 @@ async function dragSelect(selector, from, to) {
       if (fromBox === null || toBox === null) return null;
       /* 目标区滚入安全视口带：从内层滚动容器向外找（无内层可滚则文档
          滚动——见函数头的产品布局注记），把区间中点滚到该层视口中央；
-         逐层最多 3 轮（内层滚到头仍出带 → 下一轮向外层找）。 */
-      const bandTop = 80;
-      const bandBottom = window.innerHeight - 80;
+         逐层最多 3 轮（内层滚到头仍出带 → 下一轮向外层找）。
+         v1.3.1：安全带以目标最近的滚动容器的可视矩形为准，并与窗口带
+         取交（限高骨架下 #conversation 的可视带远小于窗口——上沿顶栏、
+         下沿 composer；仅按窗口带判断时，位于容器裁剪沿之下的字符盒会
+         被误判为已入带，拖选落点落到 composer 上，原生选区逃出答案
+         turn，武装失败——2026-09-30 视觉重构波真实模型跨行深选区场景
+         实录，回放见该波记录）。 */
+      const clipRect = (() => {
+        let node = el.parentElement;
+        while (node !== null && node !== document.body) {
+          const cs = getComputedStyle(node);
+          if (/(auto|scroll|overlay)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) {
+            return node.getBoundingClientRect();
+          }
+          node = node.parentElement;
+        }
+        return null;
+      })();
+      const bandTop = clipRect === null ? 80 : Math.max(80, clipRect.top + 24);
+      const bandBottom = clipRect === null ? window.innerHeight - 80 : Math.min(window.innerHeight - 80, clipRect.bottom - 24);
       const inBand = () => Math.min(fromBox.top, toBox.top) >= bandTop && Math.max(fromBox.bottom, toBox.bottom) <= bandBottom;
       let searchFrom = el.parentElement;
       let scrolledBy = "none";
