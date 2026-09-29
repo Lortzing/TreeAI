@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "d3-offline-environment-1",
+  "boundCommit": "d061b5f",
+  "recordedAt": "2026-09-29T07:22:00Z",
+  "operator": "treeai-loop scheduled run (Claude Fable 5)",
+  "node": "v24.21.0",
+  "npm": "11.19.0",
+  "platform": "darwin 25.6.0 (arm64)",
+  "mode": "offline (echo driver; no model credentials, no network model calls)"
+}

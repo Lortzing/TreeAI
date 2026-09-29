@@ -8,9 +8,11 @@ Gate 1 → Gate 2 with acceptance matrix A1–A7; acceptance report pinned at
 contracts (W1) and does not sign any gate — Gate 2 Go/No-Go is an owner
 decision.
 
-The pinned acceptance report's verdict stands: **D3 Gate 2 is not passed**;
-the Studio is an offline-Echo internal prototype until the matrix below is
-closed with evidence bound to a single commit.
+The pinned acceptance report's verdict stands: **D3 Gate 2 is not passed**. The
+revision work the report prescribes (issue #2 P0/P1) has landed in-repo (see
+below), but the Go conditions — full real-Pi evidence for A1, owner signature
+on W1, per-screen visual comparison, and the 3–5 person trials, all bound to a
+single commit — remain open owner-side steps.
 
 ## What has landed in-repo
 
@@ -19,22 +21,28 @@ closed with evidence bound to a single commit.
 | `0e71d75` | D3 Studio MVP: offline Echo vertical slice — create/open Tree, Trunk conversation, anchored branch, branch continuation, navigate back, Return edit + explicit submit; all product state in the TreeAI database |
 | `99e92e7` | P0 fixes: clean install (lockfile entry), Return retry consistency (navigate before persist), Studio suite in root `npm test` |
 | `673cef8` | P1: run/abort diagnostics (runtime state, in-flight run, DB rows), anchored source highlight restore, controlled real-Pi wiring (env-only `TREEAI_STUDIO_API_KEY`, controlled `--agent-dir`, no `~/.pi` fallback) |
-| this change | Studio suite added to the `verify:d2` offline CI gate (the remaining W0 / D3-P0 CI item) |
+| `0fa1028` | Studio suite added to the `verify:d2` offline CI gate (the remaining W0 / D3-P0 CI item) — the SHA the pinned acceptance report (issue #2) judged |
+| `8671136` | D3 P0 per issue #2: Return idempotency — `idempotencyKey` (partial unique index; same-key/same-content replays with zero writes, different content → 409 `return-conflict`), `targetAnchor` submit-time snapshot, draft/confirmed/delivered vocabulary; navigation-before-persist order kept; response-loss/double-click/concurrency/missing-session test classes |
+| `7cfd8ef` | Gate 0 drafts per issue #2: `W1-product-contracts.md` (anchor/Return/failure-idempotency contracts, **draft — owner signature pending**), `W2-frontend-prototype.md` (per-screen state checklist + motion storyboard), `evidence/d3/` scaffold (offline/real-pi/trials + run-record template) |
+| `6ff7146` | D3 P1 per issue #2: SSE streaming events (`/events`: snapshot + run-started/message-delta/abort-requested/run-terminal/tool-activity), persistent failure panel, distinct aborted state, sources drawer with event-journal tail (`/journal`, conservative projection), missing-session degradation (`sessionAvailability` live probe, branch badges/banners, fail-closed composers); deterministic `/fail` model-error injection for tests |
+| `9008cf6` | Owner-recorded sanitized evidence: two successful real-Pi (controlled DeepSeek driver) Trunk prompts on the controlled agent directory — first in-repo real-Pi run record; no credentials, no gate claims |
+| `d061b5f` | D3 P1 per issue #2 视觉: main-line reading + local branch panels (anchor-scoped side panel, fixed source/return affordances), anchored Return cards with M3/M4 motion and deliveredRunId cross-reference, localStorage return drafts (client-side per W1 §2.1), per-branch scroll restore, keyboard focus management, restrained motion with global `prefers-reduced-motion` switch, narrow-window layout |
 
-## Acceptance matrix status (as of this commit)
+## Acceptance matrix status (as of `d061b5f`)
 
 | Criterion | Scope | In-repo state |
 | --- | --- | --- |
-| A1 主线与两条支线 | two branches from different anchors, ≥2 follow-ups each, real-Pi, no context bleed | Echo path covered by automated tests; real-Pi wiring landed in `673cef8` but **no real-Pi end-to-end evidence recorded in-repo yet** |
-| A2 锚点与导航 | duplicate/cross-line/long selections, dead-reference degradation, reading-position restore | duplicate + cross-line + dead-reference degradation covered by tests (`apps/studio/tests/service.test.ts`); reading-position restore present in UI but **not formally verified** |
-| A3 Return 语义 | draft not effective until confirmed, target anchor, delivery traceable, idempotent retry | navigation-before-persist landed in `99e92e7`; **draft / target-anchor / delivery surfaces not built** |
-| A4 恢复与故障 | restart persistence, missing-session browse + actionable recovery hint | restart recovery + interrupted-run convergence covered by tests; **missing-session UI degradation hint not built** |
-| A5 Run 与权限 | streaming/stop/error/policy terminal states, overreach denial, Run provenance | run/abort diagnostics landed in `673cef8`; **streaming UI push and policy/journal surfacing not built** (documented non-goal in `apps/studio/src/service.ts`) |
-| A6 独立试用 | 3–5 non-developer trials on one real task script | **not started** |
-| A7 视觉与动效 | per-screen review against the high-fidelity spec | **not started** |
+| A1 主线与两条支线 | two branches from different anchors, ≥2 follow-ups each, real-Pi, no context bleed | Echo path fully covered by automated tests; real-Pi wiring landed and **first real-Pi Trunk prompts recorded** (`9008cf6`); the full two-branch real-Pi scenario (two anchors, ≥2 follow-ups each, no bleed) **not yet recorded** |
+| A2 锚点与导航 | duplicate/cross-line/long selections, dead-reference degradation, reading-position restore | duplicate + cross-line + dead-reference degradation covered by tests; absolute-offset selection, per-branch reading-position restore, and the anchor-scoped panel UI landed (`d061b5f`); long-answer UI behavior and full target-Mac operation **not yet owner-verified** |
+| A3 Return 语义 | draft not effective until confirmed, target anchor, delivery traceable, idempotent retry | **landed end-to-end offline** (`8671136` + `d061b5f`): draft/confirmed/delivered states, `targetAnchor` cards at the fork point, `idempotencyKey` idempotency (replay/conflict/concurrency tests), `deliveredRunId` cross-reference into the sources drawer, persistent client-side drafts; real-Pi delivery verification **not yet recorded** |
+| A4 恢复与故障 | restart persistence, missing-session browse + actionable recovery hint | restart recovery + interrupted-run convergence covered by tests; missing-session **readable degradation + actionable recovery + fail-closed continuation landed** (`6ff7146`); real-device verification **not yet done** |
+| A5 Run 与权限 | streaming/stop/error/policy terminal states, overreach denial, Run provenance | **streaming UI push, stop, error terminal states, run provenance + journal tail landed** (`6ff7146`); policy honesty retained (empty allowlist → no tool decisions observed offline; tool-activity projection is real-Pi-only); real-Pi run with tools and policy-denial surfacing **not yet recorded** |
+| A6 独立试用 | 3–5 non-developer trials on one real task script | **not started** (owner-organized) |
+| A7 视觉与动效 | per-screen review against the high-fidelity spec | prototype rework per the W2 checklist landed (`d061b5f`, see W2 更新记录); per-screen recording comparison, narrow-window and reduced-motion spot-checks on the target Mac **remain owner-manual** |
 
-## Not started outside the matrix
+## Evidence areas
 
-- No `evidence/d3/` area and no D3 acceptance script yet (Gate 0 artifacts:
-  baseline is this commit; CI coverage closed by this change; the W1 product
-  contract freeze remains open and owner-owned).
+- `evidence/d3/real-pi/` — opened; first owner-recorded controlled real-Pi (DeepSeek) trunk smoke (`9008cf6`). The full A1 two-branch scenario, failure injections, and delivery traces are still to be recorded there.
+- `evidence/d3/offline/` — opened; gate records bound to the implementation SHAs.
+- `evidence/d3/trials/` — scaffold only; nothing recorded.
+- W1 contract freeze: drafted in `W1-product-contracts.md` (`7cfd8ef`), **owner signature pending**.

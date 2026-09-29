@@ -8,7 +8,30 @@
 > 状态记录以 `docs/d3/D3-status.md` 为准。
 >
 > 本清单状态列反映撰写时点（2026-09-29，与 W1 契约实现同一 push 的仓库
-> 状态）。
+> 状态）；**更新记录见文末**——后续落地的项以更新记录为准，对应状态应读作
+> 「待 owner 验收」。
+
+## 更新记录
+
+- **2026-09-29 · `6ff7146`**：§2.5 流式推送（SSE `/events`：snapshot +
+  run-started/message-delta/abort-requested/run-terminal/tool-activity，
+  EventSource 替代轮询、断流降级轮询）、§2.7 来源抽屉（per-run 出处 +
+  Return 出处 + journal 尾部 `/journal` + 如实空态）、§2.8 缺失 session
+  降级（服务端 `sessionAvailability` 实时探针 + 分支 tab 徽标 + 常驻面板
+  提示 + 续聊入口 fail-closed 禁用 + 主线可 dismiss 横幅）已按实现口径
+  落地；事件与 journal 端点的自动化测试见
+  `apps/studio/tests/events.test.ts`。
+- **2026-09-29 · `d061b5f`**：主线阅读 + 局部支线改版落地（实现口径）——
+  主阅读面板恒为 Trunk；支线以锚点作用域的右侧覆盖层面板打开（开合与
+  转场期间主线阅读位置不动）；面板头部固定「View source / Back to
+  Trunk」操作；锚点 Return 卡（M3 插入 / M4 徽标动效 + deliveredRunId
+  反查入口）；Return 草稿 localStorage 持久化（W1 §2.1 客户端语义）；
+  每分支滚动位置恢复；键盘焦点管理（面板入焦/Esc 逐层关闭并还原焦点）；
+  M1–M7 动效与全局 `prefers-reduced-motion` 降级（流式 caret 改为静态
+  指示）；窄窗 <720px（面板/抽屉全宽、侧栏抽屉、状态条压缩）。实现取舍：
+  面板为覆盖层而非推挤（保证主线不动）；origin banner 内容并入面板头部。
+  上述项的状态应读作「待 owner 验收」；**录屏逐屏对照、窄窗实机、
+  屏幕阅读器检查仍为 owner 手动步骤**（含 §4 目标 Mac 完整操作）。
 
 ## 0. 状态词
 
