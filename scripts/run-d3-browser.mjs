@@ -1803,7 +1803,7 @@ async function stepToolPolicyDenyFailClosed() {
     `failure panel text unexpected: ${truncate(sanitizeText(panelText), 160)}`,
   );
   const composerEnabled = await evalJs("document.getElementById('prompt-input').disabled === false");
-  assert(composerEnabled === true, "trunk composer stayed disabled after the policy-denied run converged");
+  assert(composerEnabled === true, "trunk composer did not re-enable after the policy-denied run converged");
   await snap("tool-policy-deny");
   /* API 交叉核对：诊断面有 policy-denied 失败 run；runtimeState 复位。 */
   const diag = await api("GET", tpPath("diagnostics"));
@@ -2804,7 +2804,7 @@ async function main() {
     );
     /* 失败后 composer 解锁（终局渲染保证）且主线可续用（恢复路径）。 */
     const composerEnabled = await evalJs("document.getElementById('prompt-input').disabled === false");
-    assert(composerEnabled === true, "trunk composer stayed disabled after the failed run converged");
+    assert(composerEnabled === true, "trunk composer did not re-enable after the failed run converged");
     await sendTrunkPrompt(SCENARIO.recovery, { keyboard: false });
     await waitForAnswerMarkers("#conversation", MODE === "selftest" ? ["back-online"] : ["back-online"], CLI.promptTimeoutMs, 4);
     sc.trunkTurnCount += 2; /* /fail 零回合落库；恢复 prompt 落 1 对回合（断言前登记） */
