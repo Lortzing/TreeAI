@@ -1,0 +1,136 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "new-tree",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_e9ccfaed-cf90-436d-8919-886b50ad4835",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_a427a189-9ab6-46f5-8616-5d549f3d7d32",
+        "text": "understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "return",
+        "turnId": "turn_3b5593d0-e915-43d3-8d74-1231c997b69d",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_219cef60-6c29-4951-bdfe-37d0f9ebb4c5",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_7db84dac-273a-430a-ab93-6f88aa801adf",
+        "text": "noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_b2acd94f-1aa9-4d1f-a1b8-50cc8b93daed",
+        "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_0f902b73-b7c9-4b5e-935f-2acaa701e9f3",
+        "text": "The branch returned: aspen"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_0048939d-01ee-4555-a778-69dd62bd55ed",
+        "text": "After the restart, the main line continues. Reply with: restart-ok."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_5a9e0127-41b2-43d5-b687-45abcecf212d",
+        "text": "restart-ok"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_c0cf107b-c848-4e80-93a6-189869d8a824",
+        "text": "Please write a short paragraph (about 80 words) about tides. Then reply with: done-tides."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_760b8c17-d6be-4bc1-8ab6-a5e673215e8c",
+        "text": "The ocean's tides are the rhythmic rise and fall of sea levels, driven mainly by the gravitational pull of the Moon and, to a lesser extent, the Sun. As Earth rotates, bulges of water form on the sides facing and opposite the Moon. Most coastlines experience two high and two low tides each lunar day. Local geography, winds, and currents shape the exact timing and height, producing variations ranging from gentle swings to dramatic tidal bores in narrow estuaries.\n\ndone-tides"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · anchored on “understood — the trunk topic is apples and the codew” from Trunkdelivered into Trunk context (run run_7a377d1b…)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": true,
+      "deliveryText": "delivered into Trunk context (run run_7a377d1b…)"
+    }
+  ],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

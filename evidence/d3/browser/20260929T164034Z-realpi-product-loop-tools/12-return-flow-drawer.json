@@ -1,0 +1,127 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "source-drawer",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "Branch 1",
+    "anchorContext": "Branched from Trunk — anchored selection: “understood — the trunk topic is apples and the codew” · source available",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_e9ccfaed-cf90-436d-8919-886b50ad4835",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_a427a189-9ab6-46f5-8616-5d549f3d7d32",
+        "text": "understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "return",
+        "turnId": "turn_3b5593d0-e915-43d3-8d74-1231c997b69d",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_219cef60-6c29-4951-bdfe-37d0f9ebb4c5",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_7db84dac-273a-430a-ab93-6f88aa801adf",
+        "text": "noted — the secret number 4127 is registered on the main line."
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_f5636a90-4c66-416d-953d-6bb3d65a7598",
+        "text": "We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_e2ef62a1-87ce-45b3-b3b9-f7945ed6c65d",
+        "text": "ok-a1."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_be3a8700-f544-446d-a781-e0d5fcccd97e",
+        "text": "Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_34a5b534-84cb-475f-ad24-1a12b231a79f",
+        "text": "maple, cedar"
+      }
+    ]
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · anchored on “understood — the trunk topic is apples and the codew” from Trunkconfirmed — delivered on the next Trunk promptBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": false,
+      "deliveryText": "confirmed — delivered on the next Trunk prompt"
+    }
+  ],
+  "drawer": {
+    "open": true,
+    "toggleExpanded": "true",
+    "text": "Sources× CloseRunsTrunk · run run_e93f7a78… · succeeded · 00:40:36 → 00:40:36Trunk · run run_6f7b9135… · succeeded · 00:40:36 → 00:40:37Branch 1 · run run_755a01c4… · succeeded · 00:40:38 → 00:40:38Branch 1 · run run_8103831d… · succeeded · 00:40:39 → 00:40:40Branch 2 · run run_b77608e2… · succeeded · 00:40:42 → 00:40:42Branch 2 · run run_c04ceb31… · succeeded · 00:40:42 → 00:40:44Returnsfrom Branch 1 · anchored on “understood — the trunk topic is apples and the codew” from Trunk · not yet deliveredJournal (latest 20)00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.updated — message delta received (3 chars)00:40:44 message.updated — message delta received (2 chars)00:40:44 message.updated — message update received00:40:44 message.updated — message update received00:40:44 message.completed — message completed (assistant), stop: stop00:40:44 turn.completed — turn completed (stop: stop)00:40:44 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}
