@@ -486,9 +486,9 @@ UI）在真实渲染面上发现的偏差——非 W2 自记项，属新增裁�
 
 | # | W2 位置 | 现状（事实） | 选项与代价 | 裁决 / 日期 / 备注 |
 | --- | --- | --- | --- | --- |
-| 附-4 | §2.7 来源抽屉（宽窗行） | 抽屉为 fixed 右侧整幅覆盖层（`#source-drawer` `z-index:20`、宽 360px、`top/right/bottom:0`）。打开时**同时盖住**主线 composer 的 Send 按钮（`.composer-actions` 右对齐）与 Sources 开关自身（branch-bar 最右）——鼠标用户关闭抽屉的唯一路径是 **Esc**；开关上的「× Close sources」文案对鼠标不可达。窄窗全幅抽屉同理盖住整幅视口 | A 接受现状（键盘 Esc 为唯一关闭路径；W2 §2.7 键盘行已列 Esc 逐层关闭语义；代价为零）；B 抽屉加自身关闭按钮（抽屉头部加「×」按钮 + 点击关闭；改动点：`renderDrawer()` 头部 + `closeDrawer` 复用 + ui-probe/browser 断言）；C 抽屉改非覆盖布局（主线让位；动效与阅读位置语义需重设计，代价最高） |  |
+| 附-4 | §2.7 来源抽屉（宽窗行） | **已随本波次落地（option B 方向）**：抽屉头部加可见关闭按钮——`renderDrawer()` 头部渲染 `#drawer-close`（真 `<button>`、文案「× Close」、抽屉内首个可交互元素），点击复用 `closeDrawer()`（开关 aria-expanded/文案就地对齐 + 焦点还原——与 Esc 同一关闭语义，不另开路径）；`style.css` 新增 `.drawer-head`（标题/关闭按钮 flex 行，宽窗右侧抽屉与窄窗全幅抽屉同排布）与 `#drawer-close`（复用 `.drawer-retry` 的按钮语汇：`var(--line)`/`var(--ink)`/`var(--bg)`）；ui-probe 新增关闭按钮场景（渲染契约 + 点击关闭 + 开关 aria/文案翻转 + Esc 路径不回归）。覆盖事实不变：抽屉仍为 fixed 覆盖层（`z-index:20`、宽窗 360px、窄窗全幅），打开时仍盖住 Send 与 Sources 开关自身（下行证据）——变化仅在覆盖层内新增了鼠标可见的关闭路径。浏览器波 `fcfae52` 时鼠标用户唯一关闭路径为 Esc（开关「× Close sources」文案被盖住、鼠标不可达） | A 接受本波实现（option B 方向；代价已付；Esc 逐层关闭语义不变）；B 回退为「Esc 为唯一关闭路径」（回退点：`renderDrawer()` 头部 `.drawer-head`/`#drawer-close` 渲染 + click 监听、`style.css` `.drawer-head`/`#drawer-close` 规则、ui-probe 关闭按钮场景及文件头覆盖清单对应条目）；C 抽屉改非覆盖布局（主线让位；动效与阅读位置语义需重设计，代价最高，且需先回退本波按钮方案） |  |
 
-证据：`evidence/d3/browser/20260929T144428Z-echo-product-loop.md`（elementFromPoint 覆盖防护在抽屉打开时拒绝 Send/开关点击，逐项复现）；同 SHA 真实 Pi 浏览器录制同现。
+证据：`evidence/d3/browser/20260929T144428Z-echo-product-loop.md`（elementFromPoint 覆盖防护在抽屉打开时拒绝 Send/开关点击，逐项复现）；同 SHA 真实 Pi 浏览器录制同现。证据时点为浏览器波 `fcfae52`——覆盖事实（盖住 Send/开关）此后不变，上表附-4 的关闭按钮为其后的并行实现波次落地，证据文件本身不改写。
 
 ---
 

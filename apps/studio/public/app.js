@@ -1918,9 +1918,20 @@ function renderDrawer() {
 
   drawer.replaceChildren();
   drawerRunItems.clear();
+  /* 抽屉头部（附-4，option B 方向）：抽屉为覆盖层，打开时同时盖住主线
+     composer 的 Send 与 Sources 开关自身——鼠标用户此前唯一关闭路径是
+     Esc。头部加可见关闭按钮，点击复用 closeDrawer()（开关 aria 对齐 +
+     焦点还原与 Esc 同一语义，不另开关闭路径）。 */
+  const head = document.createElement("div");
+  head.className = "drawer-head";
   const title = document.createElement("h2");
   title.textContent = "Sources";
-  drawer.append(title);
+  const close = document.createElement("button");
+  close.id = "drawer-close";
+  close.textContent = "× Close";
+  close.addEventListener("click", () => closeDrawer());
+  head.append(title, close);
+  drawer.append(head);
 
   /* per-run 出处（诊断面安全投影）。 */
   const runsTitle = document.createElement("h3");

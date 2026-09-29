@@ -53,6 +53,10 @@
  * 17. A2 选区锚点三场景（issue #6 P1 / W2 §4）：数千字符多段长答案的
  *     后段选区、重复词的**第二处**、跨换行选区——精确 {start,end,text}
  *     提交与揭示切片落位（非整条回退、非首处字符串匹配顶替）。
+ * 18. §2.7 抽屉关闭按钮（issue #6 附-4 / option B 方向）：覆盖层打开时
+ *     头部渲染可见关闭按钮（#drawer-close 真按钮、「× Close」文案、抽屉
+ *     内首个可交互元素），点击复用 closeDrawer()（隐藏 + 开关
+ *     aria-expanded/文案就地对齐 + 焦点还原）；Esc 关闭路径不回归。
  *
  * 边界（如实声明）：本套件不是真实浏览器 E2E——像素级视觉基线、布局合成、
  * 真实滚动物理、键盘/读屏器实机行为不在覆盖范围；CSS 不执行，媒体查询按
@@ -1459,6 +1463,56 @@ test("journal drawer: failure with retry, honest empty state, Esc focus restore"
   assert.ok(!drawer.textContent.includes("journal failed to load"), "loaded-empty is not a failure state");
   world.el("source-drawer-toggle").click();
   await settle();
+});
+
+/* ------------------------------------------------------------------ */
+/* 2b. 抽屉关闭按钮（附-4 / option B）：覆盖层打开时的可见关闭路径       */
+/* ------------------------------------------------------------------ */
+
+test("sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged", async () => {
+  const world = await createWorld();
+  const drawer = world.el("source-drawer");
+
+  /* 打开 → 头部渲染可见关闭按钮（附-4：抽屉盖住主线 Send 与 Sources 开关
+     自身——鼠标用户此前唯一关闭路径是 Esc）。 */
+  world.el("source-drawer-toggle").click();
+  assert.equal(drawer.hidden, false, "drawer opens");
+  const close = drawer.querySelector("#drawer-close");
+  assert.ok(close !== null, "the drawer header renders #drawer-close");
+  assert.equal(close.tagName, "BUTTON", "#drawer-close is a real button element");
+  assert.ok(close.textContent.startsWith("× Close"), "the close button text starts with '× Close'");
+  /* 抽屉内的可交互元素只有按钮（关闭 + journal 失败重试）——逐标签确认
+     #drawer-close 是文档序首个可交互元素。 */
+  for (const tag of ["a", "input", "textarea", "select"]) {
+    assert.equal(drawer.querySelector(tag), null, `the drawer carries no <${tag}> interactive elements`);
+  }
+  assert.equal(close, drawer.querySelector("button"),
+    "#drawer-close is the first interactive element inside the drawer");
+
+  /* 点击关闭：复用 closeDrawer()——隐藏 + 开关 aria-expanded/文案就地对
+     齐 + 焦点还原到触发元素（与 Esc 同一语义，不另开关闭路径）。 */
+  close.click();
+  assert.equal(world.document.activeElement, world.el("source-drawer-toggle"),
+    "closing via the button restores focus to the toggle");
+  await sleep(220);
+  assert.equal(drawer.hidden, true, "clicking #drawer-close hides the drawer");
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
+    "toggle aria-expanded flips to false on button close");
+  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+    "toggle label restored on button close");
+
+  /* Esc 路径不回归（附-4 只增不改）：再开后 Esc 仍关闭并还原焦点。 */
+  world.el("source-drawer-toggle").click();
+  assert.equal(drawer.hidden, false, "drawer reopens");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.document.activeElement, world.el("source-drawer-toggle"),
+    "Esc still restores focus to the toggle");
+  await sleep(220);
+  assert.equal(drawer.hidden, true, "Esc still closes the drawer");
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
+    "Esc close still flips the toggle aria-expanded");
+  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+    "Esc close still restores the toggle label");
 });
 
 /* ------------------------------------------------------------------ */

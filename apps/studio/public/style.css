@@ -480,6 +480,27 @@ button.drawer-toggle:hover { background: var(--bg); }
 }
 #source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
 #source-drawer h3 { font-size: 12px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* 抽屉头部（附-4，option B 方向）：标题与关闭按钮同行——覆盖层打开时
+   盖住主线 Send 与 Sources 开关自身，鼠标用户需要抽屉内的可见关闭路径
+   （此前唯一关闭路径是 Esc）。宽窗右侧抽屉与窄窗全幅抽屉同一排布。 */
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+}
+#source-drawer .drawer-head h2 { margin: 0; }
+#drawer-close {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+#drawer-close:hover { background: var(--bg); }
 .drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
 .drawer-list li { margin: 4px 0; line-height: 1.45; }
 .drawer-list.journal-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
