@@ -1,0 +1,1151 @@
+{
+  "script": "run-d3-browser",
+  "version": "1.3.2",
+  "mode": "selftest",
+  "generatedAt": "2026-09-29T23:15:41.842Z",
+  "git": {
+    "head": "1380a3967f7630763a2caf9f2f2ac935a83e08f4",
+    "dirty": false
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "page-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tree-create",
+      "status": "PASS"
+    },
+    {
+      "id": "trunk-main-line",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-anchoring",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "switch-navigation",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "no-context-bleed",
+      "status": "PASS"
+    },
+    {
+      "id": "return-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "return-delivery",
+      "status": "PASS"
+    },
+    {
+      "id": "model-error-convergence",
+      "status": "PASS"
+    },
+    {
+      "id": "server-restart-recovery",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-session-degradation",
+      "status": "PASS"
+    },
+    {
+      "id": "response-loss-midstream",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "a11y-semantics",
+      "status": "PASS"
+    },
+    {
+      "id": "narrow-window-layout",
+      "status": "PASS"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-long",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-duplicate",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-cross-line",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-boot",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-allow-read",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-deny-fail-closed",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-deny-provenance",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-canary-never-read",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS"
+    }
+  ],
+  "pageFinalState": {
+    "url": "/",
+    "readyState": "complete",
+    "activeElementId": "",
+    "sidebar": {
+      "toggleExpanded": "false",
+      "treeCount": 4,
+      "driverNote": ""
+    },
+    "main": {
+      "emptyStateVisible": false,
+      "treeViewVisible": true,
+      "runStatus": "idle",
+      "runDetail": "last run: succeeded",
+      "abortVisible": false,
+      "failurePanel": {
+        "hidden": true,
+        "text": "Run run_b2fee4c6… failed — upstream: Error: simulated upstream failure (500)Dismiss"
+      },
+      "sessionBanner": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "role": "alert",
+        "text": ""
+      }
+    },
+    "panel": {
+      "hidden": true,
+      "title": "Branch 1",
+      "anchorContext": "Branched from Trunk — anchored selection: “anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line” · source available",
+      "sessionNote": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "text": ""
+      }
+    },
+    "conversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_3070cd25-9a8c-45e9-b714-c78d5a58fb88",
+          "text": "Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_278c761d-7d22-4bb0-a500-d78a4345bc81",
+          "text": "echo:[Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block.]"
+        }
+      ]
+    },
+    "panelConversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_4bdf2e8d-8cd1-48cb-82fc-67b2376ca01b",
+          "text": "Follow-up on the cross-line branch. Reply with exactly: deep-cross-branch-live."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_3759679d-8182-4b05-8f5e-5de6e7ca9436",
+          "text": "echo:[Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block.|Follow-up on the cross-line branch. Reply with exactly: deep-cross-branch-live.]"
+        }
+      ]
+    },
+    "branchTabs": [
+      {
+        "text": "Trunk",
+        "ariaCurrent": null
+      },
+      {
+        "text": "Branch 1 °",
+        "ariaCurrent": null
+      }
+    ],
+    "returnCards": [],
+    "drawer": {
+      "open": false,
+      "toggleExpanded": "false",
+      "text": "Sources× CloseRunsTrunk · run run_6e78082e… · succeeded · 07:15:20 → 07:15:20Trunk · run run_668a3f06… · succeeded · 07:15:20 → 07:15:20Branch 1 · run run_aacd224e… · succeeded · 07:15:21 → 07:15:21Branch 1 · run run_1c4008bd… · succeeded · 07:15:22 → 07:15:22Branch 2 · run run_e0bf898a… · succeeded · 07:15:24 → 07:15:24Branch 2 · run run_3a3c98f3… · succeeded · 07:15:24 → 07:15:24Trunk · run run_5d930635… · succeeded · 07:15:26 → 07:15:26Trunk · run run_b2fee4c6… · failed · failure upstream · 07:15:27 → 07:15:27Trunk · run run_eb5dc5fc… · succeeded · 07:15:27 → 07:15:27Trunk · run run_06601727… · succeeded · 07:15:30 → 07:15:30Returnsfrom Branch 1 · anchored on “ine, turn one. The trunk top” from Trunk · delivered into run run_5d930635…Journal (latest 20)07:15:27 message.started — message started (user)07:15:27 message.completed — message completed (user)07:15:27 message.started — message started (assistant)07:15:27 message.updated — message delta received (383 chars)07:15:27 message.updated — message delta received (382 chars)07:15:27 message.completed — message completed (assistant), stop: stop07:15:27 turn.completed — turn completed (stop: stop)07:15:27 agent.settled — agent run settled07:15:30 session.restored — session restored07:15:30 run.state-changed — run state changed: queued → running07:15:30 agent.started — agent run started07:15:30 turn.started — turn started07:15:30 message.started — message started (user)07:15:30 message.completed — message completed (user)07:15:30 message.started — message started (assistant)07:15:30 message.updated — message delta received (417 chars)07:15:30 message.updated — message delta received (416 chars)07:15:30 message.completed — message completed (assistant), stop: stop07:15:30 turn.completed — turn completed (stop: stop)07:15:30 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+    },
+    "composers": {
+      "trunkDisabled": false,
+      "panelDisabled": false,
+      "returnDisabled": false
+    }
+  },
+  "pageErrors": [],
+  "netLog": [
+    {
+      "id": "D1F869679BFF3DEA0B93C2C999E4212B",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.2",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.3",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.6",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.8",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.9",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.10",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.11",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "45162.12",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.13",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.14",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.15",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.16",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.17",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.18",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.19",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.20",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.21",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.22",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.23",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.24",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.25",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.26",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.27",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.28",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.29",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.30",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.31",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.32",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.33",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.34",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.35",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.36",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.37",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.38",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.39",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.40",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.41",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.42",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/return",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.43",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.44",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.45",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.46",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.47",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.48",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.49",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 502,
+      "failed": null
+    },
+    {
+      "id": "45162.50",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.51",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.52",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.53",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.54",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.55",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.56",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.57",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "45162.58",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "45162.59",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "44BAFFA1B1F601F14FA32B401376C176",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.61",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.62",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.65",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.66",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.67",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.68",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.69",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.70",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.71",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.72",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.73",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "428E5784104309FB11DE745A82E00DC5",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.75",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.76",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.79",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.80",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.81",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.82",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.83",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "D4EDE85828D830AA41EB3A5A73E2BCBD",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.85",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.86",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.89",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.90",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.91",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.92",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.93",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "45162.94",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.95",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.96",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_269b4ab0-f121-4087-8df4-f6a3f08aee87/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.97",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.98",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.99",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.100",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "45162.101",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.102",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.103",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.104",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.105",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.106",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/branches/branch_0eaed6d2-aac2-4baa-8a2f-c025731eec33/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.107",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.108",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.109",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.110",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.111",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_92c6b9c1-53b8-4512-a036-b914f5b05ab2/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.112",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.113",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.114",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.115",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "45162.116",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.117",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.118",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.119",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.120",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.121",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/branches/branch_c3d8378e-18ed-4a46-a5b1-0cfa110d2ffc/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.122",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.123",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.124",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.125",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.126",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_4ffba3f3-4766-450f-a404-737c98530333/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.127",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.128",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.129",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.130",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.131",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.132",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.133",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.134",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.135",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "45162.136",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/branches/branch_f7bdf407-3227-4316-b0aa-ece682dfde8d/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.137",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.138",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.139",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.140",
+      "method": "GET",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "45162.141",
+      "method": "POST",
+      "url": "http://127.0.0.1:62220/api/trees/tree_d82cdb4d-5ea4-48cf-84ad-b6368c432a8a/switch",
+      "status": 200,
+      "failed": null
+    }
+  ]
+}

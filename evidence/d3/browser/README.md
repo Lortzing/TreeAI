@@ -21,6 +21,15 @@
   0.85.1）；API key 只经 `TREEAI_STUDIO_API_KEY` 注入——记录中**最多出现
   变量名，绝不出现值**。
 
+## 运行前置（跑批器纪律）
+
+- 跑批器**绝不静默代为构建**：worktree 内先 `npm ci`，再执行
+  `npm run --workspace @treeai/event-journal build:test`——studio 服务
+  进程经 `@treeai/event-journal` 的编译入口 `dist/src/index.js` 消费，
+  缺该前置时 studio 引导以 `ERR_MODULE_NOT_FOUND` 如实失败
+  （`studio-boot` FAIL；`20260929T231541Z-echo-product-loop.md` 本波发现
+  首次显式记录此前隐式满足的该前置）。
+
 ## 记录必含
 
 - **驱动类别**（echo / 真实 Pi）在标题与基本信息中醒目标注；
