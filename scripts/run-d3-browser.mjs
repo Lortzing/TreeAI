@@ -96,6 +96,8 @@ const USAGE = [
   `         --provider ID --model ID  (and the ${PI_API_KEY_ENV} env var)`,
   "       optional: [--data DIR] [--keep-data] [--artifacts DIR]",
   "                 [--chrome-executable PATH] [--prompt-timeout-ms N]",
+  "       real-pi agent dir (non-secret provider/model registry):",
+  "         [--agent-dir DIR]  (default: the studio CLI's <data>/pi-agent)",
 ].join("\n");
 
 /* ------------------------------------------------------------------ */
@@ -174,6 +176,7 @@ function parseCli(argv) {
     promptTimeoutMs: DEFAULT_PROMPT_SETTLE_MS,
     provider: null,
     model: null,
+    agentDir: null,
   };
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
@@ -189,6 +192,7 @@ function parseCli(argv) {
     else if (flag === "--prompt-timeout-ms") raw.promptTimeoutMs = Number(value);
     else if (flag === "--provider") raw.provider = value;
     else if (flag === "--model") raw.model = value;
+    else if (flag === "--agent-dir") raw.agentDir = value;
     else throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
   }
   if (!MODES.includes(raw.mode)) throw new Error(`${USAGE}\n(--mode must be one of ${MODES.join(", ")})`);
@@ -199,13 +203,16 @@ function parseCli(argv) {
     if (raw.provider === null || raw.model === null) {
       throw new Error(`${USAGE}\n(--mode real-pi requires --provider and --model)`);
     }
+    if (raw.agentDir !== null && !existsSync(raw.agentDir)) {
+      throw new Error(`${USAGE}\n(--agent-dir does not exist: ${raw.agentDir})`);
+    }
     if (process.env[PI_API_KEY_ENV] === undefined || process.env[PI_API_KEY_ENV] === "") {
       throw new Error(
         `BLOCKED: --mode real-pi needs the ${PI_API_KEY_ENV} env var (name only is printed; the value is never read by this script)`,
       );
     }
-  } else if (raw.provider !== null || raw.model !== null) {
-    throw new Error(`${USAGE}\n(--provider/--model apply only to --mode real-pi)`);
+  } else if (raw.provider !== null || raw.model !== null || raw.agentDir !== null) {
+    throw new Error(`${USAGE}\n(--provider/--model/--agent-dir apply only to --mode real-pi)`);
   }
   return raw;
 }
@@ -741,6 +748,7 @@ function studioArgv(dataDir) {
   ];
   if (MODE === "real-pi") {
     argv.push("--driver", "pi", "--provider", CLI.provider, "--model", CLI.model);
+    if (CLI.agentDir !== null) argv.push("--agent-dir", CLI.agentDir);
   }
   return argv;
 }
