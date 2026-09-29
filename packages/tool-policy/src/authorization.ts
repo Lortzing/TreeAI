@@ -19,8 +19,8 @@
  */
 import { randomUUID } from "node:crypto";
 import type { ToolActionCategory } from "@treeai/contracts";
-import type { ToolPolicyAuditLog } from "./audit.js";
-import { canonicalizePath, isPathWithin } from "./paths.js";
+import type { ToolPolicyAuditLog } from "./audit.ts";
+import { canonicalizePath, isPathWithin } from "./paths.ts";
 
 /** 可授权的动作类别。 */
 export const GRANTABLE_CATEGORIES: readonly ToolActionCategory[] = ["write", "other-high-risk"];

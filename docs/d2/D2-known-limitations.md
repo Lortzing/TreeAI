@@ -158,3 +158,34 @@ The workflow treats offline exit 3 as an expected incomplete state so it still
 reaches the live step; FAIL and verifier errors remain blocking. D1 direct unit
 checks install missing sdk-node dependencies when `--repro` is explicitly
 requested, while ordinary offline runs do not perform a network install.
+
+## D2 packaging closure update (2026-09-30)
+
+Limitation #7 is closed (commit
+`7e8dcdd6a39f582206633d134ff30dce044d3a7f`). `@treeai/tool-policy` now
+declares `main`/`types`/`exports` → `./src/index.ts` — the same Node 24
+type-stripping entry point `runtime-pi` established per item 8 — and its
+internal imports use `.ts` specifiers, so the package loads directly from
+TypeScript sources. Every app-local compile workaround is removed: the
+`#tool-policy` `imports` maps, the tsconfig `paths` mappings, the three
+`tsconfig.tool-policy-build.json` files, and the `build:tool-policy` /
+`build:live-policy` / `preverify:d2:live` scripts. `packages/runtime-pi`
+(test battery), `apps/studio`, `apps/runtime-smoke` and
+`tests/live/framework.ts` now import `@treeai/tool-policy` through normal
+workspace resolution, and tool-policy's own test flow runs
+`node --test tests/*.test.ts` directly on the `.ts` sources (same four
+test files, same assertions, 58/58). Packaging/wiring only — no runtime
+behavior or public API changed; the gate set after the change:
+typecheck 0, full `npm test` 0, `test:integration` 0, `verify:d2`
+21 PASS / 0 FAIL / 1 NOT_RUN (`d1-repro`) exit 3, `verify:d2:selftest`
+0, `verify:d2:live --driver=fake` 9 PASS / 0 FAIL exit 0 (no prebuild).
+
+One consumer of the old compiled copy remains, outside this change's
+write scope: `scripts/run-d3-real-pi-tool-policy.mjs` (D3-owned) still
+documents `npm run build:live-policy` as its prerequisite and imports
+`apps/runtime-smoke/dist/tool-policy/index.js` directly. With that build
+script removed, the D3 owner must rewire the script to
+`import("@treeai/tool-policy")` (now a one-line change) before its next
+run; the product-surface tool-policy phase in `scripts/run-d3-real-pi.mjs`
+goes through the studio CLI and is unaffected. Recorded here so a future
+maintainer knows why the reference exists after the workaround's removal.

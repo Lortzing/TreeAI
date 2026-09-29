@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 
-import { canonicalizePath, createToolPolicy, REASONS } from "../src/index.js";
+import { canonicalizePath, createToolPolicy, REASONS } from "../src/index.ts";
 
 let tempRoot: string;
 let fixtures: string;

@@ -49,9 +49,14 @@ Each of these is currently worked around in the host layer
       (limitation #3): currently one journal file per process generation; a
       single restart-spanning journal requires namespaced eventIds in
       `runtime-pi`.
-- [ ] **`tool-policy` package entry** (limitation #7): commission
+- [x] **`tool-policy` package entry** (limitation #7): commission
       `main`/`exports` from the package owner so production consumers do not
       need the app-local `#subpath-imports` compile workaround.
+      Done in commit `7e8dcdd6a39f582206633d134ff30dce044d3a7f`:
+      `main`/`types`/`exports` → `./src/index.ts` with `.ts` internal
+      specifiers, and every `#tool-policy` compile workaround removed from
+      runtime-pi, studio, runtime-smoke and the live framework (see the
+      packaging closure update in `docs/d2/D2-known-limitations.md`).
 
 ## 3. Manual acceptance the owner may want to perform personally
 

@@ -25,16 +25,16 @@
  * fs 等手段不受本策略约束——见 README「不能防御的风险」。
  */
 import type { ToolActionCategory, ToolDecision } from "@treeai/contracts";
-import { AuthorizationStore } from "./authorization.js";
-import { safeActionLabel, ToolPolicyAuditLog } from "./audit.js";
-import { resolveToolPolicyConfig, type ResolvedToolPolicyConfig, type ToolPolicyConfig } from "./config.js";
+import { AuthorizationStore } from "./authorization.ts";
+import { safeActionLabel, ToolPolicyAuditLog } from "./audit.ts";
+import { resolveToolPolicyConfig, type ResolvedToolPolicyConfig, type ToolPolicyConfig } from "./config.ts";
 import {
   isToolActionCategory,
   makeDecision,
   REASONS,
   RULE_IDS,
-} from "./decisions.js";
-import { canonicalizePath, isPathWithin } from "./paths.js";
+} from "./decisions.ts";
+import { canonicalizePath, isPathWithin } from "./paths.ts";
 
 /** 一次策略评估请求（由宿主从工具调用映射而来）。 */
 export interface ToolPolicyRequest {

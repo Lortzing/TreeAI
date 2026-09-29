@@ -8,18 +8,18 @@
  * 依赖：仅 `@treeai/contracts`（纯类型，一律 `import type`）与 Node
  * 内置模块。不 import Pi。
  */
-export { ToolPolicyEngine, createToolPolicy } from "./engine.js";
-export type { ToolPolicyRequest, ToolPolicyEngineOptions } from "./engine.js";
+export { ToolPolicyEngine, createToolPolicy } from "./engine.ts";
+export type { ToolPolicyRequest, ToolPolicyEngineOptions } from "./engine.ts";
 export {
   AuthorizationStore,
   GRANTABLE_CATEGORIES,
-} from "./authorization.js";
-export type { ToolAuthorizationRequest, ToolAuthorizationGrant } from "./authorization.js";
-export { ToolPolicyAuditLog, safeActionLabel } from "./audit.js";
-export type { ToolPolicyAuditRecord, ToolPolicyAuditKind } from "./audit.js";
-export { DEFAULT_TOOL_POLICY_CONFIG, resolveToolPolicyConfig } from "./config.js";
-export type { ToolPolicyConfig, ResolvedToolPolicyConfig } from "./config.js";
-export { canonicalizePath, isPathWithin } from "./paths.js";
+} from "./authorization.ts";
+export type { ToolAuthorizationRequest, ToolAuthorizationGrant } from "./authorization.ts";
+export { ToolPolicyAuditLog, safeActionLabel } from "./audit.ts";
+export type { ToolPolicyAuditRecord, ToolPolicyAuditKind } from "./audit.ts";
+export { DEFAULT_TOOL_POLICY_CONFIG, resolveToolPolicyConfig } from "./config.ts";
+export type { ToolPolicyConfig, ResolvedToolPolicyConfig } from "./config.ts";
+export { canonicalizePath, isPathWithin } from "./paths.ts";
 export {
   CATEGORY_RISK,
   isToolActionCategory,
@@ -27,7 +27,7 @@ export {
   REASONS,
   RULE_IDS,
   TOOL_ACTION_CATEGORIES,
-} from "./decisions.js";
+} from "./decisions.ts";
 
 /* contracts 类型便捷再导出（类型层面；无运行时代码）。 */
 export type {

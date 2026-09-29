@@ -20,7 +20,7 @@ import {
   createToolPolicy,
   DEFAULT_TOOL_POLICY_CONFIG,
   RULE_IDS,
-} from "../src/index.js";
+} from "../src/index.ts";
 
 let tempRoot: string;
 let canonRoot: string;

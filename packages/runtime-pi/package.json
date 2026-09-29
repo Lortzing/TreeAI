@@ -10,16 +10,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "imports": {
-    "#tool-policy": "./dist/tool-policy/index.js"
-  },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "build:tool-policy": "tsc -p tsconfig.tool-policy-build.json",
-    "test": "npm run typecheck && npm run build:tool-policy && node --test tests/unit/*.test.ts tests/real-port/*.test.ts"
+    "test": "npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.85.1",
     "@treeai/contracts": "0.1.0"
+  },
+  "devDependencies": {
+    "@treeai/tool-policy": "0.0.0"
   }
 }

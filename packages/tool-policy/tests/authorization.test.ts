@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 
-import { canonicalizePath, createToolPolicy } from "../src/index.js";
+import { canonicalizePath, createToolPolicy } from "../src/index.ts";
 
 let tempRoot: string;
 let ws: string;

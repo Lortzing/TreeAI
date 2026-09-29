@@ -12,7 +12,7 @@
  *  - --pi-tools / --policy-read-roots 的解析（合法组合 + 全部边界错误：
  *    echo 拒绝、空列表、缺 --pi-tools、相对根、不存在的根）；
  *  - 读取根缺省（数据目录 workspace/）与显式给出的区分（横幅据此标注）；
- *  - 装配方（buildPiToolPolicy + 真实 #tool-policy 引擎）的直接调用：
+ *  - 装配方（buildPiToolPolicy + 真实 @treeai/tool-policy 引擎）的直接调用：
  *    root 内 read 放行、root 外 read / 写入 / shell 拒绝——证明装配
  *    真实生效（服务级 SSE/journal/diagnostics 行为由 events.test.ts
  *    覆盖，此处不重复）。
@@ -290,11 +290,11 @@ test("the wired policy engine allows in-root reads and denies out-of-root reads,
     const workspace = join(dir, "workspace");
     mkdirSync(workspace, { recursive: true });
     /* 与 index.ts 同一装配方（缺省读取根 = workspace）+ 同一真实引擎工厂
-       （#tool-policy 编译产物）——直接调用评估面，证明装配真实生效。 */
+       （@treeai/tool-policy 工作区包）——直接调用评估面，证明装配真实生效。 */
     const wiring = resolvePiToolWiring(parseArgs([...PI_ARGS, "--pi-tools", "read"]), workspace, ALWAYS_DIRECTORY);
     assert.ok(wiring !== null);
     assert.equal(wiring.readRootsDefaulted, true);
-    const { createToolPolicy } = await import("#tool-policy");
+    const { createToolPolicy } = await import("@treeai/tool-policy");
     const engine = buildPiToolPolicy(wiring, workspace, createToolPolicy);
 
     const inRoot = engine.evaluate({ category: "read", targetPath: join(workspace, "notes.txt") });

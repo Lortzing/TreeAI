@@ -277,6 +277,10 @@ const snapshot = policy.audit.toJSON(); // JSON 字符串（同样脱敏）
   `ruleId` 与审计记录的 `targetPath`/存在性标志字段）。
 - **每次工具调用前评估**：决策不可缓存复用（授权可能已消费/过期/被
   撤销；文件系统可能已变化）。
-- **测试**：`cd packages/tool-policy && npm test`（typecheck + tsc
-  编译到 `.tmp-test` + `node --test` + 清理；Node 内置 runner，无测试
-  框架依赖；fixture 全部用临时目录并由 `after()` 清理）。
+- **测试**：`cd packages/tool-policy && npm test`（typecheck + Node 24
+  直接 `node --test tests/*.test.ts`（type stripping，无编译步骤）；Node
+  内置 runner，无测试框架依赖；fixture 全部用临时目录并由 `after()`
+  清理）。
+- **包入口**：`main`/`types`/`exports` 指向 `./src/index.ts`（Node 24
+  type stripping 直接加载源码，与 `@treeai/runtime-pi` 同一模式）；内部
+  import 一律用 `.ts` 后缀。

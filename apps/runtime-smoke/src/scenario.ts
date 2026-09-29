@@ -7,7 +7,7 @@
  *   contracts (types) + runtime-pi (createPiRuntimeFromConfig + injected
  *   deterministic fake port) + persistence (TreeRepository/SQLite) +
  *   event-journal (JsonlEventJournal/EventRecorder/projector/recovery) +
- *   tool-policy (ToolPolicyEngine via the #tool-policy import alias).
+ *   tool-policy (ToolPolicyEngine via the @treeai/tool-policy package).
  *
  * Covered flow:
  *  1. Forest/Tree/main branch/second branch + episodes/runs/references.
@@ -67,7 +67,7 @@ import {
   findRemainingSecrets,
   projectRunEvents,
 } from "@treeai/event-journal";
-import { ToolPolicyEngine } from "#tool-policy";
+import { ToolPolicyEngine } from "@treeai/tool-policy";
 import { SmokeSdkPort } from "./fake-pi-port.ts";
 
 /* ------------------------------------------------------------------ */
