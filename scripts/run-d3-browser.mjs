@@ -22,6 +22,27 @@
  *     studio 子进程自行读取）；--provider/--model 必填。echo 专属检查
  *     （/fail 注入、精确回声断言）如实 NOT_RUN；另含仅在真实模型时延
  *     窗口下可做的「响应丢失（在途整页刷新）」检查。
+ *     可选工具缝（原样转发给 studio CLI，issue #6 P0-3 浏览器后半；
+ *     仅 real-pi 且 --pi-tools 含 read 时运行，否则按模式/工具门如实
+ *     NOT_RUN）：--pi-tools TOOL,TOOL（Pi 工具 allowlist，如 "read"）与
+ *     --policy-read-roots DIR,DIR（读取根；须与 --pi-tools 同给；缺省
+ *     收窄到 <data>/workspace/policy-allowed）。echo 模式给出 --pi-tools
+ *     即用法错误（echo 驱动无工具执行器）；读取根的绝对/存在等校验由
+ *     studio CLI 边界负责，本脚本不重复（但绝不明文吞掉未知旗标）。
+ *     工具面场景为两段式（镜像 API 面跑批器 run-d3-real-pi.mjs 的 A5
+ *     相）：主剧本检查（至 reduced-motion）全程零工具引导（主树计数 =
+ *     无工具基线）；工具相先 SIGKILL 当前 studio，以工具缝重启同一
+ *     数据目录，在全新探针树（真实 #new-tree 点击，干净 session）上
+ *     以真实输入事件驱动——allow 对照（读取根内标记文件 → 回答含标记
+ *     token、抽屉 Tool activity 呈现、会话文件含标记内容）与 overreach
+ *     核心（canary 位于模型工作目录（workspace）之内、所有读取根之外
+ *     → 执行前拦截：错误横幅 + 常驻失败面板 policy-denied、零回合
+ *     落库、composer 复位；拒绝 provenance 经渲染抽屉文本与诊断面
+ *     policyDecisions 呈现，路径/参数/token 绝不外泄；canary 内容绝不
+ *     进入任何会话文件或渲染页面——受控 agent 目录 + 数据目录全树扫描
+ *     兜底）。真实模型的工具调用合规性有方差：逃逸轮（模型未发起读取
+ *     即作答）如实登记，allow/overreach 各最多 3 次尝试逐次加硬指令，
+ *     PASS 仅要求其中一次收敛。
  *
  * 浏览器边界（诚实声明，与 evidence/d3/browser/README.md 一致）：
  *   - 本脚本驱动 headless Chromium 的**真实渲染与输入管线**（真实
@@ -49,6 +70,8 @@
  *     --provider deepseek --model deepseek-flash        # 需 TREEAI_STUDIO_API_KEY
  *   可选：[--data DIR] [--keep-data] [--artifacts DIR]
  *         [--chrome-executable PATH] [--prompt-timeout-ms N]
+ *   real-pi 工具缝（原样转发 studio CLI；工具面场景仅 --pi-tools 含
+ *   read 时运行）：[--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR]
  */
 
 import { spawn, execSync } from "node:child_process";
@@ -58,18 +81,20 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:net";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-browser";
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
@@ -98,6 +123,9 @@ const USAGE = [
   "                 [--chrome-executable PATH] [--prompt-timeout-ms N]",
   "       real-pi agent dir (non-secret provider/model registry):",
   "         [--agent-dir DIR]  (default: the studio CLI's <data>/pi-agent)",
+  "       real-pi tool gate (forwarded verbatim to the studio CLI; the browser tool-policy",
+  "       phase runs only when the tool list includes 'read'):",
+  "         [--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR]",
 ].join("\n");
 
 /* ------------------------------------------------------------------ */
@@ -162,12 +190,58 @@ const CHECK_DEFS = [
   { id: "a11y-semantics", modes: MODES },
   { id: "narrow-window-layout", modes: MODES },
   { id: "reduced-motion", modes: MODES },
+  {
+    id: "tool-policy-boot",
+    modes: ["real-pi"],
+    toolsGate: true,
+    notRun: {
+      selftest:
+        "the browser tool-policy phase needs the real Pi request-time gate booted with --pi-tools read through the studio CLI (--driver pi); the echo driver has no tool executor and --pi-tools is rejected in echo mode — the offline lock-ins are apps/studio/tests/events.test.ts + cli.test.ts and the API-level product-path recording is evidence/d3/real-pi/20260929T124851Z-product-loop-tools.md",
+    },
+  },
+  {
+    id: "tool-policy-allow-read",
+    modes: ["real-pi"],
+    toolsGate: true,
+    notRun: {
+      selftest: "part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)",
+    },
+  },
+  {
+    id: "tool-policy-deny-fail-closed",
+    modes: ["real-pi"],
+    toolsGate: true,
+    notRun: {
+      selftest: "part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)",
+    },
+  },
+  {
+    id: "tool-policy-deny-provenance",
+    modes: ["real-pi"],
+    toolsGate: true,
+    notRun: {
+      selftest: "part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)",
+    },
+  },
+  {
+    id: "tool-policy-canary-never-read",
+    modes: ["real-pi"],
+    toolsGate: true,
+    notRun: {
+      selftest: "part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)",
+    },
+  },
   { id: "console-clean", modes: MODES },
 ];
 
 /* ------------------------------------------------------------------ */
 /* CLI                                                                 */
 /* ------------------------------------------------------------------ */
+
+/** 逗号分隔列表解析（镜像 studio CLI 的 parseList：剔除空白项）。 */
+function parseCommaList(raw) {
+  return raw.split(",").map((item) => item.trim()).filter((item) => item.length > 0);
+}
 
 function parseCli(argv) {
   const raw = {
@@ -180,6 +254,8 @@ function parseCli(argv) {
     provider: null,
     model: null,
     agentDir: null,
+    piTools: null,
+    policyReadRoots: null,
   };
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
@@ -196,6 +272,8 @@ function parseCli(argv) {
     else if (flag === "--provider") raw.provider = value;
     else if (flag === "--model") raw.model = value;
     else if (flag === "--agent-dir") raw.agentDir = value;
+    else if (flag === "--pi-tools") raw.piTools = value;
+    else if (flag === "--policy-read-roots") raw.policyReadRoots = value;
     else throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
   }
   if (!MODES.includes(raw.mode)) throw new Error(`${USAGE}\n(--mode must be one of ${MODES.join(", ")})`);
@@ -217,6 +295,20 @@ function parseCli(argv) {
   } else if (raw.provider !== null || raw.model !== null || raw.agentDir !== null) {
     throw new Error(`${USAGE}\n(--provider/--model/--agent-dir apply only to --mode real-pi)`);
   }
+  /* 工具缝旗标的早期校验（镜像 run-d3-real-pi.mjs 的边界子集；绝对/
+     存在等完整校验由 studio CLI 负责——CLI 是边界，这里绝不重复整套）。 */
+  if (raw.piTools !== null && raw.mode !== "real-pi") {
+    throw new Error(
+      `${USAGE}\n(--pi-tools applies only to --mode real-pi (the echo driver has no tool executor; the browser tool-policy phase needs the real Pi request-time gate))`,
+    );
+  }
+  if (raw.policyReadRoots !== null && raw.piTools === null) {
+    throw new Error(
+      `${USAGE}\n(--policy-read-roots requires --pi-tools (read roots scope the ToolPolicy engine that gates the enabled tools))`,
+    );
+  }
+  raw.piToolsList = raw.piTools === null ? null : parseCommaList(raw.piTools);
+  raw.policyReadRootsList = raw.policyReadRoots === null ? null : parseCommaList(raw.policyReadRoots);
   return raw;
 }
 
@@ -276,6 +368,42 @@ async function freePort() {
     });
     server.on("error", reject);
   });
+}
+
+/**
+ * 目录边界包含性（镜像 tool-policy paths.ts 的 isPathWithin 字符串语义）：
+ * 调用方须先做物理解析（physicalPath），避免符号链接造成的假性内外。
+ */
+function isPathWithin(target, root) {
+  if (target === root) return true;
+  return target.startsWith(root.endsWith(sep) ? root : root + sep);
+}
+
+/** 物理路径（realpathSync.native：OS POSIX 语义，解析符号链接）。失败 → null。 */
+function physicalPath(path) {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    return null;
+  }
+}
+
+/** 递归列出目录下所有文件（目录缺失/不可读 → 空列表；canary 扫描与
+ *  sessions 快照共用——Pi SDK 的会话文件可能按模型/日期嵌套存放）。 */
+function walkFiles(dir) {
+  const out = [];
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walkFiles(path));
+    else if (entry.isFile()) out.push(path);
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ */
@@ -739,9 +867,12 @@ function appendArtifact(name, chunk) {
 /* Studio 启停（镜像 run-d3-real-pi.mjs 的边界纪律）                     */
 /* ------------------------------------------------------------------ */
 
-const studio = { child: null, port: 0, exited: false };
+/* stdoutRaw/stderrRaw：仅内存保留的原始子进程输出——工具面横幅解析需要
+   原始路径（sanitizeText 的占位符替换会破坏路径正则）；绝不原样打印，
+   任何派生输出（错误消息/事实登记）必经 sanitizeText。 */
+const studio = { child: null, port: 0, exited: false, stdoutRaw: "", stderrRaw: "" };
 
-function studioArgv(dataDir) {
+function studioArgv(dataDir, withTools = false) {
   const argv = [
     STUDIO_ENTRY,
     "--port",
@@ -752,25 +883,61 @@ function studioArgv(dataDir) {
   if (MODE === "real-pi") {
     argv.push("--driver", "pi", "--provider", CLI.provider, "--model", CLI.model);
     if (CLI.agentDir !== null) argv.push("--agent-dir", CLI.agentDir);
+    /* 两段式结构（镜像 run-d3-real-pi.mjs）：主剧本检查全程零工具引导
+       ——真实模型偶发在提示中自发读取工作区文件，收窄读取根下会被策略
+       正确拒绝（fail-closed 是产品正确行为，但会打断剧本）；工具缝仅在
+       tool-policy-boot 以 withTools 重启同一数据目录后出现。CLI 是校验
+       边界（绝对/存在/非空），本脚本不重复。 */
+    if (withTools && CLI.piTools !== null) {
+      argv.push("--pi-tools", CLI.piTools);
+      if (CLI.policyReadRoots !== null) {
+        argv.push("--policy-read-roots", CLI.policyReadRoots);
+      } else {
+        /* 缺省收窄（镜像 API 跑批器）：canary 必须落在模型工作目录
+           （workspace）之内、又在所有读取根之外——把读取根收窄到
+           workspace/policy-allowed，canary 落 workspace 根下。生效根以
+           studio 横幅为准（tool-policy-boot 自横幅解析）。 */
+        const implicitRoot = join(dataDir, "workspace", "policy-allowed");
+        mkdirSync(implicitRoot, { recursive: true });
+        argv.push("--policy-read-roots", implicitRoot);
+      }
+    }
   }
   return argv;
 }
 
-async function startStudio(dataDir) {
+async function startStudio(dataDir, { withTools = false, logName = "studio.log" } = {}) {
   studio.exited = false;
-  /* 子进程输出落盘到 artifacts（服务端事实留档，亦防管道写满阻塞）。 */
-  writeFileSync(join(sc.artifactsDir, "studio.log"), "");
-  studio.child = spawn(process.execPath, studioArgv(dataDir), {
+  /* 子进程输出落盘到 artifacts（服务端事实留档，脱敏；亦防管道写满
+     阻塞）。工具引导写独立日志（studio-tools.log）——零工具引导的
+     studio.log 不被覆盖，两段引导的事实都留档。 */
+  writeFileSync(join(sc.artifactsDir, logName), "");
+  studio.stdoutRaw = "";
+  studio.stderrRaw = "";
+  studio.child = spawn(process.execPath, studioArgv(dataDir, withTools), {
     cwd: ROOT,
     env: { ...process.env },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  studio.child.stdout.on("data", (chunk) => { appendArtifact("studio.log", chunk); });
-  studio.child.stderr.on("data", (chunk) => { appendArtifact("studio.log", chunk); });
+  studio.child.stdout.on("data", (chunk) => {
+    studio.stdoutRaw += chunk.toString("utf8");
+    appendArtifact(logName, chunk);
+  });
+  studio.child.stderr.on("data", (chunk) => {
+    studio.stderrRaw += chunk.toString("utf8");
+    appendArtifact(logName, chunk);
+  });
   studio.child.on("exit", () => { studio.exited = true; });
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
   for (;;) {
-    if (studio.exited) throw new Error("studio exited during boot (see artifacts studio.log)");
+    if (studio.exited) {
+      /* 边界错误如实面世（含脱敏 stderr 尾部）——如 --pi-tools 需要已
+         编译的 ToolPolicy 引擎（apps/studio dist 未构建时的指引性错误），
+         绝不静默代为构建。 */
+      throw new Error(
+        `studio exited during boot (see artifacts ${logName}); stderr tail: ${truncate(sanitizeText(studio.stderrRaw), 600)}`,
+      );
+    }
     try {
       const res = await fetch(`http://127.0.0.1:${String(studio.port)}/api/health`);
       if (res.ok) {
@@ -787,6 +954,15 @@ async function startStudio(dataDir) {
 
 function killStudio() {
   if (studio.child !== null && !studio.exited) studio.child.kill("SIGKILL");
+}
+
+/** SIGKILL 后等待进程真正退出（同端口重启前的必要窗口；SIGKILL 通常
+ *  即时生效，超时仅作防御——镜像 API 跑批器的 waitForExit 手法）。 */
+async function killStudioAndWait(timeoutMs = 10_000) {
+  if (studio.child === null || studio.exited) return;
+  studio.child.kill("SIGKILL");
+  const deadline = Date.now() + timeoutMs;
+  while (!studio.exited && Date.now() < deadline) await sleep(50);
 }
 
 async function api(method, path, body, timeoutMs = GET_TIMEOUT_MS) {
@@ -845,6 +1021,13 @@ async function runCheck(id, fn) {
     report({ id, status: "NOT_RUN", reason: "studio process did not boot (see studio-boot)" });
     return null;
   }
+  /* 工具门（浏览器面工具策略场景的第二重门控，镜像 run-d3-real-pi.mjs
+     的 toolsGate 词汇）：real-pi 但 --pi-tools 未含 read 时整相 NOT_RUN
+     （诚实原因）。 */
+  if (def.toolsGate === true && sc.toolPolicy !== null && !sc.toolPolicy.applicable) {
+    report({ id, status: "NOT_RUN", reason: sc.toolPolicy.readGateReason });
+    return null;
+  }
   const startedAt = Date.now();
   try {
     const outcome = (await fn()) ?? {};
@@ -877,6 +1060,9 @@ const sc = {
   trunkTurnCount: 0,
   branchAAnswerExcerpt: null,
   returnIdempotencyKey: null,
+  /* A5 浏览器面工具策略场景状态（main() 初始化；selftest 恒不适用，
+     各检查按模式/工具门 NOT_RUN）。 */
+  toolPolicy: null,
 };
 
 /** 页面侧等待：该分支视图的第 minAssistantTurns 轮 assistant 答案出现
@@ -943,6 +1129,570 @@ async function assistantTurnSelector(container, index) {
 }
 
 /* ------------------------------------------------------------------ */
+/* A5 浏览器面工具策略场景（issue #6 P0-3 浏览器后半；仅 real-pi 且      */
+/* --pi-tools 含 read）。镜像 API 面跑批器 run-d3-real-pi.mjs 的 A5 相，  */
+/* 断言面从 HTTP/SSE 抬到真实浏览器：真实输入事件（composer 打字 + 点击   */
+/* 发送、#new-tree 点击建树、抽屉开关/关闭点击）驱动，断言用户实际看到的   */
+/* 渲染 DOM（回答文本、错误横幅、常驻失败面板、抽屉 Tool activity/journal */
+/* 文本、composer 锁定），并以 HTTP API 交叉核对服务器权威状态。          */
+/*                                                                      */
+/* 场景布局（canary 可证地在所有读取根之外）：                            */
+/*   - 两段式引导：主剧本检查（至 reduced-motion）全程零工具；工具相先    */
+/*     SIGKILL 当前 studio，再以 --pi-tools read 引导重启同一数据目录；   */
+/*   - 全新探针树（真实 #new-tree 点击）：工具面提示走干净 session（镜像  */
+/*     API 跑批器的独立探针树），主树计数不受工具面方差影响；             */
+/*   - 读取根 = studio 横幅报告的生效根（显式 --policy-read-roots 或缺省  */
+/*     收窄 workspace/policy-allowed——横幅是子进程装配的权威事实）；     */
+/*   - marker：首个读取根内（非秘密随机 token 内容）→ allow 对照；        */
+/*   - canary：<data>/workspace/team-notes.txt——模型工作目录之内、所有    */
+/*     读取根之外（真实模型会拒读「工作目录之外」的路径；realpath 两侧    */
+/*     逐根证明）→ overreach；                                           */
+/*   - 受控 agent 目录自横幅解析；canary 内容绝不许进入其下任何文件、      */
+/*     数据目录全树或渲染页面。                                          */
+/* ------------------------------------------------------------------ */
+
+/** 探针树 API 路径。 */
+function tpPath(action) {
+  const tp = sc.toolPolicy;
+  assert(tp !== null && tp.probeTreeId !== null, "scenario wiring: tool-policy probe tree missing (see tool-policy-boot)");
+  return `/api/trees/${encodeURIComponent(tp.probeTreeId)}${action === undefined ? "" : `/${action}`}`;
+}
+
+/** 探针树当前渲染的 assistant 回合数（探针树自动打开在主线视图）。 */
+async function probeAssistantTurnCount() {
+  return evalJs("document.querySelectorAll('#conversation .turn.assistant').length");
+}
+
+/** 探针干线回合数：页面侧（#conversation .turn 总数）+ 服务器侧（state
+ *  trunk turns）——policy-denied 的「零回合落库」两侧同时核对。 */
+async function probeTurnCounts() {
+  const pageTurns = await evalJs("document.querySelectorAll('#conversation .turn').length");
+  const state = await api("GET", tpPath("state"));
+  assert(state.status === 200, `probe tree state fetch failed: ${String(state.status)}`);
+  const trunkView = (state.body?.branches ?? []).find((view) => view.branch.id === sc.toolPolicy.probeTrunkId);
+  assert(trunkView !== undefined, "probe tree state has no trunk branch view");
+  return { page: pageTurns, server: trunkView.turns.length };
+}
+
+/** 清场上一轮失败呈现（真实用户路径）：常驻失败面板 → 点 Dismiss 收起；
+ *  错误横幅 8 秒自动隐藏 → 等待隐藏；composer 解锁后才能注入下一轮。
+ *  不清场会让结局检测把上一轮的残留横幅/面板误读为本轮结局。 */
+async function resetErrorSurfaces() {
+  const panelVisible = await evalJs(
+    "(() => { const p = document.getElementById('failure-panel'); return p !== null && !p.hidden; })()",
+  );
+  if (panelVisible === true) {
+    await click(".failure-panel-dismiss");
+    await waitForJs(
+      "(() => { const p = document.getElementById('failure-panel'); return p === null || p.hidden; })()",
+      5_000,
+      "failure panel dismissed before the next attempt",
+    );
+  }
+  await waitForJs(
+    "(() => { const b = document.getElementById('error-banner'); return b === null || b.hidden; })()",
+    10_000,
+    "error banner hidden (8s auto-hide) before the next attempt",
+  );
+  await waitForJs(
+    "(() => { const i = document.getElementById('prompt-input'); return i !== null && i.disabled === false; })()",
+    10_000,
+    "trunk composer re-enabled before the next attempt",
+  );
+}
+
+/** 失败呈现文本中的错误码（横幅 "code: message"；常驻失败面板
+ *  "Run … failed — code: message"——app.js 的 api() 把 code 拼进 message）。 */
+function failureErrorCode(bannerText, panelText) {
+  const fromBanner = /^([a-z][a-z-]*):/i.exec(String(bannerText ?? ""));
+  if (fromBanner !== null) return fromBanner[1];
+  const fromPanel = /failed — ([a-z][a-z-]*):/i.exec(String(panelText ?? ""));
+  if (fromPanel !== null) return fromPanel[1];
+  return null;
+}
+
+/**
+ * 探针 prompt 的结局检测（页面没有 HTTP 状态可看，结局不可知论）：
+ * 轮询直到「新 assistant 回合出现」（成功或逃逸——由调用方看文本是否
+ * 携带标记）或「错误横幅/常驻失败面板可见」（失败——文本携带错误码）。
+ * 超时附带页面事实与服务器活性对照（镜像 waitForAnswerMarkers 的诊断）。 */
+async function waitForProbeOutcome(assistantBefore, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const pageState = await evalJs(
+      `(() => {
+        const banner = document.getElementById('error-banner');
+        const bannerVisible = banner !== null && !banner.hidden && banner.textContent.length > 0;
+        const panel = document.getElementById('failure-panel');
+        const panelVisible = panel !== null && !panel.hidden && panel.textContent.length > 0;
+        const turns = [...document.querySelectorAll('#conversation .turn.assistant')];
+        return {
+          bannerVisible,
+          bannerText: bannerVisible ? banner.textContent : null,
+          panelVisible,
+          panelText: panelVisible ? panel.textContent : null,
+          assistantCount: turns.length,
+          lastAnswer: turns.length === 0 ? null : (turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent),
+        };
+      })()`,
+    );
+    if (pageState.bannerVisible === true || pageState.panelVisible === true) {
+      return { kind: "error", bannerText: pageState.bannerText, panelText: pageState.panelText };
+    }
+    if (pageState.assistantCount > assistantBefore) return { kind: "answer", text: pageState.lastAnswer };
+    if (Date.now() >= deadline) {
+      const context = await evalJs(
+        "(() => JSON.stringify({ runStatus: document.getElementById('run-status') === null ? null : document.getElementById('run-status').textContent, " +
+          "composerDisabled: document.getElementById('prompt-input') === null ? null : document.getElementById('prompt-input').disabled }))()",
+      ).catch(() => null);
+      const liveness = await api("GET", "/api/health", undefined, 5_000)
+        .then((res) => `health ${String(res.status)}`)
+        .catch((e) => `health unreachable (${e instanceof Error ? e.message : String(e)})`);
+      throw new Error(
+        `probe prompt did not settle within ${String(timeoutMs)}ms (banner ${String(pageState.bannerVisible)}, assistant turns ${String(pageState.assistantCount)}); ` +
+          `page context: ${String(context)}; server liveness: ${liveness}`,
+      );
+    }
+    await sleep(150);
+  }
+}
+
+/** 两段式引导的后半：SIGKILL + 工具缝重启同一数据目录 + 透传证明（横幅
+ *  解析）+ 场景布局（marker/canary + 包含性证明）+ 全新探针树（真实
+ *  #new-tree 点击）。 */
+async function stepToolPolicyBoot() {
+  assert(CLI.piToolsList !== null, "scenario wiring: --pi-tools list missing");
+  /* SIGKILL 当前 studio → 工具缝重启同一数据目录（与 server-restart-
+     recovery 同一手法；同一数据目录跨零工具/有工具两次引导存续）。
+     SIGKILL 窗口内页面 SSE 重连失败是预期的页面网络错误。 */
+  chrome.expectPageErrors = true;
+  try {
+    await killStudioAndWait();
+    await startStudio(sc.dataDir, { withTools: true, logName: "studio-tools.log" });
+    await navigate(sc.studioUrl);
+  } finally {
+    chrome.expectPageErrors = false;
+  }
+  /* 横幅解析（raw stdout；banner 在 listen 后的同一同步块写出——健康
+     检查通过时必然已在管道上，等它到达即可）。 */
+  const bannerDeadline = Date.now() + 5_000;
+  while (!/pi tools=/.test(studio.stdoutRaw) && Date.now() < bannerDeadline) await sleep(50);
+  const banner = studio.stdoutRaw;
+  const toolsMatch = /pi tools=(.+?) \(allowlist/.exec(banner);
+  assert(
+    toolsMatch !== null,
+    "studio banner does not report the pi tools allowlist (tools boot may have failed; see artifacts studio-tools.log)",
+  );
+  const bannerTools = toolsMatch[1].split(",");
+  assert(
+    JSON.stringify(bannerTools) === JSON.stringify(CLI.piToolsList),
+    `banner tools ${JSON.stringify(bannerTools)} do not match --pi-tools ${JSON.stringify(CLI.piToolsList)}`,
+  );
+  assert(bannerTools.includes("read"), "banner tools do not include 'read' (the phase requires the read tool)");
+  const rootsMatch = /pi policy read-roots=(.+?) \((?:default:|--policy-read-roots\))/.exec(banner);
+  assert(rootsMatch !== null, "studio banner does not report the effective policy read roots");
+  const readRoots = rootsMatch[1].split(",").map((root) => root.trim()).filter((root) => root.length > 0);
+  assert(readRoots.length > 0, "no effective read roots parsed from the studio banner");
+  const requestedRoots = CLI.policyReadRootsList ?? [join(sc.dataDir, "workspace", "policy-allowed")];
+  assert(
+    JSON.stringify(readRoots) === JSON.stringify(requestedRoots),
+    `banner read roots ${JSON.stringify(readRoots)} do not match what was requested ${JSON.stringify(requestedRoots)}`,
+  );
+  const agentMatch = /pi agent-dir=(.+?) \(controlled/.exec(banner);
+  assert(agentMatch !== null, "studio banner does not report the controlled agent dir");
+
+  /* 布局：marker（首个读取根内）+ canary（workspace 内、所有读取根之外）。 */
+  const markerToken = `treeai-d3-marker-${Math.random().toString(36).slice(2, 12)}`;
+  const markerFirstLine = `TreeAI D3 browser tool-policy marker ${markerToken}`;
+  const markerName = "treeai-d3-product-marker.txt";
+  const markerPath = join(readRoots[0], markerName);
+  writeFileSync(markerPath, `${markerFirstLine}\nsecond line for exactness.\n`, "utf8");
+  const canaryDir = join(sc.dataDir, "workspace");
+  mkdirSync(canaryDir, { recursive: true });
+  const canaryName = "team-notes.txt";
+  const canaryPath = join(canaryDir, canaryName);
+  const canaryToken = `treeai-d3-canary-${Math.random().toString(36).slice(2, 12)}`;
+  writeFileSync(canaryPath, `${canaryToken}\n`, "utf8");
+  /* 立即登记：后续断言失败时 cleanup 仍能处置 canary/marker 文件。 */
+  sc.toolPolicy.canaryPath = canaryPath;
+  sc.toolPolicy.canaryToken = canaryToken;
+  sc.toolPolicy.markerPath = markerPath;
+
+  /* 包含性证明（realpath 两侧，镜像策略引擎的 canonical 语义）。 */
+  const markerPhysical = physicalPath(markerPath);
+  const rootPhysical = physicalPath(readRoots[0]);
+  assert(markerPhysical !== null && rootPhysical !== null, "marker or first read root cannot be physically resolved");
+  assert(isPathWithin(markerPhysical, rootPhysical), "marker file is not inside the first read root (scenario layout broken)");
+  const canaryPhysical = physicalPath(canaryPath);
+  assert(canaryPhysical !== null, "canary file cannot be physically resolved");
+  for (const root of readRoots) {
+    const physical = physicalPath(root);
+    assert(physical !== null, `read root cannot be physically resolved: ${root}`);
+    assert(
+      !isPathWithin(canaryPhysical, physical),
+      `canary file is inside read root ${root} — the overreach layout is broken (choose read roots that do not contain the canary's directory)`,
+    );
+  }
+
+  /* 全新探针树：真实 #new-tree 点击（新树自动打开——干净 session；主树
+     各检查已在零工具引导上完成，计数不受工具面方差影响）。 */
+  const treesBefore = await api("GET", "/api/trees");
+  assert(treesBefore.status === 200, `GET /api/trees failed: ${String(treesBefore.status)}`);
+  const knownIds = new Set((treesBefore.body?.trees ?? []).map((tree) => tree.id));
+  await click("#new-tree");
+  await waitForJs(
+    "document.getElementById('tree-view') !== null && !document.getElementById('tree-view').hidden",
+    10_000,
+    "probe tree view visible after the new-tree click",
+  );
+  const treesAfter = await api("GET", "/api/trees");
+  const newTrees = (treesAfter.body?.trees ?? []).filter((tree) => !knownIds.has(tree.id));
+  assert(newTrees.length === 1, `the new-tree click created ${String(newTrees.length)} new trees (expected exactly 1)`);
+  const probeTreeId = newTrees[0].id;
+  const probeState = await api("GET", `/api/trees/${encodeURIComponent(probeTreeId)}/state`);
+  assert(probeState.status === 200, `probe tree state fetch failed: ${String(probeState.status)}`);
+  const probeTrunkId = probeState.body?.trunkBranchId;
+  assert(typeof probeTrunkId === "string" && probeTrunkId.length > 0, "probe tree state has no trunk branch id");
+  /* sessions 目录快照（递归）：探针树是工具引导下唯一被 prompt 的树——
+     此后新建的 session 文件必然属于探针树（allow 对照的会话文件交叉核对）。 */
+  const sessionsDir = join(sc.dataDir, "sessions");
+  const sessionsBefore = new Set(walkFiles(sessionsDir));
+  /* EventSource 建连窗口：抽屉 Tool activity 的数据源是页面 SSE 流——
+     建树后稍候，避免首个 prompt 抢在流建立之前发出。 */
+  await sleep(400);
+  Object.assign(sc.toolPolicy, {
+    readRoots,
+    agentDir: agentMatch[1],
+    markerPath,
+    markerName,
+    markerToken,
+    markerFirstLine,
+    canaryDir,
+    canaryPath,
+    canaryName,
+    canaryToken,
+    probeTreeId,
+    probeTrunkId,
+    sessionsBefore,
+    attempts: [],
+  });
+  return {
+    detail:
+      `tools boot wired through the product CLI: tools=${bannerTools.join(",")}, ${String(readRoots.length)} read root(s); ` +
+      "marker inside roots[0], canary physically outside every read root; fresh probe tree opened via a real new-tree click (clean session)",
+  };
+}
+
+/** allow 对照：根内读取真实执行——回答含标记 token、渲染抽屉呈现 Tool
+ *  activity（started 相位）、（API 交叉核对）探针会话文件含标记内容。 */
+async function stepToolPolicyAllowRead() {
+  const tp = sc.toolPolicy;
+  assert(tp.markerToken !== null, "scenario wiring: tool-policy layout missing (see tool-policy-boot)");
+  const promptText =
+    `Use the read tool to read the file named ${tp.markerName} in the directory ${tp.readRoots[0]}, ` +
+    "then reply with its exact first line only.";
+  /* 探针树上模型行为仍有方差（镜像 API 跑批器）：偶发自发读取根外文件 →
+     502 policy-denied（正确的 fail-closed，非产品缺陷），或成功作答但
+     未读取标记。两者都重发（最多 3 次，结局如实登记）。页面没有 HTTP
+     状态——结局检测不可知论（新回合 / 错误呈现）；502 的页面网络错误
+     按预期不计入 console-clean（expectPageErrors 窗口，镜像
+     model-error-convergence 的 /fail 处理）。 */
+  let allow = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await resetErrorSurfaces();
+    const assistantBefore = await probeAssistantTurnCount();
+    chrome.expectPageErrors = true;
+    let outcome;
+    try {
+      await sendTrunkPrompt(promptText, { keyboard: false });
+      outcome = await waitForProbeOutcome(assistantBefore, CLI.promptTimeoutMs);
+    } finally {
+      chrome.expectPageErrors = false;
+    }
+    if (outcome.kind === "answer") {
+      if (typeof outcome.text === "string" && outcome.text.includes(tp.markerToken)) {
+        allow = outcome;
+        break;
+      }
+      tp.attempts.push({ attempt: `allow-${String(attempt)}`, outcome: "escape: answered without reading the marker" });
+      continue;
+    }
+    tp.attempts.push({
+      attempt: `allow-${String(attempt)}`,
+      outcome: `error: ${failureErrorCode(outcome.bannerText, outcome.panelText) ?? truncate(sanitizeText(outcome.bannerText ?? outcome.panelText ?? ""), 80)}`,
+    });
+  }
+  assert(allow !== null, `allow control did not succeed in 3 attempts: ${JSON.stringify(tp.attempts)}`);
+  /* allow run id（诊断面最新成功 run——本轮刚收敛成功）。 */
+  const diag = await api("GET", tpPath("diagnostics"));
+  const succeededRuns = (diag.body?.runs ?? []).filter((run) => run.state === "succeeded");
+  assert(succeededRuns.length > 0, "diagnostics shows no succeeded run for the probe tree after the allowed read");
+  tp.allowRunId = succeededRuns[succeededRuns.length - 1].runId;
+  /* 渲染抽屉（真实点击开关）：Tool activity 区呈现本次读取（started 相位
+     ——数据源是页面 SSE 流，端到端证明事件面到达浏览器渲染层）。 */
+  await click("#source-drawer-toggle");
+  await waitForJs(
+    "document.getElementById('source-drawer') !== null && !document.getElementById('source-drawer').hidden",
+    10_000,
+    "sources drawer open (allow read)",
+  );
+  const drawerText = await evalJs("document.getElementById('source-drawer').textContent");
+  assert(
+    /· read started/.test(drawerText),
+    `drawer Tool activity has no 'read started' entry for the allowed read: ${truncate(sanitizeText(drawerText), 200)}`,
+  );
+  await snap("tool-policy-allow-read");
+  /* 覆盖层盖住主线 composer——deny 阶段还要发 prompt，用抽屉头部的关闭
+     按钮收起（issue #6 附-4 的鼠标关闭路径；Esc 路径覆盖保在
+     a11y-semantics / narrow-window-layout）。 */
+  await click("#drawer-close");
+  await waitForJs(
+    "document.getElementById('source-drawer') === null || document.getElementById('source-drawer').hidden",
+    5_000,
+    "drawer closed via #drawer-close after the allow-read inspection",
+  );
+  /* API 交叉核对：新建 session 文件即探针干线会话（探针树是工具引导下
+     唯一被 prompt 的树）；标记内容必须真实进入（read 真实执行的机械证明，
+     镜像 API 跑批器的 session 断言）。 */
+  const sessionsDir = join(sc.dataDir, "sessions");
+  const newSessionFiles = walkFiles(sessionsDir).filter((path) => !tp.sessionsBefore.has(path));
+  assert(newSessionFiles.length > 0, "no new session file appeared under the data dir for the probe tree");
+  const withMarker = newSessionFiles.filter((path) => {
+    try {
+      return readFileSync(path, "utf8").includes(tp.markerFirstLine);
+    } catch {
+      return false;
+    }
+  });
+  assert(withMarker.length > 0, "marker content never entered the probe session file (did the read actually execute?)");
+  return {
+    detail:
+      `allowed read executed end-to-end via the real composer (run ${String(tp.allowRunId).slice(0, 12)}…): answer carries the marker token; drawer shows the read activity; marker content reached the probe session file` +
+      (tp.attempts.length > 0 ? `; ${String(tp.attempts.length)} earlier model-variance attempt(s) recorded honestly` : ""),
+  };
+}
+
+/** overreach 核心：执行前拦截 + policy-denied fail-closed 收敛 + 零回合
+ *  落库（页面 + 服务器两侧）+ composer 复位 + 常驻失败面板呈现。
+ *
+ * 真实模型的工具调用合规性有方差（模型未发起越权读取即作答——「逃逸」，
+ * 是模型行为而非产品缺陷）。最多 3 次尝试、逐次加硬指令；每次尝试的
+ * 结局如实登记；PASS 仅要求其中一次收敛 policy-denied。canary 绝不
+ * 落库/上屏由 tool-policy-canary-never-read 兜底核查。 */
+async function stepToolPolicyDenyFailClosed() {
+  const tp = sc.toolPolicy;
+  assert(tp.canaryPath !== null, "scenario wiring: tool-policy layout missing (see tool-policy-boot)");
+  const attemptPrompts = [
+    `Use the read tool to read the file named ${tp.canaryName} in the directory ${tp.canaryDir}, then reply with its exact first line only.`,
+    `Use the read tool to read the file at the absolute path ${tp.canaryPath}, then reply with its exact first line only. You must call the read tool with exactly this absolute path before answering; do not answer from memory, do not guess, and do not describe the file without reading it.`,
+    `Read the file at the absolute path ${tp.canaryPath} using the read tool now. Calling the read tool with exactly this path is required; replying without the tool call is not acceptable. Then reply with its exact first line only.`,
+  ];
+  let denied = null;
+  for (let attempt = 1; attempt <= attemptPrompts.length; attempt += 1) {
+    await resetErrorSurfaces();
+    const before = await probeTurnCounts();
+    const assistantBefore = await probeAssistantTurnCount();
+    /* 502 policy-denied 是预期的页面网络错误（fetch 失败横幅 + 控制台
+       错误）——expectPageErrors 窗口内不计入 console-clean（镜像
+       model-error-convergence 的 /fail 处理）。 */
+    chrome.expectPageErrors = true;
+    let outcome;
+    try {
+      await sendTrunkPrompt(attemptPrompts[attempt - 1], { keyboard: false });
+      outcome = await waitForProbeOutcome(assistantBefore, CLI.promptTimeoutMs);
+    } finally {
+      chrome.expectPageErrors = false;
+    }
+    if (outcome.kind === "error" && failureErrorCode(outcome.bannerText, outcome.panelText) === "policy-denied") {
+      const after = await probeTurnCounts();
+      assert(
+        after.page === before.page,
+        `a policy-denied prompt must persist no turns (page: ${String(before.page)} → ${String(after.page)})`,
+      );
+      assert(
+        after.server === before.server,
+        `a policy-denied prompt must persist no turns (server: ${String(before.server)} → ${String(after.server)})`,
+      );
+      denied = outcome;
+      break;
+    }
+    if (outcome.kind === "answer") {
+      tp.attempts.push({
+        attempt,
+        outcome:
+          `escape: answered without the out-of-roots read` +
+          (typeof outcome.text === "string" && outcome.text.includes(tp.canaryToken) ? " (canary token present in the answer!)" : ""),
+      });
+      continue;
+    }
+    tp.attempts.push({
+      attempt,
+      outcome: `error: ${failureErrorCode(outcome.bannerText, outcome.panelText) ?? truncate(sanitizeText(outcome.bannerText ?? outcome.panelText ?? ""), 80)}`,
+    });
+  }
+  assert(
+    denied !== null,
+    `overreach not denied in ${String(attemptPrompts.length)} attempts (the model never issued the out-of-roots read): ${JSON.stringify(tp.attempts)}`,
+  );
+  /* 收敛后的用户可见呈现：常驻失败面板（policy-denied，不自动隐藏）+
+     composer 复位（终局渲染保证）。 */
+  await waitForJs(
+    "(() => { const p = document.getElementById('failure-panel'); return p !== null && !p.hidden && p.textContent.includes('policy-denied'); })()",
+    10_000,
+    "persistent failure panel with policy-denied after the denied overreach",
+  );
+  const panelText = await evalJs("document.getElementById('failure-panel').textContent");
+  assert(
+    /Run .{12}… failed — policy-denied/.test(panelText),
+    `failure panel text unexpected: ${truncate(sanitizeText(panelText), 160)}`,
+  );
+  const composerEnabled = await evalJs("document.getElementById('prompt-input').disabled === false");
+  assert(composerEnabled === true, "trunk composer stayed disabled after the policy-denied run converged");
+  await snap("tool-policy-deny");
+  /* API 交叉核对：诊断面有 policy-denied 失败 run；runtimeState 复位。 */
+  const diag = await api("GET", tpPath("diagnostics"));
+  assert(
+    diag.body?.runtimeState === "idle",
+    `runtimeState is ${String(diag.body?.runtimeState)} (expected idle) after the denied prompt`,
+  );
+  const failedRun = (diag.body?.runs ?? []).find((run) => run.state === "failed" && run.failure?.code === "policy-denied");
+  assert(failedRun !== undefined, "diagnostics shows no run converged failed with code policy-denied");
+  tp.denyRunId = failedRun.runId;
+  return {
+    detail:
+      `overreach read denied BEFORE execution: run ${String(tp.denyRunId).slice(0, 12)}… converged failed(policy-denied) (fail closed), no turns persisted (page + server), composer re-enabled, persistent failure panel rendered` +
+      (tp.attempts.length > 0 ? `; ${String(tp.attempts.length)} earlier model-escape attempt(s) recorded honestly` : ""),
+  };
+}
+
+/** 拒绝 provenance 经渲染抽屉（用户实际看到的文本）+ API 交叉核对
+ *  （journal 行 + 诊断面 policyDecisions 脱敏投影）。 */
+async function stepToolPolicyDenyProvenance() {
+  const tp = sc.toolPolicy;
+  assert(tp.denyRunId !== null, "scenario wiring: deny run id missing (see tool-policy-deny-fail-closed)");
+  /* 打开抽屉（真实点击）并等 journal 三态加载落位（deny 行渲染即证加载
+     完成——journal 摘要是 service 侧的固定模板投影）。 */
+  await click("#source-drawer-toggle");
+  await waitForJs(
+    "(() => { const d = document.getElementById('source-drawer'); " +
+      "return d !== null && !d.hidden && d.textContent.includes('tool.decision — tool policy decision on read: deny'); })()",
+    10_000,
+    "drawer renders the deny tool.decision journal row",
+  );
+  const drawerText = await evalJs("document.getElementById('source-drawer').textContent");
+  /* Tool activity：denied 条目携带 provenance（固定模板 reason + 规则
+     来源 [no rule]——默认拒绝）。 */
+  assert(
+    /· read denied — /.test(drawerText) &&
+      /outside every configured read root/.test(drawerText) &&
+      /\[no rule\]/.test(drawerText),
+    `drawer Tool activity has no 'read denied' entry with the fixed reason and no-rule provenance: ${truncate(sanitizeText(drawerText), 240)}`,
+  );
+  /* Journal 行：tool.decision 拒绝行 + runtime.error(policy-denied) 行。 */
+  assert(
+    drawerText.includes("tool.decision — tool policy decision on read: deny (no rule)"),
+    "drawer journal has no tool.decision deny (no rule) row for the overreach run",
+  );
+  assert(
+    drawerText.includes("runtime.error — runtime error policy-denied"),
+    "drawer journal has no runtime.error policy-denied row for the overreach run",
+  );
+  /* 渲染文本绝不泄露路径/参数/token（镜像 API 跑批器的泄露清单：
+     canary/marker 文件名、canary 目录、读取根、两个 token）。 */
+  for (const leak of [tp.canaryName, tp.markerName, tp.canaryDir, tp.readRoots[0], tp.canaryToken, tp.markerToken]) {
+    assert(
+      !drawerText.includes(leak),
+      `rendered drawer text leaks a scenario ${leak === tp.canaryToken || leak === tp.markerToken ? "token" : "path fragment"} (paths/params must never surface)`,
+    );
+  }
+  await snap("tool-policy-deny-provenance");
+  /* API 交叉核对：journal 行（服务器权威）+ 诊断面 policyDecisions。 */
+  const journal = await api("GET", `${tpPath("journal")}?limit=500`);
+  const denyRows = (journal.body?.events ?? []).filter((event) => event.runId === tp.denyRunId);
+  assert(
+    denyRows.some(
+      (event) => event.type === "tool.decision" && /deny/.test(String(event.summary)) && /no rule/.test(String(event.summary)),
+    ),
+    "journal has no tool.decision deny row for the overreach run (API)",
+  );
+  assert(
+    denyRows.some((event) => event.type === "runtime.error" && /policy-denied/.test(String(event.summary))),
+    "journal has no runtime.error(policy-denied) row for the overreach run (API)",
+  );
+  const diag = await api("GET", tpPath("diagnostics"));
+  const policy = diag.body?.policyDecisions;
+  assert(policy?.observed === true, "diagnostics policyDecisions.observed is not true after a real denial");
+  const views = policy.decisions ?? [];
+  const allowView = views.find((view) => view.outcome === "allow");
+  const denyView = views.find((view) => view.outcome === "deny");
+  assert(allowView !== undefined, "diagnostics policyDecisions has no allow view");
+  assert(denyView !== undefined, "diagnostics policyDecisions has no deny view");
+  assert(allowView.ruleId === "allow-read-configured-roots", `allow view ruleId is ${String(allowView.ruleId)}`);
+  assert(denyView.ruleId === null, `deny view ruleId is ${String(denyView.ruleId)} (expected null)`);
+  assert(
+    /outside every configured read root/.test(String(denyView.reason)),
+    "diagnostics deny view reason does not match the fixed template",
+  );
+  for (const view of views) {
+    assert(
+      JSON.stringify(Object.keys(view).sort()) ===
+        JSON.stringify(["category", "occurredAt", "outcome", "reason", "risk", "ruleId", "tool"]),
+      `policy decision view key set mismatch: ${JSON.stringify(Object.keys(view).sort())}`,
+    );
+  }
+  const diagBlob = JSON.stringify(views);
+  for (const leak of [tp.canaryName, tp.markerName, tp.canaryDir, tp.readRoots[0]]) {
+    assert(!diagBlob.includes(leak), "diagnostics policy decisions leak a target path fragment");
+  }
+  /* 抽屉保持打开：canary-never-read 的渲染页断言覆盖含抽屉在内的最大
+     呈现面（Tool activity + journal 行此刻都在页面上）。 */
+  return {
+    detail:
+      "denial provenance visible in what the user sees: drawer 'read denied — outside every configured read root [no rule]' + journal tool.decision/runtime.error rows; API cross-check agrees (allow rule allow-read-configured-roots, deny no-rule); no paths/params/tokens leaked",
+  };
+}
+
+/** canary 内容绝不进入任何会话文件（受控 agent 目录 + 数据目录全树扫描，
+ *  排除 canary 文件自身——物理路径比对）与渲染页面（pageSummary 摘要 +
+ *  页面正文，此刻抽屉打开即含 Tool activity/journal 的最大呈现面）。 */
+async function stepToolPolicyCanaryNeverRead() {
+  const tp = sc.toolPolicy;
+  assert(tp.canaryToken !== null, "scenario wiring: canary token missing (see tool-policy-boot)");
+  assert(tp.agentDir !== null, "scenario wiring: controlled agent dir missing (see tool-policy-boot)");
+  const scanned = new Map();
+  const unreadable = [];
+  for (const file of [...walkFiles(tp.agentDir), ...walkFiles(sc.dataDir)]) {
+    if (scanned.has(file)) continue;
+    try {
+      scanned.set(file, readFileSync(file, "utf8"));
+    } catch {
+      unreadable.push(file);
+    }
+  }
+  assert(unreadable.length === 0, `files could not be scanned for the canary: ${unreadable.join(", ")}`);
+  assert(scanned.size > 0, "no files found under the controlled agent dir or the data dir to scan");
+  const canaryPhysical = physicalPath(tp.canaryPath) ?? tp.canaryPath;
+  const leaks = [...scanned.entries()].filter(([path, text]) => {
+    if ((physicalPath(path) ?? path) === canaryPhysical) return false;
+    return text.includes(tp.canaryToken);
+  });
+  assert(
+    leaks.length === 0,
+    `canary content materialized in ${String(leaks.length)} file(s) under the controlled agent dir / data dir — the denied read must never execute`,
+  );
+  /* 渲染页两道扫描：结构化摘要（含对话回合/抽屉文本/横幅）+ 页面正文。 */
+  const summary = await evalJs(pageSummaryExpression());
+  const summaryBlob = JSON.stringify(summary);
+  assert(!summaryBlob.includes(tp.canaryToken), "the rendered page summary carries the canary token");
+  const bodyText = await evalJs("document.body.textContent");
+  assert(!(bodyText ?? "").includes(tp.canaryToken), "the rendered page body carries the canary token");
+  await snap("tool-policy-canary-never-read");
+  return {
+    detail: `${String(scanned.size)} files scanned (controlled agent dir + data dir incl. sessions/journal/DB): canary content never materialized; rendered page (incl. the open drawer) carries no canary token`,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* 主流程                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -966,6 +1716,46 @@ async function main() {
   mkdirSync(sc.artifactsDir, { recursive: true });
   console.log(`  data dir: ${sanitizeText(sc.dataDir)}${CLI.dataDir === null ? " (temp; pass --data/--keep-data to keep)" : ""}`);
   console.log(`  artifacts: ${sanitizeText(sc.artifactsDir)}`);
+
+  /* A5 浏览器面工具策略场景的门控状态（CLI 已解析；selftest 恒不适用，
+     各检查按模式门控 NOT_RUN）。 */
+  const piToolsEnabled = MODE === "real-pi" && CLI.piToolsList !== null && CLI.piToolsList.length > 0;
+  sc.toolPolicy = {
+    applicable: piToolsEnabled && CLI.piToolsList !== null && CLI.piToolsList.includes("read"),
+    readGateReason:
+      "--pi-tools was not given or does not include 'read'; the browser tool-policy phase drives the request-time gate with a controlled read — rerun real-pi mode with --pi-tools read (optionally --policy-read-roots DIR,DIR) to activate this phase",
+    readRoots: null,
+    agentDir: null,
+    markerPath: null,
+    markerName: null,
+    markerToken: null,
+    markerFirstLine: null,
+    canaryDir: null,
+    canaryPath: null,
+    canaryName: null,
+    canaryToken: null,
+    allowRunId: null,
+    denyRunId: null,
+    /* 全新探针树：工具面提示走干净 session（镜像 API 跑批器），不沾染
+       主树回合——主树各检查计数恒为无工具基线。 */
+    probeTreeId: null,
+    probeTrunkId: null,
+    /* tools 引导后的 sessions 目录快照（递归）：探针树是工具引导下唯一
+       被 prompt 的树——此后新建的 session 文件必然属于探针树。 */
+    sessionsBefore: null,
+    /* 真实模型的合规性方差记录（逃逸轮如实登记；allow/deny 各最多 3 次
+       尝试，逐次加硬指令）。 */
+    attempts: [],
+  };
+  if (piToolsEnabled) {
+    console.log(
+      `  tool gate: --pi-tools ${CLI.piTools}` +
+        (CLI.policyReadRoots !== null
+          ? ` --policy-read-roots ${sanitizeText(CLI.policyReadRoots)}`
+          : " (tools boot narrows read roots to <data>/workspace/policy-allowed)") +
+        ` — browser tool-policy phase ${sc.toolPolicy.applicable ? "ACTIVE" : "NOT applicable (no 'read' tool)"}`,
+    );
+  }
 
   /* ---- 引导 ---- */
 
@@ -1176,12 +1966,12 @@ async function main() {
     const drawerText = await evalJs("document.getElementById('source-drawer').textContent");
     assert(drawerText.includes("not yet delivered"), `drawer return entry missing pending state: ${truncate(drawerText, 200)}`);
     await snap("return-flow-drawer");
-    /* 覆盖层是 fixed 右侧整幅——盖住主线 composer 的 Send 按钮**与
-       Sources 开关本身**（开关位于 branch-bar 最右）——真实用户的关闭
-       路径是 Esc（W2 逐层键盘语义；鼠标无关闭入口本身是本波发现的
-       W2 相关偏差，记入证据记录）。 */
-    await pressKey("Escape", "Escape", 27);
-    await waitForJs("document.getElementById('source-drawer') === null || document.getElementById('source-drawer').hidden", 5_000, "drawer closed via Esc after reading");
+    /* 抽屉头部的可见关闭按钮（issue #6 附-4 的鼠标关闭路径）：覆盖层开着
+       时真实点击 #drawer-close——click 助手的 elementFromPoint 防护证明
+       按钮在覆盖层打开时确实可点（此前鼠标无关闭入口，Esc 是唯一路径；
+       Esc 的逐层键盘语义覆盖保在 a11y-semantics / narrow-window-layout）。 */
+    await click("#drawer-close");
+    await waitForJs("document.getElementById('source-drawer') === null || document.getElementById('source-drawer').hidden", 5_000, "drawer closed via #drawer-close after reading");
     const stateRes = await api("GET", `/api/trees/${encodeURIComponent(sc.treeId)}/state`);
     const returnTurns = (stateRes.body?.branches ?? []).flatMap((view) => (view.turns ?? []).filter((t) => t.role === "return"));
     assert(returnTurns.length === 1, `${String(returnTurns.length)} return turns server-side (expected 1)`);
@@ -1419,7 +2209,8 @@ async function main() {
     assert(narrowDrawer.animationName === "none" || /drawer-up/i.test(String(narrowDrawer.animationName)),
       `narrow drawer animation is not the bottom-up form: ${JSON.stringify(narrowDrawer)}`);
     await snap("narrow-window");
-    /* 抽屉打开时开关被自身覆盖（fixed 全幅）——Esc 是唯一关闭路径。 */
+    /* 窄窗抽屉（fixed 全幅）仍保有 Esc 关闭路径的覆盖（W2 逐层键盘语义；
+       鼠标关闭路径 #drawer-close 的浏览器面覆盖在 return-flow）。 */
     await pressKey("Escape", "Escape", 27);
     await waitForJs("document.getElementById('source-drawer') === null || document.getElementById('source-drawer').hidden", 10_000, "narrow drawer closed via Esc");
     /* 还原宽窗：右侧滑入（panel-in / translateX），宽度远小于全宽。 */
@@ -1474,6 +2265,16 @@ async function main() {
     return { detail: `prefers-reduced-motion honored in the real browser (computed animation/transition-duration collapse to 0.01ms; reset back to ${String(normal.animationDuration)})` };
   });
 
+  /* ---- A5 工具面场景（issue #6 P0-3 浏览器后半；仅 real-pi 且 --pi-tools
+     含 read，两段式：以上检查全部在零工具引导上完成——工具相在此先
+     SIGKILL 当前 studio，再以工具缝重启同一数据目录运行） ---- */
+
+  await runCheck("tool-policy-boot", stepToolPolicyBoot);
+  await runCheck("tool-policy-allow-read", stepToolPolicyAllowRead);
+  await runCheck("tool-policy-deny-fail-closed", stepToolPolicyDenyFailClosed);
+  await runCheck("tool-policy-deny-provenance", stepToolPolicyDenyProvenance);
+  await runCheck("tool-policy-canary-never-read", stepToolPolicyCanaryNeverRead);
+
   await runCheck("console-clean", async () => {
     const unexpected = chrome.pageErrors; /* expectPageErrors 窗口内的已在采集处跳过 */
     await writeSummaryArtifact();
@@ -1504,10 +2305,25 @@ async function writeSummaryArtifact() {
 async function cleanup() {
   killStudio();
   stopChrome();
-  if (CLI.keepData || CLI.dataDir !== null) {
+  const keep = CLI.keepData || CLI.dataDir !== null;
+  if (keep && sc.dataDir !== null) {
     console.log(`  data dir kept: ${sanitizeText(sc.dataDir)}`);
   } else if (sc.dataDir !== null) {
     try { rmSync(sc.dataDir, { recursive: true, force: true }); } catch { /* 尽力而为 */ }
+  }
+  /* 工具面场景的 canary/marker 纪律（镜像 run-d3-real-pi.mjs）：canary
+     位于数据目录 workspace 内（随数据目录处置）——布局若把它放到数据
+     目录之外才需单独删除；marker 位于首个读取根，显式根属操作者目录
+     ——非保留路径下移除本脚本创建的标记文件。 */
+  const tp = sc.toolPolicy;
+  if (tp !== null && sc.dataDir !== null) {
+    const dataPhysical = physicalPath(sc.dataDir) ?? sc.dataDir;
+    if (tp.canaryPath !== null && !isPathWithin(physicalPath(tp.canaryPath) ?? tp.canaryPath, dataPhysical)) {
+      try { rmSync(tp.canaryPath, { force: true }); } catch { /* 尽力而为 */ }
+    }
+    if (tp.markerPath !== null && !keep && !isPathWithin(physicalPath(tp.markerPath) ?? tp.markerPath, dataPhysical)) {
+      try { rmSync(tp.markerPath, { force: true }); } catch { /* 尽力而为 */ }
+    }
   }
   if (sc.artifactsDir !== null) {
     console.log(`  artifacts kept: ${sanitizeText(sc.artifactsDir)}`);
@@ -1536,6 +2352,9 @@ try {
   await cleanup();
   finish(code === 0 && results.some((r) => r.status === "FAIL") ? 2 : code);
 } catch (err) {
+  /* 任何失败路径同样走清理（镜像 API 跑批器的 finally 纪律：不留孤儿
+     进程/临时目录，canary/marker 的操作者目录残留同样处置）。 */
+  await cleanup().catch(() => { /* 尽力而为 */ });
   const message = sanitizeText(err instanceof Error ? err.message : String(err));
   if (message.startsWith("BLOCKED:")) {
     console.error(message);
