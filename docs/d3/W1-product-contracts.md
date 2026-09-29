@@ -319,7 +319,7 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
 | R1 | 选区以绝对偏移定位（§1.1） | 双击（重复词 / 跨行 / 长答案） | 重复词第二处、跨行、长答案选区揭示高亮命中原位置，不依赖字符串搜索 | service.test.ts「anchor status preserves duplicate and cross-line selections and degrades when source is unavailable」（重复词第二处 + 跨行偏移不变量）、「branch anchoring is validated (answer role, slice integrity, bounds)」；**长答案 UI 级未验**（ui-probe 文本均为短句） | 目标 Mac 完整操作一遍（A2，含数千字符长答案） |
 | R2 | 锚点三态判定与降级（§1.2–1.3） | 缺失 session | 判定规则逐条命中；降级时摘录可读、揭示/续聊拒绝且如实报告、不伪造 | available/unavailable 判定与降级：service.test.ts 同上用例（session 不可用 → originStatus unavailable）；api.test.ts 主流程（`/source` available）；**`changed` 分支无直接用例**——产品当前无 turn 改写路径，正常流不可构造（§6-3） | 真实 session 缺失抽查 |
 | R3 | draft 不生效（§2.1） | 双击 | 草稿不落库、不进 Pi 上下文、不渲染为产品 turn | `apps/studio/tests/ui-probe.test.ts`（文件级：草稿持久化与防双击场景——草稿仅存 localStorage 并携带幂等键，Return 卡仅在提交后出现于树状态）；"不进 DB / Pi 上下文"按构造成立（draft 只存在于客户端输入框与 localStorage，无落库通道） | UI 可见性确认（刷新后草稿恢复、未提交不渲染） |
-| R4 | delivered 恰好一次（§2.6） | 双击 / 模型错误 | 下一次主干 prompt 送达并置 `deliveredRunId`；失败的 prompt 不置、不重复置 | service.test.ts「full D3 vertical slice…」（`deliveredReturns === 1`；重启后再 prompt `deliveredReturns === 0`——不重复送达）+「composePromptText prefixes pending returns deterministically」；**"失败 prompt 不置"无直接用例**（按构造成立，§6-4） | 真实 Pi 送达一次验证 |
+| R4 | delivered 恰好一次（§2.6） | 双击 / 模型错误 | 下一次主干 prompt 送达并置 `deliveredRunId`；失败的 prompt 不置、不重复置 | service.test.ts「full D3 vertical slice…」（`deliveredReturns === 1`；重启后再 prompt `deliveredReturns === 0`——不重复送达）+「composePromptText prefixes pending returns deterministically」；「失败 prompt 不置」直接用例已补（`b0be424`：service.test.ts「failed prompt never delivers the pending return…（W1 §6-4）」） | 真实 Pi 送达一次验证 |
 | R5 | 同键同内容 → 同一 Return（§2.3） | 双击 | 双击提交第二次 `200` 重放；DB 仅一条 confirmed Return | api.test.ts「return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key」；service.test.ts「return idempotency: same key+content replays the same turn; different content conflicts」；`apps/studio/tests/ui-probe.test.ts`（文件级：DOM 级防双击恰一次 POST） | UI 双击提交按钮（实机口径） |
 | R6 | 同键不同内容 → 409（§2.3） | 双击 | `409 return-conflict`，零写入 | 同上两用例（冲突持久化零写入断言）；并发同键异容：service.test.ts「concurrent same-key submits converge to one return (race-safe, no dangling episode)」 | — |
 | R7 | 响应丢失先对账再重提（§2.5） | 响应丢失 | 响应丢失 → refetch 按键命中 → 不重复提交；未命中 → 同键重提安全 | `apps/studio/tests/ui-probe.test.ts` + `apps/studio/tests/ui-regressions.test.ts`（均文件级：响应丢失对账——命中条件为键+来源分支+文本全同、失败保留草稿、改写换键场景）；api.test.ts「response-loss resubmit and double-click converge to exactly one return」 | 断网 / 杀进程后恢复复现 |
@@ -328,7 +328,7 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
 | R10 | 中止语义（§3.2） | 中止 | 非活动 run → `409`；user-abort → `aborted` 不改写 `failed`；已 settle 的 abort 无效果 | service.test.ts「abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed」（含 404/400/409 映射与中止后上下文隔离）；api.test.ts 同名面（「diagnostics and abort endpoints…」）；events.test.ts「abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees」；D2 层支撑：tests/integration/scenarios.test.ts「e2e error-convergence…」 | 真实 Pi 中途点停止 |
 | R11 | 重启收敛（§3.3） | 重启收敛 | 非终态 run 重启后 `failed`（host-interrupted）；DB 事实源；重启后流程可继续 | service.test.ts「startup recovery converges interrupted runs to failed (I6 host-interrupt semantics)」+「full D3 vertical slice…」（重启恢复 + 分支/主干续聊）；api.test.ts「HTTP API serves the UI and the full D3 flow, surviving a restart」；events.test.ts「process restart: journal and diagnostics converge consistently (host-crash semantics)」 | kill 宿主后重启复现 |
 | R12 | 缺失 session fail-closed + 可执行恢复（§3.4） | 缺失 session | 树/分支/turn 可读；续聊 `502` 不静默重建；恢复提示（从既有 turn 开新分支）可执行 | events.test.ts「session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path」+「session availability derivation: live probe refines the cached assessment honestly」；`apps/studio/tests/ui-probe.test.ts`（文件级：恢复动作精确载荷、横幅禁用与原因场景） | 文件级移除 session，按 UI 提示恢复 |
-| R13 | 模型错误收敛（§3.5） | 模型错误 | run `failed` + failure 记录；无 assistant turn；confirmed Return 不被标记送达 | events.test.ts「model error injection: run converges failed across HTTP, diagnostics, journal and SSE」（`/fail` 注入：failed + code/message + 零 turn + journal/诊断面一致）；安全投影：service.test.ts「diagnostics read model: safe projection only (no session refs, details, causes, paths)」；**"confirmed Return 不被标记送达"无直接用例**（按构造成立，§6-4） | 真实 Pi 侧错误配置一次 |
+| R13 | 模型错误收敛（§3.5） | 模型错误 | run `failed` + failure 记录；无 assistant turn；confirmed Return 不被标记送达 | events.test.ts「model error injection: run converges failed across HTTP, diagnostics, journal and SSE」（`/fail` 注入：failed + code/message + 零 turn + journal/诊断面一致）；安全投影：service.test.ts「diagnostics read model: safe projection only (no session refs, details, causes, paths)」；「confirmed Return 不被标记送达」直接用例已补（`b0be424` 同一用例：失败后 Return 仍 confirmed、下次成功 prompt 送达恰一次、再后不重发） | 真实 Pi 侧错误配置一次 |
 
 ## 5. 明确非目标
 
@@ -368,10 +368,14 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
    的路径，正常产品流无法构造 `changed` 态；自动化只覆盖
    `available`/`unavailable`。R2 的"判定规则逐条命中"强于现有证据——补
    测试需要伪造不变量破坏（如直改 DB）或引入编辑功能。
-4. **§2.6/§3.5 "失败的 prompt 不标记送达"无直接用例（加注）**：送达只发
-   生在成功收敛的同一事务内（`service.ts` `prompt()` L1050–1074），失败路
-   径按构造不触碰；但无"pending return + 失败 prompt"的组合用例。补测试
-   需要在有待送达 Return 的树上注入 `/fail`。
+4. **§2.6/§3.5 "失败的 prompt 不标记送达"直接用例已补（`b0be424`）**：
+   送达只发生在成功收敛的同一事务内（`service.ts` `prompt()` L1050–
+   1074）；本条原为证据缺口加注，已由 service.test.ts「failed prompt
+   never delivers the pending return; the next successful trunk prompt
+   delivers it exactly once (W1 §6-4)」关闭——失败注入在 runtime 层
+   （echo `/fail` 前缀钩子在待送达 Return 的组合文本下不可用），断言
+   run failed + Return 仍 confirmed + 下次成功 prompt 送达恰一次 + 再后
+   不重发。
 5. **§2.2 降级 Return 卡的摘录（加注）**：锚点 turn 在当前视图内时卡面
    呈现摘录；锚点不在当前视图（如嵌套支线的 Return）时卡面降级为
    "original anchor unavailable"，摘录仅在来源抽屉 Returns 节可读。若契约
