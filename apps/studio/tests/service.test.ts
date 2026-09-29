@@ -91,9 +91,9 @@ test("full D3 vertical slice: trunk → anchored branch → continue → navigat
     }
     assert.equal(sessionFiles.size, 1, "one session file per tree (fork-in-session)");
 
-    /* 6. 编辑并显式提交 Return（记录在 Trunk，含出处）。 */
+    /* 6. 编辑并显式提交 Return（记录在 Trunk，含出处；先导航后落库）。 */
     const returnText = `RETURN: use ${selection.text} as the answer`;
-    const returnTurn = service.submitReturn(treeId, branchId, returnText);
+    const returnTurn = await service.submitReturn(treeId, branchId, returnText);
     assert.equal(returnTurn.role, "return");
     assert.equal(returnTurn.branchId, trunkId, "the return lands on the Trunk");
     assert.equal(returnTurn.fromBranchId, branchId);
@@ -258,8 +258,8 @@ test("return and prompt validation errors", async () => {
       () => service.prompt("tree-missing" as TreeId, trunkId, "q"),
       EntityNotFoundError,
     );
-    // Trunk 无 origin，不能提交 return（同步方法）。
-    assert.throws(() => service.submitReturn(treeId, trunkId, "text"), InvalidArgumentError);
+    // Trunk 无 origin，不能提交 return（submitReturn 为 async 方法）。
+    await assert.rejects(() => service.submitReturn(treeId, trunkId, "text"), InvalidArgumentError);
     // return 文本不能为空；跨树引用被拒绝。
     const other = service.createTree();
     const t = await service.prompt(other.tree.id, other.trunkBranch.id, "q");
@@ -268,8 +268,8 @@ test("return and prompt validation errors", async () => {
       end: 2,
       text: t.assistantTurn.text.slice(0, 2),
     });
-    assert.throws(() => service.submitReturn(other.tree.id, branch.branch.id, "  "), InvalidArgumentError);
-    assert.throws(
+    await assert.rejects(() => service.submitReturn(other.tree.id, branch.branch.id, "  "), InvalidArgumentError);
+    await assert.rejects(
       () => service.submitReturn(treeId, branch.branch.id, "cross-tree"),
       InvalidArgumentError,
     );

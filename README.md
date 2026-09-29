@@ -26,11 +26,12 @@ packages/persistence    TreeRepository, migrations             (Agent C)
 packages/tool-policy    default-deny tool policy               (Agent D)
 packages/event-journal  append-only journal & run-state         (Agent E)
 apps/runtime-smoke      end-to-end integration app             (Integrator)
+apps/studio             D3 Core MVP local web surface (offline echo default)
 coordination/d2/        agent status files & dependency requests
 evidence/d2/            append-only verification evidence
 ```
 
-Dependency direction: `apps/runtime-smoke` → { runtime-pi, persistence, tool-policy, event-journal } → `contracts`. No lateral package dependencies; cooperate through `contracts`.
+Dependency direction: `apps/runtime-smoke` → { runtime-pi, persistence, tool-policy, event-journal } → `contracts`; `apps/studio` → { runtime-pi, persistence } → `contracts`. No lateral package dependencies; cooperate through `contracts`.
 
 ## Commands
 
@@ -49,6 +50,22 @@ Exit-code convention (shared with the D2 verifier): `0` all PASS · `1` tool err
 What was actually verified, what was not, and what needs an owner decision:
 see `docs/d2/D2-verification.md`, `docs/d2/D2-known-limitations.md` and
 `docs/d2/D2-owner-checklist.md`.
+
+## Studio (D3 MVP) — local install & start
+
+```bash
+npm ci                                     # pinned Node 24.21.0 / npm 11.19.0
+npm run start --workspace @treeai/studio   # http://127.0.0.1:8787
+```
+
+Options: `--port N`, `--data DIR` (default `./treeai-studio-data/` under
+`apps/studio/` — SQLite DB + Pi session files, survives restarts). The default
+driver is the offline **echo** driver: deterministic, no network, no
+credentials. Real Pi is optional and credentialed —
+`--driver pi --provider ID --model ID` — and fails explicitly without valid
+credentials. Tests: `npm test --workspace @treeai/studio` (also part of
+`npm test`). D3 status: offline echo vertical slice only — Gate 2 / real-Pi
+acceptance and user trials are **not** complete.
 
 ## Coordination & evidence
 

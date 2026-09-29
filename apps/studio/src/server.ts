@@ -220,12 +220,13 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         }
         if (action === "return" && method === "POST") {
           const body = await readJsonBody(req);
-          const returnTurn = service.submitReturn(
+          // submitReturn 先导航回 Trunk 再落库：导航失败（如 session 文件
+          // 缺失 → 502 session-corrupt）时 Return 未写入，重试不会重复。
+          const returnTurn = await service.submitReturn(
             treeId,
             requireString(body, "fromBranchId") as BranchId,
             requireString(body, "text"),
           );
-          await service.switchBranch(treeId, returnTurn.branchId);
           sendJson(res, 201, { returnTurn, state: service.getTreeState(treeId) });
           return;
         }

@@ -409,10 +409,18 @@ export class TreeStudioService {
   /* ------------------------------ Return ------------------------------ */
 
   /**
-   * 编辑后显式提交 Return：记录在 Trunk（含出处分支），
-   * 下一次 Trunk prompt 时送入 Pi 上下文（deliveredRunId 落库）。
+   * 编辑后显式提交 Return：先把活动会话导航回 Trunk 续聊点，成功后才把
+   * Return 记录在 Trunk（含出处分支）；下一次 Trunk prompt 时送入 Pi 上下文
+   * （deliveredRunId 落库）。
+   *
+   * 失败/重试一致性（写入顺序即契约）：导航失败（如 Pi session 文件缺失
+   * → session-corrupt）在任何 Return 落库之前抛出，因此同一失败上重试
+   * 不会产生重复的 Return turn；导航成功后写入失败时，重试只会补写一次。
+   * Trunk 尚无 session（new-session）时不导航、不建 session（与
+   * switchBranch 语义一致），Return 直接落库，待首次 Trunk prompt 时建
+   * session 并送达。
    */
-  submitReturn(treeId: TreeId, fromBranchId: BranchId, text: string): Turn {
+  async submitReturn(treeId: TreeId, fromBranchId: BranchId, text: string): Promise<Turn> {
     if (typeof text !== "string" || text.trim().length === 0) {
       throw new InvalidArgumentError("return text must be a non-empty string");
     }
@@ -432,6 +440,9 @@ export class TreeStudioService {
     if (trunk === undefined) {
       throw new InvalidArgumentError(`tree ${tree.id} has no trunk (root) branch`);
     }
+    // 先导航后写入：导航失败（运行期 TreeAIError，如 session 文件缺失）
+    // 在任何 Return 持久化之前抛出 → 重试不产生重复 Return。
+    await this.switchBranch(tree.id, trunk.id);
     const episode = this.repository.createEpisode(trunk.id);
     return this.repository.createTurn({
       treeId: tree.id,
