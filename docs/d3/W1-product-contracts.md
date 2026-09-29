@@ -317,7 +317,7 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
 | # | 契约规则 | 测试类别 | 断言要点 | 自动化（离线） | 人工（目标 Mac / 真实 Pi） |
 | --- | --- | --- | --- | --- | --- |
 | R1 | 选区以绝对偏移定位（§1.1） | 双击（重复词 / 跨行 / 长答案） | 重复词第二处、跨行、长答案选区揭示高亮命中原位置，不依赖字符串搜索 | service.test.ts「anchor status preserves duplicate and cross-line selections and degrades when source is unavailable」（重复词第二处 + 跨行偏移不变量）、「branch anchoring is validated (answer role, slice integrity, bounds)」；**长答案 UI 级未验**（ui-probe 文本均为短句） | 目标 Mac 完整操作一遍（A2，含数千字符长答案） |
-| R2 | 锚点三态判定与降级（§1.2–1.3） | 缺失 session | 判定规则逐条命中；降级时摘录可读、揭示/续聊拒绝且如实报告、不伪造 | available/unavailable 判定与降级：service.test.ts 同上用例（session 不可用 → originStatus unavailable）；api.test.ts 主流程（`/source` available）；**`changed` 分支无直接用例**——产品当前无 turn 改写路径，正常流不可构造（§6-3） | 真实 session 缺失抽查 |
+| R2 | 锚点三态判定与降级（§1.2–1.3） | 缺失 session | 判定规则逐条命中；降级时摘录可读、揭示/续聊拒绝且如实报告、不伪造 | available/unavailable 判定与降级：service.test.ts 同上用例（session 不可用 → originStatus unavailable）；api.test.ts 主流程（`/source` available）；`changed` 判定与降级直接用例已补——service.test.ts「changed anchor (DB-constructed): …（W1 §6-3）」直改 DB 构造切片失配（originStatus 如实 changed + 同 turn 对照 available、摘录可读、揭示拒绝无回退、无静默修复；changed 不阻断续聊的边界一并如实锁定，§6-3） | 真实 session 缺失抽查 |
 | R3 | draft 不生效（§2.1） | 双击 | 草稿不落库、不进 Pi 上下文、不渲染为产品 turn | `apps/studio/tests/ui-probe.test.ts`（文件级：草稿持久化与防双击场景——草稿仅存 localStorage 并携带幂等键，Return 卡仅在提交后出现于树状态）；"不进 DB / Pi 上下文"按构造成立（draft 只存在于客户端输入框与 localStorage，无落库通道） | UI 可见性确认（刷新后草稿恢复、未提交不渲染） |
 | R4 | delivered 恰好一次（§2.6） | 双击 / 模型错误 | 下一次主干 prompt 送达并置 `deliveredRunId`；失败的 prompt 不置、不重复置 | service.test.ts「full D3 vertical slice…」（`deliveredReturns === 1`；重启后再 prompt `deliveredReturns === 0`——不重复送达）+「composePromptText prefixes pending returns deterministically」；「失败 prompt 不置」直接用例已补（`b0be424`：service.test.ts「failed prompt never delivers the pending return…（W1 §6-4）」） | 真实 Pi 送达一次验证 |
 | R5 | 同键同内容 → 同一 Return（§2.3） | 双击 | 双击提交第二次 `200` 重放；DB 仅一条 confirmed Return | api.test.ts「return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key」；service.test.ts「return idempotency: same key+content replays the same turn; different content conflicts」；`apps/studio/tests/ui-probe.test.ts`（文件级：DOM 级防双击恰一次 POST） | UI 双击提交按钮（实机口径） |
@@ -364,10 +364,21 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
    `findReturnByIdempotencyKey` 却按 `treeId` 过滤——同键用于另一棵树会
    以 400（约束冲突）拒绝而非重放。客户端按 §2.3 生成 UUID，该边角实际
    不可达；若契约需要"按树唯一"，需改索引并补测试（owner 决策）。
-3. **§1.2 `changed` 判定无直接用例（加注）**：产品当前没有改写 turn 文本
-   的路径，正常产品流无法构造 `changed` 态；自动化只覆盖
-   `available`/`unavailable`。R2 的"判定规则逐条命中"强于现有证据——补
-   测试需要伪造不变量破坏（如直改 DB）或引入编辑功能。
+3. **§1.2 `changed` 判定直接用例已补（直改 DB 构造，测试与本文档同一
+   提交）**：产品当前没有改写 turn 文本的路径，正常产品流无法构造
+   `changed` 态——按本条预期的补测路线伪造不变量破坏：service.test.ts
+   「changed anchor (DB-constructed): originStatus reports changed, the
+   excerpt stays readable, reveal refuses without fallback, nothing is
+   silently repaired (W1 §6-3)」以直接 `UPDATE turns` 同长度前缀改写锚点
+   答案（一处选区切片失配、同 turn 上另一选区仍匹配作对照）后整实例
+   重启，断言真实 `#anchorStatus()` 如实报 `changed`（对照仍 available）、
+   摘录快照可读、揭示拒绝且返回落库快照原文（无 whole-answer / 首次
+   出现回退、零导航副作用）、DB 事实与选区快照不被静默修复。**边界
+   （如实）**：`changed` 锚点不阻断分支续聊——服务层续聊只由「续聊点
+   可解析 + session 可用性」门控，§1.3 字面的「changed → 续聊拒绝」
+   未实现（§1.3 实现对照本身把续聊 fail-closed 指向 §3.4 的 session
+   不可用路径）；测试按实现如实锁定该边界（分支仍从记录在案的锚点
+   条目分叉，无重新定位回退），是否补上服务层续聊拒绝待 owner 裁决。
 4. **§2.6/§3.5 "失败的 prompt 不标记送达"直接用例已补（`b0be424`）**：
    送达只发生在成功收敛的同一事务内（`service.ts` `prompt()` L1050–
    1074）；本条原为证据缺口加注，已由 service.test.ts「failed prompt
@@ -385,9 +396,16 @@ prompt 失败（上游 / 模型错误）把 run 收敛为 `failed` 并记录
    `6ff7146`（事件/journal/降级）、`d061b5f`（UI 改版）及 issue #3/#4 波
    次；本稿以 `56f8c31` 勘定，`app.js` 相关行号与语义随 `8fd8684` 波次
    更新。
-7. **§2.4 new-session 直落库分支无专属用例（加注）**：主干尚无 session
-   时 Return 不导航直接落库——`switchBranch()` 对 new-session 显式返回
-   （L1257–1261），按构造覆盖，但无"空主干提交 Return"的独立用例。
+7. **§2.4 new-session 直落库分支直接用例已补（测试与本文档同一提交）**：
+   主干尚无 session 时 Return 不导航直接落库——`switchBranch()` 对
+   new-session 显式返回（L1257–1261）。service.test.ts「empty-trunk
+   return: submit persists directly without a session; the first trunk
+   prompt creates the session and delivers it exactly once (W1 §6-7)」
+   以仓储层铺设锚点构造空主干形状（「主干零 episode/run + 已存在锚定
+   分支」在产品流不可达——任何树的首个 prompt 必然落在主干）后提交
+   Return，断言直接落库（confirmed + targetAnchor 快照完整）、零
+   session 创建 / 零导航 / 零新 run，首次主干 prompt 才建 session 并
+   送达恰一次（deliveredRunId 绑定该 run；再后不重送）。
 8. **Return 卡的回退放置规则未写入契约（开放项）**：锚点回合不在当前
    渲染分支（历史 Return、嵌套支线的 Return）时，卡按时间序原位渲染并
    降级标注（`app.js` `renderTurnsInto` L567–588、`returnCard` L483–542）；
