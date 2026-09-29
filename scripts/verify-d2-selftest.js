@@ -6,7 +6,8 @@
  * schema/秘密/非法退出码时门禁失败" — prove, by actually injecting defects
  * and running the REAL verifier, that the gate fails when:
  *
- *   A. a secret-shaped file appears in the scanned workspace;
+ *   A. a secret-shaped file appears in the scanned workspace (a tests/
+ *      fixture, and a JSON sidecar in the evidence/d3/browser record area);
  *   B. a schema is weakened (event schema replaced by an accept-anything
  *      document → "invalid" probes start validating → constraint loss);
  *   C. the exit-code discipline constraints are stripped from the result
@@ -183,6 +184,46 @@ async function main() {
         ),
       );
       console.log(`  [${pass ? "PASS" : "FAIL"}] inject-secret (child exit ${run.exitCode})`);
+    }
+
+    /* ---- A2. secret injection in the D3 browser evidence area ------- */
+    {
+      const root = buildSyntheticTree(join(workDir, "secret-browser"));
+      // A credential-shaped string inside a browser-record JSON sidecar
+      // (evidence/d3/browser holds DOM / accessibility-tree sidecars next
+      // to its .md records; a leak there must FAIL the workspace scan).
+      const token = ["sk-test-", "abcdef0123456789", "abcdef0123456789"].join("");
+      const runDirName = "20260929T000000Z-echo-navigation";
+      mkdirSync(join(root, "evidence", "d3", "browser", runDirName), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(root, "evidence", "d3", "browser", runDirName, "dom-snapshot.json"),
+        `${JSON.stringify({ note: "captured locally", apiKey: token }, null, 2)}\n`,
+        "utf8",
+      );
+      const childRuns = childRunsFor("secret-browser");
+      const run = runVerifier(root, childRuns, ["secret-scan-workspace"]);
+      const failedCheck = run.result?.results?.find?.((r) => r.id === "secret-scan-workspace");
+      const pass =
+        run.exitCode === 2 &&
+        failedCheck !== undefined &&
+        failedCheck.status === "FAIL" &&
+        run.result.verdict === "HAS_FAIL";
+      scenarios.push(
+        scenarioRecord(
+          "inject-secret-browser-evidence",
+          2,
+          run.exitCode,
+          pass,
+          pass
+            ? "secret-shaped JSON sidecar in evidence/d3/browser/ → secret-scan-workspace FAIL, gate exit 2"
+            : `browser evidence secret injection NOT detected (child exit ${run.exitCode}, verdict ${run.result?.verdict})`,
+        ),
+      );
+      console.log(
+        `  [${pass ? "PASS" : "FAIL"}] inject-secret-browser-evidence (child exit ${run.exitCode})`,
+      );
     }
 
     /* ---- B. weakened event schema ---------------------------------- */

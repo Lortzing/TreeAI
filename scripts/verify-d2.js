@@ -490,6 +490,7 @@ const CHECKS = [
         join(ROOT, ".github", "workflows"),
         join(ROOT, "evidence", "d2"),
         join(ROOT, "evidence", "d3"),
+        join(ROOT, "evidence", "d3", "browser"),
       ].filter((p) => existsSync(p));
       // Only Agent F's scripts (the other scripts/ files are the
       // Integrator's; they are not part of this gate's write zone).

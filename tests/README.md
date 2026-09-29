@@ -90,7 +90,8 @@ Checks (id → meaning):
 - `pi-version-pin` — `@earendil-works/pi-coding-agent` must be exactly
   `0.85.1` (declared AND installed)
 - `secret-scan-workspace` — scans tests/, schemas/d2/, .github/workflows/,
-  evidence/d2/ and scripts/verify-d2*.js; any finding FAILs the gate
+  evidence/d2/, evidence/d3/ (incl. its browser/ record area) and
+  scripts/verify-d2*.js; any finding FAILs the gate
 - `residual-resources` — no `treeai-*` temp leftovers after the suites
 - `d1-repro` — NOT_RUN unless `--d1-repro` (offline PRs never force live
   model calls)
@@ -134,7 +135,8 @@ Builds synthetic trees in temp dirs (never touches the real tree), injects
 defects, runs the REAL verifier against them, and requires each injection
 to fail the gate (child exit 2):
 
-1. a secret-shaped file in tests/ → `secret-scan-workspace` FAIL
+1. secret-shaped files in tests/ and in an evidence/d3/browser JSON sidecar →
+   `secret-scan-workspace` FAIL
 2. the event schema replaced by an accept-anything document →
    `fixtures-integrity` FAIL ("a schema constraint was lost")
 3. the exit-code constraints stripped from the result schema → the
