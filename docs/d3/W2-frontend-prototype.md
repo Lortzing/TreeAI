@@ -13,6 +13,15 @@
 
 ## 更新记录
 
+- **2026-09-29 · issue #3 修复波次（journal/恢复/滚动纪律）**：§2.7 打开-加载
+  失败态落地（journal 三态：加载中/已载/失败——失败呈现"journal failed
+  to load + Retry"，不再与"无事件"混淆；Retry 即回加载态）；§2.8 恢复
+  提示升级为可直接执行按钮（"⑃ Branch from latest available answer"，
+  主线横幅与面板降级提示共用；无可用候选时禁用并给出原因；恢复是绕行
+  不是解锁——原 fail-closed 输入禁用保持）；流式与新内容滚动纪律修正
+  （48px 贴底判定——用户已向上阅读时，delta 渲染与终态重渲均不再强制
+  滚底；在底部时照常贴底；首次打开仍直接落底）。78/78 探针断言 +
+  367/367 测试通过。仍属 owner 待验收（实机/录屏口径不变）。
 - **2026-09-29 · `6ff7146`**：§2.5 流式推送（SSE `/events`：snapshot +
   run-started/message-delta/abort-requested/run-terminal/tool-activity，
   EventSource 替代轮询、断流降级轮询）、§2.7 来源抽屉（per-run 出处 +

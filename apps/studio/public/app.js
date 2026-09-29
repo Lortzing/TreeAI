@@ -14,7 +14,8 @@
  *    仅客户端，不落 TreeAI DB、未显式提交前永不生效）；提交成功 / 响应丢失
  *    对账命中即清除；失败保留草稿与幂等键供同键重试；
  *  - 每分支阅读位置恢复（W2 §4）：滚动位置按 tree:branch 记忆，切走再回
- *    恢复原位；接收新 turn 的视图贴底。
+ *    恢复原位；接收新 turn / 流式增量的视图只在用户本就贴底时跟随贴底
+ *    （已向上阅读绝不强制滚底，issue #3 P1；首次打开无记录直接落底）。
  *
  * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。其余既有事实面：
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
@@ -22,10 +23,13 @@
  *    在途时 Abort、“未观测策略决策”的如实呈现（Studio 无工具执行器
  *    ——绝不声称未接入的策略执行）；
  *  - 来源抽屉：per-run 出处、Return 出处与 journal 尾部的保守摘要（工具
- *    活动如实空态——Studio 离线以空工具 allowlist 运行）；
+ *    活动如实空态——Studio 离线以空工具 allowlist 运行）；journal 拉取
+ *    三态呈现——加载中 / 已载（含如实空态）/ 加载失败 + 重试（失败绝不
+ *    伪装成“无事件”，W2 §2.7 打开-加载失败、issue #3 P1）；
  *  - 缺失 session 降级（A4/W2 §2.8）：分支徽标 + 横幅（树保持可读、续聊
- *    fail-closed 且入口禁用并说明原因、可执行的恢复方式），
- *    session-corrupt 失败时同样提示。
+ *    fail-closed 且入口禁用并说明原因），恢复方式是可直接执行的按钮
+ *    （从 session 仍可用的最新 assistant 答案整条建支线——近似说明见
+ *    findSessionRecoveryAnchor），session-corrupt 失败时同样提示。
  *
  * 动效分镜（W2 §3，M1–M7）：全部短促、无循环装饰；streaming 指示为静态
  * caret（不闪烁）；每个动效在 prefers-reduced-motion 下即时化（CSS 全局
@@ -50,10 +54,13 @@
 /** @typedef {{treeId:string, runtimeState:"idle"|"streaming"|"aborting", activeRun:{runId:string,branchId:string,episodeId:string}|null, runs:RunDiagnosticsT[], policyDecisions:{observed:boolean, reason:string}}} TreeDiagnosticsT */
 /** @typedef {{branchId:string, idempotencyKey:string, text:string, failed:boolean}} ReturnDraftT */
 /** @typedef {{eventId:string, runId:string, seq:number, occurredAt:string, type:string, summary:string}} JournalEventT */
+/** journal 拉取三态（W2 §2.7）：{ok:true} = 已载（events 可为空——如实
+    空态）；{ok:false} = 加载失败（呈现失败 + 重试）；null = 加载中。 */
+/** @typedef {{ok:true, events:JournalEventT[]}|{ok:false}} JournalLoadT */
 /** @typedef {{runId:string, branchId:string, episodeId:string}} ActiveRunInfoT */
 /** @typedef {{runId:string, branchId:string, text:string}} StreamingT */
 /** @typedef {{branchId:string, turnId:string, start:number, end:number}} SourceHighlightT */
-/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}} FocusReturnRefT */
+/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}|{kind:"main-input"}} FocusReturnRefT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
@@ -93,7 +100,9 @@ const state = {
   forcePanelSessionNote: false,
   /** 来源抽屉。 */
   drawerOpen: false,
-  /** @type {JournalEventT[]|null} */ journalEvents: null,
+  /** journal 三态（null = 加载中；W2 §2.7 / issue #3 P1——拉取失败绝不
+      折叠成空数组伪装成无事件）。 @type {JournalLoadT|null} */
+  journalEvents: null,
   /** 最近工具活动（真实 Pi 驱动才会有；离线如实为空）。 */
   toolActivity: [],
   /** 每分支阅读位置（`${treeId}:${branchId}` → scrollTop；W2 §2.2/§4）。 */
@@ -141,6 +150,16 @@ function prefersReducedMotion() {
 }
 function scrollBehavior() {
   return prefersReducedMotion() ? "auto" : "smooth";
+}
+
+/** 贴底阈值（issue #3）：视口底边距内容底部 ≤48px 视为“正在跟随底部”。 */
+const AT_BOTTOM_PX = 48;
+
+/** 贴底判定：强制贴底（新内容跟随）只允许发生在用户本就在底部的容器上
+    （issue #3 P1：流式增量 / 新 turn 到达时，已向上阅读的视图不得被拉回
+    底部）。判定须在写入新内容之前取值——写入本身会增高 scrollHeight。 */
+function isAtBottom(container) {
+  return container.scrollTop + container.clientHeight >= container.scrollHeight - AT_BOTTOM_PX;
 }
 
 async function api(path, method = "GET", body = undefined) {
@@ -316,9 +335,10 @@ function renderBranchTabs() {
 
 /**
  * A4 缺失 session 横幅（主线视角，可关闭、不自动消失）：树保持完全可读
- * （数据库是事实源），Trunk 续聊将 fail-closed；可执行恢复方式 = 从 session
- * 仍可用的 turn 建新分支 / 新建 Tree。session-corrupt 的 Trunk prompt 失败
- * 同样强制显示（forceSessionBanner，下一次成功 Trunk prompt 清除）。
+ * （数据库是事实源），Trunk 续聊将 fail-closed；可执行恢复方式 = 横幅内
+ * 的恢复按钮（sessionRecoveryControls，从 session 仍可用的 turn 建新
+ * 分支）或新建 Tree。session-corrupt 的 Trunk prompt 失败同样强制显示
+ * （forceSessionBanner，下一次成功 Trunk prompt 清除）。
  */
 function renderSessionBanner() {
   const banner = $("session-banner");
@@ -334,14 +354,69 @@ function renderSessionBanner() {
   text.textContent =
     "Session missing on this branch — the tree stays fully readable (the database is the source of truth), " +
     "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.";
+  banner.append(text);
+  banner.append(sessionRecoveryControls("main"));
   const dismiss = document.createElement("button");
   dismiss.className = "session-banner-dismiss";
   dismiss.textContent = "Dismiss";
   dismiss.addEventListener("click", () => {
     banner.hidden = true;
   });
-  banner.append(text, dismiss);
+  banner.append(dismiss);
   banner.hidden = false;
+}
+
+/**
+ * 恢复候选（W2 §2.8「可直接执行」的依据）：session 可用分支的最新
+ * assistant 答案。近似（诚实边界）：TreeStateT 不提供逐 turn 的 session
+ * 判定——BranchViewT.sessionAvailability 是分支续聊点（latest run 的
+ * session 引用；无 run 分支为 origin 锚点 run 的引用）的可用性，同分支
+ * 各 run 共享会话文件，故以分支视图推断其 turn 的可用性。主线优先，
+ * 其次其余分支（读模型顺序，稳定）。残余边界：某分支 prompt 刚以
+ * session-corrupt 失败而读模型仍报 available 时可能被选中（服务端对
+ * corrupt 会话在读模型中标 unavailable，正常不出现）。
+ */
+function findSessionRecoveryAnchor() {
+  const st = state.treeState;
+  if (st === null) return null;
+  const ordered = st.trunkBranchId === null ? [] : [st.trunkBranchId];
+  for (const view of st.branches) {
+    if (view.branch.id !== st.trunkBranchId) ordered.push(view.branch.id);
+  }
+  for (const branchId of ordered) {
+    const view = branchView(branchId);
+    if (view === null || view.sessionAvailability !== "available") continue;
+    const turn = [...view.turns].reverse().find((t) => t.role === "assistant");
+    if (turn !== undefined) return turn;
+  }
+  return null;
+}
+
+/**
+ * 恢复按钮（issue #3 P1：恢复说明从纯文字变为可执行操作）：主线横幅与
+ * 面板降级提示共用。有候选 → 可点击（title 如实标注来源分支）；无候选 →
+ * 禁用并说明原因（新建 Tree / 恢复 session 文件）。不削弱 fail-closed 的
+ * 续聊禁用——按钮是旁路恢复动作，不是对被禁入口的解禁。
+ */
+function sessionRecoveryControls(surface) {
+  const wrap = document.createElement("span");
+  wrap.className = "session-recovery";
+  const button = document.createElement("button");
+  button.className = "session-recovery-button";
+  button.textContent = "⑃ Branch from latest available answer";
+  const anchor = findSessionRecoveryAnchor();
+  if (anchor === null) {
+    button.disabled = true;
+    const reason = document.createElement("span");
+    reason.className = "session-recovery-reason";
+    reason.textContent = "no session currently available — start a new Tree or restore the session file";
+    wrap.append(button, reason);
+  } else {
+    button.title = `branch from the latest answer on ${branchLabel(anchor.branchId)} (whose session is still available)`;
+    wrap.append(button);
+  }
+  button.addEventListener("click", () => guard(() => branchFromLatestAvailableAnswer(), surface));
+  return wrap;
 }
 
 function selectionOffsetsWithin(element, text) {
@@ -437,11 +512,15 @@ function returnCard(turn, anchor) {
 /**
  * 共享对话渲染（主线 / 面板）：turn 列表、按 targetAnchor 定位的 Return 卡、
  * 锚点高亮（M6 一次性脉冲）、流式占位（M5 静态指示）。
- * 滚动策略（W2 §2.2/§4）：接收新内容的视图贴底（平滑；reduced-motion 直接
- * 定位）；其余渲染恢复该分支已记忆的阅读位置；无记录（首次打开）贴底。
+ * 滚动策略（W2 §2.2/§4 + issue #3）：接收新内容（stick）只在用户本就
+ * 贴底时跟随贴底（平滑；reduced-motion 直接定位）——已向上阅读绝不
+ * 强制滚底；其余渲染恢复该分支已记忆的阅读位置；无记录（首次打开）
+ * 直接落底（自然的阅读起点，非强制拉动）。
  */
 function renderTurnsInto(container, view, branchId, stick) {
   const st = state.treeState;
+  /* 贴底判定取重渲前实况（replaceChildren 移除内容会改变 scrollHeight）。 */
+  const wasAtBottom = isAtBottom(container);
   container.replaceChildren();
   if (view.turns.length === 0) {
     const empty = document.createElement("p");
@@ -557,10 +636,14 @@ function renderTurnsInto(container, view, branchId, stick) {
   }
 
   const saved = state.scrollPositions.get(scrollKey(branchId));
-  if (stick || saved === undefined) {
-    /* 接收新内容 → 贴底（平滑；reduced-motion 直接定位）；
-       首次打开（无阅读位置记录）→ 直接定位（不做过场滚动）。 */
-    container.scrollTo({ top: container.scrollHeight, behavior: stick ? scrollBehavior() : "auto" });
+  if ((stick && wasAtBottom) || saved === undefined) {
+    /* 贴底跟随——仅当用户本就贴底（或首次打开无阅读位置记录，直接落底
+       为自然的阅读起点）；已向上阅读（stick 且 !wasAtBottom 且有记录）
+       落入恢复分支，阅读位置不动（issue #3：不得强制滚底）。 */
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: saved === undefined ? "auto" : scrollBehavior(),
+    });
   } else {
     container.scrollTop = Math.min(saved, container.scrollHeight);
   }
@@ -605,7 +688,8 @@ function renderPanelAnchorContext(view) {
 
 /**
  * 支线 session 不可用降级提示（W2 §2.8）：常驻（非 dismissible——它解释
- * 的是被禁用的续聊入口这一事实状态），并作为降级视图的首个焦点。
+ * 的是被禁用的续聊入口这一事实状态），并作为降级视图的首个焦点。内含
+ * 可直接执行的恢复按钮（issue #3 P1）。
  */
 function renderPanelSessionNote(view) {
   const note = $("panel-session-note");
@@ -614,9 +698,14 @@ function renderPanelSessionNote(view) {
     note.hidden = true;
     return;
   }
-  note.textContent =
-    "Session missing on this branch — the branch stays fully readable (the database is the source of truth), " +
-    "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.";
+  note.replaceChildren();
+  note.append(
+    document.createTextNode(
+      "Session missing on this branch — the branch stays fully readable (the database is the source of truth), " +
+        "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.",
+    ),
+  );
+  note.append(sessionRecoveryControls("panel"));
   note.hidden = false;
 }
 
@@ -996,7 +1085,8 @@ function connectEvents(treeId) {
   });
 }
 
-/** 流式占位回显：增量到达时只更新占位文本节点（不整树重渲），贴底滚动。 */
+/** 流式占位回显：增量到达时只更新占位文本节点（不整树重渲）；用户本就
+    贴底时跟随贴底，已向上阅读则完全不动滚动（issue #3 P1）。 */
 function updateStreamingPlaceholder() {
   const streaming = state.streaming;
   if (streaming === null) return;
@@ -1009,11 +1099,17 @@ function updateStreamingPlaceholder() {
     renderAll({ stick: streaming.branchId });
     return;
   }
+  const container = node.parentElement;
+  /* 先取增量写入前的贴底实况（写入会增高 scrollHeight，事后再判会把恰在
+     底部的用户误判为已上移）。 */
+  const follow = isAtBottom(container);
   const textNode = node.firstChild;
   if (textNode !== null && typeof textNode.data === "string") {
     textNode.data = streaming.text;
   }
-  node.parentElement.scrollTo({ top: node.parentElement.scrollHeight, behavior: scrollBehavior() });
+  if (follow) {
+    container.scrollTo({ top: container.scrollHeight, behavior: scrollBehavior() });
+  }
 }
 
 /* ------------------------------ 面板 / 抽屉进出场（M1/M2） ------------------------------ */
@@ -1105,6 +1201,7 @@ function hideDrawer(opts = {}) {
 function resolveFocusRef(ref) {
   if (ref === null || ref === undefined) return null;
   if (ref.kind === "element") return ref.element;
+  if (ref.kind === "main-input") return $("prompt-input");
   if (ref.kind === "tab") return tabButtons.get(ref.branchId) ?? null;
   if (ref.kind === "branch-button") return branchHereButtons.get(ref.turnId) ?? null;
   if (ref.kind === "return-card") return turnElements.get(ref.turnId) ?? null;
@@ -1112,12 +1209,15 @@ function resolveFocusRef(ref) {
 }
 
 /** 面板打开 → 焦点移入面板：常规 = 支线输入框（面板主操作面）；
-    session 不可用降级 = 降级提示为首个焦点（W2 §2.8）。
+    session 不可用降级 = 恢复按钮为首个焦点（W2 §2.8 键盘焦点行；按钮
+    禁用——无可用候选——时退回降级提示本身）。
     busy 的瞬态禁用期间（动作未收尾）延迟到解锁后再移入。 */
 function focusIntoPanel() {
   const view = branchView(state.panelBranchId);
   if (view !== null && (view.sessionAvailability === "unavailable" || state.forcePanelSessionNote)) {
-    $("panel-session-note").focus();
+    const recovery = $("panel-session-note").querySelector("button");
+    if (recovery !== null && !recovery.disabled) recovery.focus();
+    else $("panel-session-note").focus();
     return;
   }
   const input = $("panel-prompt-input");
@@ -1419,6 +1519,34 @@ async function branchFromTurn(turnElement, turn) {
   });
 }
 
+/**
+ * 恢复动作（issue #3 P1 / W2 §2.8「可直接执行」）：从 session 仍可用的
+ * 最新 assistant 答案（findSessionRecoveryAnchor）整条建支线，并以局部
+ * 面板打开。不变量：新支线无 run，其续聊点 = origin 锚点 run 的 session
+ * 引用（服务端语义），而锚点所在分支视图的 sessionAvailability 为
+ * available——故新支线的续聊点按构造可用（面板续聊入口随之启用）。
+ * 建支线不对齐游标（与 branchFromTurn 一致：首次续聊由 prompt 显式
+ * 导航）。失败按调用面呈现错误横幅（guard）。
+ */
+async function branchFromLatestAvailableAnswer() {
+  const anchor = findSessionRecoveryAnchor();
+  if (anchor === null) return; /* 渲染期已禁用；兜底防竞态 */
+  const payload = await api(
+    `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches`,
+    "POST",
+    {
+      sourceBranchId: anchor.branchId,
+      anchorTurnId: anchor.id,
+      selection: { start: 0, end: anchor.text.length, text: anchor.text },
+    },
+  );
+  state.treeState = payload.state;
+  await openBranchPanel(payload.branch.id, {
+    alignCursor: false,
+    trigger: { kind: "main-input" },
+  });
+}
+
 /** 在树状态里按幂等键找已落库的 Return（响应丢失探查）。 */
 function findReturnByKey(treeState, idempotencyKey) {
   for (const view of treeState.branches) {
@@ -1507,15 +1635,26 @@ async function openDrawer(opts = {}) {
   state.drawerOpen = true;
   state.drawerFocusRunId = opts.focusRunId ?? null;
   state.drawerFocusReturn = opts.trigger ?? { kind: "element", element: $("source-drawer-toggle") };
-  state.journalEvents = null;
+  state.journalEvents = null; /* 三态复位：进入加载中（防上次的陈旧态闪现） */
   renderDrawer();
   showDrawer();
   $("source-drawer").focus(); /* 焦点入抽屉（W2 §2.7） */
+  void loadJournal();
+}
+
+/**
+ * journal 拉取（打开与重试共用）：成功 / 失败如实落三态（W2 §2.7
+ * 打开-加载失败；issue #3 P1——失败绝不折叠成空数组伪装成“无事件”）。
+ */
+async function loadJournal() {
+  if (state.currentTreeId === null) return;
+  state.journalEvents = null;
+  renderDrawer();
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/journal?limit=20`);
-    state.journalEvents = payload.events;
+    state.journalEvents = { ok: true, events: payload.events };
   } catch {
-    state.journalEvents = []; /* 诚实空态：拉取失败也如实呈现为空 */
+    state.journalEvents = { ok: false };
   }
   renderDrawer();
 }
@@ -1604,18 +1743,31 @@ function renderDrawer() {
     drawer.append(list);
   }
 
-  /* journal 尾部（保守摘要；最新在后）。 */
+  /* journal 尾部（保守摘要；最新在后）。三态（W2 §2.7 / issue #3 P1）：
+     加载中 / 已载（可为空——如实空态）/ 加载失败（失败 + 重试，绝不
+     伪装成无事件）。 */
   const journalTitle = document.createElement("h3");
   journalTitle.textContent = "Journal (latest 20)";
   drawer.append(journalTitle);
   if (state.journalEvents === null) {
     drawer.append(mutedLine("loading journal…"));
-  } else if (state.journalEvents.length === 0) {
+  } else if (!state.journalEvents.ok) {
+    const line = document.createElement("p");
+    line.className = "muted";
+    line.append(document.createTextNode("journal failed to load — "));
+    const retry = document.createElement("button");
+    retry.className = "drawer-retry";
+    retry.textContent = "Retry";
+    retry.title = "Fetch the journal tail again";
+    retry.addEventListener("click", () => void loadJournal());
+    line.append(retry);
+    drawer.append(line);
+  } else if (state.journalEvents.events.length === 0) {
     drawer.append(mutedLine("no journal events recorded for this tree yet"));
   } else {
     const list = document.createElement("ul");
     list.className = "drawer-list journal-list";
-    for (const event of state.journalEvents) {
+    for (const event of state.journalEvents.events) {
       const li = document.createElement("li");
       const time = document.createElement("span");
       time.className = "muted";

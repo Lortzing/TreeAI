@@ -205,6 +205,7 @@ body {
 #session-banner {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 10px;
   margin: 10px 18px 0;
   padding: 8px 12px;
@@ -227,6 +228,24 @@ body {
   cursor: pointer;
 }
 #session-banner .session-banner-dismiss:hover { background: #f6e8cd; }
+
+/* A4/W2 §2.8 恢复动作（issue #3 P1：可执行的恢复按钮）：主线横幅与
+   面板降级提示共用；无可用候选时禁用并内联说明原因。 */
+.session-recovery { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+#session-banner .session-recovery { margin-right: 8px; }
+#panel-session-note .session-recovery { display: flex; margin-top: 6px; }
+.session-recovery-button {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid #b07d2b;
+  border-radius: 5px;
+  background: none;
+  color: #7a5a20;
+  cursor: pointer;
+}
+.session-recovery-button:hover:not(:disabled) { background: #f6e8cd; }
+.session-recovery-reason { font-size: 11px; opacity: 0.85; }
 
 /* 阅读区：主线面板 + 支线局部覆盖层（W2 §2.2/§2.3）。 */
 #reading-area { position: relative; flex: 1; min-height: 0; display: flex; }
@@ -429,6 +448,19 @@ button.drawer-toggle:hover { background: var(--bg); }
 .drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
 .drawer-list li { margin: 4px 0; line-height: 1.45; }
 .drawer-list.journal-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+
+/* journal 加载失败态的重试（W2 §2.7 打开-加载失败；issue #3 P1——
+   失败如实呈现，绝不伪装成“无事件”）。 */
+.drawer-retry {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.drawer-retry:hover { background: var(--bg); }
 
 button.danger {
   font-size: 12px;
