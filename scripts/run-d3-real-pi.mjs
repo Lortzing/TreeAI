@@ -36,7 +36,11 @@
  *   - SSE 事件面（snapshot / run-started / message-delta / run-terminal）；
  *   - A4 宿主重启（SIGKILL 后同数据目录重启：树/分支/回合/cursor 完整、
  *     续聊可用）；
- *   - 模型错误收敛（echo 模式经 /fail 确定性注入；real-pi 模式 NOT_RUN）；
+ *   - 模型错误收敛（echo 模式经 /fail 确定性注入；real-pi 模式经「错误
+ *     配置 registry」注入——20260929T104445Z-faults-model-error.md 已证
+ *     手法的跑批器化：受控 agent 目录副本仅把 provider baseUrl 改为不可
+ *     路由回环地址，错误 prompt 502/Run failed/零回合；换回原目录重启
+ *     同一数据目录后同树恢复续聊；独立探针树，主树基线计数不受影响）；
  *   - 在途中止（real-pi 模式真实模型时延窗口；echo 模式 NOT_RUN）。
  *
  * 两种模式（同一剧本、同一断言面）：
@@ -80,18 +84,22 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT_NAME = "run-d3-real-pi";
-const VERSION = "1.1.1";
+const VERSION = "1.2.0";
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 /** 真实 Pi 驱动的 API key 环境变量（日志中只允许出现该名字）。 */
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
 const MODES = ["echo-selftest", "real-pi"];
+/** 模型错误注入的不可路由 provider baseUrl（回环 9 端口 = discard：
+ *  连接立即被拒，绝不产生真实 provider 请求；镜像
+ *  evidence/d3/real-pi/20260929T104445Z-faults-model-error.md 的已证手法）。 */
+const MISCONFIG_BASE_URL = "http://127.0.0.1:9/";
 const BOOT_TIMEOUT_MS = 60_000;
 const DEFAULT_PROMPT_TIMEOUT_MS = 120_000;
 const GET_TIMEOUT_MS = 15_000;
@@ -152,14 +160,11 @@ const CHECK_DEFS = [
   { id: "return-submit", modes: BOTH },
   { id: "return-idempotency", modes: BOTH },
   { id: "return-delivery", modes: BOTH },
-  {
-    id: "model-error-convergence",
-    modes: ["echo-selftest"],
-    notRun: {
-      "real-pi":
-        "no safe deterministic model-error injection against a real provider; the owner injects it once by misconfiguration per evidence/d3/real-pi/README.md (fault class: model error); the echo /fail hook covers the convergence mechanics offline",
-    },
-  },
+  /* 模型错误收敛在两种模式各有一条确定性注入路径：echo 模式经 /fail
+     钩子（主树，本清单第 14 项位置执行）；real-pi 模式经错误配置
+     registry 的重启舞步（探针树，phaseAbort 之后执行）——见
+     phaseModelError 与 main() 的双时序注释。 */
+  { id: "model-error-convergence", modes: BOTH },
   {
     id: "A5-product-tool-policy",
     modes: ["real-pi"],
@@ -377,11 +382,14 @@ function npmVersion() {
 /* Studio 子进程                                                       */
 /* ------------------------------------------------------------------ */
 
-function studioArgv(dataDir, withTools = false) {
+function studioArgv(dataDir, withTools = false, agentDirOverride = null) {
   const args = [STUDIO_ENTRY, "--port", "0", "--data", dataDir];
   if (CLI.mode === "real-pi") {
     args.push("--driver", "pi", "--provider", CLI.provider, "--model", CLI.model);
-    if (CLI.agentDir !== null) args.push("--agent-dir", CLI.agentDir);
+    /* agentDirOverride 仅由模型错误注入阶段使用（错误配置副本引导）；
+       null = 既有语义（--agent-dir 透传或 CLI 缺省 <data>/pi-agent）。 */
+    const agentDir = agentDirOverride ?? CLI.agentDir;
+    if (agentDir !== null) args.push("--agent-dir", agentDir);
     /* 两段式结构：主剧本（含重启/中止检查）全程零工具引导——真实模型
        偶尔会在提示中自发读取工作区文件，收窄读取根下会被策略正确拒绝
        （fail-closed 是产品正确行为，但会打断剧本）；工具缝仅在 A5 阶段
@@ -406,8 +414,8 @@ function studioArgv(dataDir, withTools = false) {
   return args;
 }
 
-async function startStudio(dataDir, withTools = false) {
-  const child = spawn(process.execPath, studioArgv(dataDir, withTools), {
+async function startStudio(dataDir, withTools = false, agentDirOverride = null) {
+  const child = spawn(process.execPath, studioArgv(dataDir, withTools, agentDirOverride), {
     cwd: ROOT,
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -669,6 +677,9 @@ const sc = {
   /* A5 产品面 ToolPolicy 场景状态（main() 初始化；echo 模式 applicable
      恒 false，各检查按门控 NOT_RUN）。 */
   toolPolicy: null,
+  /* 模型错误注入阶段的错误配置 agent 目录副本（cleanup 处置；
+     null = 未创建）。 */
+  misconfigAgentDir: null,
 };
 
 function treePath(action) {
@@ -888,7 +899,15 @@ async function main() {
     await phaseNoBleed();
     await phaseAnchorReveal();
     await phaseReturn();
-    await phaseModelError();
+    /* 模型错误检查的双时序：echo 模式在此处经 /fail 钩子注入主树（主树
+       SSE/诊断计数把它算作第 9 个 run，见 phaseSse/phaseDiagnostics 的
+       echo 期望值）；real-pi 模式改为错误配置 registry 的重启舞步，
+       为不扰动其后 SSE/诊断/journal/重启/中止检查的主树基线计数，
+       挪到 phaseAbort 之后、A5 之前执行（独立探针树，镜像 A5 的两段式
+       结构——见 phaseModelError 的 real-pi 分支）。 */
+    if (MODE === "echo-selftest") {
+      await phaseModelError();
+    }
     /* 两段式结构：SSE/诊断/journal/重启/中止检查全部在零工具引导上完成
        （主树计数 = 无工具基线，不受工具面方差影响）；A5 工具面场景在
        其后以工具引导重启同一数据目录运行。 */
@@ -897,6 +916,9 @@ async function main() {
     await phaseJournal();
     await phaseRestart();
     await phaseAbort();
+    if (MODE === "real-pi") {
+      await phaseModelError();
+    }
     await phaseProductToolPolicy();
   } catch (err) {
     verifierError = err;
@@ -937,6 +959,15 @@ async function cleanup() {
     console.log(`data dir kept for inspection: ${sc.dataDir}`);
   } else if (CLI.data === null) {
     rmSync(sc.dataDir, { recursive: true, force: true });
+  }
+  /* 错误配置 registry 副本（模型错误注入用，位于系统临时目录、数据目录
+     之外）：绿色运行后删除；失败保留供取证（与 data dir 同一 keep 语义）。 */
+  if (sc.misconfigAgentDir !== null) {
+    if (keep) {
+      console.log(`misconfigured agent-dir copy kept for inspection: ${sc.misconfigAgentDir}`);
+    } else {
+      rmSync(sc.misconfigAgentDir, { recursive: true, force: true });
+    }
   }
   const tp = sc.toolPolicy;
   if (tp !== null) {
@@ -1267,30 +1298,163 @@ async function phaseReturn() {
 
 async function phaseModelError() {
   await runCheck("model-error-convergence", async () => {
-    const before = turnCount(await fetchState(), sc.branchB);
-    const failed = await api(sc.port, "POST", treePath("prompt"), { branchId: sc.branchB, text: SCENARIO.fail }, CLI.promptTimeoutMs);
-    assert(failed.status === 502, `/fail prompt must map to 502 (got ${String(failed.status)})`);
-    assert(failed.body?.error?.code === "upstream", `error code is ${String(failed.body?.error?.code)} (expected upstream)`);
-    assert(/simulated upstream failure/.test(String(failed.body?.error?.message ?? "")), "error message does not match the echo failure hook");
-    const midState = await fetchState();
-    assert(turnCount(midState, sc.branchB) === before, "a failed prompt must persist no turns");
-    const diag = await api(sc.port, "GET", treePath("diagnostics"));
-    const failedRun = (diag.body?.runs ?? []).find((run) => run.state === "failed");
-    assert(failedRun !== undefined, "diagnostics shows no failed run");
-    assert(failedRun.failure?.code === "upstream", "diagnostics failed run code is not upstream");
-    sc.failedRunId = failedRun.runId;
-    sc.runIds.add(failedRun.runId);
-    /* 错误后的恢复：同一分支续聊可用。 */
-    const recovery = await promptOk(sc.branchB, SCENARIO.recoverB);
-    sc.answers.recoverB = recovery.outcome.assistantTurn.text;
-    assertEchoMode(
-      sc.answers.recoverB,
-      echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1, SCENARIO.b2, SCENARIO.fail, SCENARIO.recoverB),
-      "branch B recovery turn",
+    if (MODE === "echo-selftest") {
+      const before = turnCount(await fetchState(), sc.branchB);
+      const failed = await api(sc.port, "POST", treePath("prompt"), { branchId: sc.branchB, text: SCENARIO.fail }, CLI.promptTimeoutMs);
+      assert(failed.status === 502, `/fail prompt must map to 502 (got ${String(failed.status)})`);
+      assert(failed.body?.error?.code === "upstream", `error code is ${String(failed.body?.error?.code)} (expected upstream)`);
+      assert(/simulated upstream failure/.test(String(failed.body?.error?.message ?? "")), "error message does not match the echo failure hook");
+      const midState = await fetchState();
+      assert(turnCount(midState, sc.branchB) === before, "a failed prompt must persist no turns");
+      const diag = await api(sc.port, "GET", treePath("diagnostics"));
+      const failedRun = (diag.body?.runs ?? []).find((run) => run.state === "failed");
+      assert(failedRun !== undefined, "diagnostics shows no failed run");
+      assert(failedRun.failure?.code === "upstream", "diagnostics failed run code is not upstream");
+      sc.failedRunId = failedRun.runId;
+      sc.runIds.add(failedRun.runId);
+      /* 错误后的恢复：同一分支续聊可用。 */
+      const recovery = await promptOk(sc.branchB, SCENARIO.recoverB);
+      sc.answers.recoverB = recovery.outcome.assistantTurn.text;
+      assertEchoMode(
+        sc.answers.recoverB,
+        echoAnswer(SCENARIO.t1, SCENARIO.t2, SCENARIO.b1, SCENARIO.b2, SCENARIO.fail, SCENARIO.recoverB),
+        "branch B recovery turn",
+      );
+      const after = turnCount(await fetchState(), sc.branchB);
+      assert(after === before + 2, `branch B must hold ${String(before + 2)} turns after recovery (got ${String(after)})`);
+      return { detail: "injected upstream failure converged failed (502, no turns); branch B usable again afterwards" };
+    }
+
+    /* real-pi：错误配置 registry 注入（20260929T104445Z-faults-model-error.md
+       已证手法的跑批器化）。受控 agent 目录副本仅把 provider baseUrl 改为
+       不可路由回环地址（连接立即被拒，绝不产生真实 provider 请求），凭据
+       全程经环境变量注入且不变；错误 prompt 后换回原目录重启同一数据
+       目录——「配置修复 + 重启恢复」闭环。独立探针树（同 A5 理由：全新
+       session，主树的 SSE/诊断/重启计数不受影响；本检查晚于全部主树
+       基线检查执行，见 main() 的双时序注释）。 */
+    const banner = stripSecret(sc.studios[sc.studios.length - 1].stdout);
+    const agentMatch = /pi agent-dir=(.+?) \(controlled/.exec(banner);
+    assert(agentMatch !== null, "studio banner does not report the controlled agent dir");
+    const sourceAgentDir = agentMatch[1];
+    assert(existsSync(sourceAgentDir), `the controlled agent dir reported by the banner does not exist: ${sourceAgentDir}`);
+
+    /* 副本 + 仅改 provider baseUrl（其余 registry 字段逐字节保留；
+       副本位于系统临时目录、数据目录之外——canary/数据目录扫描不受
+       影响，cleanup 按绿色/失败语义处置）。 */
+    const misconfigDir = mkdtempSync(join(tmpdir(), "treeai-d3-misconfig-agent-"));
+    cpSync(sourceAgentDir, misconfigDir, { recursive: true });
+    sc.misconfigAgentDir = misconfigDir;
+    const modelsPath = join(misconfigDir, "models.json");
+    assert(existsSync(modelsPath), `the controlled agent dir carries no models.json registry to misconfigure: ${sourceAgentDir}`);
+    let registry;
+    try {
+      registry = JSON.parse(readFileSync(modelsPath, "utf8"));
+    } catch (err) {
+      throw new Error(`the registry copy could not be parsed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    const provider = registry?.providers?.[CLI.provider];
+    assert(provider !== null && typeof provider === "object", `the registry has no provider entry for '${CLI.provider}'`);
+    assert(typeof provider.baseUrl === "string" && provider.baseUrl.length > 0, `provider '${CLI.provider}' has no baseUrl to misconfigure`);
+    provider.baseUrl = MISCONFIG_BASE_URL;
+    writeFileSync(modelsPath, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+
+    /* 注入引导：SIGKILL 当前 studio（与 phaseRestart/A5 同一手法），以
+       错误配置副本引导同一数据目录。 */
+    const current = sc.studios[sc.studios.length - 1];
+    current.child.kill("SIGKILL");
+    await waitForExit(current.child, 10_000);
+    const misconfigStudio = await startStudio(sc.dataDir, false, misconfigDir);
+    sc.studios.push(misconfigStudio);
+    sc.port = misconfigStudio.port;
+    const misconfigBanner = stripSecret(misconfigStudio.stdout);
+    assert(
+      misconfigBanner.includes(`pi agent-dir=${misconfigDir} (controlled`),
+      "the misconfigured boot does not report the registry copy as its controlled agent dir",
     );
-    const after = turnCount(await fetchState(), sc.branchB);
-    assert(after === before + 2, `branch B must hold ${String(before + 2)} turns after recovery (got ${String(after)})`);
-    return { detail: "injected upstream failure converged failed (502, no turns); branch B usable again afterwards" };
+    console.log("    studio banner (sanitized, misconfigured boot):");
+    for (const line of misconfigBanner.trim().split("\n")) {
+      console.log(`      ${line}`);
+    }
+
+    /* 独立探针树：错误 prompt 与恢复 prompt 都走全新 session（同 A5 的
+       已证条件）。 */
+    const probe = await api(sc.port, "POST", "/api/trees");
+    assert(probe.status === 201, `probe tree creation failed: ${errDetail(probe)}`);
+    const probeTreeId = probe.body?.tree?.id;
+    const probeTrunkId = probe.body?.trunkBranchId;
+    assert(typeof probeTreeId === "string" && probeTreeId.length > 0, "no tree id in the probe creation response");
+    assert(typeof probeTrunkId === "string" && probeTrunkId.length > 0, "no trunk branch id in the probe creation response");
+    const probePath = (action) => `/api/trees/${encodeURIComponent(probeTreeId)}${action === undefined ? "" : `/${action}`}`;
+    const probeTurnCount = async () => {
+      const res = await api(sc.port, "GET", probePath("state"));
+      assert(res.status === 200, `probe state fetch failed: ${errDetail(res)}`);
+      return turnCount(res.body, probeTrunkId);
+    };
+
+    /* 错误 prompt：provider 不可达 → 502、Run failed、零回合落库
+       （SDK 内部重试有固定时长，promptTimeoutMs 覆盖；错误码按现行分类
+       器如实登记——「连接错误归 unknown」是 104445Z 已记录的现行行为，
+       是否需要更细的连接级错误码属 owner 契约决定）。 */
+    const failed = await api(
+      sc.port,
+      "POST",
+      probePath("prompt"),
+      { branchId: probeTrunkId, text: "Reply with the single word: online." },
+      CLI.promptTimeoutMs,
+    );
+    assert(failed.status === 502, `the misconfigured prompt must map to 502 (got ${String(failed.status)}): ${errDetail(failed)}`);
+    const errorCode = failed.body?.error?.code;
+    assert(typeof errorCode === "string" && errorCode.length > 0, "the misconfigured prompt returned no error code");
+    assert(await probeTurnCount() === 0, "a failed prompt must persist no turns");
+    let probeDiag = await api(sc.port, "GET", probePath("diagnostics"));
+    assert(probeDiag.body?.runtimeState === "idle", `runtimeState is ${String(probeDiag.body?.runtimeState)} (expected idle) after the misconfigured prompt`);
+    assert(probeDiag.body?.activeRun === null, "activeRun is not null after the misconfigured prompt");
+    const failedRun = (probeDiag.body?.runs ?? []).find((run) => run.state === "failed");
+    assert(failedRun !== undefined, "diagnostics shows no failed run for the misconfigured prompt");
+    assert(
+      failedRun.failure?.code === errorCode,
+      `the failed run carries code ${String(failedRun.failure?.code)} while the HTTP error carried ${String(errorCode)}`,
+    );
+
+    /* 恢复引导：SIGKILL，换回原受控目录重启同一数据目录（配置修复）。 */
+    misconfigStudio.child.kill("SIGKILL");
+    await waitForExit(misconfigStudio.child, 10_000);
+    const recoveryStudio = await startStudio(sc.dataDir);
+    sc.studios.push(recoveryStudio);
+    sc.port = recoveryStudio.port;
+    const recoveryBanner = stripSecret(recoveryStudio.stdout);
+    assert(
+      recoveryBanner.includes(`pi agent-dir=${sourceAgentDir} (controlled`),
+      "the recovery boot does not report the original controlled agent dir",
+    );
+
+    /* 同一探针树续聊：配置修复 + 重启后恢复（failed → succeeded 序列）。 */
+    const recovery = await api(
+      sc.port,
+      "POST",
+      probePath("prompt"),
+      { branchId: probeTrunkId, text: "Reply with the single word: online." },
+      CLI.promptTimeoutMs,
+    );
+    assert(recovery.status === 200, `the recovery prompt failed: ${errDetail(recovery)}`);
+    assert(recovery.body?.outcome?.run?.state === "succeeded", `recovery run state is ${String(recovery.body?.outcome?.run?.state)}`);
+    assert(
+      typeof recovery.body?.outcome?.assistantTurn?.text === "string" && recovery.body.outcome.assistantTurn.text.trim().length > 0,
+      "the recovery answer is empty",
+    );
+    assert(await probeTurnCount() === 2, "the recovery prompt did not persist its turn pair");
+    probeDiag = await api(sc.port, "GET", probePath("diagnostics"));
+    assert(probeDiag.body?.runtimeState === "idle", "runtimeState is not idle after the recovery prompt");
+    const runStates = (probeDiag.body?.runs ?? []).map((run) => `${run.state}${run.failure === null ? "" : `(${String(run.failure.code)})`}`);
+    assert(
+      JSON.stringify(runStates) === JSON.stringify([`failed(${errorCode})`, "succeeded"]),
+      `the probe run sequence is ${JSON.stringify(runStates)} (expected [failed(${errorCode}), succeeded])`,
+    );
+    return {
+      detail:
+        `misconfigured registry (unroutable baseUrl) converged failed (502 ${errorCode}, no turns) on a fresh probe tree; ` +
+        "original-registry restart recovered the same tree (failed → succeeded)",
+    };
   });
 }
 
