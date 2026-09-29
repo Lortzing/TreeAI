@@ -67,7 +67,18 @@ through `TREEAI_STUDIO_API_KEY` (in-memory injection via runtime-pi credentials;
 never a CLI flag, never logged or persisted). The controlled Pi agent directory
 is `--agent-dir DIR`, defaulting to `<data>/pi-agent/`; Studio never silently
 reads `~/.pi`. Missing provider, model, API key, or an unusable agent directory
-fails at startup. Tests: `npm test --workspace @treeai/studio` (part of
+fails at startup. Tools are disabled by default (zero tools, no policy — the
+default behavior is unchanged); the real-Pi driver can enable Pi's built-in
+tools behind the request-time ToolPolicy gate with `--pi-tools TOOL,TOOL`
+(e.g. `read`; needs a one-time `npm run build:deps --workspace @treeai/studio`,
+which compiles the ToolPolicy engine) and `--policy-read-roots DIR,DIR`
+(absolute, existing, comma-separated directories; defaults to
+`<data>/workspace/` and says so in the startup banner). The gate fails closed:
+reads outside the roots, all writes, shell, and network are denied before
+execution — a denial converges the run failed (`policy-denied`) with
+`tool.decision` provenance — and there is no CLI switch to relax it. Both flags
+are pi-driver-only and rejected elsewhere with explicit startup errors.
+Tests: `npm test --workspace @treeai/studio` (part of
 `npm test` and of the `verify:d2` offline CI gate). D3 status: offline Echo
 vertical slice only — Gate 2 / real-Pi acceptance and user trials are not
 complete.
