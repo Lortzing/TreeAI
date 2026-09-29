@@ -8,85 +8,131 @@
 </head>
 <body>
   <div id="app">
+    <!-- 窄窗（<720px）侧栏开关：桌面隐藏。 -->
     <button id="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">☰ Trees</button>
-    <aside id="sidebar" aria-label="Trees">
-      <h1>TreeAI Studio</h1>
-      <p class="subtitle">D3 Core MVP · trusted-local</p>
-      <button id="new-tree" class="primary">＋ New Tree</button>
-      <ul id="tree-list" aria-label="Trees"></ul>
-      <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
-      <div id="list-load-error" hidden>
-        <p id="list-load-message"></p>
-        <button id="list-retry">Retry</button>
+
+    <!-- 顶栏（目标视觉：58px 白条）。品牌 + Forest/Tree/主干路径（主阅读面
+         恒为 Trunk，W2 §2.2；路径由 app.js renderTopbarPath 渲染）；诊断面
+         内联为「模型状态/详情」（诚实呈现：run 状态 / 终态 / 策略注记 /
+         Abort）；来源抽屉入口。无树打开时诊断面与来源入口的 hidden 均由
+         app.js（renderAll）统一管理。 -->
+    <header id="branch-bar">
+      <h1 id="topbar-brand">TreeAI</h1>
+      <div id="topbar-path-wrap">
+        <div id="topbar-path"></div>
+        <span id="cursor-note" class="muted"></span>
       </div>
-      <p id="driver-note" class="muted"></p>
-    </aside>
-    <main id="main">
-      <div id="empty-state" hidden>
-        <p>No Tree open.</p>
-        <p class="muted">Create a Tree to start a Trunk conversation.</p>
+      <div id="diagnostics-bar" hidden>
+        <span id="run-status" class="run-status idle" aria-live="polite">idle</span>
+        <span id="run-detail" class="muted"></span>
+        <button id="abort-run" class="danger" hidden>Abort run</button>
+        <span id="policy-note" class="muted"></span>
       </div>
-      <section id="tree-view" hidden>
-        <header id="branch-bar">
+      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ Sources</button>
+    </header>
+
+    <!-- 左右分栏工作区：左栏 Forest/Branches 导航 + 主区；高度受限使
+         #conversation 成为真实滚动容器（修复文档级整页滚动缺陷）。 -->
+    <div id="workspace">
+      <!-- 左栏（目标视觉：~240px 白面）。Forest（树列表）与 Branches（当前树
+           分支导航，即既有 branch-tabs——点击语义不变：支线开局部面板 /
+           Trunk 收面板回主线）同栏；New Tree 置顶为主操作。 -->
+      <aside id="sidebar" aria-label="Trees">
+        <button id="new-tree" class="primary">＋ New Tree</button>
+        <section class="sidebar-section" id="forest-section">
+          <h2 class="sidebar-heading">Forest</h2>
+          <ul id="tree-list" aria-label="Trees"></ul>
+          <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
+          <div id="list-load-error" hidden>
+            <p id="list-load-message"></p>
+            <button id="list-retry">Retry</button>
+          </div>
+        </section>
+        <section class="sidebar-section" id="branch-section">
+          <h2 class="sidebar-heading">Branches</h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
-          <span id="cursor-note" class="muted"></span>
-          <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ Sources</button>
-        </header>
-        <div id="diagnostics-bar">
-          <span id="run-status" class="run-status idle" aria-live="polite">idle</span>
-          <span id="run-detail" class="muted"></span>
-          <button id="abort-run" class="danger" hidden>Abort run</button>
-          <span id="policy-note" class="muted"></span>
+        </section>
+        <div id="sidebar-foot">
+          <p class="subtitle">D3 Core MVP · trusted-local</p>
+          <p id="driver-note" class="muted"></p>
         </div>
-        <div id="failure-panel" hidden></div>
-        <div id="session-banner" hidden></div>
-        <div id="reading-area">
-          <div id="main-pane">
-            <div id="conversation" aria-live="polite" aria-label="Trunk conversation"></div>
-            <!-- 错误横幅朗读语义（W2 §2.4）：role=alert（隐式 aria-live）+ 可 Tab 触达。 -->
-            <div id="error-banner" role="alert" tabindex="0" hidden></div>
-            <div id="composer">
-              <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
-              <div class="composer-actions">
-                <button id="send" class="primary">Send</button>
+      </aside>
+
+      <main id="main">
+        <!-- 空态：无树打开。主操作直达（窄窗侧栏在抽屉后，不在首屏）。 -->
+        <div id="empty-state" hidden>
+          <p class="empty-title">No Tree open.</p>
+          <p class="muted">Create a Tree to start a Trunk conversation — branches fork from any answer, and Return brings the result back.</p>
+          <button id="empty-new-tree" class="primary">＋ New Tree</button>
+        </div>
+        <section id="tree-view" hidden>
+          <!-- P1 失败面板（持久、不自动消失）：树级警示条，置于阅读区之上。 -->
+          <div id="failure-panel" hidden></div>
+          <!-- 阅读区：中央 Trunk 阅读列（暖灰阅读面）+ 右侧稳定的支线概念列
+               （≥1180px：面板打开为局部工作面，收起时为受控空态——列常驻，
+               主干阅读宽度不随面板开合变化；<1180px 回落为右侧覆盖层，
+               W2 §2.2/§2.3 开合期间主线阅读位置不动）。 -->
+          <div id="reading-area">
+            <div id="main-pane">
+              <!-- A4 缺失 session 横幅（主线视角，可关闭、不自动消失）。 -->
+              <div id="session-banner" hidden></div>
+              <div id="conversation" aria-live="polite" aria-label="Trunk conversation"></div>
+              <!-- 错误横幅朗读语义（W2 §2.4）：role=alert（隐式 aria-live）+ 可 Tab 触达。 -->
+              <div id="error-banner" role="alert" tabindex="0" hidden></div>
+              <div id="composer">
+                <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
+                <div class="composer-actions">
+                  <button id="send" class="primary">Send</button>
+                </div>
               </div>
+            </div>
+            <div id="branch-column">
+              <!-- 受控空态（列的常驻底面）：面板打开时被面板覆盖（visibility
+                   隐藏，见 style.css ≥1180px 块），收起后如实呈现指引。 -->
+              <div id="branch-empty">
+                <span class="branch-empty-orn" aria-hidden="true"></span>
+                <p class="branch-empty-title">No branch open</p>
+                <p class="muted">Select text in an answer to anchor a branch here — its excerpt, continuation, and Return draft open in this column.</p>
+              </div>
+              <!-- 支线局部面板（W2 §2.3）：锚点作用域；固定「来源/回程」操作；
+                   Return 草稿面就近（面板底部，紧邻头部锚点摘录）。 -->
+              <aside id="branch-panel" hidden aria-label="Branch side panel">
+                <header id="panel-header">
+                  <div id="panel-heading">
+                    <p id="panel-title"></p>
+                    <!-- 揭示降级焦点的说明区（W2 §2.6）：摘录 + 状态徽标，常驻可读，可程序聚焦。 -->
+                    <p id="panel-anchor-context" tabindex="-1"></p>
+                  </div>
+                  <div id="panel-fixed-actions">
+                    <button id="panel-view-source" class="source-button">⌖ View source</button>
+                    <button id="panel-close" class="panel-close">↩ Back to Trunk</button>
+                  </div>
+                  <div id="panel-session-note" hidden tabindex="-1"></div>
+                </header>
+                <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
+                <div id="panel-error-banner" role="alert" tabindex="0" hidden></div>
+                <div id="panel-composer">
+                  <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
+                  <div class="composer-actions">
+                    <button id="panel-send" class="primary">Send</button>
+                  </div>
+                </div>
+                <div id="return-panel">
+                  <h2>Return to Trunk</h2>
+                  <p class="muted">Edit the branch result, then explicitly submit it to the Trunk.</p>
+                  <textarea id="return-input" rows="4" aria-label="Return draft"></textarea>
+                  <div class="composer-actions">
+                    <button id="submit-return" class="accent">Submit Return to Trunk</button>
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
-          <!-- 支线局部面板（W2 §2.3）：锚点作用域；固定“来源/回程”操作；
-               覆盖层形态——主线阅读位置在开合与转场期间不动。 -->
-          <aside id="branch-panel" hidden aria-label="Branch side panel">
-            <header id="panel-header">
-              <div id="panel-heading">
-                <p id="panel-title"></p>
-                <!-- 揭示降级焦点的说明区（W2 §2.6）：摘录 + 状态徽标，常驻可读，可程序聚焦。 -->
-                <p id="panel-anchor-context" tabindex="-1"></p>
-              </div>
-              <div id="panel-fixed-actions">
-                <button id="panel-view-source" class="source-button">⌖ View source</button>
-                <button id="panel-close" class="panel-close">↩ Back to Trunk</button>
-              </div>
-              <div id="panel-session-note" hidden tabindex="-1"></div>
-            </header>
-            <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
-            <div id="panel-error-banner" role="alert" tabindex="0" hidden></div>
-            <div id="panel-composer">
-              <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
-              <div class="composer-actions">
-                <button id="panel-send" class="primary">Send</button>
-              </div>
-            </div>
-            <div id="return-panel">
-              <h2>Return to Trunk</h2>
-              <p class="muted">Edit the branch result, then explicitly submit it to the Trunk.</p>
-              <textarea id="return-input" rows="4" aria-label="Return draft"></textarea>
-              <div class="composer-actions">
-                <button id="submit-return" class="accent">Submit Return to Trunk</button>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
+
+    <!-- 来源抽屉（W2 §2.7）：Run 溯源 / Return 出处 / journal / 工具活动。 -->
     <aside id="source-drawer" hidden aria-label="Sources" tabindex="-1"></aside>
   </div>
   <script src="/app.js"></script>

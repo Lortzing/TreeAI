@@ -57,6 +57,23 @@
  *     头部渲染可见关闭按钮（#drawer-close 真按钮、「× Close」文案、抽屉
  *     内首个可交互元素），点击复用 closeDrawer()（隐藏 + 开关
  *     aria-expanded/文案就地对齐 + 焦点还原）；Esc 关闭路径不回归。
+ * 19. 顶栏位置路径（改版后新增，renderTopbarPath）：诚实状态机——无树
+ *     → 空字符串（绝不渲染硬编码面包屑占位），树打开 → `<treeId> / Trunk`，
+ *     支线面板打开 → 追加支线标签，收起面板 → 回到 `<treeId> / Trunk`。
+ * 20. 空态 New Tree 按钮（改版后新增）：空态主操作直达——#empty-new-tree
+ *     与侧栏「新建」同一动作（guard(createTree)）：POST /api/trees 可观测、
+ *     树打开（空态隐藏 / 树面可见 / 分支 tab 渲染）、顶栏路径随之渲染。
+ * 21. 来源抽屉入口的诚实隐藏（改版后新增）：无树 → #source-drawer-toggle
+ *     hidden（无源可溯，优于必然为空的空态）；树打开 → renderAll 恢复可见。
+ * 22. 改版 CSS 词法锁定：≥1180px 并置支线概念列（源设计 §二：列常驻
+ *     width:min(440px,34vw)、#branch-panel width:100% 恰好覆盖、
+ *     :has(#branch-panel:not([hidden])) 遮蔽列空态）+ 基础层布局链
+ *     （#branch-column display:contents / #workspace min-height:0 有界
+ *     高度 / #branch-bar 58px）+ 恢复规则在场（#list-load-error /
+ *     .session-recovery-button / #drawer-close / .turn.return.insert +
+ *     @keyframes return-insert / .turn .meta .delivery 徽标 + badge-change /
+ *     :root 动效变量）+ 移除项锁定缺席（假面包屑 #topbar-path::before、
+ *     #branch-panel/#source-drawer 的 .open 可见性门控、闪烁 caret）。
  *
  * 边界（如实声明）：本套件不是真实浏览器 E2E——像素级视觉基线、布局合成、
  * 真实滚动物理、键盘/读屏器实机行为不在覆盖范围；CSS 不执行，媒体查询按
@@ -844,6 +861,33 @@ function declarationsOf(block: CssMediaBlock, selector: string): string | null {
   return rule === undefined ? null : rule.declarations;
 }
 
+/** 去除注释与全部 @media 块后的基础层（基础规则的词法断言用——媒体块内
+ *  的同名规则变体不与基态契约混淆，如 reduced-motion 块内的
+ *  `.streaming-caret { animation: none }` 是降级、不是基态动画）。 */
+function baseCssLayer(css: string): string {
+  const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  let out = "";
+  let i = 0;
+  while (i < src.length) {
+    const at = src.indexOf("@media", i);
+    if (at === -1) {
+      out += src.slice(i);
+      break;
+    }
+    out += src.slice(i, at);
+    const open = src.indexOf("{", at);
+    let depth = 1;
+    let j = open + 1;
+    while (j < src.length && depth > 0) {
+      if (src[j] === "{") depth += 1;
+      else if (src[j] === "}") depth -= 1;
+      j += 1;
+    }
+    i = j;
+  }
+  return out;
+}
+
 class StubDocument {
   activeElement: StubElement | null = null;
   root: StubElement | null = null;
@@ -981,6 +1025,9 @@ interface WorldOptions {
   returnMode?: Backend["returnMode"];
   /** GET /api/trees 脚本化失败（§2.1 列表加载失败重试场景）。 */
   treesMode?: Backend["treesMode"];
+  /** 空 Forest 启动（改版后空态 / 顶栏诚实路径场景）：GET /api/trees 返回
+   *  空列表——引导不自动打开树，主区呈空态。 */
+  noTrees?: boolean;
   /** 覆盖 trunk 第二条答案（a2）的文本（A2 长答案 / 重复词 / 跨行场景）。 */
   a2Text?: string;
   /** 预置一张锚定于 a1 的已确认 Return 卡（渲染定位断言用）。 */
@@ -1051,7 +1098,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   /* ---------------- 脚本化 echo 后端 ---------------- */
 
   const backend: Backend = {
-    trees: [{ id: TREE, createdAt: ISO, forestId: "forest-1" }],
+    trees: options.noTrees === true ? [] : [{ id: TREE, createdAt: ISO, forestId: "forest-1" }],
     treesMode: options.treesMode ?? "ok",
     treeState:
       options.twoBranches === true
@@ -1097,6 +1144,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       return respond(200, { trees: backend.trees });
     }
     if (p === "/api/trees" && method === "POST") {
+      /* 服务端语义：创建的树进入列表（createTree 的 refreshTrees 立即可见）。 */
+      if (!backend.trees.some((t) => t.id === backend.treeState.tree.id)) {
+        backend.trees.push(backend.treeState.tree);
+      }
       return respond(201, { tree: backend.treeState.tree, trunkBranchId: "trunk-1", state: backend.treeState });
     }
     let m = /^\/api\/trees\/([^/]+)\/state$/.exec(p);
@@ -1313,7 +1364,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 test("visual baseline: real index.html skeleton and boot-rendered structure", async () => {
   const world = await createWorld({ initialTrunkReturn: true });
 
-  /* 静态骨架：必需 id 恰好出现一次（解析自真实 index.html，非硬编码副本）。 */
+  /* 静态骨架：必需 id 恰好出现一次（解析自真实 index.html，非硬编码副本）。
+   * 改版后骨架：#workspace 有界高度分栏、顶栏路径 #topbar-path(-wrap)、
+   * 空态直达 #empty-new-tree、右侧支线概念列 #branch-column/#branch-empty。 */
   const requiredIds = [
     "sidebar",
     "branch-tabs",
@@ -1332,6 +1385,12 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
     "session-banner",
     "list-load-error",
     "list-retry",
+    "workspace",
+    "topbar-path",
+    "topbar-path-wrap",
+    "empty-new-tree",
+    "branch-column",
+    "branch-empty",
   ];
   for (const id of requiredIds) {
     assert.equal(world.document.querySelectorAll(`#${id}`).length, 1, `#${id} must appear exactly once`);
@@ -2626,4 +2685,197 @@ test("A2 cross-line selection: offsets and the revealed text span the line break
   const mark = revealed.querySelector(".source-highlight");
   assert.ok(mark !== null);
   assert.ok(mark.textContent.includes("\n"), "the highlighted mark text carries the newline");
+});
+
+/* ------------------------------------------------------------------ */
+/* 21. 顶栏位置路径（改版后新增）：renderTopbarPath 的诚实状态机          */
+/* ------------------------------------------------------------------ */
+
+test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", async () => {
+  /* 无树启动：路径 = 空字符串——诚实状态（renderTopbarPath 无树分支），
+     绝不用硬编码面包屑（如 “Forest”）占位；空态可见。 */
+  const world = await createWorld({ noTrees: true });
+  const path = world.el("topbar-path");
+  assert.equal(path.textContent, "", "no tree open: the topbar path is the empty string");
+  assert.ok(!path.textContent.includes("Forest"), "no hardcoded breadcrumb stands in for missing tree state");
+  assert.equal(world.el("empty-state").hidden, false, "the empty state is visible with no tree open");
+
+  /* 建树（侧栏「新建」）→ 树打开：路径 = `<treeId> / Trunk`。 */
+  world.el("new-tree").click();
+  await settle();
+  assert.equal(path.textContent, `${TREE} / Trunk`, "tree open: the path names the tree id and Trunk");
+
+  /* 支线面板打开（tab 点击——最轻的既有模式）→ 路径追加支线标签。 */
+  const tab = world.tabButton("branch-1");
+  assert.ok(tab !== null);
+  tab.click();
+  await settle();
+  assert.equal(
+    path.textContent,
+    `${TREE} / Trunk / Branch 1`,
+    "panel open: the path ends with the open branch's label",
+  );
+
+  /* 收起面板（↩ Back to Trunk）→ 路径回到 `<treeId> / Trunk`（renderAll
+     先于 170ms 退场动效收尾刷新路径；收尾后路径不再变化）。 */
+  world.el("panel-close").click();
+  await settle();
+  assert.equal(path.textContent, `${TREE} / Trunk`, "panel closed: the path drops the branch label");
+  await sleep(220);
+  assert.equal(world.el("branch-panel").hidden, true, "the panel finished its exit animation");
+  assert.equal(path.textContent, `${TREE} / Trunk`, "the path stays on the Trunk after the exit animation settles");
+});
+
+/* ------------------------------------------------------------------ */
+/* 22. 空态 New Tree 按钮（改版后新增）：主操作直达 = 同一 createTree      */
+/* ------------------------------------------------------------------ */
+
+test("empty-state New Tree: the button creates a tree via POST /api/trees and opens it", async () => {
+  const world = await createWorld({ noTrees: true });
+
+  /* 启动（空 Forest）：空态可见、树面隐藏（断言基线）。 */
+  assert.equal(world.el("empty-state").hidden, false, "boot with an empty forest shows the empty state");
+  assert.equal(world.el("tree-view").hidden, true, "no tree view renders with no tree");
+
+  /* 点击空态主操作 → POST /api/trees（与侧栏「新建」同一 guard(createTree)；
+     载荷为空对象（服务端分配 tree id）。 */
+  world.el("empty-new-tree").click();
+  await settle();
+  const createPost = world.requestsOf("/api/trees").find((r) => r.method === "POST");
+  assert.ok(createPost !== undefined, "clicking the empty-state button issues POST /api/trees");
+  assert.deepEqual(createPost.body, {}, "the create posts an empty body (the server assigns the tree id)");
+
+  /* 树打开：空态隐藏、树面可见、创建的树入列、分支 tab 渲染、顶栏路径
+     随之渲染（同 §2.1 恢复后补齐启动语义的断言面）。 */
+  assert.equal(world.el("empty-state").hidden, true, "the empty state hides once the tree opens");
+  assert.equal(world.el("tree-view").hidden, false, "the tree view becomes visible");
+  assert.equal(world.el("tree-list").querySelectorAll("button").length, 1, "the created tree renders in the sidebar list");
+  assert.equal(
+    world.el("branch-tabs").querySelectorAll("button").length,
+    2,
+    "branch tabs render for the created tree (Trunk + Branch 1)",
+  );
+  assert.equal(world.el("topbar-path").textContent, `${TREE} / Trunk`, "the topbar path renders for the created tree");
+});
+
+/* ------------------------------------------------------------------ */
+/* 23. 来源抽屉入口的诚实隐藏（改版后新增）：无源可溯 → hidden            */
+/* ------------------------------------------------------------------ */
+
+test("sources drawer toggle: hidden while no tree is open, revealed once a tree opens", async () => {
+  const world = await createWorld({ noTrees: true });
+  assert.equal(
+    world.el("source-drawer-toggle").hidden,
+    true,
+    "no tree open: nothing to source — the toggle is hidden (better than a guaranteed-empty drawer)",
+  );
+  world.el("empty-new-tree").click();
+  await settle();
+  assert.equal(
+    world.el("source-drawer-toggle").hidden,
+    false,
+    "a tree opens: the sources entry returns (renderAll owns its visibility)",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 24. 改版 CSS 词法锁定（一）：≥1180px 并置支线列 + 基础层布局链         */
+/* ------------------------------------------------------------------ */
+
+test("post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically", () => {
+  /* ≥1180px 并置支线概念列（源设计 §二 / W2 §2.2–§2.3）：列常驻（自带
+     宽度，主干阅读宽度不随面板开合变化）、面板打开恰好覆盖列、列空态以
+     :has(#branch-panel:not([hidden])) 遮蔽（enter 渐入期间亦然）——受控
+     空态面而非透出。 */
+  const wide = extractMediaBlocks(STYLE_CSS).find((b) => b.query === "(min-width: 1180px)");
+  assert.ok(wide !== undefined, "style.css carries the (min-width: 1180px) juxtaposed-column media query");
+  const columnDecl = declarationsOf(wide, "#branch-column");
+  assert.ok(columnDecl !== null, "the wide block styles #branch-column");
+  assert.ok(columnDecl.includes("position: relative"), "the column is the panel's positioning basis (position: relative)");
+  assert.ok(columnDecl.includes("width: min(440px, 34vw)"), "the resident column keeps its own width (min(440px, 34vw))");
+  const panelDecl = declarationsOf(wide, "#branch-panel");
+  assert.ok(panelDecl !== null, "the wide block styles #branch-panel inside the column");
+  assert.ok(panelDecl.includes("width: 100%"), "the open panel spans the column exactly");
+  const coverDecl = declarationsOf(wide, "#branch-column:has(#branch-panel:not([hidden])) #branch-empty");
+  assert.ok(coverDecl !== null, "the covering rule targets the column's empty state via :has(:not([hidden]))");
+  assert.ok(coverDecl.includes("visibility: hidden"), "an open panel hides the column's empty state (visibility, not display)");
+  assert.ok(declarationsOf(wide, "#branch-empty") !== null, "the wide block styles the resident empty state (#branch-empty)");
+
+  /* 基础层（媒体块之外）：<1180px 列不生成盒（display: contents——面板的
+     定位基准退回 #reading-area，行为与改版前一致）；#workspace min-height:0
+     接通有界高度链（#app 100dvh → … → #conversation 内部滚动）；#branch-bar
+     为 58px 顶栏（窄窗块只调 padding，不再改高度）。 */
+  const base = baseCssLayer(STYLE_CSS);
+  assert.ok(
+    /#branch-column\s*\{[^{}]*display:\s*contents/.test(base),
+    "the base layer keeps #branch-column boxless (display: contents) below 1180px",
+  );
+  assert.ok(
+    /#workspace\s*\{[^{}]*min-height:\s*0/.test(base),
+    "#workspace carries min-height: 0 (the bounded-height chain reaches the internal scroller)",
+  );
+  assert.ok(
+    /#branch-bar\s*\{[^{}]*height:\s*58px/.test(base),
+    "#branch-bar is the 58px top bar",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 25. 改版 CSS 词法锁定（二）：恢复规则在场 + 移除项锁定缺席             */
+/* ------------------------------------------------------------------ */
+
+test("post-rework CSS: restored rules are present and the removed anti-patterns stay absent", () => {
+  /* 缺席断言跑在去注释全文上（注释里的字样不算规则）；基础层断言走
+     baseCssLayer（媒体块内的变体不与基态契约混淆）。 */
+  const flat = STYLE_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const base = baseCssLayer(STYLE_CSS);
+
+  /* 恢复规则（改版中曾被删、现已找回的回归面）：§2.1 列表失败面（常驻
+     错误 + 重试）；issue #3 P1 可执行恢复按钮；issue #6 附-4 抽屉关闭
+     按钮；M3 Return 卡插入动效；M4 confirmed→delivered 徽标切换；
+     :root 动效分镜变量。 */
+  assert.ok(/#list-load-error\s*\{/.test(flat), "#list-load-error rules are present (§2.1 persistent retry face)");
+  assert.ok(/\.session-recovery-button\s*\{/.test(flat), ".session-recovery-button is present (executable recovery)");
+  assert.ok(/#drawer-close\s*\{/.test(flat), "#drawer-close is present (附-4 visible close path)");
+  assert.ok(
+    /\.turn\.return\.insert\s*\{[^{}]*animation:\s*return-insert/.test(flat),
+    ".turn.return.insert plays return-insert (M3 Return card insertion)",
+  );
+  assert.ok(/@keyframes return-insert\s*\{/.test(flat), "@keyframes return-insert is present");
+  assert.ok(/\.turn\s+\.meta\s+\.delivery\s*\{/.test(flat), ".turn .meta .delivery carries the delivery badge styling");
+  assert.ok(
+    /\.turn\s+\.meta\s+\.delivery\.badge-change\s*\{[^{}]*animation:\s*badge-change/.test(flat),
+    ".turn .meta .delivery.badge-change plays badge-change (M4 badge flip)",
+  );
+  assert.ok(/@keyframes badge-change\s*\{/.test(flat), "@keyframes badge-change is present");
+  assert.ok(/:root\s*\{[^{}]*--motion-state:/.test(flat), ":root declares --motion-state");
+  assert.ok(/:root\s*\{[^{}]*--motion-panel:/.test(flat), ":root declares --motion-panel");
+  assert.ok(/:root\s*\{[^{}]*--motion-card:/.test(flat), ":root declares --motion-card");
+
+  /* 移除项锁定缺席（改版裁决）：
+   * - #topbar-path::before：位置路径必须是 renderTopbarPath 的诚实渲染
+   *   （无树 = 空），不允许 CSS 假面包屑占位；
+   * - #branch-panel/#source-drawer 的 .open：可见性契约 = hidden 属性 +
+   *   .enter/.exit 动效（app.js 驱动），类名门控不得残留；
+   * - 闪烁 caret：基础层 .streaming-caret 只有颜色、无 animation（M5
+   *   静态指示）；blink 关键帧不存在（reduced-motion 块内的
+   *   animation: none 是降级、不是闪烁——故该断言只针对基础层）。 */
+  assert.ok(!/#topbar-path::before/.test(flat), "no #topbar-path::before anywhere — the path is honest rendered state");
+  assert.ok(
+    !/#branch-panel\.open/.test(flat),
+    "no .open visibility gating on #branch-panel (hidden attribute + .enter/.exit only)",
+  );
+  assert.ok(
+    !/#source-drawer\.open/.test(flat),
+    "no .open visibility gating on #source-drawer (hidden attribute + .enter/.exit only)",
+  );
+  assert.ok(
+    !/\.streaming-caret\s*\{[^{}]*animation:/.test(base),
+    "the base .streaming-caret rule animates nothing (static caret, M5)",
+  );
+  assert.ok(
+    /\.streaming-caret\s*\{[^{}]*color:\s*var\(--muted\)/.test(base),
+    "the static caret is only muted color",
+  );
+  assert.ok(!/@keyframes blink/.test(flat), "no blink keyframes anywhere");
 });

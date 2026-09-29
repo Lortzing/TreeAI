@@ -1,14 +1,38 @@
+/* TreeAI Studio — W2 工作台视觉语言（安静克制的阅读工作台）。
+ *
+ * 概念：暖灰画布上的白色阅读面。58px 白色顶栏（品牌 / 位置路径 / 内联
+ * 诊断面 / 来源入口）+ 白色左栏（Forest / Branches / 常驻页脚）+ 暖灰
+ * 阅读列（白色助手卡，≤68ch）；≥1180px 时右侧常驻支线概念列。深绿 =
+ * 主线/主动作；暖金 = Return（回到主线的那个动作）。边线安静（发丝级
+ * 暖灰）。动效只回答操作（面板/抽屉滑入、Return 插入、徽标切换、锚点
+ * 脉冲），全部有 prefers-reduced-motion 等价物。面板与抽屉的可见性由
+ * hidden 属性 + .enter/.exit 动效管理（app.js 契约），基态不预隐藏。
+ */
+
 :root {
-  --bg: #f7f6f3;
-  --panel: #ffffff;
-  --ink: #1f2328;
-  --muted: #6e7178;
-  --accent: #2f6f4f;
-  --accent-soft: #e7f0eb;
-  --line: #dcd9d2;
-  --user: #e8eee9;
-  --return: #fdf3e0;
+  --canvas: #f3f1ec;        /* 暖灰画布 */
+  --surface: #ffffff;       /* 白色阅读面 */
+  --surface-dim: #faf9f5;   /* 输入/悬停的微沉面 */
+  --ink: #23281f;           /* 带绿意的近黑 */
+  --ink-soft: #4f5346;
+  --muted: #85816f;         /* 暖灰弱化文字 */
+  --green: #2e6b4e;         /* 深绿主色 */
+  --green-deep: #23523c;
+  --green-wash: #e8f0e9;
+  --green-line: #c2d6c8;
+  --gold: #9a7428;          /* 暖金 Return */
+  --gold-deep: #7c5d1e;
+  --gold-wash: #fbf3e0;
+  --gold-line: #e5d3a4;
+  --line: #e5e1d6;          /* 安静边线 */
+  --line-strong: #cec9ba;
   --danger: #a33b2e;
+  --danger-wash: #fbece8;
+  --highlight: #f3d36a;     /* 锚点高亮 */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  --font-read: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 8px;
   /* 动效分镜（W2 §3）：短促、少而克制；全部动效在 prefers-reduced-motion
      下有即时等价物（见文件末尾的全局降级块）。 */
   --motion-state: 100ms;
@@ -18,160 +42,195 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
+html { color-scheme: light; }
+
 body {
   margin: 0;
-  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  background: var(--canvas);
   color: var(--ink);
 }
 
-/* 键盘焦点可见（W2 逐屏键盘焦点要求）。 */
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+::selection { background: var(--green-wash); }
 
-#app { display: flex; min-height: 100vh; }
-
-#sidebar {
-  width: 250px;
-  flex-shrink: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
-  padding: 18px 16px;
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
-#sidebar h1 { font-size: 17px; margin: 0 0 2px; }
-.subtitle { margin: 0 0 14px; font-size: 12px; color: var(--muted); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+
 .muted { color: var(--muted); font-size: 12px; }
 
-#tree-list { list-style: none; margin: 14px 0 0; padding: 0; }
-#tree-list li { margin: 4px 0; }
-#tree-list button {
+/* ------------------------------ 布局骨架 ------------------------------ */
+
+/* 有界高度链：#app（100dvh 列）→ #workspace → #main（列）→ #tree-view
+   → #reading-area → #main-pane → #conversation（overflow-y:auto）——
+   滚动收敛在会话容器内，文档级滚动不出现。 */
+#app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+
+#workspace { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+
+/* 左栏：New Tree 置顶 + Forest（树列表）+ Branches（分支导航）+ 常驻
+   页脚（白色面 + 发丝右边界）。Branches 区长列表自身滚动，Forest 与
+   页脚保持稳定。 */
+#sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 14px 14px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+#new-tree { width: 100%; }
+
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; }
+#branch-section { flex: 1; overflow-y: auto; }
+
+.sidebar-heading {
+  margin: 6px 0 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+#tree-list, #branch-tabs { list-style: none; margin: 0; padding: 0; }
+#tree-list li, #branch-tabs li { margin: 3px 0; }
+
+#tree-list button, #branch-tabs button {
   width: 100%;
   text-align: left;
-  padding: 7px 9px;
+  padding: 7px 10px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: none;
   cursor: pointer;
   font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-#tree-list button:hover { background: var(--bg); }
-#tree-list button.active { background: var(--accent-soft); border-color: var(--accent); }
-#tree-list .tree-date { display: block; font-size: 11px; color: var(--muted); }
+#tree-list button:hover, #branch-tabs button:hover { background: var(--surface-dim); }
+#tree-list button.active, #branch-tabs button.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+/* 主线 tab 恒为当前主阅读面（W2 §2.2）；打开的支线 tab 以柔和绿底呈现
+   （不加粗，与 active 相区分）。 */
+#branch-tabs button.panel-open { background: var(--green-wash); border-color: var(--green-line); color: var(--green-deep); }
+#tree-list .tree-date { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+#branch-tabs button .dot { color: var(--green); }
+#branch-tabs button.panel-open .dot { color: var(--green); }
+#branch-tabs button .session-badge { font-size: 10px; color: var(--gold-deep); margin-left: 4px; }
 
-/* 树列表加载失败态（W2 §2.1 状态行）：常驻错误 + 重试——与 8 秒自动
-   隐藏横幅不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
+/* 树列表加载失败态（W2 §2.1）：常驻错误 + 重试——与 8 秒自动隐藏横幅
+   不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
    “Retrying…” 文案（诚实待态）。 */
 #list-load-error {
   margin-top: 12px;
   padding: 8px 10px;
-  background: #fbeae7;
+  background: var(--danger-wash);
   border: 1px solid var(--danger);
   border-radius: 6px;
   color: var(--danger);
   font-size: 12px;
 }
-#list-load-error[hidden] { display: none; }
 #list-load-error p { margin: 0 0 6px; }
 #list-load-error button {
   font-size: 11px;
   padding: 3px 10px;
   border: 1px solid var(--danger);
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--danger);
   cursor: pointer;
 }
-#list-load-error button:hover:not(:disabled) { background: #f6dbd6; }
+#list-load-error button:hover:not(:disabled) { background: #f6dcd4; }
 
-#driver-note { margin-top: 18px; }
+/* 页脚常驻左栏底部。 */
+#sidebar-foot { margin-top: auto; }
+.subtitle { margin: 0; font-size: 11.5px; color: var(--muted); }
 
-/* 窄窗（<720px）树侧栏收进抽屉，顶部只留一个开关（W2 §2.1 窄窗行）。 */
-#sidebar-toggle {
-  display: none;
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 40;
-  font-size: 12px;
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
-  cursor: pointer;
-}
+/* 主区 */
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
-#main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#empty-state { margin: auto; text-align: center; max-width: 420px; padding: 24px; }
+.empty-title { font-family: var(--font-read); font-size: 22px; margin: 0 0 6px; }
+#empty-state .muted { font-size: 13px; line-height: 1.5; margin: 0 0 18px; }
+/* 空态主操作：与左栏 New Tree 同为 primary，居中收束成主要入口。 */
+#empty-new-tree { width: 100%; max-width: 260px; margin-top: 6px; }
 
-#empty-state { margin: auto; text-align: center; font-size: 15px; }
+#tree-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
-/* 作者 display 规则会覆盖 hidden 属性的 UA 样式——显式守卫（JS 以
-   hidden 切换可见性的元素都需要）。 */
-#tree-view[hidden],
-#branch-panel[hidden],
-#diagnostics-bar[hidden],
-#source-drawer[hidden] {
-  display: none;
-}
-
-#tree-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-
+/* 顶栏（#branch-bar，58px 白条 + 发丝下边界）：品牌 + 位置路径（app.js
+   renderTopbarPath 如实渲染 `<treeId> / Trunk [ / Branch n]`，长树名以
+   省略号截断）+ 真实 cursor 注记 + 内联诊断面 + 来源抽屉入口。 */
 #branch-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 18px;
-  background: var(--panel);
+  gap: 12px;
+  height: 58px;
+  padding: 0 20px;
+  flex-shrink: 0;
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-#branch-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
-#branch-tabs button {
-  padding: 5px 12px;
+#topbar-brand { flex-shrink: 0; margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+#topbar-path-wrap { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+#topbar-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
   font-size: 13px;
+}
+#cursor-note {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.drawer-toggle {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 5px 13px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--panel);
+  background: var(--surface);
+  color: var(--ink-soft);
   cursor: pointer;
 }
-/* 主线 tab 恒为当前主阅读面（W2 §2.2）；打开的支线 tab 以描边呈现。 */
-#branch-tabs button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-#branch-tabs button.panel-open { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-#branch-tabs button .dot { color: var(--accent); }
-#branch-tabs button.active .dot { color: #fff; }
-#branch-tabs button.panel-open .dot { color: var(--accent); }
+button.drawer-toggle:hover { background: var(--surface-dim); border-color: var(--line-strong); }
 
-/* 支线 session 不可用徽标（A4 / W2 §2.8）。 */
-#branch-tabs button .session-badge {
-  font-size: 10px;
-  color: #b07d2b;
-  margin-left: 4px;
-}
-
-/* 锚点高亮：静态底色 + 揭示时一次性脉冲（M6；reduced-motion 见文件末尾）。 */
-.source-highlight { background: #f3d36a; color: inherit; padding: 1px 2px; border-radius: 2px; }
-.source-highlight.pulse { animation: anchor-pulse 900ms ease-out 1; }
-@keyframes anchor-pulse {
-  0% { background: #f3d36a; }
-  25% { background: #ffe9a3; }
-  50% { background: #f3d36a; }
-  75% { background: #ffe9a3; }
-  100% { background: #f3d36a; }
-}
-
-/* Diagnostics bar (A5): run status, failure, abort, honest policy note. */
+/* 诊断面（A5）：内联于顶栏的段落——run 状态、失败、中止、诚实策略
+   注记（无树打开时 app.js 以 hidden 收起整段；空间紧张时内部换行
+   而非溢出 58px 条高）。 */
 #diagnostics-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 6px 18px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
   font-size: 12px;
 }
 #diagnostics-bar #policy-note { margin-left: auto; text-align: right; }
 
-/* Run 状态指示（M5）：状态切换以 ~100ms 颜色/文案过渡；无循环动画。 */
 .run-status {
   display: inline-block;
   padding: 2px 10px;
@@ -179,80 +238,67 @@ body {
   font-size: 11px;
   border: 1px solid var(--line);
   color: var(--muted);
-  background: var(--bg);
-  transition: color var(--motion-state) ease-out, background-color var(--motion-state) ease-out,
-    border-color var(--motion-state) ease-out;
+  background: var(--canvas);
+  transition: color var(--motion-state) ease-out, background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out;
 }
-/* 状态点（窄窗下与短文案一起构成压缩状态条）。 */
-.run-status::before {
-  content: "";
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: 1px;
-}
-.run-status.streaming { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
-.run-status.aborting { color: #b07d2b; border-color: #b07d2b; background: var(--return); }
+.run-status.streaming { color: var(--green-deep); border-color: var(--green); background: var(--green-wash); }
+.run-status.aborting { color: var(--gold-deep); border-color: var(--gold); background: var(--gold-wash); }
 
-/* Last-run terminal state: aborted is a distinct, explicit user action (amber). */
-.last-run-state.succeeded { color: var(--accent); font-weight: 600; }
+/* 终态着色：aborted 是显式用户动作（金），非失败。 */
+.last-run-state.succeeded { color: var(--green-deep); font-weight: 600; }
 .last-run-state.failed { color: var(--danger); font-weight: 600; }
-.last-run-state.aborted { color: #b07d2b; font-weight: 600; }
+.last-run-state.aborted { color: var(--gold-deep); font-weight: 600; }
 
-/* P1 failure panel: persistent (no auto-hide) until dismissed. */
+/* P1 失败面板：持久（不自动消失）直到手动关闭。 */
 #failure-panel {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 18px;
-  background: #fbeae7;
+  padding: 6px 20px;
+  background: var(--danger-wash);
   border-bottom: 1px solid var(--danger);
   font-size: 12px;
   color: var(--danger);
 }
-#failure-panel[hidden] { display: none; }
 #failure-panel .failure-panel-dismiss {
   margin-left: auto;
+  flex-shrink: 0;
   font-size: 11px;
   padding: 2px 10px;
   border: 1px solid var(--danger);
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--danger);
   cursor: pointer;
 }
-#failure-panel .failure-panel-dismiss:hover { background: #f6dbd6; }
+#failure-panel .failure-panel-dismiss:hover { background: #f6dcd4; }
 
-/* A4 missing-session banner (main view): persistent, dismissible. */
+/* A4 缺失 session 横幅（主线）：持久、可关闭。 */
 #session-banner {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
   gap: 10px;
-  margin: 10px 18px 0;
+  margin: 10px 20px 0;
   padding: 8px 12px;
-  font-size: 13px;
-  background: #fdf3e0;
-  border: 1px solid #b07d2b;
-  border-radius: 6px;
-  color: #7a5a20;
+  font-size: 12.5px;
+  line-height: 1.5;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius);
+  color: var(--gold-deep);
 }
-#session-banner[hidden] { display: none; }
 #session-banner .session-banner-dismiss {
   margin-left: auto;
   flex-shrink: 0;
   font-size: 11px;
   padding: 3px 10px;
-  border: 1px solid #b07d2b;
-  border-radius: 5px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
   background: none;
-  color: #7a5a20;
+  color: var(--gold-deep);
   cursor: pointer;
 }
-#session-banner .session-banner-dismiss:hover { background: #f6e8cd; }
+#session-banner .session-banner-dismiss:hover { background: #f3e6c4; }
 
 /* A4/W2 §2.8 恢复动作（issue #3 P1：可执行的恢复按钮）：主线横幅与
    面板降级提示共用；无可用候选时禁用并内联说明原因。 */
@@ -263,223 +309,344 @@ body {
   flex-shrink: 0;
   font-size: 11px;
   padding: 3px 10px;
-  border: 1px solid #b07d2b;
-  border-radius: 5px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
   background: none;
-  color: #7a5a20;
+  color: var(--gold-deep);
   cursor: pointer;
 }
-.session-recovery-button:hover:not(:disabled) { background: #f6e8cd; }
+.session-recovery-button:hover:not(:disabled) { background: #f3e6c4; }
 .session-recovery-reason { font-size: 11px; opacity: 0.85; }
 
-/* 阅读区：主线面板 + 支线局部覆盖层（W2 §2.2/§2.3）。 */
-#reading-area { position: relative; flex: 1; min-height: 0; display: flex; }
-#main-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+/* ------------------------------ 阅读区 ------------------------------ */
 
+/* 中央 Trunk 阅读列 + 支线局部侧板。 */
+#reading-area { position: relative; flex: 1; min-height: 0; display: flex; }
+
+#main-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--canvas); }
+
+/* 对话容器：暖灰画布上的阅读列（左锚定，留出右侧支线面板空间）。 */
 #conversation, #panel-conversation {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+  padding: 26px clamp(20px, 5vw, 88px);
 }
+#panel-conversation { padding: 18px 16px; }
 
-.turn { max-width: 76%; padding: 9px 13px; border-radius: 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
-.turn.user { align-self: flex-end; background: var(--user); }
-.turn.assistant { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); }
+/* Turns：user = 深绿浅底的提问块（UI 字体）；assistant = 白色阅读卡
+   （衬线长文）；return = 暖金卡片。 */
+.turn {
+  width: 100%;
+  max-width: 68ch;
+  padding: 10px 16px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.turn.user {
+  max-width: 54ch;
+  background: var(--green-wash);
+  color: var(--green-deep);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.turn.assistant {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(35, 40, 31, 0.04);
+  font-family: var(--font-read);
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--ink);
+}
+#panel-conversation .turn { max-width: none; }
+#panel-conversation .turn.assistant { font-size: 15px; }
+
 .turn.return {
-  align-self: stretch;
   max-width: none;
-  background: var(--return);
-  border: 1px solid #e3c98f;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
+  border-left: 3px solid var(--gold);
+  font-family: var(--font-read);
+  font-size: 15px;
+  line-height: 1.65;
 }
-.turn .meta { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.turn .meta .delivery { color: #7a5a20; }
-.turn .meta .delivery.delivered { color: var(--accent); }
-
 /* M3：Return 卡插入（高度展开 + 淡入，≤200ms；仅新插入的卡播放）。 */
 .turn.return.insert { animation: return-insert var(--motion-card) ease-out; }
 @keyframes return-insert {
   from { opacity: 0; clip-path: inset(0 0 100% 0); }
   to { opacity: 1; clip-path: inset(0 0 0 0); }
 }
-/* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡）。 */
-.turn .meta .delivery { transition: color var(--motion-state) ease-out; }
+.turn .meta { display: block; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-bottom: 5px; line-height: 1.5; }
+/* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡；仅状态
+   变化时播放 badge-change，reduced-motion 即时）。 */
+.turn .meta .delivery { color: var(--gold-deep); transition: color var(--motion-state) ease-out; }
+.turn .meta .delivery.delivered { color: var(--green-deep); }
 .turn .meta .delivery.badge-change { animation: badge-change var(--motion-state) ease-out; }
 @keyframes badge-change {
-  from { color: #7a5a20; background: #f6e8cd; }
-  to { color: var(--accent); background: transparent; }
+  from { color: var(--gold-deep); background: #f3e6c4; }
+  to { color: var(--green-deep); background: transparent; }
 }
-/* delivered 卡的 deliveredRunId 反查入口（可 Tab 触达；点击打开来源抽屉）。 */
+/* delivered 卡的 deliveredRunId 反查入口（可 Tab 触达；点击打开来源
+   抽屉）：安静下划线按钮，不与卡的暖金面争抢。 */
 button.delivery-link {
   font: inherit;
   font-size: 11px;
   padding: 1px 6px;
-  margin-left: 4px;
+  margin-left: 8px;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
-  color: var(--accent);
+  color: var(--green);
   cursor: pointer;
   text-decoration: underline;
 }
-button.delivery-link:hover { background: var(--accent-soft); }
+button.delivery-link:hover { background: var(--green-wash); }
 
-/* 流式占位 turn：静态指示（M5——无循环动画，caret 不闪烁）。 */
-.turn.streaming-turn { border-style: dashed; color: var(--muted); }
-.streaming-caret { color: var(--muted); }
-
+/* “从这建支线”：安静虚线（诚实操作，不抢阅读）。 */
 .turn .branch-here {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 10px;
   margin-right: 8px;
+  font-family: var(--font-ui);
   font-size: 12px;
-  padding: 3px 9px;
-  border: 1px dashed var(--accent);
+  padding: 3px 10px;
+  border: 1px dashed var(--green);
   border-radius: 6px;
   background: none;
-  color: var(--accent);
+  color: var(--green);
   cursor: pointer;
 }
-.turn .branch-here:hover { background: var(--accent-soft); }
-.turn .selection-hint { display: none; font-size: 11px; color: var(--muted); margin-left: 6px; }
+.turn .branch-here:hover { background: var(--green-wash); }
+.turn .selection-hint { display: none; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-left: 6px; }
 .turn.has-selection .selection-hint { display: inline; }
 
-/* 揭示后聚焦的锚点 turn（tabindex=-1）。 */
-.turn.anchor-focus { border-color: var(--accent); }
+/* P1 流式占位 turn（M5）：静态指示——caret 不闪烁，无循环动画。 */
+.turn.streaming-turn { border-style: dashed; color: var(--ink-soft); }
+.streaming-caret { color: var(--muted); }
 
-/* 支线局部面板（W2 §2.3）：右侧覆盖层——主阅读面板布局不动，
-   开合与转场期间主线阅读位置不位移。 */
+/* 锚点高亮（M6）：一次脉冲后保持静态；reduced-motion 下直接静态。 */
+.source-highlight { background: var(--highlight); color: inherit; padding: 1px 0; border-radius: 2px; box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.35); }
+.source-highlight.pulse { animation: anchor-pulse 0.9s ease-out 1; }
+@keyframes anchor-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.35); }
+  40% { box-shadow: 0 0 0 7px rgba(243, 211, 106, 0.55); }
+}
+
+/* 揭示后聚焦的锚点 turn（tabindex=-1）：绿描边静默标识。 */
+.turn.anchor-focus { border-color: var(--green); }
+
+/* ------------------------------ 输入区 ------------------------------ */
+
+#error-banner, #panel-error-banner {
+  margin: 0;
+  padding: 8px 20px;
+  background: var(--danger-wash);
+  border-top: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+#composer, #panel-composer, #return-panel {
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 12px 20px 14px;
+}
+#composer, #panel-composer { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+textarea:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+textarea::placeholder { color: var(--muted); }
+
+.composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* Return 草稿面（面板内）：暖金主线。 */
+#return-panel { border-top: 2px solid var(--gold-line); background: #fdfaf2; }
+#return-panel h2 { font-size: 13.5px; margin: 0 0 2px; color: var(--gold-deep); }
+#return-panel .muted { margin: 0 0 8px; font-size: 11.5px; }
+
+/* ------------------------------ 按钮 ------------------------------ */
+
+button { font-family: var(--font-ui); }
+
+button.primary, button.accent {
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+}
+button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); }
+button.accent { background: var(--gold); border-color: var(--gold); }
+button.accent:hover:not(:disabled) { background: var(--gold-deep); border-color: var(--gold-deep); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button.danger {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--danger);
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+button.danger:hover:not(:disabled) { background: var(--danger-wash); }
+
+/* ------------------------------ 支线局部面板（W2 §2.3，M1/M2） ------------------------------ */
+
+/* 可见性契约：hidden 属性控制显隐，.enter/.exit 播放一次滑入/滑出
+   （app.js 驱动、测试按此断言）——基态即完整可见，不做
+   opacity/visibility 预隐藏。 */
 #branch-panel {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(460px, 100%);
+  width: min(440px, 100%);
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  background: var(--panel);
+  background: var(--surface);
   border-left: 1px solid var(--line);
-  box-shadow: -4px 0 14px rgba(0, 0, 0, 0.06);
-  z-index: 15;
-}
-/* M1/M2：侧滑 + 淡入（150–200ms，ease-out），退出对称。 */
-#branch-panel.enter { animation: panel-in var(--motion-panel) ease-out; }
-#branch-panel.exit { animation: panel-out 150ms ease-in forwards; }
-@keyframes panel-in {
-  from { opacity: 0; transform: translateX(24px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes panel-out {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(24px); }
+  box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
+  z-index: 10;
 }
 
 #panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 14px 8px;
-  background: var(--panel);
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--line);
+  background: var(--surface);
 }
-/* 面板头部不随内容滚动：固定来源 / 回程操作常驻（W2 §1）。 */
-#panel-heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-#panel-title { margin: 0; font-size: 14px; font-weight: 600; }
+#panel-heading { outline: none; margin: 0 0 10px; }
+#panel-heading:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 4px; }
+#panel-title { margin: 0; font-size: 15px; font-weight: 650; color: var(--green-deep); }
 #panel-anchor-context {
-  margin: 0;
+  margin: 3px 0 0;
   font-size: 12px;
   color: var(--muted);
-  overflow-wrap: anywhere;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-#panel-anchor-context .sel { font-style: italic; }
-#panel-anchor-context .origin-status { margin-left: 6px; font-size: 11px; }
+#panel-anchor-context .sel { font-style: italic; color: var(--ink-soft); }
+#panel-anchor-context .origin-status { font-size: 11px; }
+#panel-anchor-context .origin-status.available { color: var(--green); }
 #panel-anchor-context .origin-status.changed,
 #panel-anchor-context .origin-status.unavailable { color: var(--danger); }
-#panel-anchor-context .origin-status.available { color: var(--accent); }
-#panel-fixed-actions { display: flex; gap: 8px; flex-shrink: 0; }
-#panel-fixed-actions .source-button {
-  font-size: 12px;
-  padding: 4px 10px;
-  border: 1px solid var(--accent);
-  border-radius: 5px;
-  background: var(--panel);
-  color: var(--accent);
-  cursor: pointer;
-}
-#panel-fixed-actions .source-button:hover { background: var(--accent-soft); }
-#panel-fixed-actions .panel-close {
-  font-size: 12px;
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--panel);
-  cursor: pointer;
-}
-#panel-fixed-actions .panel-close:hover { background: var(--bg); }
 
-/* 支线 session 不可用降级提示（W2 §2.8）：常驻（不 dismissible），
-   因为它解释的是被禁用的续聊入口这一事实状态。 */
+/* 固定来源 / 回程（W2 §1：常驻、不随滚动消失）。 */
+#panel-fixed-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+#panel-fixed-actions button {
+  flex: 1 1 auto;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button.source-button {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+button.source-button:hover:not(:disabled) { background: var(--surface-dim); }
+button.panel-close {
+  border: 1px solid var(--green);
+  background: var(--green-wash);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+button.panel-close:hover { background: #dcebe0; }
+
+/* A4 面板内 session 提示。 */
 #panel-session-note {
-  padding: 7px 10px;
-  font-size: 12px;
-  background: #fdf3e0;
-  border: 1px solid #b07d2b;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
   border-radius: 6px;
-  color: #7a5a20;
+  color: var(--gold-deep);
 }
-#panel-session-note[hidden] { display: none; }
 
-#panel-composer, #return-panel {
-  padding: 12px 14px 14px;
-  background: var(--panel);
-  border-top: 1px solid var(--line);
+#panel-error-banner { border-top: none; border-bottom: 1px solid var(--danger); }
+
+/* ------------------------------ 支线概念列（≥1180px 并置） ------------------------------ */
+
+/* 支线概念列：<1180px 面板回落为阅读区右侧覆盖层（列不生成盒，面板的
+   定位基准退回 #reading-area，行为与改版前一致）；≥1180px 列常驻并与
+   主线并置（源设计 §二），面板打开恰好覆盖列——主干阅读宽度不随面板
+   开合变化。 */
+#branch-column { display: contents; }
+#branch-empty { display: none; }
+@media (min-width: 1180px) {
+  #branch-column {
+    display: flex;
+    position: relative;            /* 面板的定位基准 → 列本身 */
+    width: min(440px, 34vw);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+  }
+  #branch-panel { width: 100%; }   /* 与列同宽，恰好覆盖 */
+  #branch-empty {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+  /* 面板打开时列空态不透出（enter 渐入期间亦然）。 */
+  #branch-column:has(#branch-panel:not([hidden])) #branch-empty { visibility: hidden; }
+  /* 列空态：安静的指引面（装饰字符 + 标题 + 说明）。 */
+  .branch-empty-orn { font-size: 20px; color: var(--line-strong); }
+  .branch-empty-orn::before { content: "⑂"; }
+  .branch-empty-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+  #branch-empty .muted { margin: 0; font-size: 12.5px; line-height: 1.55; max-width: 30ch; }
 }
-#return-panel h2 { font-size: 14px; margin: 0 0 2px; }
-#return-panel { border-top: 2px solid #e3c98f; }
 
-/* 来源抽屉开关（branch bar）。 */
-button.drawer-toggle {
-  font-size: 12px;
-  padding: 4px 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  cursor: pointer;
-}
-button.drawer-toggle:hover { background: var(--bg); }
+/* ------------------------------ 来源抽屉（W2 §2.7） ------------------------------ */
 
-/* 来源抽屉：固定侧板，滑入 150–200ms（W2 §2.7）。 */
+/* 可见性契约同 #branch-panel：hidden 属性 + .enter/.exit 动效。 */
 #source-drawer {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 360px;
-  max-width: 90vw;
+  width: min(380px, 92vw);
   overflow-y: auto;
-  padding: 16px 18px;
-  background: var(--panel);
+  padding: 18px 20px;
+  background: var(--surface);
   border-left: 1px solid var(--line);
-  box-shadow: -4px 0 14px rgba(0, 0, 0, 0.06);
-  z-index: 20;
-}
-#source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
-#source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
-/* 窄窗 <720px 的自底向上变体（W2 §2.7 窄窗行，见文件末尾 @media 块）：
-   整幅位移（全高抽屉从底部滑入/滑出），同侧栏抽屉的整幅滑入语汇。 */
-@keyframes drawer-up-in {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-@keyframes drawer-up-out {
-  from { transform: translateY(0); }
-  to { transform: translateY(100%); }
+  box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
+  z-index: 30;
 }
 #source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
-#source-drawer h3 { font-size: 12px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+#source-drawer h3 { font-size: 11.5px; margin: 16px 0 5px; color: var(--muted); letter-spacing: 0.03em; }
 
 /* 抽屉头部（附-4，option B 方向）：标题与关闭按钮同行——覆盖层打开时
    盖住主线 Send 与 Sources 开关自身，鼠标用户需要抽屉内的可见关闭路径
@@ -492,18 +659,20 @@ button.drawer-toggle:hover { background: var(--bg); }
 }
 #source-drawer .drawer-head h2 { margin: 0; }
 #drawer-close {
+  flex-shrink: 0;
   font-size: 11px;
   padding: 2px 10px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--ink);
   cursor: pointer;
 }
-#drawer-close:hover { background: var(--bg); }
+#drawer-close:hover { background: var(--surface-dim); }
+
 .drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
-.drawer-list li { margin: 4px 0; line-height: 1.45; }
-.drawer-list.journal-list li { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+.drawer-list li { margin: 5px 0; line-height: 1.5; }
+.drawer-list.journal-list li { font-family: var(--font-mono); font-size: 11px; }
 
 /* journal 加载失败态的重试（W2 §2.7 打开-加载失败；issue #3 P1——
    失败如实呈现，绝不伪装成“无事件”）。 */
@@ -511,116 +680,149 @@ button.drawer-toggle:hover { background: var(--bg); }
   font-size: 11px;
   padding: 2px 10px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--ink);
   cursor: pointer;
 }
-.drawer-retry:hover { background: var(--bg); }
+.drawer-retry:hover { background: var(--surface-dim); }
 
-button.danger {
-  font-size: 12px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--danger);
-  background: none;
-  color: var(--danger);
-  cursor: pointer;
-}
-button.danger:hover:not(:disabled) { background: #fbeae7; }
+/* ------------------------------ 窄窗侧栏开关（<720px） ------------------------------ */
 
-#error-banner, #panel-error-banner {
-  margin: 0 18px;
-  padding: 8px 12px;
-  background: #fbeae7;
-  border: 1px solid var(--danger);
-  border-radius: 6px;
-  color: var(--danger);
+#sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 70;
   font-size: 13px;
-}
-#panel-error-banner { margin: 0 14px; }
-
-#composer {
-  padding: 12px 18px 16px;
-  background: var(--panel);
-  border-top: 1px solid var(--line);
-}
-
-textarea {
-  width: 100%;
-  resize: vertical;
-  font: inherit;
-  font-size: 14px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #fcfcfa;
-}
-textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
-
-.composer-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-
-button.primary, button.accent {
-  font-size: 13px;
-  padding: 7px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: #fff;
+  padding: 7px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
   cursor: pointer;
+  box-shadow: 0 2px 10px rgba(35, 40, 31, 0.12);
 }
-button.accent { background: #b07d2b; border-color: #b07d2b; }
-button:disabled { opacity: 0.5; cursor: wait; }
 
-/* ------------------------------ 窄窗 <720px ------------------------------ */
+#sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 40, 31, 0.35);
+  z-index: 55;
+}
+
+/* 兼容钩子（W1/W2 事件与 UI 探测按词法断言）：宽窗右滑的 enter/exit。
+   必须置于窄窗块之前——窄窗块对 #source-drawer.enter/.exit 的自底向上
+   变体（drawer-up-*）才能在级联中胜出（后定义者胜）。 */
+#branch-panel.enter { animation: panel-in var(--motion-panel) ease-out; }
+#branch-panel.exit { animation: panel-out 150ms ease-in forwards; }
+#source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
+#source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes drawer-up-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes drawer-up-out {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@media (min-width: 720px) {
+  #sidebar-backdrop { display: none !important; }
+}
+
+/* ------------------------------ 窄窗（<720px）：单面板 ------------------------------ */
 
 @media (max-width: 719px) {
   #sidebar-toggle { display: block; }
+
+  /* 侧栏收进左侧抽屉（固定定位脱流，骨架高度链不受影响）。 */
   #sidebar {
     position: fixed;
     top: 0;
-    left: 0;
     bottom: 0;
-    z-index: 35;
+    left: 0;
+    width: min(300px, 86vw);
+    z-index: 60;
     transform: translateX(-100%);
-    transition: transform var(--motion-panel) ease-out;
-    box-shadow: 4px 0 14px rgba(0, 0, 0, 0.08);
-    overflow-y: auto;
+    visibility: hidden;
+    box-shadow: 18px 0 44px -26px rgba(35, 40, 31, 0.4);
+    transition: transform 220ms ease-out, visibility 0s 220ms;
   }
-  body.sidebar-open #sidebar { transform: translateX(0); }
+  body.sidebar-open #sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 220ms ease-out, visibility 0s 0s;
+  }
 
-  /* 主操作按钮全宽（W2 §2.1 窄窗行：主操作按钮全宽）。 */
   #new-tree { width: 100%; }
-
-  #branch-bar { padding-left: 64px; }
-
-  /* 状态条压缩：状态点 + 短文案（run-status 本身即为短词），详情收起。 */
-  #diagnostics-bar #run-detail, #diagnostics-bar #policy-note { display: none; }
-
-  /* 消息全宽；输入区吸底（flex 列内 conversation flex:1 已保证）。 */
   .turn { max-width: 100%; }
-
-  /* 支线面板与来源抽屉全宽（W2 §2.3/§2.7 窄窗行）。 */
   #branch-panel, #source-drawer { width: 100%; max-width: 100%; }
 
-  /* 窄窗抽屉自底向上（W2 §2.7 窄窗行）：全宽抽屉自底部整幅滑入/滑出
-     （translateY，同侧栏抽屉语汇）；宽窗右侧滑入（panel-in/out）不变；
-     reduced-motion 由全局降级块照常即时化。 */
+  /* 顶栏让出固定开关的位置（开关固定于左上，覆盖顶栏左侧）。 */
+  #branch-bar { padding-left: 96px; padding-right: 12px; }
+  #topbar-path-wrap { flex-direction: column; align-items: flex-start; gap: 1px; }
+
+  #diagnostics-bar #run-detail, #diagnostics-bar #policy-note { display: none; }
+
+  #session-banner { margin: 8px 12px 0; font-size: 11.5px; }
+
+  #conversation { padding: 16px 14px; gap: 12px; }
+  .turn, .turn.user { max-width: none; }
+  .turn.assistant { font-size: 15px; }
+
+  #composer, #panel-composer, #return-panel { padding: 10px 14px 12px; }
+  #composer, #panel-composer { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+
+  /* 16px 输入避免 iOS 聚焦缩放。 */
+  textarea { font-size: 16px; }
+
+  /* 支线面板占满主区（推栈式）；固定来源/回程保持可触达。 */
+  #branch-panel {
+    width: 100%;
+    border-left: none;
+    box-shadow: -24px 0 48px -28px rgba(35, 40, 31, 0.45);
+  }
+
   #source-drawer.enter { animation: drawer-up-in var(--motion-panel) ease-out; }
   #source-drawer.exit { animation: drawer-up-out 150ms ease-in forwards; }
+
+  /* 来源抽屉：自底向上全宽。 */
+  #source-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 78dvh;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--line-strong);
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
-/* --------------------- prefers-reduced-motion 全局等价 --------------------- */
-/* M1–M7 的 reduced-motion 变体：全部动效即时化（直接出现/切换/跳转）；
-   JS 侧滚动定位配合 matchMedia("(prefers-reduced-motion: reduce)") 用 auto。 */
+/* ------------------------------ prefers-reduced-motion（W2 §3） ------------------------------ */
+
+/* M1–M7 的 reduced-motion 变体：全部动效即时化（直接出现/切换/跳转）。 */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  #branch-panel, #source-drawer, #sidebar { transform: none; }
   #sidebar { transition: none; }
+  .streaming-caret { animation: none; }
+  .source-highlight.pulse { animation: none; box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.45); }
 }

@@ -358,6 +358,21 @@ function renderBranchTabs() {
       : `session @ ${branchLabel(cursor.branchId)} · ${cursor.entryId}`;
 }
 
+/* 顶栏位置路径（源设计 §二 顶栏行）：无树 → 空；有树 → `<treeId> / Trunk`；
+   支线面板打开 → 追加当前支线标签。树名与列表一致用 tree.id；路径由
+   renderAll 统一刷新（面板开合、切树、SSE 终态重渲都经过 renderAll）。 */
+function renderTopbarPath() {
+  const el = $("topbar-path");
+  const st = state.treeState;
+  if (st === null || state.currentTreeId === null) {
+    el.textContent = "";
+    return;
+  }
+  const segments = [state.currentTreeId, branchLabel(st.trunkBranchId)];
+  if (state.panelBranchId !== null) segments.push(branchLabel(state.panelBranchId));
+  el.textContent = segments.join(" / ");
+}
+
 /**
  * A4 缺失 session 横幅（主线视角，可关闭、不自动消失）：树保持完全可读
  * （数据库是事实源），Trunk 续聊将 fail-closed；可执行恢复方式 = 横幅内
@@ -772,6 +787,10 @@ function renderAll(opts = {}) {
   const hasTree = state.treeState !== null;
   $("empty-state").hidden = hasTree;
   $("tree-view").hidden = !hasTree;
+  /* 无树打开 → 无源可溯：来源抽屉入口（顶栏）直接隐藏，优于必然为空的
+     诚实空态；有树后随 renderAll 恢复。 */
+  $("source-drawer-toggle").hidden = !hasTree;
+  renderTopbarPath();
   if (hasTree) {
     renderBranchTabs();
     renderSessionBanner();
@@ -2092,6 +2111,8 @@ $("panel-conversation").addEventListener("scroll", () => {
 /* ------------------------------ 启动 ------------------------------ */
 
 $("new-tree").addEventListener("click", () => guard(createTree));
+/* 空态主操作直达（窄窗侧栏在抽屉后，不在首屏）——与侧栏「新建」同一动作。 */
+$("empty-new-tree").addEventListener("click", () => guard(createTree));
 /* 列表重试（W2 §2.1）：不整页刷新，重新走 GET /api/trees。 */
 $("list-retry").addEventListener("click", () => void retryTreesLoad());
 $("send").addEventListener("click", () => guard(() => sendPrompt("main")));
