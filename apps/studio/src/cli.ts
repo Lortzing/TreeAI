@@ -247,14 +247,15 @@ export function resolvePiToolWiring(
  * 由工具装配构造请求时策略引擎（配方的唯一来源，index.ts 与测试共用）：
  * 读取限 wiring.readRoots；写入根恒为空（一切写入拒绝——默认无逐次
  * 授权）；相对 targetPath 按工具 cwd（workspace）解析；shell / network
- * 保持默认拒绝。引擎工厂由宿主注入（index.ts 动态加载 #tool-policy
- * 编译产物——本模块不静态依赖它，缺省零工具路径零新模块加载；测试
- * 注入同一真实工厂，证明装配真实生效）。应用层策略，不是 OS 沙箱。
+ * 保持默认拒绝。引擎工厂由宿主注入（index.ts 动态加载
+ * @treeai/tool-policy——本模块不静态依赖它，缺省零工具路径零新模块
+ * 加载；测试注入同一真实工厂，证明装配真实生效）。应用层策略，不是
+ * OS 沙箱。
  */
 export function buildPiToolPolicy(
   wiring: PiToolWiring,
   workspace: string,
-  createEngine: typeof import("#tool-policy")["createToolPolicy"],
+  createEngine: typeof import("@treeai/tool-policy")["createToolPolicy"],
 ): PiToolPolicyEvaluator {
   return createEngine({
     readRoots: wiring.readRoots,

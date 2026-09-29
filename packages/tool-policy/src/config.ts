@@ -6,7 +6,7 @@
  * 本模块不硬编码任何目录——readRoots（含 fixtures 路径）与
  * workspaceRoots 全部由调用方（宿主）传入，默认值为空 → 拒绝一切。
  */
-import { canonicalizePath } from "./paths.js";
+import { canonicalizePath } from "./paths.ts";
 
 /** 策略配置（构造时冻结解析；roots 在构造期规范化一次）。 */
 export interface ToolPolicyConfig {

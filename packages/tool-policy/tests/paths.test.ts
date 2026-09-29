@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 
-import { canonicalizePath, isPathWithin } from "../src/index.js";
+import { canonicalizePath, isPathWithin } from "../src/index.ts";
 
 let tempRoot: string;
 let canonRoot: string;

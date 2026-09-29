@@ -69,18 +69,19 @@ function isExistingDirectory(path: string): boolean {
 }
 
 /**
- * --pi-tools 给出时装配请求时策略引擎：真实 @treeai/tool-policy 经
- * #tool-policy 编译产物**动态**加载（缺省零工具路径不加载任何新模块，
- * 行为字节级不变；dist 未构建时给出含 build:deps 指引的清晰边界错误）。
+ * --pi-tools 给出时装配请求时策略引擎：真实 @treeai/tool-policy
+ * **动态**加载（缺省零工具路径不加载任何新模块，行为字节级不变；
+ * 包入口指向 src/index.ts，Node 24 type stripping 直接加载，无需
+ * 编译步骤；加载失败给出 fail-closed 边界错误）。
  */
 async function loadPiToolPolicy(wiring: PiToolWiring, workspace: string): Promise<PiToolPolicyEvaluator> {
-  let engineModule: typeof import("#tool-policy");
+  let engineModule: typeof import("@treeai/tool-policy");
   try {
-    engineModule = await import("#tool-policy");
+    engineModule = await import("@treeai/tool-policy");
   } catch (err) {
     throw new Error(
-      "--pi-tools requires the compiled ToolPolicy engine (apps/studio #tool-policy -> dist/tool-policy; " +
-        `run \`npm run build:deps\` in apps/studio first): ${err instanceof Error ? err.message : String(err)}`,
+      "--pi-tools requires the @treeai/tool-policy workspace package (entry src/index.ts via Node type stripping; " +
+        `check the workspace install): ${err instanceof Error ? err.message : String(err)}`,
     );
   }
   return buildPiToolPolicy(wiring, workspace, engineModule.createToolPolicy);

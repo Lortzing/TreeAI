@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import * as Pi from "@earendil-works/pi-coding-agent";
 import type { PiRuntimeEvent, TreeAIError } from "@treeai/contracts";
-import { ToolPolicyEngine } from "#tool-policy";
+import { ToolPolicyEngine } from "@treeai/tool-policy";
 import { createPiRuntime, createPiRuntimeFromConfig } from "../../src/index.ts";
 import { adaptSession, createRealPiSdkPort, REAL_PI_VERSION } from "../../src/pi-real-port.ts";
 import type { PiPortCreateSessionInput, PiSdkPort } from "../../src/pi-sdk-port.ts";

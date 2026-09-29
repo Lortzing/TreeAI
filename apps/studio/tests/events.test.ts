@@ -48,7 +48,7 @@ import type {
 } from "@treeai/contracts";
 import { EventRecorder, JsonlEventJournal, MemoryEventJournal } from "@treeai/event-journal";
 import { createPiRuntimeFromConfig } from "@treeai/runtime-pi";
-import { ToolPolicyEngine } from "#tool-policy";
+import { ToolPolicyEngine } from "@treeai/tool-policy";
 import { EchoSdkPort } from "../src/echo-port.ts";
 import { createStudioServer } from "../src/server.ts";
 import {
@@ -966,7 +966,7 @@ test("policy request-time gate: denial surfaces provenance, fails the run, and r
   const outsideName = "secret-outside.txt";
   const journal = new MemoryEventJournal();
   try {
-    /* 真实 ToolPolicyEngine（#tool-policy 编译产物）注入真实 PiRuntime；
+    /* 真实 ToolPolicyEngine（@treeai/tool-policy 工作区包）注入真实 PiRuntime；
        echo 驱动以 toolCalls 测试钩「请求」两次 read：root 内（allow）与
        root 外（deny）。决策发生在请求路径上——不是合成事件。 */
     const engine = new ToolPolicyEngine({

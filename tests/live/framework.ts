@@ -337,8 +337,9 @@ const scenarioBasic: ScenarioFn = async (ctx) => {
 async function createLiveToolPolicyEngine(): Promise<{
   evaluate(request: LivePolicyRequest): LivePolicyDecision;
 }> {
-  const moduleUrl = new URL("../../apps/runtime-smoke/dist/tool-policy/index.js", import.meta.url).href;
-  const module = (await import(moduleUrl)) as unknown as {
+  // The real engine straight from the workspace package (entry src/index.ts,
+  // Node 24 type stripping) — no app-local compiled copy involved.
+  const module = (await import("@treeai/tool-policy")) as unknown as {
     ToolPolicyEngine: new (config: {
       readonly readRoots: readonly string[];
       readonly workspaceRoots: readonly string[];
