@@ -1,0 +1,70 @@
+{
+  "kind": "d3-real-pi-tool-policy",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "result": "PASS",
+  "checks": [
+    {
+      "id": "allow-run-succeeded",
+      "ok": true,
+      "detail": "final message received (len 38)"
+    },
+    {
+      "id": "allow-tool-executed",
+      "ok": true,
+      "detail": "1 execution starts total"
+    },
+    {
+      "id": "allow-decision-provenance",
+      "ok": true,
+      "detail": "ruleId=allow-read-configured-roots"
+    },
+    {
+      "id": "allow-fixture-entered-session",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "deny-prompt-rejected",
+      "ok": true,
+      "detail": "code=policy-denied"
+    },
+    {
+      "id": "deny-decision-provenance",
+      "ok": true,
+      "detail": "decision=deny"
+    },
+    {
+      "id": "deny-call-blocked-not-executed",
+      "ok": true,
+      "detail": "canary content stays unread; the blocked tool result carries the policy reason"
+    },
+    {
+      "id": "deny-runtime-error",
+      "ok": true,
+      "detail": "eager runtime.error(policy-denied) precedes convergence"
+    },
+    {
+      "id": "deny-no-paths-in-decision-payload",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "eventKinds": [
+    "session.created",
+    "agent.started",
+    "turn.started",
+    "message.started",
+    "message.completed",
+    "message.updated",
+    "tool.execution.started",
+    "tool.decision",
+    "tool.execution.finished",
+    "turn.completed",
+    "agent.settled",
+    "session.replaced",
+    "runtime.error"
+  ],
+  "totalMs": 1825,
+  "credentialPolicy": "controlled-env-injection (values never logged or written)"
+}
