@@ -1,0 +1,19 @@
+$ npm test -w @treeai/contracts
+
+> @treeai/contracts@0.1.0 test
+> npm run typecheck && bash scripts/run-negative-type-tests.sh && bash scripts/check-no-pi-imports.sh
+
+
+> @treeai/contracts@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/brand-ids-not-interchangeable
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/error-code-not-in-enum
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/pinned-pi-version-drift
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/run-state-illegal-transition
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/run-state-illegal-via-helper
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/session-reference-missing-entry-id
+negative ok（已按预期拒绝）: [HOME]/Projects/TreeAI/packages/contracts/tests/negatives/tool-decision-invalid-outcome
+negative type tests: 7/7 rejected as expected
+ok: no Pi imports in packages/contracts (src + tests)
+

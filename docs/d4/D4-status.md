@@ -31,6 +31,8 @@
 | D4-7 安装程序与跨平台 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0；目标环境见下文 | B8：三平台干净安装实测（Windows 原生，非 WSL） |
 | D4-8 大规模树导航 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0 | B9：结构规格已冻结于 `tests/fixtures/d4/b9-nav/` |
 
+**本波收口复验（2026-09-30）**：合并 main（术语③ `87cbd2c` + D4 波 `4ebead9` + 文档）后全量复跑 — typecheck 全绿、全仓测试 522/522（studio 192/192）、`verify:d4` 9 PASS / 0 FAIL / 8 NOT_RUN（`evidence/d4/runs/d4-offline-20260930T123643289Z`）、`verify:d2` 21/0/0/1 基线不变（`evidence/d2/runs/d2-offline-20260930T123648205Z`）。运行代码与 `4ebead9` 的差异仅为术语③前端（其独立验证见上），组合树由本复验覆盖。
+
 ## 门禁状态
 
 | 门 | 状态 | 说明 |
