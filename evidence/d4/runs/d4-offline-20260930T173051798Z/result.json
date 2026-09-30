@@ -1,0 +1,43 @@
+{
+  "runId": "d4-offline-20260930T173051798Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-30T17:30:51.799Z",
+  "endedAt": "2026-09-30T17:30:52.093Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 2,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "id": "b3-material-exploration",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: EntityNotFoundError: tree not found: tree_de0124c0-71ab-46b9-bd89-6b3ee53c8de4"
+      },
+      "durationMs": 60
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only b3-material-exploration executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

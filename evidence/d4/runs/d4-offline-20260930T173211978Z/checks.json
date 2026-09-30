@@ -1,0 +1,24 @@
+{
+  "runId": "d4-offline-20260930T173211978Z",
+  "checks": [
+    {
+      "durationMs": 111,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "14 deterministic scenarios passed on the real service stack (echo runtime, zero credentials)",
+      "id": "b3-material-exploration"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}
