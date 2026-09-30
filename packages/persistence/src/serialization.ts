@@ -23,12 +23,14 @@ import type {
   SessionAvailability,
   SessionReference,
   SessionUnavailableReason,
+  TerminologyAnnotation,
+  TerminologyDispatchState,
+  TerminologyMode,
+  TerminologyPromotionDispatch,
   Tree,
   TreeAIError,
   TreeAIErrorCode,
   TreeId,
-  TerminologyAnnotation,
-  TerminologyMode,
   Turn,
   TurnId,
   TurnRole,
@@ -124,6 +126,20 @@ export interface TerminologyAnnotationRow {
   promoted_branch_id: string | null;
   promotion_key: string | null;
   created_at: string;
+}
+export interface TerminologyDispatchRow {
+  id: string;
+  annotation_id: string;
+  tree_id: string;
+  promotion_key: string;
+  branch_id: string;
+  first_question_hash: string;
+  dispatch_state: string;
+  attempts: number;
+  run_id: string | null;
+  failure_json: string | null;
+  created_at: string;
+  updated_at: string;
 }
 export interface ActiveNavigationRow {
   tree_id: string;
@@ -390,6 +406,37 @@ export function rowToTerminologyAnnotation(row: TerminologyAnnotationRow): Termi
     promotedBranchId: (row.promoted_branch_id as BranchId | null) ?? null,
     promotionKey: row.promotion_key ?? null,
     createdAt: row.created_at as IsoTimestamp,
+  };
+}
+
+const TERMINOLOGY_DISPATCH_STATES = new Set<TerminologyDispatchState>([
+  "pending",
+  "dispatched",
+  "succeeded",
+  "failed",
+]);
+
+/** 派发账本行还原（dispatch_state 越界按库损坏拒绝；failure_json 经 decodeFailure）。 */
+export function rowToTerminologyDispatch(row: TerminologyDispatchRow): TerminologyPromotionDispatch {
+  const state = row.dispatch_state;
+  if (!TERMINOLOGY_DISPATCH_STATES.has(state as TerminologyDispatchState)) {
+    throw new DatabaseCorruptError(
+      `terminology dispatch ${row.id} has unknown dispatch_state '${state}' (expected pending|dispatched|succeeded|failed)`,
+    );
+  }
+  return {
+    id: row.id,
+    annotationId: row.annotation_id,
+    treeId: row.tree_id as TreeId,
+    promotionKey: row.promotion_key,
+    branchId: row.branch_id as BranchId,
+    firstQuestionHash: row.first_question_hash,
+    dispatchState: state as TerminologyDispatchState,
+    attempts: Number(row.attempts),
+    runId: (row.run_id as RunId | null) ?? null,
+    failure: decodeFailure(row.failure_json) ?? null,
+    createdAt: row.created_at as IsoTimestamp,
+    updatedAt: row.updated_at as IsoTimestamp,
   };
 }
 

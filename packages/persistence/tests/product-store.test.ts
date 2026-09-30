@@ -50,7 +50,7 @@ test("migrations bring a fresh database to the current product schema", () => {
       .prepare(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN " +
           "('turns', 'branch_origins', 'tree_active_navigation', 'return_adoption_attempts', " +
-          "'terminology_annotations', 'terminology_state')",
+          "'terminology_annotations', 'terminology_state', 'terminology_promotion_dispatches')",
       )
       .all() as Array<{ name: string }>;
     assert.deepEqual(
@@ -59,11 +59,12 @@ test("migrations bring a fresh database to the current product schema", () => {
         "branch_origins",
         "return_adoption_attempts",
         "terminology_annotations",
+        "terminology_promotion_dispatches",
         "terminology_state",
         "tree_active_navigation",
         "turns",
       ],
-      "product migrations must create the product, navigation, adoption-attempt and terminology tables",
+      "product migrations must create the product, navigation, adoption-attempt, terminology and terminology-dispatch tables",
     );
     const versions = raw.prepare("SELECT version FROM schema_migrations ORDER BY version").all() as Array<{
       version: number;
@@ -973,6 +974,218 @@ test("terminology annotations round-trip with anchor integrity, range dedup, at-
     assert.equal(reloaded[0]!.explanation, "A measure of uncertainty.");
     assert.equal(reloaded[0]!.promotedBranchId, promotedBranch.id);
     assert.equal(repo2.getTerminologyState("usage"), '{"total":{"requests":2}}');
+    repo2.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("terminology dispatch ledger (migration 0009): intent registration follows the promotion binding, one row per annotation, sent/settle state machine with attempt counting, and durable replay", () => {
+  const dir = makeTempDir();
+  try {
+    const repo = TreeRepository.open({ path: dbPath(dir), now: makeClock(), generateId: makeIdGenerator("d") });
+    const ids = setupDomainWithRun(repo);
+    const answer = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: ids.episodeId,
+      runId: ids.runId,
+      role: "assistant",
+      text: "The entropy of a distribution measures uncertainty.",
+      piEntryId: "entry-0042",
+    });
+    const annotation = repo.createTerminologyAnnotation({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      anchorTurnId: answer.id,
+      selection: { start: 4, end: 11, text: "entropy" },
+      sourceHash: "a".repeat(64),
+      term: "entropy",
+      explanation: "A measure of uncertainty.",
+      mode: "term",
+    });
+    const promotedBranch = repo.createBranch(ids.treeId, { parentBranchId: ids.rootBranchId });
+    const firstQuestionHash = "f".repeat(64);
+
+    /* 顺序纪律：绑定先行——未绑定时登记意图 → InvalidArgumentError。 */
+    assert.throws(
+      () =>
+        repo.createTerminologyDispatch({
+          annotationId: annotation.id,
+          treeId: ids.treeId,
+          promotionKey: "ledger-key",
+          branchId: promotedBranch.id,
+          firstQuestionHash,
+        }),
+      (error: unknown) => error instanceof InvalidArgumentError && /not bound to a promotion/.test(error.message),
+    );
+
+    /* 绑定后登记：pending / attempts 0；重复登记（annotation 唯一）→
+       ConstraintViolationError。 */
+    assert.equal(repo.bindTerminologyPromotion(annotation.id, "ledger-key", promotedBranch.id), true);
+    const intent = repo.createTerminologyDispatch({
+      annotationId: annotation.id,
+      treeId: ids.treeId,
+      promotionKey: "ledger-key",
+      branchId: promotedBranch.id,
+      firstQuestionHash,
+    });
+    assert.equal(intent.dispatchState, "pending");
+    assert.equal(intent.attempts, 0);
+    assert.equal(intent.firstQuestionHash, firstQuestionHash);
+    assert.equal(intent.runId, null);
+    assert.equal(intent.failure, null);
+    assert.equal(repo.findTerminologyDispatchByAnnotation(annotation.id)?.id, intent.id);
+    assert.throws(
+      () =>
+        repo.createTerminologyDispatch({
+          annotationId: annotation.id,
+          treeId: ids.treeId,
+          promotionKey: "ledger-key",
+          branchId: promotedBranch.id,
+          firstQuestionHash,
+        }),
+      ConstraintViolationError,
+    );
+
+    /* 意图与绑定不匹配（异键/异枝）→ InvalidArgumentError。 */
+    assert.throws(
+      () =>
+        repo.createTerminologyDispatch({
+          annotationId: annotation.id,
+          treeId: ids.treeId,
+          promotionKey: "another-key",
+          branchId: promotedBranch.id,
+          firstQuestionHash,
+        }),
+      InvalidArgumentError,
+    );
+
+    /* 结算前置：pending 不能直接结算。 */
+    assert.throws(
+      () => repo.settleTerminologyDispatch(annotation.id, { state: "failed", failure: { code: "upstream", message: "no" } }),
+      InvalidArgumentError,
+    );
+
+    /* markSent：pending → dispatched，attempts 1；再 markSent（结果未知/
+       已在途）→ InvalidArgumentError（调用方须先对账）。 */
+    const sent = repo.markTerminologyDispatchSent(annotation.id);
+    assert.equal(sent.dispatchState, "dispatched");
+    assert.equal(sent.attempts, 1);
+    assert.throws(
+      () => repo.markTerminologyDispatchSent(annotation.id),
+      (error: unknown) => error instanceof InvalidArgumentError && /reconcile/.test(error.message),
+    );
+
+    /* 结算 succeeded：携带 Run 引用；重复结算 → InvalidArgumentError。 */
+    const episode = repo.createEpisode(promotedBranch.id);
+    const dispatchRun = repo.createRun(episode.id, makeSessionReference());
+    const settled = repo.settleTerminologyDispatch(annotation.id, { state: "succeeded", runId: dispatchRun.id });
+    assert.equal(settled.dispatchState, "succeeded");
+    assert.equal(settled.runId, dispatchRun.id);
+    assert.equal(settled.attempts, 1);
+    assert.throws(
+      () => repo.settleTerminologyDispatch(annotation.id, { state: "failed", failure: { code: "upstream", message: "no" } }),
+      InvalidArgumentError,
+    );
+    /* succeeded 后 markSent（不可再发）→ InvalidArgumentError。 */
+    assert.throws(
+      () => repo.markTerminologyDispatchSent(annotation.id),
+      (error: unknown) => error instanceof InvalidArgumentError && /already landed/.test(error.message),
+    );
+
+    /* failed 路线（第二条批注）：markSent → settle failed（failure 往返）
+       → failed → markSent（重试，attempts 2）→ settle succeeded。 */
+    const answer2 = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: ids.episodeId,
+      runId: ids.runId,
+      role: "assistant",
+      text: "Latency is the delay before a transfer begins.",
+      piEntryId: "entry-0043",
+    });
+    const annotation2 = repo.createTerminologyAnnotation({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      anchorTurnId: answer2.id,
+      selection: { start: 0, end: 7, text: "Latency" },
+      sourceHash: "b".repeat(64),
+      term: "Latency",
+      explanation: "Delay.",
+      mode: "term",
+    });
+    const branch2 = repo.createBranch(ids.treeId, { parentBranchId: ids.rootBranchId });
+    assert.equal(repo.bindTerminologyPromotion(annotation2.id, "ledger-key-2", branch2.id), true);
+    repo.createTerminologyDispatch({
+      annotationId: annotation2.id,
+      treeId: ids.treeId,
+      promotionKey: "ledger-key-2",
+      branchId: branch2.id,
+      firstQuestionHash: "e".repeat(64),
+    });
+    repo.markTerminologyDispatchSent(annotation2.id);
+    const failedSettle = repo.settleTerminologyDispatch(annotation2.id, {
+      state: "failed",
+      failure: { code: "upstream", message: "simulated upstream failure" },
+    });
+    assert.equal(failedSettle.dispatchState, "failed");
+    assert.deepEqual(failedSettle.failure, { code: "upstream", message: "simulated upstream failure" });
+    assert.equal(failedSettle.runId, null);
+    const retried = repo.markTerminologyDispatchSent(annotation2.id);
+    assert.equal(retried.dispatchState, "dispatched", "failed → dispatched is the explicit retry transition");
+    assert.equal(retried.attempts, 2, "attempts counts every real dispatch");
+    const episode2 = repo.createEpisode(branch2.id);
+    const run2 = repo.createRun(episode2.id, makeSessionReference());
+    const retriedSettled = repo.settleTerminologyDispatch(annotation2.id, { state: "succeeded", runId: run2.id });
+    assert.equal(retriedSettled.dispatchState, "succeeded");
+    assert.equal(retriedSettled.runId, run2.id);
+
+    /* succeeded 引用不存在的 Run → EntityNotFoundError。 */
+    const answer3 = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: ids.episodeId,
+      runId: ids.runId,
+      role: "assistant",
+      text: "Throughput measures completed work per unit time.",
+      piEntryId: "entry-0044",
+    });
+    const annotation3 = repo.createTerminologyAnnotation({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      anchorTurnId: answer3.id,
+      selection: { start: 0, end: 10, text: "Throughput" },
+      sourceHash: "c".repeat(64),
+      term: "Throughput",
+      explanation: "Rate.",
+      mode: "term",
+    });
+    const branch3 = repo.createBranch(ids.treeId, { parentBranchId: ids.rootBranchId });
+    repo.bindTerminologyPromotion(annotation3.id, "ledger-key-3", branch3.id);
+    repo.createTerminologyDispatch({
+      annotationId: annotation3.id,
+      treeId: ids.treeId,
+      promotionKey: "ledger-key-3",
+      branchId: branch3.id,
+      firstQuestionHash: "9".repeat(64),
+    });
+    repo.markTerminologyDispatchSent(annotation3.id);
+    assert.throws(
+      () => repo.settleTerminologyDispatch(annotation3.id, { state: "succeeded", runId: "run_missing" as never }),
+      EntityNotFoundError,
+    );
+
+    /* 跨重开持久化：账本行与终态原样。 */
+    repo.close();
+    const repo2 = TreeRepository.open({ path: dbPath(dir) });
+    const reloaded = repo2.findTerminologyDispatchByAnnotation(annotation.id);
+    assert.equal(reloaded?.dispatchState, "succeeded");
+    assert.equal(reloaded?.runId, dispatchRun.id);
+    const reloaded2 = repo2.findTerminologyDispatchByAnnotation(annotation2.id);
+    assert.equal(reloaded2?.dispatchState, "succeeded");
+    assert.equal(reloaded2?.attempts, 2);
+    assert.equal(repo2.findTerminologyDispatchByAnnotation("term_missing"), null);
     repo2.close();
   } finally {
     cleanupTempDir(dir);

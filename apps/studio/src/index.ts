@@ -59,7 +59,7 @@ import {
 } from "./cli.ts";
 import { EchoSdkPort } from "./echo-port.ts";
 import { TreeStudioService } from "./service.ts";
-import { TerminologyExecutor, TerminologyService } from "./terminology.ts";
+import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
 import { createStudioServer } from "./server.ts";
 
@@ -187,12 +187,19 @@ async function main(): Promise<void> {
   }
   const terminologyUsageKey = "usage";
   const persistedUsage = repository.getTerminologyState(terminologyUsageKey);
-  let initialUsage: { total: { requests: number; promptChars: number; completionChars: number }; lateResultsDiscarded: number } | null = null;
+  let initialUsage: TerminologyExecutorUsage | null = null;
+  let initialUsageCorrupt = false;
   if (persistedUsage !== null) {
+    /* 损坏 kv（非法 JSON / 形状不符）不挂启动，但绝不从零静默清账：
+       initialUsageCorrupt → 执行器新派发 fail-closed（恢复动作由用户
+       显式执行：清除 kv 或核对后提高预算）。 */
     try {
-      initialUsage = JSON.parse(persistedUsage) as typeof initialUsage;
+      initialUsage = normalizeExecutorUsage(JSON.parse(persistedUsage) as unknown);
     } catch {
-      initialUsage = null; /* 损坏 kv 不挂启动：从零记账（旧值保留不读） */
+      initialUsage = null;
+    }
+    if (initialUsage === null) {
+      initialUsageCorrupt = true;
     }
   }
   const terminologyExecutor = new TerminologyExecutor({
@@ -202,7 +209,10 @@ async function main(): Promise<void> {
     cwd: terminologyWorkspace,
     budgetTokens: options.terminologyBudgetTokens,
     cacheEnabled: true,
+    /* 偏好版本面：执行器装配（thinkingLevel 等）变化即令旧缓存失效。 */
+    cacheScope: "thinkingLevel=off",
     initialUsage,
+    initialUsageCorrupt,
     onUsage: (usage) => {
       repository.setTerminologyState(terminologyUsageKey, JSON.stringify(usage));
     },

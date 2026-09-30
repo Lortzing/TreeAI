@@ -40,6 +40,7 @@ import type {
   SessionReference,
   TerminologyAnnotation,
   TerminologyMode,
+  TerminologyPromotionDispatch,
   Tree,
   TreeAIError,
   TreeId,
@@ -78,6 +79,7 @@ import {
   rowToRun,
   rowToSessionReference,
   rowToTerminologyAnnotation,
+  rowToTerminologyDispatch,
   rowToTree,
   rowToTurn,
   type ActiveNavigationRow,
@@ -89,6 +91,7 @@ import {
   type RunRow,
   type SessionReferenceRow,
   type TerminologyAnnotationRow,
+  type TerminologyDispatchRow,
   type TreeRow,
   type TurnRow,
 } from "./serialization.ts";
@@ -178,6 +181,24 @@ export interface CreateTerminologyAnnotationInput {
   readonly explanation: string;
   readonly mode: TerminologyMode;
 }
+
+/**
+ * 登记术语推广首问派发意图（migration 0009 派发账本；issue #7 P0 整改）。
+ * 与推广绑定同一事务调用（见 bindTerminologyPromotion 的调用方契约）。
+ */
+export interface CreateTerminologyDispatchInput {
+  readonly annotationId: string;
+  readonly treeId: TreeId;
+  readonly promotionKey: string;
+  readonly branchId: BranchId;
+  /** 首问不可变 payload（组合上下文 + 问题全文）的 SHA-256。 */
+  readonly firstQuestionHash: string;
+}
+
+/** 派发账本终局结算输入：成功（带 Run 引用）或明确失败。 */
+export type SettleTerminologyDispatchInput =
+  | { readonly state: "succeeded"; readonly runId: RunId }
+  | { readonly state: "failed"; readonly failure: TreeAIError };
 
 /** 设置 Branch 出处锚点（每分支至多一条）。 */
 export interface SetBranchOriginInput {
@@ -1445,6 +1466,177 @@ export class TreeRepository {
       .get(treeId, promotionKey) as TerminologyAnnotationRow | undefined;
     return row ? rowToTerminologyAnnotation(row) : null;
   }
+
+  /* ------------- 术语推广首问派发账本（terminology_promotion_dispatches，migration 0009） ------------- */
+
+  /**
+   * 登记派发意图（issue #7 P0 整改）：插入 dispatch_state='pending'、
+   * attempts=0 的账本行。**必须与推广绑定（bindTerminologyPromotion）及
+   * Branch/Origin 创建在同一事务内调用**——意图先于任何派发落库，崩溃后
+   * 重放以账本而非内存/分支 Turn 为准。前置校验：批注已绑定该 key/branch、
+   * 分支属于该树；重复登记（annotation_id 唯一）以 ConstraintViolationError
+   * 拒绝（调用方按键对齐或按冲突上抛）。
+   */
+  createTerminologyDispatch(input: CreateTerminologyDispatchInput): TerminologyPromotionDispatch {
+    this.#assertOpen();
+    assertNonEmptyString(input.annotationId, "terminology annotation id");
+    assertNonEmptyString(input.treeId, "tree id");
+    assertNonEmptyString(input.promotionKey, "promotion key");
+    assertNonEmptyString(input.branchId, "branch id");
+    assertNonEmptyString(input.firstQuestionHash, "first question hash");
+    const annotation = this.findTerminologyAnnotation(input.annotationId);
+    if (annotation === null) throw new EntityNotFoundError("terminology annotation", input.annotationId);
+    if (annotation.treeId !== input.treeId) {
+      throw new InvalidArgumentError(
+        `terminology annotation ${input.annotationId} belongs to tree ${annotation.treeId}, not ${input.treeId}`,
+      );
+    }
+    if (annotation.promotedBranchId === null || annotation.promotionKey === null) {
+      throw new InvalidArgumentError(
+        `terminology annotation ${input.annotationId} is not bound to a promotion yet; ` +
+          "bind the promotion (bindTerminologyPromotion) in the same transaction before registering the dispatch intent",
+      );
+    }
+    if (annotation.promotedBranchId !== input.branchId || annotation.promotionKey !== input.promotionKey) {
+      throw new InvalidArgumentError(
+        `the dispatch intent for annotation ${input.annotationId} must match its promotion binding ` +
+          `(branch ${annotation.promotedBranchId} / key ${annotation.promotionKey}), got ` +
+          `branch ${input.branchId} / key ${input.promotionKey}`,
+      );
+    }
+    const branch = this.findBranch(input.branchId);
+    if (branch === null) throw new EntityNotFoundError("branch", input.branchId);
+    if (branch.treeId !== input.treeId) {
+      throw new InvalidArgumentError(`branch ${input.branchId} belongs to tree ${branch.treeId}, not ${input.treeId}`);
+    }
+    const id = this.#newId("termdispatch");
+    const now = this.now();
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO terminology_promotion_dispatches
+             (id, annotation_id, tree_id, promotion_key, branch_id, first_question_hash,
+              dispatch_state, attempts, run_id, failure_json, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'pending', 0, NULL, NULL, ?, ?)`,
+        )
+        .run(
+          id,
+          input.annotationId,
+          input.treeId,
+          input.promotionKey,
+          input.branchId,
+          input.firstQuestionHash,
+          now,
+          now,
+        );
+    } catch (error) {
+      throw mapSqliteError(error, "creating terminology dispatch");
+    }
+    return this.getTerminologyDispatchByAnnotation(input.annotationId);
+  }
+
+  /** 批注的派发账本行（无则 null）。 */
+  findTerminologyDispatchByAnnotation(annotationId: string): TerminologyPromotionDispatch | null {
+    this.#assertOpen();
+    assertNonEmptyString(annotationId, "terminology annotation id");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, annotation_id, tree_id, promotion_key, branch_id, first_question_hash,
+                dispatch_state, attempts, run_id, failure_json, created_at, updated_at
+         FROM terminology_promotion_dispatches WHERE annotation_id = ?`,
+      )
+      .get(annotationId) as TerminologyDispatchRow | undefined;
+    return row ? rowToTerminologyDispatch(row) : null;
+  }
+
+  /** getTerminologyDispatchByAnnotation 的抛错版（账本行缺失 = schema 完整性违约）。 */
+  getTerminologyDispatchByAnnotation(annotationId: string): TerminologyPromotionDispatch {
+    const found = this.findTerminologyDispatchByAnnotation(annotationId);
+    if (found === null) {
+      throw new EntityNotFoundError("terminology dispatch ledger row", annotationId);
+    }
+    return found;
+  }
+
+  /**
+   * 标记一次实际派发尝试：dispatch_state ∈ {pending, failed} → dispatched，
+   * attempts 自增。条件 UPDATE 保证唯一在途尝试；已 dispatched（结果未知，
+   * 须先对账）或已 succeeded（不可再发）均以 InvalidArgumentError 拒绝
+   * （HTTP 层 400——调用方编程/并发纪律错误，不是领域冲突）。
+   */
+  markTerminologyDispatchSent(annotationId: string): TerminologyPromotionDispatch {
+    this.#assertOpen();
+    assertNonEmptyString(annotationId, "terminology annotation id");
+    return this.transaction((): TerminologyPromotionDispatch => {
+      const result = this.#db!
+        .prepare(
+          `UPDATE terminology_promotion_dispatches
+           SET dispatch_state = 'dispatched', attempts = attempts + 1, updated_at = ?
+           WHERE annotation_id = ? AND dispatch_state IN ('pending', 'failed')`,
+        )
+        .run(this.now(), annotationId);
+      if (Number(result.changes) === 0) {
+        const current = this.findTerminologyDispatchByAnnotation(annotationId);
+        if (current === null) throw new EntityNotFoundError("terminology dispatch ledger row", annotationId);
+        if (current.dispatchState === "succeeded") {
+          throw new InvalidArgumentError(
+            `the first question for annotation ${annotationId} already landed (run ${String(current.runId)}); it is never re-dispatched`,
+          );
+        }
+        throw new InvalidArgumentError(
+          `a dispatch for annotation ${annotationId} is already in flight or its result is unknown ` +
+            "(ledger state 'dispatched'); reconcile against the branch turns/runs before re-sending",
+        );
+      }
+      return this.getTerminologyDispatchByAnnotation(annotationId);
+    });
+  }
+
+  /**
+   * 派发终局结算（条件 UPDATE：仅 dispatched → 终态）。succeeded 携带 Run
+   * 引用（run 必须存在）；failed 携带脱敏失败（failure_json）。结算后不可
+   * 再变更（重试经 markTerminologyDispatchSent 的 failed → dispatched 走
+   * 新尝试，不改写历史终态行——attempts 保留全部尝试计数）。
+   */
+  settleTerminologyDispatch(
+    annotationId: string,
+    outcome: SettleTerminologyDispatchInput,
+  ): TerminologyPromotionDispatch {
+    this.#assertOpen();
+    assertNonEmptyString(annotationId, "terminology annotation id");
+    return this.transaction((): TerminologyPromotionDispatch => {
+      if (outcome.state === "succeeded") {
+        if (this.findRun(outcome.runId) === null) throw new EntityNotFoundError("run", outcome.runId);
+      }
+      const now = this.now();
+      const result =
+        outcome.state === "succeeded"
+          ? this.#db!
+              .prepare(
+                `UPDATE terminology_promotion_dispatches
+                 SET dispatch_state = 'succeeded', run_id = ?, failure_json = NULL, updated_at = ?
+                 WHERE annotation_id = ? AND dispatch_state = 'dispatched'`,
+              )
+              .run(outcome.runId, now, annotationId)
+          : this.#db!
+              .prepare(
+                `UPDATE terminology_promotion_dispatches
+                 SET dispatch_state = 'failed', run_id = NULL, failure_json = ?, updated_at = ?
+                 WHERE annotation_id = ? AND dispatch_state = 'dispatched'`,
+              )
+              .run(encodeFailure(outcome.failure), now, annotationId);
+      if (Number(result.changes) === 0) {
+        const current = this.findTerminologyDispatchByAnnotation(annotationId);
+        if (current === null) throw new EntityNotFoundError("terminology dispatch ledger row", annotationId);
+        throw new InvalidArgumentError(
+          `cannot settle the dispatch for annotation ${annotationId} from state '${current.dispatchState}' ` +
+            "(settle is only valid while the ledger row is 'dispatched')",
+        );
+      }
+      return this.getTerminologyDispatchByAnnotation(annotationId);
+    });
+  }
+
 
   /** 执行器键值状态读取（用量/预算/缓存偏好；缺失为 null）。 */
   getTerminologyState(key: string): string | null {
