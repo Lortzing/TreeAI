@@ -42,6 +42,7 @@ import { EvidenceWriter } from "../tests/support/verifier/evidence.ts";
 import { verifyD4FixturesIntegrity } from "../tests/support/verifier/d4-probes.ts";
 import { runB1ImportCheck } from "../tests/support/verifier/d4-b1-import.ts";
 import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
+import { runB4SearchCheck } from "../tests/support/verifier/d4-b4-search.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -439,11 +440,42 @@ const CHECKS = [
   },
   {
     id: "b4-cross-material-find",
-    fn: notRunCheck(
-      "b4-cross-material-find",
-      "D4-4",
-      "local full-text search not implemented; B4 executes against tests/fixtures/d4/b4-search once D4-4 lands",
-    ),
+    // REAL executing check (D4-4): the frozen B4 corpus (facts.json: saved
+    // product facts across 3 trees; material fragments pinned to the B1 frozen
+    // truth canonicalText) is assembled into search documents through the
+    // PRODUCT assembly path (buildSearchDocuments in
+    // apps/studio/src/search/search-service.ts — the same pure function the
+    // HTTP search endpoints use) and queried through the real engine
+    // (LocalSearchEngine). Every positive query must place its pre-specified
+    // target factId in the top-5 (charter floor 95%; the frozen set + the
+    // deterministic engine assert all of them); every no-result query must
+    // return zero hits (nothing fabricated). The browser/UI part of charter
+    // B4 (source jump) stays with run:d4-browser; the HTTP endpoints are
+    // covered by the studio suite (search-api.test.ts).
+    fn: async () => {
+      const d4Root = join(ROOT, "tests", "fixtures", "d4");
+      if (!existsSync(d4Root)) {
+        return {
+          status: "NOT_RUN",
+          exitCode: null,
+          reason: "tests/fixtures/d4 not present in this tree",
+        };
+      }
+      const outcome = runB4SearchCheck(d4Root);
+      log("b4-cross-material-find", `b4 cross-material find check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
   },
   {
     id: "b5-restore-integrity",

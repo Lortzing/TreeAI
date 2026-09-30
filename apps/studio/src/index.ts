@@ -61,6 +61,7 @@ import { EchoSdkPort } from "./echo-port.ts";
 import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
+import { SearchService } from "./search/search-service.ts";
 import { createStudioServer } from "./server.ts";
 
 let piApiKeyValueGuard: string | null = null;
@@ -226,8 +227,14 @@ async function main(): Promise<void> {
   const materialRepository = MaterialRepository.open({ path: join(options.dataDir, "treeai.db") });
   const materials = new MaterialImportService({ repository: materialRepository });
 
+  /* 搜索（issue #8 D4-4 找回既有思考）：同一产品库两仓储上的文档装配 +
+     确定性检索（材料版本×树链接、批注、Return、Turn——只索引已保存产品
+     事实）。每请求重建索引（零缓存，正确性优先；性能优化归 D4-6）；无
+     持久化索引表——索引只是可从产品数据重建的派生结构。 */
+  const search = new SearchService({ treeRepository: repository, materialRepository });
+
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
-  const studio = createStudioServer({ service, staticDir, terminology, materials });
+  const studio = createStudioServer({ service, staticDir, terminology, materials, search });
   const port = await studio.listen(options.port);
 
   const banner = [
@@ -261,6 +268,9 @@ async function main(): Promise<void> {
   );
   banner.push(
     "treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)",
+  );
+  banner.push(
+    "treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)",
   );
   banner.push("");
   process.stdout.write(scrubSecret(banner.join("\n")));
