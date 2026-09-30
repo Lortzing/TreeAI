@@ -161,10 +161,17 @@ export function buildExplainPrompt(sourceText: string, selection: TurnSelection)
 export function buildExtractPrompt(sourceText: string, maxTerms: number): string {
   return (
     `List up to ${String(maxTerms)} specialized terms in the passage below that a general reader would likely not ` +
-    "understand, most important first. Reply with ONLY a JSON array of objects " +
+    "understand, most important first. A qualifying term is a domain-specific expression — a named concept, " +
+    "technique, entity, or jargon phrase that needs a definition. Do NOT mark:\n" +
+    "- ordinary vocabulary even if it sounds technical in context (e.g. common words like signal, noise, " +
+    "amplitude, nodes, replicas used in their ordinary meaning);\n" +
+    "- code snippets, URLs, commands, file paths;\n" +
+    "- single everyday words; prefer the full technical phrase when one exists.\n" +
+    "When unsure, leave the word out — precision beats recall here.\n" +
+    "Reply with ONLY a JSON array of objects " +
     '{"term": "...", "start": N, "end": M} where start/end are character offsets into the passage ' +
     "(UTF-16 code units, start inclusive, end exclusive; the passage slice [start,end) must equal the term). " +
-    "Exclude code snippets, URLs, commands, and ordinary words. If there are none, reply with [].\n\n" +
+    "If there are none, reply with [].\n\n" +
     `[Passage]\n${sourceText}`
   );
 }
