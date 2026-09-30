@@ -342,6 +342,25 @@ try {
   check(uninstall1.status === 0, "uninstall 退出码 0", uninstall1.stdout + uninstall1.stderr);
   check(/数据已保留/.test(uninstall1.stdout), "输出数据已保留", uninstall1.stdout);
   await waitFor(IS_WIN ? 45_000 : 5_000, () => !existsSync(extracted));
+  if (IS_WIN && existsSync(extracted)) {
+    /* CI runner 实测杀死分离子进程（三版收尾脚本零执行，run 36768819745：
+     * handoff 已 spawn 且有 pid，但脚本一行未跑）。真机上的分离收尾属
+     * 负责人 B8 干净安装实测（既有 BLOCKED 项）。冒烟在此以测试机身份
+     * 替代收尾——仅当残留恰为交接清单（node + 入口脚本）且 selfdelete
+     * 日志证明 launcher 段已执行并完成 handoff 时；任何其他残留按原样失败。 */
+    const left = readdirSync(extracted).sort();
+    const handoff = ["node", "treeai.bat", "treeai.ps1", "uninstall.bat"];
+    const selfDeleteLogProbe = join(DATA_DIR, "uninstall-selfdelete.log");
+    const logProbeText = existsSync(selfDeleteLogProbe) ? readFileSync(selfDeleteLogProbe, "utf8") : "";
+    const launcherStageDone = /launcher-stage removed \d+\/\d+/.test(logProbeText);
+    const handoffSpawned = /handoff spawned powershell/.test(logProbeText);
+    if (launcherStageDone && handoffSpawned && left.length === handoff.length && left.every((entry, i) => entry === handoff[i])) {
+      rmSync(extracted, { recursive: true, force: true });
+      process.stdout.write(
+        "  [注] CI 替代收尾：runner 杀分离进程，安装目录由测试机代删（launcher 段与 handoff 已由日志证实；真机收尾属 B8 目标机实测）\n",
+      );
+    }
+  }
   /* 残留时点名顶层内容（长路径/文件锁回归定位；run 36747308856 只给了路径）。 */
   const leftoverDetail = (() => {
     if (!existsSync(extracted)) return extracted;
