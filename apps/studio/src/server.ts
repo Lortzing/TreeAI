@@ -123,6 +123,12 @@ import {
   ParseTaskNotCancelableError,
 } from "./materials/import-service.ts";
 import { MaterialRangeResolver, type ResolveSelectionInput } from "./materials/range-resolver.ts";
+import {
+  MaterialBranchConflictError,
+  MaterialBranchingService,
+  MaterialFirstQuestionConflictError,
+  type MaterialContextView,
+} from "./materials/branching.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -222,6 +228,16 @@ function sendError(res: ServerResponse, err: unknown): void {
     sendJson(res, 409, { error: { code: "parse-task-not-cancelable", message: err.message } } satisfies ApiErrorBody);
     return;
   }
+  if (err instanceof MaterialBranchConflictError) {
+    // 材料建枝意图冲突（同树同 intent_key 已绑定不同选区）——既有建枝不变。
+    sendJson(res, 409, { error: { code: "material-branch-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof MaterialFirstQuestionConflictError) {
+    // 材料首问内容冲突（首问已用不同内容落库）——改问走普通续聊。
+    sendJson(res, 409, { error: { code: "material-first-question-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
   if (err instanceof TypeError) {
     // 调用方契约违规（如并发 prompt）——单用户本地工具下按操作冲突呈现。
     sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
@@ -277,6 +293,58 @@ function requireString(body: Record<string, unknown>, field: string): string {
     throw new InvalidArgumentError(`request field '${field}' must be a non-empty string`);
   }
   return value;
+}
+
+/**
+ * 材料建枝请求体的规范选区（D4-3）：{materialId, versionId, blockId, start,
+ * end, excerpt, sourceHash}——D4-2 resolve-selection 的产出形状。此处只做
+ * 形状校验；切片/块/sourceHash 锚定纪律由材料仓储 getMaterialSelection
+ * （经建枝服务）再校验。
+ */
+function parseMaterialSelection(body: Record<string, unknown>): {
+  readonly materialId: MaterialId;
+  readonly versionId: MaterialVersionId;
+  readonly blockId: string;
+  readonly start: number;
+  readonly end: number;
+  readonly excerpt: string;
+  readonly sourceHash: string;
+} {
+  const selection = body["selection"];
+  if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
+    throw new InvalidArgumentError(
+      "request field 'selection' must be an object {materialId, versionId, blockId, start, end, excerpt, sourceHash}",
+    );
+  }
+  const record = selection as Record<string, unknown>;
+  const materialId = record["materialId"];
+  const versionId = record["versionId"];
+  const blockId = record["blockId"];
+  const start = record["start"];
+  const end = record["end"];
+  const excerpt = record["excerpt"];
+  const sourceHash = record["sourceHash"];
+  if (
+    typeof materialId !== "string" ||
+    typeof versionId !== "string" ||
+    typeof blockId !== "string" ||
+    typeof excerpt !== "string" ||
+    typeof sourceHash !== "string"
+  ) {
+    throw new InvalidArgumentError("selection string fields (materialId/versionId/blockId/excerpt/sourceHash) are required");
+  }
+  if (!Number.isInteger(start) || !Number.isInteger(end)) {
+    throw new InvalidArgumentError("selection start/end must be integers (UTF-16 half-open range)");
+  }
+  return {
+    materialId: materialId as MaterialId,
+    versionId: versionId as MaterialVersionId,
+    blockId,
+    start: start as number,
+    end: end as number,
+    excerpt,
+    sourceHash,
+  };
 }
 
 /**
@@ -337,6 +405,17 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
      即为 null → 解析路由 503 materials-not-wired，绝不伪装成功）。 */
   const materialRanges =
     materials === null ? null : new MaterialRangeResolver({ repository: materials.repository });
+  /* D4-3 材料建枝服务（issue #8 charter §3.3 / ADR-004）：复用主服务
+     （studio）的 Branch/Origin/Run/Return 底层 + 材料仓储的来源/首问幂等
+     面——与解析层同一装配纪律（materials 未装配即为 null → 建枝路由 503）。 */
+  const materialBranching =
+    materials === null
+      ? null
+      : new MaterialBranchingService({
+          treeRepository: service.repository,
+          materialRepository: materials.repository,
+          studio: service,
+        });
   /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
   const sseResponses = new Set<ServerResponse>();
 
