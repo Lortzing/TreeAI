@@ -568,8 +568,10 @@ export class MaterialImportService {
   /* ------------------------------ 解析任务 ------------------------------ */
 
   /**
-   * 取消解析任务（POST …/parse-tasks/:taskId/cancel）。pending/parsing →
-   * canceled（200）；已终态（ready/failed/canceled）→ 409。
+   * 取消解析任务（POST /api/trees/:treeId/materials/:materialId/parse-tasks/
+   * :taskId/cancel）。pending/parsing → canceled（200）；已终态
+   * （ready/failed/canceled）→ 409；树不存在/任务不属该树/材料未链接该树
+   * → 统一 404（不泄露任务存在性，issue #8 P1）。
    *
    * **迟到结果不挂靠（机制）**：取消与解析完成是两个竞争的条件 UPDATE，
    * 都以 `WHERE parse_status IN ('pending','parsing')` 为守卫、由数据库行
@@ -577,14 +579,22 @@ export class MaterialImportService {
    * （updateVersionParseResult 返回 null），服务层据此丢弃并计数。任务面
    * 的 state 检查只是第一道短路；即便绕过它，行级守卫仍结构性拒绝。
    */
-  cancelParseTask(taskId: string, materialId?: MaterialId): MaterialParseTaskView {
+  cancelParseTask(treeId: TreeId, taskId: string, materialId?: MaterialId): MaterialParseTaskView {
+    /* 树作用域（issue #8 增量验收 P1，2026-09-30）：取消必须落在创建该任务
+       的树上下文——错误树、不存在树、材料未链接到该树统一 404，不泄露任务
+       存在性。多树链接的材料仍以创建 parse task 的 tree 作用域为准。 */
+    this.#assertTree(treeId);
     const task = this.#tasks.get(taskId);
     if (task === undefined) {
       throw new EntityNotFoundError("material parse task", taskId);
     }
+    if (task.treeId !== treeId) {
+      throw new EntityNotFoundError("material parse task", `${taskId} (tree ${treeId})`);
+    }
     if (materialId !== undefined && task.materialId !== materialId) {
       throw new EntityNotFoundError("material parse task", `${taskId} (material ${materialId})`);
     }
+    this.#findTreeMaterial(treeId, task.materialId);
     if (task.state !== "pending" && task.state !== "parsing") {
       throw new ParseTaskNotCancelableError(task.taskId, task.state);
     }

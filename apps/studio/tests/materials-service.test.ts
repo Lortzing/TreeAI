@@ -17,6 +17,8 @@
  * - 规范文本超限 → 版本 failed text-units-exceeded（超限文本不落库）；
  * - 取消（受控门控假解析器）：cancel → canceled；放行迟到结果 → 状态保持
  *   canceled、迟到丢弃计数、无 ready 版本、无规范文本（迟到不挂靠）；
+ *   树作用域（issue #8 P1）：错误树/未知树统一 404 语义且不取消任务，
+ *   多树链接仍以创建任务的树为准；
  * - 宿主中断恢复：遗留 parsing 版本在新服务实例构造时收敛 failed
  *   （parse-interrupted）；
  * - 诚实拒绝：未知扩展名 / 空文件名 / 空字节 / 未知树——全部零持久化；
@@ -460,8 +462,25 @@ test("parse cancellation with a gated fake parser: canceled stays canceled; the 
     const taskId = result.parseTaskId!;
     await until(() => studio.materials.getParseTask(taskId)?.state === "parsing", "the task to enter parsing");
 
-    /* 取消在途任务 → canceled。 */
-    const canceled = studio.materials.cancelParseTask(taskId);
+    /* 树作用域（issue #8 增量验收 P1）：取消必须落在创建任务的树上下文。
+       错误树/未知树统一 EntityNotFoundError（404 语义）且任务保持 parsing；
+       材料多树链接不扩大作用域——仍以创建 parse task 的树为准。 */
+    const otherTree = studio.service.createTree().tree;
+    studio.materials.repository.linkTreeMaterial(otherTree.id, result.material.id);
+    assert.throws(() => studio.materials.cancelParseTask(otherTree.id, taskId), EntityNotFoundError);
+    assert.throws(
+      () => studio.materials.cancelParseTask("tree-missing" as TreeId, taskId),
+      EntityNotFoundError,
+    );
+    assert.equal(studio.materials.getParseTask(taskId)?.state, "parsing", "failed scope attempts never cancel");
+    assert.equal(
+      studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus,
+      "parsing",
+      "the version row survives the rejected cancels untouched",
+    );
+
+    /* 取消在途任务（创建树作用域）→ canceled。 */
+    const canceled = studio.materials.cancelParseTask(tree.id, taskId);
     assert.equal(canceled.state, "canceled");
     assert.equal(
       studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus,
@@ -482,8 +501,8 @@ test("parse cancellation with a gated fake parser: canceled stays canceled; the 
     );
 
     /* 终态任务不可再取消（409 语义）；未知任务 404 语义。 */
-    assert.throws(() => studio.materials.cancelParseTask(taskId), ParseTaskNotCancelableError);
-    assert.throws(() => studio.materials.cancelParseTask("mat-task-missing"), EntityNotFoundError);
+    assert.throws(() => studio.materials.cancelParseTask(tree.id, taskId), ParseTaskNotCancelableError);
+    assert.throws(() => studio.materials.cancelParseTask(tree.id, "mat-task-missing"), EntityNotFoundError);
   } finally {
     await studio.shutdown();
     cleanupDir(dir);

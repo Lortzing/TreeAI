@@ -70,7 +70,9 @@
  *   nextAfterBlock=null）。仅 ready 版本可读：非 ready → 409
  *   material-not-ready（不支持/失败/取消绝不伪装成空成功文档）。
  *   POST …/materials/:materialId/parse-tasks/:taskId/cancel —— 取消解析：
- *   200 canceled；已终态 409 parse-task-not-cancelable。迟到结果结构性
+ *   200 canceled；已终态 409 parse-task-not-cancelable；treeId 参与作用域
+ *   校验——树不存在/任务不属该树/材料未链接该树统一 404（issue #8 P1）。
+ *   迟到结果结构性
  *   丢弃（版本行条件 UPDATE 由数据库仲裁，不可能复活/覆盖已取消状态）。
  *   PUT  …/materials/:materialId/reading-position —— 持久化阅读位置
  *   （{versionId, blockId?, focusStart?}；校验失败 400）→ 204 无 body。
@@ -675,7 +677,8 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         return;
       }
 
-      /* 取消解析任务（迟到结果不挂靠——版本行条件 UPDATE 结构性拒绝）。 */
+      /* 取消解析任务（迟到结果不挂靠——版本行条件 UPDATE 结构性拒绝）。
+         树作用域由路由校验（issue #8 P1）：treeId 参与解析，错误树统一 404。 */
       const parseTaskCancelMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/parse-tasks\/([^/]+)\/cancel$/.exec(pathname);
       if (parseTaskCancelMatch !== null) {
         if (materials === null) {
@@ -688,9 +691,10 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
           return;
         }
+        const treeId = asTreeId(parseTaskCancelMatch[1]!);
         const materialId = decodeURIComponent(parseTaskCancelMatch[2]!) as MaterialId;
         const taskId = decodeURIComponent(parseTaskCancelMatch[3]!);
-        const task = materials.cancelParseTask(taskId, materialId);
+        const task = materials.cancelParseTask(treeId, taskId, materialId);
         sendJson(res, 200, { task });
         return;
       }

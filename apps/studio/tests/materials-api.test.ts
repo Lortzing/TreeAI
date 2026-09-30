@@ -517,6 +517,59 @@ test("parse cancellation over HTTP: mid-parse cancel with a gated fake parser; t
   }
 });
 
+test("parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1)", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  const gated = new GatedParser();
+  try {
+    const studio = await startStudio(dir, running, { materialImport: { parsers: { markdown: gated } } });
+    const treeId = await createTree(studio);
+    const otherTreeId = await createTree(studio);
+
+    const imported = await upload(studio.url(materialPath(treeId)), "scoped.md", utf8("scoped bytes"));
+    assert.equal(imported.status, 201);
+    const materialId: string = imported.body.material.id;
+    const taskId: string = imported.body.parseTaskId;
+
+    await until(
+      async () => (await call(studio.url(materialPath(treeId, materialId)), "GET")).body.parseTasks[0]?.state === "parsing",
+      "the parse task to enter parsing",
+    );
+
+    /* 另一棵已存在的树 → 404；不存在的树 → 404：统一拒绝，不泄露任务存在性。 */
+    const wrongTree = await call(
+      `${studio.url(materialPath(otherTreeId, materialId))}/parse-tasks/${encodeURIComponent(taskId)}/cancel`,
+      "POST",
+    );
+    assert.equal(wrongTree.status, 404);
+    assert.equal(wrongTree.body.error.code, "not-found");
+
+    const missingTree = await call(
+      `${studio.url(materialPath("tree-missing", materialId))}/parse-tasks/${encodeURIComponent(taskId)}/cancel`,
+      "POST",
+    );
+    assert.equal(missingTree.status, 404);
+    assert.equal(missingTree.body.error.code, "not-found");
+
+    /* 两次作用域失败的取消都没有动任务：仍 parsing、版本行原样。 */
+    const detailAfterRejects = await call(studio.url(materialPath(treeId, materialId)), "GET");
+    assert.equal(detailAfterRejects.body.parseTasks[0].state, "parsing");
+    assert.equal(detailAfterRejects.body.versions[0].parseStatus, "parsing");
+
+    /* 创建任务的树作用域内取消 → 200 canceled。 */
+    const canceled = await call(
+      `${studio.url(materialPath(treeId, materialId))}/parse-tasks/${encodeURIComponent(taskId)}/cancel`,
+      "POST",
+    );
+    assert.equal(canceled.status, 200);
+    assert.equal(canceled.body.task.state, "canceled");
+  } finally {
+    gated.release();
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
 test("pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200", async () => {
   const dir = makeTempDataDir();
   const running: RunningStudio[] = [];
