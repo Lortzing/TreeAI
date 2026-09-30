@@ -34,6 +34,17 @@
   BLOCKED。文件面：scripts/ 打包与安装脚本、.github/workflows/、根
   package.json scripts、docs/d4/D4-status.md（D4-7 行）——不碰 app.js/
   server.ts/terminology/迁移，与上三支无文件冲突。
+- `wip/term-eval`（worktree term-eval，2026-09-30 21:25 追加，基于 main
+  `3fc9198`；登记会话：21:10 让位会话，agent 在飞）：术语冻结评测集
+  （issue #7 §4 / v2 方案 P3）——`apps/studio/terminology/` 下新增
+  eval-set-dev.json + eval-set-frozen.json（各 180 条，按 Tree/文档分组
+  防泄漏、中文 ≥240、负例 ≥25%、六类覆盖）＋ 新评测 runner
+  `scripts/run-terminology-eval.mjs`（dev 可调参 / 冻结一次性、分任务
+  指标、空输出记录、echo 模式离线校验）＋ 零依赖 TF-IDF/TextRank 基线
+  ＋ 完整性测试。**全部新文件**：不碰 run-terminology-trials.mjs、
+  terminology.ts、app.js、server.ts、迁移、tests/fixtures/（避开
+  MANIFEST 纪律）——与在飞各支无文件冲突。真实模型跑批与两人标注为
+  owner/后续波次事项。
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
