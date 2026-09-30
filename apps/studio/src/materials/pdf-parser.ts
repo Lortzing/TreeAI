@@ -28,7 +28,7 @@
  *     - "encrypted"：trailer 携带 /Encrypt（加密件拒收，不尝试解密）；
  *     - "corrupt"：结构损坏（缺 %PDF- 头 / startxref/%%EOF、xref 错位、
  *       对象/trailer 形状破坏、流 /Length 失配、页树破坏、内容流操作
- *       数残缺等）；
+ *       数残缺、bfrange 数组值失配、未闭合内联图等）；
  *     - "no-text-layer"：全部页零文字显示操作（或拼得空文本）——
  *       纯图件/空内容流，绝不伪装成空 ready 文档；
  *     - "unsupported"：诚实能力边界（非 FlateDecode 流过滤器、
@@ -44,10 +44,14 @@
  * 理解的 PDF 子集（与参考提取器一致的口径 + 少量标准泛化）：
  * 经典 xref 表（支持 /Prev 链；**不支持** xref 流/对象流）、未压缩或
  * FlateDecode 流（/Length 直数或间接引用）、可嵌套页树（页可继承
- * 父节点 /Resources）、Type0/Identity-H + ToUnicode（bfchar/bfrange）
- * 与 base-14 Type1/WinAnsiEncoding 字体、内容流文字操作
- * BT、ET、Tf、Td、TD、TL、T-star、Tm、Tj、TJ、单引号与双引号
- * （其余操作符忽略）。
+ * 父节点 /Resources）、Type0/Identity-H + ToUnicode（bfchar/bfrange，
+ * bfrange 含顺序与**数组值**两种形态）与 base-14 Type1/WinAnsiEncoding
+ * 字体、内容流文字操作 BT、ET、Tf、Td、TD、TL、T-star、Tm、Tj、TJ、
+ * 单引号与双引号（其余操作符忽略；BI/ID/EI 内联图整段跳过——EI 判定
+ * 为「前置空白 + 后随空白/分隔符」的通行启发式，无 /Length 时这是
+ * 标准实践）。字体**惰性物化**：资源表只登记 名字 → 原始值，只有
+ * 真正用于显示文字的字体（Tj/TJ/'/" 时的当前字体，且字节非空）才
+ * 解析/校验——未用于显示的坏字体不拖垮整页。
  * 这是**应用解析器的诚实范围**，不是通用 PDF 规范实现；范围外特征
  * 一律按原因码拒绝，绝不静默产出猜测文本。
  */
@@ -635,14 +639,79 @@ function parseToUnicode(cmapText: string): Map<number, string> {
   }
   const bfrange = /(\d+)\s+beginbfrange([\s\S]*?)endbfrange/g;
   while ((m = bfrange.exec(cmapText)) !== null) {
-    const entry = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
-    let e: RegExpExecArray | null;
-    while ((e = entry.exec(m[2]!)) !== null) {
-      const lo = parseInt(e[1]!, 16);
-      const hi = parseInt(e[2]!, 16);
-      const start = parseInt(e[3]!, 16);
-      for (let c = lo; c <= hi; c += 1) {
-        map.set(c, utf16beToText((start + (c - lo)).toString(16).padStart(4, "0")));
+    /* 两种形态（PDF 32000-1 §9.10.3）：
+       <lo> <hi> <start>        顺序映射（start + 偏移，与参考提取器一致）
+       <lo> <hi> [<v1> <v2> …]  数组逐码映射（元素数必须等于码数）
+       逐项扫描而非整体正则：数组形态若被「三段 hex」正则吞读，会把数组
+       元素误当成顺序区间起点（静默错映射），此处显式区分两种形态。 */
+    const block = m[2]!;
+    const wsRe = /\s*/y;
+    const hexRe = /<([0-9A-Fa-f]+)>/y;
+    const skipWs = (p: number): number => {
+      wsRe.lastIndex = p;
+      return p + (wsRe.exec(block)?.[0].length ?? 0);
+    };
+    let p = 0;
+    for (;;) {
+      p = skipWs(p);
+      if (p >= block.length) break;
+      hexRe.lastIndex = p;
+      const loM = hexRe.exec(block);
+      if (loM === null) {
+        p += 1; // 容错跳过非条目字符（注释文本等）
+        continue;
+      }
+      const q = skipWs(hexRe.lastIndex);
+      hexRe.lastIndex = q;
+      const hiM = hexRe.exec(block);
+      if (hiM === null) {
+        p = q; // 只有 <lo> 而无 <hi>：残缺条目，跳过并继续扫描
+        continue;
+      }
+      const r = skipWs(hexRe.lastIndex);
+      if (block[r] === "[") {
+        // 数组形态：显式逐码值，元素数必须等于 hi-lo+1（失配 = corrupt）
+        const values: string[] = [];
+        let k = r + 1;
+        for (;;) {
+          k = skipWs(k);
+          if (block[k] === "]") {
+            k += 1;
+            break;
+          }
+          hexRe.lastIndex = k;
+          const vM = hexRe.exec(block);
+          if (vM === null) throw new PdfCorruptError("malformed bfrange array entry in ToUnicode CMap");
+          values.push(vM[1]!);
+          k = hexRe.lastIndex;
+        }
+        p = k;
+        const lo = parseInt(loM[1]!, 16);
+        const hi = parseInt(hiM[1]!, 16);
+        if (hi < lo) {
+          throw new PdfCorruptError(`ToUnicode bfrange <${loM[1]}> <${hiM[1]}> is a descending range`);
+        }
+        if (values.length !== hi - lo + 1) {
+          throw new PdfCorruptError(
+            `ToUnicode bfrange array has ${String(values.length)} values for ${String(hi - lo + 1)} codes (<${loM[1]}>..<${hiM[1]}>)`,
+          );
+        }
+        for (let c = lo; c <= hi; c += 1) map.set(c, utf16beToText(values[c - lo]!));
+      } else {
+        // 顺序形态
+        hexRe.lastIndex = r;
+        const dstM = hexRe.exec(block);
+        if (dstM === null) {
+          p = r; // <lo> <hi> 后无第三段：残缺条目，跳过并继续扫描
+          continue;
+        }
+        p = hexRe.lastIndex;
+        const lo = parseInt(loM[1]!, 16);
+        const hi = parseInt(hiM[1]!, 16);
+        const start = parseInt(dstM[1]!, 16);
+        for (let c = lo; c <= hi; c += 1) {
+          map.set(c, utf16beToText((start + (c - lo)).toString(16).padStart(4, "0")));
+        }
       }
     }
   }
@@ -663,11 +732,23 @@ type ContentToken =
 
 const CONTENT_DELIMS = new Set([" ", "\n", "\r", "\t", "\f", "\0", "(", ")", "<", ">", "[", "]", "{", "}", "/", "%"]);
 
+function isContentWs(c: string): boolean {
+  return c === " " || c === "\n" || c === "\r" || c === "\t" || c === "\f" || c === "\0";
+}
+
 function tokenizeContent(bytes: Uint8Array): ContentToken[] {
   const tokens: ContentToken[] = [];
   const text = bytesToLatin1(bytes);
   let i = 0;
   const n = text.length;
+  /* BI/ID/EI 内联图（PDF 32000-1 §8.9.7）状态：BI 之后、ID 之前的字典
+     经正常词法消费但不产出 token（字符串/名字里的 "ID"/"EI" 不会误触
+     发）；ID 之后单个空白起为二进制，整体跳到「前置空白 + 后随空白/
+     分隔符」的 EI——无 /Length 时的通行启发式。内联图对文字模型零效果。 */
+  let inInlineImage = false;
+  const push = (tok: ContentToken): void => {
+    if (!inInlineImage) tokens.push(tok);
+  };
   while (i < n) {
     const c = text[i]!;
     if (c === " " || c === "\n" || c === "\r" || c === "\t" || c === "\f" || c === "\0") {
@@ -731,7 +812,7 @@ function tokenizeContent(bytes: Uint8Array): ContentToken[] {
         out += d;
         j += 1;
       }
-      tokens.push({ t: "str", v: latin1ToBytes(out) });
+      push({ t: "str", v: latin1ToBytes(out) });
       i = j + 1;
       continue;
     }
@@ -740,19 +821,19 @@ function tokenizeContent(bytes: Uint8Array): ContentToken[] {
       while (j < n && text[j] !== ">") j += 1;
       let hex = text.slice(i + 1, j).replace(/[^0-9A-Fa-f]/g, "");
       if (hex.length % 2 === 1) hex += "0";
-      tokens.push({ t: "str", v: hexToBytes(hex) });
+      push({ t: "str", v: hexToBytes(hex) });
       i = j + 1;
       continue;
     }
     if (c === "<" || c === ">" || c === "[" || c === "]") {
-      tokens.push({ t: "delim", v: c });
+      push({ t: "delim", v: c });
       i += 1;
       continue;
     }
     if (c === "/") {
       let j = i + 1;
       while (j < n && !CONTENT_DELIMS.has(text[j]!)) j += 1;
-      tokens.push({ t: "name", v: text.slice(i + 1, j) });
+      push({ t: "name", v: text.slice(i + 1, j) });
       i = j;
       continue;
     }
@@ -760,10 +841,42 @@ function tokenizeContent(bytes: Uint8Array): ContentToken[] {
     let j = i;
     while (j < n && !CONTENT_DELIMS.has(text[j]!)) j += 1;
     const word = text.slice(i, j);
-    if (/^[0-9+\-.]/.test(word)) tokens.push({ t: "num", v: parseFloat(word) });
-    else tokens.push({ t: "op", v: word });
+    if (word === "BI") {
+      inInlineImage = true;
+      i = j;
+      continue;
+    }
+    if (inInlineImage) {
+      if (word === "ID") {
+        // ID 后单个空白字符（CRLF 记作一对）之后是二进制数据
+        let k = j;
+        if (k < n && isContentWs(text[k]!)) k += 1;
+        if (text[k - 1] === "\r" && text[k] === "\n") k += 1;
+        let end = -1;
+        while (k < n) {
+          if (text[k] === "E" && text[k + 1] === "I") {
+            const after = text[k + 2];
+            const afterOk = after === undefined || isContentWs(after) || "()<>[]{}/%".includes(after);
+            if (isContentWs(text[k - 1]!) && afterOk) {
+              end = k + 2;
+              break;
+            }
+          }
+          k += 1;
+        }
+        if (end < 0) throw new PdfCorruptError("inline image (BI/ID) is not terminated by EI");
+        i = end;
+        inInlineImage = false;
+        continue;
+      }
+      i = j; // BI 与 ID 之间的字典 token：词法消费、不产出
+      continue;
+    }
+    if (/^[0-9+\-.]/.test(word)) push({ t: "num", v: parseFloat(word) });
+    else push({ t: "op", v: word });
     i = j;
   }
+  if (inInlineImage) throw new PdfCorruptError("inline image (BI) is not terminated by ID");
   return tokens;
 }
 
@@ -803,6 +916,45 @@ type FontSpec =
   | { readonly subtype: "Type0"; readonly toUnicode: ReadonlyMap<number, string> }
   | { readonly subtype: "Type1" };
 
+/**
+ * 物化一个字体规格（首次真正用于显示文字时才调用）：
+ * Type0/Identity-H + ToUnicode（bfchar/bfrange 两种形态）或
+ * base-14 Type1/WinAnsiEncoding；其余一律 unsupported（说明特征，
+ * 不猜文本）。惰性口径：未用于显示的字体不会走到这里——坏字体
+ * 不拖垮整页，只有它显示的文字才触发拒绝。
+ */
+function materializeFontSpec(parser: PdfObjectParser, raw: PdfValue): FontSpec {
+  const font = parser.resolve(raw);
+  if (!(font instanceof Map)) throw new PdfCorruptError("font entry is not a dict");
+  const subtype = font.get("Subtype");
+  const subtypeName = subtype instanceof PdfName ? subtype.value : undefined;
+  if (subtypeName === "Type0") {
+    const enc = font.get("Encoding");
+    if (!(enc instanceof PdfName) || enc.value !== "Identity-H") {
+      throw new PdfUnsupportedError(
+        `only Identity-H Type0 fonts are understood (got /Encoding ${describePdfValue(enc)})`,
+      );
+    }
+    const toUnicodeRaw = font.get("ToUnicode");
+    if (toUnicodeRaw === undefined) {
+      throw new PdfUnsupportedError("Type0 font without a ToUnicode CMap cannot be mapped to text");
+    }
+    const toUnicode = parser.resolve(toUnicodeRaw);
+    const cmapText = bytesToLatin1(streamBytes(toUnicode));
+    return { subtype: "Type0", toUnicode: parseToUnicode(cmapText) };
+  }
+  if (subtypeName === "Type1") {
+    const enc = font.get("Encoding");
+    if (!(enc instanceof PdfName) || enc.value !== "WinAnsiEncoding") {
+      throw new PdfUnsupportedError(
+        `base-14 Type1 fonts must use WinAnsiEncoding (got /Encoding ${describePdfValue(enc)})`,
+      );
+    }
+    return { subtype: "Type1" };
+  }
+  throw new PdfUnsupportedError(`unsupported font subtype in page resources: ${describePdfValue(subtype)}`);
+}
+
 /** 一条视觉文字行（Tj 时刻的文本矩阵平移点 + 顺序号）。 */
 export interface PageTextLine {
   readonly x: number;
@@ -811,16 +963,21 @@ export interface PageTextLine {
   readonly text: string;
 }
 
-function interpretContent(tokens: readonly ContentToken[], fonts: ReadonlyMap<string, FontSpec>): PageTextLine[] {
+function interpretContent(
+  tokens: readonly ContentToken[],
+  fonts: ReadonlyMap<string, () => FontSpec>,
+): PageTextLine[] {
   const lines: PageTextLine[] = [];
   let order = 0;
   let tm: readonly number[] = [1, 0, 0, 1, 0, 0];
   let lm: readonly number[] = [1, 0, 0, 1, 0, 0];
   let leading = 0;
-  let font: FontSpec | null = null;
+  let fontFactory: (() => FontSpec) | null = null;
   const operands: ContentToken[] = [];
   const decode = (bytes: Uint8Array): string => {
-    if (font === null) throw new PdfCorruptError("Tj without a current font");
+    if (fontFactory === null) throw new PdfCorruptError("Tj without a current font");
+    if (bytes.length === 0) return ""; // 零字节零字形：无需物化字体（惰性口径）
+    const font = fontFactory();
     if (font.subtype === "Type0") {
       if (bytes.length % 2 !== 0) {
         throw new PdfCorruptError("Identity-H string has an odd byte count");
@@ -865,9 +1022,16 @@ function interpretContent(tokens: readonly ContentToken[], fonts: ReadonlyMap<st
         if (nameTok === undefined || nameTok.t !== "name") {
           throw new PdfCorruptError("Tf without a font name");
         }
-        font = fonts.get(nameTok.v) ?? null;
-        if (font === null) {
-          throw new PdfCorruptError(`Tf references an unknown font resource: /${nameTok.v}`);
+        /* 惰性：Tf 只登记当前字体的物化闭包（名字缺失亦然）——只有
+           真正显示非空文字时才解析/校验，未显示的 Tf 不影响页面。 */
+        const factory = fonts.get(nameTok.v);
+        if (factory !== undefined) {
+          fontFactory = factory;
+        } else {
+          const missing = nameTok.v;
+          fontFactory = (): FontSpec => {
+            throw new PdfCorruptError(`Tf references an unknown font resource: /${missing}`);
+          };
         }
         break;
       }
@@ -1073,40 +1237,19 @@ function extractPdfDocument(bytes: Uint8Array, maxPages: number): PdfParseResult
       resources = resolved;
     }
     const fontDictRaw = resources?.get("Font");
-    const fonts = new Map<string, FontSpec>();
+    /* 字体惰性物化：资源表只登记 名字 → 原始值；只有真正用于显示文字
+       的字体才经 materializeFontSpec 解析校验（同页重复使用命中闭包内
+       缓存）——未用于显示的坏字体不拖垮整页。 */
+    const fonts = new Map<string, () => FontSpec>();
     if (fontDictRaw !== undefined && fontDictRaw !== null) {
       const fontDict = parser.resolve(fontDictRaw);
       if (!(fontDict instanceof Map)) throw new PdfCorruptError("page resources /Font is not a dictionary");
-      for (const [name, ref] of fontDict) {
-        const font = parser.resolve(ref);
-        if (!(font instanceof Map)) throw new PdfCorruptError("font entry is not a dict");
-        const subtype = font.get("Subtype");
-        const subtypeName = subtype instanceof PdfName ? subtype.value : undefined;
-        if (subtypeName === "Type0") {
-          const enc = font.get("Encoding");
-          if (!(enc instanceof PdfName) || enc.value !== "Identity-H") {
-            throw new PdfUnsupportedError(
-              `only Identity-H Type0 fonts are understood (got /Encoding ${describePdfValue(enc)})`,
-            );
-          }
-          const toUnicodeRaw = font.get("ToUnicode");
-          if (toUnicodeRaw === undefined) {
-            throw new PdfUnsupportedError("Type0 font without a ToUnicode CMap cannot be mapped to text");
-          }
-          const toUnicode = parser.resolve(toUnicodeRaw);
-          const cmapText = bytesToLatin1(streamBytes(toUnicode));
-          fonts.set(name, { subtype: "Type0", toUnicode: parseToUnicode(cmapText) });
-        } else if (subtypeName === "Type1") {
-          const enc = font.get("Encoding");
-          if (!(enc instanceof PdfName) || enc.value !== "WinAnsiEncoding") {
-            throw new PdfUnsupportedError(
-              `base-14 Type1 fonts must use WinAnsiEncoding (got /Encoding ${describePdfValue(enc)})`,
-            );
-          }
-          fonts.set(name, { subtype: "Type1" });
-        } else {
-          throw new PdfUnsupportedError(`unsupported font subtype in page resources: ${describePdfValue(subtype)}`);
-        }
+      for (const [name, raw] of fontDict) {
+        let cached: FontSpec | null = null;
+        fonts.set(
+          name,
+          () => (cached ??= materializeFontSpec(parser, raw)),
+        );
       }
     }
     const contentsRaw = page.dict.get("Contents");

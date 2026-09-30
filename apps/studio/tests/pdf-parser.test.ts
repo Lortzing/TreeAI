@@ -17,8 +17,12 @@
  *    经测试内装配的微型 PDF 覆盖）：TJ 数组（数字项不计）、TL+T*、
  *    ' 与 " 换行显示、TD 置 leading、Tm 绝对定位、空串 Tj 空行、
  *    FlateDecode 压缩内容流（fixture 内容流均未压缩——解压路径只有
- *    此处真跑）、bfrange ToUnicode（fixture 只产 bfchar）、
- *    字面串八进制转义 + WinAnsi 高位字节；
+ *    此处真跑）、bfrange ToUnicode（fixture 只产 bfchar；顺序与**数组
+ *    值**两种形态都测）、字面串八进制转义 + WinAnsi 高位字节、
+ *    BI/ID/EI 内联图整段跳过（二进制里的括号与裸 EI 不误触发）；
+ *  - 字体惰性物化：未用于显示文字的坏字体（含未知资源名）不拖垮
+ *    页面；真正用于显示时才 unsupported/corrupt（空字节显示零字形
+ *    不物化字体）；
  *  - 钉死阅读顺序：栏带（x 差 > 40pt 先左栏后右栏）、同 y 按 x 升序；
  *  - 块规则：非末页 "\n" 收尾、空页跳过且 blockId 用真实页码；
  *  - 拒绝面：not-a-PDF / 截断（无 startxref/%%EOF）/ /Length 失配 /
@@ -245,6 +249,8 @@ interface AssembleOptions {
   readonly fontBody?: string;
   /** 附加对象体（排在字体对象之后、页对象之前）。 */
   readonly extraObjects?: readonly string[];
+  /** 追加进页 /Resources /Font 字典的串（如 " /F2 4 0 R"——多字体/惰性用例）。 */
+  readonly fontResources?: string;
   /** 把 startxref 指向某个对象（xref 流/错位构造）。 */
   readonly startxrefObjectNum?: number;
   /** 追加进 trailer 的键值串（如 " /Encrypt 4 0 R"）。 */
@@ -278,7 +284,7 @@ function buildTextPdf(pageContents: readonly string[], options: AssembleOptions 
     const contentNum = bodies.push(contentStreamBody(content, options.contentFilter));
     const pageNum = bodies.push(
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] ` +
-        `/Resources << /Font << /F1 3 0 R >> >> /Contents ${String(contentNum)} 0 R >>`,
+        `/Resources << /Font << /F1 3 0 R${options.fontResources ?? ""} >> >> /Contents ${String(contentNum)} 0 R >>`,
     );
     pageRefs.push(`${String(pageNum)} 0 R`);
   }
@@ -504,6 +510,95 @@ test("Identity-H mapping: bfchar and bfrange both decode; surrogate pairs carry 
   assert.equal(result.canonicalText, "abc🌳");
   assert.equal(result.textUnits, "abc🌳".length);
   assert.equal("🌳".length, 2, "the astral glyph occupies two UTF-16 units");
+});
+
+test("bfrange array values map code-by-code (an array is never misread as a sequential range)", () => {
+  /* 数组形态 <lo> <hi> [<v>…]（PDF 32000-1 §9.10.3）：值故意非顺序
+     （A、B、🌳）——若被「三段 hex」正则吞读，会错映射成顺序区间
+     （如 0x41→0x42、0x42→0x43）。 */
+  const cmap =
+    "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n" +
+    "1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n" +
+    "1 beginbfrange\n<0001> <0003> [<0041> <0042> <D83CDF33>]\nendbfrange\n" +
+    "endcmap\nend\nend\n";
+  const result = parseOk(
+    buildTextPdf(["BT /F1 12 Tf 72 700 Td <000100020003> Tj ET"], {
+      fontBody:
+        "<< /Type /Font /Subtype /Type0 /BaseFont /X /Encoding /Identity-H /DescendantFonts [5 0 R] /ToUnicode 4 0 R >>",
+      extraObjects: [contentStreamBody(cmap), "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /X >>"],
+    }),
+    "bfrange array values",
+  );
+  assert.equal(result.canonicalText, "AB🌳");
+  /* 数组元素数必须等于码数（hi-lo+1）——失配是损坏的 CMap，如实 corrupt。 */
+  const mismatchCmap =
+    "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n" +
+    "1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n" +
+    "1 beginbfrange\n<0001> <0004> [<0041> <0042>]\nendbfrange\n" +
+    "endcmap\nend\nend\n";
+  parseReject(
+    buildTextPdf(["BT /F1 12 Tf 72 700 Td <0001> Tj ET"], {
+      fontBody:
+        "<< /Type /Font /Subtype /Type0 /BaseFont /X /Encoding /Identity-H /DescendantFonts [5 0 R] /ToUnicode 4 0 R >>",
+      extraObjects: [contentStreamBody(mismatchCmap), "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /X >>"],
+    }),
+    "corrupt",
+    "bfrange array count mismatch",
+  );
+});
+
+test("inline images (BI/ID/EI) are skipped whole; text before and after survives intact", () => {
+  /* 二进制里故意埋两重陷阱：裸 EI 前置非空白字节（仅空白前置条件能否
+     拒绝它）、其后的未配对括号（若提前终止扫描，括号会吞掉后续文字
+     的 Tj 串——两种误判都会让本用例失败）。 */
+  const binary = "\x01\x02EI)\xff(unbalanced-until-the-real-terminator";
+  const withImage =
+    "BT /F1 12 Tf 72 700 Td (before) Tj ET\n" +
+    `q BI /W 2 /H 2 /CS /G /BPC 8 ID ${binary} EI Q\n` +
+    "BT /F1 12 Tf 72 680 Td (after) Tj ET";
+  assert.equal(singlePageText(withImage), "before\nafter");
+  /* BI 之后没有 ID（内容流残缺）→ corrupt。 */
+  parseReject(
+    buildTextPdf(["BT /F1 12 Tf 72 700 Td (x) Tj ET\nBI /W 1 /H 1"]),
+    "corrupt",
+    "BI without ID",
+  );
+  /* ID 之后没有 EI 终结符 → corrupt。 */
+  parseReject(
+    buildTextPdf(["q BI /W 1 /H 1 /CS /G /BPC 8 ID \x01\x02 Q"]),
+    "corrupt",
+    "ID without EI",
+  );
+});
+
+test("lazy fonts: only a font actually used to show text can fail the page", () => {
+  const brokenFont = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /StandardEncoding >>";
+  const twoFonts = { extraObjects: [brokenFont], fontResources: " /F2 4 0 R" };
+  /* /F2 不支持（StandardEncoding），但内容只用 /F1 → 照常解析。 */
+  assert.equal(singlePageText("BT /F1 12 Tf 72 700 Td (fine) Tj ET", twoFonts), "fine");
+  /* Tf 选中 /F2 但从未显示文字 → 不失败（未用于显示的字体不物化）。 */
+  assert.equal(
+    singlePageText("BT /F2 12 Tf ET\nBT /F1 12 Tf 72 700 Td (fine) Tj ET", twoFonts),
+    "fine",
+  );
+  /* /F2 真正显示文字 → unsupported（诚实能力边界，消息说明特征）。 */
+  parseReject(
+    buildTextPdf(["BT /F2 12 Tf 72 700 Td (x) Tj ET"], twoFonts),
+    "unsupported",
+    "broken font actually used to show text",
+  );
+  /* 空串显示（零字节零字形）不物化字体：坏字体 + () Tj → 不失败。 */
+  assert.equal(
+    singlePageText("BT /F2 12 Tf 72 700 Td () Tj ET\nBT /F1 12 Tf 72 680 Td (fine) Tj ET", twoFonts),
+    "\nfine",
+  );
+  /* 未知资源名：Tf 后真正显示 → corrupt；只 Tf 不显示 → 不影响。 */
+  parseReject(
+    buildTextPdf(["BT /F9 12 Tf 72 700 Td (x) Tj ET"]),
+    "corrupt",
+    "unknown font resource actually used to show text",
+  );
+  assert.equal(singlePageText("BT /F9 12 Tf ET\nBT /F1 12 Tf 72 700 Td (fine) Tj ET"), "fine");
 });
 
 /* ---------------- 拒绝面：encrypted / no-text-layer ---------------- */
