@@ -82,8 +82,8 @@
  *    选区边界向外吸附到整簇，绝不产生劈开代理对/组合字符/emoji 的载荷）；
  *    跨块选区如实呈「不可锚定」（B2 纪律：markdown 选区必须含于单块），
  *    不给出错误载荷；捕获载荷（materialId/versionId/blockId/start/end/
- *    excerpt）如实展示为 D4-3 的未来锚点（建枝入口随 D4-3 落地，本分支
- *    显式声明，不伪装可用）；「复制摘录」按 canonicalText 切片复制原文；
+ *    excerpt）如实展示（D4-3 落地后即建枝流程的锚点载荷——见 D4-3 段）；
+ *    「复制摘录」按 canonicalText 切片复制原文；
  *  - 版本可辨认（charter §3.1）：阅读器头部标明所渲染版本；非最新版本
  *    显式标注 older + 「切换到最新」的非破坏性入口（旧版本保持可读、随
  *    版本链可切回；绝不自动迁移锚点）；版本链上每版状态如实；
@@ -130,6 +130,50 @@
  *    composer、主线命中聚焦主线 composer——既有 v3 §4.4 换轨入口承接首
  *    问，不另造第二条换轨路径）；来源跳转永不因此受阻（跳转只呈现已
  *    保存事实，不触碰 session）。
+ *
+ * D4-3 原文探索闭环前端（issue #8 工作包 D4-3 / charter §3.3 / ADR-004；
+ * 消费已落地的四个 HTTP 端点——服务 apps/studio/src/materials/branching.ts）：
+ *  - 建枝入口（规则一）：阅读器武装选区的捕获条给出「⑃ Branch from
+ *    material」。提交前先经 D4-2 resolve-selection 把捕获载荷换成**规范
+ *    MaterialSelection**（服务端复核切片/块/sourceHash——阅读器窗口可能被
+ *    裁剪，客户端不自行伪造 sourceHash），再 POST from-material
+ *    {selection, intentKey, mode:"resume-or-create"}。intentKey 标识一次
+ *    逻辑提交（建枝+首问），跨失败重试/页面刷新经 localStorage 稳定复用
+ *    （同键重放同枝零新行——服务端原子绑定）；显式另开换新键。
+ *  - 提交前的材料范围声明（规则三，charter「UI 在提交前说明本次使用的材
+ *    料范围」）：from-material 响应的组合上下文视图（选区摘录 + 有界邻近
+ *    块窗口 + 标题/版本 + 上限/截断标记 + 组合文本预览）在首问输入旁完整
+ *    呈现——截断时显式标注（truncationNote 原文）；组合文本与派发时逐字
+ *    节相同（服务端确定性），<details> 内可全文核对。建枝本身零 Run/Turn
+ *    （浏览/搜索不创建 Turn）；首问是独立的显式提交。
+ *  - 幂等首问（规则四/五，先对账后行动）：submitting 在途锁杜绝双发（双
+ *    击/响应丢失不重发）；dispatch succeeded（outcome null = 同键重放，
+ *    不重复派发——如实注记）；failed = 明确失败可同键重试（显式新尝试）；
+ *    unknown = 在途对账不决——**不盲发**，如实呈现并等用户处置。409
+ *    material-first-question-conflict（同分支首问不可变）如实呈现，并给出
+ *    「改问走普通续聊」的去向（开面板预填问题，用户显式发送）。
+ *  - 恢复 vs 另开（规则五/六，同来源可恢复已有探索也可显式另开）：
+ *    resume-or-create 命中恢复 → 明确二选（打开既有分支续聊 / 显式另开
+ *    新枝——新键新提交）；恢复分支零 turn 时如实注明「续聊是普通 prompt、
+ *    不带组合材料上下文」，另开才有完整首问流。挂起的 intentKey（建枝后
+ *    未问）在重进同一选区时复用——恢复响应 + 已存键直达声明面（刷新/重
+ *    启后的诚实续走）。导航/会话可用性结果分离携带（失败如实，恢复本身
+ *    不被掩盖）。
+ *  - 材料 Return（规则七）：材料分支的面板 Return 走 material-return（响
+ *    应携带来源卡）；幂等键纪律与 Turn 来源 Return 完全共用（草稿持久化/
+ *    同键重放/响应丢失对账）。主线 Return 卡按 targetAnchor null（材料来
+ *    源没有主线对话锚点，绝不伪造）+ 来源分支无 turn origin 识别材料
+ *    Return，渲染材料来源卡：材料标题/版本/解析器/块·页/摘录/确认时间/
+ *    采用记录（树态实时）+ 原文跳转（sourceJump → 阅读器按版本+块定位，
+ *    复用 D4-4 搜索跳转的定位机制）。卡片数据（来源卡字段）从提交响应
+ *    缓存（localStorage，按 tree:turn），缓存缺失时如实注明（Return 本身
+ *    完好，绝不伪造来源细节）。
+ *  - 缺 session 显式新探索（规则八）：材料分支的「⑃ Start new exploration」
+ *    走 material-new-exploration（材料上下文随行）——可见性/确认流/收尾
+ *    与 Turn 来源分支的换轨入口完全一致（v3 §4.4 既有语义）。
+ *  - 材料分支的可辨认：分支 tab 标记 · material；面板头部呈材料来源上下
+ *    文（标题/版本/块/摘录——来源缓存自建枝/恢复响应，缺失时如实注明）；
+ *    「⌖ View source」对材料分支跳原文（对 Turn 来源分支仍是锚点揭示）。
  *
  * 范围（诚实声明）：对话 turn 无 Markdown 渲染、无自动摘要（材料阅读器
  *   的 markdown 渲染是**无损字面渲染**——见 D4-2 段，与 turn 渲染无关）。
@@ -345,21 +389,55 @@ const state = {
    *   trimmedBlocks: number,
    *   restoredToBlockId: string|null,
    *   lastSavedBlockId: string|null,
-   *   searchJump: {blockId:string|null, versionId:string|null, fellBackToDefaultVersion:boolean}|null
+   *   searchJump: {blockId:string|null, versionId:string|null, fellBackToDefaultVersion:boolean, arrival:"search"|"return-source"}|null
    * }|null}
    */
   materialReader: null,
   /**
    * D4-2 阅读器武装选区（charter §3.2 精确锚点的前端捕获面）：武装纪律
    * 同正文层（mouseup/双击/触屏 selectionchange；拖拽窗口内不重绘）。
-   * 有效载荷 = D4-3 的未来锚点（excerpt 与块文本切片字节相等、边界字素
-   * 安全——snapped 表示边界被吸附到完整字素簇）；invalid 携带如实原因
+   * 有效载荷 = D4-3 建枝的锚点载荷（excerpt 与块文本切片字节相等、边界字
+   * 素安全——snapped 表示边界被吸附到完整字素簇）；invalid 携带如实原因
    * （cross-block：B2 纪律——markdown 选区必须含于单块）。
    * @type {null|
    *   {kind:"valid", materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string, snapped:boolean}|
    *   {kind:"invalid", materialId:string, versionId:string, reason:"cross-block"|"unmappable"}}
    */
   materialSelection: null,
+  /**
+   * D4-3 材料建枝流程状态（null = 无流程；issue #8 charter §3.3 / ADR-004）。
+   * 流程面渲染在阅读器内（捕获条之下的建枝面）；selection 属于哪个阅读器
+   * 会话由 materialId 判定（切材料后流程面只在原材料重开时可见）。token 是
+   * 世代号（迟到响应丢弃——P1 同族规则）。intentKey 标识一次逻辑提交，跨
+   * 失败重试稳定（localStorage 持久化，见 materialIntentStorageKey）；首问
+   * 落库（dispatch succeeded）即清除挂起键。
+   * @type {null|{
+   *   phase: "creating"|"declared"|"choice"|"failed",
+   *   selection: {materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string},
+   *   intentKey: string,
+   *   branchId: string|null,
+   *   context: {
+   *     materialId:string, materialTitle:string, versionId:string,
+   *     parserKind:string, parserVersion:string,
+   *     selection: {materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string, sourceHash:string},
+   *     window: {start:number, end:number},
+   *     contextBlocks: {blockId:string, start:number, end:number}[],
+   *     limitUnits: number, composedUnits: number,
+   *     truncated: boolean, truncationNote: string|null,
+   *     composed: string
+   *   }|null,
+   *   mode: "created"|"restored"|null,
+   *   created: boolean,
+   *   restore: {created:boolean, navigation:{status:string, code?:string, message?:string}|null, sessionAvailability:"available"|"unavailable"|null, hasTurns:boolean}|null,
+   *   firstQuestion: string,
+   *   submitting: boolean,
+   *   dispatchNote: string|null,
+   *   error: string|null,
+   *   conflict: string|null,
+   *   token: number
+   * }}
+   */
+  materialBranching: null,
   /**
    * D4-4 搜索面状态（issue #8 工作包 D4-4，charter §5）。scope/kinds 是
    * 用户的筛选选择（静态表单承载，不随 renderAll 重建）；phase/hits 是
@@ -611,6 +689,13 @@ function renderBranchTabs() {
       dot.className = "dot";
       dot.textContent = " °";
       button.append(dot);
+    } else if (!isTrunk) {
+      /* D4-3 材料 Branch：无 Turn 来源——可辨认标记（来源细节在面板头部）。 */
+      const badge = document.createElement("span");
+      badge.className = "material-badge";
+      badge.textContent = "· material";
+      badge.title = "branched from a material selection (D4-3) — the source context is shown in the branch panel";
+      button.append(badge);
     }
     /* A4 缺失 session：分支徽标（续聊将 fail-closed；详情见降级提示）。 */
     if (view.sessionAvailability === "unavailable") {
@@ -1681,6 +1766,14 @@ function renderTurnsInto(container, view, branchId, stick) {
   for (const turn of view.turns) {
     if (turn.role === "return") {
       if (isAnchored(turn)) continue; /* 已随锚点答案渲染 */
+      /* 材料 Return（D4-3）：来源分支无 Turn 来源（材料来源）→ 材料来源卡
+         （targetAnchor null 是诚实事实——按确认时间放置，原文跳转不伪造
+         主线位置）；与 Turn 来源 Return 的降级卡分开呈现。 */
+      const fromView = turn.fromBranchId === null ? null : branchView(turn.fromBranchId);
+      if (isMaterialBranchView(fromView)) {
+        desired.push(materialReturnCard(turn, returnAttemptsFor(view, turn.id)));
+        continue;
+      }
       /* 降级放置（P1）：锚点不在当前视图——targetAnchor 快照随卡传递，
          区分来源位于其他 Branch / 已变化 / 缺失，摘录照常在卡面可读。 */
       desired.push(returnCard(turn, turn.targetAnchor, returnAttemptsFor(view, turn.id), "fallback"));
@@ -1749,6 +1842,29 @@ function renderMainConversation(stick) {
 function renderPanelAnchorContext(view) {
   const el = $("panel-anchor-context");
   el.replaceChildren();
+  /* 材料 Branch（D4-3）：无 Turn 来源——材料来源上下文（标题/版本/块/摘录）
+     从建枝/恢复响应的缓存读取（树态不含材料来源；缺失时如实注明）。 */
+  if (isMaterialBranchView(view)) {
+    const origin = recallMaterialBranchOrigin(state.currentTreeId, view.branch.id);
+    if (origin === null) {
+      el.textContent = "Branched from a material selection (source details not cached in this browser)";
+      return;
+    }
+    const selection = origin.selection;
+    el.append(
+      document.createTextNode(
+        `From material “${String(origin.materialTitle)}” — version ${String(selection.versionId)}, anchored selection: `,
+      ),
+    );
+    const sel = document.createElement("span");
+    sel.className = "sel";
+    sel.textContent = `“${selection.excerpt}”`;
+    const statusSpan = document.createElement("span");
+    statusSpan.className = "origin-status available";
+    statusSpan.textContent = ` · block ${selection.blockId} · material source`;
+    el.append(sel, statusSpan);
+    return;
+  }
   if (view.origin === null) {
     el.textContent = "no anchor recorded for this branch";
     return;
@@ -2469,6 +2585,9 @@ function resetTransientView() {
      的块容器一并清空——绝不给下一次打开留下上一棵树的块元素。 */
   state.materials = null;
   state.materialSelection = null;
+  /* D4-3：建枝流程随树切换复位（挂起的 intentKey 仍在 localStorage——重进
+     同一选区时按同键幂等续走，服务端对账兜底）。 */
+  state.materialBranching = null;
   if (state.materialReader !== null) {
     state.materialReader = null;
     materialReaderEpoch += 1;
@@ -2816,8 +2935,13 @@ async function startNewExploration(viewKind) {
       "The old history stays readable.",
   );
   if (!confirmed) return;
+  /* 材料 Branch（D4-3）走 material-new-exploration——材料来源上下文随行
+     （#newExplorationMaterialContext）；可见性/确认流/收尾与 Turn 来源分支
+     的换轨入口完全一致（v3 §4.4 既有语义）。 */
+  const materialBranch = isMaterialBranchView(branchView(branchId));
   const payload = await api(
-    `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`,
+    `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}` +
+      `${materialBranch ? "/material-new-exploration" : "/new-exploration"}`,
     "POST",
     { text },
   );
@@ -2988,18 +3112,28 @@ async function submitReturn() {
   const text = input.value;
   if (text.trim() === "") return;
   const draft = ensureReturnDraft(branchId);
+  /* 材料 Branch（D4-3）走 material-return——响应携带材料来源卡（主线卡渲
+     染的数据面）；幂等键/草稿/对账纪律与 Turn 来源 Return 完全共用。 */
+  const materialBranch = isMaterialBranchView(branchView(branchId));
   let submittedTurnId = null;
   let navigation = null;
   try {
-    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/return`, "POST", {
-      fromBranchId: branchId,
-      text,
-      idempotencyKey: draft.idempotencyKey,
-    });
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(state.currentTreeId)}${materialBranch ? "/material-return" : "/return"}`,
+      "POST",
+      {
+        fromBranchId: branchId,
+        text,
+        idempotencyKey: draft.idempotencyKey,
+      },
+    );
     /* 200（同键重放）与 201（新建）同为成功：Return 已保存，清空草稿。 */
     state.treeState = payload.state;
     submittedTurnId = payload.returnTurn.id;
     navigation = payload.navigation ?? null;
+    if (materialBranch && payload.card != null) {
+      rememberMaterialReturnCard(state.currentTreeId, payload.returnTurn.id, payload.card);
+    }
     clearReturnDraft();
   } catch (err) {
     /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态。
@@ -4132,6 +4266,7 @@ async function openMaterial(materialId, opts = {}) {
             blockId: opts.focusBlockId ?? null,
             versionId: opts.versionId,
             fellBackToDefaultVersion: false,
+            arrival: opts.arrival === "return-source" ? "return-source" : "search",
           }
         : null,
   };
@@ -4499,6 +4634,11 @@ function renderMaterialReader() {
   bar.setAttribute("role", "status");
   root.append(bar);
 
+  /* D4-3 建枝流程面（材料范围声明 + 首问 / 恢复二选；无流程时不渲染）。
+     置于捕获条与正文之间——提交前的材料范围声明就近可读。 */
+  const branchFlow = renderMaterialBranchFlow();
+  if (branchFlow !== null) root.append(branchFlow);
+
   /* 块容器：优先移回既有元素（身份/子树/监听全部保留）。 */
   const blocksEl = preservedBlocks ?? createMaterialBlocksElement();
   root.append(blocksEl);
@@ -4619,10 +4759,23 @@ function buildMaterialNotes(reader, version) {
   if (reader.restoredToBlockId !== null) {
     notes.push(mutedLine(`restored to your saved reading position (block ${reader.restoredToBlockId})`));
   }
-  /* D4-4 搜索命中跳转注记（与位置恢复注记分开——两个来源两种说法，
-     绝不把搜索跳转伪装成位置恢复）。 */
+  /* D4-4 搜索命中跳转注记 / D4-3 材料 Return 的原文跳转注记（两个来源两
+     种说法——与位置恢复注记分开，绝不把跳转伪装成位置恢复）。 */
   if (reader.searchJump !== null) {
-    if (reader.searchJump.fellBackToDefaultVersion) {
+    if (reader.searchJump.arrival === "return-source") {
+      if (reader.searchJump.fellBackToDefaultVersion) {
+        notes.push(
+          mutedLine(
+            "jumped to the material source of a Return — the Return's version is no longer in this material's version " +
+              "chain, so the default version selection is shown instead (nothing is faked)",
+          ),
+        );
+      } else if (reader.searchJump.blockId !== null) {
+        notes.push(mutedLine(`jumped to the material source of a Return — located at block ${reader.searchJump.blockId}`));
+      } else {
+        notes.push(mutedLine("jumped to the material source of a Return — the version is opened at the top"));
+      }
+    } else if (reader.searchJump.fellBackToDefaultVersion) {
       notes.push(
         mutedLine(
           "arrived from Search — the hit's version is no longer in this material's version chain, " +
@@ -4905,7 +5058,7 @@ function materialBlockLocalStart(blockEl, range) {
 }
 
 /**
- * 阅读器选区 → 捕获载荷（D4-3 的未来锚点）。事实源：块元素区间 +
+ * 阅读器选区 → 捕获载荷（D4-3 建枝的锚点载荷）。事实源：块元素区间 +
  * 前缀长度换算 + 块文本切片校验（excerpt === 块文本切片——即
  * canonicalText.slice(start,end)，绝对偏移由 block.start 平移）。跨块 →
  * 如实 {invalid, cross-block}（B2 纪律：markdown 选区必须含于单块，不悄悄
@@ -5000,7 +5153,7 @@ function updateMatSelectionBar() {
     const hint = document.createElement("span");
     hint.className = "muted";
     hint.textContent =
-      "(select text in the material to capture a quote — branching from material lands with D4-3)";
+      "(select text in the material to capture a quote — a captured selection can branch into an exploration)";
     bar.append(hint);
     return;
   }
@@ -5041,17 +5194,14 @@ function updateMatSelectionBar() {
   copy.addEventListener("click", () => void copyMaterialQuote(copy, selection));
   const branch = document.createElement("button");
   branch.className = "mat-branch-d43";
-  branch.textContent = "⑃ Branch from material (D4-3)";
-  branch.disabled = true;
+  branch.textContent = "⑃ Branch from material";
   branch.title =
-    "Branching from a material selection lands with work package D4-3 — this captured payload " +
-    "(material, version, block, UTF-16 range, excerpt) is the anchor point it will use";
+    "Open the exploration flow anchored on this exact selection — the material scope is declared for you to review before the first question is submitted";
+  branch.addEventListener("click", () => {
+    void guard(() => startMaterialBranchFlow(selection), "main");
+  });
   actions.append(copy, branch);
   bar.append(actions);
-  const d43 = document.createElement("span");
-  d43.className = "mat-d43-note";
-  d43.textContent = "branching from material lands with D4-3 — the captured payload above is the future anchor";
-  bar.append(d43);
 }
 
 /** 复制摘录：按 canonicalText 切片复制（excerpt 已过切片校验；正文渲染
@@ -5083,6 +5233,844 @@ async function copyMaterialQuote(button, selection) {
         "the quote above stays selectable for a manual copy",
     );
   }
+}
+
+/* ------------------------------ D4-3 材料建枝（issue #8 charter §3.3 / ADR-004） ------------------------------ */
+
+/** D4-3 建枝流程世代号（迟到响应丢弃——P1 同族规则）。 */
+let materialBranchingSeq = 0;
+
+/** 选区身份（与 sameMaterialSelectionIdentity 同维度：材料×版本×块×区间）。 */
+function materialSelectionIdentity(selection) {
+  return `${selection.materialId}:${selection.versionId}:${selection.blockId}:${String(selection.start)}-${String(selection.end)}`;
+}
+
+const MATERIAL_INTENT_PREFIX = "treeai-material-intent:";
+const MATERIAL_BRANCH_ORIGIN_PREFIX = "treeai-material-branch:";
+const MATERIAL_RETURN_CARD_PREFIX = "treeai-material-return-card:";
+
+/**
+ * 挂起的建枝意图（intentKey + 未落库的首问草稿）：一次逻辑提交跨页面刷新
+ * /重启稳定（同键重放同枝、同键同问不重发——服务端原子绑定与对账兜底）。
+ * 首问落库（dispatch succeeded）即清除；显式另开时以新键覆盖。
+ */
+function materialIntentStorageKey(treeId, identity) {
+  return `${MATERIAL_INTENT_PREFIX}${treeId}:${identity}`;
+}
+
+function readPendingMaterialIntent(treeId, identity) {
+  try {
+    const raw = window.localStorage.getItem(materialIntentStorageKey(treeId, identity));
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object" || typeof parsed.intentKey !== "string") return null;
+    return parsed;
+  } catch {
+    return null; /* localStorage 不可用：会话内流程照常，刷新后走恢复对账（诚实降级） */
+  }
+}
+
+function persistPendingMaterialIntent(treeId, identity, intentKey, firstQuestion) {
+  try {
+    window.localStorage.setItem(
+      materialIntentStorageKey(treeId, identity),
+      JSON.stringify({ intentKey, firstQuestion }),
+    );
+  } catch {
+    /* 同上：持久化尽力而为 */
+  }
+}
+
+function clearPendingMaterialIntent(treeId, identity) {
+  try {
+    window.localStorage.removeItem(materialIntentStorageKey(treeId, identity));
+  } catch {
+    /* 同上 */
+  }
+}
+
+/** 材料 Branch 的来源上下文缓存（会话 Map + localStorage 双写）：面板头部
+ *  来源呈现与「⌖ View source」原文跳转的数据面（树态不含 turn origin——
+ *  材料来源只在 material_branch_origins，HTTP 面无读取端点，客户端从建枝/
+ *  恢复响应缓存）。缓存缺失时如实注明，绝不伪造来源细节。 */
+const materialBranchOriginCache = new Map();
+
+function rememberMaterialBranchOrigin(treeId, branchId, originData) {
+  const key = `${treeId}:${branchId}`;
+  materialBranchOriginCache.set(key, originData);
+  try {
+    window.localStorage.setItem(`${MATERIAL_BRANCH_ORIGIN_PREFIX}${key}`, JSON.stringify(originData));
+  } catch {
+    /* 会话内缓存仍有效 */
+  }
+}
+
+function recallMaterialBranchOrigin(treeId, branchId) {
+  const key = `${treeId}:${branchId}`;
+  const cached = materialBranchOriginCache.get(key);
+  if (cached !== undefined) return cached;
+  try {
+    const raw = window.localStorage.getItem(`${MATERIAL_BRANCH_ORIGIN_PREFIX}${key}`);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object") return null;
+    materialBranchOriginCache.set(key, parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** 材料 Return 的来源卡缓存（提交响应的 card；主线卡渲染的数据面——树态
+ *  实时携带采用记录，材料身份字段从缓存读取，缺失时如实注明）。 */
+const materialReturnCardCache = new Map();
+
+function rememberMaterialReturnCard(treeId, turnId, card) {
+  const key = `${treeId}:${turnId}`;
+  materialReturnCardCache.set(key, card);
+  try {
+    window.localStorage.setItem(`${MATERIAL_RETURN_CARD_PREFIX}${key}`, JSON.stringify(card));
+  } catch {
+    /* 会话内缓存仍有效 */
+  }
+}
+
+function recallMaterialReturnCard(treeId, turnId) {
+  const key = `${treeId}:${turnId}`;
+  const cached = materialReturnCardCache.get(key);
+  if (cached !== undefined) return cached;
+  try {
+    const raw = window.localStorage.getItem(`${MATERIAL_RETURN_CARD_PREFIX}${key}`);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object") return null;
+    materialReturnCardCache.set(key, parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 材料 Branch 判定（树态结构信号）：非 Trunk 分支且无 Turn 来源（turn 来源
+ * 分支恒有 origin；材料来源只落 material_branch_origins——与后端
+ * service.submitReturn 的判定同口径）。材料 Return 的主线识别同用。
+ */
+function isMaterialBranchView(view) {
+  const st = state.treeState;
+  if (st === null || view === null) return false;
+  return view.branch.id !== st.trunkBranchId && view.origin === null;
+}
+
+/**
+ * 建枝入口（捕获条按钮）：resolve-selection → from-material 两步。
+ * 1. 规范选区：阅读器的捕获载荷不含 sourceHash（窗口可能被裁剪，客户端
+ *    不伪造）——经 D4-2 resolve-selection 由服务端复核切片/块/边界并签发
+ *    规范 MaterialSelection（含 sourceHash；捕获过期时如实 400）；
+ * 2. from-material {selection, intentKey, mode:"resume-or-create"}——
+ *    同来源已有探索则进入恢复/另开二选，无则按 intentKey 新建（响应携带
+ *    提交前的材料范围声明）。挂起的 intentKey（同选区身份）复用——建枝后
+ *    未问的流程经同键幂等续走（刷新/重启后直达声明面）。
+ * 建枝零 Run/Turn（首问是独立显式提交）；本调用不触碰对话游标（无
+ * POST /switch——阅读与探索互不干扰，D4-2 同纪律）。
+ */
+async function startMaterialBranchFlow(selection) {
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  const token = ++materialBranchingSeq;
+  const identity = materialSelectionIdentity(selection);
+  const pending = readPendingMaterialIntent(treeId, identity);
+  const intentKey = pending !== null ? pending.intentKey : crypto.randomUUID();
+  state.materialBranching = {
+    phase: "creating",
+    selection,
+    intentKey,
+    branchId: null,
+    context: null,
+    mode: null,
+    created: false,
+    restore: null,
+    firstQuestion: pending !== null ? String(pending.firstQuestion ?? "") : "",
+    submitting: false,
+    dispatchNote: null,
+    error: null,
+    conflict: null,
+    token,
+  };
+  renderMaterialReader();
+  const flowElement = document.getElementById("mat-branch-flow");
+  if (flowElement !== null) flowElement.focus();
+  try {
+    /* 步骤一：规范选区（服务端复核 + sourceHash 签发）。 */
+    const resolved = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(selection.materialId)}` +
+        `/versions/${encodeURIComponent(selection.versionId)}/resolve-selection`,
+      "POST",
+      {
+        locator: { kind: "utf16-range", start: selection.start, end: selection.end },
+        excerpt: selection.excerpt,
+        blockId: selection.blockId,
+      },
+    );
+    const canonical = resolved.selection;
+    /* 步骤二：建枝/恢复（resume-or-create）。 */
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/branches/from-material`,
+      "POST",
+      { selection: canonical, intentKey, mode: "resume-or-create" },
+    );
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    state.treeState = payload.state;
+    const branchId = payload.branch.id;
+    rememberMaterialBranchOrigin(treeId, branchId, {
+      selection: canonical,
+      materialTitle: payload.context.materialTitle,
+    });
+    if (payload.mode === "restored") {
+      const view = branchView(branchId);
+      const hasTurns = view !== null && view.turns.length > 0;
+      /* 恢复 + 挂起键 + 零 turn：该键正是这枝的未落库首问——直达声明面
+         （同键幂等续走）。其余恢复进入明确二选。 */
+      if (!hasTurns && pending !== null) {
+        state.materialBranching = {
+          ...state.materialBranching,
+          phase: "declared",
+          mode: "restored",
+          created: false,
+          branchId,
+          context: payload.context,
+          dispatchNote:
+            "reopened the branch this pending intent key created (no first question has landed on it yet) — the flow resumes with the same key",
+        };
+        persistPendingMaterialIntent(treeId, identity, intentKey, state.materialBranching.firstQuestion);
+      } else {
+        state.materialBranching = {
+          ...state.materialBranching,
+          phase: "choice",
+          mode: "restored",
+          created: false,
+          branchId,
+          context: payload.context,
+          restore: {
+            created: payload.created === true,
+            navigation: payload.navigation ?? null,
+            sessionAvailability: payload.sessionAvailability ?? null,
+            hasTurns,
+          },
+        };
+      }
+    } else {
+      state.materialBranching = {
+        ...state.materialBranching,
+        phase: "declared",
+        mode: "created",
+        created: payload.created === true,
+        branchId,
+        context: payload.context,
+      };
+      persistPendingMaterialIntent(treeId, identity, intentKey, state.materialBranching.firstQuestion);
+    }
+  } catch (err) {
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    state.materialBranching = {
+      ...state.materialBranching,
+      phase: "failed",
+      error: String(err && err.message ? err.message : err),
+    };
+  }
+  renderMaterialReader();
+}
+
+/**
+ * 建枝面（阅读器内、捕获条之下）：creating / declared（材料范围声明 + 首
+ * 问输入）/ choice（恢复 vs 另开二选）/ failed（诚实错误 + 重试）四态。
+ * 输入值经 state.materialBranching.firstQuestion 跨重渲保持（同术语首问
+ * 输入的惯例）。
+ */
+function renderMaterialBranchFlow() {
+  const flow = state.materialBranching;
+  const reader = state.materialReader;
+  if (flow === null || reader === null) return null;
+  if (flow.selection.materialId !== reader.materialId) return null; /* 流程属于另一份材料：不在此渲染 */
+  const div = document.createElement("div");
+  div.id = "mat-branch-flow";
+  div.className = "mat-branch-flow";
+  div.setAttribute("tabindex", "-1");
+  div.setAttribute("role", "region");
+  div.setAttribute("aria-label", "Branch from material flow");
+
+  if (flow.phase === "creating") {
+    const head = document.createElement("p");
+    head.className = "mat-branch-head";
+    head.textContent = "⑃ Branch from material — resolving the selection…";
+    div.append(head);
+    div.append(
+      mutedLine(
+        "creating the branch records zero runs/turns (browsing and searching create none) — the first question is a separate explicit submit",
+      ),
+    );
+    div.append(materialBranchCancelButton());
+    return div;
+  }
+
+  if (flow.phase === "failed") {
+    const head = document.createElement("p");
+    head.className = "mat-branch-head danger";
+    head.textContent = "⑃ Branch from material — the flow failed";
+    div.append(head);
+    div.append(mutedLine(`error — ${String(flow.error)}`));
+    const actions = document.createElement("div");
+    actions.className = "mat-branch-actions";
+    const retry = document.createElement("button");
+    retry.className = "mat-branch-retry";
+    retry.textContent = "Retry";
+    retry.title = "Resolve the selection and open the branching flow again";
+    retry.addEventListener("click", () => void guard(() => startMaterialBranchFlow(flow.selection), "main"));
+    actions.append(retry, materialBranchCancelButton());
+    div.append(actions);
+    return div;
+  }
+
+  if (flow.phase === "choice") {
+    const restore = flow.restore;
+    div.append(materialBranchChoiceCard(flow));
+    const actions = document.createElement("div");
+    actions.className = "mat-branch-actions";
+    const resume = document.createElement("button");
+    resume.className = "mat-branch-resume";
+    resume.textContent = "↩ Open the existing exploration";
+    resume.title = "Resume the exploration anchored on this exact selection (its session continues where it left off)";
+    resume.addEventListener("click", () => void guard(() => materialBranchResumeExisting(), "main"));
+    const fresh = document.createElement("button");
+    fresh.className = "mat-branch-new";
+    fresh.textContent = "⑃ Start a new exploration from this selection";
+    fresh.title = "Explicitly open a second exploration from the same source — a new branch and a new session (a new submission)";
+    fresh.addEventListener("click", () => void guard(() => materialBranchStartNew(), "main"));
+    actions.append(resume, fresh, materialBranchCancelButton());
+    div.append(actions);
+    if (restore !== null && restore.navigation !== null && restore.navigation.status === "failed") {
+      div.append(
+        mutedLine(
+          `aligning the live session failed (${String(restore.navigation.code)}: ${String(restore.navigation.message)}) — ` +
+            "the branch stays fully readable; opening it shows the saved history, prompts navigate on their own",
+        ),
+      );
+    }
+    if (restore !== null && restore.sessionAvailability === "unavailable") {
+      div.append(
+        mutedLine(
+          "the session at this branch's continuation point is unavailable — opening it shows the recovery entries " +
+            "(including starting a new exploration from saved content)",
+        ),
+      );
+    }
+    if (restore !== null && !restore.hasTurns) {
+      div.append(
+        mutedLine(
+          "the existing branch has no first question yet — continuing it there sends a normal prompt without the composed " +
+            "material context; starting a new exploration below gives the full first-question flow",
+        ),
+      );
+    }
+    return div;
+  }
+
+  /* declared：材料范围声明（提交前）+ 首问输入。 */
+  div.append(materialBranchContextCard(flow));
+  const form = document.createElement("div");
+  form.className = "mat-branch-question";
+  const label = document.createElement("span");
+  label.className = "muted";
+  label.textContent = "first question for the new exploration:";
+  const input = document.createElement("input");
+  input.id = "mat-branch-first-question";
+  input.type = "text";
+  input.value = flow.firstQuestion;
+  input.placeholder = "Ask the first question — it enters the new session together with the declared material scope…";
+  input.disabled = flow.submitting;
+  input.addEventListener("input", () => {
+    const current = state.materialBranching;
+    if (current !== null) current.firstQuestion = input.value;
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void guard(submitMaterialFirstQuestion, "main");
+    }
+  });
+  const submit = document.createElement("button");
+  submit.className = "primary mat-branch-submit";
+  submit.textContent = flow.submitting ? "Dispatching…" : "Submit first question";
+  submit.disabled = flow.submitting;
+  submit.title =
+    "Dispatch the first question with the declared material scope into a new, independent session (idempotent by intent key)";
+  submit.addEventListener("click", () => void guard(submitMaterialFirstQuestion, "main"));
+  form.append(label, input, submit);
+  div.append(form);
+  if (flow.mode === "restored") {
+    div.append(
+      mutedLine(
+        "this branch was created earlier from the same selection and has no first question yet — submitting resumes it with the pending intent key",
+      ),
+    );
+  } else if (flow.created === false) {
+    div.append(
+      mutedLine("this intent key already has its branch — the existing one is reopened (no duplicate is created)"),
+    );
+  }
+  if (flow.submitting) {
+    div.append(mutedLine("dispatching the first question… (it is not re-sent while a dispatch is pending)"));
+  }
+  if (flow.dispatchNote !== null) {
+    const note = document.createElement("p");
+    note.className = `mat-branch-dispatch${flow.dispatchNote.startsWith("dispatch failed") || flow.dispatchNote.startsWith("the first question for this branch") ? " danger" : ""}`;
+    note.textContent = flow.dispatchNote;
+    div.append(note);
+    if (flow.dispatchNote.startsWith("dispatch failed")) {
+      div.append(
+        mutedLine(
+          "a retry with the same key is an explicit new attempt (the backend reconciles first — a landed question is never re-sent)",
+        ),
+      );
+    }
+  }
+  if (flow.conflict !== null) {
+    const conflict = document.createElement("p");
+    conflict.className = "mat-branch-conflict";
+    conflict.textContent = `first-question conflict — ${flow.conflict}`;
+    div.append(conflict);
+    div.append(
+      mutedLine("the first question is immutable for this branch — a changed question is a normal continuation, not a first-question retry"),
+    );
+    const actions = document.createElement("div");
+    actions.className = "mat-branch-actions";
+    const cont = document.createElement("button");
+    cont.className = "accent mat-branch-continue";
+    cont.textContent = "Continue on the branch with this question";
+    cont.title = "Open the branch panel with the changed question in its composer — sending it there is a normal continuation";
+    cont.addEventListener("click", () => void guard(() => materialBranchContinueWithQuestion(), "main"));
+    actions.append(cont, materialBranchCancelButton());
+    div.append(actions);
+    return div;
+  }
+  div.append(materialBranchCancelButton());
+  return div;
+}
+
+/** 取消按钮（各阶段共用：收起流程面，回到纯阅读）。 */
+function materialBranchCancelButton() {
+  const cancel = document.createElement("button");
+  cancel.className = "mat-branch-cancel";
+  cancel.textContent = "Cancel";
+  cancel.title = "Close this flow and keep reading — nothing is dispatched without your explicit first question";
+  cancel.addEventListener("click", closeMaterialBranchFlow);
+  return cancel;
+}
+
+/**
+ * 材料范围声明卡（charter §3.3 规则三「UI 在提交前说明本次使用的材料范
+ * 围」）：from-material 响应的组合上下文视图——与首问派发时逐字节相同
+ * （全部成分由不可变数据决定）。截断（24,000 单元上限）显式标注；组合
+ * 文本全文经 <details> 可核对。
+ */
+function materialBranchContextCard(flow) {
+  const context = flow.context;
+  const card = document.createElement("div");
+  card.className = "mat-branch-context";
+  const head = document.createElement("p");
+  head.className = "mat-branch-context-head";
+  head.textContent = "Material scope for this exploration — declared before your first question";
+  card.append(head);
+  if (context === null) {
+    card.append(mutedLine("the scope view is unavailable — do not submit until it is shown"));
+    return card;
+  }
+  const lines = [];
+  lines.push(
+    `material “${context.materialTitle}” · version ${context.versionId} (${context.parserKind} ${context.parserVersion})`,
+  );
+  lines.push(
+    `selected excerpt: block ${context.selection.blockId}, UTF-16 [${String(context.selection.start)}, ${String(context.selection.end)}) — quoted in full below`,
+  );
+  lines.push(
+    `surrounding-material window: UTF-16 [${String(context.window.start)}, ${String(context.window.end)}) of the version canonical text` +
+      ` (blocks fully covered: ${
+        context.contextBlocks.length > 0 ? context.contextBlocks.map((block) => block.blockId).join(", ") : "none"
+      })`,
+  );
+  lines.push(`composed context: ${String(context.composedUnits)} / ${String(context.limitUnits)} UTF-16 units`);
+  for (const text of lines) {
+    const line = document.createElement("p");
+    line.className = "mat-branch-scope-line";
+    line.textContent = text;
+    card.append(line);
+  }
+  const quote = document.createElement("blockquote");
+  quote.className = "mat-branch-excerpt";
+  quote.textContent = context.selection.excerpt;
+  card.append(quote);
+  if (context.truncated) {
+    const marker = document.createElement("p");
+    marker.className = "mat-branch-truncated";
+    marker.textContent = `TRUNCATED — ${String(context.truncationNote)}`;
+    card.append(marker);
+  } else {
+    card.append(mutedLine("the window covers the whole material — nothing is omitted"));
+  }
+  const details = document.createElement("details");
+  details.className = "mat-branch-composed collapsible";
+  const summary = document.createElement("summary");
+  summary.textContent = "the exact composed context that will enter the model input";
+  const pre = document.createElement("pre");
+  pre.textContent = context.composed;
+  details.append(summary, pre);
+  card.append(details);
+  card.append(
+    mutedLine(
+      "creating the branch recorded zero runs/turns; submitting the first question dispatches it with exactly this scope into a new, independent session (the same bytes — the scope is deterministic)",
+    ),
+  );
+  return card;
+}
+
+/** 恢复 vs 另开二选卡（charter §3.3 规则五/六：同来源可恢复，也可显式另开）。 */
+function materialBranchChoiceCard(flow) {
+  const card = document.createElement("div");
+  card.className = "mat-branch-context";
+  const head = document.createElement("p");
+  head.className = "mat-branch-context-head";
+  head.textContent = "This exact material source already has an exploration in this tree";
+  card.append(head);
+  const line = document.createElement("p");
+  line.className = "mat-branch-scope-line";
+  line.textContent =
+    `source: material “${String(flow.context?.materialTitle ?? "")}” · version ${String(flow.selection.versionId)} · ` +
+    `block ${flow.selection.blockId} · UTF-16 [${String(flow.selection.start)}, ${String(flow.selection.end)}) — ` +
+    `selection identity is exact (material × version × block × range); look-alike excerpts elsewhere are never reused`;
+  card.append(line);
+  card.append(
+    mutedLine(
+      "you can resume the existing exploration, or explicitly start a new one from this same selection — both are honest continuations, nothing is silently reused",
+    ),
+  );
+  return card;
+}
+
+/**
+ * 幂等首问提交（先对账后动作在服务端；客户端纪律 = 在途锁不重发 + 结局
+ * 如实呈现）：dispatch succeeded（outcome null = 同键重放，零重发）→ 收流
+ * 程面、关阅读器、开新枝面板；failed → 诚实错误 + 同键可重试（显式新尝
+ * 试）；unknown → 在途对账不决，**不盲发**（无自动重试）；409
+ * material-first-question-conflict → 冲突面 + 「改问走普通续聊」去向。
+ */
+async function submitMaterialFirstQuestion() {
+  const flow = state.materialBranching;
+  if (flow === null || flow.phase !== "declared" || flow.submitting) return;
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  const firstQuestion = flow.firstQuestion;
+  if (firstQuestion.trim() === "") {
+    const input = document.getElementById("mat-branch-first-question");
+    if (input !== null) input.focus();
+    showError("Type the first question for the exploration first.");
+    return;
+  }
+  const token = flow.token;
+  const branchId = flow.branchId;
+  const identity = materialSelectionIdentity(flow.selection);
+  state.materialBranching = { ...flow, submitting: true, dispatchNote: null, conflict: null };
+  renderMaterialReader();
+  try {
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/material-first-question`,
+      "POST",
+      { intentKey: flow.intentKey, firstQuestion },
+    );
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    state.treeState = payload.state;
+    if (payload.dispatch === "succeeded") {
+      clearPendingMaterialIntent(treeId, identity); /* 首问已落库：逻辑提交完成 */
+      state.materialBranching = null;
+      await closeMaterialReader();
+      await openBranchPanel(branchId, {
+        alignCursor: false,
+        trigger: { kind: "material-button", materialId: flow.selection.materialId },
+      });
+      if (payload.outcome === null) {
+        showError(
+          "Opened the branch — the first question had already landed with this intent key (idempotent replay, no duplicate dispatch).",
+          "panel",
+        );
+      }
+      return;
+    }
+    if (payload.dispatch === "failed") {
+      state.materialBranching = {
+        ...state.materialBranching,
+        submitting: false,
+        dispatchNote: `dispatch failed — ${String(payload.error?.code)}: ${String(payload.error?.message)}`,
+      };
+    } else {
+      state.materialBranching = {
+        ...state.materialBranching,
+        submitting: false,
+        dispatchNote:
+          "the first question for this branch was dispatched but never reached a terminal state (the process may have exited " +
+          "mid-dispatch, or another dispatch may still be in flight) — it was NOT re-sent; reconcile the branch's runs, then retry",
+      };
+    }
+  } catch (err) {
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    if (err !== null && typeof err === "object" && err.code === "material-first-question-conflict") {
+      state.materialBranching = {
+        ...state.materialBranching,
+        submitting: false,
+        conflict: String(err && err.message ? err.message : err),
+      };
+    } else {
+      state.materialBranching = { ...state.materialBranching, submitting: false };
+      renderMaterialReader();
+      throw err; /* 网络/传输失败：guard 呈现横幅，流程面保留可重试 */
+    }
+  }
+  renderMaterialReader();
+}
+
+/** 恢复二选之「打开既有探索」：收流程面 + 关阅读器，面板打开恢复分支。 */
+async function materialBranchResumeExisting() {
+  const flow = state.materialBranching;
+  if (flow === null || flow.phase !== "choice" || flow.branchId === null) return;
+  const branchId = flow.branchId;
+  state.materialBranching = null;
+  await closeMaterialReader();
+  /* alignCursor:false——恢复响应的 navigation 已是诚实的服务端对齐尝试
+     （失败/不可用时如实随恢复分离携带，上面已呈现）；重放 /switch 只会
+     复现同一失败。 */
+  await openBranchPanel(branchId, {
+    alignCursor: false,
+    trigger: { kind: "material-button", materialId: flow.selection.materialId },
+  });
+}
+
+/** 恢复二选之「显式另开」：新键新提交（from-material mode:"new"）。 */
+async function materialBranchStartNew() {
+  const flow = state.materialBranching;
+  if (flow === null || flow.phase !== "choice") return;
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  const token = flow.token;
+  const intentKey = crypto.randomUUID(); /* 另开 = 新提交：换新键 */
+  state.materialBranching = {
+    ...flow,
+    phase: "creating",
+    intentKey,
+    branchId: null,
+    context: null,
+    mode: null,
+    created: false,
+    restore: null,
+    dispatchNote: null,
+    conflict: null,
+    submitting: false,
+  };
+  renderMaterialReader();
+  try {
+    /* 规范选区已由入口步骤一签发（同一选区身份）——恢复响应的 context
+       携带同值（确定性）；缺失（理论不可达）时如实失败，不伪造 sourceHash。 */
+    const sourceHash =
+      flow.context !== null && flow.context.selection !== null ? flow.context.selection.sourceHash : null;
+    if (sourceHash === null || sourceHash === "") {
+      throw new Error("the canonical selection for this source is not available — restart the flow from the capture bar");
+    }
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/branches/from-material`,
+      "POST",
+      {
+        selection: {
+          materialId: flow.selection.materialId,
+          versionId: flow.selection.versionId,
+          blockId: flow.selection.blockId,
+          start: flow.selection.start,
+          end: flow.selection.end,
+          excerpt: flow.selection.excerpt,
+          sourceHash,
+        },
+        intentKey,
+        mode: "new",
+      },
+    );
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    state.treeState = payload.state;
+    state.materialBranching = {
+      ...state.materialBranching,
+      phase: "declared",
+      mode: "created",
+      created: payload.created === true,
+      branchId: payload.branch.id,
+      context: payload.context,
+    };
+    rememberMaterialBranchOrigin(treeId, payload.branch.id, {
+      selection: payload.origin.selection,
+      materialTitle: payload.context.materialTitle,
+    });
+    persistPendingMaterialIntent(
+      treeId,
+      materialSelectionIdentity(flow.selection),
+      intentKey,
+      state.materialBranching.firstQuestion,
+    );
+  } catch (err) {
+    if (state.materialBranching === null || state.materialBranching.token !== token) return; /* 迟到丢弃 */
+    state.materialBranching = {
+      ...state.materialBranching,
+      phase: "failed",
+      error: String(err && err.message ? err.message : err),
+    };
+  }
+  renderMaterialReader();
+}
+
+/**
+ * 409 冲突的「改问走普通续聊」去向：收流程面 + 关阅读器，面板打开该分支
+ * 并把改后的问题预填进面板 composer——发送是用户的显式动作（普通续聊，
+ * 组合材料上下文已在分支既有首问的会话历史里）。输入文本保留在面板
+ * composer 中待审阅。
+ */
+async function materialBranchContinueWithQuestion() {
+  const flow = state.materialBranching;
+  if (flow === null || flow.branchId === null) return;
+  const branchId = flow.branchId;
+  const question = flow.firstQuestion;
+  state.materialBranching = null;
+  await closeMaterialReader();
+  await openBranchPanel(branchId, {
+    alignCursor: false,
+    trigger: { kind: "material-button", materialId: flow.selection.materialId },
+  });
+  const input = $("panel-prompt-input");
+  if (input !== null && question.trim() !== "") {
+    input.value = question;
+    input.focus();
+  }
+  showError(
+    "The first question on this branch is immutable — review the question below and send it as a normal continuation " +
+      "(the material context already sits in the branch's first-question session).",
+    "panel",
+  );
+}
+
+/** 收起建枝流程面（回纯阅读；挂起的 intentKey 保留——同选区重进可续走）。 */
+function closeMaterialBranchFlow() {
+  if (state.materialBranching === null) return;
+  state.materialBranching = null;
+  renderMaterialReader();
+}
+
+/**
+ * 材料 Return 卡（主线；charter §3.3 规则七 / ADR-004 §8）：材料来源没有
+ * 主线对话锚点（targetAnchor 恒 null——绝不伪造），主线按确认时间放置。
+ * 来源卡字段（材料标题/版本/解析器/块·页/摘录/sourceJump）从提交响应的
+ * card 缓存读取；确认时间/文本/采用记录取树态实时事实（与 returnCard 同
+ * 词汇：saved → attempted → delivered）。缓存缺失时如实注明（Return 完好，
+ * 绝不伪造来源细节）。
+ */
+function materialReturnCard(turn, attempts) {
+  const treeKey = `${state.currentTreeId}:${turn.id}`;
+  const nowMs = Date.now();
+  const div = document.createElement("div");
+  div.className = "turn return material-return";
+  div.dataset.turnId = turn.id;
+  div.dataset.turnText = turn.text;
+  turnElements.set(turn.id, div); /* 提交后滚动定位 / 反查焦点还原 */
+  if (!state.knownReturnIds.has(treeKey)) {
+    state.knownReturnIds.add(treeKey);
+    returnInsertedAt.set(treeKey, nowMs);
+  }
+  const insertedAt = returnInsertedAt.get(treeKey);
+  if (insertedAt !== undefined && nowMs - insertedAt < MOTION_EPOCH_MS) {
+    div.classList.add("insert");
+  }
+  const meta = document.createElement("span");
+  meta.className = "meta";
+  meta.append(
+    document.createTextNode(
+      `↩ Return from ${branchLabel(turn.fromBranchId ?? "")} (material exploration) · saved ${formatProductTime(turn.createdAt)}`,
+    ),
+  );
+  const delivered = turn.deliveredRunId !== null;
+  const delivery = document.createElement(delivered ? "button" : "span");
+  if (delivered) {
+    const deliveredAttempt = attempts.find((attempt) => attempt.runId === turn.deliveredRunId);
+    const adoptedNote =
+      deliveredAttempt !== undefined && deliveredAttempt.terminalAt !== null
+        ? `, adopted ${formatProductTime(deliveredAttempt.terminalAt)}`
+        : "";
+    delivery.className = "delivery delivered delivery-link";
+    delivery.textContent = `successfully adopted into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…${adoptedNote})`;
+    delivery.title = `first successfully adopted into Trunk run ${turn.deliveredRunId} — open sources`;
+    div.dataset.deliveredRunId = turn.deliveredRunId;
+    delivery.addEventListener("click", () =>
+      void openDrawer({
+        focusRunId: turn.deliveredRunId,
+        trigger: { kind: "return-card", turnId: turn.id },
+      }),
+    );
+  } else if (attempts.length > 0) {
+    delivery.className = "delivery attempted";
+    delivery.textContent = `adoption attempted (${String(attempts.length)}) — still pending, retried on the next Trunk discussion`;
+    delivery.title = attempts
+      .map((a) => `run ${a.runId.slice(0, 12)}… ${a.runState}${a.failure !== null ? ` (${a.failure.code})` : ""}`)
+      .join("\n");
+  } else {
+    delivery.className = "delivery";
+    delivery.textContent = "saved — pending adoption on the next Trunk discussion";
+  }
+  state.seenDeliveredRunIds.set(treeKey, turn.deliveredRunId);
+  meta.append(delivery);
+  div.append(meta);
+  const card = recallMaterialReturnCard(state.currentTreeId, turn.id);
+  if (card !== null) {
+    const source = document.createElement("div");
+    source.className = "mat-return-source";
+    const fields = document.createElement("p");
+    fields.className = "mat-return-source-fields";
+    const pageNote = card.page !== null ? ` · page ${String(card.page)}` : "";
+    fields.textContent =
+      `material “${String(card.materialTitle)}” · version ${String(card.versionId)}` +
+      ` (${String(card.parserKind)} ${String(card.parserVersion)}) · block ${String(card.blockId)}${pageNote}` +
+      ` · confirmed ${formatProductTime(card.confirmTime)}`;
+    source.append(fields);
+    const quote = document.createElement("blockquote");
+    quote.className = "mat-return-excerpt";
+    quote.textContent = String(card.excerpt);
+    source.append(quote);
+    const jump = document.createElement("button");
+    jump.className = "mat-return-jump";
+    jump.textContent = "⌖ View material source";
+    jump.title = "Open the material at the anchored version and block — the source jump never fakes a mainline position";
+    jump.addEventListener("click", () =>
+      void guard(
+        () =>
+          openMaterial(card.sourceJump.materialId, {
+            trigger: { kind: "return-card", turnId: turn.id },
+            versionId: card.sourceJump.versionId,
+            focusBlockId: card.sourceJump.blockId,
+            arrival: "return-source",
+          }),
+        "main",
+      ),
+    );
+    source.append(jump);
+    div.append(source);
+  } else {
+    div.append(
+      mutedLine(
+        "the material source details for this Return are not cached in this browser — the Return itself is intact and pending adoption",
+      ),
+    );
+  }
+  div.append(document.createTextNode(turn.text));
+  return div;
 }
 
 /* ------------------------------ D4-2 阅读位置 ------------------------------ */
@@ -5591,7 +6579,8 @@ function searchHitSessionNote(hit, key) {
     branchId = located === null ? null : located.view.branch.id;
   } else {
     /* 材料命中：阅读不需要 session（charter §3.2 阅读与探索互不干扰）；
-       D4-3 的材料建枝未落地——材料分支的换轨面随该工作包呈现。 */
+       D4-3 落地后，阅读器内的建枝入口承接探索去向（武装选区 → 建枝流
+       程），材料命中不在此给换轨入口。 */
     return null;
   }
   if (branchId === null) return null;
@@ -5892,8 +6881,28 @@ for (const kind of SEARCH_KIND_ORDER) {
 /* 面板收起动作的失败呈现在主线横幅（面板此刻已收起/未开）。 */
 $("panel-close").addEventListener("click", () => void guard(() => closePanel()));
 $("panel-view-source").addEventListener("click", () =>
-  void guard(() => revealOrigin(state.panelBranchId), "panel"),
+  void guard(() => (isMaterialBranchView(branchView(state.panelBranchId)) ? materialSourceJump(state.panelBranchId) : revealOrigin(state.panelBranchId)), "panel"),
 );
+
+/**
+ * 材料 Branch 的「⌖ View source」（D4-3）：跳原文——阅读器打开来源材料
+ * 的**锚定版本**并定位到选区所在块（sourceJump 语义：materialId/versionId/
+ * blockId——不伪造主线位置）。来源缓存缺失时如实失败（无法定位即不跳）。
+ */
+async function materialSourceJump(branchId) {
+  const origin = recallMaterialBranchOrigin(state.currentTreeId, branchId);
+  if (origin === null) {
+    throw new Error(
+      "the material source details for this branch are not cached in this browser — it cannot be located for jumping",
+    );
+  }
+  await openMaterial(origin.selection.materialId, {
+    trigger: { kind: "element", element: $("panel-view-source") },
+    versionId: origin.selection.versionId,
+    focusBlockId: origin.selection.blockId,
+    arrival: "return-source",
+  });
+}
 
 /* Esc 语义（W2 逐屏键盘焦点行）：抽屉 → 阅读器 → 支线面板 → 侧栏抽屉
    逐层关闭，每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。
@@ -5911,6 +6920,12 @@ document.addEventListener("keydown", (event) => {
   }
   if (state.materialReader !== null) {
     event.preventDefault();
+    /* D4-3 建枝流程面是阅读器的内层面（材料范围声明/首问在提交前不丢）：
+       Esc 先收流程面，再关阅读器（分层关卡同解释卡之于面板）。 */
+    if (state.materialBranching !== null) {
+      closeMaterialBranchFlow();
+      return;
+    }
     closeMaterialReader();
     return;
   }
