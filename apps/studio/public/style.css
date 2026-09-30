@@ -1062,8 +1062,9 @@ button.panel-close:hover { background: #dcebe0; }
 .mat-note .mat-note-action:hover:not(:disabled), .mat-note .drawer-retry:hover:not(:disabled) { background: rgba(35, 40, 31, 0.06); }
 
 /* 选区捕获条（常驻阅读器头部之下，不随正文滚动消失）：提示 / 捕获载荷
-   （摘录 + blockId + UTF-16 区间，D4-3 的未来锚点）/ 跨块不可锚定说明 /
-   字素吸附注记。role=status（aria-live polite）——状态变化可被朗读。 */
+   （摘录 + blockId + UTF-16 区间——D4-3 建枝的锚点载荷）/ 跨块不可锚定
+   说明 / 字素吸附注记。role=status（aria-live polite）——状态变化可被
+   朗读。 */
 .mat-selection-bar {
   padding: 8px 16px;
   border-bottom: 1px solid var(--line);
@@ -1109,7 +1110,190 @@ button.panel-close:hover { background: #dcebe0; }
 .mat-selection-bar .mat-selection-actions button:disabled { opacity: 0.55; cursor: default; }
 .mat-selection-bar .mat-snap-note,
 .mat-selection-bar .mat-invalid-note { color: var(--gold-deep); }
-.mat-selection-bar .mat-d43-note { color: var(--muted); }
+
+/* D4-3 材料建枝流程面（阅读器内、捕获条之下；issue #8 charter §3.3 /
+   ADR-004）：提交前的材料范围声明（选区摘录 + 有界邻近块窗口 + 上限/
+   截断标记 + 组合文本核对）与首问输入 / 恢复二选 / 诚实失败面。 */
+.mat-branch-flow {
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--green-wash);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  outline: none; /* 程序聚焦目标（tabindex=-1）；焦点环只给可交互元素 */
+}
+.mat-branch-flow .mat-branch-head {
+  font-weight: 650;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.mat-branch-flow .mat-branch-head.danger { color: var(--danger); }
+.mat-branch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mat-branch-actions button,
+.mat-branch-question button {
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.mat-branch-actions button:hover:not(:disabled),
+.mat-branch-question button:hover:not(:disabled) { background: var(--green-wash); border-color: var(--green); }
+.mat-branch-actions button:disabled { opacity: 0.55; cursor: default; }
+.mat-branch-actions .mat-branch-resume { border-color: var(--green-line); }
+.mat-branch-flow .mat-branch-dispatch { margin: 6px 0 0; color: var(--ink-soft); }
+.mat-branch-flow .mat-branch-dispatch.danger { color: var(--danger); }
+.mat-branch-flow .mat-branch-conflict {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--danger);
+  background: var(--danger-wash);
+  border-radius: 4px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+/* 首问输入行（同术语推广首问输入的布局惯例）。 */
+.mat-branch-question {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mat-branch-question input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: 12.5px;
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.mat-branch-question input:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+/* 材料范围声明卡（from-material 响应的组合上下文视图——与派发时逐字节
+   相同；charter §3.3 规则三「UI 在提交前说明本次使用的材料范围」）。 */
+.mat-branch-context {
+  margin: 6px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--green-line);
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.mat-branch-context .mat-branch-context-head {
+  font-weight: 650;
+  color: var(--green-deep);
+  margin: 0 0 4px;
+}
+.mat-branch-context .mat-branch-scope-line {
+  margin: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+.mat-branch-context .mat-branch-excerpt {
+  margin: 6px 0;
+  padding: 5px 8px;
+  border-left: 3px solid var(--green-line);
+  background: var(--surface-dim);
+  border-radius: 4px;
+  font-family: var(--font-read);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* 截断标记（24,000 单元上限命中——显式、不折叠成普通注记）。 */
+.mat-branch-context .mat-branch-truncated {
+  margin: 6px 0 2px;
+  padding: 5px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  background: var(--gold-wash);
+  color: var(--gold-deep);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+/* 组合文本全文核对（<details>；与模型输入逐字节相同）。 */
+.mat-branch-context .mat-branch-composed { margin: 6px 0 2px; }
+.mat-branch-context .mat-branch-composed summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.mat-branch-context .mat-branch-composed pre {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-dim);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* 主线材料 Return 来源卡（charter §3.3 规则七：材料标题/版本/块·页/摘录/
+   确认时间/采用记录 + 原文跳转；targetAnchor null 是诚实事实）。 */
+.turn.return .mat-return-source {
+  margin: 4px 0 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--gold-line);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  background: var(--gold-wash);
+}
+.turn.return .mat-return-source .mat-return-source-fields {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--gold-deep);
+  overflow-wrap: anywhere;
+}
+.turn.return .mat-return-source .mat-return-excerpt {
+  margin: 4px 0;
+  padding: 4px 8px;
+  border-left: 3px solid var(--gold-line);
+  background: var(--surface);
+  border-radius: 4px;
+  font-family: var(--font-read);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.turn.return .mat-return-source .mat-return-jump {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.turn.return .mat-return-source .mat-return-jump:hover { background: var(--gold-wash); border-color: var(--gold); }
+/* 分支 tab 的材料来源标记（D4-3：可辨认，与 session 徽标同区）。 */
+#branch-tabs .material-badge {
+  color: var(--green);
+  font-size: 11px;
+}
 
 /* 正文块容器：真实滚动容器（阅读位置记忆 / 懒加载触发 / 有界窗口裁剪
    都挂在它上面）。 */

@@ -33,8 +33,9 @@
      区间 [1015, 1036)）精确换算；重复词第 5 处（md-sel-19 的「递归」
      [116, 118)——不是第 1 处）；跨块选区如实「不可锚定」（不产生错误
      载荷、不悄悄截断）；字素安全（代理对中间/组合字符中间的边界向外
-     吸附到整簇——载荷绝不劈开一个簇）；捕获条如实展示 D4-3 未来锚点
-     载荷 + 复制摘录（clipboard 桩记录 canonicalText 切片）。
+     吸附到整簇——载荷绝不劈开一个簇）；捕获条如实展示载荷 + 复制摘录
+     （clipboard 桩记录 canonicalText 切片）+ D4-3 建枝入口（可点击——
+     完整流程归 ui-material-branching.test.ts）。
  *  5. 版本语义（charter §3.1）：所渲染版本可辨认（v2 current / v1 older
      标签）；显式非破坏切换（旧版本保持可读、注记声明绝不迁移锚点）；
      保存位置在旧版本 → 默认打开旧版本并恢复。
@@ -1635,10 +1636,11 @@ test("cross-line selection inside one block: the captured payload is the frozen 
   assert.equal(quote.textContent, excerpt, "the quote shows the exact original text (newline intact)");
   /* 冻结真值复核：excerpt === canonicalText.slice(start, end)（B1 真值）。 */
   assert.equal(MD01.canonicalText.slice(1015, 1036), excerpt);
-  /* 捕获条如实声明 D4-3（不伪装可建枝）。 */
+  /* 捕获条给出 D4-3 建枝入口（已落地——可点击，不再是「随 D4-3 落地」的
+     诚实占位；入口的完整流程由 ui-material-branching.test.ts 锁定）。 */
   const d43 = bar.querySelector(".mat-branch-d43")!;
-  assert.equal(d43.disabled, true, "the D4-3 branch entry is present but explicitly disabled");
-  assert.match(bar.querySelector(".mat-d43-note")!.textContent!, /D4-3/);
+  assert.equal(d43.disabled, false, "the D4-3 branch entry is offered (enabled) on the armed bar");
+  assert.match(d43.textContent!, /Branch from material/);
 });
 
 test("repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19)", async () => {
@@ -2067,7 +2069,7 @@ test("Esc closes the reader with focus returned to the material's list button; k
   const bar = selectionBar(world);
   assert.equal(bar.querySelector(".mat-copy")!.tagName, "BUTTON");
   assert.equal(bar.querySelector(".mat-branch-d43")!.tagName, "BUTTON");
-  assert.equal(bar.querySelector(".mat-branch-d43")!.disabled, true, "D4-3 stays explicitly disabled");
+  assert.equal(bar.querySelector(".mat-branch-d43")!.disabled, false, "the D4-3 branch entry stays offered (native button)");
 });
 
 /* ------------------------------------------------------------------ */

@@ -314,7 +314,11 @@ function assertBarPayload(bar, { materialId, versionId, expected, caseId, expect
     problems.push(`snap note ${expectSnap ? "expected (boundary inside a grapheme cluster should snap outward)" : "unexpected"}: ${JSON.stringify(bar.snapNote)}`);
   }
   if (bar.copyLabel === null) problems.push("copy-quote button not present on the armed bar");
-  if (bar.branchDisabled !== true) problems.push("branch-from-material button not disabled (D4-3 honesty surface)");
+  /* D4-3 落地（材料建枝前端，ui-material-branching.test.ts）：武装捕获条给出
+     可点击的建枝入口——D4-2 时代的「按钮禁用（诚实占位）」期望随之翻绿为
+     「在场且可用」。 */
+  if (bar.branchDisabled === null) problems.push("branch-from-material button missing from the armed bar (D4-3 entry)");
+  else if (bar.branchDisabled === true) problems.push("branch-from-material button disabled (D4-3 landed — the entry must be offered)");
   if (problems.length > 0) throw new Error(`${caseId}: capture bar mismatch — ${problems.join("; ")}`);
 }
 
