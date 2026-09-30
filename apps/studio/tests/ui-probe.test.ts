@@ -88,12 +88,19 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
 const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
+
+/** 服务端 hashSourceText 同口径（src/terminology.ts）——保存桩按锚点
+ *  turn 的当前文本即时计算 sourceHash（P0 联合校验下的真实桩）。 */
+function sha256Of(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
 
 /* ------------------------------ 测试数据模型（对齐 app.js 头部 JSDoc） ------------------------------ */
 
@@ -268,6 +275,15 @@ function makeTurn(id: string, branchId: string, role: Turn["role"], text: string
     targetAnchor: extra.targetAnchor ?? null,
     createdAt: ISO,
   };
+}
+
+/** 树状态内按 turn id 反查正文（保存桩计算锚点全文指纹用）。 */
+function findTurnText(state: TreeState, turnId: string): string {
+  for (const view of state.branches) {
+    const found = view.turns.find((t) => t.id === turnId);
+    if (found !== undefined) return found.text;
+  }
+  return "";
 }
 
 function makeBranchView(
@@ -1465,7 +1481,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         branchId: typeof record.branchId === "string" ? record.branchId : "trunk-1",
         anchorTurnId,
         selection: sel,
-        sourceHash: "f".repeat(64),
+        /* 服务端语义（src/terminology.ts saveAnnotation）：sourceHash 取
+           保存时刻锚点答案全文指纹。 */
+        sourceHash: sha256Of(findTurnText(backend.treeState, anchorTurnId)),
         term: sel.text,
         explanation: typeof record.explanation === "string" ? record.explanation : "",
         mode: typeof record.mode === "string" ? record.mode : "term",

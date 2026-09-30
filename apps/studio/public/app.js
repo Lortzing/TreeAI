@@ -38,6 +38,15 @@
  *  - 统一标注/来源区间：术语批注与来源揭示高亮共用同一覆盖机制（绝对
  *    UTF-16 偏移，W1 §1.1），覆盖只包裹不改写文本，重渲后按存储偏移重
  *    算复现；已保存批注在正文上呈常驻下划线（点击重开卡）；
+ *  - 批注锚定联合校验 + 异步写点竞态守卫（issue #7 增量验收 2026-09-30
+ *    P0/P1）：活覆盖渲染前联合校验界内区间 + 摘录切片 + 全文指纹
+ *    （sourceHash——内置与服务端 hashSourceText 同口径的无依赖 SHA-256），
+ *    任一失配绝不把批注挂到当前文本，降级为「保存快照 + source
+ *    changed/missing 说明」（W1 降级 Return 卡同款纪律；抽屉列表与解释卡
+ *    两处降级呈现）；术语读模型与状态类异步写入（保存/推广/偏好/journal/
+ *    SSE 终态刷新/开树）一律先验「请求树 + 世代号」再落 state——迟到的
+ *    响应（切树后到达 / 被更新请求取代）如实丢弃，绝不把 A 树的数据写进
+ *    B 树的共享界面状态；
  *  - 选择期间不重绘：武装选区（mouseup/双击/触屏 selectionchange）期间
  *    异步刷新不换走正文层；mousedown→mouseup 拖拽窗口内整树重渲延后，
  *    mouseup 后 0ms 冲刷（click 先于冲刷，按钮不被换走）；
@@ -193,7 +202,7 @@ const state = {
    *   cached: boolean,
    *   lateDiscard: boolean,
    *   saveOutcome: "created"|"duplicate"|null,
-   *   annotation: {id:string,term:string,explanation:string,promotedBranchId:string|null,selection:Object,mode:string,createdAt:string}|null,
+   *   annotation: {id:string,term:string,explanation:string,promotedBranchId:string|null,selection:Object,mode:string,createdAt:string,branchId:string,anchorTurnId:string,sourceHash:string}|null,
    *   promotionKey: string|null, promoting: boolean,
    *   promotionConflict: string|null,
    *   firstQuestion: string,
@@ -815,12 +824,178 @@ function findReusableTurnElement(container, turn) {
   return null;
 }
 
+/* -------- 批注锚定联合校验（issue #7 增量验收 2026-09-30 P0） -------- */
+
+/** SHA-256 轮常量（FIPS 180-4）。 */
+const SHA256_K = [
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+/** UTF-16 → UTF-8 字节序列（孤立代理按 U+FFFD 替换——与 TextEncoder /
+    Node utf8 同口径，保证与锚点 turn 原文（服务端以 utf8 摘要）可对齐）。 */
+function utf8BytesOf(text) {
+  const bytes = [];
+  for (let i = 0; i < text.length; i += 1) {
+    let code = text.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = i + 1 < text.length ? text.charCodeAt(i + 1) : 0;
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        code = 0x10000 + ((code - 0xd800) << 10) + (next - 0xdc00);
+        i += 1;
+      } else {
+        code = 0xfffd;
+      }
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      code = 0xfffd;
+    }
+    if (code < 0x80) {
+      bytes.push(code);
+    } else if (code < 0x800) {
+      bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+    } else if (code < 0x10000) {
+      bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+    } else {
+      bytes.push(
+        0xf0 | (code >> 18),
+        0x80 | ((code >> 12) & 0x3f),
+        0x80 | ((code >> 6) & 0x3f),
+        0x80 | (code & 0x3f),
+      );
+    }
+  }
+  return bytes;
+}
+
+function sha256Rotr(x, n) {
+  return ((x >>> n) | (x << (32 - n))) >>> 0;
+}
+
+/**
+ * SHA-256（十六进制摘要）——服务端 hashSourceText（src/terminology.ts）同
+ * 口径的无依赖 vanilla JS 实现，供批注锚定的全文指纹校验（P0「来源版本
+ * 与摘录切片联合校验」的版本半边）。带 text→摘要缓存（渲染路径反复校验
+ * 零重算；超限整体清空——重算廉价，绝不无界增长）。
+ */
+const sha256HexCache = new Map();
+function sha256Hex(text) {
+  const cached = sha256HexCache.get(text);
+  if (cached !== undefined) return cached;
+  const bytes = utf8BytesOf(text);
+  const bitLength = bytes.length * 8;
+  const paddedLength = ((bytes.length + 9 + 63) >> 6) << 6;
+  const data = new Uint8Array(paddedLength);
+  for (let i = 0; i < bytes.length; i += 1) data[i] = bytes[i];
+  data[bytes.length] = 0x80;
+  const hi = Math.floor(bitLength / 4294967296);
+  const lo = bitLength % 4294967296;
+  data[paddedLength - 8] = (hi >>> 24) & 0xff;
+  data[paddedLength - 7] = (hi >>> 16) & 0xff;
+  data[paddedLength - 6] = (hi >>> 8) & 0xff;
+  data[paddedLength - 5] = hi & 0xff;
+  data[paddedLength - 4] = (lo >>> 24) & 0xff;
+  data[paddedLength - 3] = (lo >>> 16) & 0xff;
+  data[paddedLength - 2] = (lo >>> 8) & 0xff;
+  data[paddedLength - 1] = lo & 0xff;
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+  const w = new Array(64);
+  for (let offset = 0; offset < paddedLength; offset += 64) {
+    for (let i = 0; i < 16; i += 1) {
+      const j = offset + i * 4;
+      w[i] = ((data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | data[j + 3]) >>> 0;
+    }
+    for (let i = 16; i < 64; i += 1) {
+      const s0 = sha256Rotr(w[i - 15], 7) ^ sha256Rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = sha256Rotr(w[i - 2], 17) ^ sha256Rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+    for (let i = 0; i < 64; i += 1) {
+      const S1 = sha256Rotr(e, 6) ^ sha256Rotr(e, 11) ^ sha256Rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + SHA256_K[i] + w[i]) >>> 0;
+      const S0 = sha256Rotr(a, 2) ^ sha256Rotr(a, 13) ^ sha256Rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) >>> 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + t1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (t1 + t2) >>> 0;
+    }
+    h0 = (h0 + a) >>> 0;
+    h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0;
+    h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0;
+    h5 = (h5 + f) >>> 0;
+    h6 = (h6 + g) >>> 0;
+    h7 = (h7 + h) >>> 0;
+  }
+  const hex = [h0, h1, h2, h3, h4, h5, h6, h7].map((x) => x.toString(16).padStart(8, "0")).join("");
+  if (sha256HexCache.size > 256) sha256HexCache.clear();
+  sha256HexCache.set(text, hex);
+  return hex;
+}
+
+/**
+ * 已保存批注对「当前渲染中的锚点 turn」的联合校验（P0）：界内区间、摘录
+ * 切片全等、全文指纹（sourceHash）三者同时成立才允许渲染活覆盖——只验
+ * 边界会把批注挂到漂移后的错误文本上（等长替换/同词移位/代理对错位在
+ * 边界判定下全部伪装成立）。sourceHash 是批注保存时刻锚点答案全文的
+ * SHA-256（服务端 hashSourceText）；当前文本指纹失配 = 原文在保存后发生
+ * 过变化（含被批注区间之外的编辑）——同样降级，绝不冒充仍锚定在原文上。
+ * 字段缺失按失配处理（fail-closed：数据残缺不放宽校验）。
+ */
+function annotationMatchesTurn(annotation, turn) {
+  const start = annotation.selection.start;
+  const end = annotation.selection.end;
+  if (!(start >= 0 && end > start && end <= turn.text.length)) return false;
+  if (turn.text.slice(start, end) !== annotation.selection.text) return false;
+  return sha256Hex(turn.text) === annotation.sourceHash;
+}
+
+/**
+ * 批注锚点三态（W1 降级 Return 卡 available/changed/missing 的锚定语义同
+ * 款词汇）：以当前树状态里的锚点 turn 为事实源反查——查不到 → missing
+ * （锚点答案已不在树中）；查到但联合校验失败 → changed（原文漂移）；全
+ * 部成立 → valid。降级路径只展示保存快照（批注自带的摘录与解释）+ 状态
+ * 说明（抽屉列表/解释卡），绝不渲染当前文本上的活覆盖。
+ */
+function terminologyAnchorStatus(annotation) {
+  const st = state.treeState;
+  if (st === null) return "missing";
+  for (const view of st.branches) {
+    const found = view.turns.find(
+      (t) => t.id === annotation.anchorTurnId && t.branchId === annotation.branchId,
+    );
+    if (found !== undefined) {
+      return annotationMatchesTurn(annotation, found) ? "valid" : "changed";
+    }
+  }
+  return "missing";
+}
+
 /**
  * 统一区间覆盖（issue #7 C ③）：术语批注与来源揭示高亮共用同一机制，一律
  * 由绝对 UTF-16 偏移（W1 §1.1——重复词/跨行禁用字符串搜索定位）计算。
  * 来源揭示带 M6 一次性脉冲标记；与批注区间重叠时来源优先（揭示是即时
  * 定位动作），批注区间不重叠地并存。读模型未载/拉取失败时如实无批注
  * 覆盖（不伪造）。
+ * 批注覆盖渲染前过 annotationMatchesTurn 联合校验（P0，issue #7 增量验收
+ * 2026-09-30）：界内区间只证明「区间存在」，不证明「批注还挂在原文上」
+ * ——等长替换/同词移位/半代理对在界内照样成立。任一失配不渲染活覆盖，
+ * 降级呈现见抽屉批注列表与解释卡的 source changed/missing 说明。
  */
 function turnOverlaysFor(branchId, turn) {
   const overlays = [];
@@ -843,9 +1018,9 @@ function turnOverlaysFor(branchId, turn) {
   if (terminology !== null && terminology.ok) {
     for (const annotation of terminology.annotations) {
       if (annotation.anchorTurnId !== turn.id || annotation.branchId !== branchId) continue;
+      if (!annotationMatchesTurn(annotation, turn)) continue;
       const start = annotation.selection.start;
       const end = annotation.selection.end;
-      if (!(start >= 0 && end > start && end <= turn.text.length)) continue;
       if (overlays.some((overlay) => start < overlay.end && overlay.start < end)) continue;
       overlays.push({ kind: "term", start, end, pulse: false, annotation });
     }
@@ -952,7 +1127,10 @@ function buildTurnActions(turn, branchId) {
   return wrap;
 }
 
-/** 工具条内按（分支, 锚点 turn, 精确区间）找已保存批注（读模型数据面）。 */
+/** 工具条内按（分支, 锚点 turn, 精确区间）找已保存批注（读模型数据面）。
+    P0 同源校验：批注摘录必须与当前选区文本全等——同偏移异文（原文漂移后
+    的陈旧批注）不是「这个选区的批注」，不给捷径（服务端解释仍会以同选区
+    去重如实返回该批注，卡面带 source changed 降级说明）。 */
 function findAnnotationForSelection(branchId, turnId, selection) {
   const terminology = state.terminology;
   if (terminology === null || !terminology.ok) return null;
@@ -962,7 +1140,8 @@ function findAnnotationForSelection(branchId, turnId, selection) {
         annotation.branchId === branchId &&
         annotation.anchorTurnId === turnId &&
         annotation.selection.start === selection.start &&
-        annotation.selection.end === selection.end,
+        annotation.selection.end === selection.end &&
+        annotation.selection.text === selection.text,
     ) ?? null
   );
 }
@@ -1843,10 +2022,15 @@ function connectEvents(treeId) {
     state.activeRunInfo = null;
     state.streaming = null;
     /* /state 是权威读模型：终态后整树刷新（prompt 响应也会刷新，幂等）。
-       接收新 turn 的视图贴底；另一视图恢复其阅读位置。 */
+       接收新 turn 的视图贴底；另一视图恢复其阅读位置。P1 同族规则（issue
+       #7 增量验收）：刷新期间切树 → 迟到的旧树 state 不写共享树态。 */
     void (async () => {
+      const treeId = state.currentTreeId;
+      if (treeId === null) return;
       try {
-        state.treeState = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/state`);
+        const treeState = await api(`/api/trees/${encodeURIComponent(treeId)}/state`);
+        if (state.currentTreeId !== treeId) return; /* 迟到丢弃 */
+        state.treeState = treeState;
         renderAll({ stick: terminalBranchId });
       } catch {
         /* 刷新失败不打断；sendPrompt 的收尾刷新会重试 */
@@ -2103,8 +2287,15 @@ function resetTransientView() {
   state.pendingRerender = false;
 }
 
+/** 开树世代号（P1 同族，issue #7 增量验收）：启动恢复 / 列表重试的
+    openTree 不经 busy 锁——与用户点击的开树并发时，迟到的旧树 state 绝不
+    覆盖更新的树切换（末次开树/建树胜出）。 */
+let treeOpenEpoch = 0;
+
 async function openTree(treeId) {
+  const epoch = ++treeOpenEpoch;
   const treeState = await api(`/api/trees/${encodeURIComponent(treeId)}/state`);
+  if (epoch !== treeOpenEpoch) return; /* 已被更新的开树/建树取代：迟到丢弃 */
   state.currentTreeId = treeId;
   state.treeState = treeState;
   /* 树切换：面板/抽屉收起、草稿回到会话外（持久草稿仍在 localStorage，
@@ -2129,6 +2320,7 @@ async function openTree(treeId) {
 }
 
 async function createTree() {
+  treeOpenEpoch += 1; /* 建树即新的当前树：作废在途的旧 openTree（P1 同族） */
   const payload = await api("/api/trees", "POST", {});
   state.currentTreeId = payload.tree.id;
   state.treeState = payload.state;
@@ -2686,12 +2878,17 @@ async function openDrawer(opts = {}) {
  */
 async function loadJournal() {
   if (state.currentTreeId === null) return;
+  const treeId = state.currentTreeId;
   state.journalEvents = null;
   renderDrawer();
   try {
-    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/journal?limit=20`);
+    const payload = await api(`/api/trees/${encodeURIComponent(treeId)}/journal?limit=20`);
+    /* P1 同族规则（issue #7 增量验收）：迟到的 journal 响应（切树后到达）
+       不写入当前树的共享状态（三态属于当前打开的树）。 */
+    if (state.currentTreeId !== treeId) return;
     state.journalEvents = { ok: true, events: payload.events };
   } catch {
+    if (state.currentTreeId !== treeId) return;
     state.journalEvents = { ok: false };
   }
   renderDrawer();
@@ -2859,9 +3056,19 @@ function renderDrawer() {
           annotation.promotedBranchId === null
             ? "not promoted"
             : `promoted to ${branchLabel(annotation.promotedBranchId)}`;
+        /* P0 降级显示（W1 降级 Return 卡同款纪律）：锚定失效（原文漂移/锚
+           点缺失）的批注——保存快照（摘录/术语/解释）照常在列表可读，但明
+           确标注来源状态，绝不冒充仍可在正文上定位（活覆盖不渲染）。 */
+        const anchorStatus = terminologyAnchorStatus(annotation);
+        const anchorNote =
+          anchorStatus === "valid"
+            ? ""
+            : anchorStatus === "changed"
+              ? " · source changed — the answer text drifted since saving (snapshot only, no live underline)"
+              : " · source missing — the anchored answer is not in this tree (snapshot only)";
         li.textContent =
           `“${annotation.term}” (${annotation.mode}) from ${branchLabel(annotation.branchId)} · ` +
-          `anchored on “${annotation.selection.text}” · ${promotedNote}`;
+          `anchored on “${annotation.selection.text}” · ${promotedNote}${anchorNote}`;
         list.append(li);
       }
       drawer.append(list);
@@ -3002,20 +3209,34 @@ function mutedLine(text) {
 
 /* ------------------------------ 术语三部分（issue #7 C ③ 完整前端） ------------------------------ */
 
+/** 术语读模型世代号（P1，issue #7 增量验收 2026-09-30）：写 state.terminology
+    前双验证之一——同一树上被更新请求取代、或切树后迟到到达的响应按世代
+    作废（末次请求胜出）。 */
+let terminologyEpoch = 0;
+
 /** 术语读模型拉取（解释卡保存/推广后、抽屉打开时与开树时刷新；失败不伪
     装空态——三态：null = 未载 / {ok:true,…} = 已载 / {ok:false} = 拉取
-    失败。批注区间覆盖（turnOverlaysFor）只在已载时渲染）。 */
+    失败。批注区间覆盖（turnOverlaysFor）只在已载时渲染）。
+    P1 竞态整改：写 state 前先验「请求树 + 世代号」——A 树的响应在切到
+    B 树后迟到到达时整包丢弃（成功与失败两路同守卫；原先 then 里的树守卫
+    只拦渲染、不拦写入，探针实测 A 的批注会写进 B 的读模型）；守卫在写
+    点，开树/保存/推广/抽屉/重试等全部调用方自动继承同一规则。 */
 async function refreshTerminology() {
   if (state.currentTreeId === null) return;
+  const treeId = state.currentTreeId;
+  const epoch = ++terminologyEpoch;
   try {
-    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology`);
+    const payload = await api(`/api/trees/${encodeURIComponent(treeId)}/terminology`);
+    if (epoch !== terminologyEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
     state.terminology = { ok: true, ...payload };
   } catch {
+    if (epoch !== terminologyEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
     state.terminology = { ok: false };
   }
 }
 
-/** 开树时拉取术语读模型（批注区间覆盖的数据面）；迟到响应按树守卫丢弃。 */
+/** 开树时拉取术语读模型（批注区间覆盖的数据面）；迟到响应在
+    refreshTerminology 的写点丢弃，此处只守卫重渲（树已切换不重渲）。 */
 function refreshTerminologyForTree(treeId) {
   void refreshTerminology().then(() => {
     if (state.currentTreeId === treeId) renderAll();
@@ -3117,10 +3338,14 @@ async function explainSelection(branchId, turn, selection) {
 /**
  * 显式保存批注（产品事实；同选区幂等——服务端返回既有批注，created:false
  * 时卡面如实呈现「已存在，显示既有批注」，不伪装成新建）。
+ * P1 同族规则（issue #7 增量验收）：请求期间卡被关闭/替换（token 失配）→
+ * 卡面状态如实丢弃（批注已保存为产品事实，随读模型刷新自然可见），绝不
+ * 复活已关的卡。
  */
 async function saveTermAnnotation() {
   const card = state.termExplain;
   if (card === null || card.explanation === null) return;
+  const token = card.token;
   const payload = await api(
     `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/annotations`,
     "POST",
@@ -3133,12 +3358,15 @@ async function saveTermAnnotation() {
       explanation: card.explanation,
     },
   );
-  state.termExplain = {
-    ...card,
-    state: "saved",
-    annotation: payload.annotation,
-    saveOutcome: payload.created === true ? "created" : "duplicate",
-  };
+  const current = state.termExplain;
+  if (current !== null && current.token === token) {
+    state.termExplain = {
+      ...current,
+      state: "saved",
+      annotation: payload.annotation,
+      saveOutcome: payload.created === true ? "created" : "duplicate",
+    };
+  }
   await refreshTerminology();
   renderAll();
 }
@@ -3170,7 +3398,9 @@ async function promoteTermAnnotation() {
     );
     state.treeState = payload.state;
     await refreshTerminology();
-    state.termExplain = null;
+    if (state.termExplain !== null && state.termExplain.token === card.token) {
+      state.termExplain = null; /* P1 同族：请求期间卡已被替换时不误关新卡 */
+    }
     renderAll();
     await openBranchPanel(payload.branch.id, {
       alignCursor: false,
@@ -3256,18 +3486,23 @@ function closeTermExplain() {
 /**
  * 抽屉内的缓存偏好切换（③：执行器偏好面）：PUT preferences；在途禁用
     明示，失败如实呈现 + 重试（不伪装成功），成功后读模型与抽屉同步。
+    P1 同族规则（issue #7 增量验收）：偏好响应只写「请求树」的读模型
+    （切树后迟到到达即丢弃）；本写入即读模型新一代——并发在途的旧读模型
+    响应（其快照早于本次偏好变化）一并作废，防止把偏好改回旧值。
  */
 async function setTerminologyCachePreference(enabled) {
+  const treeId = state.currentTreeId;
   termPrefsPending = true;
   termPrefsError = null;
   renderDrawer();
   try {
     const payload = await api(
-      `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/preferences`,
+      `/api/trees/${encodeURIComponent(treeId)}/terminology/preferences`,
       "PUT",
       { cacheEnabled: enabled },
     );
-    if (state.terminology !== null && state.terminology.ok) {
+    terminologyEpoch += 1;
+    if (state.currentTreeId === treeId && state.terminology !== null && state.terminology.ok) {
       state.terminology = { ...state.terminology, cacheEnabled: payload.cacheEnabled === true };
     }
   } catch (err) {
@@ -3371,6 +3606,21 @@ function termExplainCard() {
   div.append(body);
   if (card.state === "explained" && card.cached) {
     div.append(mutedLine("(served from the executor cache — no new request)"));
+  }
+  /* P0 降级显示（issue #7 增量验收）：已保存批注的卡在锚定失效时明确标注
+     来源状态——卡面展示的是保存快照（批注自带的摘录/解释），活覆盖不在
+     当前文本上，绝不冒充仍锚定在原文上。 */
+  if (card.state === "saved" && card.annotation !== null) {
+    const anchorStatus = terminologyAnchorStatus(card.annotation);
+    if (anchorStatus === "changed") {
+      div.append(
+        mutedLine(
+          "the anchored answer text has changed since this annotation was saved — this card shows the saved snapshot; no live underline is drawn on the current text",
+        ),
+      );
+    } else if (anchorStatus === "missing") {
+      div.append(mutedLine("the anchored answer is no longer in this tree — this card shows the saved snapshot"));
+    }
   }
   const actions = document.createElement("div");
   actions.className = "term-explain-actions";

@@ -44,6 +44,14 @@
  *  9. 抽屉执行器面：近期任务（三模式任务态如实）、用量（chars/4 诚实估
      算 + 服务端/客户端迟到丢弃分开计数）、缓存偏好切换（成功/在途/失败
      + 重试）、读模型失败态 + 重试。
+ * 10. P0/P1 整改回归（issue #7 增量验收 2026-09-30「H前端函数探针」）：
+     批注活覆盖的联合校验（界内区间 + 摘录切片 + 全文指纹 sourceHash 任
+     一失配不渲染——等长替换/同词移位/删除越界/代理对错位/区间外漂移五
+     类漂移；失效降级为抽屉快照 + source changed/missing 说明，完好批注
+     照常渲染）；A 树读模型响应在切到 B 树后迟到到达绝不写入共享状态
+     （探针复现口径：currentTreeId=B、annotations=[A]——多树桩 + 请求闸
+     门的确定性编排）；解释卡保存期间被关闭 → 迟到响应不复活卡、批注照
+     常落读模型。
  *
  * 边界（如实声明）：同 ui-probe——不是真实浏览器 E2E；CSS 不执行，媒体
  * 查询按词法锁定规则存在与形状；桩 Range 只支持单文本节点语义（覆盖在场
@@ -56,12 +64,20 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
 const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
+
+/** 服务端 hashSourceText 同口径（src/terminology.ts）：锚点答案全文的
+ *  SHA-256（hex）。P0 联合校验后，批注桩必须携带真实指纹——保存路径的
+ *  桩按锚点 turn 的当前文本即时计算（与服务端行为一致）。 */
+function sha256Of(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
 
 /* ------------------------------ 测试数据模型（对齐 app.js 头部 JSDoc） ------------------------------ */
 
@@ -271,7 +287,8 @@ function termAnnotation(overrides: Partial<StubTermAnnotation> = {}): StubTermAn
     branchId: "trunk-1",
     anchorTurnId: "a2",
     selection: { start: 0, end: A2_TERM.length, text: A2_TERM },
-    sourceHash: "f".repeat(64),
+    /* 默认锚点是 a2（A2_TEXT 全文指纹——P0 联合校验下的真实桩）。 */
+    sourceHash: sha256Of(A2_TEXT),
     term: A2_TERM,
     explanation: "Seeded explanation of the seeded term.",
     mode: "term",
@@ -280,6 +297,15 @@ function termAnnotation(overrides: Partial<StubTermAnnotation> = {}): StubTermAn
     createdAt: ISO,
     ...overrides,
   };
+}
+
+/** 树状态内按 turn id 反查（保存桩计算锚点全文指纹用）。 */
+function findTurnInState(state: TreeState, turnId: string): Turn | null {
+  for (const view of state.branches) {
+    const found = view.turns.find((t) => t.id === turnId);
+    if (found !== undefined) return found;
+  }
+  return null;
 }
 
 /* ------------------------------ 桩事件 / fetch 形状 ------------------------------ */
@@ -325,9 +351,21 @@ interface RecordedRequest {
 type ExplainScript = "ok" | "cached" | "fail" | "cancelled" | "cancelled-late" | "error";
 type PromoteScript = "ok" | "lose-response" | "replay" | "conflict" | "fail";
 
+/** 多树场景束（P1 竞态回归）：/api/trees 列表与 /state、GET /terminology
+ *  按 treeId 分派到各束（读模型与批注按树隔离——服务端语义）。 */
+interface TreeBundle {
+  tree: Tree;
+  state: TreeState;
+  annotations?: StubTermAnnotation[];
+}
+
 interface Backend {
   trees: Tree[];
   treeState: TreeState;
+  /** 多树分派束（空 = 单树缺省路径，树状态/批注不按 URL 区分）。 */
+  treeBundles: TreeBundle[];
+  /** 请求闸门（P1 迟到响应编排）：路径后缀命中的请求挂起至 releaseHold。 */
+  holdSuffix: string | null;
   diagnostics: TreeDiagnostics;
   requests: RecordedRequest[];
   switchCount: number;
@@ -910,6 +948,8 @@ interface World {
   liveSse(): StubEventSource;
   setSelection(range: StubTextRange | null): void;
   turnElement(containerId: string, turnId: string): StubElement;
+  /** 放行被 holdSuffix 挂起的请求（一次性闸门：此后同后缀请求直通）。 */
+  releaseHold(): void;
 }
 
 interface WorldOptions {
@@ -926,6 +966,13 @@ interface WorldOptions {
   terminologyGetFail?: boolean;
   /** 预置已推广批注的支线分支视图（resume-or-create 场景）。 */
   promotedBranchView?: Branch;
+  /** 覆写 a2 的正文（emoji/增补平面 astral 码位等锚定场景——turn id 与结构不变）。 */
+  a2Text?: string;
+  /** 多树场景束（P1 竞态回归；空 = 缺省单树）。 */
+  treeBundles?: TreeBundle[];
+  /** 命中即挂起的请求路径后缀（一次性闸门，releaseHold 放行）——迟到
+   *  响应竞态的确定性编排。 */
+  holdSuffix?: string;
 }
 
 let appLoadCounter = 0;
@@ -976,6 +1023,8 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   const backend: Backend = {
     trees: [{ id: TREE, createdAt: ISO, forestId: "forest-1" }],
     treeState: freshBackendState(),
+    treeBundles: options.treeBundles === undefined ? [] : [...options.treeBundles],
+    holdSuffix: options.holdSuffix ?? null,
     diagnostics: {
       treeId: TREE,
       runtimeState: "idle",
@@ -1000,6 +1049,21 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   if (options.promotedBranchView !== undefined) {
     backend.treeState.branches.push(makeBranchView(options.promotedBranchView, null, "available", []));
   }
+  if (options.a2Text !== undefined) {
+    const trunkView = backend.treeState.branches.find((view) => view.branch.id === "trunk-1");
+    const a2 = trunkView?.turns.find((t) => t.id === "a2");
+    assert.ok(a2 !== undefined, "a2Text override requires the default a2 turn");
+    a2.text = options.a2Text;
+  }
+
+  /* 一次性请求闸门（holdSuffix 命中 → 挂起至 releaseHold；此后直通）。 */
+  let releaseHoldFn: (() => void) | null = null;
+  const holdGate =
+    options.holdSuffix === undefined ? null : new Promise<void>((resolve) => { releaseHoldFn = resolve; });
+
+  /** 多树分派：URL treeId 命中的束（null = 无束，走单树缺省）。 */
+  const bundleFor = (treeId: string): TreeBundle | null =>
+    backend.treeBundles.find((b) => b.tree.id === treeId) ?? null;
 
   const viewByBranch = (branchId: string): BranchView | undefined =>
     backend.treeState.branches.find((view) => view.branch.id === branchId);
@@ -1010,6 +1074,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     backend.requests.push({ method, path: String(input), body });
     const url = new URL(String(input), "http://studio.local");
     const p = url.pathname;
+    if (holdGate !== null && backend.holdSuffix !== null && p.endsWith(backend.holdSuffix)) {
+      await holdGate;
+    }
     const respond = (status: number, payload: unknown): StubResponse => ({
       ok: status < 400,
       status,
@@ -1017,7 +1084,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     });
 
     if (p === "/api/trees" && method === "GET") {
-      return respond(200, { trees: backend.trees });
+      return respond(200, { trees: backend.treeBundles.length > 0 ? backend.treeBundles.map((b) => b.tree) : backend.trees });
     }
     if (p === "/api/trees" && method === "POST") {
       if (!backend.trees.some((t) => t.id === backend.treeState.tree.id)) {
@@ -1026,9 +1093,14 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       return respond(201, { tree: backend.treeState.tree, trunkBranchId: "trunk-1", state: backend.treeState });
     }
     let m = /^\/api\/trees\/([^/]+)\/state$/.exec(p);
-    if (m !== null && method === "GET") return respond(200, backend.treeState);
+    if (m !== null && method === "GET") {
+      const bundle = bundleFor(decodeURIComponent(m[1]!));
+      return respond(200, bundle === null ? backend.treeState : bundle.state);
+    }
     m = /^\/api\/trees\/([^/]+)\/diagnostics$/.exec(p);
-    if (m !== null && method === "GET") return respond(200, backend.diagnostics);
+    if (m !== null && method === "GET") {
+      return respond(200, { ...backend.diagnostics, treeId: decodeURIComponent(m[1]!) });
+    }
     m = /^\/api\/trees\/([^/]+)\/journal$/.exec(p);
     if (m !== null && method === "GET") return respond(200, { events: [] });
     m = /^\/api\/trees\/([^/]+)\/switch$/.exec(p);
@@ -1122,8 +1194,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       if (backend.terminologyGetFail) {
         return respond(500, { error: { code: "internal", message: "terminology read model boom" } });
       }
+      /* 多树分派（服务端语义：读模型按 treeId 隔离）；单树缺省不分派。 */
+      const bundle = bundleFor(decodeURIComponent(m[1]!));
       return respond(200, {
-        annotations: backend.termAnnotations,
+        annotations: bundle === null ? backend.termAnnotations : (bundle.annotations ?? []),
         tasks: backend.termTasks,
         usage: {
           total: { requests: 3, promptChars: 120, completionChars: 80 },
@@ -1220,6 +1294,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         branchId: typeof record.branchId === "string" ? record.branchId : "trunk-1",
         anchorTurnId,
         selection: sel,
+        /* 服务端语义（src/terminology.ts saveAnnotation）：sourceHash 取
+           保存时刻锚点答案全文指纹。 */
+        sourceHash: sha256Of(findTurnInState(backend.treeState, anchorTurnId)?.text ?? ""),
         term: sel.text,
         explanation: typeof record.explanation === "string" ? record.explanation : "",
         mode: typeof record.mode === "string" ? record.mode : "term",
@@ -1383,6 +1460,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       const found = container.querySelectorAll(".turn").find((t) => t.dataset.turnId === turnId);
       assert.ok(found !== undefined, `missing .turn[data-turn-id=${turnId}] in #${containerId}`);
       return found;
+    },
+    releaseHold: () => {
+      assert.ok(releaseHoldFn !== null, "releaseHold requires a holdSuffix world");
+      releaseHoldFn();
     },
   };
 }
@@ -2187,4 +2268,337 @@ test("drawer terminology surface: tasks with modes, honest usage counts, cache p
       "the retry's renderAll applies the annotation overlay from the recovered read model",
     );
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* 11. P0/P1 整改回归（issue #7 增量验收 2026-09-30「H前端函数探针」）     */
+/* ------------------------------------------------------------------ */
+
+/** 抽屉批注条目按术语定位（P0 降级说明的逐条断言用）。 */
+function drawerAnnotationLi(drawer: StubElement, term: string): StubElement {
+  const li = drawer.querySelectorAll("li").find((el) => el.textContent.includes(`“${term}”`));
+  assert.ok(li !== undefined, `the drawer lists the annotation “${term}”`);
+  return li;
+}
+
+test("P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders", async () => {
+  /* 五类漂移 + 一个完好对照（同一答案 a2 上并存的种子批注）：
+   *  - 等长替换（验收探针的原样场景）：旧文 "old…" 与现文 "Las…" 等长，存
+   *    储区间 [0,3) 界内成立、内容已换；
+   *  - 同词移位：旧文 [8,13) 是 "lasso"，现文该处是 "gular"（lasso 在现文
+   *    的另一处存在——绝不字符串搜索顶替）；
+   *  - 删除越界：现文变短，存储区间末端越出界；
+   *  - 区间外漂移（摘录完好、全文指纹失配）：sourceHash 半边的独立证明；
+   *  - 锚点缺失：锚点 turn 不在树中（source missing）；
+   *  - 完好对照：三重校验全过，活覆盖照常渲染。 */
+  const equalLengthOldText = `old${A2_TEXT.slice(3)}`;
+  const movedOldText = `${A2_TEXT.slice(0, 8)}lasso${A2_TEXT.slice(13)}`;
+  const offRangeOldText = `${A2_TEXT} Amended tail.`;
+  const deletedOldText = `${A2_TEXT} tail.`;
+  const world = await createWorld({
+    termAnnotations: [
+      termAnnotation({
+        id: "term-ann-valid",
+        selection: { start: 0, end: A2_TERM.length, text: A2_TERM },
+        term: "Lasso",
+        explanation: "Intact seeded annotation.",
+      }),
+      termAnnotation({
+        id: "term-ann-equal-length",
+        selection: { start: 0, end: 3, text: "old" },
+        sourceHash: sha256Of(equalLengthOldText),
+        term: "oldish",
+        explanation: "Saved against the pre-edit text.",
+      }),
+      termAnnotation({
+        id: "term-ann-moved",
+        selection: { start: 8, end: 13, text: "lasso" },
+        sourceHash: sha256Of(movedOldText),
+        term: "moved-lasso",
+        explanation: "Saved where the word used to sit.",
+      }),
+      termAnnotation({
+        id: "term-ann-off-range",
+        selection: { start: A2_SECOND_TERM_START, end: A2_SECOND_TERM_START + 5, text: "lasso" },
+        sourceHash: sha256Of(offRangeOldText),
+        term: "hash-stale-lasso",
+        mode: "range",
+        explanation: "The excerpt is intact but the answer was edited elsewhere.",
+      }),
+      termAnnotation({
+        id: "term-ann-deleted",
+        selection: {
+          start: A2_TEXT.length - 3,
+          end: A2_TEXT.length + 6,
+          text: `${A2_TEXT.slice(A2_TEXT.length - 3)} tail.`,
+        },
+        sourceHash: sha256Of(deletedOldText),
+        term: "deleted-tail",
+        explanation: "Saved against a longer text; the range is now out of bounds.",
+      }),
+      termAnnotation({
+        id: "term-ann-missing",
+        anchorTurnId: "no-such-turn",
+        term: "ghost-anchor",
+        explanation: "The anchored answer is gone.",
+      }),
+    ],
+  });
+
+  /* 活覆盖：只有三重校验全过的对照批注渲染（等长替换/移位/越界/指纹失配
+     全部拦截——移位词也绝不顶替到现文的另一处）。 */
+  const a2 = world.turnElement("conversation", "a2");
+  const marks = a2.querySelectorAll(".term-annotation-mark");
+  assert.equal(marks.length, 1, "only the intact annotation renders a live overlay");
+  assert.equal(marks[0]!.textContent, A2_TERM, "the intact annotation underlines exactly its own slice");
+  assert.equal(contentRegionText(a2), A2_TEXT, "the answer text stays byte-identical (no fabrication)");
+
+  /* 降级呈现（W1 降级 Return 卡同款纪律）：保存快照照常可读 + 状态说明。 */
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const drawer = world.el("source-drawer");
+  for (const term of ["oldish", "moved-lasso", "hash-stale-lasso", "deleted-tail"]) {
+    const li = drawerAnnotationLi(drawer, term);
+    assert.ok(
+      li.textContent.includes("source changed — the answer text drifted since saving (snapshot only, no live underline)"),
+      `“${term}” is degraded with the explicit source-changed note`,
+    );
+  }
+  const ghost = drawerAnnotationLi(drawer, "ghost-anchor");
+  assert.ok(
+    ghost.textContent.includes("source missing — the anchored answer is not in this tree (snapshot only)"),
+    "the missing anchor is named explicitly",
+  );
+  const valid = drawerAnnotationLi(drawer, "Lasso");
+  assert.ok(!valid.textContent.includes("source changed"), "the intact annotation carries no drift note");
+  assert.ok(!valid.textContent.includes("source missing"), "the intact annotation carries no missing note");
+  /* 快照可读性：失效批注的落库摘录仍在列表可读（不是隐藏或伪造）。 */
+  assert.ok(drawerAnnotationLi(drawer, "oldish").textContent.includes("“old”"), "the saved excerpt stays readable");
+});
+
+test("P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths)", async () => {
+  const world = await createWorld({
+    termAnnotations: [
+      termAnnotation({
+        id: "term-ann-hash-stale",
+        selection: { start: A2_SECOND_TERM_START, end: A2_SECOND_TERM_START + 5, text: "lasso" },
+        sourceHash: sha256Of(`${A2_TEXT} Amended tail.`),
+        term: "lasso",
+        mode: "range",
+        explanation: "Stale-hash snapshot explanation.",
+      }),
+    ],
+  });
+  const a2 = world.turnElement("conversation", "a2");
+  assert.equal(a2.querySelectorAll(".term-annotation-mark").length, 0,
+    "no live overlay: the full-text fingerprint no longer matches the answer (drift outside the excerpt is still drift)");
+  assert.equal(contentRegionText(a2), A2_TEXT, "the answer text stays untouched");
+
+  /* 判定在渲染路径上：重渲（SSE 终态）后同样不渲染。 */
+  world.liveSse().emit("run-terminal", { runId: "run-x" });
+  await settle();
+  assert.equal(
+    world.turnElement("conversation", "a2").querySelectorAll(".term-annotation-mark").length,
+    0,
+    "the drift gate holds across re-renders",
+  );
+
+  /* 摘录完好的陈旧批注：武装同一选区（选区文本与摘录全等）→ 工具条捷径
+     打开保存快照卡（零请求），卡面带 source changed 降级说明。 */
+  const a2Again = world.turnElement("conversation", "a2");
+  const textNode = firstContentTextNode(a2Again);
+  world.setSelection(new StubTextRange(textNode, A2_SECOND_TERM_START, A2_SECOND_TERM_START + 5));
+  a2Again.dispatchEvent("mouseup", {});
+  const toolbar = a2Again.querySelector(".selection-toolbar");
+  assert.ok(toolbar !== null, "arming the exact stored range still works");
+  assert.equal(
+    toolbar.querySelector(".toolbar-annotation")!.textContent,
+    "✓ Saved annotation",
+    "the toolbar offers the shortcut for the identical selection text (the excerpt itself is intact)",
+  );
+  toolbar.querySelector(".toolbar-annotation")!.click();
+  await settle();
+  const card = world.byId("term-explain-card");
+  assert.ok(card !== null, "the saved-annotation card opens without a new request");
+  assert.ok(card.textContent.includes("Stale-hash snapshot explanation."),
+    "the card shows the saved snapshot explanation");
+  assert.ok(
+    card.textContent.includes("the anchored answer text has changed since this annotation was saved"),
+    "the card names the drift explicitly (snapshot only, no live underline)",
+  );
+
+  /* 服务端同选区去重路径（按区间命中返回既有批注）同样落到降级卡面。 */
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  await settle();
+  const a2Third = world.turnElement("conversation", "a2");
+  world.setSelection(new StubTextRange(textNode, A2_SECOND_TERM_START, A2_SECOND_TERM_START + 5));
+  a2Third.dispatchEvent("mouseup", {});
+  a2Third.querySelector(".selection-toolbar")!.querySelector(".toolbar-explain")!.click();
+  await settle();
+  const dedupCard = world.byId("term-explain-card");
+  assert.ok(dedupCard !== null, "the explain request lands (the server dedups to the existing annotation by range)");
+  assert.ok(
+    dedupCard.textContent.includes("already saved — showing the existing annotation for this exact selection"),
+    "the dedup hit shows the existing annotation",
+  );
+  assert.ok(
+    dedupCard.textContent.includes("the anchored answer text has changed since this annotation was saved"),
+    "the dedup card carries the same explicit drift note",
+  );
+});
+
+test("P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches", async () => {
+  const emojiText = "Gravity \u{1F600} waves bend spacetime; a second \u{1F600} marks the curvature.";
+  const firstEmoji = emojiText.indexOf("\u{1F600}");
+  const secondEmoji = emojiText.indexOf("\u{1F600}", firstEmoji + 2);
+  /* 旧文在首 emoji 前多一个字符（保存时 emoji 位于 [firstEmoji+1, firstEmoji+3)）；
+     现文删去该字符后，该存储区间横跨低代理 + 后续空格——切片必不相等。 */
+  const shiftedOldText = `${emojiText.slice(0, firstEmoji)}X${emojiText.slice(firstEmoji)}`;
+  const world = await createWorld({
+    a2Text: emojiText,
+    termAnnotations: [
+      termAnnotation({
+        id: "term-ann-astral-valid",
+        selection: { start: secondEmoji, end: secondEmoji + 2, text: "\u{1F600}" },
+        sourceHash: sha256Of(emojiText),
+        term: "second-emoji",
+        explanation: "Astral slice intact.",
+      }),
+      termAnnotation({
+        id: "term-ann-astral-shifted",
+        selection: { start: firstEmoji + 1, end: firstEmoji + 3, text: "\u{1F600}" },
+        sourceHash: sha256Of(shiftedOldText),
+        term: "shifted-emoji",
+        explanation: "Saved before a one-char edit shifted the surrogate pair.",
+      }),
+    ],
+  });
+  const a2 = world.turnElement("conversation", "a2");
+  const marks = a2.querySelectorAll(".term-annotation-mark");
+  assert.equal(marks.length, 1, "only the intact astral annotation renders");
+  assert.equal(marks[0]!.textContent, "\u{1F600}", "the overlay is exactly the astral slice");
+  assert.equal(marks[0]!.textContent.length, 2, "the astral slice is two UTF-16 code units (no surrogate splitting)");
+  assert.equal(contentRegionText(a2), emojiText, "textContent stays byte-identical with an astral overlay applied");
+});
+
+test("P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations", async () => {
+  const TREE_A = "tree-a";
+  const TREE_B = "tree-b";
+  /* 两树共享 branch/turn id 与正文（使污染在 DOM 上可观测：A 的批注若写入
+   * 共享读模型，会在 B 的同 id turn 上通过全部校验并渲染出来）。 */
+  const sharedText = "Shared prose keeps a marked term inside.";
+  const sharedState = (treeId: string): TreeState => {
+    const trunk: Branch = { id: "trunk-1", treeId, parentBranchId: null, createdAt: ISO };
+    return {
+      tree: { id: treeId, createdAt: ISO, forestId: "forest-1" },
+      trunkBranchId: "trunk-1",
+      branches: [
+        makeBranchView(trunk, null, "available", [
+          makeTurn("u1", "trunk-1", "user", "Question."),
+          makeTurn("a1", "trunk-1", "assistant", sharedText),
+        ]),
+      ],
+      cursor: { treeId, branchId: "trunk-1", entryId: "pi-a1" },
+    };
+  };
+  const annotationA = termAnnotation({
+    id: "term-ann-tree-a",
+    treeId: TREE_A,
+    anchorTurnId: "a1",
+    selection: { start: 0, end: 6, text: "Shared" },
+    sourceHash: sha256Of(sharedText),
+    term: "Shared",
+    explanation: "Annotation saved on tree A.",
+  });
+  const world = await createWorld({
+    treeBundles: [
+      { tree: { id: TREE_A, createdAt: ISO, forestId: "forest-1" }, state: sharedState(TREE_A), annotations: [annotationA] },
+      { tree: { id: TREE_B, createdAt: ISO, forestId: "forest-1" }, state: sharedState(TREE_B), annotations: [] },
+    ],
+    /* A 的读模型 GET 挂起（A 请求在途的确定性编排）。 */
+    holdSuffix: `/api/trees/${TREE_A}/terminology`,
+  });
+
+  /* 开树 A 完成，但其读模型响应在途（诚实无覆盖，不伪造）。 */
+  assert.equal(
+    world.turnElement("conversation", "a1").querySelectorAll(".term-annotation-mark").length,
+    0,
+    "while tree A's read model is in flight, no overlay renders yet",
+  );
+
+  /* A 的读模型在途时切到树 B（B 自身读模型为空）。 */
+  const treeButton = (treeId: string): StubElement => {
+    const found = world.el("tree-list").querySelectorAll("button").find((b) => b.textContent.startsWith(treeId));
+    assert.ok(found !== undefined, `the sidebar lists ${treeId}`);
+    return found;
+  };
+  treeButton(TREE_B).click();
+  await settle();
+  assert.equal(
+    world.turnElement("conversation", "a1").querySelectorAll(".term-annotation-mark").length,
+    0,
+    "tree B opens with its own empty read model (no annotations)",
+  );
+
+  /* A 的迟到响应到达（currentTreeId=B）：写点守卫丢弃——共享读模型从未
+     持有 A 的批注（探针口径：currentTreeId=B、annotations=[A] 绝不出现）。
+     观测面：迟到写入后的下一次重渲（B 的 SSE 终态刷新）绝不把 A 的批注画
+     到 B 的同 id turn 上（若写入发生，此刻就会浮现）。 */
+  world.releaseHold();
+  await settle();
+  world.liveSse().emit("run-terminal", { runId: "run-b" });
+  await settle();
+  assert.equal(
+    world.turnElement("conversation", "a1").querySelectorAll(".term-annotation-mark").length,
+    0,
+    "tree A's late response is discarded before the state write — no cross-tree overlay on tree B, even after a fresh re-render",
+  );
+
+  /* 抽屉（B 打开时）如实为空。 */
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const drawer = world.el("source-drawer");
+  assert.ok(
+    drawer.textContent.includes("no saved term annotations yet"),
+    "the drawer on tree B never lists tree A's annotation",
+  );
+  assert.ok(
+    !drawer.textContent.includes("Annotation saved on tree A."),
+    "tree A's explanation never reaches tree B's terminology surface",
+  );
+  world.el("drawer-close").click();
+  await settle();
+
+  /* 切回 A：重新拉取（闸门已开）后批注覆盖正常落位——对照证明拦截不是
+     桩数据损坏。 */
+  treeButton(TREE_A).click();
+  await settle();
+  const marksOnA = world.turnElement("conversation", "a1").querySelectorAll(".term-annotation-mark");
+  assert.equal(marksOnA.length, 1, "switching back to tree A renders its own annotation (positive control)");
+  assert.equal(marksOnA[0]!.textContent, "Shared", "the overlay is tree A's excerpt");
+});
+
+test("P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card", async () => {
+  const world = await createWorld({ holdSuffix: "/terminology/annotations" });
+  const card = await explainA2Term(world);
+  card.querySelector(".term-save")!.click();
+  assert.ok(world.byId("term-explain-card") !== null, "the card is open while the save request is in flight");
+  /* 保存响应在途时用户关卡（Esc 不经 guard——在途可关）。 */
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.ok(world.byId("term-explain-card") === null, "the user closes the card before the save response arrives");
+  world.releaseHold();
+  await settle();
+  assert.ok(
+    world.byId("term-explain-card") === null,
+    "the late save response never resurrects the closed card (token-guarded card write)",
+  );
+  assert.ok(
+    world.turnElement("conversation", "a2").querySelector(".term-annotation-mark") !== null,
+    "the saved annotation still lands: the read-model refresh renders its overlay on the answer",
+  );
+  /* 抽屉如实列出已保存批注（无降级注记——三重校验全过）。 */
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const validLi = drawerAnnotationLi(world.el("source-drawer"), A2_TERM);
+  assert.ok(!validLi.textContent.includes("source changed"), "the freshly saved annotation is intact");
 });
