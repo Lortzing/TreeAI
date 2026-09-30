@@ -342,7 +342,13 @@ try {
   check(uninstall1.status === 0, "uninstall 退出码 0", uninstall1.stdout + uninstall1.stderr);
   check(/数据已保留/.test(uninstall1.stdout), "输出数据已保留", uninstall1.stdout);
   await waitFor(IS_WIN ? 45_000 : 5_000, () => !existsSync(extracted));
-  check(!existsSync(extracted), "安装目录已删除", extracted);
+  /* 残留时点名顶层内容（长路径/文件锁回归定位；run 36747308856 只给了路径）。 */
+  const leftoverDetail = existsSync(extracted)
+    ? `${extracted}（残留顶层 ${String(readdirSync(extracted).length)} 项：${readdirSync(extracted)
+        .slice(0, 8)
+        .join(", ")}）`
+    : extracted;
+  check(!existsSync(extracted), "安装目录已删除", leftoverDetail);
   check(existsSync(DATA_DIR), "数据目录仍在（默认保留）", DATA_DIR);
   check(existsSync(join(DATA_DIR, "treeai.db")), "数据库文件仍在");
   const reinstallDir = join(WORK_DIR, "reinstall");

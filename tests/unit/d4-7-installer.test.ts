@@ -45,6 +45,7 @@ import {
   validateBundleLayout,
   validateBundleManifest,
   validateLauncherConfig,
+  windowsSelfDeleteScript,
 } from "../../scripts/d4/installer/core.ts";
 import { shimFilesFor } from "../../scripts/d4/installer/shims.ts";
 
@@ -516,4 +517,27 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+/* Windows 卸载自删除（run 36747308856 回归：PS 5.1 Remove-Item 删不掉超
+   MAX_PATH 260 的 node_modules 深路径——最深相对路径 179 字符，稍深的
+   解压目录即超限，30 次重试全失败、目录残留）。修复纪律：robocopy 以
+   空目录 /MIR 镜像目标先清场（robocopy 原生支持长路径），再删已空的
+   短路径目录；重试循环等待 launcher 自身 node.exe 退出解锁。 */
+test("windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义（长路径回归）", () => {
+  const script = windowsSelfDeleteScript("D:\\a\\_temp\\smoke with spaces\\TreeAI App");
+  /* 目标路径按 PS 单引号字符串注入（内部 ' 加倍转义）。 */
+  assert.match(script, /\$target = 'D:\\a\\_temp\\smoke with spaces\\TreeAI App'/);
+  const quoted = windowsSelfDeleteScript("C:\\dir with 'quote'");
+  assert.match(quoted, /'C:\\dir with ''quote''/);
+  /* 每轮先 robocopy /MIR 清场（长路径），Remove-Item 只删已空目录。 */
+  assert.match(script, /robocopy \$empty \$target \/MIR \/NFL \/NDL \/NJH \/NJS \/NP/);
+  assert.match(script, /Remove-Item -LiteralPath \$target -Recurse -Force -ErrorAction Stop/);
+  /* 30 次 × 1s 重试等待文件锁释放；失败退出码非 0，成功 0。 */
+  assert.match(script, /for\(\$i=0; \$i -lt 30; \$i\+\+\)/);
+  assert.match(script, /catch \{ Start-Sleep -Seconds 1 \}/);
+  assert.match(script, /if \(-not \$done\) \{ exit 1 \}/);
+  assert.match(script, /exit 0/);
+  /* 空目录临时文件自身也要清理。 */
+  assert.match(script, /Remove-Item -LiteralPath \$empty -Recurse -Force/);
 });
