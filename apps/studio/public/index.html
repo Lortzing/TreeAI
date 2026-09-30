@@ -61,6 +61,32 @@
           <h2 class="sidebar-heading">Materials</h2>
           <ul id="material-list" aria-label="Materials"></ul>
         </section>
+        <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：
+             跨已保存产品事实的检索入口（材料版本×树链接 / 术语批注 / Return /
+             对话 Turn）。默认范围 = 当前树，显式切换全部树；来源类型筛选按
+             契约 kinds 透传服务端；结果按服务端返回序确定性呈现（命中说明
+             来源类型/标题/版本/摘录/时间，旧版本显式标注「旧版本」），命中
+             点击跳既有视图（材料 → D4-2 阅读器按版本+块定位；批注/Return/
+             Turn → 对应事实的既有视图）。搜索纯只读（不创建 Turn）；只索引
+             已保存产品事实——未提交草稿结构性不入索引（服务端已裁决），本
+             面如实声明、绝不暗示草稿可搜。 -->
+        <section class="sidebar-section" id="search-section">
+          <h2 class="sidebar-heading">Search</h2>
+          <input id="search-input" type="search" placeholder="Search saved thoughts…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
+          <div class="search-scope" role="group" aria-label="Search scope">
+            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">This tree</button>
+            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">All trees</button>
+          </div>
+          <div class="search-kinds" role="group" aria-label="Filter results by source type">
+            <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
+            <button type="button" id="search-kind-annotation" class="search-kind-toggle" aria-pressed="true">批注</button>
+            <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">Return</button>
+            <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
+          </div>
+          <button type="button" id="search-run" class="primary">Search</button>
+          <p id="search-status" class="muted" role="status"></p>
+          <ul id="search-results" aria-label="Search results"></ul>
+        </section>
         <div id="sidebar-foot">
           <p class="subtitle">D3 Core MVP · trusted-local</p>
           <p id="driver-note" class="muted"></p>

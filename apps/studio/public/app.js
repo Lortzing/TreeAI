@@ -97,6 +97,39 @@
  *    parsing/failed/canceled/unsupported/rejected）各按事实呈现（含原因
  *    与刷新入口）；网络/API 失败可见可重试，绝不折叠成空态。
  *
+ * D4-4 找回既有思考 —— 搜索前端（issue #8 工作包 D4-4；charter §5「搜索」
+ * + §6 B4 的浏览器面；消费已落地的 POST /api/trees/:id/search 与
+ * POST /api/search）：
+ *  - 入口在侧栏（Forest/Branches/Materials/Search 同栏四段——检索是找回
+ *    既有思考的导航面，不另开整页视图）：输入框 + 范围开关（默认当前树，
+ *    显式切全部树——无树打开时「当前树」如实禁用、范围回落全部树）+
+ *    来源类型筛选（材料/批注/Return/对话，按契约 kinds 透传服务端过滤）；
+ *  - 只索引已保存产品事实（服务端契约已裁决）——未提交 Return 草稿、
+ *    术语解释缓存结构性不入索引；本面在空态如实声明，绝不暗示草稿可搜；
+ *    搜索纯只读：浏览/搜索不创建 Turn（charter §3.3），跳转对服务端游标
+ *    无副作用（材料命中不开面板、不 POST /switch——与 D4-2 阅读器同纪律）；
+ *  - 结果按服务端返回序确定性呈现（引擎全序：档位/类型/次数/时间/refId，
+ *    客户端不重排）：来源类型徽标、标题、版本标签（旧版本命中显式标注
+ *    「旧版本」——版本诚实同 D4-2）、含命中的摘录、时间；零命中如实空
+ *    态（不编造、不给近似匹配），请求失败如实呈现可重试；
+ *  - 点击命中跳既有视图（charter §5「结果跳转后可继续原探索」）：
+ *      · 材料命中 → D4-2 阅读器打开该材料的**命中版本**（旧版本命中即
+ *        打开旧版本只读面——版本链/never-migrate 注记复用 D4-2 纪律），
+ *        并定位到命中块（跨页前补到目标块出现，与阅读位置恢复同一循环）；
+ *      · 批注命中 → 定位锚定答案（主线或支线面板）并打开已保存批注卡
+ *        （openSavedAnnotationCard）；锚点答案缺失时退到来源抽屉的
+ *        Terminology 快照列表（保存快照照常可读，不伪造正文定位）；
+ *      · Return / 对话命中 → 定位到该 turn 的既有视图（Return 卡在主线、
+ *        支线 turn 在支线面板——打开面板走既有 switch 语义）；
+ *    命中的事实 id 不在契约 SearchHit 内（HTTP 裁剪面剥离 refId）——
+ *    客户端以 kind+createdAt+标题头（与服务端 headOf 同算法）+ 摘录切片
+ *    反查已加载树态定位事实；查不到时如实说明（不跳到近似位置）；
+ *  - session 不可用（charter §3.2：来源定位与 Pi 续聊分别判断）：命中若
+ *    可解析到当前已加载树态中 session 不可用的分支，行内并排给出显式
+ *    「⑃ 新探索」入口（打开该支线面板并聚焦输入框——面板既有 v3 §4.4
+ *    换轨入口随不可用状态呈现）；来源跳转永不因此受阻（跳转只呈现已
+ *    保存事实，不触碰 session）。
+ *
  * 范围（诚实声明）：对话 turn 无 Markdown 渲染、无自动摘要（材料阅读器
  *   的 markdown 渲染是**无损字面渲染**——见 D4-2 段，与 turn 渲染无关）。
  *   其余既有事实面：
@@ -161,13 +194,18 @@
 /** @typedef {{runId:string, branchId:string, episodeId:string}} ActiveRunInfoT */
 /** @typedef {{runId:string, branchId:string, text:string}} StreamingT */
 /** @typedef {{branchId:string, turnId:string, start:number, end:number}} SourceHighlightT */
-/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}|{kind:"main-input"}|{kind:"material-button", materialId:string}} FocusReturnRefT */
+/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}|{kind:"main-input"}|{kind:"material-button", materialId:string}|{kind:"search-hit", hitKey:string}} FocusReturnRefT */
 /** D4-2 材料面类型（契约 §3 的 HTTP 载荷形状；阅读器与侧栏列表消费）。 */
 /** @typedef {{id:string, title:string, createdAt:string}} MaterialT */
 /** @typedef {{id:string, materialId:string, contentHash:string, parserKind:"markdown"|"pdf", parserVersion:string, importedAt:string, sizeBytes:number, parseStatus:"pending"|"parsing"|"ready"|"failed"|"canceled"|"unsupported"|"rejected", parseError:string|null, textUnits:number}} MaterialVersionT */
 /** @typedef {{material:MaterialT, versions:MaterialVersionT[]}} MaterialListItemT */
 /** @typedef {{material:MaterialT, versions:MaterialVersionT[], readingPosition:{treeId:string, materialId:string, versionId:string, blockId:string|null, focusStart:number|null, updatedAt:string}|null, parseTasks:object[]}} MaterialDetailT */
 /** @typedef {{block:{blockId:string, kind:"markdown-block"|"pdf-page", start:number, end:number, page?:number}, text:string}} MaterialBlockEntryT */
+/** D4-4 搜索命中（契约 §3 SearchHit 的 HTTP 裁剪面：可空字段缺省而非
+    null——材料命中携带 materialId/materialTitle/versionId/versionLabel/
+    blockId，非材料命中全部缺省；引擎附加字段 refId/matchType/matchCount
+    已被服务端剥离，客户端不以任何方式假定它们在场）。 */
+/** @typedef {{kind:"material"|"annotation"|"return"|"turn", treeId:string, treeTitle:string, materialId?:string, materialTitle?:string, versionId?:string, versionLabel?:string, oldVersion:boolean, blockId?:string, start:number, end:number, excerpt:string, title:string, createdAt:string}} SearchHitT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
@@ -305,7 +343,8 @@ const state = {
    *   fenceOpen: boolean,
    *   trimmedBlocks: number,
    *   restoredToBlockId: string|null,
-   *   lastSavedBlockId: string|null
+   *   lastSavedBlockId: string|null,
+   *   searchJump: {blockId:string|null, versionId:string|null, fellBackToDefaultVersion:boolean}|null
    * }|null}
    */
   materialReader: null,
@@ -320,6 +359,38 @@ const state = {
    *   {kind:"invalid", materialId:string, versionId:string, reason:"cross-block"|"unmappable"}}
    */
   materialSelection: null,
+  /**
+   * D4-4 搜索面状态（issue #8 工作包 D4-4，charter §5）。scope/kinds 是
+   * 用户的筛选选择（静态表单承载，不随 renderAll 重建）；phase/hits 是
+   * 最近一次执行的读模型（三态纪律同材料列表/journal：idle = 未搜过 /
+   * loading = 在途 / loaded = 已载（含如实零命中）/ failed = 失败 + 错误
+   * 事实）。resultScope/resultTreeId 记录结果产生时的范围：树切走后
+   * 「当前树」范围的旧结果不再描述当前工作台——诚实清空（全部树范围的
+   * 结果是库级事实，保持有效）；resultQuery 仅用于状态行回显。note 是
+   * 跳转反馈（如「命中事实已不在当前树态」）——跳转的如实说明面。
+   * @type {{
+   *   scope: "tree"|"all",
+   *   kinds: Array<"material"|"annotation"|"return"|"turn">,
+   *   phase: "idle"|"loading"|"loaded"|"failed",
+   *   error: string|null,
+   *   hits: SearchHitT[],
+   *   note: string|null,
+   *   resultQuery: string|null,
+   *   resultScope: "tree"|"all"|null,
+   *   resultTreeId: string|null
+   * }}
+   */
+  search: {
+    scope: "tree",
+    kinds: ["material", "annotation", "return", "turn"],
+    phase: "idle",
+    error: null,
+    hits: [],
+    note: null,
+    resultQuery: null,
+    resultScope: null,
+    resultTreeId: null,
+  },
 };
 
 /** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
@@ -1764,6 +1835,10 @@ function renderAll(opts = {}) {
   /* D4-2 材料列表（侧栏 Materials 段）随 renderAll 渲染（三态幂等；阅读
      器的块容器不在此路径——与树态正交，SSE 刷新对已载块零触碰）。 */
   renderMaterialsSection();
+  /* D4-4 搜索面（侧栏 Search 段）：静态表单只同步开关态（焦点/输入值不
+     触碰），结果列表按当前读模型重建（注册表随之重建——焦点还原取最新
+     DOM，同 materialListButtons 纪律）。 */
+  renderSearchSection();
 }
 
 /* ------------------------------ Return 草稿（持久化） ------------------------------ */
@@ -2269,6 +2344,7 @@ function resolveFocusRef(ref) {
   if (ref.kind === "branch-button") return branchHereButtons.get(ref.turnId) ?? null;
   if (ref.kind === "return-card") return turnElements.get(ref.turnId) ?? null;
   if (ref.kind === "material-button") return materialListButtons.get(ref.materialId) ?? null;
+  if (ref.kind === "search-hit") return searchHitButtons.get(ref.hitKey) ?? null;
   return null;
 }
 
@@ -2405,6 +2481,20 @@ function resetTransientView() {
     if (blocksEl !== null) blocksEl.replaceChildren();
   }
   materialReaderFocusReturn = null;
+  /* D4-4：「当前树」范围搜索的旧结果不再描述当前工作台（树已切换）——
+     诚实清空并作废在途的旧树搜索响应（P1 同族迟到丢弃）；全部树范围的
+     结果是库级事实，保持有效。筛选选择（scope/kinds）与输入框不重置
+     （用户的显式选择，跨树保持）。 */
+  if (state.search.resultScope === "tree") {
+    searchEpoch += 1;
+    state.search.phase = "idle";
+    state.search.error = null;
+    state.search.hits = [];
+    state.search.note = null;
+    state.search.resultQuery = null;
+    state.search.resultScope = null;
+    state.search.resultTreeId = null;
+  }
 }
 
 /** 开树世代号（P1 同族，issue #7 增量验收）：启动恢复 / 列表重试的
@@ -3991,13 +4081,18 @@ async function refreshMaterials() {
 
 /** 打开材料阅读器。幂等：同一材料已在读（且非失败态）只聚焦；换材料先把
     当前阅读位置落库（旧材料的事实不因切换丢失）。打开是异步的——先立
-    loading 壳，detail 到达后选版本并拉首页；全程按世代丢弃迟到响应。 */
+    loading 壳，detail 到达后选版本并拉首页；全程按世代丢弃迟到响应。
+    D4-4 搜索命中跳转：opts.versionId 显式指定命中版本（旧版本命中即打开
+    旧版本——版本诚实同 D4-2，绝不静默落到最新）；opts.focusBlockId 定位
+    到命中块（与阅读位置恢复同一跨页前补循环）。命中版本已不在版本链
+    （版本行不可变，正常不可能）时如实回落默认选择并注记，不伪装。 */
 async function openMaterial(materialId, opts = {}) {
   if (state.currentTreeId === null) return;
   if (
     state.materialReader !== null &&
     state.materialReader.materialId === materialId &&
-    state.materialReader.firstPageState !== "failed"
+    state.materialReader.firstPageState !== "failed" &&
+    opts.versionId === undefined
   ) {
     $("material-reader").focus();
     return;
@@ -4030,6 +4125,14 @@ async function openMaterial(materialId, opts = {}) {
     trimmedBlocks: 0,
     restoredToBlockId: null,
     lastSavedBlockId: null,
+    searchJump:
+      opts.versionId !== undefined
+        ? {
+            blockId: opts.focusBlockId ?? null,
+            versionId: opts.versionId,
+            fellBackToDefaultVersion: false,
+          }
+        : null,
   };
   materialReaderFocusReturn = opts.trigger ?? { kind: "material-button", materialId };
   renderMaterialReader();
@@ -4051,7 +4154,14 @@ async function openMaterial(materialId, opts = {}) {
     reader.material = detail.material;
     reader.versions = detail.versions;
     reader.readingPosition = detail.readingPosition ?? null;
-    const version = chooseMaterialVersion(detail);
+    let version = null;
+    if (reader.searchJump !== null) {
+      /* 搜索命中跳转：命中版本优先（旧版本命中打开旧版本）；版本已不在
+         链上（不可变版本行，正常不可能）→ 如实回落 + 注记（绝不伪装）。 */
+      version = detail.versions.find((candidate) => candidate.id === reader.searchJump.versionId) ?? null;
+      if (version === null) reader.searchJump.fellBackToDefaultVersion = true;
+    }
+    if (version === null) version = chooseMaterialVersion(detail);
     reader.versionId = version === null ? "" : version.id;
     await loadMaterialFirstPage(reader, { epoch, treeId });
   } catch (err) {
@@ -4103,14 +4213,18 @@ async function loadMaterialFirstPage(reader, opts) {
   reader.firstPageState = "loading";
   reader.firstPageError = null;
   renderMaterialReader();
-  /* 恢复目标：保存位置即所开版本时滚到该块；块不在首页则按 nextAfterBlock
-     向前补页（API 只有正向分页——循环以块总数为上界，长材料上是诚实代价；
-     目标块出现即停）。 */
+  /* 恢复/定位目标：D4-4 搜索命中跳转优先（用户刚点击的意图）；无跳转时
+     按保存的阅读位置恢复。目标块不在首页则按 nextAfterBlock 向前补页
+     （API 只有正向分页——循环以块总数为上界，长材料上是诚实代价；目标
+     块出现即停）。 */
   const position = reader.readingPosition;
   const restoreBlockId =
     position !== null && position.versionId === reader.versionId && position.blockId !== null
       ? position.blockId
       : null;
+  const jumpBlockId =
+    reader.searchJump !== null && reader.searchJump.blockId !== null ? reader.searchJump.blockId : null;
+  const targetBlockId = jumpBlockId ?? restoreBlockId;
   let afterBlock = null;
   for (;;) {
     let page;
@@ -4125,20 +4239,26 @@ async function loadMaterialFirstPage(reader, opts) {
     }
     if (isStale()) return;
     applyMaterialPage(reader, page);
-    if (restoreBlockId === null || page.nextAfterBlock === null) break;
-    if (reader.blocks.some((entry) => entry.block.blockId === restoreBlockId)) break;
+    if (targetBlockId === null || page.nextAfterBlock === null) break;
+    if (reader.blocks.some((entry) => entry.block.blockId === targetBlockId)) break;
     afterBlock = page.nextAfterBlock;
   }
   reader.firstPageState = "loaded";
   renderMaterialReader();
-  if (restoreBlockId !== null) {
-    const target = materialBlockElement(restoreBlockId);
+  if (targetBlockId !== null) {
+    const target = materialBlockElement(targetBlockId);
     if (target !== null && typeof target.scrollIntoView === "function") {
       target.scrollIntoView({ block: "start", behavior: scrollBehavior() });
     }
-    reader.restoredToBlockId = restoreBlockId;
-    /* 恢复注记在 chrome 渲染时读取 restoredToBlockId——补一次让注记落位。 */
-    renderMaterialReader();
+    if (jumpBlockId !== null) {
+      /* 搜索命中定位注记（chrome 渲染时读取 searchJump——补一次让注记
+         落位；位置恢复注记仍走 restoredToBlockId，两者不混写）。 */
+      renderMaterialReader();
+    } else {
+      reader.restoredToBlockId = restoreBlockId;
+      /* 恢复注记在 chrome 渲染时读取 restoredToBlockId——补一次让注记落位。 */
+      renderMaterialReader();
+    }
   }
 }
 
@@ -4488,6 +4608,22 @@ function buildMaterialNotes(reader, version) {
   }
   if (reader.restoredToBlockId !== null) {
     notes.push(mutedLine(`restored to your saved reading position (block ${reader.restoredToBlockId})`));
+  }
+  /* D4-4 搜索命中跳转注记（与位置恢复注记分开——两个来源两种说法，
+     绝不把搜索跳转伪装成位置恢复）。 */
+  if (reader.searchJump !== null) {
+    if (reader.searchJump.fellBackToDefaultVersion) {
+      notes.push(
+        mutedLine(
+          "arrived from Search — the hit's version is no longer in this material's version chain, " +
+            "so the default version selection is shown instead (nothing is faked)",
+        ),
+      );
+    } else if (reader.searchJump.blockId !== null) {
+      notes.push(mutedLine(`arrived from Search — the hit is located at block ${reader.searchJump.blockId}`));
+    } else {
+      notes.push(mutedLine("arrived from Search — the hit's version is opened at the top"));
+    }
   }
   return notes;
 }
@@ -5017,6 +5153,7 @@ async function switchMaterialVersion(versionId) {
   reader.trimmedBlocks = 0;
   reader.restoredToBlockId = null;
   reader.lastSavedBlockId = null;
+  reader.searchJump = null; /* D4-4：显式切版本即离开搜索跳转目标——跳转注记随之失效（不跨版本移用） */
   const blocksEl = document.getElementById("mat-blocks");
   if (blocksEl !== null) blocksEl.replaceChildren(); /* 版本内容整体换（元素容器保留） */
   renderMaterialReader();
@@ -5205,6 +5342,440 @@ function hideMaterialReader(opts = {}) {
   }, MATERIAL_READER_EXIT_MS);
 }
 
+/* ------------------------------ D4-4 找回既有思考 · 搜索（issue #8 工作包 D4-4） ------------------------------ */
+
+/** 来源类型词汇表（契约 §3 kinds；顺序即请求 kinds 数组的稳定顺序）。 */
+const SEARCH_KIND_ORDER = ["material", "annotation", "return", "turn"];
+/** 来源类型徽标文案（charter §5 的四类筛选词汇：材料/批注/Return/对话）。 */
+const SEARCH_KIND_LABELS = { material: "材料", annotation: "批注", return: "Return", turn: "对话" };
+
+/** 搜索请求世代号（P1 同族纪律）：新搜索/树切换（清空当前树范围结果时）
+    递增——迟到的旧响应整包丢弃，绝不覆盖新状态。 */
+let searchEpoch = 0;
+/** 搜索命中行注册表（hitKey → 行按钮）：跳转面的焦点还原目标（随
+    renderSearchSection 重建，取最新 DOM——同 materialListButtons 纪律）。 */
+const searchHitButtons = new Map();
+
+/** 实际生效的检索范围：用户选「当前树」且确有树打开 → tree；否则（含无树
+    打开的回落）→ all（charter §5 默认当前树、可切全部树；「当前树」开关在
+    无树时如实禁用，范围不悬空）。 */
+function effectiveSearchScope() {
+  return state.search.scope === "tree" && state.currentTreeId !== null ? "tree" : "all";
+}
+
+/** 命中行稳定标识：契约 SearchHit 未携带事实 id（HTTP 裁剪面剥离 refId），
+    以契约字段组合作行键（引擎每文档恰一条命中，start/end 参与消歧）。 */
+function searchHitKey(hit) {
+  return `${hit.kind}:${hit.treeId}:${hit.createdAt}:${String(hit.start)}-${String(hit.end)}`;
+}
+
+/**
+ * 执行搜索（POST /api/trees/:id/search | /api/search——已落地的检索端点；
+ * kinds 按用户筛选透传服务端过滤）。空查询/空筛选在客户端按服务端同一规
+ * 则拦下（服务端 parseSearchQuery 会 400）——如实提示，不发注定失败的请
+ * 求；响应按世代丢弃（新搜索/树切换取代）。零命中如实空列表（服务端不
+ * 编造，本面同样绝不编造）；hits 缺失视为坏响应（fail-closed，不伪装空）。
+ */
+async function runSearch() {
+  const input = $("search-input");
+  const text = input.value;
+  state.search.note = null;
+  if (text.trim() === "") {
+    state.search.note = "type something to search — blank queries are rejected (they would match nothing)";
+    renderSearchSection();
+    return;
+  }
+  const kinds = [...state.search.kinds];
+  if (kinds.length === 0) {
+    state.search.note = "select at least one source type (材料 / 批注 / Return / 对话) — an empty filter would match nothing";
+    renderSearchSection();
+    return;
+  }
+  const scopeTreeId = effectiveSearchScope() === "tree" ? state.currentTreeId : null;
+  const epoch = ++searchEpoch;
+  state.search.phase = "loading";
+  state.search.error = null;
+  state.search.resultQuery = text;
+  state.search.resultScope = scopeTreeId === null ? "all" : "tree";
+  state.search.resultTreeId = scopeTreeId;
+  renderSearchSection();
+  try {
+    const path =
+      scopeTreeId === null ? "/api/search" : `/api/trees/${encodeURIComponent(scopeTreeId)}/search`;
+    const payload = await api(path, "POST", { text, kinds });
+    if (epoch !== searchEpoch) return; /* 迟到丢弃：已被更新的搜索/树切换取代 */
+    if (payload === null || !Array.isArray(payload.hits)) {
+      throw new Error("malformed search response (no hits array)");
+    }
+    state.search.phase = "loaded";
+    state.search.hits = payload.hits;
+  } catch (err) {
+    if (epoch !== searchEpoch) return;
+    state.search.phase = "failed";
+    state.search.error = String(err && err.message ? err.message : err);
+  }
+  renderSearchSection();
+}
+
+/** 状态行文案（#search-status，role=status 朗读结果态变化）：三态 + 跳转
+    反馈 note（同一行以「 — 」续接）。idle 恒带索引口径的诚实声明（charter
+    §5：只索引已保存产品事实——未提交草稿/解释缓存结构性不入索引）。 */
+function searchStatusLine() {
+  const search = state.search;
+  const noteSuffix = search.note === null ? "" : ` — ${search.note}`;
+  if (search.phase === "loading") {
+    return `searching ${search.resultScope === "tree" ? "this tree" : "all trees"}…`;
+  }
+  if (search.phase === "failed") {
+    return `search failed — ${search.error ?? "unknown error"} (press Search to retry)${noteSuffix}`;
+  }
+  if (search.phase === "loaded") {
+    const scopeLabel = search.resultScope === "tree" ? "in this tree" : "across all trees";
+    if (search.hits.length === 0) {
+      return `0 hits for “${search.resultQuery ?? ""}” ${scopeLabel} — nothing in the saved facts matches; no results are fabricated${noteSuffix}`;
+    }
+    return `${String(search.hits.length)} hit(s) for “${search.resultQuery ?? ""}” ${scopeLabel} — only saved facts are searched; unsubmitted drafts are never indexed${noteSuffix}`;
+  }
+  return `search saved facts — 材料 / 批注 / Return / 对话; unsubmitted drafts and explain caches are never indexed${noteSuffix}`;
+}
+
+/**
+ * 搜索面渲染（renderAll 与本面局部动作共用；幂等）。静态表单（输入框/
+ * 范围/类型/执行按钮）只同步开关态——输入值与焦点不触碰（重渲绝不夺走
+ * 用户正在输入/阅读的状态）；结果列表按当前读模型整体重建（注册表随之
+ * 重建）。结果按服务端返回序呈现（引擎全序：档位/类型/次数/时间/refId），
+ * 客户端不重排。
+ */
+function renderSearchSection() {
+  const hasTree = state.currentTreeId !== null;
+  const wantTree = state.search.scope === "tree" && hasTree;
+  const scopeTree = $("search-scope-tree");
+  scopeTree.classList.toggle("active", wantTree);
+  scopeTree.setAttribute("aria-pressed", wantTree ? "true" : "false");
+  scopeTree.disabled = !hasTree;
+  scopeTree.title = hasTree ? "" : "no tree is open — search across all trees instead";
+  const scopeAll = $("search-scope-all");
+  scopeAll.classList.toggle("active", !wantTree);
+  scopeAll.setAttribute("aria-pressed", !wantTree ? "true" : "false");
+  for (const kind of SEARCH_KIND_ORDER) {
+    const button = $(`search-kind-${kind}`);
+    const on = state.search.kinds.includes(kind);
+    button.classList.toggle("active", on);
+    button.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  $("search-status").textContent = searchStatusLine();
+  const list = $("search-results");
+  list.replaceChildren();
+  searchHitButtons.clear();
+  if (state.search.phase === "loading") {
+    list.append(mutedListItem("searching…"));
+    return;
+  }
+  if (state.search.phase === "failed") {
+    list.append(mutedListItem(`search failed — ${state.search.error ?? "unknown error"} (press Search to retry)`));
+    return;
+  }
+  if (state.search.phase !== "loaded") return; /* idle：状态行已承载索引口径声明 */
+  if (state.search.hits.length === 0) {
+    list.append(
+      mutedListItem(
+        `no results — nothing in the searched facts matches “${state.search.resultQuery ?? ""}” (nothing is fabricated)`,
+      ),
+    );
+    return;
+  }
+  for (const hit of state.search.hits) {
+    list.append(renderSearchHitRow(hit));
+  }
+}
+
+/** 命中行元信息：材料行带材料名 + 版本标签（旧版本命中显式标注「旧版本」
+    ——独立样式层，绝不与当前版本混淆；版本诚实同 D4-2）；全部行带时间；
+    跨树命中（全部树范围）带树名（treeTitle = 树 id，与树列表同源）。 */
+function buildSearchHitMeta(hit) {
+  const meta = document.createElement("span");
+  meta.className = "search-hit-meta";
+  const appendText = (text) => {
+    if (meta.children.length > 0 || meta.textContent !== "") meta.append(document.createTextNode(" · "));
+    meta.append(document.createTextNode(text));
+  };
+  if (hit.kind === "material") {
+    if (typeof hit.materialTitle === "string" && hit.materialTitle !== "") appendText(hit.materialTitle);
+    if (typeof hit.versionLabel === "string" && hit.versionLabel !== "") {
+      appendText(hit.versionLabel);
+      if (hit.oldVersion) {
+        const old = document.createElement("span");
+        old.className = "search-old-version";
+        old.textContent = "旧版本";
+        meta.append(document.createTextNode(" · "), old);
+      }
+    }
+  }
+  appendText(formatProductTime(hit.createdAt));
+  if (hit.treeId !== state.currentTreeId) appendText(hit.treeTitle);
+  return meta;
+}
+
+/** 命中行：徽标（来源类型）+ 标题 + 元信息 + 摘录（含命中区间，服务端截
+    断标记原样呈现）；点击跳既有视图（guard 包裹——跳转面的失败呈主线
+    横幅）。session 不可用命中的「⑃ 新探索」并排入口见
+    searchHitSessionNote（来源跳转永不因此受阻）。 */
+function renderSearchHitRow(hit) {
+  const key = searchHitKey(hit);
+  const li = document.createElement("li");
+  const button = document.createElement("button");
+  button.className = "search-hit";
+  button.dataset.hitKey = key;
+  const badge = document.createElement("span");
+  badge.className = `search-hit-kind k-${hit.kind}`;
+  badge.textContent = SEARCH_KIND_LABELS[hit.kind];
+  const title = document.createElement("span");
+  title.className = "search-hit-title";
+  title.textContent = hit.title;
+  const meta = buildSearchHitMeta(hit);
+  const excerpt = document.createElement("span");
+  excerpt.className = "search-hit-excerpt";
+  excerpt.textContent = hit.excerpt;
+  button.append(badge, title, meta, excerpt);
+  button.title = `open this ${SEARCH_KIND_LABELS[hit.kind]} hit at its source`;
+  button.addEventListener("click", () => {
+    closeSidebar(); /* 窄窗：跳转后收起侧栏抽屉（与树/材料选择同一纪律） */
+    void guard(() => jumpToSearchHit(hit));
+  });
+  searchHitButtons.set(key, button);
+  li.append(button);
+  const session = searchHitSessionNote(hit, key);
+  if (session !== null) li.append(session);
+  return li;
+}
+
+/**
+ * session 不可用命中的并排换轨入口（charter §3.2：来源定位与 Pi 续聊分别
+ * 判断——来源跳转永不因此受阻；§5：结果跳转后可继续原探索，session 不可
+ * 用时显示显式新探索入口）。只对**当前已加载树态**中可解析、且解析到
+ * session 不可用分支的命中呈现（跨树命中的可用性在跳转后由该分支面板的
+ * 既有 v3 §4.4 换轨面呈现——不在数据未载时猜测）。「⑃ 新探索」打开该支
+ * 线面板并聚焦输入框：面板 composer 的「Start new exploration」按钮即既有
+ * 显式换轨入口（首问在其旁输入），本入口不另造第二条换轨路径。
+ */
+function searchHitSessionNote(hit, key) {
+  if (state.treeState === null || hit.treeId !== state.currentTreeId) return null;
+  let branchId = null;
+  if (hit.kind === "annotation") {
+    const located = locateAnnotationHit(hit);
+    branchId = located === null ? null : located.annotation.branchId;
+  } else if (hit.kind === "turn" || hit.kind === "return") {
+    const located = locateTurnHit(hit);
+    branchId = located === null ? null : located.view.branch.id;
+  } else {
+    /* 材料命中：阅读不需要 session（charter §3.2 阅读与探索互不干扰）；
+       D4-3 的材料建枝未落地——材料分支的换轨面随该工作包呈现。 */
+    return null;
+  }
+  if (branchId === null) return null;
+  const view = branchView(branchId);
+  if (view === null || view.sessionAvailability !== "unavailable") return null;
+  const wrap = document.createElement("div");
+  wrap.className = "search-hit-session";
+  const text = document.createElement("span");
+  text.className = "search-hit-session-text";
+  text.textContent = "session unavailable on this branch — the saved text stays readable";
+  const explore = document.createElement("button");
+  explore.className = "search-hit-explore";
+  explore.textContent = "⑃ 新探索";
+  explore.title =
+    "open this branch and type the first question — its composer carries the “Start new exploration” entry (the old Pi session cannot continue)";
+  explore.addEventListener("click", () => {
+    closeSidebar();
+    void guard(async () => {
+      await openBranchPanel(branchId, { trigger: { kind: "search-hit", hitKey: key } });
+    }).then(() => {
+      /* guard 收尾（busy 解锁 + composer 锁定态重算）后聚焦输入框——busy
+         期间输入框被瞬态禁用，聚焦必须等解锁后再判。 */
+      const input = $("panel-prompt-input");
+      if (!input.disabled) input.focus();
+    });
+  });
+  wrap.append(text, explore);
+  return wrap;
+}
+
+/* ---------------- 命中 → 事实的客户端定位（契约无事实 id 的如实边界） ---------------- */
+
+/**
+ * 服务端 headOf 镜像（search-service.ts 的展示标题算法：trim + 24 码元 +
+ * 省略号）。契约 SearchHit 被服务端剥离了事实 id（refId）——本面以
+ * kind + createdAt + 标题头（同算法重建）+ 摘录切片反查已加载树态定位
+ * 事实；全部命中即唯一性证据（碰撞需同一毫秒同角色同文本头），查不到则
+ * 如实说明，绝不跳到近似位置。
+ */
+function searchHeadOf(text) {
+  const trimmed = text.trim();
+  return trimmed.length > 24 ? `${trimmed.slice(0, 24)}…` : trimmed;
+}
+
+/** 服务端命中标题的镜像重建（提问/回答/Return 前缀 + headOf）。 */
+function searchTurnTitle(turn) {
+  if (turn.role === "return") return `Return：${searchHeadOf(turn.text)}`;
+  return `${turn.role === "user" ? "提问" : "回答"}：${searchHeadOf(turn.text)}`;
+}
+
+/** 摘录去头尾截断省略号——剩余应是正文连续切片（定位校验用；「…」只出现
+    在截断处，中间内容是 body 的原样子串）。 */
+function searchHitExcerptCore(excerpt) {
+  let core = excerpt;
+  if (core.startsWith("…")) core = core.slice(1);
+  if (core.endsWith("…")) core = core.slice(0, -1);
+  return core;
+}
+
+/** 对话/Return 命中 → 已加载树态中的 turn（读模型顺序：主线在前、分支按
+    序、turn 按序——首个全匹配胜出，确定性）。 */
+function locateTurnHit(hit) {
+  const st = state.treeState;
+  if (st === null || hit.treeId !== state.currentTreeId) return null;
+  const expectedRole =
+    hit.kind === "return"
+      ? "return"
+      : hit.title.startsWith("提问：")
+        ? "user"
+        : hit.title.startsWith("回答：")
+          ? "assistant"
+          : null;
+  if (expectedRole === null) return null;
+  const excerptCore = searchHitExcerptCore(hit.excerpt);
+  for (const view of st.branches) {
+    for (const turn of view.turns) {
+      if (turn.role !== expectedRole) continue;
+      if (turn.createdAt !== hit.createdAt) continue;
+      if (searchTurnTitle(turn) !== hit.title) continue;
+      if (excerptCore !== "" && !turn.text.includes(excerptCore)) continue;
+      return { view, turn };
+    }
+  }
+  return null;
+}
+
+/** 批注命中 → 已加载术语读模型中的批注（产品批注无 note 字段——索引正文
+    = explanation+term，与服务端装配同口径）。 */
+function locateAnnotationHit(hit) {
+  const terminology = state.terminology;
+  if (state.treeState === null || hit.treeId !== state.currentTreeId) return null;
+  if (terminology === null || !terminology.ok) return null;
+  const excerptCore = searchHitExcerptCore(hit.excerpt);
+  for (const annotation of terminology.annotations) {
+    if (annotation.createdAt !== hit.createdAt) continue;
+    if (`批注：${annotation.term}` !== hit.title) continue;
+    const body = `${annotation.explanation}${annotation.term}`;
+    if (excerptCore !== "" && !body.includes(excerptCore)) continue;
+    return { annotation };
+  }
+  return null;
+}
+
+/** 树态中按 id 找 turn（含其分支视图）。 */
+function findTurnById(turnId) {
+  const st = state.treeState;
+  if (st === null) return null;
+  for (const view of st.branches) {
+    const turn = view.turns.find((candidate) => candidate.id === turnId);
+    if (turn !== undefined) return { view, turn };
+  }
+  return null;
+}
+
+/* ---------------- 命中跳转（charter §5「结果跳转后可继续原探索」） ---------------- */
+
+/**
+ * 点击命中 → 打开其来源的既有视图。跨树命中（全部树范围检索）先开命中树
+ * （既有 openTree 语义：树态/材料/术语读模型随之就绪），再在树内定位。
+ * 搜索/跳转纯只读：不创建 Turn（charter §3.3「浏览/搜索不创建 Turn」），
+ * 材料命中不开支线面板、不 POST /switch（阅读与探索互不干扰，D4-2 同
+ * 纪律）；对话/批注命中落支线时走既有面板打开语义（switch 对齐游标）。
+ */
+async function jumpToSearchHit(hit) {
+  state.search.note = null;
+  const trigger = { kind: "search-hit", hitKey: searchHitKey(hit) };
+  if (hit.treeId !== state.currentTreeId) {
+    await openTree(hit.treeId);
+  }
+  if (hit.kind === "material") {
+    if (typeof hit.materialId !== "string" || hit.materialId === "") {
+      state.search.note = "malformed material hit (no material id) — cannot jump";
+      renderSearchSection();
+      return;
+    }
+    await openMaterial(hit.materialId, {
+      trigger,
+      versionId: hit.versionId,
+      focusBlockId: typeof hit.blockId === "string" && hit.blockId !== "" ? hit.blockId : null,
+    });
+    return;
+  }
+  if (hit.kind === "annotation") {
+    await jumpToAnnotationHit(hit, trigger);
+    return;
+  }
+  await jumpToTurnFactHit(hit, trigger);
+}
+
+/**
+ * 批注命中 → 锚定答案的既有视图 + 已保存批注卡（openSavedAnnotationCard）。
+ * 锚定答案缺失/漂移 → 来源抽屉 Terminology 节（保存快照照常可读的既有
+ * 视图，状态如实标注——不伪造正文定位）。术语读模型未载时先拉取（跳转
+ * 面的事实依据，失败如实落入「无法定位」分支）。
+ */
+async function jumpToAnnotationHit(hit, trigger) {
+  if (state.terminology === null || !state.terminology.ok) {
+    try {
+      await refreshTerminology();
+    } catch {
+      /* 拉取失败：locateAnnotationHit 读不到事实——落入「无法定位」分支 */
+    }
+  }
+  const located = locateAnnotationHit(hit);
+  if (located === null) {
+    state.search.note =
+      "the annotation could not be located in this tree's current facts — it may have changed since the search";
+    renderSearchSection();
+    return;
+  }
+  const { annotation } = located;
+  const anchored = findTurnById(annotation.anchorTurnId);
+  if (anchored === null) {
+    await openDrawer({ trigger });
+    state.search.note =
+      "the annotation's anchored answer is no longer in this tree — its saved snapshot is in Sources → Terminology";
+    renderSearchSection();
+    return;
+  }
+  const branchId = anchored.view.branch.id;
+  if (branchId !== trunkBranchId()) {
+    await openBranchPanel(branchId, { trigger, focus: "anchor" });
+  }
+  revealAnchorTurn(anchored.turn.id);
+  openSavedAnnotationCard(annotation, branchId, anchored.turn);
+}
+
+/**
+ * 对话 / Return 命中 → 该 turn 的既有视图：主线事实直接定位（主阅读面恒
+    为 Trunk——Return 卡与主线 turn 都在 #conversation）；支线事实先开
+    支线面板（既有 switch 语义）再定位（滚动 + 焦点，W2 §2.6 同款）。
+ */
+async function jumpToTurnFactHit(hit, trigger) {
+  const located = locateTurnHit(hit);
+  if (located === null) {
+    state.search.note = `the ${SEARCH_KIND_LABELS[hit.kind]} hit could not be located in this tree's current facts — it may have changed since the search`;
+    renderSearchSection();
+    return;
+  }
+  const { view, turn } = located;
+  if (view.branch.id !== trunkBranchId()) {
+    await openBranchPanel(view.branch.id, { trigger, focus: "anchor" });
+  }
+  revealAnchorTurn(turn.id);
+}
+
 /* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */
 
 function closeSidebar() {
@@ -5260,6 +5831,37 @@ $("new-exploration").addEventListener("click", () => guard(() => startNewExplora
 $("panel-new-exploration").addEventListener("click", () => guard(() => startNewExploration("panel"), "panel"));
 $("abort-run").addEventListener("click", () => void abortActiveRun());
 $("source-drawer-toggle").addEventListener("click", () => void toggleDrawer());
+
+/* D4-4 搜索表单（静态元素，注册一次；重渲只同步开关态——输入值与焦点
+   绝不被 renderAll 触碰）。Enter 执行搜索（单行输入的既有语义；主输入
+   框的 Cmd+Enter 是多行 textarea 的约束，不适用）。 */
+$("search-run").addEventListener("click", () => void runSearch());
+$("search-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    void runSearch();
+  }
+});
+$("search-scope-tree").addEventListener("click", () => {
+  if (state.currentTreeId === null) return; /* 无树打开：开关已禁用——兜底防竞态 */
+  state.search.scope = "tree";
+  renderSearchSection();
+});
+$("search-scope-all").addEventListener("click", () => {
+  state.search.scope = "all";
+  renderSearchSection();
+});
+for (const kind of SEARCH_KIND_ORDER) {
+  $(`search-kind-${kind}`).addEventListener("click", () => {
+    const kinds = new Set(state.search.kinds);
+    if (kinds.has(kind)) kinds.delete(kind);
+    else kinds.add(kind);
+    /* 恢复词汇表稳定顺序（kinds 请求序确定性）。 */
+    state.search.kinds = SEARCH_KIND_ORDER.filter((candidate) => kinds.has(candidate));
+    renderSearchSection();
+  });
+}
+
 /* 面板收起动作的失败呈现在主线横幅（面板此刻已收起/未开）。 */
 $("panel-close").addEventListener("click", () => void guard(() => closePanel()));
 $("panel-view-source").addEventListener("click", () =>
