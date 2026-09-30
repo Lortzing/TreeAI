@@ -2,15 +2,15 @@
  * MaterialImportService — D4-1「材料存储和导入」的导入编排 + 解析流水线
  * （issue #8 工作包 D4-1；D4 契约 §3 HTTP 语义 / §5 资源上限）。
  *
- * 职责（在已落地的 MaterialRepository + d4-md-v1 解析器之上）：
+ * 职责（在已落地的 MaterialRepository + d4-md-v1/d4-pdf-v1 解析器之上）：
  *   - 导入：文件名扩展名 → 解析器种类（.md/.markdown → markdown；
  *     .pdf → pdf；其他 → 415 material-unsupported，如实说明，绝不伪成功）；
  *   - 上限（charter §5，在耗尽资源前明确拒绝）：
  *     · 单文件 20 MiB：读体/解析前拒绝（413 material-too-large）；
  *     · 规范文本 100 万 UTF-16 码元：解析后、落库前拒绝（版本 failed，
  *       原因码 text-units-exceeded——超限文本不落库、不外泄）；
- *     · 文本 PDF 200 页：pdf 解析器内部在抽取全文前拒绝（原因码
- *       pages-exceeded，常量在此共享；pdf 槽位随 D4-1 集成装配）；
+ *     · 文本 PDF 200 页：pdf 解析器在解释任何内容流之前拒绝（原因码
+ *       pages-exceeded，常量在 pdf-parser.ts 冻结、此处再导出共享）；
  *   - 版本语义（ADR-003 §3）：内容寻址 blob + UNIQUE(material_id,
  *     content_hash)——同材料同字节复用版本（200），新字节追加新版本（201），
  *     旧版本（及其锚点/摘录）永不受影响；导入端点按**树内**同字节去重
@@ -28,9 +28,11 @@
  *   - 分块读取：canonicalText 按块分页（afterBlock 游标 + limit），
  *     仅 ready 版本可读（非 ready → 409 material-not-ready，不伪装空成功）。
  *
- * 诚实边界：pdf 解析器（d4-pdf-v1）随 D4-1 集成装配——装配前 .pdf 导入在
- * 预检即被 415 拒绝并说明 "pdf parser lands with D4-1 integration"
- * （绝无伪成功/伪就绪）；集成只需在默认注册表追加一行。
+ * 诚实边界：默认注册表装配 markdown d4-md-v1 + pdf d4-pdf-v1（PDF 文字
+ * 层解析器，apps/studio/src/materials/pdf-parser.ts——参考提取器
+ * scripts/d4/pdf/extract.mjs 的应用侧移植，以 12 个冻结 fixture 真值为
+ * 验收）。注入自定义 parsers 注册表时整体替换：缺位的种类在预检即被
+ * 415 拒绝并说明 "not wired in this process"（绝无伪成功/伪就绪）。
  */
 
 import { createHash, randomUUID } from "node:crypto";
@@ -47,6 +49,7 @@ import type {
 } from "@treeai/contracts";
 import { EntityNotFoundError, InvalidArgumentError, type MaterialRepository } from "@treeai/persistence";
 import { MARKDOWN_PARSER_VERSION, parseMarkdownMaterial } from "./markdown-parser.ts";
+import { DEFAULT_MAX_PAGES, PDF_PARSER_VERSION, parsePdfMaterial } from "./pdf-parser.ts";
 
 /* ------------------------------------------------------------------ */
 /* 冻结常量：上限与稳定原因码（charter §5 / D4 契约 §3）                */
@@ -62,22 +65,25 @@ export const DEFAULT_MAX_TEXT_UNITS = 1_000_000;
 export const TEXT_UNITS_EXCEEDED_REASON = "text-units-exceeded";
 
 /**
- * 超限原因码：文本 PDF 超 200 页。pdf 解析器（d4-pdf-v1）在抽取全文前
- * 按页数拒绝时使用本常量；服务层把解析器给出的原因码原样入 parseError。
+ * 超限原因码：文本 PDF 超 200 页。pdf 解析器（d4-pdf-v1）在解释任何
+ * 内容流之前按页树页数拒绝时使用本常量（常量定义在 pdf-parser.ts，
+ * 此处再导出保持服务面稳定）；服务层把解析器给出的原因码原样入 parseError。
  */
-export const PAGES_EXCEEDED_REASON = "pages-exceeded";
+export { PAGES_EXCEEDED_REASON } from "./pdf-parser.ts";
+
+/** 文本 PDF 页数上限冻结值（charter §5；经 limits.maxPages 注入解析器）。 */
+export { DEFAULT_MAX_PAGES } from "./pdf-parser.ts";
 
 /** 宿主中断恢复的原因码（构造时收敛遗留 pending/parsing 版本）。 */
 export const PARSE_INTERRUPTED_REASON = "parse-interrupted";
-
-/** pdf 解析器未装配时的诚实说明（HTTP 415 detail；绝不伪成功）。 */
-export const PDF_PARSER_PENDING_DETAIL = "pdf parser lands with D4-1 integration";
 
 export interface MaterialImportLimits {
   /** 单文件字节上限（缺省 DEFAULT_MAX_FILE_BYTES = 20 MiB）。 */
   readonly maxFileBytes: number;
   /** 规范文本 UTF-16 码元上限（缺省 DEFAULT_MAX_TEXT_UNITS = 1,000,000）。 */
   readonly maxTextUnits: number;
+  /** 文本 PDF 页数上限（缺省 DEFAULT_MAX_PAGES = 200；仅 pdf 解析器消费）。 */
+  readonly maxPages: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -106,7 +112,16 @@ export type MaterialParserOutcome =
 export interface MaterialParser {
   readonly kind: MaterialParserKind;
   readonly parserVersion: string;
-  parse(bytes: Uint8Array): Promise<MaterialParserOutcome>;
+  parse(bytes: Uint8Array, context?: MaterialParseContext): Promise<MaterialParserOutcome>;
+}
+
+/**
+ * 解析任务的运行参数（服务 → 解析器；markdown 解析器忽略页数上限）。
+ * 页数上限由 pdf 解析器在解释任何内容流之前执行（charter §5：超限在
+ * 耗尽资源前明确拒绝）。
+ */
+export interface MaterialParseContext {
+  readonly maxPages: number;
 }
 
 /** d4-md-v1 解析器装配（同步纯函数 → MaterialParser 缝）。 */
@@ -132,14 +147,40 @@ export const D4_MD_V1_PARSER: MaterialParser = {
   },
 };
 
+/** d4-pdf-v1 解析器装配（同步纯函数 → MaterialParser 缝；页块带 1-based page）。 */
+export const D4_PDF_V1_PARSER: MaterialParser = {
+  kind: "pdf",
+  parserVersion: PDF_PARSER_VERSION,
+  parse(bytes: Uint8Array, context?: MaterialParseContext): Promise<MaterialParserOutcome> {
+    const result = parsePdfMaterial(bytes, { maxPages: context?.maxPages });
+    if (result.ok) {
+      return Promise.resolve({
+        ok: true,
+        canonicalText: result.canonicalText,
+        // pdf-page 块的 page 字段随块图入库（D4-2 阅读器按页渲染所需）。
+        blocks: result.blocks.map((block) => ({
+          blockId: block.blockId,
+          kind: block.kind,
+          start: block.start,
+          end: block.end,
+          page: block.page,
+        })),
+      });
+    }
+    return Promise.resolve({ ok: false, reason: result.reason, message: result.message });
+  },
+};
+
 /**
- * 默认解析器注册表（按 MaterialParserKind）。pdf 槽位**尚未装配**：
- * d4-pdf-v1 随 D4-1 集成落地，届时在此追加 `pdf: D4_PDF_V1_PARSER`
- * 一行即完成接线；装配前 .pdf 导入在预检即被 415 诚实拒绝
- * （PDF_PARSER_PENDING_DETAIL），绝无伪成功/伪就绪。
+ * 默认解析器注册表（按 MaterialParserKind）：markdown = d4-md-v1，
+ * pdf = d4-pdf-v1（PDF 文字层解析器随本工作包装配）。注入自定义
+ * `parsers` 时**整体替换**注册表——缺哪个种类，该扩展名导入即被
+ * 415 诚实拒绝（`the 'X' parser is not wired in this process`），
+ * 绝无伪成功/伪就绪。
  */
 const DEFAULT_PARSERS: Readonly<Partial<Record<MaterialParserKind, MaterialParser>>> = {
   markdown: D4_MD_V1_PARSER,
+  pdf: D4_PDF_V1_PARSER,
 };
 
 /* ------------------------------------------------------------------ */
@@ -299,9 +340,9 @@ export const MAX_BLOCK_PAGE_LIMIT = 500;
 
 export interface MaterialImportServiceOptions {
   readonly repository: MaterialRepository;
-  /** 解析器注册表（缺省只装 markdown；pdf 槽位见 DEFAULT_PARSERS 注释）。 */
+  /** 解析器注册表（缺省 markdown d4-md-v1 + pdf d4-pdf-v1，见 DEFAULT_PARSERS 注释）。 */
   readonly parsers?: Readonly<Partial<Record<MaterialParserKind, MaterialParser>>>;
-  /** 上限覆盖（测试注入小限额用；缺省 20 MiB / 1,000,000 units）。 */
+  /** 上限覆盖（测试注入小限额用；缺省 20 MiB / 1,000,000 units / 200 pages）。 */
   readonly limits?: Partial<MaterialImportLimits>;
   readonly now?: () => IsoTimestamp;
   readonly generateTaskId?: () => string;
@@ -336,13 +377,17 @@ export class MaterialImportService {
     this.repository = options.repository;
     const maxFileBytes = options.limits?.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES;
     const maxTextUnits = options.limits?.maxTextUnits ?? DEFAULT_MAX_TEXT_UNITS;
+    const maxPages = options.limits?.maxPages ?? DEFAULT_MAX_PAGES;
     if (!Number.isInteger(maxFileBytes) || maxFileBytes < 1) {
       throw new InvalidArgumentError("limits.maxFileBytes must be a positive integer");
     }
     if (!Number.isInteger(maxTextUnits) || maxTextUnits < 1) {
       throw new InvalidArgumentError("limits.maxTextUnits must be a positive integer");
     }
-    this.limits = { maxFileBytes, maxTextUnits };
+    if (!Number.isInteger(maxPages) || maxPages < 1) {
+      throw new InvalidArgumentError("limits.maxPages must be a positive integer");
+    }
+    this.limits = { maxFileBytes, maxTextUnits, maxPages };
     const registryEntries = Object.entries(options.parsers ?? DEFAULT_PARSERS).filter(
       (entry): entry is [string, MaterialParser] => entry[1] !== undefined,
     );
@@ -361,8 +406,8 @@ export class MaterialImportService {
 
   /**
    * 导入预检（HTTP 层在读取请求体之前调用，使 404/415 无需先吞下整个 body）：
-   * 树存在（404）+ 扩展名可判定（415）+ 解析器已装配（415——pdf 在 D4-1
-   * 集成前如实拒绝）。
+   * 树存在（404）+ 扩展名可判定（415）+ 解析器已装配（415——自定义注册表
+   * 缺位种类时如实拒绝）。
    */
   precheckImport(treeId: TreeId, filename: string): {
     readonly parserKind: MaterialParserKind;
@@ -654,9 +699,8 @@ export class MaterialImportService {
     const parser = this.#parsers.get(kind);
     if (parser === undefined) {
       throw new MaterialUnsupportedError(
-        kind === "pdf"
-          ? `the '${kind}' parser is not wired in this process: ${PDF_PARSER_PENDING_DETAIL}`
-          : `the '${kind}' parser is not wired in this process`,
+        `the '${kind}' parser is not wired in this process ` +
+          "(the default registry carries markdown d4-md-v1 + pdf d4-pdf-v1; a custom parsers registry that omits this kind is honestly rejected)",
       );
     }
     return parser;
@@ -743,7 +787,8 @@ export class MaterialImportService {
         return;
       }
       task.state = "parsing";
-      let outcome = await parser.parse(bytes);
+      // 页数上限随上下文交给解析器（pdf 在解释内容流前执行；md 忽略）。
+      let outcome = await parser.parse(bytes, { maxPages: this.limits.maxPages });
       // 取消可能发生在解析在途期间（cancelParseTask 同步改写 task.state；
       // 经方法读取避免控制流窄化掩盖该交错）。
       if (this.#isCanceled(task)) {

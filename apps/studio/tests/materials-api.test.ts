@@ -6,11 +6,15 @@
  * - 导入 happy path：原始字节 body + x-treeai-filename（UTF-8 百分号编码，
  *   空格/CJK 解码）；201 {material, version, parseTaskId}；就绪轮询；列表/
  *   详情读模型；分块读取分页（afterBlock/limit/nextAfterBlock/textUnits）；
+ * - PDF 导入（d4-pdf-v1 默认装配）：真实 fixture（pdf-01）201 → ready，
+ *   page-N 块分页（page 字段随块返回）；加密负例 201 → failed
+ *   （encrypted 原因码入 parseError），读取 409 material-not-ready 且
+ *   携带原因；自定义注册表缺 pdf 槽位 → 415 "not wired"；
  * - 版本语义：同字节重导 200（同 versionId，零新行）；新字节 201 + 版本链
  *   （旧版本仍可读）；versions 端点同语义；
  * - 拒绝面：413 material-too-large（小限额注入、读体即拒、零持久化）；
- *   415 material-unsupported（未知扩展名；.pdf 集成前诚实说明）；404 未知
- *   树/材料/版本；400 缺文件名头/坏百分号编码/坏查询参数；503 未装配；
+ *   415 material-unsupported（未知扩展名）；404 未知树/材料/版本；
+ *   400 缺文件名头/坏百分号编码/坏查询参数；503 未装配；
  * - 解析失败诚实面：invalid-utf8 → 版本 failed（原因码入 parseError），
  *   分块读取 409 material-not-ready（绝不伪装空成功文档）；
  * - 取消（受控门控假解析器，经 HTTP 注入）：mid-parse 取消 200 → canceled；
@@ -21,10 +25,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { MaterialBlock, MaterialId } from "@treeai/contracts";
 import { createStudioServer } from "../src/server.ts";
-import type { MaterialParser, MaterialParserOutcome } from "../src/materials/import-service.ts";
+import { D4_MD_V1_PARSER, type MaterialParser, type MaterialParserOutcome } from "../src/materials/import-service.ts";
 import {
   cleanupDir,
   makeStudioInstance,
@@ -34,10 +39,15 @@ import {
 } from "./helpers.ts";
 
 const staticDir = fileURLToPath(new URL("../public/", import.meta.url));
+const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", import.meta.url));
 const ENCODER = new TextEncoder();
 
 function utf8(text: string): Uint8Array {
   return ENCODER.encode(text);
+}
+
+function b1Bytes(rel: string): Uint8Array {
+  return new Uint8Array(readFileSync(`${B1_ROOT}${rel}`));
 }
 
 interface JsonOutcome {
@@ -359,15 +369,6 @@ test("rejection surface: 413 oversize, 415 unsupported extension and pending pdf
     assert.equal(docx.body.error.code, "material-unsupported");
     assert.ok(docx.body.error.message.includes(".docx"));
 
-    /* .pdf：D4-1 集成前的诚实拒绝（绝不伪成功）。 */
-    const pdf = await upload(studio.url(materialPath(treeId)), "paper.pdf", utf8("%PDF-1.7 fake"));
-    assert.equal(pdf.status, 415);
-    assert.equal(pdf.body.error.code, "material-unsupported");
-    assert.ok(
-      pdf.body.error.message.includes("pdf parser lands with D4-1 integration"),
-      "the honest pending-integration detail is carried",
-    );
-
     /* 缺文件名头 / 坏百分号编码 → 400。 */
     const noHeader = await fetch(studio.url(materialPath(treeId)), { method: "POST" });
     assert.equal((await readOutcome(noHeader)).status, 400);
@@ -510,6 +511,124 @@ test("parse cancellation over HTTP: mid-parse cancel with a gated fake parser; t
       ).status,
       404,
     );
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running);
+    const treeId = await createTree(studio);
+    const expected = JSON.parse(readFileSync(`${B1_ROOT}pdf/pdf-01.expected.json`, "utf8")) as {
+      canonicalText: string;
+      blocks: readonly { blockId: string; text: string; page: number; start: number; end: number }[];
+    };
+
+    const imported = await upload(
+      studio.url(materialPath(treeId)),
+      "递归学习笔记.pdf",
+      b1Bytes("pdf/pdf-01.pdf"),
+    );
+    assert.equal(imported.status, 201);
+    assert.equal(imported.body.version.parserKind, "pdf");
+    assert.equal(imported.body.version.parserVersion, "d4-pdf-v1");
+    const materialId: string = imported.body.material.id;
+    const versionId: string = imported.body.version.id;
+
+    const version = await waitVersionStatus(studio, treeId, materialId, "ready");
+    assert.equal(version.textUnits, expected.canonicalText.length);
+
+    /* 分块读取：page-N 块（page 字段随块返回）+ 分页游标。 */
+    const versionPath = `${materialPath(treeId, materialId)}/versions/${encodeURIComponent(versionId)}`;
+    const full = await call(studio.url(versionPath), "GET");
+    assert.equal(full.status, 200);
+    assert.equal(full.body.nextAfterBlock, null);
+    assert.deepEqual(
+      full.body.blocks.map((b: any) => b.block),
+      expected.blocks.map((b) => ({ blockId: b.blockId, kind: "pdf-page", start: b.start, end: b.end, page: b.page })),
+    );
+    assert.deepEqual(
+      full.body.blocks.map((b: any) => b.text),
+      expected.blocks.map((b) => b.text),
+    );
+
+    const page1 = await call(`${studio.url(versionPath)}?limit=1`, "GET");
+    assert.deepEqual(page1.body.blocks.map((b: any) => b.block.blockId), ["page-1"]);
+    assert.equal(page1.body.nextAfterBlock, "page-1");
+    const page2 = await call(`${studio.url(versionPath)}?afterBlock=page-1&limit=1`, "GET");
+    assert.deepEqual(page2.body.blocks.map((b: any) => b.block.blockId), ["page-2"]);
+    assert.equal(page2.body.nextAfterBlock, null);
+
+    /* 同字节重导（换文件名）→ 200 复用，零新行。 */
+    const reimport = await upload(
+      studio.url(materialPath(treeId)),
+      "renamed.pdf",
+      b1Bytes("pdf/pdf-01.pdf"),
+    );
+    assert.equal(reimport.status, 200);
+    assert.equal(reimport.body.created, false);
+    assert.equal(reimport.body.version.id, versionId);
+    assert.equal(reimport.body.parseTaskId, null);
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running);
+    const treeId = await createTree(studio);
+
+    const imported = await upload(
+      studio.url(materialPath(treeId)),
+      "locked.pdf",
+      b1Bytes("negative/neg-pdf-encrypted.pdf"),
+    );
+    assert.equal(imported.status, 201, "the upload itself succeeds; the parse pipeline reports the rejection");
+    const materialId: string = imported.body.material.id;
+
+    const version = await waitVersionStatus(studio, treeId, materialId, "failed");
+    assert.match(version.parseError, /^encrypted:/);
+    assert.equal(version.textUnits, 0);
+
+    const read = await call(
+      `${studio.url(materialPath(treeId, materialId))}/versions/${encodeURIComponent(imported.body.version.id)}`,
+      "GET",
+    );
+    assert.equal(read.status, 409);
+    assert.equal(read.body.error.code, "material-not-ready");
+    assert.ok(read.body.error.message.includes("encrypted"), "the rejection reason is carried, not hidden");
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
+test("custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running, { materialImport: { parsers: { markdown: D4_MD_V1_PARSER } } });
+    const treeId = await createTree(studio);
+
+    const pdf = await upload(studio.url(materialPath(treeId)), "paper.pdf", utf8("%PDF-1.7 fake"));
+    assert.equal(pdf.status, 415);
+    assert.equal(pdf.body.error.code, "material-unsupported");
+    assert.ok(
+      pdf.body.error.message.includes("not wired"),
+      "the honest not-wired detail is carried",
+    );
+    /* markdown 槽位照常可用。 */
+    const md = await upload(studio.url(materialPath(treeId)), "notes.md", utf8(THREE_BLOCKS));
+    assert.equal(md.status, 201);
+    assert.equal((await call(studio.url(materialPath(treeId)), "GET")).body.materials.length, 1);
   } finally {
     await closeAll(running);
     cleanupDir(dir);

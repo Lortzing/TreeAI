@@ -48,10 +48,10 @@ export interface StudioInstanceOptions {
   readonly journal?: EventJournal;
   /** 可选覆盖 runtime（脚本化 runtime 的服务级测试）。 */
   readonly runtime?: PiRuntime;
-  /** 材料导入服务注入（受控假解析器/小限额测试用；缺省 d4-md-v1 + 冻结上限）。 */
+  /** 材料导入服务注入（受控假解析器/小限额测试用；缺省 d4-md-v1 + d4-pdf-v1 + 冻结上限）。 */
   readonly materialImport?: {
     readonly parsers?: Readonly<Partial<Record<"markdown" | "pdf", MaterialParser>>>;
-    readonly limits?: { readonly maxFileBytes?: number; readonly maxTextUnits?: number };
+    readonly limits?: { readonly maxFileBytes?: number; readonly maxTextUnits?: number; readonly maxPages?: number };
   };
 }
 
