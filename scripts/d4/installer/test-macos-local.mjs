@@ -497,6 +497,16 @@ try {
   if (recorderContent !== "") {
     writeFileSync(join(EVIDENCE_DIR, "browser-open.log"), redact(recorderContent));
   }
+  const scan = scanFiles([EVIDENCE_DIR], EVIDENCE_DIR);
+  const scanReport = {
+    scanner: "d2-v1.1",
+    findings: scan.findings.map((f) => ({ ruleId: f.ruleId, path: redact(f.path) })),
+    filesScanned: scan.stats.filesScanned,
+  };
+  writeFileSync(join(EVIDENCE_DIR, "secret-scan.json"), `${JSON.stringify(scanReport, null, 2)}\n`);
+  check(scan.findings.length === 0, "证据密钥扫描零发现", JSON.stringify(scanReport.findings));
+  check(!existsSync(REAL_DATA_DIR), "收尾：真实数据目录恢复不存在");
+  /* summary 在最后写：必须包含上面两个收尾检查的真实计数。 */
   const summary = [
     `# D4-7 本机 macOS ARM64 真实安装实测 — ${runId}`,
     "",
@@ -521,15 +531,6 @@ try {
   ].join("\n");
   writeFileSync(join(EVIDENCE_DIR, "summary.md"), summary);
   writeFileSync(join(EVIDENCE_DIR, "commands.log"), commandLog.join("\n"));
-  const scan = scanFiles([EVIDENCE_DIR], EVIDENCE_DIR);
-  const scanReport = {
-    scanner: "d2-v1.1",
-    findings: scan.findings.map((f) => ({ ruleId: f.ruleId, path: redact(f.path) })),
-    filesScanned: scan.stats.filesScanned,
-  };
-  writeFileSync(join(EVIDENCE_DIR, "secret-scan.json"), `${JSON.stringify(scanReport, null, 2)}\n`);
-  check(scan.findings.length === 0, "证据密钥扫描零发现", JSON.stringify(scanReport.findings));
-  check(!existsSync(REAL_DATA_DIR), "收尾：真实数据目录恢复不存在");
 
   exitCode = failed === 0 ? 0 : 2;
 } catch (err) {

@@ -1,0 +1,410 @@
+## sw_vers
+$ sw_vers
+exit=0
+```
+ProductName:		macOS
+ProductVersion:		26.6.2
+BuildVersion:		25G83
+```
+
+## uname -m
+$ uname -m
+exit=0
+```
+arm64
+```
+
+## node --version
+$ node --version
+exit=0
+```
+v24.21.0
+```
+
+## git rev-parse HEAD
+$ git rev-parse HEAD
+exit=0
+```
+fcb5fa33e89deebe1e5e020a5ec1bcddf636d6f9
+```
+
+## 构建产物 A
+$ ~/.local/share/fnm/node-versions/v24.21.0/installation/bin/node scripts/d4/package-installer.mjs --platform darwin-arm64 --version 0.1.0-d47local-a --out-dir /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+exit=0
+```
+package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+  平台          darwin-arm64
+  bundle 版本   0.1.0-d47local-a
+  内置 Node     24.21.0（nodejs.org 官方发行包）
+  git 提交      fcb5fa33e89deebe1e5e020a5ec1bcddf636d6f9（工作区有未提交改动）
+  输出目录      /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz …
+package-installer: 下载并核对官方 SHASUMS256.txt …
+package-installer: 发行包 SHA256 与官方一致（bed7eea5325e1108…）
+package-installer: 解包 Node 发行包…
+package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+package-installer: 密钥扫描通过（81 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+package-installer: 压缩 treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz …
+
+package-installer: 构建完成（54.5s）
+  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz（75.4 MiB）
+  SHA256 dbd04f89151288d25480ba96ecfab87f02ce7ec46fcac9b8122a8f913c0bc7a2
+  裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, linux-x64, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32, win32-x64
+  签名状态：未签名 / 未公证（如实记录）
+```
+
+## 构建产物 B
+$ ~/.local/share/fnm/node-versions/v24.21.0/installation/bin/node scripts/d4/package-installer.mjs --platform darwin-arm64 --version 0.1.0-d47local-b --out-dir /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+exit=0
+```
+package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+  平台          darwin-arm64
+  bundle 版本   0.1.0-d47local-b
+  内置 Node     24.21.0（nodejs.org 官方发行包）
+  git 提交      fcb5fa33e89deebe1e5e020a5ec1bcddf636d6f9（工作区有未提交改动）
+  输出目录      /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+package-installer: 使用缓存发行包 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/.cache/node-dist/node-v24.21.0-darwin-arm64.tar.gz
+package-installer: 下载并核对官方 SHASUMS256.txt …
+package-installer: 发行包 SHA256 与官方一致（bed7eea5325e1108…）
+package-installer: 解包 Node 发行包…
+package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+package-installer: 密钥扫描通过（81 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+package-installer: 压缩 treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz …
+
+package-installer: 构建完成（19.0s）
+  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz（75.4 MiB）
+  SHA256 46ca84bd6e82b7cc7029334646611dd9fa3647548d8cc731572ee5db599de48f
+  裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, linux-x64, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32, win32-x64
+  签名状态：未签名 / 未公证（如实记录）
+```
+
+## sha256 A
+$ shasum -a 256 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz
+exit=0
+```
+dbd04f89151288d25480ba96ecfab87f02ce7ec46fcac9b8122a8f913c0bc7a2  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz
+```
+
+## sha256 B
+$ shasum -a 256 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz
+exit=0
+```
+46ca84bd6e82b7cc7029334646611dd9fa3647548d8cc731572ee5db599de48f  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz
+```
+
+## 解压产物 A 到安装目录
+$ tar -xzf /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz -C "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）"
+exit=0
+```
+
+```
+
+## 首次运行 start.command（真实 open）
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=0
+```
+treeai-launcher: 首次运行，已生成默认离线配置 ~/Library/Application Support/TreeAI/config.json（driver=echo，无需模型）
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8788（bundle 0.1.0-d47local-a，端口 8788）
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已请求系统浏览器打开 http://127.0.0.1:8788
+```
+
+## 停止实例（准备记录器首启）
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## start.command（BROWSER 记录器）
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=0
+```
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8788（bundle 0.1.0-d47local-a，端口 8788）
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已请求系统浏览器打开 http://127.0.0.1:8788
+```
+
+## stop.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## restart.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/restart.command"
+exit=0
+```
+treeai-launcher: 当前没有在运行（无需停止）
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8788（bundle 0.1.0-d47local-a，端口 8788）
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已请求系统浏览器打开 http://127.0.0.1:8788
+```
+
+## 先停止
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## 端口被占时的 start.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=0
+```
+treeai-launcher: 端口 8787 被占用，已自动改用 8789（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8789（bundle 0.1.0-d47local-a，端口 8789）
+treeai-launcher: url=http://127.0.0.1:8789
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已按配置不打开浏览器：http://127.0.0.1:8789
+```
+
+## doctor.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/doctor.command"
+exit=0
+```
+treeai-launcher: doctor — D4-7 诊断
+  ✓ 产物清单：bundle 0.1.0-d47local-a，平台 darwin-arm64，Node 24.21.0（git fcb5fa33e89d）
+  ✓ 产物布局完整（node/launcher/app/入口脚本/静态前端/预编译依赖）
+  ✓ 内置 Node 运行时正常（v24.21.0）
+  ✓ 数据目录可写（~/Library/Application Support/TreeAI）
+  ✓ 配置有效（driver=echo 离线回声，端口 8787）
+  ✓ 已在运行 http://127.0.0.1:8789（换端口：stop 后改 ~/Library/Application Support/TreeAI/config.json 再 start）
+
+treeai-launcher: doctor 结论：全部通过（! 警告不影响启动）
+```
+
+## treeai.sh paths
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/treeai.sh" paths
+exit=0
+```
+treeai-launcher: bundle=/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64
+treeai-launcher: data=~/Library/Application Support/TreeAI
+treeai-launcher: config=~/Library/Application Support/TreeAI/config.json
+treeai-launcher: studio-log=~/Library/Application Support/TreeAI/logs/studio.log
+treeai-launcher: install-root-default=~/Applications/TreeAI
+treeai-launcher: node=/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/node/bin/node (v24.21.0)
+```
+
+## 停止
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## 坏配置 doctor.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/doctor.command"
+exit=1
+```
+treeai-launcher: doctor — D4-7 诊断
+  ✓ 产物清单：bundle 0.1.0-d47local-a，平台 darwin-arm64，Node 24.21.0（git fcb5fa33e89d）
+  ✓ 产物布局完整（node/launcher/app/入口脚本/静态前端/预编译依赖）
+  ✓ 内置 Node 运行时正常（v24.21.0）
+  ✓ 数据目录可写（~/Library/Application Support/TreeAI）
+  ✗ 配置（~/Library/Application Support/TreeAI/config.json）：driver=pi 需要 provider（例如 anthropic）。修复方法：在 config.json 加 "provider": "<你的 provider id>"，或先把 "driver" 改回 "echo"（离线回声模式，无需模型）。
+  ✗ 配置（~/Library/Application Support/TreeAI/config.json）：driver=pi 需要 model（例如 claude-sonnet-4-5）。修复方法：在 config.json 加 "model": "<模型 id>",或先把 "driver" 改回 "echo"。
+  ! 端口 8787 被其他程序占用：start 会自动顺延到下一个可用端口并在输出中告知；固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段
+
+treeai-launcher: doctor 结论：发现 2 个问题（上面每条 ✗ 都附带了修复方法）
+
+操作失败（退出码 1）。可运行诊断：
+  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/doctor.command
+```
+
+## 坏配置 start.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=1
+```
+操作失败（退出码 1）。可运行诊断：
+  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/doctor.command
+
+(stderr)
+treeai-launcher: 失败：配置校验未通过（~/Library/Application Support/TreeAI/config.json）：
+driver=pi 需要 provider（例如 anthropic）。修复方法：在 config.json 加 "provider": "<你的 provider id>"，或先把 "driver" 改回 "echo"（离线回声模式，无需模型）。
+driver=pi 需要 model（例如 claude-sonnet-4-5）。修复方法：在 config.json 加 "model": "<模型 id>",或先把 "driver" 改回 "echo"。
+可运行 doctor 查看逐项诊断。
+```
+
+## 修复后 start.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=0
+```
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8788（bundle 0.1.0-d47local-a，端口 8788）
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已按配置不打开浏览器：http://127.0.0.1:8788
+```
+
+## 停止
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## 解压产物 B（新版本）
+$ tar -xzf /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz -C /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+exit=0
+```
+
+```
+
+## upgrade.command --old <A 安装目录>
+$ /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64/upgrade.command --old "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64"
+exit=0
+```
+treeai-launcher: 升级 0.1.0-d47local-a → 0.1.0-d47local-b（安装目录 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64）
+treeai-launcher: 升级成功：0.1.0-d47local-b 已启动并通过健康检查（旧版本备份：/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64.backup-2026-09-30T13-52-52-052Z）
+treeai-launcher: 用户数据未做任何改动：~/Library/Application Support/TreeAI
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 已请求系统浏览器打开 http://127.0.0.1:8788
+```
+
+## 停止升级后的实例
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## 解压产物 B（破坏版）
+$ tar -xzf /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz -C /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/broken-new
+exit=0
+```
+
+```
+
+## 损坏新包 upgrade.command --old <A>
+$ /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/broken-new/treeai-studio-0.1.0-d47local-b-darwin-arm64/upgrade.command --old "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64"
+exit=1
+```
+treeai-launcher: 升级 0.1.0-d47local-b → 0.1.0-d47local-b（安装目录 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64）
+treeai-launcher: 新版本健康检查未通过，已回滚到旧版本。新版本输出：
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+
+treeai-launcher: 失败：studio 服务进程启动后很快退出（端口 8788）。最近日志：
+ens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:32.965Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:36.948Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:38.507Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8789
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:40.981Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:55.398Z (bundle 0.1.0-d47local-b) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:53:10.817Z (bundle 0.1.0-d47local-b) =====
+node:internal/modules/cjs/loader:1568
+  throw err;
+  ^
+
+Error: Cannot find module '/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/app/apps/studio/src/index.ts'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v24.21.0
+
+可运行 doctor 诊断；配置文件：~/Library/Application Support/TreeAI/config.json
+
+操作失败（退出码 1）。可运行诊断：
+  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/broken-new/treeai-studio-0.1.0-d47local-b-darwin-arm64/doctor.command
+
+(stderr)
+treeai-launcher: 失败：升级失败已回滚（旧版本 0.1.0-d47local-b 已恢复）。数据目录未受影响（~/Library/Application Support/TreeAI）。请把上面的输出反馈给开发者。
+```
+
+## 回滚后 start.command
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/start.command"
+exit=0
+```
+treeai-launcher: 端口 8787 被占用，已自动改用 8788（固定端口请改 ~/Library/Application Support/TreeAI/config.json 的 port 字段）
+treeai-launcher: 已启动 http://127.0.0.1:8788（bundle 0.1.0-d47local-b，端口 8788）
+treeai-launcher: url=http://127.0.0.1:8788
+treeai-launcher: 数据目录 ~/Library/Application Support/TreeAI；停止用 stop；诊断用 doctor
+treeai-launcher: 已按配置不打开浏览器：http://127.0.0.1:8788
+```
+
+## 停止
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/stop.command"
+exit=0
+```
+treeai-launcher: 已停止
+```
+
+## uninstall.command（默认）
+$ "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/uninstall.command"
+exit=0
+```
+treeai-launcher: 用户数据已保留：~/Library/Application Support/TreeAI（重新安装任意版本即可继续使用；确认不要了可手动删除该目录）
+treeai-launcher: 已删除安装目录 /private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64
+```
+
+## 重解压产物 B
+$ tar -xzf /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz -C /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/reinstall
+exit=0
+```
+
+```
+
+## uninstall.command --delete-data
+$ /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/reinstall/treeai-studio-0.1.0-d47local-b-darwin-arm64/uninstall.command --delete-data
+exit=0
+```
+treeai-launcher: 已删除数据目录 ~/Library/Application Support/TreeAI
+treeai-launcher: 已删除安装目录 /private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/reinstall/treeai-studio-0.1.0-d47local-b-darwin-arm64
+```

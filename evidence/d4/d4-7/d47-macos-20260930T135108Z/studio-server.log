@@ -1,0 +1,76 @@
+
+===== treeai-studio start 2026-09-30T13:52:31.195Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:32.965Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:36.948Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:38.507Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8789
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:40.981Z (bundle 0.1.0-d47local-a) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:52:55.398Z (bundle 0.1.0-d47local-b) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+
+===== treeai-studio start 2026-09-30T13:53:10.817Z (bundle 0.1.0-d47local-b) =====
+node:internal/modules/cjs/loader:1568
+  throw err;
+  ^
+
+Error: Cannot find module '/private/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）/treeai-studio-0.1.0-d47local-a-darwin-arm64/app/apps/studio/src/index.ts'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v24.21.0
+
+===== treeai-studio start 2026-09-30T13:53:12.650Z (bundle 0.1.0-d47local-b) =====
+treeai-studio: listening http://127.0.0.1:8788
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=~/Library/Application Support/TreeAI (schema v8)
+treeai-studio: journal=~/Library/Application Support/TreeAI/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)

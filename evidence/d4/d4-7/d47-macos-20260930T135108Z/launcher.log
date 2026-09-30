@@ -1,0 +1,15 @@
+2026-09-30T13:52:32.227Z start ok pid=24877 port=8788 bundle=0.1.0-d47local-a
+2026-09-30T13:52:32.870Z stop (stop) pid=24877 port=8788 clean=true
+2026-09-30T13:52:34.003Z start ok pid=24913 port=8788 bundle=0.1.0-d47local-a
+2026-09-30T13:52:35.442Z stop (stop) pid=24913 port=8788 clean=true
+2026-09-30T13:52:37.984Z start ok pid=24960 port=8788 bundle=0.1.0-d47local-a
+2026-09-30T13:52:38.414Z stop (stop) pid=24960 port=8788 clean=true
+2026-09-30T13:52:39.544Z start ok pid=24995 port=8789 bundle=0.1.0-d47local-a
+2026-09-30T13:52:40.630Z stop (stop) pid=24995 port=8789 clean=true
+2026-09-30T13:52:42.012Z start ok pid=25051 port=8788 bundle=0.1.0-d47local-a
+2026-09-30T13:52:42.426Z stop (stop) pid=25051 port=8788 clean=true
+2026-09-30T13:52:56.437Z start ok pid=25143 port=8788 bundle=0.1.0-d47local-b
+2026-09-30T13:52:56.448Z upgrade 0.1.0-d47local-a -> 0.1.0-d47local-b ok
+2026-09-30T13:52:58.119Z stop (stop) pid=25143 port=8788 clean=true
+2026-09-30T13:53:13.693Z start ok pid=25277 port=8788 bundle=0.1.0-d47local-b
+2026-09-30T13:53:14.115Z stop (stop) pid=25277 port=8788 clean=true
