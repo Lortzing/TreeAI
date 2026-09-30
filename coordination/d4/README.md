@@ -21,6 +21,13 @@
 - 注意：term-backend 与 d4-2-backend 都会改 `apps/studio/src/server.ts`
   （术语路由 vs 材料路由）——集成时由集成会话解决冲突。
 - D4-2 前端阅读器不在本波（app.js 由 term-frontend 独占）。
+- `wip/d4-7-installer`（worktree d4-7-installer，2026-09-30 21:20 追加，基于
+  main `a6f411d`）：D4-7 安装程序/跨平台工程——打包本地服务＋系统浏览器
+  方案、三平台安装产物与校验和、首次启动/诊断/升级/卸载脚本、三平台 CI
+  构建；本机仅 macOS ARM64 可实测，Windows/Linux 干净安装按 B8 如实
+  BLOCKED。文件面：scripts/ 打包与安装脚本、.github/workflows/、根
+  package.json scripts、docs/d4/D4-status.md（D4-7 行）——不碰 app.js/
+  server.ts/terminology/迁移，与上三支无文件冲突。
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
