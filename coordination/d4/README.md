@@ -4,7 +4,27 @@
 负责人统一协调」。本目录是 D4 波次的协调登记处，由 D4 集成侧维护；各工作包
 动下列资源前必须先在此登记领取。
 
-## 当前波次（2026-09-30 晚，已完成）
+## 当前波次（进行中，2026-09-30 深夜）
+
+术语整改波（issue #7 增量验收 12:08Z 的必须修复项）+ D4-2 后端，三支并行，
+均基于 main `57a8abb`：
+
+- `wip/term-backend`（worktree term-backend）：术语后端 P0×3 + P1×2 ——
+  缓存语境键、推广事务原子性（bindTerminologyPromotion 单事务/冲突零副作用）、
+  首问 payload hash + 派发账本（迁移 0011 已登记）、预算预留、取消记账。
+- `wip/term-frontend`（worktree term-frontend）：app.js `turnOverlaysFor`
+  来源/切片联合校验（P0）+ `refreshTerminology` 跨树竞态守卫（P1）。
+- `wip/d4-2-backend`（worktree d4-2-backend）：D4-2 后端——材料读取 API、
+  统一区间解析层、阅读位置持久化、verify:d4 b2-precise-anchors 真执行
+  （75 有效 100% / 17 无效零误定位）。
+- 注意：term-backend 与 d4-2-backend 都会改 `apps/studio/src/server.ts`
+  （术语路由 vs 材料路由）——集成时由集成会话解决冲突。
+- D4-2 前端阅读器不在本波（app.js 由 term-frontend 独占）。
+
+若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
+`.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
+
+## 上一波（2026-09-30 晚，已完成）
 
 D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 
