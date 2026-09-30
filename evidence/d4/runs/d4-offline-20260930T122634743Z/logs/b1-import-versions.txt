@@ -1,0 +1,17 @@
+b1 import/versions check
+pdf-01: ready ok — 2 block(s), 1109 units, re-import reuses (pdf)
+pdf-02: ready ok — 2 block(s), 3270 units, re-import reuses (pdf)
+pdf-03: ready ok — 2 block(s), 1864 units, re-import reuses (pdf)
+pdf-04: ready ok — 2 block(s), 1528 units, re-import reuses (pdf)
+pdf-05: ready ok — 2 block(s), 1277 units, re-import reuses (pdf)
+pdf-06: ready ok — 2 block(s), 1815 units, re-import reuses (pdf)
+pdf-07: ready ok — 4 block(s), 2643 units, re-import reuses (pdf)
+pdf-08: ready ok — 10 block(s), 9239 units, re-import reuses (pdf)
+pdf-09: ready ok — 2 block(s), 1019 units, re-import reuses (pdf)
+pdf-10: ready ok — 2 block(s), 1487 units, re-import reuses (pdf)
+pdf-11: ready ok — 30 block(s), 3775 units, re-import reuses (pdf)
+pdf-12: ready ok — 2 block(s), 958 units, re-import reuses (pdf)
+neg-pdf-encrypted: rejected ok — encrypted
+neg-pdf-corrupt: rejected ok — corrupt
+neg-pdf-image-only: rejected ok — no-text-layer
+neg-pdf-zero-text: rejected ok — no-text-layer
