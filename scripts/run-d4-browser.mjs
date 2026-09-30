@@ -1,12 +1,24 @@
 #!/usr/bin/env node
 /**
- * run-d4-browser — TreeAI D4 浏览器验收入口（D4-0 骨架，issue #8 §8）。
+ * run-d4-browser — TreeAI D4 浏览器验收入口（issue #8 §8）。
  *
  * 驱动真实 headless Chromium（CDP，零 npm 依赖）与真实 Studio 进程，
  * 沿 D4 用户路径（导入→选文探索→Return→重启→搜索找回）执行检查。
- * D4-0 只落骨架：boot/页面装载是真实检查；材料路径的各检查在对应
- * 工作包（D4-1…D4-4）落地前保持 NOT_RUN + 原因——绝不静默省略，也
- * 不把 NOT_RUN 计为通过。
+ * D4-0 落骨架（boot/页面装载真实检查）；D4-2 前端落地后（v0.2.0）材料
+ * 路径的浏览器检查翻绿（探针实现见 scripts/d4/browser/material-probes.mjs，
+ * 冻结真值取 tests/fixtures/d4/ 的 B1/B2 冻结集）：
+ *   - d4-import-material：B1 冻结 fixture 经真实 HTTP API 导入（D4-1 契约
+ *     面；导入 UI 属后续增量）→ 真实 UI 侧栏 Materials 列表逐条 ready +
+ *     种类/版本标签；
+ *   - d4-read-and-select：真实 UI 打开阅读器 → 分块懒加载 → 真实 DOM 选区
+ *     （selectionchange/mouseup 武装路径 + 一次真实鼠标拖选）→ 捕获载荷
+ *     与 B2 冻结真值逐项全等（blockId/UTF-16 区间/摘录；含字素吸附、
+ *     跨块拒绝、重复词第 N 次出现）→ resolve-selection 服务端复核（含
+ *     sourceHash === SHA-256(冻结 canonicalText)）→ 复制摘录不变；
+ *   - d4-restart-continue：阅读位置经阅读器自身保存路径落库 → 停止
+ *     studio 进程 → 同数据目录新进程 → 重开恢复到原块。
+ * 未落地项保持 NOT_RUN + 原因（owner 写明）——绝不静默省略，也不把
+ * NOT_RUN 计为通过。
  *
  * 退出码（沿用 D2/D3 冻结语义）：
  *   0 — 所选模式全部检查 PASS
@@ -37,14 +49,19 @@
  */
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { execSync } from "node:child_process";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
+import { probeImportMaterial, probeReadAndSelect, probeRestartContinue } from "./d4/browser/material-probes.mjs";
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
+const D4_FIXTURES_MANIFEST = join(ROOT, "tests", "fixtures", "d4", "MANIFEST.sha256");
 const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
 const MODES = ["selftest", "real-pi"];
 const BOOT_TIMEOUT_MS = 60_000;
@@ -370,6 +387,14 @@ async function screenshot(name) {
   return path;
 }
 
+/** JSON sidecar（与截图同一序号空间；确定性事实入证据，脱敏纪律同 summary）。 */
+async function sidecar(name, data) {
+  chrome.screenshotSeq += 1;
+  const path = join(sc.artifactsDir, `${String(chrome.screenshotSeq).padStart(2, "0")}-${name}.json`);
+  writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+  return path;
+}
+
 /* ------------------------------------------------------------------ */
 /* Studio 进程                                                          */
 /* ------------------------------------------------------------------ */
@@ -385,10 +410,16 @@ function studioArgv(dataDir) {
   return argv;
 }
 
-async function startStudio(dataDir) {
+async function startStudio(dataDir, opts = {}) {
   studio.exited = false;
+  studio.stdoutRaw = "";
+  studio.stderrRaw = "";
   const logPath = join(sc.artifactsDir, "studio.log");
-  writeFileSync(logPath, "");
+  if (opts.appendLog === true) {
+    appendArtifact("studio.log", `\n=== studio restart ${new Date().toISOString()} (data dir unchanged) ===\n`);
+  } else {
+    writeFileSync(logPath, "");
+  }
   studio.child = spawn(process.execPath, studioArgv(dataDir), {
     cwd: ROOT,
     env: { ...process.env },
@@ -433,6 +464,39 @@ function killStudio() {
   if (studio.child !== null && !studio.exited) studio.child.kill("SIGKILL");
 }
 
+/** 停止 studio 进程（d4-restart-continue 用）：SIGTERM 优雅退出（进程
+    自带 graceful shutdown：仓储/journal 落盘）；超时 SIGKILL 兜底。 */
+async function stopStudioProcess(timeoutMs = 8000) {
+  const child = studio.child;
+  if (child === null || studio.exited) return;
+  child.kill("SIGTERM");
+  const graceful = await new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), timeoutMs);
+    child.once("exit", () => {
+      clearTimeout(timer);
+      resolve(true);
+    });
+  });
+  if (!graceful) {
+    child.kill("SIGKILL");
+    await new Promise((resolve) => {
+      child.once("exit", resolve);
+      setTimeout(resolve, 2000).unref?.();
+    });
+  }
+  studio.exited = true;
+}
+
+/** 同数据目录启动全新 studio 进程（新端口；数据目录原样保留）。 */
+async function restartStudio(dataDir) {
+  await stopStudioProcess();
+  studio.port = await freePort();
+  await startStudio(dataDir, { appendLog: true });
+  booted = true;
+  sc.studioUrl = `http://127.0.0.1:${String(studio.port)}/`;
+  return sc.studioUrl;
+}
+
 async function api(method, path, body, timeoutMs = GET_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -459,13 +523,14 @@ const CHECK_DEFS = [
   { id: "studio-boot", modes: ["selftest", "real-pi"] },
   { id: "page-load", modes: ["selftest", "real-pi"] },
   { id: "console-clean", modes: ["selftest", "real-pi"] },
-  /* D4 用户路径：工作包落地前 NOT_RUN（原因写明归属），落地后翻成真实检查。 */
-  { id: "d4-import-material", modes: ["selftest", "real-pi"], notRun: { selftest: "材料导入 UI/API 未实现（owner: D4-1）", "real-pi": "材料导入 UI/API 未实现（owner: D4-1）" } },
-  { id: "d4-read-and-select", modes: ["selftest", "real-pi"], notRun: { selftest: "材料阅读区/区间层未实现（owner: D4-2）", "real-pi": "材料阅读区/区间层未实现（owner: D4-2）" } },
-  { id: "d4-branch-from-material", modes: ["real-pi"], notRun: { "real-pi": "材料建枝/首问未实现（owner: D4-3）" } },
-  { id: "d4-return-from-material", modes: ["real-pi"], notRun: { "real-pi": "材料 Return 未实现（owner: D4-3）" } },
-  { id: "d4-restart-continue", modes: ["selftest", "real-pi"], notRun: { selftest: "材料阅读位置持久化未实现（owner: D4-2）", "real-pi": "材料阅读位置持久化未实现（owner: D4-2）" } },
-  { id: "d4-search-recover", modes: ["selftest", "real-pi"], notRun: { selftest: "本地全文搜索未实现（owner: D4-4）", "real-pi": "本地全文搜索未实现（owner: D4-4）" } },
+  /* D4 用户路径：B1/B2 浏览器面已落地（v0.2.0，scripts/d4/browser/）；
+     其余检查在对应工作包落地前 NOT_RUN（原因写明归属），落地后翻成真实检查。 */
+  { id: "d4-import-material", modes: ["selftest", "real-pi"] },
+  { id: "d4-read-and-select", modes: ["selftest", "real-pi"] },
+  { id: "d4-branch-from-material", modes: ["real-pi"], notRun: { selftest: "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料建枝/首问未实现（owner: D4-3）" } },
+  { id: "d4-return-from-material", modes: ["real-pi"], notRun: { selftest: "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料 Return 未实现（owner: D4-3）" } },
+  { id: "d4-restart-continue", modes: ["selftest", "real-pi"] },
+  { id: "d4-search-recover", modes: ["selftest", "real-pi"], notRun: { selftest: "搜索 UI 未落地（owner: D4-4 前端波次进行中；HTTP/引擎面已由离线 b4-cross-material-find 覆盖，浏览器 UI 面待其前端落地）", "real-pi": "搜索 UI 未落地（owner: D4-4 前端波次进行中；HTTP/引擎面已由离线 b4-cross-material-find 覆盖，浏览器 UI 面待其前端落地）" } },
 ];
 
 const results = [];
@@ -486,6 +551,9 @@ function report(entry) {
 
 let booted = false;
 let chromeReady = false;
+
+/** 级联 NOT_RUN（探针间依赖未就位）：如实登记原因，不伪装成 FAIL/PASS。 */
+class NotRunError extends Error {}
 
 async function runCheck(id, fn) {
   const def = byId.get(id);
@@ -514,6 +582,11 @@ async function runCheck(id, fn) {
     report({ id, status: "PASS", ...(outcome.detail !== undefined ? { detail: outcome.detail } : {}), durationMs: Date.now() - startedAt });
     return outcome;
   } catch (err) {
+    if (err instanceof NotRunError) {
+      /* 探针级联（如导入未就位 → 阅读探针无对象）：NOT_RUN + 原因。 */
+      report({ id, status: "NOT_RUN", reason: sanitizeText(err instanceof Error ? err.message : String(err)) });
+      return null;
+    }
     report({
       id,
       status: "FAIL",
@@ -526,6 +599,35 @@ async function runCheck(id, fn) {
 
 function sweepBlocked(reason) {
   for (const def of CHECK_DEFS) report({ id: def.id, status: "BLOCKED", reason });
+}
+
+function gitInfo() {
+  try {
+    const head = execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    let dirty = false;
+    try {
+      dirty = execSync("git status --porcelain", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().length > 0;
+    } catch { /* 如实保持 false */ }
+    return { head, dirty };
+  } catch {
+    return null;
+  }
+}
+
+/** 冻结集绑定（evidence/d4/README 规则 5）：引用 tests/fixtures/d4/ 的
+    运行记录 MANIFEST.sha256 的 SHA-256（哈希的哈希）。 */
+function fixturesBinding() {
+  if (scenario.fixturesUsed === null || scenario.fixturesUsed.length === 0) return null;
+  try {
+    const manifest = readFileSync(D4_FIXTURES_MANIFEST);
+    return {
+      manifestPath: "tests/fixtures/d4/MANIFEST.sha256",
+      manifestSha256: createHash("sha256").update(manifest).digest("hex"),
+      used: scenario.fixturesUsed,
+    };
+  } catch {
+    return { manifestPath: "tests/fixtures/d4/MANIFEST.sha256", manifestSha256: null, used: scenario.fixturesUsed };
+  }
 }
 
 function finish(code) {
@@ -545,11 +647,15 @@ function finish(code) {
     console.log("note: selftest uses the offline echo driver — these results are never real-Pi evidence");
   }
   try {
+    const git = gitInfo();
+    const fixtures = fixturesBinding();
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
-      version: "0.1.0",
+      version: "0.2.0",
       mode: MODE,
       generatedAt: new Date().toISOString(),
+      ...(git !== null ? { git } : {}),
+      ...(fixtures !== null ? { fixtures } : {}),
       checks: results,
       pageErrors: chrome.pageErrors,
     }, null, 2));
@@ -563,11 +669,38 @@ function finish(code) {
 
 const sc = { dataDir: null, artifactsDir: null, studioUrl: null };
 
+/** 材料探针的共享场景状态（探针间传递：树/导入产物；fixturesUsed 供
+    summary 的冻结集绑定）。 */
+const scenario = { treeId: null, materials: null, fixturesUsed: null };
+
+/** 探针上下文：真实 Chrome（CDP）+ 真实 studio 进程的受控句柄集合。 */
+const probeCtx = {
+  MODE,
+  ROOT,
+  NotRunError,
+  evalJs,
+  navigate,
+  screenshot,
+  sidecar,
+  cdpSend: (method, params, timeoutMs) => chrome.cdp.send(method, params, timeoutMs),
+  studioPort: () => studio.port,
+  studioOrigin: () => `http://127.0.0.1:${String(studio.port)}`,
+  studioUrl: () => sc.studioUrl,
+  api,
+  stopStudio: () => stopStudioProcess(),
+  restartStudio: () => restartStudio(sc.dataDir),
+  pageErrors: () => chrome.pageErrors.slice(),
+  scenario,
+  noteFixturesUsed: (ids) => {
+    scenario.fixturesUsed = ids;
+  },
+};
+
 async function main() {
   sc.dataDir = CLI.dataDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-data-"));
   sc.artifactsDir = CLI.artifactsDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-browser-artifacts-"));
   mkdirSync(sc.artifactsDir, { recursive: true });
-  console.log(`run-d4-browser 0.1.0 — mode ${MODE}`);
+  console.log(`run-d4-browser 0.2.0 — mode ${MODE}`);
   console.log(`data: ${sanitizeText(sc.dataDir)}${CLI.keepData ? " (kept)" : ""}`);
   console.log(`artifacts: ${sanitizeText(sc.artifactsDir)}`);
 
@@ -604,12 +737,14 @@ async function main() {
       return { detail: "no console/log errors on the studio shell" };
     });
 
-    /* D4 材料路径检查：骨架 NOT_RUN（fn 传 null——上面登记的原因面世）。 */
-    await runCheck("d4-import-material", null);
-    await runCheck("d4-read-and-select", null);
+    /* D4 材料路径检查（B1/B2 浏览器面，v0.2.0 落地）：真实 Chrome +
+       真实 studio 进程上的真实 DOM 检查（echo 驱动，selftest 声明照旧）。
+       未落地项保持 NOT_RUN + 原因（owner 写明）。 */
+    await runCheck("d4-import-material", () => probeImportMaterial(probeCtx));
+    await runCheck("d4-read-and-select", () => probeReadAndSelect(probeCtx));
     await runCheck("d4-branch-from-material", null);
     await runCheck("d4-return-from-material", null);
-    await runCheck("d4-restart-continue", null);
+    await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
     await runCheck("d4-search-recover", null);
 
     finish(0);
