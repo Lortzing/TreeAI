@@ -1,0 +1,25 @@
+{
+  "fixtureId": "pdf-04",
+  "kind": "pdf",
+  "normalizer": "d4-pdf-v1",
+  "pages": 2,
+  "canonicalText": "代码清单：递归版 Fibonacci 与记忆化\n下面是一份可以直接运行的 TypeScript 片段。先用朴素的递归实现，再展示记忆化版\n本，两者恰好构成“指数复杂度到线性复杂度”的对照。代码行保持原始缩进，中文\n注释行与代码行同处一个清单。\n// naive-recursive.ts\nexport function fibNaive(n: number): number {\n  // 递归终止条件：n <= 1 时直接返回 n\n  if (n <= 1) return n;\n  return fibNaive(n - 1) + fibNaive(n - 2);\n}\n\n// memoized.ts\nexport function fibMemo(n: number, memo = new Map<number, number>()): number {\n  if (n <= 1) return n;\n  const hit = memo.get(n);\n  if (hit !== undefined) return hit;\n  const value = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);\n  memo.set(n, value);\n  return value;\n}\n朴素版本对每个 n 重复计算子问题，调用树按指数增长；记忆化版本把已算出的答案\n存进 Map，使每个 n 只真正计算一次。二者代码只差几行，性能却差着数量级，这正\n是“递归 + 缓存”组合的经典教材案例。\n值得注意的细节：memo 作为默认参数挂在函数签名里，调用方不需要知道缓存的存\n在；TypeScript 的类型标注同时约束了键与值的类型。把实现换成数组缓存或 BigInt\n版本，接口保持不变。\n复杂度对照\nfibNaive(35)  // ~ 150 ms   O(2^n)  exponential\nfibMemo(35)   // < 1 ms    O(n)    linear\nfibNaive(20)  // ~ 1 ms    still exponential\nfibMemo(500)  // < 2 ms    linear, fits in double\n测试时建议把 fibNaive 的参数控制在 35 以内，否则等待时间会明显干扰断言与超时设\n置。记忆化版本则可以轻松算到 fibMemo(500)，再往上就需要 BigInt 防止精度丢失。\n第二条清单：调用栈观察器\n调试递归时，缩进日志比断点单步高效得多。下面的帮助函数在进入与返回时各打印\n一行，缩进随深度变化，肉眼即可看到调用树的结构。\nexport function traced<T>(label: string, depth: number, run: () => T): T {\n  const pad = \"  \".repeat(depth);\n  console.log(`${pad}-> ${label}`);\n  const result = run();\n  console.log(`${pad}<- ${label} = ${String(result)}`);\n  return result;\n}\n// traced(\"fib(4)\", 0, () => fibNaive(4));\n把 traced 套在 fibNaive 外层即可观察到整棵调用树；套在 fibMemo 外层则会看到树被\n缓存压扁的过程。同样的观察器也能用在目录遍历与树遍历上，是排查递归逻辑的第\n一工具。本清单到此收束。",
+  "blocks": [
+    {
+      "blockId": "page-1",
+      "kind": "pdf-page",
+      "start": 0,
+      "end": 1112,
+      "page": 1,
+      "text": "代码清单：递归版 Fibonacci 与记忆化\n下面是一份可以直接运行的 TypeScript 片段。先用朴素的递归实现，再展示记忆化版\n本，两者恰好构成“指数复杂度到线性复杂度”的对照。代码行保持原始缩进，中文\n注释行与代码行同处一个清单。\n// naive-recursive.ts\nexport function fibNaive(n: number): number {\n  // 递归终止条件：n <= 1 时直接返回 n\n  if (n <= 1) return n;\n  return fibNaive(n - 1) + fibNaive(n - 2);\n}\n\n// memoized.ts\nexport function fibMemo(n: number, memo = new Map<number, number>()): number {\n  if (n <= 1) return n;\n  const hit = memo.get(n);\n  if (hit !== undefined) return hit;\n  const value = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);\n  memo.set(n, value);\n  return value;\n}\n朴素版本对每个 n 重复计算子问题，调用树按指数增长；记忆化版本把已算出的答案\n存进 Map，使每个 n 只真正计算一次。二者代码只差几行，性能却差着数量级，这正\n是“递归 + 缓存”组合的经典教材案例。\n值得注意的细节：memo 作为默认参数挂在函数签名里，调用方不需要知道缓存的存\n在；TypeScript 的类型标注同时约束了键与值的类型。把实现换成数组缓存或 BigInt\n版本，接口保持不变。\n复杂度对照\nfibNaive(35)  // ~ 150 ms   O(2^n)  exponential\nfibMemo(35)   // < 1 ms    O(n)    linear\nfibNaive(20)  // ~ 1 ms    still exponential\nfibMemo(500)  // < 2 ms    linear, fits in double\n测试时建议把 fibNaive 的参数控制在 35 以内，否则等待时间会明显干扰断言与超时设\n置。记忆化版本则可以轻松算到 fibMemo(500)，再往上就需要 BigInt 防止精度丢失。\n第二条清单：调用栈观察器\n调试递归时，缩进日志比断点单步高效得多。下面的帮助函数在进入与返回时各打印\n"
+    },
+    {
+      "blockId": "page-2",
+      "kind": "pdf-page",
+      "start": 1112,
+      "end": 1528,
+      "page": 2,
+      "text": "一行，缩进随深度变化，肉眼即可看到调用树的结构。\nexport function traced<T>(label: string, depth: number, run: () => T): T {\n  const pad = \"  \".repeat(depth);\n  console.log(`${pad}-> ${label}`);\n  const result = run();\n  console.log(`${pad}<- ${label} = ${String(result)}`);\n  return result;\n}\n// traced(\"fib(4)\", 0, () => fibNaive(4));\n把 traced 套在 fibNaive 外层即可观察到整棵调用树；套在 fibMemo 外层则会看到树被\n缓存压扁的过程。同样的观察器也能用在目录遍历与树遍历上，是排查递归逻辑的第\n一工具。本清单到此收束。"
+    }
+  ]
+}

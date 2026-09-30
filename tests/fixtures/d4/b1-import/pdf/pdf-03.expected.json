@@ -1,0 +1,25 @@
+{
+  "fixtureId": "pdf-03",
+  "kind": "pdf",
+  "normalizer": "d4-pdf-v1",
+  "pages": 2,
+  "canonicalText": "闭包与作用域：中英对照笔记\nA closure is a function bundled together with the environment it captured at birth. In\nJavaScript, every function keeps a live reference to the scope where it was defined, so it can\nstill read those variables long after the outer call has returned. This is the mechanism behind\ncounters, memoization caches, and module patterns.\n闭包（closure）是函数与其出生时词法环境的组合体。JavaScript 里的每个函数都持有\n定义它时的作用域引用，因此外层调用返回之后，内层函数仍能读写那些变量。计数\n器、缓存与模块模式都建立在这个机制上。\n1. 词法作用域 lexical scope\nScope in JavaScript is lexical: it is decided by where code is written, not by where the\nfunction is called from. When the engine looks up a name, it walks the chain of enclosing\nscopes outward until it finds a binding. That chain is fixed at parse time, which is why\nclosures capture variables, not values.\n作用域是词法的：由代码书写的位置决定，而不是由调用位置决定。引擎查找名字时\n，会沿着定义位置向外层作用域逐级寻找，直到命中绑定。这条链在解析期就固定了\n，所以闭包捕获的是变量本身，而不是当时的值快照。\n一个经典陷阱：在循环里用 var 声明循环变量，回调函数捕获的是同一个绑定，因此\n所有回调读到的都是循环结束后的值。把 var 换成 let，每次迭代都会建立新的绑定，\n问题随之消失。理解这一点，比背下答案更重要。\n2. Practical closure patterns\nMemoize wraps a function with a cache keyed by arguments; the cache lives in the\nwrapper's closure and stays private. Once hooks resolve an initializer exactly one time. Both\npatterns rely on the same property: hidden mutable state with a controlled interface.\n记忆化（memoization）用一个以参数为键的缓存包裹函数，缓存藏在闭包里，外界碰\n不到；一次性开关（once）则保证初始化逻辑只执行一次。这两个惯用法共享同一性\n质：把可变状态藏进闭包，只暴露受控接口。\nClosures are not free. A captured scope keeps every binding in it alive as long as the inner\nfunction is reachable, which is a common source of accidental memory retention. Capture\nnarrowly: take what you need, let the rest go.\n3. 闭包的代价与边界\n闭包的代价是生命周期：只要内层函数还可达，被捕获的作用域连同其中的所有绑定\n就都不能回收。大型对象被无意间捕获，是最常见的内存滞留原因。审查代码时值得\n专门检查一次：回调究竟捕获了什么？\n边界守则：捕获要窄。把真正需要的外部值收进局部常量，再让闭包捕获这个常量；\n不需要的引用不要顺手带进闭包。守则简单，却能把大多数滞留问题挡在设计期。\n最后用一句话收束：闭包让函数拥有记忆，而工程师的工作是决定它记住什么、忘记\n什么。中英对照的这份笔记到此结束，两套表述描述的是同一个机制。",
+  "blocks": [
+    {
+      "blockId": "page-1",
+      "kind": "pdf-page",
+      "start": 0,
+      "end": 1626,
+      "page": 1,
+      "text": "闭包与作用域：中英对照笔记\nA closure is a function bundled together with the environment it captured at birth. In\nJavaScript, every function keeps a live reference to the scope where it was defined, so it can\nstill read those variables long after the outer call has returned. This is the mechanism behind\ncounters, memoization caches, and module patterns.\n闭包（closure）是函数与其出生时词法环境的组合体。JavaScript 里的每个函数都持有\n定义它时的作用域引用，因此外层调用返回之后，内层函数仍能读写那些变量。计数\n器、缓存与模块模式都建立在这个机制上。\n1. 词法作用域 lexical scope\nScope in JavaScript is lexical: it is decided by where code is written, not by where the\nfunction is called from. When the engine looks up a name, it walks the chain of enclosing\nscopes outward until it finds a binding. That chain is fixed at parse time, which is why\nclosures capture variables, not values.\n作用域是词法的：由代码书写的位置决定，而不是由调用位置决定。引擎查找名字时\n，会沿着定义位置向外层作用域逐级寻找，直到命中绑定。这条链在解析期就固定了\n，所以闭包捕获的是变量本身，而不是当时的值快照。\n一个经典陷阱：在循环里用 var 声明循环变量，回调函数捕获的是同一个绑定，因此\n所有回调读到的都是循环结束后的值。把 var 换成 let，每次迭代都会建立新的绑定，\n问题随之消失。理解这一点，比背下答案更重要。\n2. Practical closure patterns\nMemoize wraps a function with a cache keyed by arguments; the cache lives in the\nwrapper's closure and stays private. Once hooks resolve an initializer exactly one time. Both\npatterns rely on the same property: hidden mutable state with a controlled interface.\n记忆化（memoization）用一个以参数为键的缓存包裹函数，缓存藏在闭包里，外界碰\n不到；一次性开关（once）则保证初始化逻辑只执行一次。这两个惯用法共享同一性\n质：把可变状态藏进闭包，只暴露受控接口。\nClosures are not free. A captured scope keeps every binding in it alive as long as the inner\nfunction is reachable, which is a common source of accidental memory retention. Capture\nnarrowly: take what you need, let the rest go.\n3. 闭包的代价与边界\n"
+    },
+    {
+      "blockId": "page-2",
+      "kind": "pdf-page",
+      "start": 1626,
+      "end": 1864,
+      "page": 2,
+      "text": "闭包的代价是生命周期：只要内层函数还可达，被捕获的作用域连同其中的所有绑定\n就都不能回收。大型对象被无意间捕获，是最常见的内存滞留原因。审查代码时值得\n专门检查一次：回调究竟捕获了什么？\n边界守则：捕获要窄。把真正需要的外部值收进局部常量，再让闭包捕获这个常量；\n不需要的引用不要顺手带进闭包。守则简单，却能把大多数滞留问题挡在设计期。\n最后用一句话收束：闭包让函数拥有记忆，而工程师的工作是决定它记住什么、忘记\n什么。中英对照的这份笔记到此结束，两套表述描述的是同一个机制。"
+    }
+  ]
+}

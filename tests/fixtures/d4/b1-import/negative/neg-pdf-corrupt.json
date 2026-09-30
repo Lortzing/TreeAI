@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-pdf-corrupt",
+  "kind": "pdf",
+  "outcome": "rejected",
+  "reason": "corrupt",
+  "detail": "Truncated at 70% of the pre-xref region and given a 512-byte deterministic garbage tail; no startxref/%%EOF is reachable."
+}

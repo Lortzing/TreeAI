@@ -1,0 +1,271 @@
+%PDF-1.5
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 3693 >>
+stream
+BT
+/F1 18 Tf
+72.00 780.00 Td
+(Recursion Study Notes) Tj
+ET
+BT
+/F1 11 Tf
+72.00 741.20 Td
+(Recursion is a way of thinking about problems: solve a large instance by solving smaller) Tj
+ET
+BT
+/F1 11 Tf
+72.00 724.70 Td
+(instances of the same problem. When you write a recursive function, do not try to trace) Tj
+ET
+BT
+/F1 11 Tf
+72.00 708.20 Td
+(every call in your head. Instead, answer two questions first: what is the decomposition rule,) Tj
+ET
+BT
+/F1 11 Tf
+72.00 691.70 Td
+(and what is the base case? Once those are settled, the call stack does the rest.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 668.20 Td
+(Beginners often try to mentally expand the whole recursion, lose track after three levels, and) Tj
+ET
+BT
+/F1 11 Tf
+72.00 651.70 Td
+(conclude that recursion is hard. A better habit is the recursive leap of faith: assume the) Tj
+ET
+BT
+/F1 11 Tf
+72.00 635.20 Td
+(function already works for smaller inputs, and verify only the step that combines results. This) Tj
+ET
+BT
+/F1 11 Tf
+72.00 618.70 Td
+(is induction, expressed as code.) Tj
+ET
+BT
+/F1 14 Tf
+72.00 581.20 Td
+(1. Decomposition and base cases) Tj
+ET
+BT
+/F1 11 Tf
+72.00 548.80 Td
+(The first line of a recursive function is almost always the base case. It answers the question:) Tj
+ET
+BT
+/F1 11 Tf
+72.00 532.30 Td
+(at what scale can the answer be returned directly? For factorial, the answer is immediate) Tj
+ET
+BT
+/F1 11 Tf
+72.00 515.80 Td
+(when n is 0 or 1. For directory traversal, a plain file is handled on the spot.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 492.30 Td
+(The recursive case answers a different question: how do we carve a problem of size n into) Tj
+ET
+BT
+/F1 11 Tf
+72.00 475.80 Td
+(strictly smaller subproblems? The crucial constraint is progress. Every call must move) Tj
+ET
+BT
+/F1 11 Tf
+72.00 459.30 Td
+(toward the base case, or the stack grows forever and the program dies with a stack) Tj
+ET
+BT
+/F1 11 Tf
+72.00 442.80 Td
+(overflow.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 419.30 Td
+(After writing both parts, check termination explicitly. Is there an input path that never reaches) Tj
+ET
+BT
+/F1 11 Tf
+72.00 402.80 Td
+(a base case? Factorial of a negative number is the classic counterexample, so robust) Tj
+ET
+BT
+/F1 11 Tf
+72.00 386.30 Td
+(implementations reject invalid input before recursing.) Tj
+ET
+BT
+/F1 14 Tf
+72.00 348.80 Td
+(2. The call stack) Tj
+ET
+BT
+/F1 11 Tf
+72.00 316.40 Td
+(Every recursive call pushes a new stack frame holding parameters, local variables, and the) Tj
+ET
+BT
+/F1 11 Tf
+72.00 299.90 Td
+(return address. Recursion depth is the number of frames alive at once. Once you internalize) Tj
+ET
+BT
+/F1 11 Tf
+72.00 283.40 Td
+(this, stack overflow stops being mysterious: the stack is a bounded resource, and depth past) Tj
+ET
+BT
+/F1 11 Tf
+72.00 266.90 Td
+(the limit aborts the program.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 243.40 Td
+(Rewriting recursion as iteration means maintaining an explicit stack of your own. You trade) Tj
+ET
+BT
+/F1 11 Tf
+72.00 226.90 Td
+(an invisible mechanism provided by the runtime for a visible data structure on the heap. The) Tj
+ET
+BT
+/F1 11 Tf
+72.00 210.40 Td
+(space cost is often similar, but the depth limit moves from the stack to memory, which is) Tj
+ET
+BT
+/F1 11 Tf
+72.00 193.90 Td
+(usually far more generous.) Tj
+ET
+BT
+/F1 14 Tf
+72.00 156.40 Td
+(3. Recursion and induction) Tj
+ET
+BT
+/F1 11 Tf
+72.00 124.00 Td
+(Induction and recursion are mirror images. A proof by induction checks a base case and an) Tj
+ET
+BT
+/F1 11 Tf
+72.00 107.50 Td
+(inductive step; a recursive function checks a base case and a decomposition rule. The) Tj
+ET
+BT
+/F1 11 Tf
+72.00 91.00 Td
+(certainty you feel about induction is the certainty you are allowed to feel about recursion, no) Tj
+ET
+BT
+/F1 11 Tf
+72.00 74.50 Td
+(more and no less.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1239 >>
+stream
+BT
+/F1 11 Tf
+72.00 780.00 Td
+(A useful exercise: write factorial three times, then directory traversal twice, then the Tower of) Tj
+ET
+BT
+/F1 11 Tf
+72.00 763.50 Td
+(Hanoi once. Difficulty rises, but the checklist never changes. When you can explain your) Tj
+ET
+BT
+/F1 11 Tf
+72.00 747.00 Td
+(Hanoi solution out loud without notes, the concept has clicked.) Tj
+ET
+BT
+/F1 14 Tf
+72.00 709.50 Td
+(4. What tail calls teach us) Tj
+ET
+BT
+/F1 11 Tf
+72.00 677.10 Td
+(A recursive call is a tail call when it is the final action of the function and its result is returned) Tj
+ET
+BT
+/F1 11 Tf
+72.00 660.60 Td
+(unchanged. Tail calls can in principle be compiled into a jump, reusing the current frame.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 644.10 Td
+(Mainstream JavaScript engines never shipped this optimization, so treat tail position as a) Tj
+ET
+BT
+/F1 11 Tf
+72.00 627.60 Td
+(design smell that a loop is easy to write, not as a performance promise.) Tj
+ET
+BT
+/F1 11 Tf
+72.00 604.10 Td
+(Recursion is not a trick. It is the most natural notation for trees, divide and conquer, and) Tj
+ET
+BT
+/F1 11 Tf
+72.00 587.60 Td
+(backtracking search. The next note applies it to a real tree traversal, and draws every call on) Tj
+ET
+BT
+/F1 11 Tf
+72.00 571.10 Td
+(paper.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Title (Recursion Study Notes) /Producer (TreeAI D4 PDF fixture generator d4-pdf-v1) /CreationDate (D:20260930000000Z) /ModDate (D:20260930000000Z) >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000127 00000 n 
+0000000224 00000 n 
+0000003969 00000 n 
+0000004101 00000 n 
+0000005392 00000 n 
+0000005524 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R /Info 8 0 R /ID [<4B8D4B1D22D1D406CACDC5172082E0F5> <4B8D4B1D22D1D406CACDC5172082E0F5>] >>
+startxref
+5693
+%%EOF

@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-pdf-image-only",
+  "kind": "pdf",
+  "outcome": "rejected",
+  "reason": "no-text-layer",
+  "detail": "Single page whose only content is one 64x64 grayscale image XObject (hand-rolled PNG, Predictor 15); the content stream has zero text operators."
+}

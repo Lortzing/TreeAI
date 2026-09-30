@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "setId": "b6-scale",
+  "purpose": "D4 项目书 §6 B6 规模与性能验收的固定数据集规格。生成器（scripts/d4/，随 D4-6 按本规格实现并以本规格为验收边界）必须确定性复现本规格定义的数据集；优化前后不得修改本文件（修改=范围变更，须回负责人）。",
+  "charterRef": "docs/d4/D4-project-v1.md §6 B6、§5 建议首版支持上限",
+  "generatorStatus": "pending D4-6（规格已冻结，生成器未实现——不得据此宣称任何 B6 结果）",
+  "determinism": {
+    "seed": "d4-b6-2026-09-30",
+    "prng": "每个生成步骤使用以 seed + 步骤名初始化的确定性 PRNG（如 xorshift128+ 或 node:crypto 的 createHash 派生序列），禁止 Math.random() 与时间戳",
+    "outputRecording": "生成器输出 manifest：每个生成文件的 SHA-256、行/块计数、UTF-16 单元总数；manifest 哈希写入测量报告"
+  },
+  "dataset": {
+    "materials": {
+      "count": 100,
+      "composition": [
+        {"parserKind": "markdown", "count": 70},
+        {"parserKind": "pdf", "count": 30, "note": "由 scripts/d4 PDF 生成设施按固定内容模板确定性生成"}
+      ],
+      "totalCanonicalTextUnits": 1000000,
+      "unit": "UTF-16 code units（全部材料 canonicalText 长度之和）",
+      "perMaterialBounds": "每份材料须在 §5 单材料上限内（20 MiB / 200 页 / 100 万单元）",
+      "contentRule": "中文/英文混合的真实感学习笔记内容；每份含唯一 needle（用于搜索目标）；≥10 份为长文（≥5 万单元）"
+    },
+    "savedFacts": {
+      "count": 10000,
+      "composition": [
+        {"kind": "turn", "count": 6000, "note": "含 user/assistant，按既有产品事实形态"},
+        {"kind": "annotation", "count": 2500},
+        {"kind": "return", "count": 1500}
+      ],
+      "note": "只生成已保存产品事实；不含草稿/缓存"
+    },
+    "branches": {
+      "count": 1000,
+      "note": "分布于 dataset.trees 定义的树上（与 b9 规格的数据集相互独立，不要求同库）"
+    }
+  },
+  "performanceProbes": [
+    {"id": "search-p95", "rule": "预热后固定 50 次查询（冻结查询集由生成器从 needles 派生），p95 ≤ 500ms", "repetitions": 50, "warmup": true},
+    {"id": "material-open-p95", "rule": "现有材料打开至可读 ≥30 次，p95 ≤ 2s；大 PDF 先渲染可见页", "repetitions": 30},
+    {"id": "import-10mib-100p", "rule": "10 MiB / 100 页样例导入 ≤ 30s（解析完成，非仅上传）"},
+    {"id": "ui-responsive", "rule": "滚动、取消、输入可响应（无冻结 > 200ms 的主线程段落）"}
+  ],
+  "measurementRules": [
+    "记录 CPU/内存/OS/浏览器版本、样例 hash；冷/热启动分开报告",
+    "不含模型网络时间；不跨机器比较（单机基线内比较优化前后）",
+    "若固定目标在支持环境不可实现：提交测量、瓶颈分析与范围变更说明，不得降低断言"
+  ],
+  "acceptanceOwner": "D4-6"
+}

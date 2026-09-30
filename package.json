@@ -22,7 +22,11 @@
     "record:d3": "node scripts/record-d3-evidence.mjs",
     "run:d3-real-pi": "node scripts/run-d3-real-pi.mjs",
     "verify:d2:live": "node scripts/verify-d2-live.js",
-    "verify:d2:selftest": "node scripts/verify-d2-selftest.js"
+    "verify:d2:selftest": "node scripts/verify-d2-selftest.js",
+    "verify:d4": "node scripts/verify-d4.js",
+    "verify:d4:selftest": "node scripts/verify-d4-selftest.js",
+    "run:d4-browser": "node scripts/run-d4-browser.mjs",
+    "record:d4": "node scripts/record-d4-evidence.mjs"
   },
   "devDependencies": {
     "@types/node": "24.13.5",

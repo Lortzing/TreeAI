@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-pdf-encrypted",
+  "kind": "pdf",
+  "outcome": "rejected",
+  "reason": "encrypted",
+  "detail": "Trailer carries /Encrypt (Standard security handler, V2/R3, RC4 128-bit, empty user password); strings and streams are genuinely encrypted (self-check: object 4 decrypts back to the plaintext content stream)."
+}

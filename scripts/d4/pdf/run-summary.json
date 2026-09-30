@@ -1,0 +1,331 @@
+{
+  "readingOrderSpec": "1. A 'line' is one text-showing operation sequence drawing one visual line (the generator emits exactly one Tj per visual line, never split runs). Its position (x, y) is the text-matrix translation point (first glyph origin) at the time of the Tj.\n2. Column bands, per page: take the sorted set of distinct line x values and group them greedily - a new band starts when an x value exceeds the previous band's maximum x by MORE THAN 40 PDF points. A line belongs to the band containing its x. (Two-column layouts therefore emit the full left column, then the full right column.)\n3. Bands are read strictly left to right. Header and footer lines are just lines at the top/bottom of their band - no special ordering rule.\n4. Within a band, lines are read top to bottom (descending PDF y, which is bottom-origin), ties broken by ascending x, then by content-stream order.\n5. Page text = ordered lines joined with \\n; every page block ends with \\n except the last page's block. No Unicode normalization, ever.",
+  "generatedAt": "deterministic — see REPORT.md for the run log",
+  "fixtures": [
+    {
+      "id": "pdf-01",
+      "title": "递归学习笔记",
+      "pages": 2,
+      "coverage": [
+        "zh"
+      ],
+      "pdfBytes": 105408,
+      "sha256": "38a0715233f29d8d20d391d87fc8c6c6e2fff7bd7421f7e95e8f999178259ae1",
+      "textUnits": 1109,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 365,
+          "glyphs": 366,
+          "composites": 0,
+          "rawTtfBytes": 157028
+        }
+      ]
+    },
+    {
+      "id": "pdf-02",
+      "title": "Recursion Study Notes",
+      "pages": 2,
+      "coverage": [
+        "en"
+      ],
+      "pdfBytes": 6025,
+      "sha256": "d0e118356be60a2ba83f548f93f5bea9627695e279490eb821f55a70d43c2d0e",
+      "textUnits": 3270,
+      "fonts": []
+    },
+    {
+      "id": "pdf-03",
+      "title": "闭包与作用域：中英对照笔记",
+      "pages": 2,
+      "coverage": [
+        "zh",
+        "en"
+      ],
+      "pdfBytes": 79677,
+      "sha256": "e8396d2dc3129f2c9c38c539aae957031dfbac67b8dfebb5094d913727634a76",
+      "textUnits": 1864,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 270,
+          "glyphs": 271,
+          "composites": 0,
+          "rawTtfBytes": 117496
+        }
+      ]
+    },
+    {
+      "id": "pdf-04",
+      "title": "代码清单：递归版 Fibonacci 与记忆化",
+      "pages": 2,
+      "coverage": [
+        "code"
+      ],
+      "pdfBytes": 76269,
+      "sha256": "b2edc22d823e7fe02438bf90d8f33fec51e919b1469f591b9a27871d76ec7b05",
+      "textUnits": 1528,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 265,
+          "glyphs": 266,
+          "composites": 0,
+          "rawTtfBytes": 112152
+        }
+      ]
+    },
+    {
+      "id": "pdf-05",
+      "title": "重复词样本：递归、递归、递归",
+      "pages": 2,
+      "coverage": [
+        "repeated-words",
+        "zh"
+      ],
+      "pdfBytes": 111511,
+      "sha256": "d6ffe011b6472b0424f7cb3bffbaeab785f14cb16ba45537e35802b0a10f3d60",
+      "textUnits": 1277,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 387,
+          "glyphs": 388,
+          "composites": 0,
+          "rawTtfBytes": 159372
+        }
+      ]
+    },
+    {
+      "id": "pdf-06",
+      "title": "双栏对照：递归与迭代",
+      "pages": 2,
+      "coverage": [
+        "two-column"
+      ],
+      "pdfBytes": 148082,
+      "sha256": "9e2f59211a32afc52c0b0b402597272309664b79cd695e0018935eb97f0d7366",
+      "textUnits": 1815,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 497,
+          "glyphs": 498,
+          "composites": 0,
+          "rawTtfBytes": 209732
+        }
+      ]
+    },
+    {
+      "id": "pdf-07",
+      "title": "页眉页脚样本：问题分解手记",
+      "pages": 4,
+      "coverage": [
+        "header-footer"
+      ],
+      "pdfBytes": 159585,
+      "sha256": "43276e510384695a5809276d2dbb364e60bf2fc921d3e9f6be06912ba6656357",
+      "textUnits": 2643,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 535,
+          "glyphs": 536,
+          "composites": 0,
+          "rawTtfBytes": 217352
+        }
+      ]
+    },
+    {
+      "id": "pdf-08",
+      "title": "算法学习手记",
+      "pages": 10,
+      "coverage": [
+        "multipage"
+      ],
+      "pdfBytes": 281716,
+      "sha256": "6a8e377c133de12ad118537d26b019765deb7a141cc0b4dcae3e4a726ce821e5",
+      "textUnits": 9239,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 877,
+          "glyphs": 878,
+          "composites": 0,
+          "rawTtfBytes": 350376
+        }
+      ]
+    },
+    {
+      "id": "pdf-09",
+      "title": "字符编码样本：组合字符与全角",
+      "pages": 2,
+      "coverage": [
+        "combining",
+        "full-width"
+      ],
+      "pdfBytes": 181196,
+      "sha256": "9bc87c5b8da04fd2c1630592a4656149073df91f0d2c78cf3d41e6834d34e0eb",
+      "textUnits": 1019,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 198,
+          "glyphs": 199,
+          "composites": 0,
+          "rawTtfBytes": 81164
+        },
+        {
+          "fontKey": "stheiti",
+          "family": "STHeitiLight",
+          "codePoints": 215,
+          "glyphs": 216,
+          "composites": 0,
+          "rawTtfBytes": 523560
+        }
+      ]
+    },
+    {
+      "id": "pdf-10",
+      "title": "字体混排样本 Font Sampler",
+      "pages": 2,
+      "coverage": [
+        "fonts"
+      ],
+      "pdfBytes": 59824,
+      "sha256": "677d8de5a1a8472b2232959f6080929179603ab95ed6ae909c5363006857e9dd",
+      "textUnits": 1487,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 201,
+          "glyphs": 202,
+          "composites": 0,
+          "rawTtfBytes": 93224
+        }
+      ]
+    },
+    {
+      "id": "pdf-11",
+      "title": "长文样本：三十节编程笔记",
+      "pages": 30,
+      "coverage": [
+        "long-tail",
+        "zh"
+      ],
+      "pdfBytes": 173479,
+      "sha256": "3f3dc889b0d6349f0e629873c478ba2248bbc74cd1a7986bf8def17b0019f23f",
+      "textUnits": 3775,
+      "fonts": [
+        {
+          "fontKey": "songti",
+          "family": "SongtiSC",
+          "codePoints": 546,
+          "glyphs": 547,
+          "composites": 0,
+          "rawTtfBytes": 219876
+        }
+      ]
+    },
+    {
+      "id": "pdf-12",
+      "title": "宽字符样本：扩展区与代理对",
+      "pages": 2,
+      "coverage": [
+        "unicode",
+        "astral"
+      ],
+      "pdfBytes": 220500,
+      "sha256": "e7de6a440b2b6d29b357b97805caa87cdbe0eff6a28ffcd00094a11d1cac7991",
+      "textUnits": 958,
+      "fonts": [
+        {
+          "fontKey": "stheiti",
+          "family": "STHeitiLight",
+          "codePoints": 266,
+          "glyphs": 267,
+          "composites": 0,
+          "rawTtfBytes": 564072
+        },
+        {
+          "fontKey": "arialu",
+          "family": "ArialUnicode",
+          "codePoints": 64,
+          "glyphs": 67,
+          "composites": 2,
+          "rawTtfBytes": 250904
+        }
+      ]
+    }
+  ],
+  "negatives": [
+    {
+      "fixtureId": "neg-pdf-encrypted",
+      "reason": "encrypted",
+      "bytes": 1573,
+      "sha256": "aa1e5d7d7c830a7745acb0fbf031eddb0d30d96cd39cb7ccfc70167527f2e835",
+      "check": "encrypted: trailer carries /Encrypt (text-layer import must reject)"
+    },
+    {
+      "fixtureId": "neg-pdf-corrupt",
+      "reason": "corrupt",
+      "bytes": 2690,
+      "sha256": "280d3e0e86115b1df5aa49252bddf658b5098b0ee9aa1dec50fdafffa0931a0c",
+      "check": "assert failed: no startxref/%%EOF at end of file (truncated or corrupt)"
+    },
+    {
+      "fixtureId": "neg-pdf-image-only",
+      "reason": "no-text-layer",
+      "bytes": 1432,
+      "sha256": "393893a42f14bc673deba3badf3595173c22c40354f1c23874962f5960c5cab8",
+      "check": "parsed ok, 1 page, 0 text lines (no-text-layer)"
+    },
+    {
+      "fixtureId": "neg-pdf-zero-text",
+      "reason": "no-text-layer",
+      "bytes": 736,
+      "sha256": "4856f664423c15e6c92bb38c0975d1068bf1d754d5ad33ef06867b0f46d9fd74",
+      "check": "parsed ok, 1 page, 0 text lines (no-text-layer)"
+    }
+  ],
+  "selections": {
+    "count": 30,
+    "byCategory": {
+      "zh": 3,
+      "cross-line": 4,
+      "en": 2,
+      "repeat-word-2nd": 5,
+      "code": 2,
+      "two-column-left": 1,
+      "two-column-right": 1,
+      "header": 1,
+      "footer": 1,
+      "multipage": 1,
+      "long-tail": 4,
+      "unicode": 4,
+      "fonts": 1
+    }
+  },
+  "determinism": {
+    "filesCompared": 34,
+    "byteIdentical": true
+  },
+  "roundTrip": "all fixtures extract exactly",
+  "renderSmoke": {
+    "status": "skipped",
+    "detail": "--no-render"
+  },
+  "gradientPng": {
+    "bytes": 428,
+    "sha256": "22115e962ee5ead8b57cba08a707e3eed29f5ebc9727f5f20655d0ca5c8d1f41"
+  }
+}
