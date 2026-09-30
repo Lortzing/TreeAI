@@ -45,6 +45,7 @@ import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
 import { runB3ExplorationCheck } from "../tests/support/verifier/d4-b3-exploration.ts";
 import { runB4SearchCheck } from "../tests/support/verifier/d4-b4-search.ts";
 import { runB5RestoreCheck } from "../tests/support/verifier/d4-b5-restore.ts";
+import { runB9NavCheck } from "../tests/support/verifier/d4-b9-nav.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -588,10 +589,48 @@ const CHECKS = [
   },
   {
     id: "b9-large-tree-nav",
+    // REAL executing check (D4-8): the offline structural slice of charter B9
+    // against the actual deliverable surfaces — the generator CLI as real
+    // subprocesses (determinism across processes, manifest hash equality,
+    // --load-check into a real persistence DB), the loader, and the /api/nav/*
+    // HTTP surface through a real node:http server with the full B9 dataset:
+    // structure-truth vs API queries 100% (all 10,100 branches located by id
+    // with ancestors/path/origin/sibling position matching truth; every node
+    // view compared via subtree pagination), 100-level deep chain complete,
+    // wide-tree children paged in truth order, same-name disambiguation by
+    // id, empty tree honest, lazy endpoints page-bounded (<1MiB), expand
+    // state surviving a simulated restart (migration 0010), and nav responses
+    // byte-identical after every session goes unavailable (product tree ≠
+    // run/session trees). Engine-side p95 + first-open are recorded as
+    // evidence only — the browser face of B9 (p95 in a real browser,
+    // virtualization, keyboard) is NOT claimed here: see b9-nav-browser-face.
+    fn: async () => {
+      const outcome = await runB9NavCheck(ROOT);
+      log("b9-large-tree-nav", `b9 large-scale tree nav check\n${[...outcome.lines, ...outcome.notRun.map((n) => `NOT_RUN: ${n}`)].join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
+  },
+  {
+    id: "b9-nav-browser-face",
     fn: notRunCheck(
-      "b9-large-tree-nav",
+      "b9-nav-browser-face",
       "D4-8",
-      "large-scale tree navigation not implemented (spec frozen at tests/fixtures/d4/b9-nav)",
+      "B9 browser face pending the frontend wave: nav-p95 in a real browser (>=50 scripted expand/switch ops, p95 <= 300ms), " +
+        "virtualization (DOM node count grows with the viewport, not the full tree), keyboard navigation with focus surviving " +
+        "virtualization, and first-open of the 5000-node tree in a real browser — engine-side p95/first-open are recorded as " +
+        "evidence in b9-large-tree-nav but are NOT the browser verdict; evidence belongs to run:d4-browser / the final " +
+        "candidate-SHA regression",
     ),
   },
 ];

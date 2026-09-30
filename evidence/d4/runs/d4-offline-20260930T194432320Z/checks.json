@@ -1,0 +1,24 @@
+{
+  "runId": "d4-offline-20260930T194432320Z",
+  "checks": [
+    {
+      "durationMs": 5633,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "generator determinism (2 CLI runs byte-identical, manifest hashes equal); structure-truth vs API 100% (all 10,100 branches located with ancestors/path/origin/sibling position matching truth; every node view compared via subtree pagination); 100-level deep chain complete; wide-tree children paged in truth order; same-name disambiguation by id; empty tree honest; lazy endpoints page-bounded (<1MiB); expand state survives simulated restart (migration 0010); nav byte-identical after every session degrades (product tree ≠ session trees); engine-side p95 + first-open recorded as evidence only — browser face (p95/virtualization/keyboard) NOT claimed, stays with the frontend wave / run:d4-browser",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}
