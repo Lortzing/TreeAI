@@ -64,6 +64,31 @@
   迁移 0010 预计按引擎按请求确定性重建的设计**弃用**（无库内索引表），
   集成时在此记录。文件面：search/、server.ts（标记区段）、
   tests/、verify-d4.js、docs/d4/D4-contracts.md §3——与在飞各支无冲突。
+- `wip/d4-3-backend`（worktree d4-3-backend，2026-09-30 22:05 追加，基于
+  main `92c883f`；登记会话：21:10 让位会话，agent 在飞）：D4-3 原文探索
+  闭环**后端**——复用建枝/Origin/Run/Return 底层的材料建枝服务
+  （显式材料运行起点：选区+邻近段落+材料标题/版本+首问为真实输入，不造
+  假历史回答；开工 ADR-004 说明 session 复用/独立决策并测试）、幂等首问
+  （material_first_questions 表 + 0009 派发账本纪律）、同来源恢复已有探索
+  /显式另开、Return 材料来源卡（主线锚点缺失按确认时间放置+原文跳转）、
+  缺 session 显式新探索、确定性故障测试 + verify:d4 b3 离线部分。
+  **文件面**：`apps/studio/src/materials/branching.ts`（新）+ service.ts
+  接线、server.ts（材料建枝区段）、persistence 仓库函数（表已存在于 0008，
+  无新迁移）、`tests/support/verifier/d4-b3-*.ts`、verify-d4.js（b3 接线，
+  与 d4-4-wiring 的 b4 接线可能冲突，集成方解决）、docs/adr/ADR-004（新）。
+  **不碰** app.js（d4-2-frontend 在飞）、search/（d4-4-wiring）、b9-nav。
+  B3 的真实 Pi 浏览器证据属最终候选 SHA 回归，不在本支。
+
+- `wip/d4-5-export`（worktree d4-5-export，2026-09-30 22:06 追加，基于 main
+  `8d2e240`；登记会话：wave-2 集成会话，agent 在飞）：D4-5 数据可携带与可恢复
+  ——CLI 导出/空目录恢复（charter §5 导出恢复 + contracts §5：版本化包
+  manifest+blobs+facts、校验和、损坏拒绝/原子落位、缺 session 降级、
+  Markdown 可读导出）+ B5 离线机械部分（导出→空目录恢复→完整性比对、
+  损坏包拒绝且现有数据不变）接 verify:d4。**零迁移目标**：导出元信息从
+  既有表+blobs 派生；若确需迁移必须先停下报告（0010 已备案归 D4-8，
+  不可占用）。文件面：`scripts/d4/export/`、导出/恢复服务与测试、
+  verify-d4.js（b5 接线，与 d4-3-backend 的 b3 接线可能冲突，集成方解决）
+  ——不碰 app.js / search / materials 解析器 / 迁移。
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
@@ -121,6 +146,15 @@ term-frontend / d4-2-backend（并追加 d4-4-search-core）推进。本会话�
   各支完成后由本会话合并 main、过门禁、推送；其它会话避免重复集成，
   冲突以先推送的登记为准。
 
+**2026-09-30 22:10 更新（wave-2 集成会话 / d4-4 登记方）**：`wip/d4-4-wiring`
+（`ea2a91a`+`e2fa173`）已合并 main 并全量验证——search-service 装配（HTTP 与
+b4 门禁同一路径）、两个搜索端点、**verify:d4 b4-cross-material-find 真执行：
+55/55 正向前 5（最差名次 3）+ 12/12 无结果零命中**；合并后 main：studio
+244/244、全仓 8 套件零失败、verify:d4 **11 PASS / 0 FAIL / 6 NOT_RUN**、
+verify:d2 基线、双 selftest 绿。迁移 0010 弃用已记录（见迁移表）。D4-4 后端
+面至此完整；前端搜索 UI/来源跳转归后续波。仍在飞：`wip/d4-2-frontend` /
+`wip/d4-3-backend` / `wip/d4-8-nav` / `wip/term-eval`（各自登记方集成）。
+
 **2026-09-30 21:55 更新（21:10 让位会话 / d4-7 登记方）**：`wip/d4-7-installer`
 agent 已完成——tip `ceed7e3`（5 commits：安装核心 `f5f5616`、构建管线/CI/
 打包冒烟 `27b77c5`、真实测试发现的修复 `fcb5fa3`、macOS ARM64 55/55 实测
@@ -162,7 +196,7 @@ D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 |---|---|---|---|
 | 0008 | material-core（materials / material_blobs / material_versions / tree_material_links / material_branch_origins / tree_material_reading_state / material_first_questions / branches.origin_kind） | D4-1 | 已交付（`4ebead9`，随 D4-1 波合并） |
 | 0009 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 已交付（`d6005d0`，wip/term-backend 术语整改波；表 terminology_promotion_dispatches，随 P0-3 整改落地） |
-| 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留（原 0009，随术语账本前移）；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
+| 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | **已弃用（2026-09-30 22:10，D4-4 集成落地时）**：引擎按请求确定性内存重建（`search-service.ts`，零缓存，性能优化归 D4-6），索引天然可从产品数据重建、非事实源（charter §4 结构性满足）；引擎 `serialize()/restore()` 接缝保留备未来持久化。编号按 `assertContiguous` 交付顺序流转：下一个实际需要迁移的包取 **0010**（D4-8 已备案：展开/阅读状态持久化若需要迁移用 0010，见下方 13:33Z 会话备案） |
 | 0011 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留（原 0010，随术语账本前移）；同上 |
 
 规则：并行波次添加迁移前先在此占号；编号必须连续递增；已交付迁移不可修改。
@@ -208,3 +242,46 @@ term-backend 分支采纳。
 
 无（D4-0 零新增 npm 依赖；PDF fixture 生成器为 Node 内置模块实现）。
 后续工作包如需新增依赖，先在此登记理由与替代方案评估，再动 package.json。
+
+**2026-09-30 22:35 更新（13:33Z 集成会话）**：issue #8 增量验收 14:17Z 的
+**P2 建议已落地**——`tar` 解包恒带 `--no-same-owner`（rootless 容器
+user-namespace root 下恢复归档 UID/GID 会在 nodejs.org 发行包上失败）：
+新增 `scripts/d4/installer/core.ts::tarExtractArgs`（构建 packager 与
+packaged-bundle 冒烟共用），`package-installer.mjs` 两处 tar 调用与
+`smoke-bundle.mjs` 的 tar 兜底改走该助手；Windows System32 bsdtar zip 路径
+同步带 flag。回归：`tests/unit/d4-7-installer.test.ts::tarExtractArgs`
+（恒带 flag + 按后缀选 -xJf/-xzf/-xf）。win-x64 smoke zip 解包 CI 失败
+（run 36727379546，GNU tar 不识别 zip）已由其它会话于 `9c421f2` 修复，
+本条不重复。
+
+## 2026-10-01 波次接管记录（treeai-loop 调度会话，本会话）
+
+调度会话确认（`list_sessions` 全部 isRunning=false，最后活动 2026-09-30
+15:39）：wave-2 集成会话及其派发 agent 均已结束，但其登记的
+`wip/d4-3-backend`（22:05 登记）与 `wip/d4-5-export`（22:06 登记）worktree
+内留有**未提交的在飞实现**（d4-3：`materials/branching.ts` 新文件 +
+server/service/persistence 接线，约 300 行；d4-5：`portability/` 目录 +
+cli/index 接线，约 140 行）。按接管纪律：先全部保全提交至各自 wip 分支
+（不混入本会话编辑），再由本会话派发 agent 在原 worktree 续作，验收口径
+沿用原登记不变。
+
+本波组成（文件面互斥；冲突热点 verify-d4.js 由集成会话解决）：
+
+- **A｜D4-3 后端**：worktree d4-3-backend（原登记范围不变：branching.ts、
+  service.ts 接线、server.ts 材料建枝区段、persistence 仓库函数（无新迁移）、
+  b3 离线 verifier + verify:d4 接线、ADR-004）。
+- **B｜D4-5 导出恢复**：worktree d4-5-export（原登记范围不变：portability/、
+  cli.ts/index.ts、b5 离线 verifier；零迁移目标，0010 归 D4-8 不可占用）。
+- **C｜D4-8 导航后端**：worktree d4-8-nav 重置至新 main（分支零提交，无损失）。
+  本波只做后端/API/持久化（层级树按需加载、Tree/Branch 查找、展开/阅读
+  状态持久化所需的存储与端点 + 结构性离线检查）；app.js 前端面让位给 D，
+  下一波做 D4-8 前端 + D4-2 PDF 前端（app.js 单文件 5370 行，避免并行冲突）。
+- **D｜D4-4 前端搜索 UI**：worktree d4-4-wiring 切至新分支
+  `wip/d4-4-frontend`（原分支已全量合并，零提交损失）。文件面仅
+  public/{app.js,index.html,style.css} + 前端测试——不碰 server.ts
+  （搜索端点已在 main：POST /api/trees/:treeId/search 与 POST /api/search）。
+
+另：本会话修复 D4-7 win-x64 CI P1（run 36729293982：treeai.ps1 命令模式
+裸 `+` 被当字面参数传给 launcher，start 全线「不认识的参数：+」；doctor
+恰因不解析参数漏过）——改为先拼 `$nodeArgs` 数组再 splat，附内容级 +
+pwsh 执行级单测；随本波推送触发三平台 CI 复跑。

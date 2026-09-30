@@ -88,7 +88,8 @@ jobs:
         shell: bash
         run: |
           node -e '
-            const { readFileSync, createHash } = require("node:fs");
+            const { readFileSync } = require("node:fs");
+            const { createHash } = require("node:crypto");
             const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");
             let bad = 0;
             for (const line of lines) {
@@ -105,7 +106,7 @@ jobs:
 
       - name: Upload installer artifact + checksums
         if: always()
-        uses: actions/upload-artifact@ea165f8d65e675b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: d4-installer-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
