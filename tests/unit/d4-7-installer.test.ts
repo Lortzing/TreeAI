@@ -40,6 +40,7 @@ import {
   parseRuntimeState,
   portCandidates,
   requiredShimFiles,
+  tarExtractArgs,
   validateBundleLayout,
   validateBundleManifest,
   validateLauncherConfig,
@@ -407,4 +408,33 @@ test("shims/launcher 类型层纳入检查（type-only import）", () => {
   const readmes: Array<ReturnType<ShimsExports["bundleReadme"]>> = [];
   const options: LauncherStartOptions[] = [];
   assert.deepEqual([files.length, readmes.length, options.length], [0, 0, 0]);
+});
+
+/* rootless 容器回归（issue #8 增量验收 2026-09-30 P2）：tar 解包必须恒带
+   --no-same-owner——user-namespace root 下 GNU tar 恢复归档 UID/GID 会在
+   nodejs.org 发行包（属主≠当前用户）上失败退出；本仓解包后一律重新
+   staging/校验，关闭属主恢复在所有环境安全。 */
+test("tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归）", () => {
+  assert.deepEqual(tarExtractArgs("node-v24.21.0-linux-x64.tar.xz", "/tmp/x"), [
+    "-xJf",
+    "node-v24.21.0-linux-x64.tar.xz",
+    "-C",
+    "/tmp/x",
+    "--no-same-owner",
+  ]);
+  assert.deepEqual(tarExtractArgs("treeai-studio-0.0.0-darwin-arm64.tar.gz", "/tmp/y"), [
+    "-xzf",
+    "treeai-studio-0.0.0-darwin-arm64.tar.gz",
+    "-C",
+    "/tmp/y",
+    "--no-same-owner",
+  ]);
+  /* 非 tar 后缀（zip 经 bsdtar 兜底路径）交给 -xf 自动探测，flag 仍在。 */
+  assert.deepEqual(tarExtractArgs("treeai-studio-0.0.0-win-x64.zip", "/tmp/z"), [
+    "-xf",
+    "treeai-studio-0.0.0-win-x64.zip",
+    "-C",
+    "/tmp/z",
+    "--no-same-owner",
+  ]);
 });

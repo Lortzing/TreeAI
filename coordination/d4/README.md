@@ -242,3 +242,14 @@ term-backend 分支采纳。
 
 无（D4-0 零新增 npm 依赖；PDF fixture 生成器为 Node 内置模块实现）。
 后续工作包如需新增依赖，先在此登记理由与替代方案评估，再动 package.json。
+
+**2026-09-30 22:35 更新（13:33Z 集成会话）**：issue #8 增量验收 14:17Z 的
+**P2 建议已落地**——`tar` 解包恒带 `--no-same-owner`（rootless 容器
+user-namespace root 下恢复归档 UID/GID 会在 nodejs.org 发行包上失败）：
+新增 `scripts/d4/installer/core.ts::tarExtractArgs`（构建 packager 与
+packaged-bundle 冒烟共用），`package-installer.mjs` 两处 tar 调用与
+`smoke-bundle.mjs` 的 tar 兜底改走该助手；Windows System32 bsdtar zip 路径
+同步带 flag。回归：`tests/unit/d4-7-installer.test.ts::tarExtractArgs`
+（恒带 flag + 按后缀选 -xJf/-xzf/-xf）。win-x64 smoke zip 解包 CI 失败
+（run 36727379546，GNU tar 不识别 zip）已由其它会话于 `9c421f2` 修复，
+本条不重复。
