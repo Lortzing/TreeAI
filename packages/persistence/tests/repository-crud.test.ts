@@ -8,6 +8,7 @@ import type { BranchId, ForestId, TreeId } from "@treeai/contracts";
 import {
   EntityNotFoundError,
   InvalidArgumentError,
+  NAV_EXPAND_STATE_MAX_BRANCHES,
   TreeRepository,
 } from "../src/index.ts";
 import { cleanupTempDir, dbPath, makeClock, makeIdGenerator, makeSessionReference, makeTempDir } from "./helpers.ts";
@@ -196,4 +197,150 @@ test("get/find semantics: EntityNotFoundError vs null", () => {
   assert.equal(repo.findRun("missing" as never), null);
   assert.throws(() => repo.getRun("missing" as never), EntityNotFoundError);
   repo.close();
+});
+
+/* ------------------------------ 树导航展开状态（issue #8 D4-8，migration 0010） ------------------------------ */
+
+test("nav expand state: upsert, dedupe order-preserving, reopen persistence (restart semantics)", () => {
+  const dir = makeTempDir();
+  try {
+    const path = dbPath(dir);
+    const repo = TreeRepository.open({ path, now: makeClock(), generateId: makeIdGenerator("id") });
+    const ids = setupDomain(repo);
+    // 另一棵树 + 一个属于另一棵树的分支（跨树拒绝面）
+    const otherTree = repo.createTree(ids.forestId);
+    const otherBranch = repo.createBranch(otherTree.id, { parentBranchId: null });
+
+    // 初始：无状态（诚实空态）
+    assert.equal(repo.findNavExpandState(ids.treeId), null);
+
+    // 整组写入（去重保序：second 在前 root 在后，重复 second 被折叠）
+    const saved = repo.saveNavExpandState({
+      treeId: ids.treeId,
+      expandedBranchIds: [ids.secondBranchId, ids.rootBranchId, ids.secondBranchId],
+      selectedBranchId: ids.secondBranchId,
+    });
+    assert.deepEqual(saved.expandedBranchIds, [ids.secondBranchId, ids.rootBranchId]);
+    assert.equal(saved.selectedBranchId, ids.secondBranchId);
+
+    // 同树整体替换（UPSERT：PK tree_id，一行）
+    repo.saveNavExpandState({
+      treeId: ids.treeId,
+      expandedBranchIds: [ids.rootBranchId],
+      selectedBranchId: null,
+    });
+    const replaced = repo.findNavExpandState(ids.treeId);
+    assert.ok(replaced !== null);
+    assert.deepEqual(replaced.expandedBranchIds, [ids.rootBranchId]);
+    assert.equal(replaced.selectedBranchId, null);
+
+    // 空集合合法（全部折叠 = 诚实空展开）
+    repo.saveNavExpandState({ treeId: ids.treeId, expandedBranchIds: [], selectedBranchId: null });
+    assert.deepEqual(repo.findNavExpandState(ids.treeId)!.expandedBranchIds, []);
+
+    // 重开（模拟重启）：状态仍可读
+    repo.saveNavExpandState({
+      treeId: ids.treeId,
+      expandedBranchIds: [ids.rootBranchId, ids.secondBranchId],
+      selectedBranchId: ids.secondBranchId,
+    });
+    const beforeReopen = repo.findNavExpandState(ids.treeId);
+    repo.close();
+    const repo2 = TreeRepository.open({ path });
+    assert.deepEqual(repo2.findNavExpandState(ids.treeId), beforeReopen);
+    repo2.close();
+    repo.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("nav expand state: validation rejects unknown tree/branch, cross-tree ids, non-arrays and over-cap sets", () => {
+  const dir = makeTempDir();
+  try {
+    const path = dbPath(dir);
+    const repo = TreeRepository.open({ path, now: makeClock(), generateId: makeIdGenerator("id") });
+    const ids = setupDomain(repo);
+    const otherTree = repo.createTree(ids.forestId);
+    const otherBranch = repo.createBranch(otherTree.id, { parentBranchId: null });
+
+    // 未知树
+    assert.throws(
+      () => repo.saveNavExpandState({ treeId: "no-such-tree" as TreeId, expandedBranchIds: [], selectedBranchId: null }),
+      EntityNotFoundError,
+    );
+    // 幽灵分支 id（展开集合与 selected 同样校验）
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: ["ghost" as BranchId],
+          selectedBranchId: null,
+        }),
+      EntityNotFoundError,
+    );
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: [],
+          selectedBranchId: "ghost" as BranchId,
+        }),
+      EntityNotFoundError,
+    );
+    // 跨树分支
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: [otherBranch.id],
+          selectedBranchId: null,
+        }),
+      (e: unknown) => e instanceof InvalidArgumentError && /belongs to tree/.test(e.message),
+    );
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: [],
+          selectedBranchId: otherBranch.id,
+        }),
+      (e: unknown) => e instanceof InvalidArgumentError && /belongs to tree/.test(e.message),
+    );
+    // 非数组 / 成员非字符串 / 超上限
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: "not-an-array" as unknown as BranchId[],
+          selectedBranchId: null,
+        }),
+      (e: unknown) => e instanceof InvalidArgumentError && /array/.test(e.message),
+    );
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({
+          treeId: ids.treeId,
+          expandedBranchIds: [ids.rootBranchId, "" as BranchId],
+          selectedBranchId: null,
+        }),
+      (e: unknown) => e instanceof InvalidArgumentError && /non-empty/.test(e.message),
+    );
+    const tooMany = Array.from({ length: NAV_EXPAND_STATE_MAX_BRANCHES + 1 }, (_, i) => `b-${i}` as BranchId);
+    assert.throws(
+      () =>
+        repo.saveNavExpandState({ treeId: ids.treeId, expandedBranchIds: tooMany, selectedBranchId: null }),
+      (e: unknown) => e instanceof InvalidArgumentError && /at most/.test(e.message),
+    );
+    // 全部拒绝后零写入（findNavExpandState 仍是 null）
+    assert.equal(repo.findNavExpandState(ids.treeId), null);
+    // findNavExpandState 的参数校验
+    assert.throws(
+      () => repo.findNavExpandState("" as TreeId),
+      (e: unknown) => e instanceof InvalidArgumentError && /tree id/.test(e.message),
+    );
+    repo.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
 });

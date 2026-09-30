@@ -15,6 +15,7 @@ import type {
   ForestId,
   IsoTimestamp,
   JsonRecord,
+  NavTreeExpandState,
   PiEntryId,
   ReturnTargetAnchor,
   Run,
@@ -36,7 +37,7 @@ import type {
   TurnRole,
   TurnSelection,
 } from "@treeai/contracts";
-import { DatabaseCorruptError } from "./errors.ts";
+import { DatabaseCorruptError, PersistenceError } from "./errors.ts";
 
 /* ------------------------------ 行形状 ------------------------------ */
 
@@ -151,6 +152,12 @@ export interface ActiveNavigationRow {
   availability_status: string;
   availability_reason: string | null;
   availability_detail: string | null;
+  updated_at: string;
+}
+export interface NavExpandStateRow {
+  tree_id: string;
+  expanded_branch_ids_json: string;
+  selected_branch_id: string | null;
   updated_at: string;
 }
 
@@ -461,6 +468,36 @@ export function rowToActiveNavigation(row: ActiveNavigationRow): {
       created_at: row.updated_at,
       updated_at: row.updated_at,
     }),
+    updatedAt: row.updated_at as IsoTimestamp,
+  };
+}
+
+/**
+ * nav_tree_expand_state 行还原（migration 0010，issue #8 D4-8）。
+ * 列只由 TreeRepository.saveNavExpandState 写入（先校验后落库），此处
+ * JSON 解析失败按库损坏处理（PersistenceError）——静默丢弃展开状态会
+ * 伪装成「重启后状态丢失」，必须显式炸出。
+ */
+export function rowToNavExpandState(row: NavExpandStateRow): NavTreeExpandState {
+  let expanded: unknown;
+  try {
+    expanded = JSON.parse(row.expanded_branch_ids_json);
+  } catch {
+    throw new PersistenceError(
+      "database-corrupt",
+      `nav_tree_expand_state row for tree ${row.tree_id} has invalid expanded_branch_ids_json`,
+    );
+  }
+  if (!Array.isArray(expanded) || expanded.some((id) => typeof id !== "string")) {
+    throw new PersistenceError(
+      "database-corrupt",
+      `nav_tree_expand_state row for tree ${row.tree_id} has malformed expanded ids`,
+    );
+  }
+  return {
+    treeId: row.tree_id as TreeId,
+    expandedBranchIds: expanded as BranchId[],
+    selectedBranchId: (row.selected_branch_id as BranchId | null) ?? null,
     updatedAt: row.updated_at as IsoTimestamp,
   };
 }

@@ -132,6 +132,28 @@ export interface BranchOrigin {
   readonly createdAt: IsoTimestamp;
 }
 
+/**
+ * 树导航展开状态（issue #8 D4-8，persistence migration 0010）：Tree 级
+ * UI 导航状态的持久化投影——重启后展开状态与阅读位置不丢（B9
+ * restart-state 探针的离线结构性切片）。
+ *
+ * 不变量：
+ * - 每 Tree 至多一行（PK tree_id）——整树整体读写，无逐分支历史；
+ * - expandedBranchIds 是**当前展开集合**的完整快照（调用方整组提交）：
+ *   去重、按提交序保留；成员必须存在且属于该树（拒绝跨树/幽灵 id）；
+ * - selectedBranchId 是「阅读位置」语义的当前定位分支：必须属于该树，
+ *   null = 未选（诚实空态）；
+ * - 这是 UI 状态投影，不是产品事实：分支/树的权威结构在 trees/branches/
+ * turns，本表只承载「用户展开到哪/看到哪」；被引用分支删除后本行不级联
+ * （产品不删除分支；孤儿引用由读取方如实呈现并丢弃，不伪装）。
+ */
+export interface NavTreeExpandState {
+  readonly treeId: TreeId;
+  readonly expandedBranchIds: readonly BranchId[];
+  readonly selectedBranchId: BranchId | null;
+  readonly updatedAt: IsoTimestamp;
+}
+
 /* ------------------------------------------------------------------ */
 /* 术语三部分（issue #7 C）：批注与推广的共享形状                        */
 /* ------------------------------------------------------------------ */

@@ -1,0 +1,27 @@
+{
+  "runId": "d4-offline-20260930T194321854Z",
+  "checks": [
+    {
+      "durationMs": 5567,
+      "status": "FAIL",
+      "exitCode": 2,
+      "error": {
+        "message": "session-degradation probe /api/nav/trees?limit=40: HTTP 502 before sweep; session-degradation probe /api/nav/branches/b9-deep-c050/locate: HTTP 502 before sweep; session-degradation probe /api/nav/trees/b9-wide/branches/b9-wide-trunk/children?limit=50: HTTP 502 before sweep; session-degradation probe /api/nav/search/branches?text=%E5%90%8C%E5%90%8D%E8%8A%82%E7%82%B9%EF%BC%9A%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE%EF%BC%88Same-Name%20Review%EF%BC%89&mode=exact&limit=13: HTTP 502 before sweep; product tree ≠ session trees violated at /api/nav/trees?limit=40: response changed after session degradation; product tree ≠ session trees violated at /api/nav/branches/b9-deep-c050/locate: response changed after session degradation; product tree ≠ session trees violated at /api/nav/trees/b9-wide/branches/b9-wide-trunk/children?limit=50: response changed after session degradation; product tree ≠ session trees violated at /api/nav/search/branches?text=%E5%90%8C%E5%90%8D%E8%8A%82%E7%82%B9%EF%BC%9A%E9%87%8D%E7%82%B9%E5%9B%9E%E9%A1%BE%EF%BC%88Same-Name%20Review%EF%BC%89&mode=exact&limit=13: response changed after session degradation"
+      },
+      "detail": "generator determinism (2 CLI runs byte-identical, manifest hashes equal); structure-truth vs API 100% (all 10,100 branches located with ancestors/path/origin/sibling position matching truth; every node view compared via subtree pagination); 100-level deep chain complete; wide-tree children paged in truth order; same-name disambiguation by id; empty tree honest; lazy endpoints page-bounded (<1MiB); expand state survives simulated restart (migration 0010); nav byte-identical after every session degrades (product tree ≠ session trees); engine-side p95 + first-open recorded as evidence only — browser face (p95/virtualization/keyboard) NOT claimed, stays with the frontend wave / run:d4-browser",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

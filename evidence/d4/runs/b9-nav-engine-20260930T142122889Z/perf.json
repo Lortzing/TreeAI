@@ -1,0 +1,336 @@
+{
+  "runId": "b9-nav-engine-20260930T142122889Z",
+  "firstOpenMs": 63.923,
+  "warmupMs": 16.317,
+  "opCount": 65,
+  "p95Ms": 0.713,
+  "medianMs": 0.019,
+  "maxMs": 1.303,
+  "ops": [
+    {
+      "opId": "big-children-1",
+      "kind": "expand",
+      "durationMs": 0.02
+    },
+    {
+      "opId": "big-children-100",
+      "kind": "expand",
+      "durationMs": 0.01
+    },
+    {
+      "opId": "big-children-1000",
+      "kind": "expand",
+      "durationMs": 0.016
+    },
+    {
+      "opId": "big-children-2500",
+      "kind": "expand",
+      "durationMs": 0.003
+    },
+    {
+      "opId": "big-children-4999",
+      "kind": "expand",
+      "durationMs": 0.003
+    },
+    {
+      "opId": "big-subtree-10",
+      "kind": "expand",
+      "durationMs": 0.065
+    },
+    {
+      "opId": "big-subtree-500",
+      "kind": "expand",
+      "durationMs": 0.019
+    },
+    {
+      "opId": "big-subtree-1500",
+      "kind": "expand",
+      "durationMs": 0.005
+    },
+    {
+      "opId": "big-subtree-3000",
+      "kind": "expand",
+      "durationMs": 0.006
+    },
+    {
+      "opId": "big-subtree-4500",
+      "kind": "expand",
+      "durationMs": 0.007
+    },
+    {
+      "opId": "big-locate-50",
+      "kind": "switch",
+      "durationMs": 0.037
+    },
+    {
+      "opId": "big-locate-700",
+      "kind": "switch",
+      "durationMs": 0.022
+    },
+    {
+      "opId": "big-locate-1200",
+      "kind": "switch",
+      "durationMs": 0.026
+    },
+    {
+      "opId": "big-locate-2000",
+      "kind": "switch",
+      "durationMs": 0.022
+    },
+    {
+      "opId": "big-locate-4000",
+      "kind": "switch",
+      "durationMs": 0.023
+    },
+    {
+      "opId": "big-path-200",
+      "kind": "switch",
+      "durationMs": 0.001
+    },
+    {
+      "opId": "big-path-900",
+      "kind": "switch",
+      "durationMs": 0.001
+    },
+    {
+      "opId": "big-path-1800",
+      "kind": "switch",
+      "durationMs": 0.002
+    },
+    {
+      "opId": "big-path-3500",
+      "kind": "switch",
+      "durationMs": 0.004
+    },
+    {
+      "opId": "big-path-4800",
+      "kind": "switch",
+      "durationMs": 0.003
+    },
+    {
+      "opId": "deep-path-25",
+      "kind": "switch",
+      "durationMs": 0.005
+    },
+    {
+      "opId": "deep-path-50",
+      "kind": "switch",
+      "durationMs": 0.003
+    },
+    {
+      "opId": "deep-path-75",
+      "kind": "switch",
+      "durationMs": 0.002
+    },
+    {
+      "opId": "deep-path-100",
+      "kind": "switch",
+      "durationMs": 0.003
+    },
+    {
+      "opId": "deep-path-side",
+      "kind": "switch",
+      "durationMs": 0.002
+    },
+    {
+      "opId": "deep-locate-10",
+      "kind": "switch",
+      "durationMs": 0.025
+    },
+    {
+      "opId": "deep-locate-60",
+      "kind": "switch",
+      "durationMs": 0.022
+    },
+    {
+      "opId": "deep-locate-100",
+      "kind": "switch",
+      "durationMs": 0.022
+    },
+    {
+      "opId": "deep-children-5",
+      "kind": "expand",
+      "durationMs": 0.01
+    },
+    {
+      "opId": "deep-children-25",
+      "kind": "expand",
+      "durationMs": 0.008
+    },
+    {
+      "opId": "deep-children-50",
+      "kind": "expand",
+      "durationMs": 0.005
+    },
+    {
+      "opId": "deep-children-75",
+      "kind": "expand",
+      "durationMs": 0.008
+    },
+    {
+      "opId": "deep-children-95",
+      "kind": "expand",
+      "durationMs": 0.009
+    },
+    {
+      "opId": "deep-subtree-c001",
+      "kind": "expand",
+      "durationMs": 0.015
+    },
+    {
+      "opId": "deep-subtree-c090",
+      "kind": "expand",
+      "durationMs": 0.011
+    },
+    {
+      "opId": "wide-page-1",
+      "kind": "page",
+      "durationMs": 0.096
+    },
+    {
+      "opId": "wide-page-2",
+      "kind": "page",
+      "durationMs": 0.086
+    },
+    {
+      "opId": "wide-page-3",
+      "kind": "page",
+      "durationMs": 0.078
+    },
+    {
+      "opId": "wide-page-4",
+      "kind": "page",
+      "durationMs": 0.082
+    },
+    {
+      "opId": "wide-page-5",
+      "kind": "page",
+      "durationMs": 0.077
+    },
+    {
+      "opId": "wide-page-6",
+      "kind": "page",
+      "durationMs": 0.08
+    },
+    {
+      "opId": "wide-page-7",
+      "kind": "page",
+      "durationMs": 0.087
+    },
+    {
+      "opId": "wide-page-8",
+      "kind": "page",
+      "durationMs": 0.078
+    },
+    {
+      "opId": "wide-page-9",
+      "kind": "page",
+      "durationMs": 0.061
+    },
+    {
+      "opId": "wide-locate-w001",
+      "kind": "switch",
+      "durationMs": 0.02
+    },
+    {
+      "opId": "wide-locate-w060",
+      "kind": "switch",
+      "durationMs": 0.019
+    },
+    {
+      "opId": "wide-locate-w120",
+      "kind": "switch",
+      "durationMs": 0.019
+    },
+    {
+      "opId": "wide-locate-w180",
+      "kind": "switch",
+      "durationMs": 0.024
+    },
+    {
+      "opId": "wide-locate-w220",
+      "kind": "switch",
+      "durationMs": 0.022
+    },
+    {
+      "opId": "wide-subtree-1",
+      "kind": "expand",
+      "durationMs": 0.332
+    },
+    {
+      "opId": "wide-subtree-2",
+      "kind": "page",
+      "durationMs": 0.633
+    },
+    {
+      "opId": "wide-children-w005",
+      "kind": "expand",
+      "durationMs": 0.005
+    },
+    {
+      "opId": "wide-children-w085",
+      "kind": "expand",
+      "durationMs": 0.004
+    },
+    {
+      "opId": "wide-children-w155",
+      "kind": "expand",
+      "durationMs": 0.004
+    },
+    {
+      "opId": "wide-children-w215",
+      "kind": "expand",
+      "durationMs": 0.004
+    },
+    {
+      "opId": "search-samename-exact",
+      "kind": "search",
+      "durationMs": 1.227
+    },
+    {
+      "opId": "search-samename-substring",
+      "kind": "search",
+      "durationMs": 1.303
+    },
+    {
+      "opId": "search-trees-prefix-id",
+      "kind": "search",
+      "durationMs": 0.015
+    },
+    {
+      "opId": "search-trees-prefix-title",
+      "kind": "search",
+      "durationMs": 0.01
+    },
+    {
+      "opId": "search-branch-substring-zh",
+      "kind": "search",
+      "durationMs": 0.483
+    },
+    {
+      "opId": "search-branch-prefix-en",
+      "kind": "search",
+      "durationMs": 0.419
+    },
+    {
+      "opId": "search-branch-substring-prob",
+      "kind": "search",
+      "durationMs": 0.694
+    },
+    {
+      "opId": "search-branch-prefix-samename",
+      "kind": "search",
+      "durationMs": 1.261
+    },
+    {
+      "opId": "search-trees-substring-deep",
+      "kind": "search",
+      "durationMs": 0.012
+    },
+    {
+      "opId": "search-branch-scoped-big",
+      "kind": "search",
+      "durationMs": 0.713
+    }
+  ]
+}
