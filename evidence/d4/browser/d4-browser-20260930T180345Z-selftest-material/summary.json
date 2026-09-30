@@ -1,0 +1,81 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.2.0",
+  "mode": "selftest",
+  "generatedAt": "2026-09-30T18:03:52.403Z",
+  "git": {
+    "head": "3d0dbbabae9d5af1291b97e633dec7b43429a6ea",
+    "dirty": true
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-06",
+      "md-11"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:64847",
+      "durationMs": 500
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:64866/",
+      "durationMs": 618
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 635
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 828
+    },
+    {
+      "id": "d4-read-and-select",
+      "status": "PASS",
+      "detail": "12/12 frozen B2 selections captured exactly in the real reader (emoji/ZWJ/flags/keycaps, repeat-word 2nd/4th/5th occurrence, cross-line, long-tail past lazy-load; 1 via a real two-click mouse selection: click + Shift+click); grapheme-split snapped outward; cross-block refused; resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: clipboard read-back byte-equal",
+      "durationMs": 1350
+    },
+    {
+      "id": "d4-branch-from-material",
+      "status": "NOT_RUN",
+      "reason": "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）",
+      "modeGated": true
+    },
+    {
+      "id": "d4-return-from-material",
+      "status": "NOT_RUN",
+      "reason": "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）",
+      "modeGated": true
+    },
+    {
+      "id": "d4-restart-continue",
+      "status": "PASS",
+      "detail": "reading position saved at blk-52 via the reader's own save path (close-button flush) → studio SIGTERM → new process on the same data dir → reopened with the restore note and blk-52 loaded (59 blocks after forward paging; persisted row verified on the new process) — note: the visual scroll alignment is reset by the app's own re-render in real Chrome (observed scrollTop 0 vs block top 7208; frontend defect reported separately)",
+      "durationMs": 2518
+    },
+    {
+      "id": "d4-search-recover",
+      "status": "NOT_RUN",
+      "reason": "搜索 UI 未落地（owner: D4-4 前端波次进行中；HTTP/引擎面已由离线 b4-cross-material-find 覆盖，浏览器 UI 面待其前端落地）"
+    }
+  ],
+  "pageErrors": []
+}

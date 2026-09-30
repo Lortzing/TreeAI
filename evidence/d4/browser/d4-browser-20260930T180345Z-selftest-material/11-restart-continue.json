@@ -1,0 +1,32 @@
+{
+  "check": "d4-restart-continue",
+  "treeId": "tree_249fcd85-b8db-49c9-b515-5f4d63c9c3a6",
+  "material": "md-11.md",
+  "savedPosition": {
+    "versionId": "matver_ad2a1be6-2a81-42aa-8e35-03f24b00fd8b",
+    "blockId": "blk-52",
+    "focusStart": null,
+    "updatedAt": "2026-09-30T18:03:50.067Z"
+  },
+  "persistedAcrossRestart": {
+    "versionId": "matver_ad2a1be6-2a81-42aa-8e35-03f24b00fd8b",
+    "blockId": "blk-52"
+  },
+  "restart": {
+    "oldPort": 64866,
+    "newPort": 64945,
+    "dataDirKept": true
+  },
+  "restored": {
+    "blockId": "blk-52",
+    "blocks": 59,
+    "note": true
+  },
+  "scrollAlignmentObserved": {
+    "scrollTop": 0,
+    "blockTop": 7208,
+    "diffPx": 7208,
+    "verdict": "restore note + block present; visual scroll alignment lost in real Chrome (app.js renderMaterialReader detach/reattach resets scrollTop) — reported, not fixed in this branch"
+  },
+  "pageErrorsExcluded": 0
+}
