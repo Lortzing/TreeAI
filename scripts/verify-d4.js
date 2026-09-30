@@ -44,6 +44,7 @@ import { runB1ImportCheck } from "../tests/support/verifier/d4-b1-import.ts";
 import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
 import { runB3ExplorationCheck } from "../tests/support/verifier/d4-b3-exploration.ts";
 import { runB4SearchCheck } from "../tests/support/verifier/d4-b4-search.ts";
+import { runB5RestoreCheck } from "../tests/support/verifier/d4-b5-restore.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -530,7 +531,36 @@ const CHECKS = [
   },
   {
     id: "b5-restore-integrity",
-    fn: notRunCheck("b5-restore-integrity", "D4-5", "export/restore not implemented"),
+    // REAL executing check (D4-5): export/restore portability through the
+    // actual CLI entry (subprocesses running apps/studio/src/index.ts export /
+    // --import-package) against a representative dataset built by the real
+    // import pipeline + repositories. Covers the offline-mechanical slice of
+    // charter B5: empty-dir restore integrity compare (saved facts/returns/
+    // excerpts survive), corrupted package refused with the target and source
+    // untouched, material new version keeps old excerpt linkage, whole-session
+    // deletion degrades availability honestly (facts stay readable; explicit
+    // new exploration is the product path), parse cancel holds after restore,
+    // and per-request search rebuild identical over source and restored
+    // databases (B5 索引删除重建). The browser-path items of B5 (restart+
+    // resume in a real browser, the explicit-new-exploration UI affordance)
+    // stay with run:d4-browser / the final candidate-SHA regression — not
+    // claimed here.
+    fn: async () => {
+      const outcome = await runB5RestoreCheck(ROOT);
+      log("b5-restore-integrity", `b5 restore/asset-integrity check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
   },
   {
     id: "b6-scale-performance",
