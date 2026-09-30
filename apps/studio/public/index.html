@@ -52,6 +52,15 @@
           <h2 class="sidebar-heading">Branches</h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
+        <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
+             （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
+             不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
+             已载含如实空态/失败 + 重试）；导入 UI 不在本分支范围（D4-1 的
+             HTTP 面已就绪，上传入口随后续增量补齐）。 -->
+        <section class="sidebar-section" id="materials-section" hidden>
+          <h2 class="sidebar-heading">Materials</h2>
+          <ul id="material-list" aria-label="Materials"></ul>
+        </section>
         <div id="sidebar-foot">
           <p class="subtitle">D3 Core MVP · trusted-local</p>
           <p id="driver-note" class="muted"></p>
@@ -130,6 +139,10 @@
                   </div>
                 </div>
               </aside>
+              <!-- D4-2 材料阅读器（issue #8 工作包 D4-2）：与支线面板同一
+                   右列的另一工作面（app.js 渲染内容；可见性契约同
+                   #branch-panel——hidden 属性 + .enter/.exit 动效）。 -->
+              <aside id="material-reader" hidden aria-label="Material reader" tabindex="-1"></aside>
             </div>
           </div>
         </section>

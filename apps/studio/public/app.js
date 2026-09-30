@@ -61,7 +61,45 @@
  *    层关卡 + 焦点还原）/ 触屏（selectionchange 武装）/ reduced-motion
  *    （卡进场动效即时化——CSS 全局降级块 + 显式规则）。
  *
- * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。其余既有事实面：
+ * D4-2 材料阅读（issue #8 工作包 D4-2「阅读与来源定位」前端增量；charter
+ * §3.2 锚点与材料阅读 / 契约 §3 已落地的材料 HTTP 面）：
+ *  - 侧栏 Materials 段（Forest/Branches/Materials 三段同栏）：当前树关联
+ *    材料的列表——标题、种类、版本标签、解析状态（ready/failed/canceled/
+ *    unsupported/pending/parsing 各自如实呈现；failed 带原因，绝不伪装成
+ *    空文档）；导入 UI 不在本分支（D4-1 的 HTTP 面已就绪，列表按 API 返回
+ *    如实呈现，空态给出指引）；三态纪律（加载中/已载/失败 + 重试）与树列
+ *    表、journal 同款；
+ *  - 阅读器（右列工作面，与支线面板同一可见性契约：hidden + .enter/.exit，
+ *    Esc 关闭 + 焦点还原，z-index 在支线面板之上）：按块渲染 canonicalText
+ *    （?afterBlock= 分页懒加载 + 有界窗口裁剪，DOM 不无界增长），渲染是
+ *    **逐字无损**的——markdown 语法字符全部保留在文本中（标题/强调/行内
+ *    代码/链接语法只加样式不删字符），块 textContent 与 canonicalText 切片
+ *    字节相等，每个块元素携带 blockId 与绝对 UTF-16 区间（charter §3.2
+ *    「渲染必须保留到规范文本的映射」的结构性保证；绝不解析文本为 HTML）；
+ *  - 选区捕获（武装纪律同正文层：mousedown→mouseup 拖拽窗口内不重绘、
+ *    selectionchange 触屏武装）：绝对偏移换算（前缀长度法）+ 块内校验
+ *    （excerpt === 块文本切片）+ 字素安全（Intl.Segmenter 图素簇边界外的
+ *    选区边界向外吸附到整簇，绝不产生劈开代理对/组合字符/emoji 的载荷）；
+ *    跨块选区如实呈「不可锚定」（B2 纪律：markdown 选区必须含于单块），
+ *    不给出错误载荷；捕获载荷（materialId/versionId/blockId/start/end/
+ *    excerpt）如实展示为 D4-3 的未来锚点（建枝入口随 D4-3 落地，本分支
+ *    显式声明，不伪装可用）；「复制摘录」按 canonicalText 切片复制原文；
+ *  - 版本可辨认（charter §3.1）：阅读器头部标明所渲染版本；非最新版本
+ *    显式标注 older + 「切换到最新」的非破坏性入口（旧版本保持可读、随
+ *    版本链可切回；绝不自动迁移锚点）；版本链上每版状态如实；
+ *  - 阅读位置（charter §3.2「原文阅读与分支探索各自保留位置」）：按
+ *    Tree×材料 服务端持久化（PUT reading-position，滚动节流 + 关闭/切版
+ *    本/切树时立即保存），打开时按 detail.readingPosition 恢复（跨页向前
+ *    补载到目标块）；与对话阅读位置（scrollPositions，分支事实）完全
+ *    独立；
+ *  - 诚实状态面：PDF 材料显式「PDF 阅读器随下一个 D4-2 增量落地」（本
+ *    分支只有 Markdown 阅读器，不伪造页面）；非 ready 版本（pending/
+ *    parsing/failed/canceled/unsupported/rejected）各按事实呈现（含原因
+ *    与刷新入口）；网络/API 失败可见可重试，绝不折叠成空态。
+ *
+ * 范围（诚实声明）：对话 turn 无 Markdown 渲染、无自动摘要（材料阅读器
+ *   的 markdown 渲染是**无损字面渲染**——见 D4-2 段，与 turn 渲染无关）。
+ *   其余既有事实面：
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
  *  - 诊断/状态条：当前 run 状态、失败码与消息（失败面板不自动消失）、
  *    在途时 Abort、“未观测策略决策”的如实呈现（Studio 无工具执行器
@@ -123,7 +161,13 @@
 /** @typedef {{runId:string, branchId:string, episodeId:string}} ActiveRunInfoT */
 /** @typedef {{runId:string, branchId:string, text:string}} StreamingT */
 /** @typedef {{branchId:string, turnId:string, start:number, end:number}} SourceHighlightT */
-/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}|{kind:"main-input"}} FocusReturnRefT */
+/** @typedef {{kind:"element", element:object}|{kind:"tab", branchId:string}|{kind:"branch-button", turnId:string}|{kind:"return-card", turnId:string}|{kind:"main-input"}|{kind:"material-button", materialId:string}} FocusReturnRefT */
+/** D4-2 材料面类型（契约 §3 的 HTTP 载荷形状；阅读器与侧栏列表消费）。 */
+/** @typedef {{id:string, title:string, createdAt:string}} MaterialT */
+/** @typedef {{id:string, materialId:string, contentHash:string, parserKind:"markdown"|"pdf", parserVersion:string, importedAt:string, sizeBytes:number, parseStatus:"pending"|"parsing"|"ready"|"failed"|"canceled"|"unsupported"|"rejected", parseError:string|null, textUnits:number}} MaterialVersionT */
+/** @typedef {{material:MaterialT, versions:MaterialVersionT[]}} MaterialListItemT */
+/** @typedef {{material:MaterialT, versions:MaterialVersionT[], readingPosition:{treeId:string, materialId:string, versionId:string, blockId:string|null, focusStart:number|null, updatedAt:string}|null, parseTasks:object[]}} MaterialDetailT */
+/** @typedef {{block:{blockId:string, kind:"markdown-block"|"pdf-page", start:number, end:number, page?:number}, text:string}} MaterialBlockEntryT */
 
 const state = {
   /** @type {TreeT[]} */ trees: [],
@@ -231,6 +275,51 @@ const state = {
   /** 客户端迟到丢弃计数（stale 解释响应——目标卡已换/已关）：抽屉用量行
       如实呈现（与服务端迟到丢弃分开计数）。 */
   termDiscardedLate: 0,
+  /**
+   * D4-2 材料列表读模型（当前树；契约 §3 GET /materials）：三态纪律同
+   * journal/术语读模型——null = 加载中；{ok:true, materials} = 已载
+   * （可为空——如实空态）；{ok:false, error} = 拉取失败（侧栏常驻错误 +
+   * 重试，绝不折叠成空列表伪装成“无材料”）。切树时随 resetTransientView
+   * 复位、openTree 后台刷新。
+   * @type {null|{ok:true, materials:MaterialListItemT[]}|{ok:false, error:string}}
+   */
+  materials: null,
+  /**
+   * D4-2 阅读器会话（null = 关闭）。reader 持有打开面的全部产品事实
+   * （detail 载荷）与已载块窗口；渲染元素（#material-reader 的 chrome 与
+   * #mat-blocks 的块元素）不随 renderAll 重建——阅读器与树态正交（SSE
+   * 终态刷新对已载块零触碰，块元素身份跨刷新稳定）。
+   * @type {{
+   *   materialId: string,
+   *   material: MaterialT,
+   *   versions: MaterialVersionT[],
+   *   versionId: string,
+   *   readingPosition: MaterialDetailT["readingPosition"],
+   *   blocks: MaterialBlockEntryT[],
+   *   nextAfterBlock: string|null,
+   *   textUnits: number,
+   *   firstPageState: "loading"|"loaded"|"failed",
+   *   firstPageError: string|null,
+   *   appendState: "idle"|"loading"|"failed",
+   *   appendError: string|null,
+   *   fenceOpen: boolean,
+   *   trimmedBlocks: number,
+   *   restoredToBlockId: string|null,
+   *   lastSavedBlockId: string|null
+   * }|null}
+   */
+  materialReader: null,
+  /**
+   * D4-2 阅读器武装选区（charter §3.2 精确锚点的前端捕获面）：武装纪律
+   * 同正文层（mouseup/双击/触屏 selectionchange；拖拽窗口内不重绘）。
+   * 有效载荷 = D4-3 的未来锚点（excerpt 与块文本切片字节相等、边界字素
+   * 安全——snapped 表示边界被吸附到完整字素簇）；invalid 携带如实原因
+   * （cross-block：B2 纪律——markdown 选区必须含于单块）。
+   * @type {null|
+   *   {kind:"valid", materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string, snapped:boolean}|
+   *   {kind:"invalid", materialId:string, versionId:string, reason:"cross-block"|"unmappable"}}
+   */
+  materialSelection: null,
 };
 
 /** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
@@ -1333,11 +1422,16 @@ function findLiveSelectionTurn() {
   return null;
 }
 
-/** 焦点是否在术语面（工具条/解释卡）内——选区解除延迟判定用。 */
+/** 焦点是否在选区交互面（工具条/解释卡/D4-2 材料捕获条）内——选区解除
+    延迟判定用。 */
 function withinTerminologySurface(element) {
   let current = element;
   while (current !== null && isElementNode(current)) {
-    if (current.classList.contains("selection-toolbar") || current.classList.contains("term-explain-card")) {
+    if (
+      current.classList.contains("selection-toolbar") ||
+      current.classList.contains("term-explain-card") ||
+      current.classList.contains("mat-selection-bar")
+    ) {
       return true;
     }
     current = current.parentElement;
@@ -1357,11 +1451,16 @@ function disarmArmedSelection() {
   }
 }
 
-/** 冲刷拖拽窗口内被延后的整树重渲（③ 选择期间不重绘的收尾）。 */
+/** 冲刷拖拽窗口内被延后的整树重渲与阅读器 chrome 重渲（③ 选择期间不重
+    绘的收尾；阅读器块追加是纯增量的，不经此路径）。 */
 function flushPendingRerender() {
-  if (!state.pendingRerender) return;
+  if (!state.pendingRerender && !materialPendingUpdate) return;
+  const rerenderAll = state.pendingRerender;
+  const rerenderMaterial = materialPendingUpdate;
   state.pendingRerender = false;
-  renderAll();
+  materialPendingUpdate = false;
+  if (rerenderAll) renderAll();
+  if (rerenderMaterial && state.materialReader !== null) renderMaterialReader();
 }
 
 /** 解释卡重建后的焦点保持（③ 草稿/焦点纪律）：旧卡内聚焦的控件（首问
@@ -1662,6 +1761,9 @@ function renderAll(opts = {}) {
     updateComposerLocks();
   }
   renderTrees();
+  /* D4-2 材料列表（侧栏 Materials 段）随 renderAll 渲染（三态幂等；阅读
+     器的块容器不在此路径——与树态正交，SSE 刷新对已载块零触碰）。 */
+  renderMaterialsSection();
 }
 
 /* ------------------------------ Return 草稿（持久化） ------------------------------ */
@@ -2166,6 +2268,7 @@ function resolveFocusRef(ref) {
   if (ref.kind === "tab") return tabButtons.get(ref.branchId) ?? null;
   if (ref.kind === "branch-button") return branchHereButtons.get(ref.turnId) ?? null;
   if (ref.kind === "return-card") return turnElements.get(ref.turnId) ?? null;
+  if (ref.kind === "material-button") return materialListButtons.get(ref.materialId) ?? null;
   return null;
 }
 
@@ -2285,6 +2388,23 @@ function resetTransientView() {
   state.armedSelection = null;
   state.selectionDragActive = false;
   state.pendingRerender = false;
+  /* D4-2：材料面随树切换复位（阅读位置已由调用方在切树前落库）。退出中
+     的块容器一并清空——绝不给下一次打开留下上一棵树的块元素。 */
+  state.materials = null;
+  state.materialSelection = null;
+  if (state.materialReader !== null) {
+    state.materialReader = null;
+    materialReaderEpoch += 1;
+    materialPendingUpdate = false;
+    if (materialPositionTimer !== null) {
+      window.clearTimeout(materialPositionTimer);
+      materialPositionTimer = null;
+    }
+    hideMaterialReader({ instant: true });
+    const blocksEl = document.getElementById("mat-blocks");
+    if (blocksEl !== null) blocksEl.replaceChildren();
+  }
+  materialReaderFocusReturn = null;
 }
 
 /** 开树世代号（P1 同族，issue #7 增量验收）：启动恢复 / 列表重试的
@@ -2293,6 +2413,9 @@ function resetTransientView() {
 let treeOpenEpoch = 0;
 
 async function openTree(treeId) {
+  /* D4-2：切树前先把当前阅读位置落库（树×材料行；PUT 面向旧树 id 发出，
+     迟到响应不影响新树状态——api 调用即发起，不等待）。 */
+  if (state.materialReader !== null) saveMaterialReadingPositionNow();
   const epoch = ++treeOpenEpoch;
   const treeState = await api(`/api/trees/${encodeURIComponent(treeId)}/state`);
   if (epoch !== treeOpenEpoch) return; /* 已被更新的开树/建树取代：迟到丢弃 */
@@ -2317,9 +2440,13 @@ async function openTree(treeId) {
   /* ③ 批注区间覆盖的数据面：开树即拉术语读模型（失败如实 {ok:false}——
      无批注覆盖，绝不伪造）。 */
   refreshTerminologyForTree(treeId);
+  /* D4-2：开树即拉材料列表（三态；失败态侧栏常驻重试）。 */
+  void refreshMaterials();
 }
 
 async function createTree() {
+  /* D4-2：同 openTree——切换前落库当前阅读位置。 */
+  if (state.materialReader !== null) saveMaterialReadingPositionNow();
   treeOpenEpoch += 1; /* 建树即新的当前树：作废在途的旧 openTree（P1 同族） */
   const payload = await api("/api/trees", "POST", {});
   state.currentTreeId = payload.tree.id;
@@ -2339,6 +2466,8 @@ async function createTree() {
   connectEvents(payload.tree.id);
   renderAll();
   refreshTerminologyForTree(payload.tree.id);
+  /* D4-2：新树即拉材料列表（空树如实空态）。 */
+  void refreshMaterials();
 }
 
 /**
@@ -3704,6 +3833,1378 @@ function termExplainCard() {
   return div;
 }
 
+/* ------------------------------ D4-2 材料阅读（issue #8 工作包 D4-2） ------------------------------ */
+
+/** 分块读取页大小（块数；与服务端缺省 DEFAULT_BLOCK_PAGE_LIMIT=50 同值，
+    显式携带以保确定性）。 */
+const MATERIAL_PAGE_LIMIT = 50;
+/** 已载块窗口上限（有界 DOM：超过即从顶部裁掉最旧块——阅读是前进式活动；
+    裁剪计数如实呈现，重开材料/重选版本即从头可读）。 */
+const MATERIAL_MAX_LOADED_BLOCKS = 300;
+/** 懒加载提前量（px）：视口底边距内容底部不足该值即预取下一页。 */
+const MATERIAL_LOAD_THRESHOLD_PX = 400;
+/** 阅读位置保存节流（ms）：滚动停止后落一次 PUT；关闭/切版本/切树时立即
+    冲刷（charter §3.2「原文阅读与分支探索各自保留位置」——阅读位置走
+    服务端 reading-position 行，与对话的 scrollPositions 互不覆盖）。 */
+const MATERIAL_POSITION_SAVE_DEBOUNCE_MS = 1500;
+
+/** 材料读模型世代号（P1 同族纪律：写 state.materials 前双验证——请求树 +
+    世代号；切树后迟到的旧树响应整包丢弃，绝不把 A 树的材料写进 B 树）。 */
+let materialsEpoch = 0;
+/** 阅读器世代号（打开/切版本/刷新 detail 各递增）：迟到的 detail/分页
+    响应（已切材料/切版本/切树/已关闭）按世代丢弃。 */
+let materialReaderEpoch = 0;
+/** 阅读位置节流 timer（关闭/切版本时冲刷）。 */
+let materialPositionTimer = null;
+/** 阅读器进出场动画收尾 timer（M1/M2 契约同 panel/drawer）。 */
+let materialReaderAnimTimer = null;
+const MATERIAL_READER_ENTER_MS = 240; /* CSS 180ms + 收尾余量 */
+const MATERIAL_READER_EXIT_MS = 170;
+/** 拖拽窗口内被延后的阅读器 chrome 重渲（mouseup 后与整树重渲一起冲刷）。 */
+let materialPendingUpdate = false;
+/** 阅读器关闭时的焦点还原引用。 @type {FocusReturnRefT|null} */
+let materialReaderFocusReturn = null;
+/** 材料列表按钮注册表（materialId → 按钮）：阅读器关闭的焦点还原目标。 */
+const materialListButtons = new Map();
+
+/** 材料列表三态渲染（侧栏 Materials 段；renderAll 与刷新路径共用幂等）。 */
+function renderMaterialsSection() {
+  const section = $("materials-section");
+  const list = $("material-list");
+  materialListButtons.clear();
+  if (state.treeState === null || state.currentTreeId === null) {
+    section.hidden = true;
+    list.replaceChildren();
+    return;
+  }
+  section.hidden = false;
+  const materials = state.materials;
+  if (materials === null) {
+    list.replaceChildren(mutedListItem("loading materials…"));
+    return;
+  }
+  if (!materials.ok) {
+    /* 拉取失败：常驻错误 + 重试（与树列表加载失败同款纪律——绝不折叠成
+       空列表伪装成“无材料”）。 */
+    const li = document.createElement("li");
+    li.className = "muted";
+    li.append(document.createTextNode(`materials failed to load — ${materials.error} `));
+    const retry = document.createElement("button");
+    retry.className = "drawer-retry";
+    retry.textContent = "Retry";
+    retry.title = "Fetch the material list again";
+    retry.addEventListener("click", () => void refreshMaterials());
+    li.append(retry);
+    list.replaceChildren(li);
+    return;
+  }
+  if (materials.materials.length === 0) {
+    list.replaceChildren(
+      mutedListItem(
+        "no materials linked to this tree yet — imported materials (D4-1) appear here; " +
+          "the import UI lands with a later increment",
+      ),
+    );
+    return;
+  }
+  const items = [];
+  for (const entry of materials.materials) {
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.dataset.materialId = entry.material.id;
+    if (state.materialReader !== null && state.materialReader.materialId === entry.material.id) {
+      button.classList.add("active");
+    }
+    const name = document.createElement("span");
+    name.textContent = entry.material.title;
+    button.append(name, materialStatusMeta(entry.versions));
+    button.title = `open ${entry.material.title} in the material reader`;
+    button.addEventListener("click", () => {
+      closeSidebar(); /* 窄窗：选材料后收起侧栏抽屉（与树选择同一纪律） */
+      void openMaterial(entry.material.id, {
+        trigger: { kind: "material-button", materialId: entry.material.id },
+      });
+    });
+    materialListButtons.set(entry.material.id, button);
+    li.append(button);
+    items.push(li);
+  }
+  list.replaceChildren(...items);
+}
+
+/** 列表状态行（li.muted 通用件）。 */
+function mutedListItem(text) {
+  const li = document.createElement("li");
+  li.className = "muted";
+  li.textContent = text;
+  return li;
+}
+
+/** 列表项状态行：以最新版本为列表事实（版本链在阅读器内完整呈现）；最新
+    版本非 ready 时如实带原因码（截断保持列表安静，title 携全文），并标注
+    仍有旧 ready 版本可读（绝不把失败伪装成可读，也绝不因失败隐藏旧版）。 */
+function materialStatusMeta(versions) {
+  const meta = document.createElement("span");
+  meta.className = "material-meta";
+  if (versions.length === 0) {
+    meta.textContent = "no versions recorded";
+    return meta;
+  }
+  const latest = versions[versions.length - 1];
+  const status = document.createElement("span");
+  status.className = `material-status ${latest.parseStatus}`;
+  if (typeof latest.parseError === "string" && latest.parseError !== "") {
+    const reason =
+      latest.parseError.length > 90 ? `${latest.parseError.slice(0, 90)}…` : latest.parseError;
+    status.textContent = `${latest.parseStatus}: ${reason}`;
+    status.title = latest.parseError;
+  } else {
+    status.textContent = latest.parseStatus;
+  }
+  meta.append(document.createTextNode(`${latest.parserKind} · v${String(versions.length)} · `), status);
+  if (latest.parseStatus !== "ready") {
+    for (let i = versions.length - 2; i >= 0; i -= 1) {
+      if (versions[i].parseStatus === "ready") {
+        meta.append(document.createTextNode(` · v${String(i + 1)} ready (older, readable)`));
+        break;
+      }
+    }
+  }
+  return meta;
+}
+
+/** 材料列表拉取（开树/重试共用；三态 + 迟到丢弃守卫在写点）。 */
+async function refreshMaterials() {
+  if (state.currentTreeId === null) return;
+  const treeId = state.currentTreeId;
+  const epoch = ++materialsEpoch;
+  try {
+    const payload = await api(`/api/trees/${encodeURIComponent(treeId)}/materials`);
+    if (epoch !== materialsEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
+    state.materials = { ok: true, materials: payload.materials };
+  } catch (err) {
+    if (epoch !== materialsEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
+    state.materials = { ok: false, error: String(err && err.message ? err.message : err) };
+  }
+  renderMaterialsSection();
+}
+
+/** 打开材料阅读器。幂等：同一材料已在读（且非失败态）只聚焦；换材料先把
+    当前阅读位置落库（旧材料的事实不因切换丢失）。打开是异步的——先立
+    loading 壳，detail 到达后选版本并拉首页；全程按世代丢弃迟到响应。 */
+async function openMaterial(materialId, opts = {}) {
+  if (state.currentTreeId === null) return;
+  if (
+    state.materialReader !== null &&
+    state.materialReader.materialId === materialId &&
+    state.materialReader.firstPageState !== "failed"
+  ) {
+    $("material-reader").focus();
+    return;
+  }
+  if (state.materialReader !== null) {
+    /* 换材料：先把当前阅读位置落库（旧材料的事实不因切换丢失），并清空
+       既有块容器——blockId 序列（blk-N）跨材料重名，绝不能移用上一份的
+       块元素。 */
+    saveMaterialReadingPositionNow();
+    const previousBlocks = document.getElementById("mat-blocks");
+    if (previousBlocks !== null) previousBlocks.replaceChildren();
+  }
+  const treeId = state.currentTreeId;
+  const epoch = ++materialReaderEpoch;
+  state.materialSelection = null;
+  state.materialReader = {
+    materialId,
+    material: { id: materialId, title: "", createdAt: "" },
+    versions: [],
+    versionId: "",
+    readingPosition: null,
+    blocks: [],
+    nextAfterBlock: null,
+    textUnits: 0,
+    firstPageState: "loading",
+    firstPageError: null,
+    appendState: "idle",
+    appendError: null,
+    fenceOpen: false,
+    trimmedBlocks: 0,
+    restoredToBlockId: null,
+    lastSavedBlockId: null,
+  };
+  materialReaderFocusReturn = opts.trigger ?? { kind: "material-button", materialId };
+  renderMaterialReader();
+  showMaterialReader();
+  $("material-reader").focus();
+  try {
+    const detail = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(materialId)}`,
+    );
+    if (
+      epoch !== materialReaderEpoch ||
+      state.materialReader === null ||
+      state.materialReader.materialId !== materialId ||
+      state.currentTreeId !== treeId
+    ) {
+      return; /* 迟到丢弃：已切材料/切树/关闭 */
+    }
+    const reader = state.materialReader;
+    reader.material = detail.material;
+    reader.versions = detail.versions;
+    reader.readingPosition = detail.readingPosition ?? null;
+    const version = chooseMaterialVersion(detail);
+    reader.versionId = version === null ? "" : version.id;
+    await loadMaterialFirstPage(reader, { epoch, treeId });
+  } catch (err) {
+    if (
+      epoch !== materialReaderEpoch ||
+      state.materialReader === null ||
+      state.materialReader.materialId !== materialId ||
+      state.currentTreeId !== treeId
+    ) {
+      return;
+    }
+    state.materialReader.firstPageState = "failed";
+    state.materialReader.firstPageError = String(err && err.message ? err.message : err);
+    renderMaterialReader();
+  }
+}
+
+/**
+ * 首版选择（charter §1「隔天回来能找到原文」）：保存过阅读位置且该版本
+ * 仍可读（ready + markdown）→ 恢复到该版本；否则最新版本（其状态——含
+ * 失败/PDF——在阅读器内如实呈现，不因失败静默回落旧版：列表与版本链
+ * 都标明旧 ready 版本可读，切换是显式动作）。
+ */
+function chooseMaterialVersion(detail) {
+  const versions = detail.versions;
+  if (versions.length === 0) return null;
+  const position = detail.readingPosition;
+  if (position !== null) {
+    const saved = versions.find((version) => version.id === position.versionId) ?? null;
+    if (saved !== null && saved.parseStatus === "ready" && saved.parserKind === "markdown") {
+      return saved;
+    }
+  }
+  return versions[versions.length - 1];
+}
+
+/** 首页加载（含位置恢复的跨页前补）：非 ready / PDF 版本不取块——状态面
+    如实呈现（409 material-not-ready 的竞态也经 catch 落入同一失败面）。 */
+async function loadMaterialFirstPage(reader, opts) {
+  const { epoch, treeId } = opts;
+  const version = reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
+  const isStale = () =>
+    epoch !== materialReaderEpoch || state.materialReader !== reader || state.currentTreeId !== treeId;
+  if (version === null || version.parseStatus !== "ready" || version.parserKind !== "markdown") {
+    reader.firstPageState = "loaded";
+    renderMaterialReader();
+    return;
+  }
+  reader.firstPageState = "loading";
+  reader.firstPageError = null;
+  renderMaterialReader();
+  /* 恢复目标：保存位置即所开版本时滚到该块；块不在首页则按 nextAfterBlock
+     向前补页（API 只有正向分页——循环以块总数为上界，长材料上是诚实代价；
+     目标块出现即停）。 */
+  const position = reader.readingPosition;
+  const restoreBlockId =
+    position !== null && position.versionId === reader.versionId && position.blockId !== null
+      ? position.blockId
+      : null;
+  let afterBlock = null;
+  for (;;) {
+    let page;
+    try {
+      page = await fetchMaterialPage(reader, treeId, afterBlock);
+    } catch (err) {
+      if (isStale()) return;
+      reader.firstPageState = "failed";
+      reader.firstPageError = String(err && err.message ? err.message : err);
+      renderMaterialReader();
+      return;
+    }
+    if (isStale()) return;
+    applyMaterialPage(reader, page);
+    if (restoreBlockId === null || page.nextAfterBlock === null) break;
+    if (reader.blocks.some((entry) => entry.block.blockId === restoreBlockId)) break;
+    afterBlock = page.nextAfterBlock;
+  }
+  reader.firstPageState = "loaded";
+  renderMaterialReader();
+  if (restoreBlockId !== null) {
+    const target = materialBlockElement(restoreBlockId);
+    if (target !== null && typeof target.scrollIntoView === "function") {
+      target.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+    }
+    reader.restoredToBlockId = restoreBlockId;
+    /* 恢复注记在 chrome 渲染时读取 restoredToBlockId——补一次让注记落位。 */
+    renderMaterialReader();
+  }
+}
+
+/** 分块读取请求（显式 limit=页大小；afterBlock 为下一页游标）。 */
+async function fetchMaterialPage(reader, treeId, afterBlock) {
+  let path =
+    `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(reader.materialId)}` +
+    `/versions/${encodeURIComponent(reader.versionId)}?limit=${String(MATERIAL_PAGE_LIMIT)}`;
+  if (afterBlock !== null) {
+    path += `&afterBlock=${encodeURIComponent(afterBlock)}`;
+  }
+  return api(path);
+}
+
+/** 一页数据落地：窗口数据（reader.blocks）+ DOM 追加 + 顶部裁剪 + 尾部态。 */
+function applyMaterialPage(reader, page) {
+  for (const entry of page.blocks) reader.blocks.push(entry);
+  reader.nextAfterBlock = page.nextAfterBlock;
+  reader.textUnits = page.textUnits;
+  appendMaterialBlockElements(reader);
+  trimMaterialWindow(reader);
+  updateMatTail();
+}
+
+/** 追加缺失块元素（页序即 DOM 序；复用既有元素——懒加载/重渲不换走已读
+    块，选区期间的元素身份稳定）。 */
+function appendMaterialBlockElements(reader) {
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl === null) return;
+  const present = new Set();
+  for (const child of blocksEl.children) {
+    if (isElementNode(child) && child.classList.contains("material-block")) {
+      present.add(child.dataset.blockId);
+    }
+  }
+  for (const entry of reader.blocks) {
+    if (present.has(entry.block.blockId)) continue;
+    blocksEl.append(renderMaterialBlockElement(entry, reader));
+  }
+}
+
+/** 有界窗口：已载块超上限时从顶部同步裁掉最旧块（数据 + DOM 一起——
+    reader.blocks 即当前窗口，偏移换算/位置保存都以在场块为事实）。裁剪
+    调整 scrollTop 保持视觉位置（真实浏览器按被裁元素实高；脚本桩高度为
+    0 → 调整量为 0，确定性）。 */
+function trimMaterialWindow(reader) {
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl === null) return;
+  const over = reader.blocks.length - MATERIAL_MAX_LOADED_BLOCKS;
+  if (over <= 0) return;
+  let removedHeight = 0;
+  let removed = 0;
+  while (removed < over && reader.blocks.length > 0) {
+    const [entry] = reader.blocks;
+    const element = materialBlockElement(entry.block.blockId);
+    if (element !== null) {
+      removedHeight += typeof element.offsetHeight === "number" ? element.offsetHeight : 0;
+      blocksEl.removeChild(element);
+    }
+    reader.blocks.shift();
+    reader.trimmedBlocks += 1;
+    removed += 1;
+  }
+  if (removedHeight > 0 && blocksEl.scrollTop > 0) {
+    blocksEl.scrollTop = Math.max(0, blocksEl.scrollTop - removedHeight);
+  }
+}
+
+/** 块元素按 blockId 查找（stub 查询引擎只支持 id/class/tag——不用属性
+    选择器，遍历即兼容）。 */
+function materialBlockElement(blockId) {
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl === null) return null;
+  for (const child of blocksEl.children) {
+    if (isElementNode(child) && child.dataset.blockId === blockId) return child;
+  }
+  return null;
+}
+
+/** 懒加载：贴底（提前量内）且有下一页 → 预取。滚动触发与尾部按钮共用。 */
+function maybeLoadMoreMaterialBlocks(blocksEl) {
+  const reader = state.materialReader;
+  if (reader === null) return;
+  if (reader.nextAfterBlock === null) return;
+  if (reader.appendState === "loading" || reader.firstPageState !== "loaded") return;
+  const threshold =
+    blocksEl.scrollHeight - blocksEl.clientHeight - MATERIAL_LOAD_THRESHOLD_PX;
+  if (blocksEl.scrollTop < threshold) return;
+  void loadMoreMaterialBlocks();
+}
+
+/** 追加下一页（世代守卫：迟到响应绝不写进已切换的阅读器）。 */
+async function loadMoreMaterialBlocks() {
+  const reader = state.materialReader;
+  const treeId = state.currentTreeId;
+  if (reader === null || treeId === null) return;
+  if (reader.nextAfterBlock === null || reader.appendState === "loading" || reader.firstPageState !== "loaded") {
+    return;
+  }
+  const epoch = materialReaderEpoch;
+  const afterBlock = reader.nextAfterBlock;
+  reader.appendState = "loading";
+  reader.appendError = null;
+  updateMatTail();
+  try {
+    const page = await fetchMaterialPage(reader, treeId, afterBlock);
+    if (epoch !== materialReaderEpoch || state.materialReader !== reader || state.currentTreeId !== treeId) {
+      return;
+    }
+    applyMaterialPage(reader, page);
+    reader.appendState = "idle";
+  } catch (err) {
+    if (epoch !== materialReaderEpoch || state.materialReader !== reader || state.currentTreeId !== treeId) {
+      return;
+    }
+    reader.appendState = "failed";
+    reader.appendError = String(err && err.message ? err.message : err);
+  }
+  updateMatTail();
+}
+
+/**
+ * 阅读器 chrome 全量渲染（打开/切版本/状态刷新）。块容器 #mat-blocks 的
+    **元素身份跨重渲保留**（先取引用，replaceChildren 后移回——子树不动），
+    异步刷新对已载块零触碰；选区捕获条与尾部分别有就地更新函数（武装/
+    翻页不整建 chrome）。拖拽窗口内延后（③ 同族：选择期间不重绘）。
+ */
+function renderMaterialReader() {
+  const reader = state.materialReader;
+  const root = $("material-reader");
+  if (reader === null) {
+    root.replaceChildren();
+    root.hidden = true;
+    return;
+  }
+  if (state.selectionDragActive) {
+    materialPendingUpdate = true;
+    return;
+  }
+  const preservedBlocks = document.getElementById("mat-blocks");
+  root.replaceChildren();
+
+  /* 头部：标题 + 关闭（覆盖层打开时盖住侧栏入口，阅读器内需要可见关闭）。 */
+  const head = document.createElement("div");
+  head.className = "mat-head";
+  const title = document.createElement("h2");
+  title.className = "mat-title";
+  title.textContent = reader.material.title === "" ? reader.materialId : reader.material.title;
+  const close = document.createElement("button");
+  close.id = "mat-close";
+  close.className = "mat-close";
+  close.textContent = "× Close";
+  close.title = "Close the material reader (Esc) — your reading position is saved";
+  close.addEventListener("click", () => closeMaterialReader());
+  head.append(title, close);
+  root.append(head);
+
+  /* 元信息行：所渲染版本可辨认（charter §3.1）——版本号/新旧、解析器
+     版本、导入时间、规范文本长度。 */
+  const version = reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
+  const meta = document.createElement("div");
+  meta.className = "mat-meta";
+  if (version === null) {
+    meta.textContent = reader.versions.length === 0 ? "no versions recorded" : "";
+  } else {
+    const number = materialVersionNumber(reader.versions, version.id);
+    const isLatest = reader.versions[reader.versions.length - 1].id === version.id;
+    const label = document.createElement("span");
+    label.className = `mat-version-label${isLatest ? "" : " old"}`;
+    label.textContent = isLatest
+      ? `v${String(number)} (current)`
+      : `v${String(number)} (older — v${String(reader.versions.length)} is current)`;
+    meta.append(label);
+    meta.append(
+      document.createTextNode(
+        ` · ${version.parserKind} · ${version.parserVersion} · imported ${formatProductTime(version.importedAt)}` +
+          ` · ${String(version.textUnits)} text units`,
+      ),
+    );
+  }
+  root.append(meta);
+
+  /* 版本链：每版一枚小片。ready 版本可点开（旧版本保持可读——切换是显式
+     动作，绝不自动迁移任何锚点，charter §3.1）；非 ready 版本如实标注
+     状态与原因（不可点——没有可读正文，不伪装）。 */
+  if (reader.versions.length > 0) {
+    const strip = document.createElement("div");
+    strip.className = "mat-versions";
+    strip.setAttribute("role", "group");
+    strip.setAttribute("aria-label", "Material versions");
+    reader.versions.forEach((candidate, index) => {
+      const isCurrent = candidate.id === reader.versionId;
+      const latest = index === reader.versions.length - 1;
+      const readable = candidate.parseStatus === "ready";
+      const chip = document.createElement(readable ? "button" : "span");
+      chip.className = "mat-version-chip";
+      chip.dataset.versionId = candidate.id;
+      let text = `v${String(index + 1)} · ${candidate.parserKind}`;
+      if (!latest) text += " · older";
+      if (candidate.parseStatus !== "ready") text += ` · ${candidate.parseStatus}`;
+      chip.textContent = text;
+      if (isCurrent) {
+        chip.classList.add("active");
+        chip.setAttribute("aria-current", "true");
+      }
+      if (!readable) {
+        chip.classList.add("unreadable", candidate.parseStatus);
+        if (typeof candidate.parseError === "string" && candidate.parseError !== "") {
+          chip.title = candidate.parseError;
+        }
+      } else if (!isCurrent) {
+        chip.title = `Open v${String(index + 1)} (an older, readable version — saved quotes are never migrated across versions)`;
+        chip.addEventListener("click", () => void switchMaterialVersion(candidate.id));
+      }
+      strip.append(chip);
+    });
+    root.append(strip);
+  }
+
+  /* 诚实状态注记（可叠加）：打开/首页失败 + 重试；无版本；非 ready 状态
+     （含原因与刷新入口）；PDF 下一增量；旧版本 + 切最新入口；最新版本
+     不可读但当前读的是旧版；位置恢复注记。 */
+  for (const note of buildMaterialNotes(reader, version)) root.append(note);
+
+  /* 选区捕获条（常驻——不随正文滚动消失；role=status 朗读状态变化）。 */
+  const bar = document.createElement("div");
+  bar.id = "mat-selection-bar";
+  bar.className = "mat-selection-bar";
+  bar.setAttribute("role", "status");
+  root.append(bar);
+
+  /* 块容器：优先移回既有元素（身份/子树/监听全部保留）。 */
+  const blocksEl = preservedBlocks ?? createMaterialBlocksElement();
+  root.append(blocksEl);
+
+  /* 尾部状态。 */
+  const tail = document.createElement("div");
+  tail.id = "mat-tail";
+  tail.className = "mat-tail";
+  root.append(tail);
+
+  updateMatSelectionBar();
+  updateMatTail();
+}
+
+/** 状态注记构建（D4-2 诚实状态面的逐项落位）。 */
+function buildMaterialNotes(reader, version) {
+  const notes = [];
+  const appendNote = (text, opts = {}) => {
+    const note = document.createElement("div");
+    note.className = `mat-note${opts.danger === true ? " danger" : ""}`;
+    note.append(document.createTextNode(text));
+    for (const action of opts.actions ?? []) note.append(action);
+    notes.push(note);
+    return note;
+  };
+  const actionButton = (text, title, onClick, extraClass = "") => {
+    const button = document.createElement("button");
+    button.className = `mat-note-action${extraClass === "" ? "" : ` ${extraClass}`}`;
+    button.textContent = text;
+    button.title = title;
+    button.addEventListener("click", onClick);
+    return button;
+  };
+  if (reader.firstPageState === "failed" && reader.versions.length === 0) {
+    /* 详情级失败（版本链都未取得）：注记区承载错误 + 重试；分块读取失败
+       （版本链已知，正文为空、尾部就在正文下方）由尾部状态面承载，不
+       重复两处。 */
+    appendNote(
+      `opening the material failed — ${reader.firstPageError ?? "unknown error"}`,
+      {
+        danger: true,
+        actions: [
+          actionButton("Retry", "Retry opening this material", () =>
+            void openMaterial(reader.materialId, { trigger: materialReaderFocusReturn ?? undefined }),
+          "mat-retry-open"),
+        ],
+      },
+    );
+    return notes;
+  }
+  if (version === null) {
+    appendNote("this material has no versions recorded — nothing to read yet", { danger: true });
+    return notes;
+  }
+  const number = materialVersionNumber(reader.versions, version.id);
+  const latest = reader.versions[reader.versions.length - 1];
+  if (version.parseStatus !== "ready") {
+    /* 非 ready：状态如实 + 原因（failed/unsupported/rejected 的 parseError
+       全文可读）；pending/parsing 给刷新入口（解析任务是进程内瞬态——没有
+       推送，刷新是显式动作）；绝无“空文档伪装成功”。 */
+    const reason =
+      typeof version.parseError === "string" && version.parseError !== ""
+        ? ` — ${version.parseError}`
+        : "";
+    if (version.parseStatus === "pending" || version.parseStatus === "parsing") {
+      appendNote(
+        `v${String(number)} is still being parsed (${version.parseStatus}${reason}) — press Refresh to check again`,
+        {
+          actions: [
+            actionButton("Refresh", "Re-fetch this material's version statuses", () =>
+              void refreshMaterialDetail(),
+            ),
+          ],
+        },
+      );
+    } else {
+      appendNote(
+        `v${String(number)} is ${version.parseStatus}${reason}. ` +
+          "This is not an empty document — the original file is kept as imported; " +
+          "an older ready version (if any) stays readable via the version strip above.",
+        { danger: true },
+      );
+    }
+  } else if (version.parserKind !== "markdown") {
+    /* PDF：本分支只有 Markdown 阅读器——显式声明下一增量，不伪造页面。 */
+    appendNote(
+      "this is a PDF material — the PDF reader (real pages with a selectable text layer) lands with " +
+        "the next D4-2 increment. The parsed text is kept server-side; nothing is faked here.",
+    );
+  }
+  if (version.id !== latest.id) {
+    /* 旧版本可读 + 非破坏性切最新入口（charter §3.1：切换绝不迁移锚点）。 */
+    appendNote(
+      `you are reading v${String(number)} (older) — v${String(reader.versions.length)} is the current version. ` +
+        "Switching never migrates saved quotes: each stays anchored to its own version.",
+      {
+        actions: [
+          actionButton(
+            `Open v${String(reader.versions.length)}`,
+            "Switch the reader to the current version (non-destructive — this version stays readable)",
+            () => void switchMaterialVersion(latest.id),
+          ),
+        ],
+      },
+    );
+    if (latest.parseStatus !== "ready") {
+      const reason =
+        typeof latest.parseError === "string" && latest.parseError !== ""
+          ? ` — ${latest.parseError}`
+          : "";
+      appendNote(
+        `the current version v${String(reader.versions.length)} is ${latest.parseStatus}${reason} — this older version remains readable`,
+        { danger: latest.parseStatus === "failed" || latest.parseStatus === "unsupported" || latest.parseStatus === "rejected" },
+      );
+    }
+  }
+  if (reader.restoredToBlockId !== null) {
+    notes.push(mutedLine(`restored to your saved reading position (block ${reader.restoredToBlockId})`));
+  }
+  return notes;
+}
+
+/** 版本序号（导入序 1-based）。 */
+function materialVersionNumber(versions, versionId) {
+  const index = versions.findIndex((candidate) => candidate.id === versionId);
+  return index < 0 ? 0 : index + 1;
+}
+
+/** 创建块容器（每阅读器会话一次；监听随元素存续——重渲只移回不重建）。 */
+function createMaterialBlocksElement() {
+  const blocksEl = document.createElement("div");
+  blocksEl.id = "mat-blocks";
+  blocksEl.className = "mat-blocks";
+  blocksEl.setAttribute("aria-label", "Material text (canonical, block by block)");
+  /* ③ 同族：正文按下开启拖拽窗口——窗口内 chrome 重渲延后（块追加是纯
+     增量的，不触碰既有节点，无需延后）。 */
+  blocksEl.addEventListener("mousedown", () => {
+    state.selectionDragActive = true;
+  });
+  const armFromEvent = () => {
+    if (state.selectionDragActive) {
+      state.selectionDragActive = false;
+      window.setTimeout(flushPendingRerender, 0);
+    }
+    armMaterialSelection();
+  };
+  blocksEl.addEventListener("mouseup", armFromEvent);
+  blocksEl.addEventListener("dblclick", armFromEvent);
+  blocksEl.addEventListener("scroll", () => {
+    const reader = state.materialReader;
+    if (reader === null) return;
+    scheduleMaterialPositionSave();
+    maybeLoadMoreMaterialBlocks(blocksEl);
+  });
+  return blocksEl;
+}
+
+/**
+ * 块元素渲染：data-block-id / data-start / data-end 携带规范文本映射
+ * （绝对 UTF-16 区间）；内容由 renderMarkdownInto 无损填充。
+ */
+function renderMaterialBlockElement(entry, reader) {
+  const div = document.createElement("div");
+  div.className = "material-block";
+  div.dataset.blockId = entry.block.blockId;
+  div.dataset.start = String(entry.block.start);
+  div.dataset.end = String(entry.block.end);
+  reader.fenceOpen = renderMarkdownInto(div, entry.text, reader.fenceOpen);
+  return div;
+}
+
+/**
+ * d4-md-v1 的**无损字面渲染**：块文本逐字映射进 DOM——markdown 语法字符
+ * 全部保留在文本中（标题的 #、强调的 *、行内代码的反引号、链接的
+ * [label](url) 全语法），只按行/语法片段施加样式。container.textContent
+ * 与块文本字节相等（选区偏移换算的事实源），绝不把文本当 HTML 解析。
+ * 行级：ATX 标题行 → 标题样式段；```/~~~ 围栏行翻转代码状态（围栏跨块
+ * 时由调用方经 fenceOpen 携带——分块读取下逐块推进）；行间换行保留为
+ * 独立文本节点（CSS pre-wrap 成行）。
+ */
+function renderMarkdownInto(container, text, fenceOpen) {
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const isLast = i === lines.length - 1;
+    if (line === "") {
+      /* 空行片（只可能是末尾切片——块内无空白行）：无内容，仅补换行。 */
+      if (!isLast) container.append(document.createTextNode("\n"));
+      continue;
+    }
+    if (fenceOpen) {
+      container.append(codeLineSpan(line));
+      if (/^(```|~~~)/.test(line)) fenceOpen = false; /* 收栏行本身也呈代码样式 */
+    } else if (/^(```|~~~)/.test(line)) {
+      container.append(codeLineSpan(line));
+      fenceOpen = true;
+    } else if (/^#{1,6}\s/.test(line) || /^#{1,6}$/.test(line)) {
+      const marks = line.match(/^#+/);
+      const span = document.createElement("span");
+      span.className = `mat-h${String(Math.min(marks === null ? 1 : marks[0].length, 6))}`;
+      span.textContent = line;
+      container.append(span);
+    } else {
+      renderInlineMarkdownInto(container, line);
+    }
+    if (!isLast) container.append(document.createTextNode("\n"));
+  }
+  return fenceOpen;
+}
+
+/** 代码行片段（围栏行与围栏内行——等宽呈现，字符逐字保留）。 */
+function codeLineSpan(line) {
+  const span = document.createElement("span");
+  span.className = "mat-code-line";
+  span.textContent = line;
+  return span;
+}
+
+/**
+ * 行内无损渲染（最小安全集）：行内代码 `…`、强强调 **…** / __…__、弱强调
+ * *…* / _…_、链接 [label](url)。只加样式不删字符；未闭合/不成对的标记按
+ * 字面输出（宁可不渲染样式，绝不改写字节——样式误判只影响外观，映射
+ * 恒成立）。_…_ 要求词边界（snake_case 不斜体）；链接不导航（阅读面保持
+ * 位置与选区，语法字符全保留——B2 冻结集的链接摘录即含完整语法）。
+ */
+function renderInlineMarkdownInto(container, line) {
+  let at = 0;
+  while (at < line.length) {
+    const found = nextInlineMarker(line, at);
+    if (found === null) {
+      container.append(document.createTextNode(line.slice(at)));
+      return;
+    }
+    if (found.start > at) container.append(document.createTextNode(line.slice(at, found.start)));
+    const span = document.createElement("span");
+    span.className = found.kind;
+    span.textContent = line.slice(found.start, found.end);
+    if (found.kind === "mat-link") {
+      span.title = "link (rendered verbatim — the reader keeps your position and does not navigate)";
+    }
+    container.append(span);
+    at = found.end;
+  }
+}
+
+/** 最早的完整行内标记（含标记本身）；无匹配返回 null。 */
+function nextInlineMarker(line, from) {
+  for (let p = from; p < line.length; p += 1) {
+    const ch = line[p];
+    if (ch === "`") {
+      const close = line.indexOf("`", p + 1);
+      if (close > p) return { start: p, end: close + 1, kind: "mat-code" };
+      continue;
+    }
+    if (ch === "*" || ch === "_") {
+      const double = line.slice(p, p + 2);
+      if (double === "**" || double === "__") {
+        const close = line.indexOf(double, p + 2);
+        if (close > p) return { start: p, end: close + 2, kind: "mat-strong" };
+        continue;
+      }
+      /* 单标记弱强调：_ 需词边界开/闭（snake_case 不斜体）；* 允许词内。 */
+      if (ch === "_" && p > 0 && !/[\s([{'“「（《,.;:!?]/.test(line[p - 1])) continue;
+      let close = -1;
+      for (let q = p + 1; q < line.length; q += 1) {
+        if (line[q] !== ch) continue;
+        if (line.slice(q, q + 2) === double) continue;
+        if (
+          ch === "_" &&
+          q < line.length - 1 &&
+          !/[\s)\]}'”」》）,.;:!?]/.test(line[q + 1])
+        ) {
+          continue;
+        }
+        close = q;
+        break;
+      }
+      if (close > p + 1) return { start: p, end: close + 1, kind: "mat-em" };
+      continue;
+    }
+    if (ch === "[") {
+      const labelEnd = line.indexOf("](", p + 1);
+      if (labelEnd > p) {
+        const urlEnd = line.indexOf(")", labelEnd + 2);
+        if (urlEnd > labelEnd) return { start: p, end: urlEnd + 1, kind: "mat-link" };
+      }
+    }
+  }
+  return null;
+}
+
+/* ------------------------------ D4-2 选区捕获 ------------------------------ */
+
+/**
+ * 图素簇边界集（B2 无效类别 inv-05/06/07 的前端镜像）：Intl.Segmenter
+ * granularity "grapheme"（与服务端 range-resolver 同一判定）；无
+ * Segmenter 的环境退化为仅代理对边界（组合序列无法判定——如实边界，
+ * 现代浏览器/Node 24 均有 Segmenter）。块文本量级小，按需构建不缓存。
+ */
+const MATERIAL_GRAPHEME_SEGMENTER =
+  typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+function graphemeBoundarySet(text) {
+  const boundaries = new Set([0]);
+  if (MATERIAL_GRAPHEME_SEGMENTER !== null) {
+    let position = 0;
+    for (const segment of MATERIAL_GRAPHEME_SEGMENTER.segment(text)) {
+      position += segment.segment.length;
+      boundaries.add(position);
+    }
+    return boundaries;
+  }
+  for (let i = 0; i < text.length; i += 1) {
+    const code = text.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = i + 1 < text.length ? text.charCodeAt(i + 1) : 0;
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        boundaries.add(i + 2); /* 代理对中间 (i+1) 不可劈 */
+        i += 1;
+        continue;
+      }
+    }
+    boundaries.add(i + 1);
+  }
+  return boundaries;
+}
+
+/**
+ * 字素安全吸附（charter §3.2）：选区边界落在字素簇内（代理对中间、组合
+ * 字符与基字符之间、emoji/ZWJ 序列内部）时**向外**吸附到整簇边界——载荷
+ * 绝不劈开一个簇；吸附后的摘录即块文本切片（canonicalText 对应切片）。
+ * 吸附后为空（理论不可达：进入时选区非空）→ null。
+ */
+function clampToGraphemeBoundaries(text, start, end) {
+  const boundaries = graphemeBoundarySet(text);
+  let snapped = false;
+  let safeStart = start;
+  let safeEnd = end;
+  if (!boundaries.has(safeStart)) {
+    safeStart = snapBoundaryDown(boundaries, safeStart);
+    snapped = true;
+  }
+  if (!boundaries.has(safeEnd)) {
+    safeEnd = snapBoundaryUp(boundaries, safeEnd, text.length);
+    snapped = true;
+  }
+  if (safeStart >= safeEnd) return null;
+  return { start: safeStart, end: safeEnd, snapped };
+}
+
+function snapBoundaryDown(boundaries, position) {
+  let best = 0;
+  for (const boundary of boundaries) {
+    if (boundary < position && boundary > best) best = boundary;
+  }
+  return best;
+}
+
+function snapBoundaryUp(boundaries, position, max) {
+  let best = max;
+  for (const boundary of boundaries) {
+    if (boundary > position && boundary < best) best = boundary;
+  }
+  return best;
+}
+
+/** 选区起/止所在的块元素（沿 parentElement 上溯；不在阅读器正文内 →
+    null——两个 null 或单 null 都意味着“这不是阅读器选区”）。 */
+function materialBlockOf(node) {
+  let current = node;
+  while (current !== null && current !== undefined) {
+    if (isElementNode(current) && current.classList.contains("material-block")) return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+/** 块内前缀长度（selectionOffsetsWithin 的块内版：clone → 全块内容 →
+    setEnd 到选区起点 → toString 长度即块内偏移；跨文本节点成立）。 */
+function materialBlockLocalStart(blockEl, range) {
+  const before = range.cloneRange();
+  before.selectNodeContents(blockEl);
+  before.setEnd(range.startContainer, range.startOffset);
+  return before.toString().length;
+}
+
+/**
+ * 阅读器选区 → 捕获载荷（D4-3 的未来锚点）。事实源：块元素区间 +
+ * 前缀长度换算 + 块文本切片校验（excerpt === 块文本切片——即
+ * canonicalText.slice(start,end)，绝对偏移由 block.start 平移）。跨块 →
+ * 如实 {invalid, cross-block}（B2 纪律：markdown 选区必须含于单块，不悄悄
+ * 截断）；切片校验失败（理论不可达的渲染漂移）→ {invalid, unmappable}。
+ * 返回 null = 无选区/选区不在阅读器正文内（不武装）。invalid 载荷同样
+ * 携带 materialId/versionId（捕获条的归属判定对两态一致）。
+ */
+function materialSelectionFromRange(reader) {
+  const selection = window.getSelection();
+  if (selection === null || selection.rangeCount === 0) return null;
+  const range = selection.getRangeAt(0);
+  const startBlock = materialBlockOf(range.startContainer);
+  const endBlock = materialBlockOf(range.endContainer);
+  if (startBlock === null && endBlock === null) return null;
+  const invalid = (reason) => ({
+    kind: "invalid",
+    materialId: reader.materialId,
+    versionId: reader.versionId,
+    reason,
+  });
+  if (startBlock === null || endBlock === null) return invalid("unmappable");
+  if (startBlock !== endBlock) return invalid("cross-block");
+  const blockId = startBlock.dataset.blockId;
+  const entry = reader.blocks.find((candidate) => candidate.block.blockId === blockId);
+  if (blockId === undefined || entry === undefined) return invalid("unmappable");
+  const selected = range.toString();
+  if (selected.length === 0) return null;
+  const localStart = materialBlockLocalStart(startBlock, range);
+  const localEnd = localStart + selected.length;
+  if (localStart < 0 || localEnd > entry.text.length) return invalid("unmappable");
+  if (entry.text.slice(localStart, localEnd) !== selected) {
+    return invalid("unmappable");
+  }
+  const clamped = clampToGraphemeBoundaries(entry.text, localStart, localEnd);
+  if (clamped === null) return invalid("unmappable");
+  return {
+    kind: "valid",
+    materialId: reader.materialId,
+    versionId: reader.versionId,
+    blockId,
+    start: entry.block.start + clamped.start,
+    end: entry.block.start + clamped.end,
+    excerpt: entry.text.slice(clamped.start, clamped.end),
+    snapped: clamped.snapped,
+  };
+}
+
+/** 武装阅读器选区（mouseup/双击/触屏 selectionchange 共用；解除语义与
+    armTurnSelection 同族：无选区/选区移出阅读器正文即解除）。武装阅读器
+    选区时同步解除正文层的武装选区——同一时刻只有一个捕获面。 */
+function armMaterialSelection() {
+  const reader = state.materialReader;
+  if (reader === null) return;
+  const payload = materialSelectionFromRange(reader);
+  state.materialSelection = payload;
+  if (payload !== null && state.armedSelection !== null) disarmArmedSelection();
+  updateMatSelectionBar();
+}
+
+/** 解除阅读器武装（就地刷新捕获条，不触碰块容器）。 */
+function disarmMaterialSelection() {
+  if (state.materialSelection === null) return;
+  state.materialSelection = null;
+  updateMatSelectionBar();
+}
+
+/** 触屏/全局：当前选区是否落在阅读器正文内（selectionchange 武装判定）。 */
+function findLiveMaterialSelection() {
+  const reader = state.materialReader;
+  if (reader === null) return false;
+  return materialSelectionFromRange(reader) !== null;
+}
+
+/** 捕获条就地更新（武装/解除/翻提示——不整建 chrome，不触碰块）。 */
+function updateMatSelectionBar() {
+  const bar = document.getElementById("mat-selection-bar");
+  if (bar === null) return;
+  bar.replaceChildren();
+  const reader = state.materialReader;
+  if (reader === null) return;
+  const selection = state.materialSelection;
+  if (selection === null || selection.materialId !== reader.materialId || selection.versionId !== reader.versionId) {
+    const hint = document.createElement("span");
+    hint.className = "muted";
+    hint.textContent =
+      "(select text in the material to capture a quote — branching from material lands with D4-3)";
+    bar.append(hint);
+    return;
+  }
+  if (selection.kind === "invalid") {
+    const note = document.createElement("span");
+    note.className = "mat-invalid-note";
+    note.textContent =
+      selection.reason === "cross-block"
+        ? "cross-block selection not anchorable — markdown selections must stay within a single block " +
+          "(B2 anchoring discipline); no quote payload is produced, nothing is truncated silently"
+        : "the selection could not be mapped to canonical offsets — no quote payload is shown";
+    bar.append(note);
+    return;
+  }
+  const quote = document.createElement("span");
+  quote.className = "mat-quote";
+  quote.textContent = selection.excerpt;
+  const payload = document.createElement("span");
+  payload.className = "mat-payload";
+  payload.textContent =
+    `material ${selection.materialId} · version ${selection.versionId} · block ${selection.blockId}` +
+    ` · UTF-16 [${String(selection.start)}, ${String(selection.end)}) · ${String(selection.excerpt.length)} units`;
+  bar.append(quote, payload);
+  if (selection.snapped) {
+    const snap = document.createElement("span");
+    snap.className = "mat-snap-note";
+    snap.textContent =
+      "(a selection boundary fell inside a grapheme cluster — it was snapped outward so the quote never " +
+        "splits a surrogate pair, combining sequence, or emoji)";
+    bar.append(snap);
+  }
+  const actions = document.createElement("span");
+  actions.className = "mat-selection-actions";
+  const copy = document.createElement("button");
+  copy.className = "mat-copy";
+  copy.textContent = "⧉ Copy quote";
+  copy.title = "Copy the exact canonical text of this selection";
+  copy.addEventListener("click", () => void copyMaterialQuote(copy, selection));
+  const branch = document.createElement("button");
+  branch.className = "mat-branch-d43";
+  branch.textContent = "⑃ Branch from material (D4-3)";
+  branch.disabled = true;
+  branch.title =
+    "Branching from a material selection lands with work package D4-3 — this captured payload " +
+    "(material, version, block, UTF-16 range, excerpt) is the anchor point it will use";
+  actions.append(copy, branch);
+  bar.append(actions);
+  const d43 = document.createElement("span");
+  d43.className = "mat-d43-note";
+  d43.textContent = "branching from material lands with D4-3 — the captured payload above is the future anchor";
+  bar.append(d43);
+}
+
+/** 复制摘录：按 canonicalText 切片复制（excerpt 已过切片校验；正文渲染
+    无覆盖改写，textContent 即原文）。Clipboard API 缺席/失败时诚实降级：
+    摘录留在捕获条内可选（手动复制），绝不谎报已复制。 */
+async function copyMaterialQuote(button, selection) {
+  const clipboard =
+    typeof navigator !== "undefined" &&
+    navigator !== null &&
+    typeof navigator.clipboard === "object" &&
+    navigator.clipboard !== null &&
+    typeof navigator.clipboard.writeText === "function"
+      ? navigator.clipboard
+      : null;
+  if (clipboard === null) {
+    button.textContent = "Copy unavailable";
+    button.title = "Clipboard API unavailable — select the quote above and copy it manually";
+    return;
+  }
+  try {
+    await clipboard.writeText(selection.excerpt);
+    button.textContent = "Copied ✓";
+    window.setTimeout(() => {
+      button.textContent = "⧉ Copy quote";
+    }, 1500);
+  } catch (err) {
+    showError(
+      `copying the quote failed — ${String(err && err.message ? err.message : err)}; ` +
+        "the quote above stays selectable for a manual copy",
+    );
+  }
+}
+
+/* ------------------------------ D4-2 阅读位置 ------------------------------ */
+
+/** 滚动停止后节流保存（一次滚动只落一次 PUT）。 */
+function scheduleMaterialPositionSave() {
+  if (materialPositionTimer !== null) window.clearTimeout(materialPositionTimer);
+  materialPositionTimer = window.setTimeout(() => {
+    materialPositionTimer = null;
+    saveMaterialReadingPositionNow();
+  }, MATERIAL_POSITION_SAVE_DEBOUNCE_MS);
+}
+
+/**
+ * 保存阅读位置（立即版：关闭/切版本/切树前冲刷）。块级定位——顶部可见
+ * 块的 blockId；focusStart 区间留给 D4-3 的跳转场景。同块不重复写；块
+ * 尚未载入（blockId null）时**跳过**——UPSERT 整体替换语义下写 null 会
+ * 抹掉既有位置。保存失败不阻断阅读（后台尽力事实，下次节流/关闭再试）。
+ */
+function saveMaterialReadingPositionNow() {
+  const reader = state.materialReader;
+  if (reader === null || state.currentTreeId === null) return;
+  if (materialPositionTimer !== null) {
+    window.clearTimeout(materialPositionTimer);
+    materialPositionTimer = null;
+  }
+  const blockId = currentMaterialTopBlockId();
+  if (blockId === null) return;
+  if (reader.lastSavedBlockId === blockId) return;
+  reader.lastSavedBlockId = blockId;
+  const treeId = state.currentTreeId;
+  void api(
+    `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(reader.materialId)}/reading-position`,
+    "PUT",
+    { versionId: reader.versionId, blockId, focusStart: null },
+  ).catch(() => {
+    /* 位置保存是后台尽力事实：失败不打断阅读（下次节流/关闭重试） */
+  });
+}
+
+/** 顶部可见块（几何法：首个底边越过滚动顶端的块；脚本桩高度为 0 → 回落
+    首个在场块，确定性）。 */
+function currentMaterialTopBlockId() {
+  const reader = state.materialReader;
+  if (reader === null) return null;
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl === null) return reader.blocks.length > 0 ? reader.blocks[0].block.blockId : null;
+  const base = typeof blocksEl.offsetTop === "number" ? blocksEl.offsetTop : 0;
+  const scrollTop = blocksEl.scrollTop;
+  let first = null;
+  for (const child of blocksEl.children) {
+    if (!isElementNode(child) || !child.classList.contains("material-block")) continue;
+    const blockId = child.dataset.blockId;
+    if (blockId !== undefined && first === null) first = blockId;
+    const top = (typeof child.offsetTop === "number" ? child.offsetTop : 0) - base;
+    const height = typeof child.offsetHeight === "number" ? child.offsetHeight : 0;
+    if (top + height > scrollTop + 1) return blockId ?? first;
+  }
+  return first;
+}
+
+/* ------------------------------ D4-2 版本切换 / 刷新 / 关闭 ------------------------------ */
+
+/**
+ * 显式切换版本（非破坏性：旧版本经版本链随时可切回、保持可读；切换只是
+ * 阅读面换版本——本分支无锚点可迁移，D4-3 的锚点解析由服务端按各自
+    versionId 判定 stale，前端绝不“迁移”到相似文字，charter §3.1）。切换
+    前先把旧版本当前位置落库（服务端行随当前阅读状态整体替换）。
+ */
+async function switchMaterialVersion(versionId) {
+  const reader = state.materialReader;
+  if (reader === null || versionId === reader.versionId) return;
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  saveMaterialReadingPositionNow();
+  const epoch = ++materialReaderEpoch;
+  state.materialSelection = null;
+  reader.versionId = versionId;
+  reader.blocks = [];
+  reader.nextAfterBlock = null;
+  reader.textUnits = 0;
+  reader.firstPageState = "loading";
+  reader.firstPageError = null;
+  reader.appendState = "idle";
+  reader.appendError = null;
+  reader.fenceOpen = false;
+  reader.trimmedBlocks = 0;
+  reader.restoredToBlockId = null;
+  reader.lastSavedBlockId = null;
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl !== null) blocksEl.replaceChildren(); /* 版本内容整体换（元素容器保留） */
+  renderMaterialReader();
+  await loadMaterialFirstPage(reader, { epoch, treeId });
+}
+
+/** 刷新材料详情（pending/parsing 状态的显式刷新入口）。 */
+async function refreshMaterialDetail() {
+  const reader = state.materialReader;
+  const treeId = state.currentTreeId;
+  if (reader === null || treeId === null) return;
+  const epoch = ++materialReaderEpoch;
+  try {
+    const detail = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(reader.materialId)}`,
+    );
+    if (
+      epoch !== materialReaderEpoch ||
+      state.materialReader === null ||
+      state.materialReader.materialId !== reader.materialId ||
+      state.currentTreeId !== treeId
+    ) {
+      return;
+    }
+    const current = state.materialReader;
+    current.material = detail.material;
+    current.versions = detail.versions;
+    current.readingPosition = detail.readingPosition ?? null;
+    if (!detail.versions.some((candidate) => candidate.id === current.versionId)) {
+      /* 当前版本已不在版本链（极端）：按选择规则重选并整体重载。 */
+      const chosen = chooseMaterialVersion(detail);
+      current.versionId = chosen === null ? "" : chosen.id;
+      current.blocks = [];
+      current.fenceOpen = false;
+      current.trimmedBlocks = 0;
+      const blocksEl = document.getElementById("mat-blocks");
+      if (blocksEl !== null) blocksEl.replaceChildren();
+      renderMaterialReader();
+      await loadMaterialFirstPage(current, { epoch, treeId });
+      return;
+    }
+    renderMaterialReader();
+    /* 刷新后当前版本变为 ready（解析完成）：补载正文。 */
+    const version = current.versions.find((candidate) => candidate.id === current.versionId) ?? null;
+    if (
+      version !== null &&
+      version.parseStatus === "ready" &&
+      version.parserKind === "markdown" &&
+      current.blocks.length === 0 &&
+      current.firstPageState === "loaded"
+    ) {
+      await loadMaterialFirstPage(current, { epoch, treeId });
+    }
+  } catch (err) {
+    showError(`refreshing the material failed — ${String(err && err.message ? err.message : err)}`);
+  }
+}
+
+/** 关闭阅读器：位置落库（尽力）→ 状态清空 → 退出动效 → 焦点还原（W2
+    键盘焦点纪律：还原到材料列表里的触发按钮）。退出动画窗口内块容器
+    必须清空——退出中再次打开另一份材料时，绝不能移用上一份的块元素。 */
+function closeMaterialReader() {
+  if (state.materialReader === null) return;
+  saveMaterialReadingPositionNow();
+  state.materialReader = null;
+  state.materialSelection = null;
+  materialReaderEpoch += 1; /* 作废在途 detail/分页响应 */
+  materialPendingUpdate = false;
+  if (materialPositionTimer !== null) {
+    window.clearTimeout(materialPositionTimer);
+    materialPositionTimer = null;
+  }
+  hideMaterialReader();
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl !== null) blocksEl.replaceChildren();
+  renderMaterialsSection(); /* 列表 active 态回落（注册表先重建，再还原焦点） */
+  const ref = materialReaderFocusReturn;
+  materialReaderFocusReturn = null;
+  restoreFocusRef(ref);
+}
+
+/** 尾部状态就地更新（首页/追加分页态、加载更多按钮、末尾注记、裁剪注记）。 */
+function updateMatTail() {
+  const reader = state.materialReader;
+  const tail = document.getElementById("mat-tail");
+  if (reader === null || tail === null) return;
+  tail.replaceChildren();
+  const version = reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
+  if (version === null || version.parseStatus !== "ready" || version.parserKind !== "markdown") {
+    return; /* 非 ready/PDF：状态面在注记区，无正文尾部 */
+  }
+  if (reader.firstPageState === "loading") {
+    tail.append(document.createTextNode("loading blocks…"));
+    return;
+  }
+  if (reader.firstPageState === "failed") {
+    tail.append(document.createTextNode(`loading failed — ${reader.firstPageError ?? "unknown error"} `));
+    const retry = document.createElement("button");
+    retry.className = "drawer-retry mat-retry-open";
+    retry.textContent = "Retry";
+    retry.title = "Retry opening this material";
+    retry.addEventListener("click", () =>
+      void openMaterial(reader.materialId, { trigger: materialReaderFocusReturn ?? undefined }),
+    );
+    tail.append(retry);
+    return;
+  }
+  if (reader.appendState === "failed") {
+    const error = document.createElement("span");
+    error.className = "mat-tail-error";
+    error.textContent = `loading more blocks failed — ${reader.appendError ?? "unknown error"} `;
+    tail.append(error);
+    const retry = document.createElement("button");
+    retry.className = "drawer-retry mat-retry-append";
+    retry.textContent = "Retry";
+    retry.title = "Retry loading the next page of blocks";
+    retry.addEventListener("click", () => void loadMoreMaterialBlocks());
+    tail.append(retry);
+    return;
+  }
+  if (reader.appendState === "loading") {
+    tail.append(document.createTextNode("loading more blocks…"));
+  } else if (reader.nextAfterBlock !== null) {
+    /* 键盘可达的显式加载入口（滚贴近底自动预取，按钮是等价显式动作）。 */
+    const more = document.createElement("button");
+    more.className = "mat-load-more";
+    more.textContent = "Load more blocks";
+    more.title = "Load the next page of blocks (also loads automatically near the bottom)";
+    more.addEventListener("click", () => void loadMoreMaterialBlocks());
+    tail.append(more);
+  } else {
+    tail.append(document.createTextNode("end of material"));
+  }
+  tail.append(
+    document.createTextNode(
+      ` · ${String(reader.blocks.length)} block(s) in view · ${String(reader.textUnits)} text units total`,
+    ),
+  );
+  if (reader.trimmedBlocks > 0) {
+    tail.append(
+      document.createTextNode(
+        ` · ${String(reader.trimmedBlocks)} earlier block(s) unloaded to keep the view light — ` +
+          "close and reopen (or reselect the version) to read from the beginning",
+      ),
+    );
+  }
+}
+
+/* 阅读器进出场（M1/M2 契约同 panel/drawer：hidden 属性 + .enter/.exit，
+   退出播完才 hidden；reduced-motion 下 CSS 即时化）。 */
+function showMaterialReader() {
+  const root = $("material-reader");
+  if (materialReaderAnimTimer !== null) {
+    window.clearTimeout(materialReaderAnimTimer);
+    materialReaderAnimTimer = null;
+  }
+  root.classList.remove("exit");
+  if (root.hidden) {
+    root.hidden = false;
+    void root.offsetHeight; /* reflow：确保 enter 动画从初始态播放 */
+    root.classList.add("enter");
+    materialReaderAnimTimer = window.setTimeout(() => {
+      root.classList.remove("enter");
+      materialReaderAnimTimer = null;
+    }, MATERIAL_READER_ENTER_MS);
+  }
+}
+
+function hideMaterialReader(opts = {}) {
+  const root = $("material-reader");
+  if (materialReaderAnimTimer !== null) {
+    window.clearTimeout(materialReaderAnimTimer);
+    materialReaderAnimTimer = null;
+  }
+  root.classList.remove("enter");
+  if (opts.instant || root.hidden) {
+    root.hidden = true;
+    root.classList.remove("exit");
+    return;
+  }
+  root.classList.add("exit");
+  materialReaderAnimTimer = window.setTimeout(() => {
+    root.hidden = true;
+    root.classList.remove("exit");
+    materialReaderAnimTimer = null;
+  }, MATERIAL_READER_EXIT_MS);
+}
+
 /* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */
 
 function closeSidebar() {
@@ -3765,16 +5266,23 @@ $("panel-view-source").addEventListener("click", () =>
   void guard(() => revealOrigin(state.panelBranchId), "panel"),
 );
 
-/* Esc 语义（W2 逐屏键盘焦点行）：抽屉 → 支线面板 → 侧栏抽屉逐层关闭，
-   每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。
+/* Esc 语义（W2 逐屏键盘焦点行）：抽屉 → 阅读器 → 支线面板 → 侧栏抽屉
+   逐层关闭，每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。
    ③ 解释卡按内层优先插入该序列：面板内的卡先于面板关闭（卡在面板内容
    里）；主线卡在面板之后（面板覆盖主线时先收面板）；关闭还原焦点到该
-   答案的解释入口（closeTermExplain）。 */
+   答案的解释入口（closeTermExplain）。
+   D4-2 阅读器在抽屉之后、面板之前（分层关卡按表面层叠顺序：阅读器
+   z-index 在支线面板之上——它是当前注意面，先于面板收起）。 */
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (state.drawerOpen) {
     event.preventDefault();
     closeDrawer();
+    return;
+  }
+  if (state.materialReader !== null) {
+    event.preventDefault();
+    closeMaterialReader();
     return;
   }
   const termCard = state.termExplain;
@@ -3804,7 +5312,10 @@ document.addEventListener("keydown", (event) => {
 /* ③ 触屏选区（selectionchange 武装——与 mouseUp 同一武装守卫）：长按/拖
    动把手产生的选区不必经过 mouseup 也能武装工具条。空选区的解除延迟一
    拍（0ms）判定：正在与工具条交互（焦点在工具条内）时不解除——点击工
-   具条按钮时浏览会先清空选区，焦点判定让位于点击。 */
+   具条按钮时浏览会先清空选区，焦点判定让位于点击。
+   D4-2 同族：阅读器正文内的选区同样经 selectionchange 武装（捕获条）；
+   解除判定对两个捕获面同时生效（正文工具条/阅读器捕获条都不因点击
+   而误解除）。 */
 document.addEventListener("selectionchange", () => {
   const active = document.activeElement;
   if (active !== null && isElementNode(active) && withinTerminologySurface(active)) return;
@@ -3813,13 +5324,19 @@ document.addEventListener("selectionchange", () => {
     armTurnSelection(context.element, context.turn, context.branchId);
     return;
   }
+  if (findLiveMaterialSelection()) {
+    armMaterialSelection();
+    return;
+  }
   window.setTimeout(() => {
-    if (state.armedSelection === null) return;
+    if (state.armedSelection === null && state.materialSelection === null) return;
     const still = findLiveSelectionTurn();
     if (still !== null) return;
+    if (findLiveMaterialSelection()) return;
     const activeNow = document.activeElement;
     if (activeNow !== null && isElementNode(activeNow) && withinTerminologySurface(activeNow)) return;
     disarmArmedSelection();
+    disarmMaterialSelection();
   }, 0);
 });
 
