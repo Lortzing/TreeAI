@@ -253,3 +253,35 @@ packaged-bundle 冒烟共用），`package-installer.mjs` 两处 tar 调用与
 （恒带 flag + 按后缀选 -xJf/-xzf/-xf）。win-x64 smoke zip 解包 CI 失败
 （run 36727379546，GNU tar 不识别 zip）已由其它会话于 `9c421f2` 修复，
 本条不重复。
+
+## 2026-10-01 波次接管记录（treeai-loop 调度会话，本会话）
+
+调度会话确认（`list_sessions` 全部 isRunning=false，最后活动 2026-09-30
+15:39）：wave-2 集成会话及其派发 agent 均已结束，但其登记的
+`wip/d4-3-backend`（22:05 登记）与 `wip/d4-5-export`（22:06 登记）worktree
+内留有**未提交的在飞实现**（d4-3：`materials/branching.ts` 新文件 +
+server/service/persistence 接线，约 300 行；d4-5：`portability/` 目录 +
+cli/index 接线，约 140 行）。按接管纪律：先全部保全提交至各自 wip 分支
+（不混入本会话编辑），再由本会话派发 agent 在原 worktree 续作，验收口径
+沿用原登记不变。
+
+本波组成（文件面互斥；冲突热点 verify-d4.js 由集成会话解决）：
+
+- **A｜D4-3 后端**：worktree d4-3-backend（原登记范围不变：branching.ts、
+  service.ts 接线、server.ts 材料建枝区段、persistence 仓库函数（无新迁移）、
+  b3 离线 verifier + verify:d4 接线、ADR-004）。
+- **B｜D4-5 导出恢复**：worktree d4-5-export（原登记范围不变：portability/、
+  cli.ts/index.ts、b5 离线 verifier；零迁移目标，0010 归 D4-8 不可占用）。
+- **C｜D4-8 导航后端**：worktree d4-8-nav 重置至新 main（分支零提交，无损失）。
+  本波只做后端/API/持久化（层级树按需加载、Tree/Branch 查找、展开/阅读
+  状态持久化所需的存储与端点 + 结构性离线检查）；app.js 前端面让位给 D，
+  下一波做 D4-8 前端 + D4-2 PDF 前端（app.js 单文件 5370 行，避免并行冲突）。
+- **D｜D4-4 前端搜索 UI**：worktree d4-4-wiring 切至新分支
+  `wip/d4-4-frontend`（原分支已全量合并，零提交损失）。文件面仅
+  public/{app.js,index.html,style.css} + 前端测试——不碰 server.ts
+  （搜索端点已在 main：POST /api/trees/:treeId/search 与 POST /api/search）。
+
+另：本会话修复 D4-7 win-x64 CI P1（run 36729293982：treeai.ps1 命令模式
+裸 `+` 被当字面参数传给 launcher，start 全线「不认识的参数：+」；doctor
+恰因不解析参数漏过）——改为先拼 `$nodeArgs` 数组再 splat，附内容级 +
+pwsh 执行级单测；随本波推送触发三平台 CI 复跑。
