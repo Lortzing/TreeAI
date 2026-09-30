@@ -28,6 +28,30 @@
  *    恢复原位；接收新 turn / 流式增量的视图只在用户本就贴底时跟随贴底
  *    （已向上阅读绝不强制滚底，issue #3 P1；首次打开无记录直接落底）。
  *
+ * 术语三部分配套前端（issue #7 C ③，消费 ①执行器/②服务语义，不重复实
+ * 现服务端）：
+ *  - 正文/操作分层：每个 assistant turn 的正文是自己的层（turn 元素承载
+ *    前导正文区——纯文本节点 + 统一区间覆盖；textContent 恒等于原文，复
+ *    制行为不变），动作/覆盖层（按钮/工具条）在尾部 .turn-actions；turn
+ *    元素按 (turnId, text) 跨重渲复用（reconcileTopLevel 按位调和——结构
+ *    未变的异步刷新零 DOM 变更，不再整容器 replaceChildren）；
+ *  - 统一标注/来源区间：术语批注与来源揭示高亮共用同一覆盖机制（绝对
+ *    UTF-16 偏移，W1 §1.1），覆盖只包裹不改写文本，重渲后按存储偏移重
+ *    算复现；已保存批注在正文上呈常驻下划线（点击重开卡）；
+ *  - 选择期间不重绘：武装选区（mouseup/双击/触屏 selectionchange）期间
+ *    异步刷新不换走正文层；mousedown→mouseup 拖拽窗口内整树重渲延后，
+ *    mouseup 后 0ms 冲刷（click 先于冲刷，按钮不被换走）；
+ *  - 模式/工具条：选区工具条按服务端模式呈现（点词 term/划线 range），
+ *    含建支线（通用入口，绝不复用已有探索）与批注/推广捷径；执行器
+ *    模式/用量/缓存偏好面在来源抽屉（Terminology 节）；
+ *  - 解释卡完整状态：in-flight / 成功（含缓存命中注记）/ 失败（诚实错
+ *    误 + 重试）/ 取消（含迟到丢弃注记）/ 保存幂等命中（显示既有批注）/
+ *    推广成功（同键重放如实）/ 推广冲突（409 如实 + 恢复既有探索的去
+ *    向）；已推广批注呈 resume-or-create 明确二选，绝不跨语境静默复用；
+ *  - 响应式（<720px 工具条/卡片全宽 + 大触点）/ 键盘（Tab 顺序、Esc 分
+ *    层关卡 + 焦点还原）/ 触屏（selectionchange 武装）/ reduced-motion
+ *    （卡进场动效即时化——CSS 全局降级块 + 显式规则）。
+ *
  * 范围（诚实声明）：无 Markdown 渲染、无自动摘要。其余既有事实面：
  *  - 在 assistant 答案内选中文本 → “Branch from here”（无选区 = 整条答案）；
  *  - 诊断/状态条：当前 run 状态、失败码与消息（失败面板不自动消失）、
@@ -156,21 +180,48 @@ const state = {
   /** 打开抽屉时定位到的 run（delivered 卡反查）。 @type {string|null} */
   drawerFocusRunId: null,
   /**
-   * 术语解释卡（issue #7 C ③ 最小面）：当前活跃的解释（瞬态任务结果或
+   * 术语解释卡（issue #7 C ③ 完整状态）：当前活跃的解释（瞬态任务结果或
    * 已保存批注）。null = 无卡。单用户语义：同一时刻至多一张解释卡。
+   * token 是请求世代号（explainSelection 递增）——迟到的响应（目标卡已被
+   * 替换/关闭）如实丢弃并计数（termDiscardedLate），绝不覆盖新状态。
    * @type {{
    *   branchId: string, turnId: string,
    *   selection: {start:number,end:number,text:string},
    *   mode: "term"|"range",
-   *   state: "loading"|"explained"|"saved"|"failed",
+   *   state: "loading"|"explained"|"saved"|"failed"|"cancelled",
    *   explanation: string|null, error: string|null,
+   *   cached: boolean,
+   *   lateDiscard: boolean,
+   *   saveOutcome: "created"|"duplicate"|null,
    *   annotation: {id:string,term:string,explanation:string,promotedBranchId:string|null,selection:Object,mode:string,createdAt:string}|null,
-   *   promotionKey: string|null, promoting: boolean
+   *   promotionKey: string|null, promoting: boolean,
+   *   promotionConflict: string|null,
+   *   firstQuestion: string,
+   *   focusFirstQuestion: boolean,
+   *   token: number
    * }|null}
    */
   termExplain: null,
-  /** 术语读模型（解释卡保存/推广后刷新；drawer Terms 节的数据面）。 */
+  /** 术语读模型（解释卡保存/推广后、抽屉打开时与开树时刷新；批注区间
+      高亮与工具条「已有批注」判定的数据面）。 */
   terminology: null,
+  /**
+   * 已武装的选区（issue #7 C ③）：mouseup/双击/selectionchange（触屏）读
+   * 到 assistant 正文内选区时置位——工具条与解释入口据此武装；无选区或
+   * 交互结束即清空。正文层（turn 元素的前导文本区）在武装期间绝不被
+   * 重渲换走（见 renderTurnsInto 的按元素复用）。
+   * @type {{branchId:string, turnId:string, start:number, end:number, text:string, mode:"term"|"range"}|null}
+   */
+  armedSelection: null,
+  /** 选区拖拽窗口（mousedown→mouseup）：窗口内整树重渲延后（选择期间
+      不重绘——issue #7 ③）；mouseup 后经 0ms 定时冲刷（click 先于冲刷，
+      按钮不被换走）。 */
+  selectionDragActive: false,
+  /** 拖拽窗口内被延后的 renderAll（mouseup 后冲刷）。 */
+  pendingRerender: false,
+  /** 客户端迟到丢弃计数（stale 解释响应——目标卡已换/已关）：抽屉用量行
+      如实呈现（与服务端迟到丢弃分开计数）。 */
+  termDiscardedLate: 0,
 };
 
 /** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
@@ -192,6 +243,22 @@ const tabButtons = new Map();
 const branchHereButtons = new Map();
 const turnElements = new Map();
 const drawerRunItems = new Map();
+/**
+ * ③ 正文/操作分层注册表：assistant turn 的 {element, turn, branchId}——
+ * selectionchange（触屏）的选区定位与武装态的就地动作层刷新都按最新 DOM
+ * 取元素（turn 元素经按元素复用跨重渲保持身份，注册表随 renderAll 重建）。
+ */
+const assistantTurns = new Map();
+/** 解释入口按钮注册表（turnId → 按钮）：解释卡 Esc/关闭的焦点还原目标。 */
+const termExplainButtons = new Map();
+
+/** 解释请求世代号（迟到响应按 token 丢弃——目标卡已换/已关时不覆盖）。 */
+let termExplainSeq = 0;
+/** 解释卡进场动效只在新卡打开的那一次渲染播放（重建即止，不重播）。 */
+let termCardEnterPending = false;
+/** 抽屉内缓存偏好切换的在途/失败态（PUT preferences；失败如实 + 重试）。 */
+let termPrefsPending = false;
+let termPrefsError = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -723,9 +790,506 @@ function returnCard(turn, anchor, attempts, placement) {
   return div;
 }
 
+/* ------------------------------ ③ 正文/操作分层（issue #7 C ③） ------------------------------ */
+
+/** 元素节点判定（真实 DOM 与脚本桩共用：文本节点无 classList/dataset）。 */
+function isElementNode(node) {
+  return (
+    node !== null &&
+    typeof node === "object" &&
+    typeof node.classList === "object" &&
+    node.classList !== null &&
+    typeof node.dataset === "object"
+  );
+}
+
+/** 容器内按 (turnId, text) 找可复用的 turn 元素（正文层跨重渲稳定）。 */
+function findReusableTurnElement(container, turn) {
+  for (const child of container.children) {
+    if (!isElementNode(child)) continue;
+    if (!child.classList.contains("turn") || child.classList.contains("return")) continue;
+    if (child.dataset.turnId !== turn.id) continue;
+    if (child.dataset.turnText !== turn.text) continue;
+    return child;
+  }
+  return null;
+}
+
 /**
- * 共享对话渲染（主线 / 面板）：turn 列表、按 targetAnchor 定位的 Return 卡、
- * 锚点高亮（M6 一次性脉冲）、流式占位（M5 静态指示）。
+ * 统一区间覆盖（issue #7 C ③）：术语批注与来源揭示高亮共用同一机制，一律
+ * 由绝对 UTF-16 偏移（W1 §1.1——重复词/跨行禁用字符串搜索定位）计算。
+ * 来源揭示带 M6 一次性脉冲标记；与批注区间重叠时来源优先（揭示是即时
+ * 定位动作），批注区间不重叠地并存。读模型未载/拉取失败时如实无批注
+ * 覆盖（不伪造）。
+ */
+function turnOverlaysFor(branchId, turn) {
+  const overlays = [];
+  const highlight = state.sourceHighlight;
+  if (
+    highlight !== null &&
+    highlight.branchId === branchId &&
+    highlight.turnId === turn.id &&
+    highlight.start >= 0 &&
+    highlight.end > highlight.start &&
+    highlight.end <= turn.text.length
+  ) {
+    /* M6：一次性脉冲（1–2 次）后保持静态高亮；重渲不重复脉冲。 */
+    const pulseKey = `${state.currentTreeId}:${highlight.turnId}:${highlight.start}-${highlight.end}`;
+    const pulse = state.pulsedHighlightKey !== pulseKey;
+    if (pulse) state.pulsedHighlightKey = pulseKey;
+    overlays.push({ kind: "source", start: highlight.start, end: highlight.end, pulse, annotation: null });
+  }
+  const terminology = state.terminology;
+  if (terminology !== null && terminology.ok) {
+    for (const annotation of terminology.annotations) {
+      if (annotation.anchorTurnId !== turn.id || annotation.branchId !== branchId) continue;
+      const start = annotation.selection.start;
+      const end = annotation.selection.end;
+      if (!(start >= 0 && end > start && end <= turn.text.length)) continue;
+      if (overlays.some((overlay) => start < overlay.end && overlay.start < end)) continue;
+      overlays.push({ kind: "term", start, end, pulse: false, annotation });
+    }
+  }
+  overlays.sort((a, b) => a.start - b.start);
+  return overlays;
+}
+
+/**
+ * 把区间覆盖应用到 turn 的正文层：重建前导正文区（turn 元素本身按元素复
+ * 用保持身份），包裹节点只包住既有字符——textContent 与复制行为字节不变，
+ * 选择偏移计算（selectionOffsetsWithin 的前缀长度法）不受影响。来源揭示
+ * 覆盖在场时锚点 turn 携带 tabindex/-1 与 anchor-focus（W2 §2.6 键盘焦
+ * 点行），覆盖消失时如数移除（复用元素不残留陈旧态）。
+ */
+function applyTurnOverlays(element, turn, overlays) {
+  element.replaceChildren();
+  let cursor = 0;
+  for (const overlay of overlays) {
+    /* 前缀文本节点恒在场（空切片为空文本节点——与揭示渲染的既有 DOM 形状
+       一致：前缀/标记/后缀三段恰切，供按位切片断言）。 */
+    element.append(document.createTextNode(turn.text.slice(cursor, overlay.start)));
+    if (overlay.kind === "source") {
+      const mark = document.createElement("mark");
+      mark.className = overlay.pulse ? "source-highlight pulse" : "source-highlight";
+      mark.textContent = turn.text.slice(overlay.start, overlay.end);
+      element.append(mark);
+    } else {
+      const span = document.createElement("span");
+      span.className = "term-annotation-mark";
+      span.title = "saved terminology annotation — select it and use the toolbar to reopen";
+      span.textContent = turn.text.slice(overlay.start, overlay.end);
+      span.addEventListener("click", () => {
+        if (overlay.annotation !== null) {
+          openSavedAnnotationCard(overlay.annotation, branchIdOfTurn(turn), turn);
+        }
+      });
+      element.append(span);
+    }
+    cursor = overlay.end;
+  }
+  element.append(document.createTextNode(turn.text.slice(cursor)));
+  if (overlays.some((overlay) => overlay.kind === "source")) {
+    element.setAttribute("tabindex", "-1");
+    element.classList.add("anchor-focus");
+  } else {
+    element.removeAttribute("tabindex");
+    element.classList.remove("anchor-focus");
+  }
+}
+
+/** turn 所属分支（批注覆盖点击重开卡时定位视图用）。 */
+function branchIdOfTurn(turn) {
+  return turn.branchId;
+}
+
+/** 动作层：重建 .turn-actions（按钮 + 武装选区工具条）——正文区不触碰。 */
+function renderTurnActions(element, turn, branchId) {
+  const old = element.querySelector(".turn-actions");
+  if (old !== null) element.removeChild(old);
+  element.append(buildTurnActions(turn, branchId));
+}
+
+/** 构建动作层（.turn-actions）：常驻入口（建支线/解释）+ 选择提示 +
+    武装选区时的工具条（③ 模式/工具条）。 */
+function buildTurnActions(turn, branchId) {
+  const st = state.treeState;
+  const view = branchId === st.trunkBranchId ? "main" : "panel";
+  const wrap = document.createElement("span");
+  wrap.className = "turn-actions";
+  const armed = state.armedSelection;
+  const armedHere = armed !== null && armed.branchId === branchId && armed.turnId === turn.id;
+
+  const branchButton = document.createElement("button");
+  branchButton.className = "branch-here";
+  branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+  branchHereButtons.set(turn.id, branchButton);
+  branchButton.addEventListener("click", () => guard(() => branchFromTurn(turn), view));
+
+  /* 术语解释入口（issue #7 C ③）：选区（点词双击/任意划线/触屏
+     selectionchange）即武装；无选区禁用（解释需要明确区间，不做整答案
+     回退）。武装态读 state.armedSelection（与工具条同源）。 */
+  const explainButton = document.createElement("button");
+  explainButton.className = "term-explain";
+  explainButton.textContent = "⌖ Explain selection";
+  explainButton.disabled = !armedHere;
+  explainButton.title =
+    "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
+  termExplainButtons.set(turn.id, explainButton);
+  explainButton.addEventListener("click", () => {
+    const current = state.armedSelection;
+    if (current === null || current.branchId !== branchId || current.turnId !== turn.id) return;
+    guard(
+      () => explainSelection(branchId, turn, { start: current.start, end: current.end, text: current.text }),
+      view,
+    );
+  });
+
+  const hint = document.createElement("span");
+  hint.className = "selection-hint";
+  hint.textContent = "(select text above to anchor the branch)";
+  wrap.append(branchButton, explainButton, hint);
+  if (armedHere) wrap.append(buildSelectionToolbar(branchId, turn, armed));
+  return wrap;
+}
+
+/** 工具条内按（分支, 锚点 turn, 精确区间）找已保存批注（读模型数据面）。 */
+function findAnnotationForSelection(branchId, turnId, selection) {
+  const terminology = state.terminology;
+  if (terminology === null || !terminology.ok) return null;
+  return (
+    terminology.annotations.find(
+      (annotation) =>
+        annotation.branchId === branchId &&
+        annotation.anchorTurnId === turnId &&
+        annotation.selection.start === selection.start &&
+        annotation.selection.end === selection.end,
+    ) ?? null
+  );
+}
+
+/**
+ * 选区工具条（③ 模式/工具条）：服务端既有模式的入口——解释（点词 term /
+ * 划线 range，按选区文本是否含空白判定）、建支线（通用入口，绝不复用已有
+ * 探索）；已有批注时给出「打开已存批注 / 推广」捷径，已推广的批注呈现
+ * resume-or-create 明确去向（issue #7 ②③：同锚点恢复或明确另开，绝不跨
+ * 语境静默复用）。键盘可达（原生 button）。
+ */
+function buildSelectionToolbar(branchId, turn, armed) {
+  const st = state.treeState;
+  const view = branchId === st.trunkBranchId ? "main" : "panel";
+  const bar = document.createElement("span");
+  bar.className = "selection-toolbar";
+  bar.setAttribute("role", "toolbar");
+  bar.setAttribute(
+    "aria-label",
+    `Selection actions — ${armed.mode === "term" ? "term" : "span"} “${armed.text}”`,
+  );
+
+  const explain = document.createElement("button");
+  explain.className = "toolbar-explain";
+  explain.textContent = armed.mode === "term" ? "⌖ Explain term" : "⌖ Explain span";
+  explain.title = "Run the isolated terminology executor on this selection (no main-session side effects)";
+  explain.addEventListener("click", () => {
+    guard(
+      () => explainSelection(branchId, turn, { start: armed.start, end: armed.end, text: armed.text }),
+      view,
+    );
+  });
+  bar.append(explain);
+
+  const branch = document.createElement("button");
+  branch.className = "toolbar-branch";
+  branch.textContent = "⑃ Branch from selection";
+  branch.title = "Anchor a brand-new branch on this selection (never reuses an existing exploration)";
+  branch.addEventListener("click", () => guard(() => branchFromTurn(turn), view));
+  bar.append(branch);
+
+  /* 已解释未保存：工具条直达保存（与解释卡同一动作）。 */
+  const card = state.termExplain;
+  if (
+    card !== null &&
+    card.branchId === branchId &&
+    card.turnId === turn.id &&
+    card.state === "explained" &&
+    card.selection.start === armed.start &&
+    card.selection.end === armed.end
+  ) {
+    const save = document.createElement("button");
+    save.className = "toolbar-save";
+    save.textContent = "✓ Save as annotation";
+    save.title = "Persist this explanation as a term annotation (product fact)";
+    save.addEventListener("click", () => guard(saveTermAnnotation, view));
+    bar.append(save);
+  }
+
+  const existing = findAnnotationForSelection(branchId, turn.id, armed);
+  if (existing !== null) {
+    const open = document.createElement("button");
+    open.className = "toolbar-annotation";
+    open.textContent = existing.promotedBranchId === null ? "✓ Saved annotation" : "✓ Follow-up exists";
+    open.title = "Open the saved annotation card for this exact selection";
+    open.addEventListener("click", () => openSavedAnnotationCard(existing, branchId, turn));
+    bar.append(open);
+    if (existing.promotedBranchId === null) {
+      const promote = document.createElement("button");
+      promote.className = "toolbar-promote";
+      promote.textContent = "⑃ Promote to branch";
+      promote.title = "Open the annotation card and focus the follow-up first-question field";
+      promote.addEventListener("click", () => openSavedAnnotationCard(existing, branchId, turn, { focusFirstQuestion: true }));
+      bar.append(promote);
+    }
+  }
+  return bar;
+}
+
+/**
+ * 就地同步武装态（mouseup/双击/selectionchange 路径）：只改动作层内的既有
+ * 按钮/工具条（被捕获的按钮引用与焦点不失效），正文区一字不碰。renderAll
+ * 路径由 buildTurnActions 全量重建，两路最终态一致。
+ */
+function syncTurnActionsArmedState(element, turn, branchId) {
+  const actions = element.querySelector(".turn-actions");
+  if (actions === null) return;
+  const armed = state.armedSelection;
+  const armedHere = armed !== null && armed.branchId === branchId && armed.turnId === turn.id;
+  const branchButton = actions.querySelector(".branch-here");
+  if (branchButton !== null) {
+    branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+  }
+  const explainButton = actions.querySelector(".term-explain");
+  if (explainButton !== null) explainButton.disabled = !armedHere;
+  const toolbar = actions.querySelector(".selection-toolbar");
+  if (toolbar !== null && toolbar.parentElement !== null) toolbar.parentElement.removeChild(toolbar);
+  if (armedHere) actions.append(buildSelectionToolbar(branchId, turn, armed));
+}
+
+/**
+ * 武装/解除选区（mouseup、双击与触屏 selectionchange 共用）：读到本 turn
+ * 正文内的选区即武装（模式按选区文本判定：含空白 = range，否则 term）；
+ * 无选区（或选区在别处）即解除。换武装目标时旧 turn 的动作层按最新状态
+ * 重建（工具条随武装走）。selectionOffsetsWithin 的 contains 守卫保证跨
+ * turn 选区不误武装。
+ */
+function armTurnSelection(element, turn, branchId) {
+  const selection = selectionOffsetsWithin(element, turn.text);
+  const armed =
+    selection === null
+      ? null
+      : {
+          branchId,
+          turnId: turn.id,
+          start: selection.start,
+          end: selection.end,
+          text: selection.text,
+          mode: selection.text.trim().includes(" ") ? "range" : "term",
+        };
+  const previous = state.armedSelection;
+  if (
+    armed !== null &&
+    previous !== null &&
+    previous.branchId === armed.branchId &&
+    previous.turnId === armed.turnId &&
+    previous.start === armed.start &&
+    previous.end === armed.end
+  ) {
+    state.armedSelection = previous; /* 同一选区重复武装：保持对象身份 */
+  } else {
+    state.armedSelection = armed;
+  }
+  const armedHere =
+    state.armedSelection !== null &&
+    state.armedSelection.branchId === branchId &&
+    state.armedSelection.turnId === turn.id;
+  element.classList.toggle("has-selection", armedHere);
+  syncTurnActionsArmedState(element, turn, branchId);
+  if (
+    previous !== null &&
+    (armed === null || previous.turnId !== armed.turnId || previous.branchId !== armed.branchId)
+  ) {
+    const entry = assistantTurns.get(previous.turnId);
+    if (entry !== undefined) renderTurnActions(entry.element, entry.turn, entry.branchId);
+  }
+}
+
+/** turn 元素创建时挂接选区事件（复用元素的身份跨重渲保持，监听只挂一次）。 */
+function attachTurnSelectionListeners(element, turn, branchId) {
+  /* ③ 选择期间不重绘：正文层上的按下开启拖拽窗口——窗口内整树重渲延后
+     （renderAll 见 selectionDragActive），mouseup 收尾冲刷。按钮/工具条上
+     的按下不是选区拖拽（event.target 非空且在 .turn-actions 内时跳过；
+     脚本桩事件无 target，按正文按下处理）。 */
+  element.addEventListener("mousedown", (event) => {
+    const target = event.target;
+    if (
+      target !== undefined &&
+      target !== null &&
+      typeof target.closest === "function" &&
+      target.closest(".turn-actions") !== null
+    ) {
+      return;
+    }
+    state.selectionDragActive = true;
+  });
+  const armFromEvent = () => {
+    if (state.selectionDragActive) {
+      state.selectionDragActive = false;
+      /* 冲刷延后一拍：mouseup 与 click 之间不重建按钮（click 仍落在原按钮
+         上），0ms 后再补被延后的重渲。 */
+      window.setTimeout(flushPendingRerender, 0);
+    }
+    armTurnSelection(element, turn, branchId);
+  };
+  element.addEventListener("mouseup", armFromEvent);
+  /* 点词（issue #7 ②③）：双击选词与任意划线同一路径武装。 */
+  element.addEventListener("dblclick", armFromEvent);
+}
+
+/** 触屏/全局选区定位：当前选区落在哪个已渲染 assistant turn 的正文内。 */
+function findLiveSelectionTurn() {
+  for (const entry of assistantTurns.values()) {
+    const selection = selectionOffsetsWithin(entry.element, entry.turn.text);
+    if (selection !== null) {
+      return { ...entry, selection };
+    }
+  }
+  return null;
+}
+
+/** 焦点是否在术语面（工具条/解释卡）内——选区解除延迟判定用。 */
+function withinTerminologySurface(element) {
+  let current = element;
+  while (current !== null && isElementNode(current)) {
+    if (current.classList.contains("selection-toolbar") || current.classList.contains("term-explain-card")) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
+
+/** 解除武装（触屏空选区的延迟解除路径）：就地刷新动作层。 */
+function disarmArmedSelection() {
+  const armed = state.armedSelection;
+  if (armed === null) return;
+  state.armedSelection = null;
+  const entry = assistantTurns.get(armed.turnId);
+  if (entry !== undefined) {
+    entry.element.classList.remove("has-selection");
+    syncTurnActionsArmedState(entry.element, entry.turn, entry.branchId);
+  }
+}
+
+/** 冲刷拖拽窗口内被延后的整树重渲（③ 选择期间不重绘的收尾）。 */
+function flushPendingRerender() {
+  if (!state.pendingRerender) return;
+  state.pendingRerender = false;
+  renderAll();
+}
+
+/** 解释卡重建后的焦点保持（③ 草稿/焦点纪律）：旧卡内聚焦的控件（首问
+    输入 / 卡本身）在同 id 新卡上恢复焦点——重渲不丢打字焦点。 */
+function preserveTermCardFocus() {
+  const active = document.activeElement;
+  if (active === null || !isElementNode(active)) return;
+  if (active.id !== "term-explain-card" && active.id !== "term-first-question") return;
+  const fresh = document.getElementById(active.id);
+  if (fresh !== null && fresh !== active) fresh.focus();
+}
+
+/** 流式占位（M5 静态指示——caret 不闪烁；id/类名词法锁定）。 */
+function streamingPlaceholder(text) {
+  const placeholder = document.createElement("div");
+  placeholder.id = "streaming-turn";
+  placeholder.className = "turn assistant streaming-turn";
+  placeholder.append(document.createTextNode(text));
+  const caret = document.createElement("span");
+  caret.className = "streaming-caret";
+  caret.textContent = " ▍ streaming…";
+  placeholder.append(caret);
+  return placeholder;
+}
+
+/** 取得 turn 的渲染元素（③：优先复用——同 turnId 且同文本）。复用时只
+    更新动作层与区间覆盖（覆盖签名未变则正文文本节点原样保留）；新建时
+    挂接选区监听并初始化两层。 */
+function ensureTurnElement(container, turn, branchId) {
+  const existing = findReusableTurnElement(container, turn);
+  if (existing !== null) {
+    turnElements.set(turn.id, existing);
+    if (turn.role === "assistant") {
+      assistantTurns.set(turn.id, { element: existing, turn, branchId });
+      updateAssistantTurnLayer(existing, turn, branchId);
+    }
+    return existing;
+  }
+  const div = document.createElement("div");
+  div.className = `turn ${turn.role}`;
+  div.dataset.turnId = turn.id;
+  div.dataset.turnText = turn.text;
+  turnElements.set(turn.id, div);
+  if (turn.role === "assistant") {
+    assistantTurns.set(turn.id, { element: div, turn, branchId });
+    attachTurnSelectionListeners(div, turn, branchId);
+    updateAssistantTurnLayer(div, turn, branchId);
+  } else {
+    div.textContent = turn.text;
+  }
+  return div;
+}
+
+/** assistant turn 的分层更新：区间覆盖（签名未变不动正文）+ 动作层重建。 */
+function updateAssistantTurnLayer(element, turn, branchId) {
+  const overlays = turnOverlaysFor(branchId, turn);
+  const signature = overlays
+    .map((overlay) => `${overlay.kind}:${String(overlay.start)}-${String(overlay.end)}${overlay.pulse ? ":pulse" : ""}`)
+    .join("|");
+  if (element.dataset.appliedOverlays !== signature) {
+    applyTurnOverlays(element, turn, overlays);
+    element.dataset.appliedOverlays = signature;
+  }
+  renderTurnActions(element, turn, branchId);
+}
+
+/**
+ * 顶层子节点的按位调和（③ 正文/操作分层的核心）：期望序列与现序列逐位
+ * 对齐——完全一致时**零 DOM 变更**（异步刷新——SSE 终态/轮询——对未变化
+ * 的结构不触碰任何节点，武装选区下的正文层身份与文本节点原样保留，
+ * issue #7 ③「选择期间不重绘」）；有差异时只动差异位（insertBefore 定点
+ * 插入/移除，不改无关兄弟节点的位置）。turn 元素是复用的稳定层；卡片
+ * （Return / 解释卡 / 流式占位 / 空态）每次重建为新鲜节点。
+ */
+function reconcileTopLevel(container, desired) {
+  const current = [...container.children];
+  if (current.length === desired.length && current.every((node, index) => node === desired[index])) {
+    return; /* 零变更快路径 */
+  }
+  const keep = new Set(desired);
+  for (const node of current) {
+    if (!keep.has(node)) container.removeChild(node);
+  }
+  for (let index = 0; index < desired.length; index += 1) {
+    const node = desired[index];
+    const at = container.children[index];
+    if (at === node) continue;
+    if (at === undefined) {
+      container.appendChild(node);
+    } else {
+      container.insertBefore(node, at);
+    }
+  }
+  while (container.children.length > desired.length) {
+    container.removeChild(container.children[desired.length]);
+  }
+}
+
+/**
+ * 共享对话渲染（主线 / 面板；issue #7 C ③ 正文/操作分层）：
+ *  - 每个 turn 的正文是自己的层（turn 元素承载前导正文区——纯文本节点 +
+ *    统一区间覆盖包裹；动作/覆盖层在尾部 .turn-actions）；正文区
+ *    textContent 恒等于 turn 原文，复制行为不变；
+ *  - turn 元素按 (turnId, text) 复用（reconcileTopLevel）：不再整容器
+ *    replaceChildren——只有状态围绕正文变化的重渲对正文层零触碰；
+ *  - Return 按目标锚点定位、锚点高亮（M6 一次性脉冲）、流式占位
+ *    （M5 静态指示）语义与既有锁定一致；
  * 滚动策略（W2 §2.2/§4 + issue #3）：接收新内容（stick）只在用户本就
  * 贴底时跟随贴底（平滑；reduced-motion 直接定位）——已向上阅读绝不
  * 强制滚底；其余渲染恢复该分支已记忆的阅读位置；无记录（首次打开）
@@ -733,18 +1297,8 @@ function returnCard(turn, anchor, attempts, placement) {
  */
 function renderTurnsInto(container, view, branchId, stick) {
   const st = state.treeState;
-  /* 贴底判定取重渲前实况（replaceChildren 移除内容会改变 scrollHeight）。 */
+  /* 贴底判定取重渲前实况（结构变更会改变 scrollHeight）。 */
   const wasAtBottom = isAtBottom(container);
-  container.replaceChildren();
-  if (view.turns.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "muted";
-    empty.textContent =
-      branchId === st.trunkBranchId
-        ? "Empty Trunk — send the first prompt."
-        : "Empty branch — continue it with a prompt.";
-    container.append(empty);
-  }
 
   /* Return 按目标锚点定位：targetAnchor.anchorTurnId 命中当前视图内的
      assistant turn → 该锚点之后渲染；锚点不在当前视图（历史 Return 或
@@ -763,88 +1317,31 @@ function renderTurnsInto(container, view, branchId, stick) {
     turn.targetAnchor !== null &&
     (anchoredReturns.get(turn.targetAnchor.anchorTurnId) ?? []).includes(turn);
 
+  /* 期望的顶层子节点序列：turn 元素（复用层）与卡片（瞬态层）按渲染顺序。 */
+  const desired = [];
+  if (view.turns.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent =
+      branchId === st.trunkBranchId
+        ? "Empty Trunk — send the first prompt."
+        : "Empty branch — continue it with a prompt.";
+    desired.push(empty);
+  }
   for (const turn of view.turns) {
     if (turn.role === "return") {
       if (isAnchored(turn)) continue; /* 已随锚点答案渲染 */
       /* 降级放置（P1）：锚点不在当前视图——targetAnchor 快照随卡传递，
          区分来源位于其他 Branch / 已变化 / 缺失，摘录照常在卡面可读。 */
-      container.append(returnCard(turn, turn.targetAnchor, returnAttemptsFor(view, turn.id), "fallback"));
+      desired.push(returnCard(turn, turn.targetAnchor, returnAttemptsFor(view, turn.id), "fallback"));
       continue;
     }
-
-    const div = document.createElement("div");
-    div.className = `turn ${turn.role}`;
-    div.dataset.turnId = turn.id;
-    div.dataset.turnText = turn.text;
-    turnElements.set(turn.id, div);
-
-    const highlight = state.sourceHighlight;
-    if (
-      turn.role === "assistant" &&
-      highlight !== null &&
-      highlight.branchId === branchId &&
-      highlight.turnId === turn.id &&
-      highlight.start >= 0 &&
-      highlight.end > highlight.start &&
-      highlight.end <= turn.text.length
-    ) {
-      /* M6：一次性脉冲（1–2 次）后保持静态高亮；重渲不重复脉冲。 */
-      const pulseKey = `${state.currentTreeId}:${highlight.turnId}:${highlight.start}-${highlight.end}`;
-      const pulse = state.pulsedHighlightKey !== pulseKey;
-      if (pulse) state.pulsedHighlightKey = pulseKey;
-      const marked = document.createElement("mark");
-      marked.className = pulse ? "source-highlight pulse" : "source-highlight";
-      marked.textContent = turn.text.slice(highlight.start, highlight.end);
-      div.append(
-        document.createTextNode(turn.text.slice(0, highlight.start)),
-        marked,
-        document.createTextNode(turn.text.slice(highlight.end)),
-      );
-      /* 揭示后焦点可移至锚点 turn（W2 §2.6 键盘焦点行）。 */
-      div.setAttribute("tabindex", "-1");
-      div.classList.add("anchor-focus");
-    } else {
-      div.textContent = turn.text;
-    }
-
-    if (turn.role === "assistant") {
-      const hint = document.createElement("span");
-      hint.className = "selection-hint";
-      hint.textContent = "(select text above to anchor the branch)";
-      const branchButton = document.createElement("button");
-      branchButton.className = "branch-here";
-      branchButton.textContent = "⑃ Branch from here";
-      branchHereButtons.set(turn.id, branchButton);
-      branchButton.addEventListener("click", () =>
-        guard(() => branchFromTurn(div, turn), branchId === st.trunkBranchId ? "main" : "panel"),
-      );
-      /* 术语解释入口（issue #7 C ③ 最小面）：选区（点词双击/任意划线）即
-         武装；无选区禁用（解释需要明确区间，不做整答案回退）。 */
-      const explainButton = document.createElement("button");
-      explainButton.className = "term-explain";
-      explainButton.textContent = "⌖ Explain selection";
-      explainButton.disabled = true;
-      explainButton.title = "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
-      explainButton.addEventListener("click", () => {
-        const sel = selectionOffsetsWithin(div, turn.text);
-        if (sel === null) return;
-        guard(() => explainSelection(branchId, turn, sel), branchId === st.trunkBranchId ? "main" : "panel");
-      });
-      div.append(document.createElement("br"), branchButton, explainButton, hint);
-      div.addEventListener("mouseup", () => {
-        const sel = selectionOffsetsWithin(div, turn.text);
-        div.classList.toggle("has-selection", sel !== null);
-        branchButton.textContent =
-          sel !== null ? "⑃ Branch from selection" : "⑃ Branch from here";
-        explainButton.disabled = sel === null;
-        explainButton.textContent = sel !== null ? "⌖ Explain selection" : "⌖ Explain selection";
-      });
-    }
-    container.append(div);
-
+    desired.push(ensureTurnElement(container, turn, branchId));
     if (turn.role === "assistant") {
       for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
-        container.append(returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id), "anchored"));
+        desired.push(
+          returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id), "anchored"),
+        );
       }
       /* 术语解释卡：渲染在对应答案（及其 Return 卡）之后。 */
       if (
@@ -853,7 +1350,7 @@ function renderTurnsInto(container, view, branchId, stick) {
         state.termExplain.turnId === turn.id
       ) {
         const card = termExplainCard();
-        if (card !== null) container.append(card);
+        if (card !== null) desired.push(card);
       }
     }
   }
@@ -862,17 +1359,11 @@ function renderTurnsInto(container, view, branchId, stick) {
      （run-terminal 后由 /state 权威刷新取代）。 */
   const streaming = state.streaming;
   if (streaming !== null && streaming.branchId === branchId) {
-    const placeholder = document.createElement("div");
-    placeholder.id = "streaming-turn";
-    placeholder.className = "turn assistant streaming-turn";
-    placeholder.append(document.createTextNode(streaming.text));
-    /* M5：静态 streaming 指示——无循环动画（caret 不闪烁）。 */
-    const caret = document.createElement("span");
-    caret.className = "streaming-caret";
-    caret.textContent = " ▍ streaming…";
-    placeholder.append(caret);
-    container.append(placeholder);
+    desired.push(streamingPlaceholder(streaming.text));
   }
+
+  reconcileTopLevel(container, desired);
+  preserveTermCardFocus();
 
   const saved = state.scrollPositions.get(scrollKey(branchId));
   if ((stick && wasAtBottom) || saved === undefined) {
@@ -962,11 +1453,21 @@ function renderPanel(stick) {
 }
 
 function renderAll(opts = {}) {
+  /* ③ 选择期间不重绘：选区拖拽窗口（mousedown→mouseup）内整树重渲延后
+     （pendingRerender），mouseup 后冲刷——正文层绝不从用户光标下被换走。
+     未变化的异步刷新本就零 DOM 变更（reconcileTopLevel 快路径），这里的
+     延后覆盖「拖拽期间恰有区间覆盖/结构变化」的窗口。 */
+  if (state.selectionDragActive) {
+    state.pendingRerender = true;
+    return;
+  }
   const stickBranch = opts.stick ?? null;
   /* 渲染期注册表重建（焦点还原 / 锚点定位取最新 DOM）。 */
   tabButtons.clear();
   branchHereButtons.clear();
   turnElements.clear();
+  assistantTurns.clear();
+  termExplainButtons.clear();
   const hasTree = state.treeState !== null;
   $("empty-state").hidden = hasTree;
   $("tree-view").hidden = !hasTree;
@@ -1597,6 +2098,9 @@ function resetTransientView() {
   state.forcePanelSessionNote = false;
   state.termExplain = null;
   state.terminology = null;
+  state.armedSelection = null;
+  state.selectionDragActive = false;
+  state.pendingRerender = false;
 }
 
 async function openTree(treeId) {
@@ -1619,6 +2123,9 @@ async function openTree(treeId) {
   await refreshDiagnostics();
   connectEvents(treeId);
   renderAll();
+  /* ③ 批注区间覆盖的数据面：开树即拉术语读模型（失败如实 {ok:false}——
+     无批注覆盖，绝不伪造）。 */
+  refreshTerminologyForTree(treeId);
 }
 
 async function createTree() {
@@ -1639,6 +2146,7 @@ async function createTree() {
   await refreshDiagnostics();
   connectEvents(payload.tree.id);
   renderAll();
+  refreshTerminologyForTree(payload.tree.id);
 }
 
 /**
@@ -1936,10 +2444,12 @@ async function abortActiveRun() {
  * 从某条 assistant turn 建支线（W2 §2.3）：无选区 = 整条答案；选区以
  * 绝对偏移提交（W1 §1.1）。新支线以局部面板打开（主线不动）；建支线
  * 不对齐游标（首次续聊由 prompt 显式导航——与既有行为一致）。
+ * ③：选区从注册表取该 turn 的最新元素读取（复用元素跨重渲有效）。
  */
-async function branchFromTurn(turnElement, turn) {
+async function branchFromTurn(turn) {
+  const entry = assistantTurns.get(turn.id);
   const selection =
-    selectionOffsetsWithin(turnElement, turn.text) ??
+    (entry !== undefined ? selectionOffsetsWithin(entry.element, turn.text) : null) ??
     { start: 0, end: turn.text.length, text: turn.text };
   const payload = await api(
     `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches`,
@@ -2309,9 +2819,12 @@ function renderDrawer() {
     drawer.append(list);
   }
 
-  /* 术语批注（issue #7 C ③）：已保存批注的出处（术语/摘录/来源分支/
-     推广去向）+ 执行器用量（requests 为精确计数，est tokens 为诚实估算）。
-     三态呈现与 journal 同纪律：加载中 / 已载（可为空）/ 失败。 */
+  /* 术语批注与执行器面（issue #7 C ③ 完整）：已保存批注的出处（术语/摘
+     录/来源分支/推广去向）+ 近期任务（三模式 term/range/auto 的任务态如
+     实呈现——瞬态任务面，不是产品事实）+ 执行器用量（requests 为精确计
+     数，est tokens 为 chars/4 诚实估算；服务端迟到丢弃与客户端迟到丢弃
+     分开计数）+ 缓存偏好（PUT preferences，可切换；在途/失败态如实）。
+     三态呈现与 journal 同纪律：加载中 / 已载（可为空）/ 失败 + 重试。 */
   const termsTitle = document.createElement("h3");
   termsTitle.textContent = "Terminology";
   drawer.append(termsTitle);
@@ -2319,32 +2832,97 @@ function renderDrawer() {
   if (terminology === null) {
     drawer.append(mutedLine("loading terminology…"));
   } else if (!terminology.ok) {
-    drawer.append(mutedLine("terminology failed to load — close and reopen the drawer to retry"));
-  } else if (terminology.annotations.length === 0) {
-    drawer.append(mutedLine("no saved term annotations yet — select a term in an answer and “Explain selection”"));
+    const line = document.createElement("p");
+    line.className = "muted";
+    line.append(document.createTextNode("terminology failed to load — "));
+    const retryTerms = document.createElement("button");
+    retryTerms.className = "drawer-retry";
+    retryTerms.textContent = "Retry";
+    retryTerms.title = "Fetch the terminology read model again";
+    retryTerms.addEventListener("click", () =>
+      void refreshTerminology().then(() => {
+        renderDrawer();
+        renderAll(); /* 读模型恢复即补齐批注覆盖（正文区间层） */
+      }),
+    );
+    line.append(retryTerms);
+    drawer.append(line);
   } else {
-    const list = document.createElement("ul");
-    list.className = "drawer-list";
-    for (const annotation of terminology.annotations) {
-      const li = document.createElement("li");
-      const promotedNote =
-        annotation.promotedBranchId === null
-          ? "not promoted"
-          : `promoted to ${branchLabel(annotation.promotedBranchId)}`;
-      li.textContent =
-        `“${annotation.term}” (${annotation.mode}) from ${branchLabel(annotation.branchId)} · ` +
-        `anchored on “${annotation.selection.text}” · ${promotedNote}`;
-      list.append(li);
+    if (terminology.annotations.length === 0) {
+      drawer.append(mutedLine("no saved term annotations yet — select a term in an answer and “Explain selection”"));
+    } else {
+      const list = document.createElement("ul");
+      list.className = "drawer-list";
+      for (const annotation of terminology.annotations) {
+        const li = document.createElement("li");
+        const promotedNote =
+          annotation.promotedBranchId === null
+            ? "not promoted"
+            : `promoted to ${branchLabel(annotation.promotedBranchId)}`;
+        li.textContent =
+          `“${annotation.term}” (${annotation.mode}) from ${branchLabel(annotation.branchId)} · ` +
+          `anchored on “${annotation.selection.text}” · ${promotedNote}`;
+        list.append(li);
+      }
+      drawer.append(list);
     }
-    drawer.append(list);
+    /* 近期任务（瞬态——模式与任务态如实；进程重启即空，如实呈现）。 */
+    if (terminology.tasks.length === 0) {
+      drawer.append(mutedLine("no terminology tasks in this process yet"));
+    } else {
+      const taskList = document.createElement("ul");
+      taskList.className = "drawer-list term-task-list";
+      for (const task of terminology.tasks.slice(-8)) {
+        const li = document.createElement("li");
+        let taskState = task.state.kind;
+        if (task.state.kind === "succeeded") {
+          taskState = task.state.cached === true ? "succeeded (from cache)" : "succeeded";
+        } else if (task.state.kind === "failed") {
+          taskState = `failed (${task.state.code})`;
+        } else if (task.state.kind === "cancelled") {
+          taskState =
+            task.state.lateResultDiscarded === true
+              ? "cancelled (late result discarded)"
+              : "cancelled";
+        }
+        li.textContent = `${task.kind} · ${task.mode} · ${taskState}`;
+        taskList.append(li);
+      }
+      drawer.append(taskList);
+    }
     const usageNote = document.createElement("p");
     usageNote.className = "muted";
     const usage = terminology.usage;
     usageNote.textContent =
       `terminology executor: ${String(usage.total.requests)} request(s), ` +
       `est. ${String(usage.estTokens)}/${String(usage.budgetTokens)} tokens (chars/4 estimate), ` +
-      `${String(usage.lateResultsDiscarded)} late result(s) discarded, cache ${terminology.cacheEnabled ? "on" : "off"}`;
+      `${String(usage.lateResultsDiscarded)} late result(s) discarded by the executor, ` +
+      `${String(state.termDiscardedLate)} late response(s) discarded client-side, cache ${terminology.cacheEnabled ? "on" : "off"}`;
     drawer.append(usageNote);
+    /* 缓存偏好（③：同 (mode, 选区, sourceHash) 解释复用缓存——可开关）。 */
+    const cacheLine = document.createElement("p");
+    cacheLine.className = "muted term-cache-line";
+    const cacheToggle = document.createElement("button");
+    cacheToggle.className = "term-cache-toggle";
+    if (termPrefsPending) {
+      cacheToggle.textContent = "updating cache preference…";
+      cacheToggle.disabled = true;
+    } else {
+      cacheToggle.textContent = terminology.cacheEnabled
+        ? "cache preference: on — click to disable"
+        : "cache preference: off — click to enable";
+      cacheToggle.addEventListener("click", () =>
+        void guard(() => setTerminologyCachePreference(!terminology.cacheEnabled)),
+      );
+    }
+    cacheLine.append(cacheToggle);
+    drawer.append(cacheLine);
+    if (termPrefsError !== null) {
+      const prefsError = document.createElement("p");
+      prefsError.className = "muted";
+      prefsError.textContent = `cache preference failed — ${termPrefsError}`;
+      drawer.append(prefsError);
+    }
   }
 
   /* journal 尾部（保守摘要；最新在后）。三态（W2 §2.7 / issue #3 P1）：
@@ -2422,10 +3000,11 @@ function mutedLine(text) {
   return p;
 }
 
-/* ------------------------------ 术语三部分（issue #7 C ③ 最小面） ------------------------------ */
+/* ------------------------------ 术语三部分（issue #7 C ③ 完整前端） ------------------------------ */
 
-/** 术语读模型拉取（解释卡保存/推广后与抽屉打开时刷新；失败不伪装空态——
-    三态：null = 未载 / {ok:true,…} = 已载 / {ok:false} = 拉取失败）。 */
+/** 术语读模型拉取（解释卡保存/推广后、抽屉打开时与开树时刷新；失败不伪
+    装空态——三态：null = 未载 / {ok:true,…} = 已载 / {ok:false} = 拉取
+    失败。批注区间覆盖（turnOverlaysFor）只在已载时渲染）。 */
 async function refreshTerminology() {
   if (state.currentTreeId === null) return;
   try {
@@ -2436,12 +3015,25 @@ async function refreshTerminology() {
   }
 }
 
+/** 开树时拉取术语读模型（批注区间覆盖的数据面）；迟到响应按树守卫丢弃。 */
+function refreshTerminologyForTree(treeId) {
+  void refreshTerminology().then(() => {
+    if (state.currentTreeId === treeId) renderAll();
+  });
+}
+
 /**
- * 解释选区（瞬态任务——不落任何树产品事实；隔离执行器）。卡内呈现任务
- * 结果（loading/explained/saved/failed），保存与推广是显式后续动作。
+ * 解释选区（瞬态任务——不落任何树产品事实；隔离执行器）。任务态在卡内
+ * 如实呈现（loading/explained/saved/failed/cancelled——含迟到丢弃注记），
+ * 保存与推广是显式后续动作。token 是请求世代号：迟到的响应（目标卡已被
+ * 替换/关闭）如实丢弃并计数（termDiscardedLate，抽屉用量行呈现），绝不
+ * 覆盖新状态——「late-result-discarded（stale 目标离开视图）」的客户端面。
  */
 async function explainSelection(branchId, turn, selection) {
   const mode = selection.text.trim().includes(" ") ? "range" : "term";
+  termExplainSeq += 1;
+  const token = termExplainSeq;
+  termCardEnterPending = true;
   state.termExplain = {
     branchId,
     turnId: turn.id,
@@ -2450,37 +3042,69 @@ async function explainSelection(branchId, turn, selection) {
     state: "loading",
     explanation: null,
     error: null,
+    cached: false,
+    lateDiscard: false,
+    saveOutcome: null,
     annotation: null,
     promotionKey: null,
     promoting: false,
+    promotionConflict: null,
     firstQuestion: "",
+    token,
   };
+  /* 解释已捕获明确区间：选区交互收束（工具条退场，卡成为活跃面）。 */
+  if (state.armedSelection !== null) disarmArmedSelection();
   renderAll();
+  const cardElement = document.getElementById("term-explain-card");
+  if (cardElement !== null) cardElement.focus();
   try {
     const payload = await api(
       `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/explain`,
       "POST",
       { branchId, anchorTurnId: turn.id, selection, mode },
     );
-    if (payload.annotation !== null) {
+    if (state.termExplain === null || state.termExplain.token !== token) {
+      state.termDiscardedLate += 1; /* stale 目标已离开/被替换：如实丢弃 */
+      return;
+    }
+    const card = state.termExplain;
+    if (payload.annotation != null) {
+      /* 服务端同选区去重命中：零模型调用，直接呈现既有批注（已推广时
+         卡面给出 resume-or-create 明确去向）。 */
       state.termExplain = {
-        ...state.termExplain,
+        ...card,
         state: "saved",
         annotation: payload.annotation,
         explanation: payload.annotation.explanation,
+        saveOutcome: "duplicate",
       };
-    } else if (payload.task !== null && payload.task.state.kind === "succeeded") {
-      state.termExplain = { ...state.termExplain, state: "explained", explanation: payload.task.state.explanation };
-    } else if (payload.task !== null && payload.task.state.kind === "failed") {
+    } else if (payload.task != null && payload.task.state.kind === "succeeded") {
       state.termExplain = {
-        ...state.termExplain,
+        ...card,
+        state: "explained",
+        explanation: payload.task.state.explanation,
+        cached: payload.task.state.cached === true,
+      };
+    } else if (payload.task != null && payload.task.state.kind === "failed") {
+      state.termExplain = {
+        ...card,
         state: "failed",
         error: `${payload.task.state.code}: ${payload.task.state.message}`,
       };
+    } else if (payload.task != null && payload.task.state.kind === "cancelled") {
+      state.termExplain = {
+        ...card,
+        state: "cancelled",
+        lateDiscard: payload.task.state.lateResultDiscarded === true,
+      };
     } else {
-      state.termExplain = { ...state.termExplain, state: "failed", error: "the explain task ended without a result" };
+      state.termExplain = { ...card, state: "failed", error: "the explain task ended without a result" };
     }
   } catch (err) {
+    if (state.termExplain === null || state.termExplain.token !== token) {
+      state.termDiscardedLate += 1;
+      return;
+    }
     state.termExplain = {
       ...state.termExplain,
       state: "failed",
@@ -2490,7 +3114,10 @@ async function explainSelection(branchId, turn, selection) {
   renderAll();
 }
 
-/** 显式保存批注（产品事实；同选区去重——服务端返回既有批注）。 */
+/**
+ * 显式保存批注（产品事实；同选区幂等——服务端返回既有批注，created:false
+ * 时卡面如实呈现「已存在，显示既有批注」，不伪装成新建）。
+ */
 async function saveTermAnnotation() {
   const card = state.termExplain;
   if (card === null || card.explanation === null) return;
@@ -2506,7 +3133,12 @@ async function saveTermAnnotation() {
       explanation: card.explanation,
     },
   );
-  state.termExplain = { ...card, state: "saved", annotation: payload.annotation };
+  state.termExplain = {
+    ...card,
+    state: "saved",
+    annotation: payload.annotation,
+    saveOutcome: payload.created === true ? "created" : "duplicate",
+  };
   await refreshTerminology();
   renderAll();
 }
@@ -2514,7 +3146,9 @@ async function saveTermAnnotation() {
 /**
  * 幂等推广（issue #7 C ②）：从已保存批注建枝并派发首问（复用底层
  * Anchor/Branch/Origin/Run/回程/Return）。幂等键跨失败重试稳定；成功后
- * 以支线面板打开新分支。
+ * 以支线面板打开新分支（同键重放返回同一分支——created:false 如实呈现
+ * 「打开的是既有推广」）。冲突（同批注异键，409）如实呈现在卡面（不吞
+ * 错、不静默换目标），并刷新读模型以给出「恢复既有探索」的去向。
  */
 async function promoteTermAnnotation() {
   const card = state.termExplain;
@@ -2526,7 +3160,7 @@ async function promoteTermAnnotation() {
     return;
   }
   const promotionKey = card.promotionKey ?? crypto.randomUUID();
-  state.termExplain = { ...card, promotionKey, promoting: true };
+  state.termExplain = { ...card, promotionKey, promoting: true, promotionConflict: null };
   renderAll();
   try {
     const payload = await api(
@@ -2548,25 +3182,151 @@ async function promoteTermAnnotation() {
           "The saved annotation keeps its promotion — reopen the term and promote again with the same key to retry.",
         "panel",
       );
+    } else if (payload.created === false) {
+      /* 同键重放：既有推广的分支（首问已成功不重复派发——issue #7 ②）。 */
+      showError(`Opened the existing follow-up branch (same promotion key — no duplicate dispatch).`, "panel");
     }
   } catch (err) {
-    state.termExplain = { ...state.termExplain, promoting: false };
-    renderAll();
+    /* 冲突/失败：如实呈现在卡面（完整失败状态），读模型刷新后给出恢复
+       既有探索的明确去向；原始错误仍由 guard 呈现横幅。 */
+    await refreshTerminology().catch(() => {});
+    const current = state.termExplain;
+    if (current !== null && current.token === card.token) {
+      const freshAnnotation =
+        state.terminology !== null && state.terminology.ok
+          ? (state.terminology.annotations.find((a) => a.id === card.annotation.id) ?? current.annotation)
+          : current.annotation;
+      state.termExplain = {
+        ...current,
+        promoting: false,
+        promotionConflict: String(err && err.message ? err.message : err),
+        annotation: freshAnnotation,
+      };
+      renderAll();
+    }
     throw err;
   }
 }
 
-function closeTermExplain() {
-  state.termExplain = null;
+/** 打开已保存批注的卡（读模型数据面，零请求——与服务端同选区去重语义
+    一致）；focusFirstQuestion = 工具条推广捷径直达首问输入。 */
+function openSavedAnnotationCard(annotation, branchId, turn, opts = {}) {
+  termCardEnterPending = true;
+  termExplainSeq += 1;
+  state.termExplain = {
+    branchId,
+    turnId: turn.id,
+    selection: annotation.selection,
+    mode: annotation.mode === "range" ? "range" : "term",
+    state: "saved",
+    explanation: annotation.explanation,
+    error: null,
+    cached: false,
+    lateDiscard: false,
+    saveOutcome: "duplicate",
+    annotation,
+    promotionKey: null,
+    promoting: false,
+    promotionConflict: null,
+    firstQuestion: "",
+    token: termExplainSeq,
+  };
+  if (state.armedSelection !== null) disarmArmedSelection();
   renderAll();
+  if (opts.focusFirstQuestion === true) {
+    const input = document.getElementById("term-first-question");
+    if (input !== null) input.focus();
+  } else {
+    const cardElement = document.getElementById("term-explain-card");
+    if (cardElement !== null) cardElement.focus();
+  }
 }
 
-/** 解释卡（渲染在对应 assistant 答案之后）：任务态如实 + 保存/推广动作。 */
+/** 关闭解释卡：焦点还原到该答案的解释入口（无则还原到 turn 元素——
+    W2 键盘焦点纪律，与 closeDrawer 同模式）。 */
+function closeTermExplain() {
+  const card = state.termExplain;
+  state.termExplain = null;
+  renderAll();
+  if (card === null) return;
+  const target = termExplainButtons.get(card.turnId) ?? turnElements.get(card.turnId);
+  if (target !== undefined) target.focus();
+}
+
+/**
+ * 抽屉内的缓存偏好切换（③：执行器偏好面）：PUT preferences；在途禁用
+    明示，失败如实呈现 + 重试（不伪装成功），成功后读模型与抽屉同步。
+ */
+async function setTerminologyCachePreference(enabled) {
+  termPrefsPending = true;
+  termPrefsError = null;
+  renderDrawer();
+  try {
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/preferences`,
+      "PUT",
+      { cacheEnabled: enabled },
+    );
+    if (state.terminology !== null && state.terminology.ok) {
+      state.terminology = { ...state.terminology, cacheEnabled: payload.cacheEnabled === true };
+    }
+  } catch (err) {
+    termPrefsError = String(err && err.message ? err.message : err);
+  } finally {
+    termPrefsPending = false;
+    if (state.drawerOpen) renderDrawer();
+  }
+}
+
+/** 解释卡的关闭按钮（工具函数：Close 文案 + 关闭语义）。 */
+function termCloseButton() {
+  const close = document.createElement("button");
+  close.className = "term-explain-close";
+  close.textContent = "Close";
+  close.addEventListener("click", closeTermExplain);
+  return close;
+}
+
+/** 解释卡的失败重试按钮（按卡内保存的锚点/选区重发解释请求）。 */
+function termRetryButton(card) {
+  const retry = document.createElement("button");
+  retry.className = "term-explain-retry";
+  retry.textContent = "Retry";
+  retry.title = "Run the isolated explanation again";
+  retry.addEventListener("click", () =>
+    guard(
+      () =>
+        explainSelection(
+          card.branchId,
+          { id: card.turnId, text: "", branchId: card.branchId },
+          card.selection,
+        ),
+      "panel",
+    ),
+  );
+  return retry;
+}
+
+/**
+ * 解释卡（渲染在对应 assistant 答案之后；issue #7 C ③ 完整状态）：
+ * loading / explained（含缓存命中注记）/ saved（新建 vs 幂等命中既有；
+ * 未推广 → 首问输入 + 幂等推广；已推广 → resume-or-create 明确去向）/
+ * failed（诚实错误 + 重试）/ cancelled（含迟到丢弃注记）/ 推广冲突面
+ * （同批注异键 → 恢复既有探索的明确去向，绝不静默复用）。
+ * 进场动效只在打开的那一次渲染播放（.enter；reduced-motion 下 CSS 即时
+ * 化——见 style.css）。
+ */
 function termExplainCard() {
   const card = state.termExplain;
   if (card === null) return null;
   const div = document.createElement("div");
   div.className = "term-explain-card";
+  div.id = "term-explain-card";
+  div.setAttribute("tabindex", "-1"); /* 程序聚焦目标（打开/Esc 关闭还原） */
+  if (termCardEnterPending) {
+    div.classList.add("enter");
+    termCardEnterPending = false;
+  }
   const head = document.createElement("p");
   head.className = "term-explain-head";
   const modeNote = card.mode === "term" ? "term" : "span";
@@ -2574,31 +3334,44 @@ function termExplainCard() {
   div.append(head);
   if (card.state === "loading") {
     div.append(mutedLine("explaining (isolated terminology task)…"));
+    const actions = document.createElement("div");
+    actions.className = "term-explain-actions";
+    const dismiss = document.createElement("button");
+    dismiss.className = "term-explain-close";
+    dismiss.textContent = "Dismiss";
+    dismiss.title = "Close the card — a late result, if any, is discarded honestly (counted in the drawer usage)";
+    dismiss.addEventListener("click", closeTermExplain);
+    actions.append(dismiss);
+    div.append(actions);
     return div;
   }
   if (card.state === "failed") {
     div.append(mutedLine(`explanation failed — ${card.error}`));
-    const retry = document.createElement("button");
-    retry.className = "term-explain-retry";
-    retry.textContent = "Retry";
-    retry.addEventListener("click", () =>
-      guard(
-        () =>
-          explainSelection(card.branchId, { id: card.turnId, text: "", branchId: card.branchId }, card.selection),
-        "panel",
-      ),
-    );
-    const close = document.createElement("button");
-    close.className = "term-explain-close";
-    close.textContent = "Close";
-    close.addEventListener("click", closeTermExplain);
-    div.append(retry, close);
+    const actions = document.createElement("div");
+    actions.className = "term-explain-actions";
+    actions.append(termRetryButton(card), termCloseButton());
+    div.append(actions);
+    return div;
+  }
+  if (card.state === "cancelled") {
+    const note =
+      card.lateDiscard === true
+        ? "cancelled — a late result arrived after the cancellation and was discarded (the request cost is still recorded)"
+        : "cancelled — the explanation task was cancelled before completing";
+    div.append(mutedLine(note));
+    const actions = document.createElement("div");
+    actions.className = "term-explain-actions";
+    actions.append(termRetryButton(card), termCloseButton());
+    div.append(actions);
     return div;
   }
   const body = document.createElement("p");
   body.className = "term-explain-body";
   body.textContent = card.explanation ?? "";
   div.append(body);
+  if (card.state === "explained" && card.cached) {
+    div.append(mutedLine("(served from the executor cache — no new request)"));
+  }
   const actions = document.createElement("div");
   actions.className = "term-explain-actions";
   if (card.state === "explained") {
@@ -2609,6 +3382,11 @@ function termExplainCard() {
     actions.append(save);
   } else if (card.state === "saved" && card.annotation !== null) {
     if (card.annotation.promotedBranchId === null) {
+      if (card.saveOutcome === "duplicate") {
+        actions.append(
+          mutedLine("already saved — showing the existing annotation for this exact selection"),
+        );
+      }
       const label = document.createElement("span");
       label.className = "muted";
       label.textContent = "saved — promote to a follow-up branch:";
@@ -2627,17 +3405,51 @@ function termExplainCard() {
       promote.addEventListener("click", () => guard(promoteTermAnnotation, "panel"));
       actions.append(label, input, promote);
     } else {
+      /* 已推广：resume-or-create 明确二选（issue #7 ②③——同锚点恢复或明
+         确另开，绝不跨同词语境静默复用）。 */
       const note = document.createElement("span");
       note.className = "muted";
       note.textContent = `saved — already promoted to ${branchLabel(card.annotation.promotedBranchId)}`;
       actions.append(note);
+      const resume = document.createElement("button");
+      resume.className = "term-resume";
+      resume.textContent = "Open the follow-up branch";
+      resume.title = "Resume the existing exploration anchored on this exact selection";
+      resume.addEventListener("click", () => {
+        const cardElement = document.getElementById("term-explain-card");
+        state.termExplain = null; /* 恢复既有探索即收卡（去向明确，不悬空） */
+        renderAll();
+        guard(
+          () =>
+            openBranchPanel(card.annotation.promotedBranchId, {
+              trigger: { kind: "element", element: cardElement },
+            }),
+          "panel",
+        );
+      });
+      actions.append(resume);
+      actions.append(
+        mutedLine(
+          "this exact selection already has its follow-up — to start a different one, select a different span or use “⑃ Branch from selection” (a promotion is one-per-annotation by design)",
+        ),
+      );
     }
   }
-  const close = document.createElement("button");
-  close.className = "term-explain-close";
-  close.textContent = "Close";
-  close.addEventListener("click", closeTermExplain);
-  actions.append(close);
+  if (card.promotionConflict !== null) {
+    const conflict = document.createElement("p");
+    conflict.className = "term-explain-conflict";
+    conflict.textContent = `promotion conflict — ${card.promotionConflict}`;
+    div.append(conflict);
+    if (card.annotation !== null && card.annotation.promotedBranchId !== null) {
+      /* 刷新后的批注已呈推广事实（上方的 resume-or-create 块携带「打开既有
+         支线」入口）；此处只补冲突语境，不重复渲染第二个入口。 */
+      actions.append(
+        mutedLine(`the recorded promotion is on ${branchLabel(card.annotation.promotedBranchId)} — use “Open the follow-up branch” above`),
+      );
+    }
+    actions.append(mutedLine("the idempotency key stays for a same-key retry; a different follow-up needs a different promotion by design"));
+  }
+  actions.append(termCloseButton());
   div.append(actions);
   return div;
 }
@@ -2704,7 +3516,10 @@ $("panel-view-source").addEventListener("click", () =>
 );
 
 /* Esc 语义（W2 逐屏键盘焦点行）：抽屉 → 支线面板 → 侧栏抽屉逐层关闭，
-   每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。 */
+   每层把焦点还原给触发元素；主线阅读时 Esc 不丢焦点。
+   ③ 解释卡按内层优先插入该序列：面板内的卡先于面板关闭（卡在面板内容
+   里）；主线卡在面板之后（面板覆盖主线时先收面板）；关闭还原焦点到该
+   答案的解释入口（closeTermExplain）。 */
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (state.drawerOpen) {
@@ -2712,15 +3527,58 @@ document.addEventListener("keydown", (event) => {
     closeDrawer();
     return;
   }
+  const termCard = state.termExplain;
+  const termCardInPanel =
+    termCard !== null && state.panelBranchId !== null && termCard.branchId === state.panelBranchId;
+  if (termCardInPanel) {
+    event.preventDefault();
+    closeTermExplain();
+    return;
+  }
   if (state.panelBranchId !== null) {
     event.preventDefault();
     void guard(() => closePanel());
+    return;
+  }
+  if (termCard !== null) {
+    event.preventDefault();
+    closeTermExplain();
     return;
   }
   if (document.body.classList.contains("sidebar-open")) {
     event.preventDefault();
     closeSidebar();
   }
+});
+
+/* ③ 触屏选区（selectionchange 武装——与 mouseUp 同一武装守卫）：长按/拖
+   动把手产生的选区不必经过 mouseup 也能武装工具条。空选区的解除延迟一
+   拍（0ms）判定：正在与工具条交互（焦点在工具条内）时不解除——点击工
+   具条按钮时浏览会先清空选区，焦点判定让位于点击。 */
+document.addEventListener("selectionchange", () => {
+  const active = document.activeElement;
+  if (active !== null && isElementNode(active) && withinTerminologySurface(active)) return;
+  const context = findLiveSelectionTurn();
+  if (context !== null) {
+    armTurnSelection(context.element, context.turn, context.branchId);
+    return;
+  }
+  window.setTimeout(() => {
+    if (state.armedSelection === null) return;
+    const still = findLiveSelectionTurn();
+    if (still !== null) return;
+    const activeNow = document.activeElement;
+    if (activeNow !== null && isElementNode(activeNow) && withinTerminologySurface(activeNow)) return;
+    disarmArmedSelection();
+  }, 0);
+});
+
+/* ③ 拖拽窗口收尾（真实浏览器：mouseup 可能落在 turn 元素之外）：冲刷被
+   延后的整树重渲（延后一拍，click 先于冲刷——按钮不被换走）。 */
+document.addEventListener("mouseup", () => {
+  if (!state.selectionDragActive) return;
+  state.selectionDragActive = false;
+  window.setTimeout(flushPendingRerender, 0);
 });
 
 void (async () => {

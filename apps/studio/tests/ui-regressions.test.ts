@@ -466,6 +466,27 @@ class StubElement {
     return n;
   }
 
+  /** insertBefore（真实 DOM 语义：ref 为 null/undefined 时等价 appendChild；
+      已挂载节点重挂即移动到指定位）。issue #7 C ③ 正文/操作分层的按位调和
+      （reconcileTopLevel）使用——仅为桩面能力补齐，不改变任何既有断言。 */
+  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode {
+    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
+    if (ref === null || ref === undefined) {
+      this.appendChild(n);
+      return n;
+    }
+    if (n.parentElement !== null) n.parentElement.removeChild(n);
+    const index = this.children.indexOf(ref);
+    if (index < 0) {
+      n.parentElement = this;
+      this.children.push(n);
+    } else {
+      this.children.splice(index, 0, n);
+      n.parentElement = this;
+    }
+    return n;
+  }
+
   removeChild(node: StubNode): StubNode {
     const index = this.children.indexOf(node);
     if (index >= 0) {

@@ -474,6 +474,50 @@ details.return-excerpt .return-excerpt-full {
 .turn .term-explain:hover:not(:disabled) { background: var(--gold-wash); }
 .turn .term-explain:disabled { opacity: 0.55; cursor: default; }
 
+/* ------------------------------ 术语③正文/操作分层与选区面 ------------------------------ */
+
+/* 动作层（③）：turn 尾部的 .turn-actions 承载入口按钮/选择提示/武装选区
+   工具条——正文区（turn 前导文本节点 + 统一区间覆盖）与动作层分离，动
+   作层重建/武装切换不触碰正文（textContent 与复制行为不变）。 */
+.turn .turn-actions { display: block; }
+
+/* 统一标注区间（③）：已保存术语批注的常驻下划线（点划金线；点击重开
+   批注卡）。与来源揭示高亮共用同一覆盖机制（绝对 UTF-16 偏移计算，包
+   裹不改写文本）。 */
+.turn .term-annotation-mark {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.turn .term-annotation-mark:hover { background: var(--gold-wash); }
+
+/* 选区工具条（③ 模式/工具条）：武装选区出现在动作层内；键盘可达（原生
+   button，Tab 顺序即 DOM 顺序）。 */
+.selection-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 3px 6px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: var(--surface-dim);
+}
+.selection-toolbar button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.selection-toolbar button:hover { background: var(--gold-wash); border-color: var(--gold); }
+
 /* 术语解释卡（瞬态任务面 + 保存/推广动作；渲染在对应答案之后）。 */
 .term-explain-card {
   margin: 6px 0 10px;
@@ -526,6 +570,33 @@ details.return-excerpt .return-excerpt-full {
 }
 .term-explain-card .term-explain-close:hover,
 .term-explain-card .term-explain-retry:hover { background: var(--wash); }
+/* 解释卡进场（③）：只在新卡打开的那一次渲染播放（.enter 由 app.js 置一
+   次即止，重建不重播）；reduced-motion 下即时化（文件末尾全局降级块 +
+   显式规则）。 */
+.term-explain-card.enter { animation: term-card-in var(--motion-card) ease-out; }
+@keyframes term-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 推广冲突面（③：同批注异键 409 如实呈现）与「恢复既有探索」入口。 */
+.term-explain-card .term-explain-conflict {
+  margin: 6px 0 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--danger);
+}
+.term-explain-card .term-resume,
+.term-explain-card .term-explain-actions .term-resume {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  background: var(--green-wash);
+  color: var(--green-deep);
+  cursor: pointer;
+}
+.term-explain-card .term-resume:hover { background: #dcebe0; }
 .turn.has-selection .selection-hint { display: inline; }
 
 /* P1 流式占位 turn（M5）：静态指示——caret 不闪烁，无循环动画。 */
@@ -791,6 +862,21 @@ button.panel-close:hover { background: #dcebe0; }
 }
 .drawer-retry:hover { background: var(--surface-dim); }
 
+/* 抽屉内术语面（③）：近期任务列表与缓存偏好切换（同 .drawer-retry 的
+   安静形态）。 */
+.drawer-list.term-task-list li { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.term-cache-line { margin: 4px 0 0; }
+.term-cache-toggle {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-cache-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+
 /* ------------------------------ 窄窗侧栏开关（<720px） ------------------------------ */
 
 #sidebar-toggle {
@@ -884,6 +970,15 @@ button.panel-close:hover { background: #dcebe0; }
   .turn, .turn.user { max-width: none; }
   .turn.assistant { font-size: 15px; }
 
+  /* ③ 术语面（触屏）：<720px 工具条全宽换行、按钮加大触点；解释卡动作
+     纵排、输入与按钮全宽。 */
+  .selection-toolbar { display: flex; width: 100%; margin-left: 0; }
+  .selection-toolbar button { flex: 1 1 auto; padding: 8px 12px; font-size: 13px; }
+  .term-explain-card .term-explain-actions { flex-direction: column; align-items: stretch; }
+  .term-explain-card .term-explain-actions input,
+  .term-explain-card .term-explain-actions button { width: 100%; }
+  .turn .term-annotation-mark { text-underline-offset: 4px; }
+
   #composer, #panel-composer, #return-panel { padding: 10px 14px 12px; }
   #composer, #panel-composer { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
 
@@ -929,4 +1024,6 @@ button.panel-close:hover { background: #dcebe0; }
   #sidebar { transition: none; }
   .streaming-caret { animation: none; }
   .source-highlight.pulse { animation: none; box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.45); }
+  /* ③ 术语卡进场动效在 reduce 下即时化（卡直接出现，无位移/淡入）。 */
+  .term-explain-card.enter { animation: none; }
 }
