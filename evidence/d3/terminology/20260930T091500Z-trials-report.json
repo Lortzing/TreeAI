@@ -1,0 +1,1193 @@
+{
+  "mode": "real-pi",
+  "model": "deepseek/deepseek-flash",
+  "sha": "cd0784ca360cbf22a1e5b48a0680f09de5da8565",
+  "gitDirty": true,
+  "qualitySet": {
+    "version": 1,
+    "frozenAt": "2026-09-30",
+    "total": 60,
+    "ran": 60
+  },
+  "metrics": {
+    "explain": {
+      "ok": 30,
+      "total": 30,
+      "emptyOrFailed": 0
+    },
+    "extract": {
+      "expectedFound": 70,
+      "expectedTotal": 75,
+      "coverage": 0.9333333333333333,
+      "falseMarks": 11,
+      "markedTotal": 100,
+      "falseMarkRate": 0.11,
+      "emptyOutputs": 0
+    },
+    "latencyMs": {
+      "p50": 2516,
+      "p95": 17988
+    },
+    "usage": {
+      "total": {
+        "requests": 60,
+        "promptChars": 28576,
+        "completionChars": 15291
+      },
+      "estTokens": 10967,
+      "lateResultsDiscarded": 0,
+      "budgetTokens": 5000000
+    }
+  },
+  "explainRows": [
+    {
+      "id": "exp-01",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2061,
+      "explanation": "Entropy is the information-theoretic quantity described in the passage; it measures the average surprise or uncertainty of a random variable's outcomes. High entropy means the outcomes are very unpredictable, while low entropy means they are more predictable. Shannon introduced the term in 1948 as part of information theory.",
+      "failure": null
+    },
+    {
+      "id": "exp-02",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2395,
+      "explanation": "The marked span is the second occurrence of the word \"firewall\" in the passage, referring to a network security device that filters traffic between networks. Here it appears as the subject of a general claim, not tied to the specific firewall mentioned in the first sentence. In context it means any firewall, and the sentence asserts that one configured incorrectly causes more harm than having no firewall at all.",
+      "failure": null
+    },
+    {
+      "id": "exp-03",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2031,
+      "explanation": "\"Calvin cycle\" names the set of light-independent reactions in photosynthesis that assemble sugars from carbon dioxide. Using the ATP and NADPH produced by the light-dependent reactions, it fixes CO2 into organic molecules. In the passage, it's what happens after light is converted into chemical energy, and the stroma is where it takes place.",
+      "failure": null
+    },
+    {
+      "id": "exp-04",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 17822,
+      "explanation": "The marked span is the second occurrence of the word \"budget,\" which names the financial plan or spending proposal that the group plans to take up. In this passage it appears in the clause \"the budget again next week,\" indicating that this same topic will be discussed a second time at a later meeting. It is a meaningful term, though the passage gives no detail about what the budget actually contains.",
+      "failure": null
+    },
+    {
+      "id": "exp-05",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2074,
+      "explanation": "Inflation here refers to the general rise in prices across an economy, the same phenomenon described in the first sentence. The marked occurrence is the second use of the word, appearing in the phrase \"a small positive inflation rate,\" where it names the specific rate central banks aim to keep slightly above zero. It is a meaningful term in the passage rather than an incidental word, since the passage's main claim depends on distinguishing positive inflation from zero inflation.",
+      "failure": null
+    },
+    {
+      "id": "exp-06",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 3476,
+      "explanation": "The marked span is the word \"monad\" as it appears in \"the Maybe monad,\" referring back to the design pattern introduced in the first sentence. Here it names a specific instance of that pattern, the Maybe monad, which wraps a value that may be absent and lets you chain operations on it while safely handling the missing case. In short, the span points to the concept being exemplified, not a new idea.",
+      "failure": null
+    },
+    {
+      "id": "exp-07",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1989,
+      "explanation": "\"Folding\" is a cooking technique for gently combining a light, airy mixture with a heavier one. You slide a spatula down through the mixture and lift it over rather than stirring briskly. In this passage, folding the egg whites keeps their trapped air bubbles intact, which is what lets the soufflé rise.",
+      "failure": null
+    },
+    {
+      "id": "exp-08",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2480,
+      "explanation": "Guide RNA is the short RNA molecule that CRISPR uses as a targeting device. Its sequence is complementary to the DNA site of interest, so it leads the Cas enzyme to that exact spot. Once there, the enzyme cuts the DNA, and the cell's repair of that cut is what produces the edit.",
+      "failure": null
+    },
+    {
+      "id": "exp-09",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2516,
+      "explanation": "\"Cantilever\" is the term in the second sentence for the structural piece that the first sentence already placed on each side of the bridge. The passage defines it by what it does: it extends outward and carries load while its outer end has nothing beneath it to rest on. So the marked word names the load-bearing element being described, not an incidental detail.",
+      "failure": null
+    },
+    {
+      "id": "exp-10",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2002,
+      "explanation": "\"ii-V-I\" is a compact chord-progression formula used in jazz, where the Roman numerals refer to chords built on scale degrees rather than to fingerings. Lowercase \"ii\" means a minor chord on the second degree, uppercase \"V\" means a major or dominant chord on the fifth degree, and uppercase \"I\" means a major chord on the tonic. Together they describe a very common harmonic move that resolves back to the home key, which is why the passage notes that the numerals name scale degrees, not fingerings.",
+      "failure": null
+    },
+    {
+      "id": "exp-11",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2456,
+      "explanation": "A code point is the unique numeric value Unicode assigns to each character or symbol, giving it an abstract identity independent of any particular encoding. In this passage, 🌊 is one code point, meaning Unicode treats it as a single character, even though UTF-16 needs two code units to represent it. The term thus distinguishes Unicode's character model from concrete storage formats like UTF-16.",
+      "failure": null
+    },
+    {
+      "id": "exp-12",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 4113,
+      "explanation": "\"Radiate\" here is the ordinary verb meaning to give off or emit energy, in this case heat leaving a surface as infrared radiation. It explains how the ground or another surface can drop below the surrounding air temperature without touching anything cold, since the heat escapes toward the sky. It is not a specialized term in the passage, just everyday language used in its physical sense.",
+      "failure": null
+    },
+    {
+      "id": "exp-13",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1412,
+      "explanation": "In this legal passage, \"consideration\" means something of value that each party gives or promises in a contract, such as money, goods, services, or a promise to do something. It is the exchange that makes a contract legally binding. Without consideration, a contract is generally not enforceable. So the marked term names a required element of a valid contract, not mere thoughtfulness or careful attention.",
+      "failure": null
+    },
+    {
+      "id": "exp-14",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1231,
+      "explanation": "MRI stands for magnetic resonance imaging, a medical scan that produces detailed pictures of internal structures such as the spine. It works using strong magnetic fields and radio waves rather than the ionizing radiation used in X-rays or CT scans. Here the doctor ordered one to check whether a herniated disc is causing the problem.",
+      "failure": null
+    },
+    {
+      "id": "exp-15",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1642,
+      "explanation": "Register allocation is the compiler process of assigning values from a program to CPU registers. It decides which values can stay in the limited, fast registers and which must be kept in memory instead. The passage connects it to spilling, which writes a value back to memory when it cannot remain in a register.",
+      "failure": null
+    },
+    {
+      "id": "exp-16",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2092,
+      "explanation": "An unreliable narrator is a storytelling device in which the person telling the story cannot be fully trusted, whether because of bias, limited knowledge, confusion, or deliberate deception. Because their account may distort or omit what actually happened, readers must read critically rather than accept the narration at face value. In this passage, the term is a genuine literary concept, and the second sentence explains its effect: it makes readers question everything the narrator reports.",
+      "failure": null
+    },
+    {
+      "id": "exp-17",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1122,
+      "explanation": "Theta is one of the options greeks and represents an option's sensitivity to the passage of time. It measures how much the option's price is expected to change as one day passes, holding other factors constant. This effect is often called time decay because options typically lose value as expiration approaches.",
+      "failure": null
+    },
+    {
+      "id": "exp-18",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1546,
+      "explanation": "\"Planar\" is a property of a graph: it means the graph can be drawn on a flat surface so that no edges cross each other. Vertices can be moved and edges can be curved or rerouted freely, as long as every edge avoids crossing every other edge. This contrasts with non-planar graphs such as K5, which cannot be drawn without at least one crossing.",
+      "failure": null
+    },
+    {
+      "id": "exp-19",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1594,
+      "explanation": "Double-blind describes a trial design in which both the participants and the researchers are kept unaware of who is receiving the treatment and who is receiving a control. This prevents expectations or bias from influencing how people behave or how results are judged. In the passage it names the specific protocol the trial used.",
+      "failure": null
+    },
+    {
+      "id": "exp-20",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1082,
+      "explanation": "\"Allophones\" are the variant pronunciations of a single phoneme that do not by themselves distinguish meaning in a language. For example, the different ways an English /t/ sound is pronounced in different positions are allophones of the same phoneme. The span is a meaningful linguistic term and names one of the two categories the passage contrasts.",
+      "failure": null
+    },
+    {
+      "id": "exp-21",
+      "expectation": "ambiguous-in-context",
+      "ok": true,
+      "latencyMs": 999,
+      "explanation": "The marked span is the verb \"contained,\" used here in its sense of stopping something from spreading rather than storing or holding it. The passage explicitly clarifies this by contrasting \"stopped from spreading\" with \"not stored,\" so it is a meaningful term in context.",
+      "failure": null
+    },
+    {
+      "id": "exp-22",
+      "expectation": "not-a-term",
+      "ok": true,
+      "latencyMs": 768,
+      "explanation": "The marked span is the ordinary adjective \"good,\" used twice to praise the talk and the questions. It is not a meaningful term or concept in this passage, just everyday evaluative language.",
+      "failure": null
+    },
+    {
+      "id": "exp-23",
+      "expectation": "not-a-term",
+      "ok": true,
+      "latencyMs": 1524,
+      "explanation": "The marked span is just the ordinary noun \"store,\" which here refers to the shop the narrator and companion walked to; it is not a specialized term or concept.",
+      "failure": null
+    },
+    {
+      "id": "exp-24",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1651,
+      "explanation": "Soundness here is the property of a type checker that guarantees it never accepts a program that violates the typing rules, so no ill-typed program slips through as valid. The passage defines it as the assurance that any program the checker approves is genuinely well-typed. Note that soundness is about avoiding false acceptance, not about rejecting every program it should accept.",
+      "failure": null
+    },
+    {
+      "id": "exp-25",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2745,
+      "explanation": "A440 is the standard reference pitch for tuning, naming the note A above middle C at 440 hertz. In this passage, the second occurrence restates that this frequency is the concert pitch standard. It is a meaningful term because it identifies a specific pitch and tuning convention.",
+      "failure": null
+    },
+    {
+      "id": "exp-26",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 2506,
+      "explanation": "A keystone species is a species whose impact on its ecosystem is unusually large relative to its abundance. The passage uses the term literally in ecology: removing such a species can set off a cascade of changes that reshapes the whole community, which is why it is said to hold the community together. So the marked span names a real ecological concept, not an incidental phrase.",
+      "failure": null
+    },
+    {
+      "id": "exp-27",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1678,
+      "explanation": "\"Projection\" here is the cartographic term for the mathematical method used to transfer the curved surface of the Earth onto a flat map. Because a sphere cannot be flattened without stretching or tearing, every projection introduces some distortion in area, shape, distance, or direction. The passage is saying that this unavoidable distortion is what cartographers mean by projection, and that no flat map can avoid having one.",
+      "failure": null
+    },
+    {
+      "id": "exp-28",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1598,
+      "explanation": "Difficulty is the Bitcoin network's measure of how hard the hash puzzle is to solve. It automatically adjusts roughly every two weeks so that, on average, a new block is found about every ten minutes. If miners add more computing power, difficulty rises to compensate, and if miners leave, difficulty falls.",
+      "failure": null
+    },
+    {
+      "id": "exp-29",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 1533,
+      "explanation": "Hauntology is the term the passage identifies as coined by Derrida. It refers to the persistence of elements from the past in the present, as if the past lingers or haunts current reality. In this passage, it names the essay's central concept.",
+      "failure": null
+    },
+    {
+      "id": "exp-30",
+      "expectation": "term",
+      "ok": true,
+      "latencyMs": 3357,
+      "explanation": "A keel is the central structural beam that runs lengthwise along the bottom of a ship's hull, acting as its backbone. The passage explains that its depth affects performance: a deep keel gives the hull more surface to resist sideways rolling, while a shoal (shallow) keel draws less water so the boat can float in shallow areas. So \"keel\" here names both the physical part and the design feature that trades stability against shallow-water access.",
+      "failure": null
+    }
+  ],
+  "extractRows": [
+    {
+      "id": "ext-01",
+      "ok": true,
+      "latencyMs": 7497,
+      "expected": [
+        "Entropy",
+        "Mutual information"
+      ],
+      "found": [
+        "Entropy"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Entropy"
+      ]
+    },
+    {
+      "id": "ext-02",
+      "ok": true,
+      "latencyMs": 1789,
+      "expected": [
+        "lockfile"
+      ],
+      "found": [
+        "lockfile"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "lockfile"
+      ]
+    },
+    {
+      "id": "ext-03",
+      "ok": true,
+      "latencyMs": 6192,
+      "expected": [
+        "Mitochondria",
+        "ATP",
+        "oxidative phosphorylation",
+        "citric acid cycle"
+      ],
+      "found": [
+        "Mitochondria",
+        "ATP",
+        "oxidative phosphorylation",
+        "citric acid cycle"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "oxidative phosphorylation",
+        "citric acid cycle",
+        "ATP",
+        "Mitochondria"
+      ]
+    },
+    {
+      "id": "ext-04",
+      "ok": true,
+      "latencyMs": 1993,
+      "expected": [
+        "roux",
+        "bain-marie"
+      ],
+      "found": [
+        "roux",
+        "bain-marie"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "roux",
+        "bain-marie",
+        "curdling"
+      ]
+    },
+    {
+      "id": "ext-05",
+      "ok": true,
+      "latencyMs": 8694,
+      "expected": [
+        "TCP",
+        "UDP",
+        "Congestion control"
+      ],
+      "found": [
+        "TCP",
+        "UDP",
+        "Congestion control"
+      ],
+      "negativesHit": [
+        "segments"
+      ],
+      "candidates": [
+        "TCP",
+        "UDP",
+        "Congestion control",
+        "retransmits",
+        "segments"
+      ]
+    },
+    {
+      "id": "ext-06",
+      "ok": true,
+      "latencyMs": 5731,
+      "expected": [
+        "GDP",
+        "Deflators",
+        "nominal GDP",
+        "real GDP"
+      ],
+      "found": [
+        "GDP",
+        "Deflators",
+        "nominal GDP",
+        "real GDP"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "GDP",
+        "Deflators",
+        "nominal GDP",
+        "real GDP"
+      ]
+    },
+    {
+      "id": "ext-07",
+      "ok": true,
+      "latencyMs": 2108,
+      "expected": [
+        "xylem",
+        "phloem",
+        "Cambium"
+      ],
+      "found": [
+        "xylem",
+        "phloem",
+        "Cambium"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "xylem",
+        "phloem",
+        "Cambium"
+      ]
+    },
+    {
+      "id": "ext-08",
+      "ok": true,
+      "latencyMs": 17988,
+      "expected": [
+        "load balancer",
+        "Health checks"
+      ],
+      "found": [
+        "load balancer",
+        "Health checks"
+      ],
+      "negativesHit": [
+        "replicas",
+        "rotation"
+      ],
+      "candidates": [
+        "load balancer",
+        "replicas",
+        "Health checks",
+        "rotation"
+      ]
+    },
+    {
+      "id": "ext-09",
+      "ok": true,
+      "latencyMs": 5851,
+      "expected": [
+        "Tremolo",
+        "vibrato"
+      ],
+      "found": [
+        "Tremolo",
+        "vibrato"
+      ],
+      "negativesHit": [
+        "amplitude",
+        "pitch"
+      ],
+      "candidates": [
+        "Tremolo",
+        "vibrato",
+        "amplitude",
+        "pitch"
+      ]
+    },
+    {
+      "id": "ext-10",
+      "ok": true,
+      "latencyMs": 7212,
+      "expected": [
+        "p-value",
+        "null hypothesis",
+        "Effect sizes"
+      ],
+      "found": [
+        "p-value",
+        "null hypothesis",
+        "Effect sizes"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "p-value",
+        "null hypothesis",
+        "Effect sizes",
+        "significance"
+      ]
+    },
+    {
+      "id": "ext-11",
+      "ok": true,
+      "latencyMs": 9456,
+      "expected": [
+        "Kubernetes",
+        "pods",
+        "DaemonSet",
+        "Deployment"
+      ],
+      "found": [
+        "Kubernetes",
+        "pods",
+        "DaemonSet",
+        "Deployment"
+      ],
+      "negativesHit": [
+        "nodes"
+      ],
+      "candidates": [
+        "Kubernetes",
+        "DaemonSet",
+        "Deployment",
+        "pods",
+        "replicas",
+        "nodes"
+      ]
+    },
+    {
+      "id": "ext-12",
+      "ok": true,
+      "latencyMs": 6677,
+      "expected": [
+        "induction",
+        "derivation"
+      ],
+      "found": [
+        "induction",
+        "derivation"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "induction",
+        "derivation",
+        "base case"
+      ]
+    },
+    {
+      "id": "ext-13",
+      "ok": true,
+      "latencyMs": 2880,
+      "expected": [
+        "Erosion",
+        "deposition",
+        "Sediment",
+        "delta"
+      ],
+      "found": [
+        "Erosion",
+        "deposition",
+        "Sediment",
+        "delta"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Erosion",
+        "deposition",
+        "Sediment",
+        "delta"
+      ]
+    },
+    {
+      "id": "ext-14",
+      "ok": true,
+      "latencyMs": 1892,
+      "expected": [
+        "chromatic aberration"
+      ],
+      "found": [
+        "chromatic aberration"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "chromatic aberration",
+        "Stopping down"
+      ]
+    },
+    {
+      "id": "ext-15",
+      "ok": true,
+      "latencyMs": 3250,
+      "expected": [
+        "Habeas corpus",
+        "Mandamus"
+      ],
+      "found": [
+        "Habeas corpus",
+        "Mandamus"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Habeas corpus",
+        "Mandamus",
+        "show cause"
+      ]
+    },
+    {
+      "id": "ext-16",
+      "ok": true,
+      "latencyMs": 10284,
+      "expected": [
+        "Fermentation",
+        "lactate",
+        "glycolysis"
+      ],
+      "found": [
+        "Fermentation",
+        "lactate"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Fermentation",
+        "lactate",
+        "Aerobic glycolysis"
+      ]
+    },
+    {
+      "id": "ext-17",
+      "ok": true,
+      "latencyMs": 2625,
+      "expected": [],
+      "found": [],
+      "negativesHit": [
+        "squash"
+      ],
+      "candidates": [
+        "squash",
+        "commits"
+      ]
+    },
+    {
+      "id": "ext-18",
+      "ok": true,
+      "latencyMs": 5802,
+      "expected": [
+        "escapement",
+        "tourbillon",
+        "mainspring"
+      ],
+      "found": [
+        "escapement",
+        "tourbillon"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "escapement",
+        "tourbillon"
+      ]
+    },
+    {
+      "id": "ext-19",
+      "ok": true,
+      "latencyMs": 7033,
+      "expected": [
+        "Overfitting",
+        "underfitting",
+        "Regularization"
+      ],
+      "found": [
+        "Overfitting",
+        "underfitting",
+        "Regularization"
+      ],
+      "negativesHit": [
+        "noise",
+        "signal"
+      ],
+      "candidates": [
+        "Overfitting",
+        "underfitting",
+        "Regularization",
+        "bias",
+        "variance",
+        "noise",
+        "signal"
+      ]
+    },
+    {
+      "id": "ext-20",
+      "ok": true,
+      "latencyMs": 3892,
+      "expected": [
+        "iamb",
+        "Iambic pentameter",
+        "prosody"
+      ],
+      "found": [
+        "iamb",
+        "Iambic pentameter",
+        "prosody"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "iamb",
+        "Iambic pentameter",
+        "prosody"
+      ]
+    },
+    {
+      "id": "ext-21",
+      "ok": true,
+      "latencyMs": 2208,
+      "expected": [
+        "Neutrinos"
+      ],
+      "found": [
+        "Neutrinos"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Neutrinos"
+      ]
+    },
+    {
+      "id": "ext-22",
+      "ok": true,
+      "latencyMs": 20514,
+      "expected": [
+        "capex",
+        "opex",
+        "Depreciation"
+      ],
+      "found": [
+        "capex",
+        "opex",
+        "Depreciation"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "capex",
+        "opex",
+        "Depreciation",
+        "income statement"
+      ]
+    },
+    {
+      "id": "ext-23",
+      "ok": true,
+      "latencyMs": 4466,
+      "expected": [
+        "Gerrymandering",
+        "Cracking",
+        "packing"
+      ],
+      "found": [
+        "Gerrymandering",
+        "Cracking",
+        "packing"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Gerrymandering",
+        "Cracking",
+        "packing"
+      ]
+    },
+    {
+      "id": "ext-24",
+      "ok": true,
+      "latencyMs": 1615,
+      "expected": [
+        "chiasmus",
+        "Antimetabole"
+      ],
+      "found": [
+        "chiasmus"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "chiasmus"
+      ]
+    },
+    {
+      "id": "ext-25",
+      "ok": true,
+      "latencyMs": 14115,
+      "expected": [
+        "branch predictor",
+        "misprediction",
+        "pipeline"
+      ],
+      "found": [
+        "branch predictor",
+        "misprediction",
+        "pipeline"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "branch predictor",
+        "misprediction",
+        "speculatively executes",
+        "pipeline"
+      ]
+    },
+    {
+      "id": "ext-26",
+      "ok": true,
+      "latencyMs": 5984,
+      "expected": [
+        "refraction",
+        "Dispersion"
+      ],
+      "found": [
+        "refraction"
+      ],
+      "negativesHit": [
+        "wavelengths"
+      ],
+      "candidates": [
+        "refraction",
+        "internal reflection",
+        "wavelengths"
+      ]
+    },
+    {
+      "id": "ext-27",
+      "ok": true,
+      "latencyMs": 3525,
+      "expected": [
+        "selvedge",
+        "Steeks"
+      ],
+      "found": [
+        "selvedge",
+        "Steeks"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "selvedge",
+        "Steeks"
+      ]
+    },
+    {
+      "id": "ext-28",
+      "ok": true,
+      "latencyMs": 23573,
+      "expected": [
+        "Insulin",
+        "glucagon",
+        "Somatostatin"
+      ],
+      "found": [
+        "Insulin",
+        "glucagon",
+        "Somatostatin"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "Insulin",
+        "blood glucose",
+        "glucagon",
+        "Somatostatin"
+      ]
+    },
+    {
+      "id": "ext-29",
+      "ok": true,
+      "latencyMs": 8636,
+      "expected": [
+        "preamp",
+        "compressor",
+        "Gain staging"
+      ],
+      "found": [
+        "preamp",
+        "compressor",
+        "Gain staging"
+      ],
+      "negativesHit": [
+        "console"
+      ],
+      "candidates": [
+        "Gain staging",
+        "clipping",
+        "preamp",
+        "compressor",
+        "console",
+        "signal path"
+      ]
+    },
+    {
+      "id": "ext-30",
+      "ok": true,
+      "latencyMs": 10085,
+      "expected": [
+        "jya",
+        "Etymologically"
+      ],
+      "found": [
+        "jya",
+        "Etymologically"
+      ],
+      "negativesHit": [],
+      "candidates": [
+        "sine",
+        "jya",
+        "Etymologically",
+        "borrowings"
+      ]
+    }
+  ],
+  "labelingSheet": [
+    {
+      "id": "exp-01",
+      "kind": "explain",
+      "term": "entropy",
+      "expectation": "term",
+      "explanation": "Entropy is the information-theoretic quantity described in the passage; it measures the average surprise or uncertainty of a random variable's outcomes. High entropy means the outcomes are very unpredictable, while low entropy means they are more predictable. Shannon introduced the term in 1948 as part of information theory.",
+      "useful": null
+    },
+    {
+      "id": "exp-02",
+      "kind": "explain",
+      "term": "firewall",
+      "expectation": "term",
+      "explanation": "The marked span is the second occurrence of the word \"firewall\" in the passage, referring to a network security device that filters traffic between networks. Here it appears as the subject of a general claim, not tied to the specific firewall mentioned in the first sentence. In context it means any firewall, and the sentence asserts that one configured incorrectly causes more harm than having no firewall at all.",
+      "useful": null
+    },
+    {
+      "id": "exp-03",
+      "kind": "explain",
+      "term": "Calvin cycle",
+      "expectation": "term",
+      "explanation": "\"Calvin cycle\" names the set of light-independent reactions in photosynthesis that assemble sugars from carbon dioxide. Using the ATP and NADPH produced by the light-dependent reactions, it fixes CO2 into organic molecules. In the passage, it's what happens after light is converted into chemical energy, and the stroma is where it takes place.",
+      "useful": null
+    },
+    {
+      "id": "exp-04",
+      "kind": "explain",
+      "term": "budget",
+      "expectation": "term",
+      "explanation": "The marked span is the second occurrence of the word \"budget,\" which names the financial plan or spending proposal that the group plans to take up. In this passage it appears in the clause \"the budget again next week,\" indicating that this same topic will be discussed a second time at a later meeting. It is a meaningful term, though the passage gives no detail about what the budget actually contains.",
+      "useful": null
+    },
+    {
+      "id": "exp-05",
+      "kind": "explain",
+      "term": "inflation",
+      "expectation": "term",
+      "explanation": "Inflation here refers to the general rise in prices across an economy, the same phenomenon described in the first sentence. The marked occurrence is the second use of the word, appearing in the phrase \"a small positive inflation rate,\" where it names the specific rate central banks aim to keep slightly above zero. It is a meaningful term in the passage rather than an incidental word, since the passage's main claim depends on distinguishing positive inflation from zero inflation.",
+      "useful": null
+    },
+    {
+      "id": "exp-06",
+      "kind": "explain",
+      "term": "monad",
+      "expectation": "term",
+      "explanation": "The marked span is the word \"monad\" as it appears in \"the Maybe monad,\" referring back to the design pattern introduced in the first sentence. Here it names a specific instance of that pattern, the Maybe monad, which wraps a value that may be absent and lets you chain operations on it while safely handling the missing case. In short, the span points to the concept being exemplified, not a new idea.",
+      "useful": null
+    },
+    {
+      "id": "exp-07",
+      "kind": "explain",
+      "term": "folding",
+      "expectation": "term",
+      "explanation": "\"Folding\" is a cooking technique for gently combining a light, airy mixture with a heavier one. You slide a spatula down through the mixture and lift it over rather than stirring briskly. In this passage, folding the egg whites keeps their trapped air bubbles intact, which is what lets the soufflé rise.",
+      "useful": null
+    },
+    {
+      "id": "exp-08",
+      "kind": "explain",
+      "term": "guide RNA",
+      "expectation": "term",
+      "explanation": "Guide RNA is the short RNA molecule that CRISPR uses as a targeting device. Its sequence is complementary to the DNA site of interest, so it leads the Cas enzyme to that exact spot. Once there, the enzyme cuts the DNA, and the cell's repair of that cut is what produces the edit.",
+      "useful": null
+    },
+    {
+      "id": "exp-09",
+      "kind": "explain",
+      "term": "cantilever",
+      "expectation": "term",
+      "explanation": "\"Cantilever\" is the term in the second sentence for the structural piece that the first sentence already placed on each side of the bridge. The passage defines it by what it does: it extends outward and carries load while its outer end has nothing beneath it to rest on. So the marked word names the load-bearing element being described, not an incidental detail.",
+      "useful": null
+    },
+    {
+      "id": "exp-10",
+      "kind": "explain",
+      "term": "ii-V-I",
+      "expectation": "term",
+      "explanation": "\"ii-V-I\" is a compact chord-progression formula used in jazz, where the Roman numerals refer to chords built on scale degrees rather than to fingerings. Lowercase \"ii\" means a minor chord on the second degree, uppercase \"V\" means a major or dominant chord on the fifth degree, and uppercase \"I\" means a major chord on the tonic. Together they describe a very common harmonic move that resolves back to the home key, which is why the passage notes that the numerals name scale degrees, not fingerings.",
+      "useful": null
+    },
+    {
+      "id": "exp-11",
+      "kind": "explain",
+      "term": "code point",
+      "expectation": "term",
+      "explanation": "A code point is the unique numeric value Unicode assigns to each character or symbol, giving it an abstract identity independent of any particular encoding. In this passage, 🌊 is one code point, meaning Unicode treats it as a single character, even though UTF-16 needs two code units to represent it. The term thus distinguishes Unicode's character model from concrete storage formats like UTF-16.",
+      "useful": null
+    },
+    {
+      "id": "exp-12",
+      "kind": "explain",
+      "term": "radiate",
+      "expectation": "term",
+      "explanation": "\"Radiate\" here is the ordinary verb meaning to give off or emit energy, in this case heat leaving a surface as infrared radiation. It explains how the ground or another surface can drop below the surrounding air temperature without touching anything cold, since the heat escapes toward the sky. It is not a specialized term in the passage, just everyday language used in its physical sense.",
+      "useful": null
+    },
+    {
+      "id": "exp-13",
+      "kind": "explain",
+      "term": "consideration",
+      "expectation": "term",
+      "explanation": "In this legal passage, \"consideration\" means something of value that each party gives or promises in a contract, such as money, goods, services, or a promise to do something. It is the exchange that makes a contract legally binding. Without consideration, a contract is generally not enforceable. So the marked term names a required element of a valid contract, not mere thoughtfulness or careful attention.",
+      "useful": null
+    },
+    {
+      "id": "exp-14",
+      "kind": "explain",
+      "term": "MRI",
+      "expectation": "term",
+      "explanation": "MRI stands for magnetic resonance imaging, a medical scan that produces detailed pictures of internal structures such as the spine. It works using strong magnetic fields and radio waves rather than the ionizing radiation used in X-rays or CT scans. Here the doctor ordered one to check whether a herniated disc is causing the problem.",
+      "useful": null
+    },
+    {
+      "id": "exp-15",
+      "kind": "explain",
+      "term": "register allocation",
+      "expectation": "term",
+      "explanation": "Register allocation is the compiler process of assigning values from a program to CPU registers. It decides which values can stay in the limited, fast registers and which must be kept in memory instead. The passage connects it to spilling, which writes a value back to memory when it cannot remain in a register.",
+      "useful": null
+    },
+    {
+      "id": "exp-16",
+      "kind": "explain",
+      "term": "unreliable narrator",
+      "expectation": "term",
+      "explanation": "An unreliable narrator is a storytelling device in which the person telling the story cannot be fully trusted, whether because of bias, limited knowledge, confusion, or deliberate deception. Because their account may distort or omit what actually happened, readers must read critically rather than accept the narration at face value. In this passage, the term is a genuine literary concept, and the second sentence explains its effect: it makes readers question everything the narrator reports.",
+      "useful": null
+    },
+    {
+      "id": "exp-17",
+      "kind": "explain",
+      "term": "theta",
+      "expectation": "term",
+      "explanation": "Theta is one of the options greeks and represents an option's sensitivity to the passage of time. It measures how much the option's price is expected to change as one day passes, holding other factors constant. This effect is often called time decay because options typically lose value as expiration approaches.",
+      "useful": null
+    },
+    {
+      "id": "exp-18",
+      "kind": "explain",
+      "term": "planar",
+      "expectation": "term",
+      "explanation": "\"Planar\" is a property of a graph: it means the graph can be drawn on a flat surface so that no edges cross each other. Vertices can be moved and edges can be curved or rerouted freely, as long as every edge avoids crossing every other edge. This contrasts with non-planar graphs such as K5, which cannot be drawn without at least one crossing.",
+      "useful": null
+    },
+    {
+      "id": "exp-19",
+      "kind": "explain",
+      "term": "double-blind",
+      "expectation": "term",
+      "explanation": "Double-blind describes a trial design in which both the participants and the researchers are kept unaware of who is receiving the treatment and who is receiving a control. This prevents expectations or bias from influencing how people behave or how results are judged. In the passage it names the specific protocol the trial used.",
+      "useful": null
+    },
+    {
+      "id": "exp-20",
+      "kind": "explain",
+      "term": "allophones",
+      "expectation": "term",
+      "explanation": "\"Allophones\" are the variant pronunciations of a single phoneme that do not by themselves distinguish meaning in a language. For example, the different ways an English /t/ sound is pronounced in different positions are allophones of the same phoneme. The span is a meaningful linguistic term and names one of the two categories the passage contrasts.",
+      "useful": null
+    },
+    {
+      "id": "exp-21",
+      "kind": "explain",
+      "term": "contained",
+      "expectation": "ambiguous-in-context",
+      "explanation": "The marked span is the verb \"contained,\" used here in its sense of stopping something from spreading rather than storing or holding it. The passage explicitly clarifies this by contrasting \"stopped from spreading\" with \"not stored,\" so it is a meaningful term in context.",
+      "useful": null
+    },
+    {
+      "id": "exp-22",
+      "kind": "explain",
+      "term": "good",
+      "expectation": "not-a-term",
+      "explanation": "The marked span is the ordinary adjective \"good,\" used twice to praise the talk and the questions. It is not a meaningful term or concept in this passage, just everyday evaluative language.",
+      "useful": null
+    },
+    {
+      "id": "exp-23",
+      "kind": "explain",
+      "term": "store",
+      "expectation": "not-a-term",
+      "explanation": "The marked span is just the ordinary noun \"store,\" which here refers to the shop the narrator and companion walked to; it is not a specialized term or concept.",
+      "useful": null
+    },
+    {
+      "id": "exp-24",
+      "kind": "explain",
+      "term": "Soundness",
+      "expectation": "term",
+      "explanation": "Soundness here is the property of a type checker that guarantees it never accepts a program that violates the typing rules, so no ill-typed program slips through as valid. The passage defines it as the assurance that any program the checker approves is genuinely well-typed. Note that soundness is about avoiding false acceptance, not about rejecting every program it should accept.",
+      "useful": null
+    },
+    {
+      "id": "exp-25",
+      "kind": "explain",
+      "term": "A440",
+      "expectation": "term",
+      "explanation": "A440 is the standard reference pitch for tuning, naming the note A above middle C at 440 hertz. In this passage, the second occurrence restates that this frequency is the concert pitch standard. It is a meaningful term because it identifies a specific pitch and tuning convention.",
+      "useful": null
+    },
+    {
+      "id": "exp-26",
+      "kind": "explain",
+      "term": "keystone species",
+      "expectation": "term",
+      "explanation": "A keystone species is a species whose impact on its ecosystem is unusually large relative to its abundance. The passage uses the term literally in ecology: removing such a species can set off a cascade of changes that reshapes the whole community, which is why it is said to hold the community together. So the marked span names a real ecological concept, not an incidental phrase.",
+      "useful": null
+    },
+    {
+      "id": "exp-27",
+      "kind": "explain",
+      "term": "projection",
+      "expectation": "term",
+      "explanation": "\"Projection\" here is the cartographic term for the mathematical method used to transfer the curved surface of the Earth onto a flat map. Because a sphere cannot be flattened without stretching or tearing, every projection introduces some distortion in area, shape, distance, or direction. The passage is saying that this unavoidable distortion is what cartographers mean by projection, and that no flat map can avoid having one.",
+      "useful": null
+    },
+    {
+      "id": "exp-28",
+      "kind": "explain",
+      "term": "difficulty",
+      "expectation": "term",
+      "explanation": "Difficulty is the Bitcoin network's measure of how hard the hash puzzle is to solve. It automatically adjusts roughly every two weeks so that, on average, a new block is found about every ten minutes. If miners add more computing power, difficulty rises to compensate, and if miners leave, difficulty falls.",
+      "useful": null
+    },
+    {
+      "id": "exp-29",
+      "kind": "explain",
+      "term": "hauntology",
+      "expectation": "term",
+      "explanation": "Hauntology is the term the passage identifies as coined by Derrida. It refers to the persistence of elements from the past in the present, as if the past lingers or haunts current reality. In this passage, it names the essay's central concept.",
+      "useful": null
+    },
+    {
+      "id": "exp-30",
+      "kind": "explain",
+      "term": "keel",
+      "expectation": "term",
+      "explanation": "A keel is the central structural beam that runs lengthwise along the bottom of a ship's hull, acting as its backbone. The passage explains that its depth affects performance: a deep keel gives the hull more surface to resist sideways rolling, while a shoal (shallow) keel draws less water so the boat can float in shallow areas. So \"keel\" here names both the physical part and the design feature that trades stability against shallow-water access.",
+      "useful": null
+    }
+  ],
+  "checks": [
+    {
+      "name": "set-integrity",
+      "status": "PASS",
+      "detail": "frozen v1 (2026-09-30): 60 items — 30 explain + 30 extract in this run; every span resolves by occurrence with slice equality"
+    },
+    {
+      "name": "credentials",
+      "status": "PASS",
+      "detail": "TREEAI_STUDIO_API_KEY present (value never logged)"
+    },
+    {
+      "name": "agent-dir",
+      "status": "PASS",
+      "detail": "controlled agent dir .pi-d2-live"
+    },
+    {
+      "name": "explain-trials",
+      "status": "PASS",
+      "detail": "30/30 explain tasks succeeded (empty/failed outputs: 0); latency p50 2516ms / p95 17988ms"
+    },
+    {
+      "name": "extract-coverage",
+      "status": "PASS",
+      "detail": "coverage (mechanical proxy: expectedTerms found) = 70/75 = 93.3% (gate ≥80%)"
+    },
+    {
+      "name": "extract-false-marks",
+      "status": "FAIL",
+      "detail": "negative false-marking = 11/100 = 11.0% (gate ≤10%)"
+    },
+    {
+      "name": "cost-accounting",
+      "status": "PASS",
+      "detail": "usage: 60 request(s), est. 10967 tokens (chars/4 estimate — the Pi seam does not expose token counts), 0 late result(s) discarded, budget 5000000"
+    },
+    {
+      "name": "usefulness-pending-human-labeling",
+      "status": "NOT_RUN",
+      "detail": "有用率 (≥90%) needs human labels — the labeling sheet is in the report (useful: null); the gate cannot pass mechanically"
+    }
+  ],
+  "note": "real-Pi trial run; usefulness gate pending human labeling of labelingSheet"
+}
