@@ -61,7 +61,7 @@ D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 | 编号 | 名称 | 归属 | 状态 |
 |---|---|---|---|
 | 0008 | material-core（materials / material_blobs / material_versions / tree_material_links / material_branch_origins / tree_material_reading_state / material_first_questions / branches.origin_kind） | D4-1 | 已交付（`4ebead9`，随 D4-1 波合并） |
-| 0009 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 进行中（术语整改波，见「波次占用」）；按 `assertContiguous` 连续性约束实际落为 0009 |
+| 0009 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 已交付（`d6005d0`，wip/term-backend 术语整改波；表 terminology_promotion_dispatches，随 P0-3 整改落地） |
 | 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留（原 0009，随术语账本前移）；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
 | 0011 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留（原 0010，随术语账本前移）；同上 |
 
