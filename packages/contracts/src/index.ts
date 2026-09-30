@@ -37,3 +37,6 @@ export type * from "./pi-runtime.js";
 
 /* D3 产品层共享形状（纯新增，不改动上方冻结内容） */
 export type * from "./product.js";
+
+/* D4 材料层共享形状（纯新增，不改动上方冻结内容；ADR-003 §1 治理边界） */
+export type * from "./material.js";

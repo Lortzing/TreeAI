@@ -41,6 +41,22 @@ export {
 } from "./migrations/index.ts";
 
 export {
+  MaterialRepository,
+  type BranchOriginKind,
+  type BranchOriginRef,
+  type CreateMaterialInput,
+  type InsertFirstQuestionInput,
+  type InsertFirstQuestionResult,
+  type InsertMaterialBranchOriginInput,
+  type InsertMaterialVersionInput,
+  type MaterialFirstQuestion,
+  type MaterialRepositoryOptions,
+  type MaterialSelectionContext,
+  type TreeMaterialLink,
+  type UpsertReadingPositionInput,
+} from "./material-repository.ts";
+
+export {
   checkIntegrity,
   currentSchemaVersion,
   openDatabase,
