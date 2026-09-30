@@ -343,11 +343,17 @@ try {
   check(/数据已保留/.test(uninstall1.stdout), "输出数据已保留", uninstall1.stdout);
   await waitFor(IS_WIN ? 45_000 : 5_000, () => !existsSync(extracted));
   /* 残留时点名顶层内容（长路径/文件锁回归定位；run 36747308856 只给了路径）。 */
-  const leftoverDetail = existsSync(extracted)
-    ? `${extracted}（残留顶层 ${String(readdirSync(extracted).length)} 项：${readdirSync(extracted)
-        .slice(0, 8)
-        .join(", ")}）`
-    : extracted;
+  const leftoverDetail = (() => {
+    if (!existsSync(extracted)) return extracted;
+    const top = readdirSync(extracted);
+    /* 自删除脚本（Windows 分离 PowerShell）的落盘日志——它逐尝试记录
+       robocopy 退出码与 Remove-Item 失败原因，直接给出残留根因。 */
+    const selfDeleteLog = join(DATA_DIR, "uninstall-selfdelete.log");
+    const logTail = existsSync(selfDeleteLog)
+      ? `；selfdelete 日志尾：${readFileSync(selfDeleteLog, "utf8").trim().split("\n").slice(-8).join(" | ")}`
+      : "；无 selfdelete 日志（脚本未运行或未及写日志）";
+    return `${extracted}（残留顶层 ${String(top.length)} 项：${top.slice(0, 8).join(", ")}）${logTail}`;
+  })();
   check(!existsSync(extracted), "安装目录已删除", leftoverDetail);
   check(existsSync(DATA_DIR), "数据目录仍在（默认保留）", DATA_DIR);
   check(existsSync(join(DATA_DIR, "treeai.db")), "数据库文件仍在");

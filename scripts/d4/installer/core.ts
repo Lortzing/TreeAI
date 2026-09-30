@@ -627,17 +627,32 @@ export function tarExtractArgs(archivePath: string, intoDir: string): string[] {
  * 已空的短路径目录本身；循环重试等待 launcher 自身 node.exe 退出释放
  * 文件锁（运行中的 exe 所在目录不可删）。
  */
-export function windowsSelfDeleteScript(bundleRoot: string): string {
-  const target = bundleRoot.replace(/'/g, "''");
+export function windowsSelfDeleteScript(bundleRoot: string, logPath: string): string {
+  const ps = (value: string) => value.replace(/'/g, "''");
   return [
-    `$target = '${target}'`,
-    "$empty = Join-Path $env:TEMP ('treeai-uninst-' + [guid]::NewGuid().ToString('N'))",
-    "[void](New-Item -ItemType Directory -Path $empty -Force)",
+    "$target = '" + ps(bundleRoot) + "'",
+    "$logPath = '" + ps(logPath) + "'",
+    "function Log([string]$m) { try { Add-Content -LiteralPath $logPath -Value ((Get-Date -Format o) + ' ' + $m) -ErrorAction Stop } catch {} }",
+    /* GetTempPath()（Win32 API）比 $env:TEMP 稳：环境块缺 TEMP 时仍能取到。 */
+    "$empty = Join-Path ([System.IO.Path]::GetTempPath()) ('treeai-uninst-' + [guid]::NewGuid().ToString('N'))",
     "$done = $false",
-    "for($i=0; $i -lt 30; $i++) {",
-    "  [void](robocopy $empty $target /MIR /NFL /NDL /NJH /NJS /NP)",
-    "  try { Remove-Item -LiteralPath $target -Recurse -Force -ErrorAction Stop; $done = $true; break } catch { Start-Sleep -Seconds 1 }",
-    "}",
+    "try {",
+    "  Log ('start pid=' + $PID + ' target=' + $target)",
+    "  Log ('top=' + ((Get-ChildItem -LiteralPath $target -Force -ErrorAction SilentlyContinue | Select-Object -First 20 -ExpandProperty Name) -join ','))",
+    "  [void](New-Item -ItemType Directory -Path $empty -Force)",
+    "  for($i=0; $i -lt 40; $i++) {",
+    "    [void](robocopy $empty $target /MIR /NFL /NDL /NJH /NJS /NP)",
+    "    $rc = $LASTEXITCODE",
+    "    if (-not (Test-Path -LiteralPath $target)) { $done = $true; break }",
+    "    try { Remove-Item -LiteralPath $target -Recurse -Force -ErrorAction Stop; $done = $true; break }",
+    "    catch {",
+    "      $left = (Get-ChildItem -LiteralPath $target -Force -ErrorAction SilentlyContinue | Measure-Object).Count",
+    "      Log ('attempt ' + $i + ' robocopy=' + $rc + ' left=' + $left + ' remove-failed: ' + $_.Exception.Message)",
+    "      Start-Sleep -Seconds 1",
+    "    }",
+    "  }",
+    "} catch { Log ('fatal: ' + $_.Exception.Message) }",
+    "Log ('done=' + $done)",
     "[void](Remove-Item -LiteralPath $empty -Recurse -Force)",
     "if (-not $done) { exit 1 }",
     "exit 0",

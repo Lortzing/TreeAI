@@ -837,7 +837,7 @@ async function cmdUninstall(args: readonly string[]): Promise<number> {
      robocopy 空→目标 /MIR 先清场（PS 5.1 Remove-Item 删不掉超 MAX_PATH 的
      node_modules 深路径，run 36747308856），实现与单测在 core.ts。 */
   if (process.platform === "win32") {
-    const script = windowsSelfDeleteScript(BUNDLE_ROOT);
+    const script = windowsSelfDeleteScript(BUNDLE_ROOT, join(dataDir(), "uninstall-selfdelete.log"));
     const child = spawn("powershell", ["-NoProfile", "-Command", script], {
       detached: true,
       stdio: "ignore",
