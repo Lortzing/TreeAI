@@ -94,6 +94,33 @@ term-frontend / d4-2-backend（并追加 d4-4-search-core）推进。本会话�
 （未受影响，agent 在飞）并在其完成后由本会话集成、过门禁、推送。各分支
 的集成与推送以登记方为准，避免双会话重复集成。
 
+**2026-09-30 21:45 更新（treeai-loop 13:33Z firing 集成会话）**：
+
+- **D4-1 P1 已落 main**：issue #8 增量验收的解析取消树作用域缺口已修复
+  （`2a2e373`：`cancelParseTask(treeId, taskId, materialId?)` 全链路校验 +
+  wrong-tree/missing-tree HTTP 回归 + 多树链接服务回归；证据/状态
+  `61cf401`，verify:d4 10 PASS / 0 FAIL / 7 NOT_RUN，studio 230/230，
+  全仓 581/581，selftest 全注入检出，run:d4-browser selftest 真实
+  Chrome 153 4 PASS / 0 FAIL / 6 NOT_RUN）。已推送 origin/main。
+- **在飞观察（13:42Z 检查）**：`wip/d4-7-installer` 有 agent 活跃，已提交
+  2 commits（`f5f5616` 安装核心、`27b77c5` 构建管线/CI/打包冒烟），但其
+  基点是旧 main `a6f411d`（本会话对其 ff 被该 agent 的 reset 撤销）——
+  **集成时需 rebase 到新 main 并解决 package.json/verify-d4.js 冲突**；
+  `wip/d4-4-wiring` 有 agent 活跃（search-service.ts 在写）；`wip/term-eval`
+  有 agent 活跃（eval-set-dev.json 在写）；`wip/d4-2-frontend` 按上节登记
+  属 `local_b0c1d2ca`（检查时 worktree 干净，agent 可能在读代码阶段）。
+  以上各支**本会话不重复实现、不触碰其 worktree**。
+- **本会话认领（先推送为准）**：(1) 新增 `wip/d4-8-nav`（worktree
+  `.claude/worktrees/d4-8-nav`，基于 main `61cf401`）：D4-8 大规模树导航
+  **引擎增量**——b9-nav 冻结规格的确定性生成器（`tests/fixtures/d4/b9-nav/
+  spec.json`）+ 结构真值 + 层级查询/路径/定位核心（persistence 查询 +
+  纯服务层）；**不碰** server.ts / app.js / search/ / materials/（HTTP
+  接线与前端树导航属后续波，避免与 d4-4-wiring/d4-2-frontend 冲突）。
+  迁移编号：0008/0009 已用；0010 按上节 D4-4 登记弃用，**若 D4-8 需要迁移
+  （展开/阅读状态持久化）使用 0010**，在此备案。(2) **本波集成职责**：
+  各支完成后由本会话合并 main、过门禁、推送；其它会话避免重复集成，
+  冲突以先推送的登记为准。
+
 ## 上一波（2026-09-30 晚，已完成）
 
 D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
