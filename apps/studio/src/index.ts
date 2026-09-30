@@ -45,7 +45,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPiRuntime, createPiRuntimeFromConfig } from "@treeai/runtime-pi";
 import type { PiToolPolicyEvaluator } from "@treeai/runtime-pi";
-import { TreeRepository } from "@treeai/persistence";
+import { MaterialRepository, TreeRepository } from "@treeai/persistence";
 import { JsonlEventJournal } from "@treeai/event-journal";
 import type { PiRuntime } from "@treeai/contracts";
 import {
@@ -60,6 +60,7 @@ import {
 import { EchoSdkPort } from "./echo-port.ts";
 import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService } from "./terminology.ts";
+import { MaterialImportService } from "./materials/import-service.ts";
 import { createStudioServer } from "./server.ts";
 
 let piApiKeyValueGuard: string | null = null;
@@ -208,8 +209,15 @@ async function main(): Promise<void> {
   });
   const terminology = new TerminologyService({ repository, executor: terminologyExecutor, studio: service });
 
+  /* 材料导入（issue #8 D4-1）：同一产品库上的材料仓储 + 导入服务。解析器
+     注册表缺省只装 markdown（d4-md-v1）；pdf 槽位随 D4-1 集成在
+     import-service 的默认注册表一行装配——装配前 .pdf 导入 415 如实拒绝
+     （绝无伪成功）。上限为冻结缺省（20 MiB / 1,000,000 UTF-16 units）。 */
+  const materialRepository = MaterialRepository.open({ path: join(options.dataDir, "treeai.db") });
+  const materials = new MaterialImportService({ repository: materialRepository });
+
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
-  const studio = createStudioServer({ service, staticDir, terminology });
+  const studio = createStudioServer({ service, staticDir, terminology, materials });
   const port = await studio.listen(options.port);
 
   const banner = [
@@ -241,6 +249,9 @@ async function main(): Promise<void> {
     `treeai-studio: terminology executor isolated (model=${options.terminologyProviderId}/${options.terminologyModelId}, ` +
       `budget=${String(options.terminologyBudgetTokens)} est tokens, thinking=off)`,
   );
+  banner.push(
+    "treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)",
+  );
   banner.push("");
   process.stdout.write(scrubSecret(banner.join("\n")));
 
@@ -252,6 +263,7 @@ async function main(): Promise<void> {
       try {
         await service.dispose();
         await terminologyExecutor.dispose();
+        materialRepository.close();
         repository.close();
         // journal close 排空内部写入队列后落盘（追加式文件，重启续用）。
         await journal.close();

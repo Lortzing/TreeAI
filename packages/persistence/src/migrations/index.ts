@@ -19,6 +19,7 @@ import { returnIdempotencyMigration } from "./0004-return-idempotency.ts";
 import { returnIdempotencyTreeScopeMigration } from "./0005-return-idempotency-tree-scope.ts";
 import { returnAdoptionAttemptsMigration } from "./0006-return-adoption-attempts.ts";
 import { terminologyMigration } from "./0007-terminology.ts";
+import { materialCoreMigration } from "./0008-material-core.ts";
 
 /** 一条版本化 migration。`up` 必须只含幂等性不要求的 DDL（事务保护下执行一次）。 */
 export interface Migration {
@@ -36,6 +37,7 @@ export const MIGRATIONS: readonly Migration[] = [
   returnIdempotencyTreeScopeMigration,
   returnAdoptionAttemptsMigration,
   terminologyMigration,
+  materialCoreMigration,
 ];
 
 /** 当前代码支持的最高 schema 版本。 */

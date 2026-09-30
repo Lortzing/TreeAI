@@ -70,8 +70,8 @@ test("migrations bring a fresh database to the current product schema", () => {
     }>;
     assert.deepEqual(
       versions.map((v) => Number(v.version)),
-      [1, 2, 3, 4, 5, 6, 7],
-      "all product migrations must be registered on a fresh database",
+      Array.from({ length: LATEST_SCHEMA_VERSION }, (_, i) => i + 1),
+      "all registered migrations must be applied on a fresh database (1..LATEST, contiguous)",
     );
     raw.close();
   } finally {

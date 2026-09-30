@@ -51,12 +51,43 @@
  * {events: [{eventId, runId, seq, occurredAt, type, summary}]}，按写入顺序
  * （最新在后）；limit 缺省 50、须为 1..500 的整数（否则 400）。未知树 →
  * 404。未注入 journal → 空列表（诚实空态）。
+ *
+ * 材料 API（issue #8 D4-1，契约 §3；未注入 materials 服务 → 503 如实说明）：
+ *   POST /api/trees/:id/materials —— 导入：原始字节 body（本地 loopback，
+ *   无 multipart 依赖），文件名经 x-treeai-filename 头（UTF-8 百分号编码）。
+ *   201 {material, version, created, parseTaskId} 新建；同字节重导 200（树内
+ *   复用既有 material+version，零新行）；超限 413 material-too-large（读体
+ *   时即拒绝，内存有界）；不支持 415 material-unsupported（未知扩展名，或
+ *   D4-1 集成前的 .pdf——detail 如实说明，绝不伪成功）。导入即返回，版本
+ *   由异步解析任务推进 pending → parsing → ready|failed|canceled。
+ *   GET  /api/trees/:id/materials —— 列表（{materials:[{material, versions}]}）。
+ *   GET  /api/trees/:id/materials/:materialId —— 详情（版本链 + 阅读位置 +
+ *   近期解析任务）。
+ *   POST …/materials/:materialId/versions —— 新版本（同语义/同返回码）。
+ *   GET  …/materials/:materialId/versions/:versionId?afterBlock=&limit= ——
+ *   canonicalText 分块读取：{blocks:[{block, text}], nextAfterBlock, textUnits}
+ *   （缺省从头、limit 缺省 50，1..500；afterBlock 为块游标，读尽
+ *   nextAfterBlock=null）。仅 ready 版本可读：非 ready → 409
+ *   material-not-ready（不支持/失败/取消绝不伪装成空成功文档）。
+ *   POST …/materials/:materialId/parse-tasks/:taskId/cancel —— 取消解析：
+ *   200 canceled；已终态 409 parse-task-not-cancelable。迟到结果结构性
+ *   丢弃（版本行条件 UPDATE 由数据库仲裁，不可能复活/覆盖已取消状态）。
+ *   PUT  …/materials/:materialId/reading-position —— 持久化阅读位置
+ *   （{versionId, blockId?, focusStart?}；校验失败 400）→ 204 无 body。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { BranchId, RunId, TerminologyMode, TreeId, TurnId } from "@treeai/contracts";
+import type {
+  BranchId,
+  MaterialId,
+  MaterialVersionId,
+  RunId,
+  TerminologyMode,
+  TreeId,
+  TurnId,
+} from "@treeai/contracts";
 import {
   ConstraintViolationError,
   EntityNotFoundError,
@@ -68,6 +99,13 @@ import {
   TerminologyPromotionConflictError,
   type TerminologyService,
 } from "./terminology.ts";
+import {
+  MaterialImportService,
+  MaterialNotReadyError,
+  MaterialTooLargeError,
+  MaterialUnsupportedError,
+  ParseTaskNotCancelableError,
+} from "./materials/import-service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -90,6 +128,11 @@ export interface StudioServerOptions {
    * 未装配，绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
    */
   readonly terminology?: TerminologyService | null;
+  /**
+   * 材料导入服务（issue #8 D4-1；缺省不注入 → 材料路由 503，如实说明
+   * 未装配，绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
+   */
+  readonly materials?: MaterialImportService | null;
 }
 
 export interface StudioServer {
@@ -140,6 +183,26 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof TerminologyPromotionConflictError) {
     // 术语推广冲突（同批注异键 / 并发竞争判负）——既有推广不变。
     sendJson(res, 409, { error: { code: "terminology-promotion-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof MaterialUnsupportedError) {
+    // 不支持的材料（未知扩展名 / 解析器未装配，如 D4-1 集成前的 pdf）。
+    sendJson(res, 415, { error: { code: "material-unsupported", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof MaterialTooLargeError) {
+    // 超过单文件上限（charter §5：解析前拒绝）。
+    sendJson(res, 413, { error: { code: "material-too-large", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof MaterialNotReadyError) {
+    // 非 ready 版本的读取/建枝前置（不支持/失败/取消绝不伪装空成功文档）。
+    sendJson(res, 409, { error: { code: "material-not-ready", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof ParseTaskNotCancelableError) {
+    // 取消目标已终态（ready/failed/canceled）——操作冲突。
+    sendJson(res, 409, { error: { code: "parse-task-not-cancelable", message: err.message } } satisfies ApiErrorBody);
     return;
   }
   if (err instanceof TypeError) {
@@ -199,6 +262,52 @@ function requireString(body: Record<string, unknown>, field: string): string {
   return value;
 }
 
+/**
+ * 材料导入的原始字节 body（契约 §3：本地 loopback 原始字节上传，零
+ * multipart 依赖）。超限即刻停止累积（内存有界）但持续排空至流尾再拒绝
+ * ——既不缓冲超限数据，也让客户端确定性地读到 413 响应。
+ */
+async function readMaterialBody(req: IncomingMessage, maxBytes: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let exceeded = false;
+  for await (const chunk of req) {
+    const buffer = chunk as Buffer;
+    size += buffer.length;
+    if (exceeded) continue;
+    if (size > maxBytes) {
+      exceeded = true;
+      chunks.length = 0;
+      continue;
+    }
+    chunks.push(buffer);
+  }
+  if (exceeded) {
+    throw new MaterialTooLargeError(size, maxBytes);
+  }
+  return Buffer.concat(chunks);
+}
+
+/** x-treeai-filename 头（UTF-8 百分号编码）→ 文件名；缺失/畸形 → 400。 */
+function decodeFilenameHeader(req: IncomingMessage): string {
+  const raw = req.headers["x-treeai-filename"];
+  const joined = Array.isArray(raw) ? raw.join("") : raw;
+  if (typeof joined !== "string" || joined.trim().length === 0) {
+    throw new InvalidArgumentError("the x-treeai-filename header is required (UTF-8 percent-encoded)");
+  }
+  try {
+    return decodeURIComponent(joined);
+  } catch {
+    throw new InvalidArgumentError("the x-treeai-filename header is not valid percent-encoded UTF-8");
+  }
+}
+
+/** 204 No Content（无 body；阅读位置 PUT 的成功响应）。 */
+function sendNoContent(res: ServerResponse): void {
+  res.writeHead(204, { "cache-control": "no-store" });
+  res.end();
+}
+
 function asTreeId(raw: string): TreeId {
   return decodeURIComponent(raw) as TreeId;
 }
@@ -206,6 +315,7 @@ function asTreeId(raw: string): TreeId {
 export function createStudioServer(options: StudioServerOptions): StudioServer {
   const { service, staticDir } = options;
   const terminology = options.terminology ?? null;
+  const materials = options.materials ?? null;
   /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
   const sseResponses = new Set<ServerResponse>();
 
@@ -426,6 +536,173 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           }
           term.setCachePreference(cacheEnabled);
           sendJson(res, 200, { cacheEnabled: term.executor.cacheEnabled });
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* 材料导入/读取（issue #8 D4-1，契约 §3）。未装配（materials ===
+         null）→ 503 如实说明，绝不伪装成功。上传为原始字节 body +
+         x-treeai-filename 头（UTF-8 百分号编码）；404/415 预检在读 body
+         之前完成。 */
+      const materialsRootMatch = /^\/api\/trees\/([^/]+)\/materials$/.exec(pathname);
+      if (materialsRootMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(materialsRootMatch[1]!);
+        if (method === "GET") {
+          sendJson(res, 200, { materials: materials.listTreeMaterials(treeId) });
+          return;
+        }
+        if (method === "POST") {
+          const filename = decodeFilenameHeader(req);
+          materials.precheckImport(treeId, filename);
+          const bytes = await readMaterialBody(req, materials.limits.maxFileBytes);
+          const result = await materials.importMaterial(treeId, { filename, bytes });
+          sendJson(res, result.created ? 201 : 200, {
+            material: result.material,
+            version: result.version,
+            created: result.created,
+            parseTaskId: result.parseTaskId,
+          });
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      const materialMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)$/.exec(pathname);
+      if (materialMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(materialMatch[1]!);
+        const materialId = decodeURIComponent(materialMatch[2]!) as MaterialId;
+        if (method === "GET") {
+          sendJson(res, 200, materials.getMaterialDetail(treeId, materialId));
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* 新版本导入（同语义/同返回码：201 新字节 / 200 同字节复用 / 413 / 415）。 */
+      const materialVersionsMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/versions$/.exec(pathname);
+      if (materialVersionsMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(materialVersionsMatch[1]!);
+        const materialId = decodeURIComponent(materialVersionsMatch[2]!) as MaterialId;
+        if (method === "POST") {
+          const filename = decodeFilenameHeader(req);
+          materials.precheckImport(treeId, filename);
+          const bytes = await readMaterialBody(req, materials.limits.maxFileBytes);
+          const result = await materials.addMaterialVersion(treeId, materialId, { filename, bytes });
+          sendJson(res, result.created ? 201 : 200, {
+            material: result.material,
+            version: result.version,
+            created: result.created,
+            parseTaskId: result.parseTaskId,
+          });
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* canonicalText 分块读取：?afterBlock=&limit=（缺省从头、50 块）。 */
+      const materialVersionMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/versions\/([^/]+)$/.exec(pathname);
+      if (materialVersionMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(materialVersionMatch[1]!);
+        const materialId = decodeURIComponent(materialVersionMatch[2]!) as MaterialId;
+        const versionId = decodeURIComponent(materialVersionMatch[3]!) as MaterialVersionId;
+        if (method === "GET") {
+          const afterBlockRaw = url.searchParams.get("afterBlock");
+          let limit: number | undefined;
+          const limitRaw = url.searchParams.get("limit");
+          if (limitRaw !== null && limitRaw !== "") {
+            const parsed = Number(limitRaw);
+            if (!Number.isInteger(parsed)) {
+              throw new InvalidArgumentError(`limit must be an integer (got '${limitRaw}')`);
+            }
+            limit = parsed;
+          }
+          const page = materials.readVersionBlocks(treeId, materialId, versionId, {
+            afterBlock: afterBlockRaw === null || afterBlockRaw === "" ? null : afterBlockRaw,
+            limit,
+          });
+          sendJson(res, 200, page);
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* 取消解析任务（迟到结果不挂靠——版本行条件 UPDATE 结构性拒绝）。 */
+      const parseTaskCancelMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/parse-tasks\/([^/]+)\/cancel$/.exec(pathname);
+      if (parseTaskCancelMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const materialId = decodeURIComponent(parseTaskCancelMatch[2]!) as MaterialId;
+        const taskId = decodeURIComponent(parseTaskCancelMatch[3]!);
+        const task = materials.cancelParseTask(taskId, materialId);
+        sendJson(res, 200, { task });
+        return;
+      }
+
+      /* 持久化阅读位置（UPSERT 整体替换 → 204 无 body）。 */
+      const readingPositionMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/reading-position$/.exec(pathname);
+      if (readingPositionMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(readingPositionMatch[1]!);
+        const materialId = decodeURIComponent(readingPositionMatch[2]!) as MaterialId;
+        if (method === "PUT") {
+          const body = await readJsonBody(req);
+          const blockIdRaw = body["blockId"];
+          if (blockIdRaw !== undefined && blockIdRaw !== null && typeof blockIdRaw !== "string") {
+            throw new InvalidArgumentError("request field 'blockId' must be a string or null");
+          }
+          const focusRaw = body["focusStart"];
+          if (focusRaw !== undefined && focusRaw !== null && !Number.isInteger(focusRaw)) {
+            throw new InvalidArgumentError("request field 'focusStart' must be an integer or null");
+          }
+          materials.upsertReadingPosition(treeId, materialId, {
+            versionId: requireString(body, "versionId") as MaterialVersionId,
+            blockId: blockIdRaw === undefined ? null : (blockIdRaw as string | null),
+            focusStart: focusRaw === undefined ? null : (focusRaw as number | null),
+          });
+          sendNoContent(res);
           return;
         }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
