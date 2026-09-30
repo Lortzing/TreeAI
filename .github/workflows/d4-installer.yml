@@ -1,0 +1,119 @@
+# TreeAI D4-7 installer build + packaged-bundle smoke (issue #8 §5 / B8).
+#
+# Builds a versioned, checksummed install artifact per supported platform
+# (macOS Apple Silicon / Windows 11 x64 / Ubuntu 24.04 x64) on the matching
+# GitHub-hosted runner, then runs the packaged-bundle smoke
+# (scripts/d4/installer/smoke-bundle.mjs) against the built archive:
+# extract -> doctor -> first run (offline echo) -> health/static/offline API
+# roundtrip -> idempotent start -> stop/restart persistence -> port-conflict
+# auto-advance -> model-config error recovery -> broken-upgrade rollback ->
+# in-place upgrade (data preserved) -> uninstall (data kept / opt-in delete).
+#
+# Honesty boundary (matches D4-status): a green CI smoke is NOT the B8
+# "clean-install real test on the owner's target machines" — that stays with
+# the owner (Windows 11 x64 / Ubuntu 24.04 desktop). Artifacts are unsigned
+# and not notarized (recorded as absent in VERSION.json).
+#
+# This workflow must not reference any secret: `secrets.*` appears nowhere.
+# All smoke runs are offline (echo driver), zero credentials.
+
+name: d4-installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/d4/**"
+      - "apps/studio/**"
+      - "packages/**"
+      - ".github/workflows/d4-installer.yml"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d4-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build + smoke (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin-arm64
+            runner: macos-latest
+          - platform: win-x64
+            runner: windows-latest
+          - platform: linux-x64
+            runner: ubuntu-24.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node (pinned)
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24.21.0"
+          cache: npm
+
+      - name: Install dependencies (npm ci)
+        shell: bash
+        run: npm ci
+
+      - name: Build installer artifact
+        shell: bash
+        run: |
+          node scripts/d4/package-installer.mjs \
+            --platform "${{ matrix.platform }}" \
+            --version "0.0.0-ci.${GITHUB_SHA}" \
+            --out-dir dist/d4-installer
+
+      - name: Packaged-bundle smoke (offline, zero credentials)
+        shell: bash
+        run: |
+          archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-${{ matrix.platform }}.tar.gz"
+          if [ "${{ matrix.platform }}" = "win-x64" ]; then
+            archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.zip"
+          fi
+          node scripts/d4/installer/smoke-bundle.mjs --archive "$archive" --work-dir "$RUNNER_TEMP/d47-smoke"
+
+      - name: Verify SHA256SUMS matches the built archive
+        shell: bash
+        run: |
+          node -e '
+            const { readFileSync, createHash } = require("node:fs");
+            const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");
+            let bad = 0;
+            for (const line of lines) {
+              const m = /^([0-9a-f]{64})  (.+)$/.exec(line.trim());
+              if (m === null) { console.log("MALFORMED LINE:", line); bad++; continue; }
+              const actual = createHash("sha256").update(readFileSync(`dist/d4-installer/${m[2]}`)).digest("hex");
+              const ok = actual === m[1];
+              console.log(`${ok ? "OK" : "MISMATCH"}  ${m[2]}`);
+              if (!ok) bad++;
+            }
+            if (bad > 0) process.exit(1);
+            console.log(`SHA256SUMS.txt: ${lines.length} file(s) verified`);
+          '
+
+      - name: Upload installer artifact + checksums
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65e675b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: d4-installer-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            dist/d4-installer/treeai-studio-*.tar.gz
+            dist/d4-installer/treeai-studio-*.zip
+            dist/d4-installer/treeai-studio-*.sha256
+            dist/d4-installer/SHA256SUMS.txt
+            dist/d4-installer/VERSION-treeai-studio-*.json
+            dist/d4-installer/build-report-*.json
+          retention-days: 14
+          if-no-files-found: error

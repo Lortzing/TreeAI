@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "d47-macos-evidence-1",
+  "runId": "d47-macos-20260930T135108Z",
+  "generatedAt": "2026-09-30T13:51:08.537Z",
+  "mode": "local-real-macos",
+  "host": {
+    "platform": "darwin/arm64",
+    "macOS": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+    "node": "v24.21.0"
+  },
+  "git": {
+    "commit": "fcb5fa33e89deebe1e5e020a5ec1bcddf636d6f9"
+  },
+  "versions": {
+    "a": "0.1.0-d47local-a",
+    "b": "0.1.0-d47local-b"
+  },
+  "realDataDir": "~/Library/Application Support/TreeAI",
+  "dataDirExistedBefore": false,
+  "installPathPattern": "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）",
+  "honesty": {
+    "browser": "首次运行用真实 macOS open 命令；URL 精确性另经 BROWSER 记录器捕获",
+    "upgradeAB": "A/B 为同一提交的两个版本号：本实测验证升级机制（停机/备份/替换/健康验证/回滚/数据不动），非跨提交内容差异",
+    "blocked": "Windows 11 x64 与 Ubuntu 24.04 的干净安装实测属负责人目标机验证（B8 BLOCKED），本机证据不替代"
+  }
+}

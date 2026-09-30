@@ -470,7 +470,7 @@ const CHECKS = [
     fn: notRunCheck(
       "b8-install-crossplatform",
       "D4-7",
-      "installers/cross-platform not implemented; requires clean-environment installs on macOS/Windows/Ubuntu",
+      "engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute",
     ),
   },
   {

@@ -26,7 +26,10 @@
     "verify:d4": "node scripts/verify-d4.js",
     "verify:d4:selftest": "node scripts/verify-d4-selftest.js",
     "run:d4-browser": "node scripts/run-d4-browser.mjs",
-    "record:d4": "node scripts/record-d4-evidence.mjs"
+    "record:d4": "node scripts/record-d4-evidence.mjs",
+    "package:d4": "node scripts/d4/package-installer.mjs",
+    "smoke:d4-installer": "node scripts/d4/installer/smoke-bundle.mjs",
+    "test:d4-macos-local": "node scripts/d4/installer/test-macos-local.mjs"
   },
   "devDependencies": {
     "@types/node": "24.13.5",

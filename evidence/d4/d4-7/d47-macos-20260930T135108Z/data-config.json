@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "port": 8787,
+  "driver": "echo"
+}
