@@ -285,3 +285,11 @@ cli/index 接线，约 140 行）。按接管纪律：先全部保全提交至�
 裸 `+` 被当字面参数传给 launcher，start 全线「不认识的参数：+」；doctor
 恰因不解析参数漏过）——改为先拼 `$nodeArgs` 数组再 splat，附内容级 +
 pwsh 执行级单测；随本波推送触发三平台 CI 复跑。
+
+**2026-10-01 集成记录（treeai-loop 调度会话）**：A（`wip/d4-3-backend`，tip
+`a69e6c2`）与 B（`wip/d4-5-export`，tip `174543d`）已合并 main（`f90777f`、
+`5573a1d`）——合并复验全绿：typecheck、全仓 **675/675**、verify:d4 **13
+PASS / 0 FAIL / 5 NOT_RUN**（b1–b5 全部真执行，`d4-offline-20260930T174144157Z`）、
+双 selftest、verify:d2 21-0-0-1 基线不变。verify-d4.js 的 b3/b5 接线经
+自动合并无冲突（不同区段）。D4-3/D4-5 的 D4-status 行已更新。仍在飞：
+C（wip/d4-8-nav）、D（wip/d4-4-frontend）、E（wip/d4-browser-probes）。
