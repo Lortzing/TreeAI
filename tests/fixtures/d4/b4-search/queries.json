@@ -1,0 +1,725 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "purpose": "B4 冻结查询集：≥40 条正向查询（每条带唯一预指定目标 factId，供 D4-4「前 5 项命中≥95%」验收作分母）+ ≥10 条无结果查询（语料中确实不存在，不得编造匹配）。coverage 标注 zh/en/code/old-version；带 treeId 的查询是「当前树」范围查询；old-version 查询的文本须存在于版本对 v1 真值且在 v2 中已改写（其目标为引用旧句的批注事实）。",
+  "positive": [
+    {
+      "id": "q-pos-01",
+      "text": "递归假设",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-101"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-02",
+      "text": "基线条件",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-101"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-03",
+      "text": "栈帧",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-04",
+      "text": "递归的可靠性来自归纳",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-103"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-05",
+      "text": "双栏排版",
+      "treeId": "tree-b4-01",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-104"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-06",
+      "text": "打印缩进",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "turn-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-07",
+      "text": "词法环境的组合体",
+      "treeId": "tree-b4-02",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-08",
+      "text": "词法作用域",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-09",
+      "text": "记忆化",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-10",
+      "text": "保存私有状态",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-11",
+      "text": "长生不老",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-12",
+      "text": "组合锐音符",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-301"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-13",
+      "text": "全角字母",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-302"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-14",
+      "text": "全角空格和半角空格",
+      "treeId": "tree-b4-03",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "turn-301"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-15",
+      "text": "摊还分析",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-302"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-16",
+      "text": "下标是偏移量而不是序号",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-302"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-17",
+      "text": "半开区间",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-303"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-18",
+      "text": "可以独立验证",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-305"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-19",
+      "text": "比成功样本更能暴露边界",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-305"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-20",
+      "text": "页眉重复出现",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-305"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-21",
+      "text": "展开三层之后",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "turn-101"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-22",
+      "text": "返回值组合是否正确",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-101"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-23",
+      "text": "尝试、递归、撤销",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-24",
+      "text": "第三处递归出现在这里",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-103"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-25",
+      "text": "朴素版本对每个 n 重复计算子问题",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-26",
+      "text": "逐代码单元",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "ret-301"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-27",
+      "text": "扩展 B 区",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-302"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-28",
+      "text": "高代理 D840",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "anno-301"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-29",
+      "text": "带着记账本的递归",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-105"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-30",
+      "text": "长文的尾巴从这里开始",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-105"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-31",
+      "text": "表达树形思维的默认语法",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-105"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-32",
+      "text": "数独求解",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-104"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-33",
+      "text": "边遍历边删除",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-303"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-34",
+      "text": "运行标题",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-305"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-35",
+      "text": "问题分解手记",
+      "coverage": [
+        "zh"
+      ],
+      "expect": [
+        {
+          "factId": "frag-305"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-36",
+      "text": "递归深度超过一百层必然栈溢出",
+      "coverage": [
+        "zh",
+        "old-version"
+      ],
+      "expect": [
+        {
+          "factId": "anno-104"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-37",
+      "text": "基准数据尚未测量",
+      "coverage": [
+        "zh",
+        "old-version"
+      ],
+      "expect": [
+        {
+          "factId": "anno-204"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-38",
+      "text": "所有配置项默认值写在文件末尾",
+      "treeId": "tree-b4-03",
+      "coverage": [
+        "zh",
+        "old-version"
+      ],
+      "expect": [
+        {
+          "factId": "anno-303"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-39",
+      "text": "recursive leap of faith",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "anno-103"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-40",
+      "text": "base case",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "frag-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-41",
+      "text": "induction",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "frag-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-42",
+      "text": "closure",
+      "treeId": "tree-b4-02",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "frag-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-43",
+      "text": "lexical scope",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "anno-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-44",
+      "text": "decided by where code is written",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "anno-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-45",
+      "text": "memoization caches",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "anno-203"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-46",
+      "text": "stack overflow",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "anno-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-47",
+      "text": "live reference",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "turn-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-48",
+      "text": "memory leaks",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "turn-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-49",
+      "text": "running header",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "turn-302"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-50",
+      "text": "bundled together with the environment",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "frag-201"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-51",
+      "text": "lose track after three levels",
+      "coverage": [
+        "en"
+      ],
+      "expect": [
+        {
+          "factId": "frag-102"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-52",
+      "text": "fibNaive",
+      "coverage": [
+        "code"
+      ],
+      "expect": [
+        {
+          "factId": "frag-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-53",
+      "text": "fibMemo",
+      "coverage": [
+        "code"
+      ],
+      "expect": [
+        {
+          "factId": "ret-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-54",
+      "text": "memo.get(n)",
+      "coverage": [
+        "code"
+      ],
+      "expect": [
+        {
+          "factId": "ret-202"
+        }
+      ]
+    },
+    {
+      "id": "q-pos-55",
+      "text": "Map<number, number>",
+      "coverage": [
+        "code"
+      ],
+      "expect": [
+        {
+          "factId": "frag-202"
+        }
+      ]
+    }
+  ],
+  "noResult": [
+    {
+      "id": "q-neg-01",
+      "text": "马卡龙烘焙温度"
+    },
+    {
+      "id": "q-neg-02",
+      "text": "小提琴协奏曲"
+    },
+    {
+      "id": "q-neg-03",
+      "text": "票据贴现率"
+    },
+    {
+      "id": "q-neg-04",
+      "text": "企鹅迁徙路线"
+    },
+    {
+      "id": "q-neg-05",
+      "text": "分子料理"
+    },
+    {
+      "id": "q-neg-06",
+      "text": "庭审质证"
+    },
+    {
+      "id": "q-neg-07",
+      "text": "杜鹃花扦插"
+    },
+    {
+      "id": "q-neg-08",
+      "text": "玄武岩柱状节理"
+    },
+    {
+      "id": "q-neg-09",
+      "text": "glockenspiel"
+    },
+    {
+      "id": "q-neg-10",
+      "text": "hurdy-gurdy"
+    },
+    {
+      "id": "q-neg-11",
+      "text": "defenestration"
+    },
+    {
+      "id": "q-neg-12",
+      "text": "bakeMacaronTimer"
+    }
+  ]
+}
