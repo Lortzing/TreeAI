@@ -45,6 +45,15 @@
   terminology.ts、app.js、server.ts、迁移、tests/fixtures/（避开
   MANIFEST 纪律）——与在飞各支无文件冲突。真实模型跑批与两人标注为
   owner/后续波次事项。
+- `wip/d4-4-wiring`（worktree d4-4-wiring，2026-09-30 21:35 追加，基于
+  main `f64969c`；登记会话：wave-2 集成会话，agent 在飞）：D4-4 集成
+  接线——`apps/studio/src/search/search-service.ts` 文档装配（材料×版本
+  含旧版本 + 批注/Return/Turn，同一装配路径供 HTTP 与 b4 检查共用）、
+  server.ts 两个搜索端点、`tests/support/verifier/d4-b4-search.ts` +
+  verify:d4 b4-cross-material-find 真执行（55/55 top-5 + 12/12 零命中）。
+  迁移 0010 预计按引擎按请求确定性重建的设计**弃用**（无库内索引表），
+  集成时在此记录。文件面：search/、server.ts（标记区段）、
+  tests/、verify-d4.js、docs/d4/D4-contracts.md §3——与在飞各支无冲突。
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
