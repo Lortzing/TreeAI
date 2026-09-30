@@ -1,0 +1,135 @@
+{
+  "fixtureId": "md-09",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# 学习资源清单：前端工程师的自修路线\n\n这份清单是我给自己排的自修路线，按学习顺序整理。每个条目都标注了它解决的具体问题——收藏夹里躺着一百个链接不叫学习计划，知道先读哪个才叫。\n\n## 官方文档优先\n\n[MDN Web Docs](https://developer.mozilla.org/zh-CN/docs/Web) 是 HTML、CSS、JavaScript 的第一事实来源。它的兼容性表格和可运行示例能省掉一半的搜索时间。中文翻译质量参差，我的习惯是先读英文原文，卡住再对照中文页。\n\n[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) 覆盖了日常 90% 的类型问题。<https://www.typescriptlang.org/play> 是官方演练场，贴一段类型代码就能看到推断结果，比在项目里改来改去快得多。\n\n[Node.js API 文档](https://nodejs.org/docs/latest/api/) 按 API 名组织的参考手册。读 `node:fs` 和 `node:test` 两章的次数最多——前者因为路径参数的语义反复忘，后者因为内置测试框架正在取代我们项目里的第三方框架。\n\n## 规范与提案\n\n[ECMAScript 规范](https://tc39.es/ecma262/) 只在需要精确语义时才读，例如 `Array.prototype.sort` 的稳定性保证或 `Promise` 的微任务顺序。[TC39 提案列表](https://github.com/tc39/proposals) 用来跟踪语言方向，stage 3 的提案值得提前了解。\n\nCSS 方面，[CSS Working Group 的当前工作](https://www.w3.org/Style/CSS/current-work) 列出每份规范的成熟度。层级（layer）、容器查询（container queries）这些新特性我都是先在这里确认状态再投入学习。\n\n## 书与长文\n\n- 《JavaScript: The Definitive Guide》当字典用，通读性价比不高。\n- [You Don't Know JS](https://github.com/getify/You-Dont-Know-JS) 系列，作用域与 this 的章节值得精读两遍。\n- 《CSS: The Definitive Guide》的布局章节，读完 flex 和 grid 的部分再回头干活，手感完全不同。\n\n长文里我反复推荐的一篇是 [A Complete Guide to Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)，它把 flex 容器和 flex 项目的主轴交叉轴属性拆成两张图，背下这两张图基本就够了。\n\n## 练习场\n\n- <https://exercism.org> 按语言组织的练习，带导师点评。\n- [Frontend Mentor](https://www.frontendmentor.io/challenges) 提供设计稿，练「按图还原」的硬功夫。\n- <https://web.dev/learn> Google 的渐进式课程，性能章节的 Core Web Vitals 部分最值得看。\n\n## 订阅与降噪\n\n信息源宁缺毋滥。我现在只保留三个：[JavaScript Weekly](https://javascriptweekly.com/) 邮件摘要、官方博客的 RSS，加一个中文社区周报。其余全部退订——每周省下的时间足够多读一章手册。\n\n## 清单维护规则\n\n链接会失效，认知会过时，所以这份清单每季度大修一次：删掉半年没点开过的，补上这季真正帮到我的，并把「解决了什么问题」那栏重写一遍。资源清单的意义不在于全，在于每一项都答得上「为什么是它」。\n",
+  "textUnits": 1703,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 21,
+      "text": "# 学习资源清单：前端工程师的自修路线\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 21,
+      "end": 92,
+      "text": "这份清单是我给自己排的自修路线，按学习顺序整理。每个条目都标注了它解决的具体问题——收藏夹里躺着一百个链接不叫学习计划，知道先读哪个才叫。\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 92,
+      "end": 103,
+      "text": "## 官方文档优先\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 103,
+      "end": 250,
+      "text": "[MDN Web Docs](https://developer.mozilla.org/zh-CN/docs/Web) 是 HTML、CSS、JavaScript 的第一事实来源。它的兼容性表格和可运行示例能省掉一半的搜索时间。中文翻译质量参差，我的习惯是先读英文原文，卡住再对照中文页。\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 250,
+      "end": 421,
+      "text": "[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) 覆盖了日常 90% 的类型问题。<https://www.typescriptlang.org/play> 是官方演练场，贴一段类型代码就能看到推断结果，比在项目里改来改去快得多。\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 421,
+      "end": 568,
+      "text": "[Node.js API 文档](https://nodejs.org/docs/latest/api/) 按 API 名组织的参考手册。读 `node:fs` 和 `node:test` 两章的次数最多——前者因为路径参数的语义反复忘，后者因为内置测试框架正在取代我们项目里的第三方框架。\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 568,
+      "end": 578,
+      "text": "## 规范与提案\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 578,
+      "end": 759,
+      "text": "[ECMAScript 规范](https://tc39.es/ecma262/) 只在需要精确语义时才读，例如 `Array.prototype.sort` 的稳定性保证或 `Promise` 的微任务顺序。[TC39 提案列表](https://github.com/tc39/proposals) 用来跟踪语言方向，stage 3 的提案值得提前了解。\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 759,
+      "end": 903,
+      "text": "CSS 方面，[CSS Working Group 的当前工作](https://www.w3.org/Style/CSS/current-work) 列出每份规范的成熟度。层级（layer）、容器查询（container queries）这些新特性我都是先在这里确认状态再投入学习。\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 903,
+      "end": 912,
+      "text": "## 书与长文\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 912,
+      "end": 1120,
+      "text": "- 《JavaScript: The Definitive Guide》当字典用，通读性价比不高。\n- [You Don't Know JS](https://github.com/getify/You-Dont-Know-JS) 系列，作用域与 this 的章节值得精读两遍。\n- 《CSS: The Definitive Guide》的布局章节，读完 flex 和 grid 的部分再回头干活，手感完全不同。\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 1120,
+      "end": 1267,
+      "text": "长文里我反复推荐的一篇是 [A Complete Guide to Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)，它把 flex 容器和 flex 项目的主轴交叉轴属性拆成两张图，背下这两张图基本就够了。\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 1267,
+      "end": 1275,
+      "text": "## 练习场\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 1275,
+      "end": 1468,
+      "text": "- <https://exercism.org> 按语言组织的练习，带导师点评。\n- [Frontend Mentor](https://www.frontendmentor.io/challenges) 提供设计稿，练「按图还原」的硬功夫。\n- <https://web.dev/learn> Google 的渐进式课程，性能章节的 Core Web Vitals 部分最值得看。\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 1468,
+      "end": 1478,
+      "text": "## 订阅与降噪\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 1478,
+      "end": 1597,
+      "text": "信息源宁缺毋滥。我现在只保留三个：[JavaScript Weekly](https://javascriptweekly.com/) 邮件摘要、官方博客的 RSS，加一个中文社区周报。其余全部退订——每周省下的时间足够多读一章手册。\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 1597,
+      "end": 1608,
+      "text": "## 清单维护规则\n\n"
+    },
+    {
+      "blockId": "blk-17",
+      "kind": "markdown-block",
+      "start": 1608,
+      "end": 1703,
+      "text": "链接会失效，认知会过时，所以这份清单每季度大修一次：删掉半年没点开过的，补上这季真正帮到我的，并把「解决了什么问题」那栏重写一遍。资源清单的意义不在于全，在于每一项都答得上「为什么是它」。\n"
+    }
+  ]
+}

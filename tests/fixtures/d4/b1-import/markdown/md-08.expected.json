@@ -1,0 +1,184 @@
+{
+  "fixtureId": "md-08",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# 命令行学习笔记：从 man 到管道\n\n命令行是我重新学了一遍的技能。最早只会背命令，后来学会了读文档和拼管道，效率才真正上去。这份笔记按我当时的练习顺序记录，每一节都是一次真实的终端会话。\n\n## 先学会求助\n\nman 是第一入口，但 man 手册按章节组织，同一个词在不同章节含义不同。`man 1 printf` 是 shell 命令，`man 3 printf` 是 C 库函数：\n\n```\n$ whatis printf\nprintf (1)          - format and print data\nprintf (3p)         - print formatted output\n```\n\nwhatis 一眼列出所有章节的匹配项，比直接 man 少绕一圈。tldr 是另一个好东西，它用例子代替正式语法说明，适合快速上手陌生命令。\n\n## 目录与文件\n\n第一周练的都是基本功。pwd、cd、ls 的组合肌肉记忆化之后，我才发现 ls 的颜色和图标参数有多省事：\n\n```\n$ ls -lah\ntotal 48\ndrwxr-xr-x   6 tal  staff   192B Sep 30 09:00 .\ndrwxr-xr-x@ 42 tal  staff   1.3K Sep 30 08:59 ..\n-rw-r--r--   1 tal  staff    12K Sep 29 22:41 notes.md\n-rw-r--r--   1 tal  staff   288B Sep 30 07:15 todo.txt\n```\n\n-h 让大小变成人类可读，-a 露出隐藏文件。mkdir -p a/b/c 一口气建出嵌套目录，rm -i 在删除前逐个确认，这两个参数救过我不止一次。\n\n## 管道是把小工具接成大工具\n\n管道的哲学是每个程序做好一件事，文本流经之处皆可组合。统计一个日志里出现最多的十个 IP：\n\n```\n$ awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -n 10\n   1204 203.0.113.7\n    843 198.51.100.22\n    512 192.0.2.14\n```\n\nawk 取第一列，sort 排序让相同行相邻，uniq -c 计数，再按数字逆排取前十。五行管道顶得上一段临时脚本，而且每一段都可以单独拆下来调试。我的练习方法是把管道拆开逐段看输出，直到能预判每一段的结果再拼回去。\n\n## 查找与替换\n\nfind 负责按名字和类型找文件，xargs 把找到的名单交给别的命令处理。批量把所有 markdown 文件里的旧术语换掉：\n\n```\n$ find . -name '*.md' -print0 | xargs -0 grep -l '旧术语' | xargs sed -i '' 's/旧术语/新术语/g'\n```\n\n-print0 和 -0 是搭档，用空字符分隔文件名，路径里带空格也不会裂开。sed 的 -i 直接改写文件，太危险，所以我在正式执行前会先跑一遍不带 -i 的版本，肉眼确认替换效果。\n\n## 进程与退出码\n\n每条命令结束都会留下退出码：0 表示成功，非 0 表示失败。`echo $?` 查看上一条的退出码。&& 和 || 依据退出码决定是否继续，串起来的命令就有了条件逻辑：\n\n```\n$ npm test && git commit -am \"pass tests\" || echo \"tests failed, nothing committed\"\n```\n\n测试通过才提交，失败就报警。写脚本时我养成了给每个关键命令检查退出码的习惯，宁可啰嗦，不可假装成功。\n\n## 这份笔记的学习方法\n\n- 每学一个命令，立刻造一个五分钟内能用上它的小任务。\n- 管道先拆开看每段输出，再拼回去。\n- 危险参数（rm -r、sed -i）先跑无害版本预演。\n\n终端不是复古情怀，是把「说明意图」的成本降到最低的人机界面。打字比点选快，管道比脚本轻，退出码比弹窗诚实。\n",
+  "textUnits": 1729,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 21,
+      "text": "# 命令行学习笔记：从 man 到管道\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 21,
+      "end": 98,
+      "text": "命令行是我重新学了一遍的技能。最早只会背命令，后来学会了读文档和拼管道，效率才真正上去。这份笔记按我当时的练习顺序记录，每一节都是一次真实的终端会话。\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 98,
+      "end": 108,
+      "text": "## 先学会求助\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 108,
+      "end": 197,
+      "text": "man 是第一入口，但 man 手册按章节组织，同一个词在不同章节含义不同。`man 1 printf` 是 shell 命令，`man 3 printf` 是 C 库函数：\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 197,
+      "end": 311,
+      "text": "```\n$ whatis printf\nprintf (1)          - format and print data\nprintf (3p)         - print formatted output\n```\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 311,
+      "end": 383,
+      "text": "whatis 一眼列出所有章节的匹配项，比直接 man 少绕一圈。tldr 是另一个好东西，它用例子代替正式语法说明，适合快速上手陌生命令。\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 383,
+      "end": 393,
+      "text": "## 目录与文件\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 393,
+      "end": 448,
+      "text": "第一周练的都是基本功。pwd、cd、ls 的组合肌肉记忆化之后，我才发现 ls 的颜色和图标参数有多省事：\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 448,
+      "end": 683,
+      "text": "```\n$ ls -lah\ntotal 48\ndrwxr-xr-x   6 tal  staff   192B Sep 30 09:00 .\ndrwxr-xr-x@ 42 tal  staff   1.3K Sep 30 08:59 ..\n-rw-r--r--   1 tal  staff    12K Sep 29 22:41 notes.md\n-rw-r--r--   1 tal  staff   288B Sep 30 07:15 todo.txt\n```\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 683,
+      "end": 761,
+      "text": "-h 让大小变成人类可读，-a 露出隐藏文件。mkdir -p a/b/c 一口气建出嵌套目录，rm -i 在删除前逐个确认，这两个参数救过我不止一次。\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 761,
+      "end": 778,
+      "text": "## 管道是把小工具接成大工具\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 778,
+      "end": 825,
+      "text": "管道的哲学是每个程序做好一件事，文本流经之处皆可组合。统计一个日志里出现最多的十个 IP：\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 825,
+      "end": 966,
+      "text": "```\n$ awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -n 10\n   1204 203.0.113.7\n    843 198.51.100.22\n    512 192.0.2.14\n```\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 966,
+      "end": 1076,
+      "text": "awk 取第一列，sort 排序让相同行相邻，uniq -c 计数，再按数字逆排取前十。五行管道顶得上一段临时脚本，而且每一段都可以单独拆下来调试。我的练习方法是把管道拆开逐段看输出，直到能预判每一段的结果再拼回去。\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 1076,
+      "end": 1086,
+      "text": "## 查找与替换\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 1086,
+      "end": 1151,
+      "text": "find 负责按名字和类型找文件，xargs 把找到的名单交给别的命令处理。批量把所有 markdown 文件里的旧术语换掉：\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 1151,
+      "end": 1247,
+      "text": "```\n$ find . -name '*.md' -print0 | xargs -0 grep -l '旧术语' | xargs sed -i '' 's/旧术语/新术语/g'\n```\n\n"
+    },
+    {
+      "blockId": "blk-17",
+      "kind": "markdown-block",
+      "start": 1247,
+      "end": 1341,
+      "text": "-print0 和 -0 是搭档，用空字符分隔文件名，路径里带空格也不会裂开。sed 的 -i 直接改写文件，太危险，所以我在正式执行前会先跑一遍不带 -i 的版本，肉眼确认替换效果。\n\n"
+    },
+    {
+      "blockId": "blk-18",
+      "kind": "markdown-block",
+      "start": 1341,
+      "end": 1352,
+      "text": "## 进程与退出码\n\n"
+    },
+    {
+      "blockId": "blk-19",
+      "kind": "markdown-block",
+      "start": 1352,
+      "end": 1438,
+      "text": "每条命令结束都会留下退出码：0 表示成功，非 0 表示失败。`echo $?` 查看上一条的退出码。&& 和 || 依据退出码决定是否继续，串起来的命令就有了条件逻辑：\n\n"
+    },
+    {
+      "blockId": "blk-20",
+      "kind": "markdown-block",
+      "start": 1438,
+      "end": 1531,
+      "text": "```\n$ npm test && git commit -am \"pass tests\" || echo \"tests failed, nothing committed\"\n```\n\n"
+    },
+    {
+      "blockId": "blk-21",
+      "kind": "markdown-block",
+      "start": 1531,
+      "end": 1583,
+      "text": "测试通过才提交，失败就报警。写脚本时我养成了给每个关键命令检查退出码的习惯，宁可啰嗦，不可假装成功。\n\n"
+    },
+    {
+      "blockId": "blk-22",
+      "kind": "markdown-block",
+      "start": 1583,
+      "end": 1597,
+      "text": "## 这份笔记的学习方法\n\n"
+    },
+    {
+      "blockId": "blk-23",
+      "kind": "markdown-block",
+      "start": 1597,
+      "end": 1675,
+      "text": "- 每学一个命令，立刻造一个五分钟内能用上它的小任务。\n- 管道先拆开看每段输出，再拼回去。\n- 危险参数（rm -r、sed -i）先跑无害版本预演。\n\n"
+    },
+    {
+      "blockId": "blk-24",
+      "kind": "markdown-block",
+      "start": 1675,
+      "end": 1729,
+      "text": "终端不是复古情怀，是把「说明意图」的成本降到最低的人机界面。打字比点选快，管道比脚本轻，退出码比弹窗诚实。\n"
+    }
+  ]
+}

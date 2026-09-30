@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "purpose": "D4 冻结验收集总登记（issue #8 charter §6 / docs/d4/D4-contracts.md §6）：优化前入仓的固定 fixture、答案与查询集，外加不作为文件提交、验证时确定性生成的超限负例登记。真值规则、选区规则、无效选区规则与阈值以契约 §6 为准；机械校验统一由 tests/support/verifier/d4-probes.ts 执行（node --test tests/unit/d4-fixtures-integrity.test.ts、scripts/verify-d4.js、scripts/verify-d4-selftest.js 三个消费方共用）。本树全部提交文件哈希钉在 MANIFEST.sha256（由整合波次生成并随变更重生成）。",
+  "schema": {
+    "version": "登记格式版本，恒为 1（探针断言）。",
+    "frozenAt": "冻结日期，ISO yyyy-mm-dd。",
+    "sets": "分册指针表：key = 分册名；description 说明该分册内容与验收行；files 列出该分册登记文件（相对本文件）。",
+    "sets.b1-import.generatedOversize": "超限负例登记（不提交文件）：id 唯一标识；material 材料类型；limit.charter/limit.rule/limit.value 为契约 §5 上限；recipe 给出验证时确定性生成的精确配方（重复单元 + 次数公式 + 字节数）；expect 为预期拒绝原因。生成器落地（D4-6+）须按 recipe 逐字节可复现。"
+  },
+  "sets": {
+    "b1-import": {
+      "description": "B1 导入/版本：≥12 Markdown + ≥12 文字层 PDF，每个 ready fixture 附 *.expected.json 真值（canonicalText + 块图）；≥8 负例（negative/，含 sidecar）；版本对 version-pairs/。真值由 scripts/d4/reference-markdown-normalizer.mjs（d4-md-v1）与 scripts/d4/gen-pdf-fixtures.mjs（d4-pdf-v1）生成，重跑必须逐字节相同。",
+      "files": [
+        "b1-import/md-registry.json",
+        "b1-import/pdf-registry.json"
+      ],
+      "generatedOversize": [
+        {
+          "id": "oversize-md-20mib",
+          "material": "markdown",
+          "limit": {
+            "charter": "§5 建议首版支持上限：单文件 20 MiB",
+            "rule": "max-material-bytes",
+            "value": 20971520,
+            "unit": "bytes"
+          },
+          "notCommitted": true,
+          "recipe": "验证时确定性生成（不提交文件）：重复单元 U = \"超限探针段：单文件体积超过 20 MiB（20971520 字节）的 Markdown 材料必须在解析前明确拒绝，不得静默截断或耗尽内存。\\n\\n\"（UTF-8 编码，157 字节/段）；令 N = floor(20971520 / 157) + 1 = 133577，文件内容 = U 重复 N 次，总字节 20971589 > 20971520，规范文本 UTF-16 码元数与块数不超其余上限。断言：导入在解析前以「超限」明确拒绝（exit-before-parse，耗尽资源前）。",
+          "expect": "rejected-oversize-bytes"
+        },
+        {
+          "id": "oversize-pdf-200pages",
+          "material": "pdf",
+          "limit": {
+            "charter": "§5 建议首版支持上限：文本 PDF 200 页",
+            "rule": "max-pdf-pages",
+            "value": 200,
+            "unit": "pages"
+          },
+          "notCommitted": true,
+          "recipe": "验证时确定性生成（不提交文件）：用 scripts/d4/gen-pdf-fixtures.mjs 同一套确定性 pdfwriter 原语生成 201 页文本层 PDF；第 n 页文本 = \"超限探针 第 {n}/201 页：文本 PDF 超过 200 页（charter §5 上限）必须在解析前明确拒绝。\"（n = 1..201，UTF-8，无随机量、无时间戳）。断言：导入以「超限」明确拒绝，页计数在解析文本层前完成。",
+          "expect": "rejected-oversize-pages"
+        },
+        {
+          "id": "oversize-md-1m-units",
+          "material": "markdown",
+          "limit": {
+            "charter": "§5 建议首版支持上限：单材料解析规范文本 100 万 UTF-16 单元",
+            "rule": "max-canonical-text-units",
+            "value": 1000000,
+            "unit": "utf-16-code-units"
+          },
+          "notCommitted": true,
+          "recipe": "验证时确定性生成（不提交文件）：重复单元 U = \"超限探针段：单材料解析规范文本超过 100 万 UTF-16 码元（charter §5 上限）必须在解析前明确拒绝，不得静默截断；本段为确定性重复单元，归一化后每段独立成块。\\n\\n\"（UTF-8 编码，219 字节/段，90 UTF-16 码元/段）；令 N = floor(1000000 / 90) + 1 = 11112，文件内容 = U 重复 N 次：规范文本 = 1000080 码元 > 1000000，文件字节 2433528 < 20971520（不触体积上限，超限原因唯一）。断言：导入以「超限」明确拒绝。",
+          "expect": "rejected-oversize-text-units"
+        }
+      ]
+    },
+    "b2-anchors": {
+      "description": "B2 精确锚点：Markdown/PDF 各 ≥30 个有效选区（locator = text-occurrence 或 utf16-range，探针重解析并比对 start/end/excerpt/blockId，构造性 100%）+ ≥12 个无效/变更/不支持选区（每项 category + expectReason，探针按类别机械复核其确实无效）。失败样例不得事后移出分母。",
+      "files": [
+        "b2-anchors/markdown-selections.json",
+        "b2-anchors/pdf-selections.json",
+        "b2-anchors/invalid-selections.json"
+      ]
+    },
+    "b4-search": {
+      "description": "B4 搜索：≥40 正向查询 + ≥10 无结果查询 + 种子产品事实（3 棵树），全部机械复核（查询文本必须真实出现在目标真值/无结果文本必须缺席全语料）。",
+      "files": [
+        "b4-search/facts.json",
+        "b4-search/queries.json"
+      ]
+    },
+    "b6-scale": {
+      "description": "B6 规模数据集规格+种子（生成器随 D4-6 按本规格实现）：100 份材料、100 万规范文本单元、1 万条保存事实、1000 条 Branch。",
+      "files": [
+        "b6-scale/spec.json"
+      ]
+    },
+    "b9-nav": {
+      "description": "B9 大规模树结构规格+种子（生成器随 D4-8 按本规格实现）：≥100 棵树、≥10000 分支，含 5000 分支宽树、100 层深树等特殊形态。",
+      "files": [
+        "b9-nav/spec.json"
+      ]
+    }
+  }
+}

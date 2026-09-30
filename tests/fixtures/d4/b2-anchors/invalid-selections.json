@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "items": [
+    {
+      "id": "inv-01",
+      "category": "out-of-bounds",
+      "input": {
+        "fixture": "md-10",
+        "start": -1,
+        "end": 50
+      },
+      "expectReason": "start 为负：canonicalText 偏移从 0 起算，-1 越界。"
+    },
+    {
+      "id": "inv-02",
+      "category": "out-of-bounds",
+      "input": {
+        "fixture": "md-02",
+        "start": 3433,
+        "end": 3444
+      },
+      "expectReason": "end 超出 canonicalText 长度（3443）。"
+    },
+    {
+      "id": "inv-03",
+      "category": "zero-length",
+      "input": {
+        "fixture": "md-01",
+        "start": 120,
+        "end": 120
+      },
+      "expectReason": "start === end：零长度选区没有可摘录的内容。"
+    },
+    {
+      "id": "inv-04",
+      "category": "reversed",
+      "input": {
+        "fixture": "md-03",
+        "start": 400,
+        "end": 350
+      },
+      "expectReason": "end < start：区间方向颠倒。"
+    },
+    {
+      "id": "inv-05",
+      "category": "surrogate-split",
+      "input": {
+        "fixture": "md-06",
+        "start": 141,
+        "end": 148
+      },
+      "expectReason": "start=141 落在 🚀（U+1F680）代理对中间，按 UTF-16 码元切分会斩断星面字符。"
+    },
+    {
+      "id": "inv-06",
+      "category": "combining-split",
+      "input": {
+        "fixture": "md-07",
+        "start": 225,
+        "end": 231
+      },
+      "expectReason": "start=225 落在分解形式 café（e + U+0301）的基字符与组合尖音符之间，拆散了字素簇。"
+    },
+    {
+      "id": "inv-07",
+      "category": "emoji-split",
+      "input": {
+        "fixture": "md-06",
+        "start": 835,
+        "end": 841
+      },
+      "expectReason": "start=835 落在 👨‍💻（ZWJ 序列）内部：码元边界合法但字素簇被拆开。"
+    },
+    {
+      "id": "inv-08",
+      "category": "cross-page",
+      "input": {
+        "fixture": "pdf-01",
+        "start": 817,
+        "end": 819
+      },
+      "expectReason": "[817,819) 跨越 page-1 与 page-2 的页块边界，不是单页内的选区。"
+    },
+    {
+      "id": "inv-09",
+      "category": "cross-page",
+      "input": {
+        "fixture": "pdf-08",
+        "start": 3678,
+        "end": 3680
+      },
+      "expectReason": "[3678,3680) 跨越 pdf-08 相邻页块（10 页长文）的边界。"
+    },
+    {
+      "id": "inv-10",
+      "category": "block-mismatch",
+      "input": {
+        "fixture": "md-01",
+        "start": 13,
+        "end": 33,
+        "blockId": "blk-0"
+      },
+      "expectReason": "区间位于 blk-1，但锚点声明 blockId=blk-0，块归属不符。"
+    },
+    {
+      "id": "inv-11",
+      "category": "block-mismatch",
+      "input": {
+        "fixture": "pdf-02",
+        "start": 10,
+        "end": 30,
+        "blockId": "page-2"
+      },
+      "expectReason": "区间位于 page-1，但锚点声明 blockId=page-2。"
+    },
+    {
+      "id": "inv-12",
+      "category": "excerpt-mismatch",
+      "input": {
+        "fixture": "md-02",
+        "start": 0,
+        "end": 12,
+        "excerpt": "wrong-excerpt"
+      },
+      "expectReason": "摘录文本与 canonicalText.slice(0,12) 不一致。"
+    },
+    {
+      "id": "inv-13",
+      "category": "excerpt-mismatch",
+      "input": {
+        "fixture": "md-09",
+        "start": 40,
+        "end": 52,
+        "excerpt": "这段摘录是错的"
+      },
+      "expectReason": "摘录文本与 canonicalText 对应区间不一致。"
+    },
+    {
+      "id": "inv-14",
+      "category": "stale-version",
+      "input": {
+        "pair": "md-vpair",
+        "start": 234,
+        "end": 294
+      },
+      "expectReason": "锚点区间在 v1（偏移量分页）有原文，但 v2（游标分页）同一区间文本已改写——版本更新后锚点失效。"
+    },
+    {
+      "id": "inv-15",
+      "category": "stale-version",
+      "input": {
+        "pair": "md-vpair",
+        "start": 334,
+        "end": 414
+      },
+      "expectReason": "锚点区间落在 v1/v2 整体替换的中段，v2 同一偏移的文本不同，旧锚点必须判定失效。"
+    },
+    {
+      "id": "inv-16",
+      "category": "unsupported-material",
+      "input": {
+        "fixture": "neg-md-invalid-utf8"
+      },
+      "expectReason": "选区指向的 material 是负例（非法 UTF-8 被拒绝导入），不存在可锚定的规范文本。"
+    },
+    {
+      "id": "inv-17",
+      "category": "unsupported-material",
+      "input": {
+        "fixture": "neg-pdf-encrypted"
+      },
+      "expectReason": "选区指向的 material 是负例（加密 PDF 被拒绝导入），无文字层可供锚定。"
+    }
+  ]
+}

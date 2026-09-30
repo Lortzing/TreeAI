@@ -1,0 +1,163 @@
+{
+  "fixtureId": "md-04",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# TypeScript 工具类型实战笔记\n\n类型系统最好的学习材料是标准库自带的 utility types。这份笔记把我在真实项目里反复用到的几个泛型工具拆开重写了一遍，每次重写都能学到一点新的东西。\n\n## 手写 Pick\n\n`Pick<T, K>` 从对象类型里挑出部分字段。理解它的关键在三个构件：泛型参数上的约束 `K extends keyof T`、映射类型的语法，以及 `as` 子句的用法。下面是我自己实现 `MyPick` 的版本，行为与官方一致：\n\n```ts\ntype MyPick<T, K extends keyof T> = {\n  [P in K]: T[P];\n};\n```\n\n注意 `keyof T` 的位置：约束写在类型参数上，而不是写在映射里。这个位置决定了编译器能否在 K 里收窄出合法的键。如果传入的 K 里出现了 T 上不存在的键，错误会在约束处被拦下，报错信息也指向调用方而不是定义方。\n\n## 手写 Readonly 与 Mutable\n\n`Readonly<T>` 把所有字段变成只读。用映射类型加修饰符变体 `-?` 与 `readonly` 的组合，可以写出它的双向版本：\n\n```ts\ntype MyReadonly<T> = {\n  readonly [P in keyof T]: T[P];\n};\n\ntype MyMutable<T> = {\n  -readonly [P in keyof T]: T[P];\n};\n```\n\n`-readonly` 这个减号修饰符是我一度不知道存在的功能：映射类型不仅可以添加修饰符，还可以移除修饰符。工程里常见的场景是拿到一个第三方库的只读配置类型，然后在自己这一侧生成一个可写的草稿类型，只用于内部编辑态。\n\n## 条件类型提取返回值\n\n`Awaited<T>` 递归地拆开 Promise，取出最终 resolve 的值类型。它是 async 函数返回类型推断的基石：\n\n```ts\ntype MyAwaited<T> = T extends PromiseLike<infer U>\n  ? MyAwaited<U>\n  : T;\n```\n\n`infer U` 在 extends 子句里声明一个待推断的位子，匹配成功时 U 被绑定成 Promise 内部的类型。递归调用处理嵌套 Promise，直到 T 不再匹配 PromiseLike。这个模式在提取函数参数、提取数组元素时同样适用，值得背下来。\n\n## 函数重载与工具函数\n\n给工具函数写精确类型时，重载签名经常比一个万能签名更好。下面这个格式化函数根据标签是否存在返回不同的形状：\n\n```ts\nfunction createLabel(label: string, hint?: undefined): { label: string };\nfunction createLabel(label: string, hint: string): { label: string; hint: string };\nfunction createLabel(label: string, hint?: string) {\n  return hint === undefined ? { label } : { label, hint };\n}\n```\n\n实现签名对调用方不可见，调用方只能看到前两条重载。这就是为什么调用 `createLabel(\"x\")` 时返回值上没有 hint 字段——类型收窄发生在重载解析那一步。\n\n## 学到的三件事\n\n- 约束写在类型参数上，错误信息就会指向调用方，这是 API 友好度的一部分。\n- 映射类型的修饰符可以加也可以减，`-readonly` 和 `-?` 都合法。\n- `infer` 是条件类型里唯一的「挖洞」手段，洞的位置决定了你提取到什么。\n\n类型体操的尽头不是更炫的技巧，而是让调用方在错误的位置尽早看到错误。\n",
+  "textUnits": 1667,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 23,
+      "text": "# TypeScript 工具类型实战笔记\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 23,
+      "end": 104,
+      "text": "类型系统最好的学习材料是标准库自带的 utility types。这份笔记把我在真实项目里反复用到的几个泛型工具拆开重写了一遍，每次重写都能学到一点新的东西。\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 104,
+      "end": 116,
+      "text": "## 手写 Pick\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 116,
+      "end": 237,
+      "text": "`Pick<T, K>` 从对象类型里挑出部分字段。理解它的关键在三个构件：泛型参数上的约束 `K extends keyof T`、映射类型的语法，以及 `as` 子句的用法。下面是我自己实现 `MyPick` 的版本，行为与官方一致：\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 237,
+      "end": 307,
+      "text": "```ts\ntype MyPick<T, K extends keyof T> = {\n  [P in K]: T[P];\n};\n```\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 307,
+      "end": 420,
+      "text": "注意 `keyof T` 的位置：约束写在类型参数上，而不是写在映射里。这个位置决定了编译器能否在 K 里收窄出合法的键。如果传入的 K 里出现了 T 上不存在的键，错误会在约束处被拦下，报错信息也指向调用方而不是定义方。\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 420,
+      "end": 446,
+      "text": "## 手写 Readonly 与 Mutable\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 446,
+      "end": 517,
+      "text": "`Readonly<T>` 把所有字段变成只读。用映射类型加修饰符变体 `-?` 与 `readonly` 的组合，可以写出它的双向版本：\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 517,
+      "end": 583,
+      "text": "```ts\ntype MyReadonly<T> = {\n  readonly [P in keyof T]: T[P];\n};\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 583,
+      "end": 647,
+      "text": "type MyMutable<T> = {\n  -readonly [P in keyof T]: T[P];\n};\n```\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 647,
+      "end": 758,
+      "text": "`-readonly` 这个减号修饰符是我一度不知道存在的功能：映射类型不仅可以添加修饰符，还可以移除修饰符。工程里常见的场景是拿到一个第三方库的只读配置类型，然后在自己这一侧生成一个可写的草稿类型，只用于内部编辑态。\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 758,
+      "end": 772,
+      "text": "## 条件类型提取返回值\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 772,
+      "end": 840,
+      "text": "`Awaited<T>` 递归地拆开 Promise，取出最终 resolve 的值类型。它是 async 函数返回类型推断的基石：\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 840,
+      "end": 926,
+      "text": "```ts\ntype MyAwaited<T> = T extends PromiseLike<infer U>\n  ? MyAwaited<U>\n  : T;\n```\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 926,
+      "end": 1058,
+      "text": "`infer U` 在 extends 子句里声明一个待推断的位子，匹配成功时 U 被绑定成 Promise 内部的类型。递归调用处理嵌套 Promise，直到 T 不再匹配 PromiseLike。这个模式在提取函数参数、提取数组元素时同样适用，值得背下来。\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 1058,
+      "end": 1072,
+      "text": "## 函数重载与工具函数\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 1072,
+      "end": 1127,
+      "text": "给工具函数写精确类型时，重载签名经常比一个万能签名更好。下面这个格式化函数根据标签是否存在返回不同的形状：\n\n"
+    },
+    {
+      "blockId": "blk-17",
+      "kind": "markdown-block",
+      "start": 1127,
+      "end": 1410,
+      "text": "```ts\nfunction createLabel(label: string, hint?: undefined): { label: string };\nfunction createLabel(label: string, hint: string): { label: string; hint: string };\nfunction createLabel(label: string, hint?: string) {\n  return hint === undefined ? { label } : { label, hint };\n}\n```\n\n"
+    },
+    {
+      "blockId": "blk-18",
+      "kind": "markdown-block",
+      "start": 1410,
+      "end": 1497,
+      "text": "实现签名对调用方不可见，调用方只能看到前两条重载。这就是为什么调用 `createLabel(\"x\")` 时返回值上没有 hint 字段——类型收窄发生在重载解析那一步。\n\n"
+    },
+    {
+      "blockId": "blk-19",
+      "kind": "markdown-block",
+      "start": 1497,
+      "end": 1508,
+      "text": "## 学到的三件事\n\n"
+    },
+    {
+      "blockId": "blk-20",
+      "kind": "markdown-block",
+      "start": 1508,
+      "end": 1632,
+      "text": "- 约束写在类型参数上，错误信息就会指向调用方，这是 API 友好度的一部分。\n- 映射类型的修饰符可以加也可以减，`-readonly` 和 `-?` 都合法。\n- `infer` 是条件类型里唯一的「挖洞」手段，洞的位置决定了你提取到什么。\n\n"
+    },
+    {
+      "blockId": "blk-21",
+      "kind": "markdown-block",
+      "start": 1632,
+      "end": 1667,
+      "text": "类型体操的尽头不是更炫的技巧，而是让调用方在错误的位置尽早看到错误。\n"
+    }
+  ]
+}
