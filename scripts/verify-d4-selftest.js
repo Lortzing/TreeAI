@@ -44,6 +44,7 @@ function buildSyntheticTree(dest) {
   mkdirSync(dest, { recursive: true });
   cpSync(join(ROOT, "package.json"), join(dest, "package.json"));
   cpSync(join(ROOT, "scripts", "verify-d4.js"), join(dest, "scripts", "verify-d4.js"), { recursive: true, force: true });
+  cpSync(join(ROOT, "scripts", "verify-d4-selftest.js"), join(dest, "scripts", "verify-d4-selftest.js"), { recursive: true, force: true });
   cpSync(join(ROOT, "scripts", "run-d4-browser.mjs"), join(dest, "scripts", "run-d4-browser.mjs"), { recursive: true, force: true });
   cpSync(join(ROOT, "tests"), join(dest, "tests"), { recursive: true });
   cpSync(join(ROOT, "docs", "d4"), join(dest, "docs", "d4"), { recursive: true });
@@ -60,7 +61,18 @@ function runVerifier(root, runsRoot) {
     encoding: "utf8",
     timeout: 300_000,
   });
-  return { status: res.status, stdout: res.stdout ?? "", stderr: res.stderr ?? "" };
+  // The child always writes result.json into its (fresh) run dir — needles are
+  // asserted against the child's recorded check errors (verify-d2-selftest
+  // discipline), not stdout: the CLI prints check ids, not failure details.
+  let childResult = null;
+  try {
+    const runs = readdirSync(runsRoot).sort();
+    const lastRun = runs[runs.length - 1];
+    childResult = JSON.parse(readFileSync(join(runsRoot, lastRun, "result.json"), "utf8"));
+  } catch {
+    childResult = null;
+  }
+  return { status: res.status, stdout: res.stdout ?? "", stderr: res.stderr ?? "", childResult };
 }
 
 function regenerateManifest(root) {
@@ -187,11 +199,17 @@ function main() {
       }
 
       const sawCheckFail = run.stdout.includes(`[FAIL] ${scenario.expectCheck}`);
-      const sawNeedle = run.stdout.includes(scenario.expectNeedle) || run.stdout.includes(scenario.expectNeedle.slice(0, 40));
+      const failedCheck =
+        run.childResult?.results?.find((r) => r.id === scenario.expectCheck && r.status === "FAIL") ?? null;
+      const sawNeedle =
+        failedCheck !== null &&
+        typeof failedCheck.error?.message === "string" &&
+        failedCheck.error.message.includes(scenario.expectNeedle);
       if (run.status !== 2 || !sawCheckFail || !sawNeedle) {
         console.log(
           `  [FAIL] ${scenario.id}: verifier exited ${String(run.status)}; ` +
-            `check-fail seen: ${String(sawCheckFail)}; needle "${scenario.expectNeedle}" seen: ${String(sawNeedle)}`,
+            `check-fail seen: ${String(sawCheckFail)}; needle "${scenario.expectNeedle}" seen: ${String(sawNeedle)}` +
+            (failedCheck === null ? `; no recorded FAIL for ${scenario.expectCheck} in child result` : ""),
         );
         console.log(run.stdout.split("\n").slice(0, 14).join("\n"));
         failures += 1;
