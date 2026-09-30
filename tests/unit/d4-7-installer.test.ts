@@ -481,9 +481,11 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
   const root = mkdtempSync(join(tmpdir(), "treeai-d47-ps1-"));
   try {
     writeFileSync(join(root, "treeai.ps1"), treeaiPs1Content());
-    /* posix 上 Join-Path $root "node\\node.exe" 是含字面反斜杠的文件名——
-       造同名可执行 stub 即可让脚本原样跑通（Windows 上该链路由 CI 冒烟实测）。 */
-    const stub = "node\\node.exe";
+    /* POSIX pwsh 会把 Join-Path 子路径里的 "\\" 规范化为 "/"（实测
+       `/…/node\node.exe` → `/…/node/node.exe`），stub 落在与真实产物相同的
+       node/node.exe 布局即可两边一致；Windows 上该链路由 CI 冒烟实测。 */
+    mkdirSync(join(root, "node"), { recursive: true });
+    const stub = join("node", "node.exe");
     writeFileSync(
       join(root, stub),
       '#!/bin/sh\nprintf \'%s\\n\' "$@" > "$TREEAI_ARGV_OUT"\n',
@@ -501,10 +503,11 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
       rmSync(argvOut, { force: true });
       return lines;
     };
-    /* 带额外参数：argv 必须是 [launcher.ts, start, --no-browser]，绝无 '+'。 */
+    /* 带额外参数：argv 必须是 [launcher.ts, start, --no-browser]，绝无 '+'。
+       POSIX pwsh 会把子路径的 "\\" 规范化为 "/"，两种分隔符都接受。 */
     const withArgs = invoke(["start", "--no-browser"]);
     assert.equal(withArgs.length, 3, `argv 不得混入多余参数：${JSON.stringify(withArgs)}`);
-    assert.match(withArgs[0]!, /launcher\\launcher\.ts$/);
+    assert.match(withArgs[0]!, /launcher[\\/]launcher\.ts$/);
     assert.deepEqual(withArgs.slice(1), ["start", "--no-browser"]);
     /* 无剩余参数：argv 必须恰好 [launcher.ts, doctor]——无 '+'、无空串。 */
     const bare = invoke(["doctor"]);
