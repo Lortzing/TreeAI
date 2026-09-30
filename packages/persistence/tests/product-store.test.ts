@@ -16,7 +16,7 @@ import {
   TreeRepository,
   runMigrations,
 } from "../src/index.ts";
-import { cleanupTempDir, dbPath, makeClock, makeIdGenerator, makeSessionReference, makeTempDir } from "./helpers.ts";
+import { cleanupTempDir, dbPath, makeClock, makeIdGenerator, makeSessionReference, makeTempDir, modelFailure } from "./helpers.ts";
 
 interface Domain {
   readonly treeId: ReturnType<TreeRepository["createTree"]>["id"];
@@ -59,7 +59,7 @@ test("migrations bring a fresh database to the current product schema", () => {
     }>;
     assert.deepEqual(
       versions.map((v) => Number(v.version)),
-      [1, 2, 3, 4],
+      [1, 2, 3, 4, 5, 6],
       "all product migrations must be registered on a fresh database",
     );
     raw.close();
@@ -434,10 +434,10 @@ test("migration 0004 upgrades a v3 database in place; legacy return rows keep NU
       .run(at);
     raw.close();
 
-    // 正常打开：0004 前向增量应用，历史行两列保持 NULL。
+    // 正常打开：0004 起前向增量应用（当前注册到 0006），历史行两列保持 NULL。
     const repo = TreeRepository.open({ path });
     assert.equal(repo.schemaVersion, LATEST_SCHEMA_VERSION);
-    assert.equal(repo.schemaVersion, 4);
+    assert.ok(repo.schemaVersion >= 4, "migration 0004 must be applied");
     const legacy = repo.getTurn("turn-legacy" as TurnId);
     assert.equal(legacy.role, "return");
     assert.equal(legacy.idempotencyKey, null, "legacy return keeps a NULL idempotency key");
@@ -471,6 +471,221 @@ test("migration 0004 upgrades a v3 database in place; legacy return rows keep NU
       ConstraintViolationError,
     );
     repo.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("the same idempotency key is usable independently in two trees (signed v3 §3.4)", () => {
+  const dir = makeTempDir();
+  try {
+    const repo = TreeRepository.open({ path: dbPath(dir), now: makeClock(), generateId: makeIdGenerator("t") });
+    const forest = repo.createForest();
+    const tree1 = repo.createTree(forest.id);
+    const tree2 = repo.createTree(forest.id);
+    const trunk1 = repo.createBranch(tree1.id);
+    const branch1 = repo.createBranch(tree1.id, { parentBranchId: trunk1.id });
+    const trunk2 = repo.createBranch(tree2.id);
+    const branch2 = repo.createBranch(tree2.id, { parentBranchId: trunk2.id });
+    const episode1 = repo.createEpisode(trunk1.id);
+    const episode2 = repo.createEpisode(trunk2.id);
+
+    // 同一逻辑键在两棵树内各自落库——UNIQUE(tree_id, idempotency_key)。
+    const inTree1 = repo.createTurn({
+      treeId: tree1.id,
+      branchId: trunk1.id,
+      episodeId: episode1.id,
+      role: "return",
+      text: "return in tree one",
+      fromBranchId: branch1.id,
+      idempotencyKey: "key-shared",
+    });
+    const inTree2 = repo.createTurn({
+      treeId: tree2.id,
+      branchId: trunk2.id,
+      episodeId: episode2.id,
+      role: "return",
+      text: "return in tree two",
+      fromBranchId: branch2.id,
+      idempotencyKey: "key-shared",
+    });
+    assert.notEqual(inTree1.id, inTree2.id);
+
+    // 按键查找以树为命名空间：各树定位各自的 Return。
+    assert.equal(repo.findReturnByIdempotencyKey(tree1.id, "key-shared")?.id, inTree1.id);
+    assert.equal(repo.findReturnByIdempotencyKey(tree2.id, "key-shared")?.id, inTree2.id);
+    assert.equal(repo.findReturnByIdempotencyKey(tree1.id, "key-shared")?.text, "return in tree one");
+    assert.equal(repo.findReturnByIdempotencyKey(tree2.id, "key-shared")?.text, "return in tree two");
+
+    // 树内同键仍然至多一条。
+    const anotherEpisode = repo.createEpisode(trunk1.id);
+    assert.throws(
+      () =>
+        repo.createTurn({
+          treeId: tree1.id,
+          branchId: trunk1.id,
+          episodeId: anotherEpisode.id,
+          role: "return",
+          text: "same tree, same key",
+          fromBranchId: branch1.id,
+          idempotencyKey: "key-shared",
+        }),
+      ConstraintViolationError,
+    );
+
+    repo.close();
+
+    // 重开 round-trip：两棵树的同键各自还原。
+    const repo2 = TreeRepository.open({ path: dbPath(dir) });
+    assert.equal(repo2.findReturnByIdempotencyKey(tree1.id, "key-shared")?.id, inTree1.id);
+    assert.equal(repo2.findReturnByIdempotencyKey(tree2.id, "key-shared")?.id, inTree2.id);
+    repo2.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("migrations 0005/0006 upgrade a v4 database in place; idempotency scope narrows to per-tree", () => {
+  const dir = makeTempDir();
+  try {
+    const path = dbPath(dir);
+    const at = "2026-09-28T00:00:00.000Z";
+
+    // 构造 v4 库：tree-1 已有一条带键 return（0004 全局唯一索引下落库）。
+    const raw = new DatabaseSync(path);
+    runMigrations(raw, MIGRATIONS.slice(0, 4));
+    raw.prepare("INSERT INTO forests (id, created_at) VALUES ('forest-1', ?)").run(at);
+    for (const treeId of ["tree-1", "tree-2"]) {
+      raw.prepare("INSERT INTO trees (id, forest_id, created_at) VALUES (?, 'forest-1', ?)").run(treeId, at);
+      raw
+        .prepare(
+          `INSERT INTO branches (id, tree_id, parent_branch_id, created_at) VALUES ('${treeId}-trunk', ?, NULL, ?)`,
+        )
+        .run(treeId, at);
+      raw
+        .prepare(
+          `INSERT INTO branches (id, tree_id, parent_branch_id, created_at) VALUES ('${treeId}-branch', ?, '${treeId}-trunk', ?)`,
+        )
+        .run(treeId, at);
+      raw.prepare(`INSERT INTO episodes (id, branch_id, created_at) VALUES ('${treeId}-episode', '${treeId}-trunk', ?)`).run(at);
+    }
+    raw
+      .prepare(
+        `INSERT INTO turns (id, tree_id, branch_id, episode_id, run_id, role, text, pi_entry_id,
+                            from_branch_id, delivered_run_id, created_at, idempotency_key)
+         VALUES ('turn-keyed', 'tree-1', 'tree-1-trunk', 'tree-1-episode', NULL, 'return', 'keyed under v4',
+                 NULL, 'tree-1-branch', NULL, ?, 'key-upg')`,
+      )
+      .run(at);
+    raw.close();
+
+    // 正常打开：0005/0006 前向增量应用；v4 带键行原样保留。
+    const repo = TreeRepository.open({ path });
+    assert.equal(repo.schemaVersion, LATEST_SCHEMA_VERSION);
+    assert.ok(repo.schemaVersion >= 6, "migrations 0005 and 0006 must be applied");
+    const keyed = repo.getTurn("turn-keyed" as TurnId);
+    assert.equal(keyed.idempotencyKey, "key-upg", "v4 keyed return keeps its key across the upgrade");
+
+    // 作用域收窄生效：同一键在另一棵树内可独立落库；原树内仍唯一。
+    const inTree2 = repo.createTurn({
+      treeId: "tree-2" as TreeId,
+      branchId: "tree-2-trunk" as BranchId,
+      episodeId: "tree-2-episode" as never,
+      role: "return",
+      text: "same key, different tree",
+      fromBranchId: "tree-2-branch" as BranchId,
+      idempotencyKey: "key-upg",
+    });
+    assert.equal(repo.findReturnByIdempotencyKey("tree-1" as TreeId, "key-upg")?.id, "turn-keyed");
+    assert.equal(repo.findReturnByIdempotencyKey("tree-2" as TreeId, "key-upg")?.id, inTree2.id);
+    const anotherEpisode = repo.createEpisode("tree-1-trunk" as BranchId);
+    assert.throws(
+      () =>
+        repo.createTurn({
+          treeId: "tree-1" as TreeId,
+          branchId: "tree-1-trunk" as BranchId,
+          episodeId: anotherEpisode.id,
+          role: "return",
+          text: "same tree, same key after upgrade",
+          fromBranchId: "tree-1-branch" as BranchId,
+          idempotencyKey: "key-upg",
+        }),
+      ConstraintViolationError,
+    );
+    repo.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("return adoption attempts record per-run associations and survive reopen (signed v3 §3.2)", () => {
+  const dir = makeTempDir();
+  try {
+    const repo = TreeRepository.open({ path: dbPath(dir), now: makeClock(), generateId: makeIdGenerator("t") });
+    const ids = setupDomainWithRun(repo);
+    const trunkEpisode = repo.createEpisode(ids.rootBranchId);
+    const returnTurn = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: trunkEpisode.id,
+      role: "return",
+      text: "a conclusion to adopt",
+      fromBranchId: ids.secondBranchId,
+      idempotencyKey: "key-attempt",
+    });
+
+    // 两次主干 Run（第一次失败、第二次成功）都构成采用尝试。
+    const failingRun = repo.createRun(trunkEpisode.id, makeSessionReference());
+    repo.updateRunState(failingRun.id, "running");
+    repo.updateRunState(failingRun.id, "failed", { failure: modelFailure() });
+    const succeedingRun = repo.createRun(trunkEpisode.id, makeSessionReference());
+    repo.updateRunState(succeedingRun.id, "running");
+
+    assert.deepEqual(repo.listReturnAdoptionAttempts(returnTurn.id), [], "no attempts recorded before any run composes the return");
+    repo.recordReturnAdoptionAttempt(returnTurn.id, failingRun.id);
+    repo.recordReturnAdoptionAttempt(returnTurn.id, succeedingRun.id);
+
+    // 关联按尝试时刻排序；Run 结局留在 runs 行（读取面联合投影）。
+    const attempts = repo.listReturnAdoptionAttempts(returnTurn.id);
+    assert.deepEqual(
+      attempts.map((a) => a.runId),
+      [failingRun.id, succeedingRun.id],
+    );
+    assert.ok(attempts[0]!.attemptedAt <= attempts[1]!.attemptedAt);
+
+    // 复合主键：同一 (return, run) 只记录一次。
+    assert.throws(() => repo.recordReturnAdoptionAttempt(returnTurn.id, failingRun.id), ConstraintViolationError);
+
+    // 首-次-成-功 语义：markReturnDelivered 记录成功 Run；尝试关联不受影响。
+    repo.updateRunState(succeedingRun.id, "succeeded");
+    repo.markReturnDelivered(returnTurn.id, succeedingRun.id);
+    assert.equal(repo.getTurn(returnTurn.id).deliveredRunId, succeedingRun.id);
+    assert.equal(repo.listReturnAdoptionAttempts(returnTurn.id).length, 2, "attempts survive the first successful adoption");
+
+    // 校验：非 return turn / 未知 turn / 未知 run。
+    const plainTurn = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: ids.episodeId,
+      runId: ids.runId,
+      role: "user",
+      text: "plain question",
+    });
+    assert.throws(() => repo.recordReturnAdoptionAttempt(plainTurn.id, succeedingRun.id), InvalidArgumentError);
+    assert.throws(() => repo.recordReturnAdoptionAttempt("turn-missing" as TurnId, succeedingRun.id), EntityNotFoundError);
+    assert.throws(() => repo.recordReturnAdoptionAttempt(returnTurn.id, "run-missing" as never), EntityNotFoundError);
+    assert.deepEqual(repo.listReturnAdoptionAttempts(plainTurn.id), [], "non-return turns list no attempts");
+
+    repo.close();
+
+    // 重开 round-trip：尝试关联完整还原。
+    const repo2 = TreeRepository.open({ path: dbPath(dir) });
+    const reread = repo2.listReturnAdoptionAttempts(returnTurn.id);
+    assert.deepEqual(
+      reread.map((a) => a.runId),
+      [failingRun.id, succeedingRun.id],
+    );
+    repo2.close();
   } finally {
     cleanupTempDir(dir);
   }

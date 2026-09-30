@@ -193,6 +193,7 @@ test("HTTP API serves the UI and the full D3 flow, surviving a restart", async (
     assert.equal(returnRes.body.returnTurn.idempotencyKey, "key-main-flow");
     assert.ok(returnRes.body.returnTurn.targetAnchor !== null);
     assert.equal(returnRes.body.returnTurn.targetAnchor.anchorTurnId, anchorTurnId);
+    assert.equal(returnRes.body.navigation.status, "navigated", "save-then-navigate: the response separates the navigation result");
     assert.equal(returnRes.body.state.cursor.branchId, trunkBranchId);
 
     /* 下一次 Trunk prompt 送达 return。 */
@@ -257,7 +258,7 @@ test("HTTP API serves the UI and the full D3 flow, surviving a restart", async (
   }
 });
 
-test("return with a missing Pi session file: 502 before any write; retry creates no duplicate Return", async () => {
+test("return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5)", async () => {
   const dir = makeTempDataDir();
   const running: RunningStudio[] = [];
   try {
@@ -296,45 +297,62 @@ test("return with a missing Pi session file: 502 before any write; retry creates
     const countPersistedReturns = (): number =>
       studio2.instance.repository.listTurns(trunkBranchId as BranchId).filter((turn) => turn.role === "return").length;
 
-    /* 第一次提交 Return：导航回 Trunk 无法恢复缺失的 session 文件
-       → 502 session-corrupt，且 Return 尚未写入（同键重试语义的前提）。 */
+    /* 重启后基线游标（持久化的活动导航——仍指向分支续聊点）。 */
+    const baselineState = await call(studio2.url(treePath("state")), "GET");
+    const baselineCursor = baselineState.body.cursor;
+
+    /* 第一次提交 Return：保存先于导航——Return 落库（201），导航失败作为
+       分离结果随 navigation 字段返回（不是 HTTP 错误）。 */
     const first = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
       idempotencyKey: "key-missing-session",
     });
-    assert.equal(first.status, 502);
-    assert.equal(first.body.error.code, "session-corrupt");
+    assert.equal(first.status, 201, "the save succeeds although the session file is missing");
+    assert.equal(first.body.returnTurn.branchId, trunkBranchId);
+    assert.equal(first.body.navigation.status, "failed", "navigation fails separately from the save");
+    assert.equal(first.body.navigation.code, "session-corrupt");
+    assert.match(first.body.navigation.message, /session/i);
+    assert.equal(countPersistedReturns(), 1, "the Return is persisted before navigation runs");
 
-    /* 同一失败上重试（同键同文本）：仍 502，且仍零条 Return（不产生重复）。 */
+    /* 同键重试（session 仍缺失）：200 重放同一 Return，导航再次失败，
+       零新写入。 */
     const retry = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
       idempotencyKey: "key-missing-session",
     });
-    assert.equal(retry.status, 502);
-    assert.equal(retry.body.error.code, "session-corrupt");
-    assert.equal(countPersistedReturns(), 0, "no Return turn persisted after two failed submissions");
-    const failedState = await call(studio2.url(treePath("state")), "GET");
+    assert.equal(retry.status, 200, "the same-key retry replays the saved Return");
+    assert.equal(retry.body.returnTurn.id, first.body.returnTurn.id);
+    assert.equal(retry.body.navigation.status, "failed");
+    assert.equal(retry.body.navigation.code, "session-corrupt");
+    assert.equal(countPersistedReturns(), 1, "no duplicate Return after the retry");
+    const brokenState = await call(studio2.url(treePath("state")), "GET");
     assert.equal(
-      failedState.body.branches.flatMap((view: any) => view.turns).filter((turn: any) => turn.role === "return").length,
-      0,
-      "product state agrees: no Return turns visible",
+      brokenState.body.branches.flatMap((view: any) => view.turns).filter((turn: any) => turn.role === "return").length,
+      1,
+      "product state agrees: exactly one Return turn is visible",
+    );
+    assert.deepEqual(
+      brokenState.body.cursor,
+      baselineCursor,
+      "the failed navigation leaves the cursor exactly where it was (still on the branch)",
     );
 
-    /* session 文件恢复（缺失可修复）后同键重试：Return 恰好落库一次，
-       cursor 一致地在 Trunk，下一次 Trunk prompt 正常送达。 */
+    /* session 文件恢复（缺失可修复）后同键重试：仍 200 重放（保存早已
+       完成），这次导航成功——重试即重新导航的载体；下一次 Trunk prompt
+       正常送达。 */
     writeFileSync(sessionFile, sessionContent, "utf8");
     const recovered = await call(studio2.url(treePath("return")), "POST", {
       fromBranchId: branchId,
       text: "RETURN: use hi",
       idempotencyKey: "key-missing-session",
     });
-    assert.equal(recovered.status, 201);
-    assert.equal(recovered.body.returnTurn.branchId, trunkBranchId);
-    assert.equal(recovered.body.returnTurn.fromBranchId, branchId);
-    assert.equal(recovered.body.state.cursor.branchId, trunkBranchId, "trunk cursor consistency after success");
-    assert.equal(countPersistedReturns(), 1, "exactly one Return turn after the successful retry");
+    assert.equal(recovered.status, 200, "restore + retry still replays (no duplicate)");
+    assert.equal(recovered.body.returnTurn.id, first.body.returnTurn.id);
+    assert.equal(recovered.body.navigation.status, "navigated", "the retry navigates once the session is restored");
+    assert.equal(recovered.body.state.cursor.branchId, trunkBranchId, "trunk cursor consistency after the replay's navigation");
+    assert.equal(countPersistedReturns(), 1, "still exactly one Return turn");
 
     const t2 = await call(studio2.url(treePath("prompt")), "POST", { branchId: trunkBranchId, text: "t2" });
     assert.equal(t2.status, 200);

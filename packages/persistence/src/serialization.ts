@@ -102,6 +102,11 @@ export interface BranchOriginRow {
   sel_text: string;
   created_at: string;
 }
+export interface ReturnAdoptionAttemptRow {
+  return_turn_id: string;
+  run_id: string;
+  attempted_at: string;
+}
 export interface ActiveNavigationRow {
   tree_id: string;
   branch_id: string;
@@ -331,6 +336,13 @@ export function rowToBranchOrigin(row: BranchOriginRow): BranchOrigin {
     },
     createdAt: row.created_at as IsoTimestamp,
   };
+}
+
+export function rowToReturnAdoptionAttempt(row: ReturnAdoptionAttemptRow): {
+  runId: RunId;
+  attemptedAt: IsoTimestamp;
+} {
+  return { runId: row.run_id as RunId, attemptedAt: row.attempted_at as IsoTimestamp };
 }
 
 export function rowToActiveNavigation(row: ActiveNavigationRow): {

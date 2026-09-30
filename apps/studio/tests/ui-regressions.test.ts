@@ -104,12 +104,22 @@ interface Turn {
   createdAt: string;
 }
 
+interface ReturnAttempt {
+  turnId: string;
+  runId: string;
+  runState: string;
+  failure: { code: string; message: string } | null;
+  attemptedAt: string;
+  terminalAt: string | null;
+}
+
 interface BranchView {
   branch: Branch;
   origin: Origin | null;
   originStatus: "available" | "changed" | "unavailable" | null;
   sessionAvailability: "available" | "unavailable" | null;
   turns: Turn[];
+  returnAttempts: ReturnAttempt[];
 }
 
 interface TreeState {
@@ -182,8 +192,9 @@ function makeBranchView(
   origin: Origin | null,
   sessionAvailability: "available" | "unavailable" | null,
   turns: Turn[],
+  returnAttempts: ReturnAttempt[] = [],
 ): BranchView {
-  return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns };
+  return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns, returnAttempts };
 }
 
 /** 预置到 trunk 的已落库 Return（冲突 / 对账命中场景的服务端种子）。 */
@@ -299,6 +310,8 @@ interface Backend {
   switchCount: number;
   switchMode: "ok" | "fail";
   returnMode: "ok" | "lose-response" | "fail";
+  /** /return 保存后的回程导航结果脚本（signed v3 §3.5：保存与导航分离）。 */
+  returnNavigation: "ok" | "fail";
   promptFailure: PromptFailure | null;
   sourceMode: "ok" | "degraded";
   branchCounter: number;
@@ -749,6 +762,8 @@ interface WorldOptions {
   promptFailure?: PromptFailure;
   /** POST /return 的场景模式（缺省 ok）。 */
   returnMode?: Backend["returnMode"];
+  /** /return 响应的 navigation 字段脚本（保存后导航失败场景）。 */
+  returnNavigation?: Backend["returnNavigation"];
   /** POST /branches/:id/source 的场景（缺省 ok = available）。 */
   sourceMode?: Backend["sourceMode"];
   /** 预置到 trunk 的已落库 Return 种子（服务端幂等语义按键 + 内容裁决）。 */
@@ -815,6 +830,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     switchCount: 0,
     switchMode: "ok",
     returnMode: options.returnMode ?? "ok",
+    returnNavigation: options.returnNavigation ?? "ok",
     promptFailure: options.promptFailure ?? null,
     sourceMode: options.sourceMode ?? "ok",
     branchCounter: 0,
@@ -916,11 +932,20 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       const text = String(record.text ?? "");
       const idempotencyKey = typeof record.idempotencyKey === "string" ? record.idempotencyKey : null;
       /* 服务端幂等语义（W1 §2.3）：同键同（fromBranchId + text）→ 200 重放
-         （零新写入）；同键异容 → 409 return-conflict（零写入）。 */
+         （零新写入）；同键异容 → 409 return-conflict（零写入）。两种成功
+         均携带 navigation（signed v3 §3.5：保存后导航结果分离返回）。 */
+      const navigation =
+        backend.returnNavigation === "fail"
+          ? {
+              status: "failed",
+              code: "session-corrupt",
+              message: "simulated navigation failure — the session store is damaged",
+            }
+          : { status: "navigated" };
       const existing = findSeededReturn(backend.treeState, idempotencyKey);
       if (existing !== null) {
         if (existing.fromBranchId === fromBranchId && existing.text === text) {
-          return respond(200, { returnTurn: existing, state: backend.treeState });
+          return respond(200, { returnTurn: existing, navigation, state: backend.treeState });
         }
         return respond(409, {
           error: {
@@ -952,7 +977,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
             error: { code: "internal", message: "simulated response loss — the server recorded the return" },
           });
         }
-        return respond(201, { returnTurn, state: backend.treeState });
+        return respond(201, { returnTurn, navigation, state: backend.treeState });
       }
       return respond(500, { error: { code: "internal", message: "return rejected (scripted failure)" } });
     }
@@ -1339,11 +1364,11 @@ test("panel open reconciles persisted drafts: an already-recorded return drops t
   assert.equal(returnInput.value, BA1_TEXT, "the stale draft is dropped; the input falls back to the prefill convention");
   assert.ok(world.localStorageStore.get(draftKey) === undefined, "the stale persisted draft is removed from localStorage");
 
-  /* 已提交的 Return 呈现 confirmed/delivered 卡（非草稿复活）。 */
+  /* 已提交的 Return 呈 delivered 卡（非草稿复活）。 */
   const conversation = world.el("conversation");
   assert.ok(conversation.textContent.includes("Already submitted."), "the recorded Return renders in the trunk");
   assert.ok(
-    conversation.textContent.includes("delivered into Trunk context"),
+    conversation.textContent.includes("successfully adopted into Trunk context"),
     "the delivered state renders (deliveredRunId cross-reference)",
   );
 
@@ -1404,7 +1429,8 @@ test("closePanel navigation failure after a successful return surfaces in the vi
   returnInput.value = "The conclusion to return.";
   returnInput.dispatchEvent("input", {});
 
-  /* 提交成功，但回主干的游标对齐（POST /switch）失败。 */
+  /* 提交成功（服务端导航也成功），但回主干的客户端游标对齐
+     （POST /switch）失败。 */
   world.backend.switchMode = "fail";
   world.el("submit-return").click();
   await settle();
@@ -1413,10 +1439,62 @@ test("closePanel navigation failure after a successful return surfaces in the vi
   assert.equal(world.el("branch-panel").hidden, true, "the panel closed after the successful return");
   const mainError = world.el("error-banner");
   assert.equal(mainError.hidden, false, "the closePanel/navigation failure surfaces in the visible MAIN error banner");
+  assert.ok(mainError.textContent.includes("Return saved"), "the banner names the successful save (save and navigation are separate facts)");
   assert.ok(mainError.textContent.includes("switch rejected"), "the main banner carries the navigation failure message");
   assert.equal(world.el("panel-error-banner").hidden, true, "no error is buried in the now-hidden panel banner");
   /* Return 本身已成功：草稿清除、卡渲染、焦点回主线。 */
   assert.ok(world.localStorageStore.get("treeai-return-draft:tree-1:branch-1") === undefined, "the return itself succeeded — the draft is cleared");
   assert.ok(world.el("conversation").textContent.includes("The conclusion to return."), "the Return card renders in the trunk");
   assert.equal(world.document.activeElement, world.el("prompt-input"), "focus returned to the main input");
+});
+
+/* ------------------------------------------------------------------ */
+/* 8. 保存成功 + 服务端导航失败（signed v3 §3.5）：分离呈现，不重放导航   */
+/* ------------------------------------------------------------------ */
+
+test("a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch", async () => {
+  const world = await createWorld({ returnNavigation: "fail" });
+  const draftKey = "treeai-return-draft:tree-1:branch-1";
+  await openBranchOnePanel(world);
+  const returnInput = world.el("return-input");
+  returnInput.value = "Saved but not navigated.";
+  returnInput.dispatchEvent("input", {});
+  const draft = readPersistedDraft(world.localStorageStore.get(draftKey));
+  assert.ok(draft !== null);
+
+  const switchCountBefore = world.backend.switchCount;
+  world.el("submit-return").click();
+  await settle();
+  await sleep(220);
+
+  /* 保存成功：201 处理为成功（单次 POST /return、草稿清除、面板收起、
+     卡渲染）——导航失败绝不把已保存的 Return 伪装成提交失败。 */
+  const posts = world.requestsOf("/return");
+  assert.equal(posts.length, 1, "exactly one POST /return");
+  assert.ok(world.localStorageStore.get(draftKey) === undefined, "the save succeeded — the draft is cleared");
+  assert.equal(world.el("branch-panel").hidden, true, "the panel closes (staying open would invite duplicate submissions)");
+  assert.ok(world.el("conversation").textContent.includes("Saved but not navigated."), "the saved Return card renders in the trunk");
+  assert.ok(
+    world.el("conversation").textContent.includes("saved — pending adoption on the next Trunk discussion"),
+    "the card shows the saved/pending badge (no adoption has happened yet)",
+  );
+
+  /* 导航失败分离呈现：主线横幅如实呈「已保存 + 返回主线失败」；且不
+     重放 /switch（服务端已尝试并失败——重导航留给 Trunk tab，不在提交
+     收尾里再撞一次；面板打开时的 /switch 在提交之前，不计入）。 */
+  assert.equal(world.backend.switchCount, switchCountBefore, "no /switch is replayed after the failed server-side navigation");
+  const returnRequestIndex = world.backend.requests.findIndex(
+    (r) => r.method === "POST" && r.path.split("?")[0]!.endsWith("/return"),
+  );
+  assert.ok(returnRequestIndex >= 0, "the submit POST /return is recorded");
+  const switchesAfterSubmit = world.backend.requests.filter(
+    (r, index) => index > returnRequestIndex && r.method === "POST" && r.path.split("?")[0]!.endsWith("/switch"),
+  );
+  assert.equal(switchesAfterSubmit.length, 0, "closePanel skips the switch when the server already reported navigation failure");
+  const mainError = world.el("error-banner");
+  assert.equal(mainError.hidden, false, "the navigation failure surfaces in the visible main banner");
+  assert.ok(mainError.textContent.includes("Return saved"), "the banner states the return IS saved");
+  assert.ok(mainError.textContent.includes("returning to the Trunk failed"), "the banner states the navigation failed");
+  assert.ok(mainError.textContent.includes("session-corrupt"), "the banner carries the navigation failure code");
+  assert.equal(world.el("panel-error-banner").hidden, true, "no error is buried in the now-hidden panel banner");
 });

@@ -765,6 +765,41 @@ test("return idempotency: same key+content replays the same turn; different cont
   }
 });
 
+test("return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const one = await makeTreeWithAnchoredBranch(service);
+    const two = await makeTreeWithAnchoredBranch(service);
+
+    /* 同一逻辑键在两棵树内各自有效：两次提交均为新建，互不干扰。 */
+    const inOne = await service.submitReturn(one.treeId, one.branchId, "RETURN: from tree one", "key-cross-tree");
+    const inTwo = await service.submitReturn(two.treeId, two.branchId, "RETURN: from tree two", "key-cross-tree");
+    assert.equal(inOne.created, true, "the shared key is new in tree one");
+    assert.equal(inTwo.created, true, "the same key is also new in tree two (per-tree scope)");
+    assert.notEqual(inOne.turn.id, inTwo.turn.id);
+    assert.equal(inOne.navigation.status, "navigated");
+    assert.equal(inTwo.navigation.status, "navigated");
+
+    /* 树内重放/冲突语义不变：tree two 内同键同内容重放、同键异容冲突。 */
+    const replayInTwo = await service.submitReturn(two.treeId, two.branchId, "RETURN: from tree two", "key-cross-tree");
+    assert.equal(replayInTwo.created, false);
+    assert.equal(replayInTwo.turn.id, inTwo.turn.id);
+    await assert.rejects(
+      () => service.submitReturn(two.treeId, two.branchId, "RETURN: different text", "key-cross-tree"),
+      ReturnConflictError,
+    );
+    await assert.rejects(
+      () => service.submitReturn(one.treeId, one.branchId, "RETURN: different text", "key-cross-tree"),
+      ReturnConflictError,
+    );
+    await studio.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
 test("concurrent same-key submits converge to one return (race-safe, no dangling episode)", async () => {
   const dir = makeTempDataDir();
   try {
@@ -809,7 +844,7 @@ test("concurrent same-key submits converge to one return (race-safe, no dangling
   }
 });
 
-test("missing session: submit rejects with no return persisted; restore + same-key retry lands exactly once", async () => {
+test("missing session: submit saves the return first, navigation fails separately; same-key retries replay without duplicates (signed v3 §3.5)", async () => {
   const dir = makeTempDataDir();
   try {
     const studio = makeStudioInstance(dir);
@@ -829,20 +864,44 @@ test("missing session: submit rejects with no return persisted; restore + same-k
     const countReturns = () =>
       studio2.repository.listTurns(trunkId).filter((t) => t.role === "return").length;
 
-    /* 导航回 Trunk 无法恢复缺失的 session 文件 → session-corrupt，
-       且 Return 未落库。 */
-    await assert.rejects(
-      () => studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session"),
-      (err: unknown) => (err as { code?: unknown }).code === "session-corrupt",
-    );
-    assert.equal(countReturns(), 0, "no return persisted when navigation fails");
+    /* 保存先于导航：session 文件缺失时 Return 照常落库，导航失败作为
+       分离结果返回（failed + session-corrupt），绝不回滚已保存的 Return。 */
+    const saved = await studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session");
+    assert.equal(saved.created, true, "the return is saved although the session file is missing");
+    assert.equal(saved.turn.role, "return");
+    assert.equal(saved.turn.idempotencyKey, "key-missing-session");
+    assert.equal(countReturns(), 1, "the return is persisted before navigation runs");
+    assert.equal(saved.navigation.status, "failed", "navigation fails separately from the save");
+    assert.equal(saved.navigation.status === "failed" ? saved.navigation.code : "", "session-corrupt");
 
-    /* session 文件恢复后同键重试：恰好落库一次（不因先前失败产生重复）。 */
+    /* session 仍缺失时同键重试：重放（零新写入），导航再次失败——重试
+       不会产生第二条 Return，也不会把已保存的 Return 伪装成失败。 */
+    const replayedWhileBroken = await studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session");
+    assert.equal(replayedWhileBroken.created, false, "the same-key retry replays the saved return");
+    assert.equal(replayedWhileBroken.turn.id, saved.turn.id);
+    assert.equal(countReturns(), 1, "still exactly one return row");
+    assert.equal(replayedWhileBroken.navigation.status, "failed");
+    assert.equal(
+      replayedWhileBroken.navigation.status === "failed" ? replayedWhileBroken.navigation.code : "",
+      "session-corrupt",
+    );
+
+    /* session 文件恢复后同键重试：仍是重放（保存早已完成），但这次导航
+       成功——重试即重新导航的载体。 */
     writeFileSync(sessionFile, sessionContent, "utf8");
     const retried = await studio2.service.submitReturn(treeId, branchId, "RETURN: retry me", "key-missing-session");
-    assert.equal(retried.created, true);
-    assert.equal(retried.turn.idempotencyKey, "key-missing-session");
+    assert.equal(retried.created, false, "restore + retry still replays (no duplicate)");
+    assert.equal(retried.turn.id, saved.turn.id);
     assert.equal(countReturns(), 1, "exactly one return after restore + same-key retry");
+    assert.equal(retried.navigation.status, "navigated", "the retry navigates back once the session is restored");
+    const stateAfterRestore = studio2.service.getTreeState(treeId);
+    assert.notEqual(stateAfterRestore.cursor, null, "the replay's navigation moved the cursor to the trunk");
+    assert.equal(stateAfterRestore.cursor?.branchId, trunkId);
+
+    /* 后续主干 prompt 采用该 Return（保存成功 + 导航曾失败 ≠ 已采用）。 */
+    const adopted = await studio2.service.prompt(treeId, trunkId, "trunk question after recovery");
+    assert.equal(adopted.run.state, "succeeded");
+    assert.equal(adopted.deliveredReturns, 1);
     await studio2.shutdown();
   } finally {
     cleanupDir(dir);
@@ -905,7 +964,12 @@ test("empty-trunk return: submit persists directly without a session; the first 
     assert.equal(submission.turn.role, "return");
     assert.equal(submission.turn.branchId, trunkId, "the return lands on the Trunk");
     assert.equal(submission.turn.fromBranchId, branchId);
-    assert.equal(submission.turn.deliveredRunId, null, "confirmed, not yet delivered");
+    assert.equal(submission.turn.deliveredRunId, null, "saved, pending adoption");
+    assert.equal(
+      submission.navigation.status,
+      "no-session",
+      "a fresh trunk without a session saves the return; navigation reports no-session (not a failure)",
+    );
     assert.deepEqual(submission.turn.targetAnchor, {
       sourceBranchId: branchCreation.origin.sourceBranchId,
       anchorTurnId: branchCreation.origin.anchorTurnId,
@@ -998,7 +1062,7 @@ test("failed prompt never delivers the pending return; the next successful trunk
     const submission = await service.submitReturn(treeId, branchId, returnText, "key-failed-prompt-delivery");
     assert.equal(submission.created, true);
     assert.equal(submission.turn.role, "return");
-    assert.equal(submission.turn.deliveredRunId, null, "confirmed, not yet delivered");
+    assert.equal(submission.turn.deliveredRunId, null, "saved, pending adoption");
 
     /* 2. 带哨兵的 Trunk prompt：以真实 echo /fail 同款的上游错误拒绝。 */
     await assert.rejects(
@@ -1026,12 +1090,23 @@ test("failed prompt never delivers the pending return; the next successful trunk
       "the failed prompt persists no turns",
     );
 
-    /* 4. Return 仍待送达：失败的 run 绝不标记送达。 */
-    const stillPending = findBranchView(service.getTreeState(treeId), trunkId).turns.find(
-      (t) => t.role === "return",
-    );
+    /* 4. Return 仍待送达：失败的 run 绝不标记送达——但它构成一次采用尝试
+       （signed v3 §3.2：该 run 的确定输入已包含此 Return；失败尝试不消耗
+       Return，pending 重注入语义不变）。 */
+    const stateAfterFailure = service.getTreeState(treeId);
+    const trunkViewAfterFailure = findBranchView(stateAfterFailure, trunkId);
+    const stillPending = trunkViewAfterFailure.turns.find((t) => t.role === "return");
     assert.ok(stillPending !== undefined);
     assert.equal(stillPending.deliveredRunId, null, "the failed run must not deliver the return");
+    assert.deepEqual(
+      trunkViewAfterFailure.returnAttempts.map((a) => ({ runId: a.runId, runState: a.runState, failure: a.failure?.code ?? null })),
+      [{ runId: failedRun.runId, runState: "failed", failure: "upstream" }],
+      "the failed run is recorded as an adoption attempt with its outcome",
+    );
+    const attemptView = trunkViewAfterFailure.returnAttempts[0]!;
+    assert.equal(attemptView.turnId, stillPending.id, "the attempt is scoped to the return turn");
+    assert.notEqual(attemptView.attemptedAt, "");
+    assert.notEqual(attemptView.terminalAt, null, "the failed attempt's run carries a terminal timestamp");
 
     /* 5. 下一次成功的 Trunk prompt 送达恰一次（同一 runtime 实例：无哨兵
        的 prompt 原样转发给 echo）。 */
@@ -1050,9 +1125,27 @@ test("failed prompt never delivers the pending return; the next successful trunk
     assert.equal(delivered.deliveredRunId, next.run.id, "delivery is bound to the successful run");
     assert.notEqual(delivered.deliveredRunId, failedRun.runId, "never bound to the failed run");
 
-    /* 6. 再一次 Trunk prompt：不重送（送达恰一次）。 */
+    /* 采用尝试与成功采用并存（signed v3 §3.2）：尝试面完整保留两次
+       （失败 + 成功），deliveredRunId 只记录首次成功的那次。 */
+    const trunkViewAfterSuccess = findBranchView(service.getTreeState(treeId), trunkId);
+    assert.deepEqual(
+      trunkViewAfterSuccess.returnAttempts.map((a) => ({ runId: a.runId, runState: a.runState })),
+      [
+        { runId: failedRun.runId, runState: "failed" },
+        { runId: next.run.id, runState: "succeeded" },
+      ],
+      "both the failed and the first successful run are recorded as adoption attempts",
+    );
+
+    /* 6. 再一次 Trunk prompt：不重送（送达恰一次），也不再新增采用尝试
+       （成功后不再组装该 Return）。 */
     const final = await service.prompt(treeId, trunkId, "final-q");
     assert.equal(final.deliveredReturns, 0, "the return is never re-sent after delivery");
+    assert.equal(
+      findBranchView(service.getTreeState(treeId), trunkId).returnAttempts.length,
+      2,
+      "no further adoption attempt is recorded after the first success",
+    );
     await studio.shutdown();
   } finally {
     cleanupDir(dir);

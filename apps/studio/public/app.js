@@ -8,12 +8,17 @@
  *  - 分支 tab 保留为切换器：支线 tab = 打开该支线面板；Trunk tab = 收起
  *    面板回主线。切换仍 POST /switch（服务端对齐 Pi 游标），UI 不再整页换视图；
  *  - 锚点 Return 卡渲染在主干 targetAnchor 原分叉点附近（W1 §2.2）；
- *    confirmed → delivered 状态变化只改徽标；delivered 卡的 deliveredRunId
- *    可反查来源抽屉中该 run 的出处条目；
+ *    采用状态词汇（signed v3 §3.2）：saved — pending adoption（已保存，
+ *    尚无 Run 组装过）→ adoption attempted（已有 Run 组装过、其中尚无
+ *    成功——失败/中止后仍 pending，随下次主干讨论重试）→ successfully
+ *    adopted（deliveredRunId 首次成功采用，可反查来源抽屉中该 run 的
+ *    出处条目）；提交后的回程导航失败以「已保存，返回主线失败」分开
+ *    呈现（signed v3 §3.5），绝不把已保存的 Return 伪装成未提交；
  *  - Return 草稿持久化于 localStorage（key = tree+branch；W1 §2.1：draft
- *    仅客户端，不落 TreeAI DB、未显式提交前永不生效）；提交成功 / 响应
- *    丢失对账命中（幂等键 + 来源分支 + 文本全同）即清除；面板打开时先对
- *    账，已落库的草稿直接丢弃并呈现 confirmed/delivered 卡；同键异容 =
+ *    仅客户端，不落 TreeAI DB、不是模型上下文、未显式提交前永不生效）；
+ *    提交成功 / 响应丢失对账命中（幂等键 + 来源分支 + 文本全同）即清除；
+ *    导航失败不清回「未保存」态（保存已成功，草稿照常清除）；面板打开时
+ *    先对账，已落库的草稿直接丢弃并呈现已保存/已采用卡；同键异容 =
  *    显式冲突（保留草稿与面板，编辑换新键）；失败保留草稿与幂等键供同键
  *    重试；
  *  - 每分支阅读位置恢复（W2 §4）：滚动位置按 tree:branch 记忆，切走再回
@@ -61,8 +66,11 @@
 /** @typedef {{id:string, treeId:string, parentBranchId:string|null, createdAt:string}} BranchT */
 /** @typedef {{branchId:string, sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}, createdAt:string}} OriginT */
 /** @typedef {{sourceBranchId:string, anchorTurnId:string, anchorEntryId:string, selection:{start:number,end:number,text:string}}} ReturnTargetAnchorT */
+/** 单次 Return 采用尝试的安全投影（signed W1 v3.0 §3.2：Return→Run 关联
+    + 该 Run 的结果；无 session 引用/路径）。 */
+/** @typedef {{turnId:string, runId:string, runState:string, failure:{code:string,message:string}|null, attemptedAt:string, terminalAt:string|null}} ReturnAttemptT */
 /** @typedef {{id:string, treeId:string, branchId:string, episodeId:string, runId:string|null, role:"user"|"assistant"|"return", text:string, piEntryId:string|null, fromBranchId:string|null, deliveredRunId:string|null, idempotencyKey:string|null, targetAnchor:ReturnTargetAnchorT|null, createdAt:string}} TurnT */
-/** @typedef {{branch:BranchT, origin:OriginT|null, originStatus:"available"|"changed"|"unavailable"|null, sessionAvailability:"available"|"unavailable"|null, turns:TurnT[]}} BranchViewT */
+/** @typedef {{branch:BranchT, origin:OriginT|null, originStatus:"available"|"changed"|"unavailable"|null, sessionAvailability:"available"|"unavailable"|null, turns:TurnT[], returnAttempts:ReturnAttemptT[]}} BranchViewT */
 /** @typedef {{tree:TreeT, trunkBranchId:string|null, branches:BranchViewT[], cursor:{treeId:string,branchId:string,entryId:string}|null}} TreeStateT */
 /** @typedef {{runId:string, branchId:string, episodeId:string, state:string, failure:{code:string,message:string}|null, createdAt:string, terminalAt:string|null}} RunDiagnosticsT */
 /** @typedef {{tool:string|null, outcome:"allow"|"deny"|"require-approval", category:string, risk:string, reason:string, ruleId:string|null, occurredAt:string}} PolicyDecisionViewT */
@@ -492,10 +500,12 @@ function selectionOffsetsWithin(element, text) {
 }
 
 /**
- * Return 卡片（W2 §2.4 + M3/M4）：锚点答案在当前视图内 → 紧随其后渲染
- * （meta 含选区摘录，满足“原分叉点附近”）；锚点缺失（历史 Return 或锚点在
- * 其他分支）→ 按时间顺序原位渲染并降级标注。confirmed 呈“待送达”；
- * delivered 呈送达 + deliveredRunId 反查入口（点击打开来源抽屉定位该 run）。
+ * Return 卡片（W2 §2.4 + M3/M4 + signed v3 §3.2）：锚点答案在当前视图内
+ * → 紧随其后渲染（meta 含选区摘录，满足“原分叉点附近”）；锚点缺失（历史
+ * Return 或锚点在其他分支）→ 按时间顺序原位渲染并降级标注。采用状态词
+ * 汇（signed v3 §3.2）：saved（已保存，待采用）→ attempted（采用尝试过，
+ * 仍待成功）→ delivered（首次成功采用，deliveredRunId 即该 run，点击打开
+ * 来源抽屉定位）。草稿（draft）仅存在于浏览器本地，不出现在卡片词汇里。
  *
  * M3/M4 的动效 class 在插入/状态变化后的短观测窗口（MOTION_EPOCH_MS）内
  * 随重渲保持——状态刷新（SSE 终态 + prompt 响应）可能在一个动效周期内
@@ -505,7 +515,13 @@ const MOTION_EPOCH_MS = 260;
 const returnInsertedAt = new Map(); /* `${treeId}:${turnId}` → epoch ms */
 const deliveredChangedAt = new Map(); /* `${treeId}:${turnId}` → epoch ms */
 
-function returnCard(turn, anchor) {
+/** 该 Return 的采用尝试记录（signed v3 §3.2：save ≠ 尝试 ≠ 首次成功采用）。
+    视图字段缺失（旧快照）时按空列表处理——卡片降级回“已保存”语义。 */
+function returnAttemptsFor(view, turnId) {
+  return (view.returnAttempts ?? []).filter((attempt) => attempt.turnId === turnId);
+}
+
+function returnCard(turn, anchor, attempts) {
   const treeKey = `${state.currentTreeId}:${turn.id}`;
   const nowMs = Date.now();
   const div = document.createElement("div");
@@ -535,8 +551,8 @@ function returnCard(turn, anchor) {
   const delivered = turn.deliveredRunId !== null;
   const delivery = document.createElement(delivered ? "button" : "span");
   delivery.className = `delivery${delivered ? " delivered delivery-link" : ""}`;
-  /* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡；只在已见
-     confirmed 的卡上检测到状态变化时播放；reduced-motion 即时）。
+  /* M4：pending → delivered 徽标切换（~100ms 颜色/文案过渡；只在已见
+     pending 的卡上检测到状态变化时播放；reduced-motion 即时）。
      观测窗口内随重渲保持 class（见函数头注释）。 */
   const seenRun = state.seenDeliveredRunIds.get(treeKey);
   if (delivered && seenRun === null) {
@@ -547,18 +563,28 @@ function returnCard(turn, anchor) {
     delivery.classList.add("badge-change");
   }
   if (delivered) {
-    delivery.textContent = `delivered into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…)`;
-    delivery.title = `delivered into Trunk run ${turn.deliveredRunId} — open sources`;
+    /* deliveredRunId 只表示首次成功采用的 run（signed v3 §3.2）；
+       此前的失败/中止尝试记录在来源抽屉（Sources → Attempts）。 */
+    delivery.textContent = `successfully adopted into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…)`;
+    delivery.title = `first successfully adopted into Trunk run ${turn.deliveredRunId} — open sources`;
     div.dataset.deliveredRunId = turn.deliveredRunId;
-    div.title = `delivered into Trunk run ${turn.deliveredRunId}`;
+    div.title = `first successfully adopted into Trunk run ${turn.deliveredRunId}`;
     delivery.addEventListener("click", () =>
       void openDrawer({
         focusRunId: turn.deliveredRunId,
         trigger: { kind: "return-card", turnId: turn.id },
       }),
     );
+  } else if (attempts.length > 0) {
+    /* 已有主支 run 尝试采用但尚未成功（失败/中止后仍待重注入）：如实呈
+       “采用尝试过 N 次”，不伪装成已送达，也不丢失已保存事实。 */
+    delivery.className = "delivery attempted";
+    delivery.textContent = `adoption attempted (${String(attempts.length)}) — still pending, retried on the next Trunk discussion`;
+    delivery.title = attempts
+      .map((a) => `run ${a.runId.slice(0, 12)}… ${a.runState}${a.failure !== null ? ` (${a.failure.code})` : ""}`)
+      .join("\n");
   } else {
-    delivery.textContent = "confirmed — delivered on the next Trunk prompt";
+    delivery.textContent = "saved — pending adoption on the next Trunk discussion";
   }
   state.seenDeliveredRunIds.set(treeKey, turn.deliveredRunId);
   meta.append(delivery);
@@ -609,7 +635,7 @@ function renderTurnsInto(container, view, branchId, stick) {
   for (const turn of view.turns) {
     if (turn.role === "return") {
       if (isAnchored(turn)) continue; /* 已随锚点答案渲染 */
-      container.append(returnCard(turn, null)); /* 降级：锚点不在当前视图 */
+      container.append(returnCard(turn, null, returnAttemptsFor(view, turn.id))); /* 降级：锚点不在当前视图 */
       continue;
     }
 
@@ -671,7 +697,7 @@ function renderTurnsInto(container, view, branchId, stick) {
 
     if (turn.role === "assistant") {
       for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
-        container.append(returnCard(returnTurn, returnTurn.targetAnchor));
+        container.append(returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id)));
       }
     }
   }
@@ -1493,6 +1519,9 @@ async function openBranchPanel(branchId, opts = {}) {
  * 重开可恢复；回主线同时把服务端游标对齐回 Trunk（POST /switch）。
  * 收起即开始退出动效（M2），树面渲染在游标对齐返回后统一刷新一次
  * （避免双次 renderAll 掐断 Return 卡插入/徽标动效）。
+ * opts.skipSwitch（signed v3 §3.5）：跳过 POST /switch——服务端提交
+ * Return 时已尝试回程导航且失败（响应 navigation.failed），立即重放
+ * /switch 只会复现同一失败；重新导航由 Trunk tab / 下次主干讨论承担。
  */
 async function closePanel(opts = {}) {
   if (state.panelBranchId === null) return;
@@ -1503,7 +1532,7 @@ async function closePanel(opts = {}) {
      树照常可读；游标以服务端状态为准）。 */
   const trunk = trunkBranchId();
   let switchError = null;
-  if (trunk !== null && state.currentTreeId !== null) {
+  if (!opts.skipSwitch && trunk !== null && state.currentTreeId !== null) {
     try {
       const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
         branchId: trunk,
@@ -1791,12 +1820,16 @@ function returnConflictError(existing, fromBranchId, text) {
 
 /**
  * 显式提交 Return（面板分支 → 主干；W2 §2.4）：幂等键跨失败重试稳定；
- * 200 重放与 201 新建同为成功。响应丢失先按 /state 对账（键 + 来源分支 +
- * 文本全同命中 → 按成功处理，不重复提交；同键异容 → 显式冲突：保留草稿
- * 与面板、不清空已编辑文本、不把旧 Return 伪装成成功，编辑即换新键）。
- * 提交成功 → 草稿清除、面板收起、焦点回主线输入框（回程），主线滚到新
- * Return 卡（原分叉点附近）。失败 → 草稿与键保留（localStorage 持久化），
- * 同键可重试、改写即换新键。
+ * 200 重放与 201 新建同为成功。服务端先保存后导航（signed v3 §3.5）：
+ * 响应携带 navigation（navigated / no-session / failed），保存结果与
+ * 导航结果分开控制收尾——保存成功 → 草稿清除、面板收起、焦点回主线
+ * 输入框、主线滚到新 Return 卡（原分叉点附近）；导航失败 → 不立即重放
+ * /switch（closePanel skipSwitch），主线横幅如实呈现「已保存，返回主线
+ * 失败」+ 重新导航指引，绝不诱导重复提交、也不把已保存的 Return 伪装
+ * 成未提交。响应丢失先按 /state 对账（键 + 来源分支 + 文本全同命中 →
+ * 按成功处理，不重复提交；同键异容 → 显式冲突：保留草稿与面板、不清空
+ * 已编辑文本、不把旧 Return 伪装成成功，编辑即换新键）。失败 → 草稿与
+ * 键保留（localStorage 持久化），同键可重试、改写即换新键。
  */
 async function submitReturn() {
   const branchId = state.panelBranchId;
@@ -1806,15 +1839,17 @@ async function submitReturn() {
   if (text.trim() === "") return;
   const draft = ensureReturnDraft(branchId);
   let submittedTurnId = null;
+  let navigation = null;
   try {
     const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/return`, "POST", {
       fromBranchId: branchId,
       text,
       idempotencyKey: draft.idempotencyKey,
     });
-    /* 200（同键重放）与 201（新建）同为成功：清空草稿，回主线。 */
+    /* 200（同键重放）与 201（新建）同为成功：Return 已保存，清空草稿。 */
     state.treeState = payload.state;
     submittedTurnId = payload.returnTurn.id;
+    navigation = payload.navigation ?? null;
     clearReturnDraft();
   } catch (err) {
     /* 失败先查证（响应丢失：服务端已成功、响应未达客户端）：刷新树状态。
@@ -1841,13 +1876,27 @@ async function submitReturn() {
       throw err;
     }
   }
-  /* 收尾（回主干 + 滚到新 Return 卡）：Return 本身已成功；面板此刻正在
-     收起，收尾（游标对齐）失败呈现在主线横幅（可见面）——不吞错，也不把
-     已成功的提交伪装成失败（面板已收起，面板横幅不可见）。 */
-  try {
-    await closePanel({ focus: "main-input" });
-  } catch (err) {
-    showError(String(err && err.message ? err.message : err));
+  /* 收尾（回主干 + 滚到新 Return 卡）：保存结果与导航结果分别控制
+     （signed v3 §3.5）。导航已由服务端在保存后尝试：failed → 不再重放
+     /switch（skipSwitch），面板照常收起（保存已成功，留着面板会诱导
+     重复提交），主线横幅如实告知「已保存，返回主线失败」+ 重新导航
+     指引；navigated / no-session → 按既有语义收尾（客户端游标对齐失败
+     仍呈现在主线横幅——可见面，不吞错，也不把已成功的提交伪装成失败）。 */
+  if (navigation !== null && navigation.status === "failed") {
+    await closePanel({ focus: "main-input", skipSwitch: true });
+    showError(
+      `Return saved — returning to the Trunk failed (${navigation.code}: ${navigation.message}). ` +
+        `The Return is saved on the Trunk and pending adoption; use the Trunk tab to re-align the session.`,
+    );
+  } else {
+    try {
+      await closePanel({ focus: "main-input" });
+    } catch (err) {
+      showError(
+        `Return saved — returning to the Trunk failed (${String(err && err.message ? err.message : err)}). ` +
+          `The Return is saved on the Trunk and pending adoption.`,
+      );
+    }
   }
   if (submittedTurnId !== null) {
     const card = turnElements.get(submittedTurnId);
@@ -1978,30 +2027,52 @@ function renderDrawer() {
     drawer.append(list);
   }
 
-  /* Return 出处。 */
+  /* Return 出处（signed v3 §3.2：区分已保存 / 采用尝试过 / 首次成功采用；
+     尝试明细含 run 与结局——runId/状态/失败码是安全投影字段，无路径与
+     session 引用）。 */
   const returnsTitle = document.createElement("h3");
   returnsTitle.textContent = "Returns";
   drawer.append(returnsTitle);
   const st = state.treeState;
-  const returns = st === null ? [] : st.branches.flatMap((view) => view.turns.filter((t) => t.role === "return"));
+  const returns =
+    st === null
+      ? []
+      : st.branches.flatMap((view) =>
+          view.turns.filter((t) => t.role === "return").map((t) => ({ view, turn: t })),
+        );
   if (returns.length === 0) {
     drawer.append(mutedLine("no returns submitted for this tree yet"));
   } else {
     const list = document.createElement("ul");
     list.className = "drawer-list";
-    for (const turn of returns) {
+    for (const { view, turn } of returns) {
       const li = document.createElement("li");
       const anchor = turn.targetAnchor;
       const anchorNote =
         anchor === null
           ? "original anchor unavailable"
           : `anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`;
-      const delivery =
-        turn.deliveredRunId === null
-          ? "not yet delivered"
-          : `delivered into run ${turn.deliveredRunId.slice(0, 12)}…`;
-      li.textContent = `from ${branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · ${delivery}`;
+      const attempts = returnAttemptsFor(view, turn.id);
+      if (turn.deliveredRunId !== null) {
+        li.textContent =
+          `from ${branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · ` +
+          `successfully adopted into run ${turn.deliveredRunId.slice(0, 12)}… (first success)`;
+      } else if (attempts.length > 0) {
+        li.textContent =
+          `from ${branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · ` +
+          `adoption attempted, still pending (${String(attempts.length)})`;
+      } else {
+        li.textContent = `from ${branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · saved, pending adoption`;
+      }
       list.append(li);
+      for (const attempt of attempts) {
+        const item = document.createElement("li");
+        item.className = "attempt";
+        const failureNote = attempt.failure === null ? "" : ` · failure ${attempt.failure.code}`;
+        item.textContent =
+          `attempt: run ${attempt.runId.slice(0, 12)}… · ${attempt.runState}${failureNote}`;
+        list.append(item);
+      }
     }
     drawer.append(list);
   }

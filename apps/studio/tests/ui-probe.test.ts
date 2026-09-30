@@ -174,12 +174,22 @@ interface Turn {
   createdAt: string;
 }
 
+interface ReturnAttempt {
+  turnId: string;
+  runId: string;
+  runState: string;
+  failure: { code: string; message: string } | null;
+  attemptedAt: string;
+  terminalAt: string | null;
+}
+
 interface BranchView {
   branch: Branch;
   origin: Origin | null;
   originStatus: "available" | "changed" | "unavailable" | null;
   sessionAvailability: "available" | "unavailable" | null;
   turns: Turn[];
+  returnAttempts: ReturnAttempt[];
 }
 
 interface TreeState {
@@ -265,11 +275,16 @@ function makeBranchView(
   origin: Origin | null,
   sessionAvailability: "available" | "unavailable" | null,
   turns: Turn[],
+  returnAttempts: ReturnAttempt[] = [],
 ): BranchView {
-  return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns };
+  return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns, returnAttempts };
 }
 
-function freshBackendState(initialTrunkReturn: boolean, a2Text: string = A2_TEXT): TreeState {
+function freshBackendState(
+  initialTrunkReturn: boolean,
+  a2Text: string = A2_TEXT,
+  trunkReturnAttempts: ReturnAttempt[] = [],
+): TreeState {
   const trunkBranch: Branch = { id: "trunk-1", treeId: TREE, parentBranchId: null, createdAt: ISO };
   const b1Branch: Branch = { id: "branch-1", treeId: TREE, parentBranchId: "trunk-1", createdAt: ISO };
   const trunkTurns: Turn[] = [
@@ -279,7 +294,7 @@ function freshBackendState(initialTrunkReturn: boolean, a2Text: string = A2_TEXT
     makeTurn("a2", "trunk-1", "assistant", a2Text),
   ];
   if (initialTrunkReturn) {
-    /* 预置一张已确认（未送达）的锚点 Return 卡：渲染定位断言用。 */
+    /* 预置一张已保存（待采用）的锚点 Return 卡：渲染定位断言用。 */
     trunkTurns.push(
       makeTurn("r0", "trunk-1", "return", "Earlier returned conclusion.", {
         runId: null,
@@ -307,7 +322,7 @@ function freshBackendState(initialTrunkReturn: boolean, a2Text: string = A2_TEXT
     tree: { id: TREE, createdAt: ISO, forestId: "forest-1" },
     trunkBranchId: "trunk-1",
     branches: [
-      makeBranchView(trunkBranch, null, "available", trunkTurns),
+      makeBranchView(trunkBranch, null, "available", trunkTurns, trunkReturnAttempts),
       makeBranchView(b1Branch, b1Origin, "available", [
         makeTurn("bu1", "branch-1", "user", "Branch one question."),
         makeTurn("ba1", "branch-1", "assistant", BA1_TEXT),
@@ -417,6 +432,8 @@ interface Backend {
   requests: RecordedRequest[];
   switchCount: number;
   returnMode: "ok" | "lose-response" | "fail";
+  /** /return 保存后的回程导航结果脚本（signed v3 §3.5：保存与导航分离）。 */
+  returnNavigation: "ok" | "fail";
   returnDelay: boolean;
   branchCounter: number;
   /** 锚点揭示（POST /branches/:id/source）的状态脚本（revealBranchOrigin 契约）。 */
@@ -1023,6 +1040,8 @@ interface World {
 interface WorldOptions {
   journalMode?: Backend["journalMode"];
   returnMode?: Backend["returnMode"];
+  /** /return 响应的 navigation 字段脚本（保存后导航失败场景）。 */
+  returnNavigation?: Backend["returnNavigation"];
   /** GET /api/trees 脚本化失败（§2.1 列表加载失败重试场景）。 */
   treesMode?: Backend["treesMode"];
   /** 空 Forest 启动（改版后空态 / 顶栏诚实路径场景）：GET /api/trees 返回
@@ -1030,8 +1049,10 @@ interface WorldOptions {
   noTrees?: boolean;
   /** 覆盖 trunk 第二条答案（a2）的文本（A2 长答案 / 重复词 / 跨行场景）。 */
   a2Text?: string;
-  /** 预置一张锚定于 a1 的已确认 Return 卡（渲染定位断言用）。 */
+  /** 预置一张锚定于 a1 的已保存 Return 卡（渲染定位断言用）。 */
   initialTrunkReturn?: boolean;
+  /** 预置 Return 卡（r0）上的采用尝试记录（attempted 徽标场景）。 */
+  trunkReturnAttempts?: ReturnAttempt[];
   /** A1 双支线初始态（Trunk + branch-1/branch-2，各锚定不同 trunk 答案）。 */
   twoBranches?: boolean;
   /** prefers-reduced-motion: reduce 命中（app.js 的 scrollBehavior → auto）。 */
@@ -1103,7 +1124,11 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     treeState:
       options.twoBranches === true
         ? freshTwoBranchBackendState()
-        : freshBackendState(options.initialTrunkReturn === true, options.a2Text ?? A2_TEXT),
+        : freshBackendState(
+            options.initialTrunkReturn === true,
+            options.a2Text ?? A2_TEXT,
+            options.trunkReturnAttempts ?? [],
+          ),
     diagnostics: {
       treeId: TREE,
       runtimeState: "idle",
@@ -1116,6 +1141,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     requests: [],
     switchCount: 0,
     returnMode: options.returnMode ?? "ok",
+    returnNavigation: options.returnNavigation ?? "ok",
     returnDelay: false,
     branchCounter: 0,
     sourceMode: "available",
@@ -1238,7 +1264,20 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
             error: { code: "internal", message: "simulated response loss — the server recorded the return" },
           });
         }
-        return respond(201, { returnTurn, state: backend.treeState });
+        /* 服务端语义（signed v3 §3.5）：保存成功后导航回 Trunk；导航结果
+           分离返回（failed 不是 HTTP 错误）。导航失败时服务端不动游标。 */
+        const navigation =
+          backend.returnNavigation === "fail"
+            ? {
+                status: "failed",
+                code: "session-corrupt",
+                message: "simulated navigation failure — the session store is damaged",
+              }
+            : { status: "navigated" };
+        if (backend.returnNavigation === "ok") {
+          backend.treeState.cursor = { treeId: TREE, branchId: "trunk-1", entryId: "pi-a2" };
+        }
+        return respond(201, { returnTurn, navigation, state: backend.treeState });
       }
       return respond(500, { error: { code: "internal", message: "return rejected (scripted failure)" } });
     }
@@ -1449,8 +1488,8 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   assert.ok(returnCard.textContent.includes("↩ Return from Branch 1"));
   assert.ok(returnCard.textContent.includes("anchored on “First” from Branch 1"), "meta carries the anchor excerpt");
   assert.ok(
-    returnCard.textContent.includes("confirmed — delivered on the next Trunk prompt"),
-    "undelivered Return shows the confirmed badge",
+    returnCard.textContent.includes("saved — pending adoption on the next Trunk discussion"),
+    "an undelivered Return with no attempts shows the saved/pending badge (signed v3 §3.2 vocabulary)",
   );
 
   /* 流式占位形态：run-started 后 streaming turn + 静态 caret（不闪烁）。 */
@@ -1764,6 +1803,94 @@ test("return failure semantics: response-loss reconciliation, draft kept on fail
   assert.ok(world.localStorageStore.get(draftKey) === undefined, "success clears the persisted draft");
   assert.equal(world.el("branch-panel").hidden, true, "panel closes after the successful retry");
   assert.equal(world.document.activeElement, world.el("prompt-input"), "focus returns to the main input");
+});
+
+/* ------------------------------------------------------------------ */
+/* 5b. 采用尝试徽标（signed v3 §3.2）：saved ≠ attempted ≠ delivered    */
+/* ------------------------------------------------------------------ */
+
+test("adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer", async () => {
+  const world = await createWorld({
+    initialTrunkReturn: true,
+    trunkReturnAttempts: [
+      {
+        turnId: "r0",
+        runId: "run-attempt-1",
+        runState: "failed",
+        failure: { code: "upstream", message: "model request failed" },
+        attemptedAt: ISO,
+        terminalAt: ISO,
+      },
+    ],
+  });
+
+  /* 卡片：deliveredRunId === null 但已有尝试 → 「尝试过、仍待采用」，
+     不伪装成已送达，也不回退成无尝试的 saved。 */
+  const conversation = world.el("conversation");
+  const returnCard = conversation.querySelectorAll(".turn")[2]!;
+  assert.ok(returnCard.classList.contains("return"));
+  assert.ok(
+    returnCard.textContent.includes("adoption attempted (1) — still pending, retried on the next Trunk discussion"),
+    "the card distinguishes attempted-but-pending from saved and delivered",
+  );
+  assert.ok(!returnCard.textContent.includes("successfully adopted"), "no delivered badge without a successful adoption");
+
+  /* 来源抽屉：尝试明细列出 run 与结局（安全投影——runId/状态/失败码）。 */
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const drawer = world.el("source-drawer");
+  assert.ok(drawer.textContent.includes("adoption attempted, still pending (1)"), "the drawer lists the return as attempted-but-pending");
+  assert.ok(
+    drawer.textContent.includes("attempt: run run-attempt-… · failed · failure upstream"),
+    "the drawer lists the failed attempt with its run and failure code",
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/* 5c. 保存成功 + 服务端导航失败（signed v3 §3.5）：分离呈现              */
+/* ------------------------------------------------------------------ */
+
+test("a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately", async () => {
+  const world = await createWorld({ returnNavigation: "fail" });
+  const draftKey = "treeai-return-draft:tree-1:branch-1";
+  const tab = world.tabButton("branch-1");
+  assert.ok(tab !== null);
+  tab.click();
+  await settle();
+  const returnInput = world.el("return-input");
+  returnInput.value = "Saved despite the broken session.";
+  returnInput.dispatchEvent("input", {});
+  const switchCountBefore = world.backend.switchCount;
+
+  world.el("submit-return").click();
+  await settle();
+  await sleep(220);
+
+  /* 保存成功（201 + navigation.failed）：单次 POST /return、草稿清除、
+     面板收起、卡渲染为 saved/pending——导航失败不把保存伪装成失败。 */
+  assert.equal(world.requestsOf("/return").length, 1, "exactly one POST /return");
+  assert.ok(world.localStorageStore.get(draftKey) === undefined, "the save succeeded — the draft is cleared");
+  assert.equal(world.el("branch-panel").hidden, true, "the panel closes");
+  const conversation = world.el("conversation");
+  assert.ok(conversation.textContent.includes("Saved despite the broken session."), "the Return card renders");
+  assert.ok(conversation.textContent.includes("saved — pending adoption on the next Trunk discussion"), "the card shows the saved/pending badge");
+
+  /* 导航失败分离呈现于主线横幅；closePanel 不重放 /switch（面板打开时的
+     /switch 在提交之前——提交之后不再有任何 /switch）。 */
+  assert.equal(world.backend.switchCount, switchCountBefore, "no /switch is replayed (the server already attempted navigation)");
+  const returnRequestIndex = world.backend.requests.findIndex(
+    (r) => r.method === "POST" && r.path.split("?")[0]!.endsWith("/return"),
+  );
+  assert.ok(returnRequestIndex >= 0, "the submit POST /return is recorded");
+  const switchesAfterSubmit = world.backend.requests.filter(
+    (r, index) => index > returnRequestIndex && r.method === "POST" && r.path.split("?")[0]!.endsWith("/switch"),
+  );
+  assert.equal(switchesAfterSubmit.length, 0, "closePanel skips the switch after the reported navigation failure");
+  const mainError = world.el("error-banner");
+  assert.equal(mainError.hidden, false, "the navigation failure surfaces in the main banner");
+  assert.ok(mainError.textContent.includes("Return saved"), "the banner states the return IS saved");
+  assert.ok(mainError.textContent.includes("returning to the Trunk failed"), "the banner states the navigation failed");
+  assert.ok(mainError.textContent.includes("session-corrupt"), "the banner carries the navigation failure code");
 });
 
 /* ------------------------------------------------------------------ */

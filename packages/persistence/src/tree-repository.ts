@@ -72,6 +72,7 @@ import {
   rowToBranchOrigin,
   rowToEpisode,
   rowToForest,
+  rowToReturnAdoptionAttempt,
   rowToRun,
   rowToSessionReference,
   rowToTree,
@@ -81,6 +82,7 @@ import {
   type BranchRow,
   type EpisodeRow,
   type ForestRow,
+  type ReturnAdoptionAttemptRow,
   type RunRow,
   type SessionReferenceRow,
   type TreeRow,
@@ -154,7 +156,7 @@ export interface CreateTurnInput {
   readonly piEntryId?: string | null;
   /** role "return" 必填（出处分支）；其他 role 必须为 null/缺省。 */
   readonly fromBranchId?: BranchId | null;
-  /** role "return" 专属提交幂等键（非空；同键唯一索引强制至多一条）；其他 role 必须为 null/缺省。 */
+  /** role "return" 专属提交幂等键（非空；树内唯一索引 UNIQUE(tree_id, idempotency_key) 强制每 Tree 至多一条）；其他 role 必须为 null/缺省。 */
   readonly idempotencyKey?: string | null;
   /** role "return" 专属目标锚点快照（提交时 BranchOrigin 的拷贝）；其他 role 必须为 null/缺省。 */
   readonly targetAnchor?: ReturnTargetAnchor | null;
@@ -175,6 +177,12 @@ export interface ActiveNavigation {
   readonly branchId: BranchId;
   readonly reference: SessionReference;
   readonly updatedAt: IsoTimestamp;
+}
+
+/** 一次 Return 采用尝试（Return→Run 关联 + 尝试时刻；Run 结果由 runs 行携带）。 */
+export interface ReturnAdoptionAttempt {
+  readonly runId: RunId;
+  readonly attemptedAt: IsoTimestamp;
 }
 
 export interface EpisodeRecovery {
@@ -1044,8 +1052,10 @@ export class TreeRepository {
 
   /**
    * 按幂等键查找 return turn（树内定位；无键/无匹配为 null）。
-   * 同键唯一由部分唯一索引保证（idx_turns_idempotency_key），本查询是
-   * 幂等重放与并发竞争后对齐的读取路径。
+   * 同键唯一由树内部分唯一索引保证（idx_turns_idempotency_key_tree，
+   * UNIQUE(tree_id, idempotency_key)——已签署 W1 v3.0 §3.4：幂等键是
+   * Tree 内命名空间，跨 Tree 同键各自有效），本查询是幂等重放与并发
+   * 竞争后对齐的读取路径。
    */
   findReturnByIdempotencyKey(treeId: TreeId, idempotencyKey: string): Turn | null {
     this.#assertOpen();
@@ -1165,7 +1175,12 @@ export class TreeRepository {
     return row ? rowToBranchOrigin(row) : null;
   }
 
-  /** 标记 return turn 已由某次主干 Run 送入 Pi 上下文（不可二次送达）。 */
+  /**
+   * 标记 return turn 已由某次主干 Run 成功采用（deliveredRunId 只记录
+   * **首次成功采用**的 Run——条件 UPDATE 保证至多写一次；不可二次送达，
+   * 成功之后的 Run 不再重复注入）。采用尝试的完整历史（含失败/中止的
+   * Run）由 return_adoption_attempts 记录，与本标记互补。
+   */
   markReturnDelivered(turnId: TurnId, runId: RunId): void {
     this.#assertOpen();
     assertNonEmptyString(turnId, "turn id");
@@ -1189,6 +1204,50 @@ export class TreeRepository {
       }
       throw new DatabaseCorruptError(`turn ${turnId} not updatable (schema integrity violation)`);
     }
+  }
+
+  /* --------------------- D3 产品层：Return 采用尝试（return_adoption_attempts 表） --------------------- */
+
+  /**
+   * 记录一次 Return 采用尝试：组装该 Return 的主干 Run 与它的关联
+   * （已签署 W1 v3.0 §3.2——Run 的确定输入已包含该 Return 即为一次尝试，
+   * 与该 Run 最终 succeeded/failed/aborted 无关；Run 结果由 runs 行记录）。
+   * 复合主键 (return_turn_id, run_id)：同一 Return 在同一 Run 至多一条；
+   * 重复记录（编程错误）以 ConstraintViolationError 拒绝，不静默去重。
+   */
+  recordReturnAdoptionAttempt(turnId: TurnId, runId: RunId): void {
+    this.#assertOpen();
+    assertNonEmptyString(turnId, "turn id");
+    assertNonEmptyString(runId, "run id");
+    const turn = this.findTurn(turnId);
+    if (turn === null) throw new EntityNotFoundError("turn", turnId);
+    if (turn.role !== "return") {
+      throw new InvalidArgumentError(`turn ${turnId} is not a return`);
+    }
+    if (this.findRun(runId) === null) throw new EntityNotFoundError("run", runId);
+    const attemptedAt = this.now();
+    try {
+      this.#db!
+        .prepare(
+          "INSERT INTO return_adoption_attempts (return_turn_id, run_id, attempted_at) VALUES (?, ?, ?)",
+        )
+        .run(turnId, runId, attemptedAt);
+    } catch (error) {
+      throw mapSqliteError(error, "recording return adoption attempt");
+    }
+  }
+
+  /** 某 return turn 的全部采用尝试（追加序；Run 结果经 runId 关联 runs 读取）。 */
+  listReturnAdoptionAttempts(turnId: TurnId): ReturnAdoptionAttempt[] {
+    this.#assertOpen();
+    assertNonEmptyString(turnId, "turn id");
+    const rows = this.#db!
+      .prepare(
+        `SELECT return_turn_id, run_id, attempted_at
+         FROM return_adoption_attempts WHERE return_turn_id = ? ORDER BY attempted_at, rowid`,
+      )
+      .all(turnId) as unknown as ReturnAdoptionAttemptRow[];
+    return rows.map(rowToReturnAdoptionAttempt);
   }
 
   saveActiveNavigation(treeId: TreeId, branchId: BranchId, reference: SessionReference): ActiveNavigation {

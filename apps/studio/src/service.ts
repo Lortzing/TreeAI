@@ -8,16 +8,30 @@
  *     （navigateTree，不新建 session 文件——D2 已验证的分叉方式）；
  *   - 继续分支、切回 Trunk（同一 session 文件内移动叶指针）；
  *   - 编辑并显式提交 Return：记录在 Trunk 上（含出处分支与提交时的
- *     分叉锚点快照 targetAnchor），并在下一次 Trunk prompt 时送入 Pi
- *     上下文（可送达、只送达一次）；
+ *     分叉锚点快照 targetAnchor）。保存先于导航（已签署 W1 v3.0 §3.5）：
+ *     校验与持久化完成后才尝试回程导航，导航失败（session 缺失/运行期
+ *     错误）不回滚已保存的 Return，结果以 ReturnSubmission.navigation
+ *     分离呈现（navigated / no-session / failed）；重放路径同样尝试
+ *     导航（同键重试即重新导航，不产生重复）；
+ *   - Return 采用语义（signed v3 §3.2）：保存 ≠ 采用。每次组装该
+ *     Return 的主干 Run 记一条采用尝试关联（return_adoption_attempts，
+ *     Run 结果 succeeded/failed/aborted 由 runs 行携带，读取面以
+ *     BranchView.returnAttempts 安全投影）；deliveredRunId 只标记
+ *     **首次成功采用**的 Run（markReturnDelivered 条件 UPDATE，至多
+ *     一次），失败/中止后 Return 保持 pending 并在下一次主干 prompt
+ *     再次组装（pending 重注入）；
  *   - Return 幂等（响应丢失/双击/并发同键安全）：提交方提供稳定
  *     idempotencyKey。同键同内容重试零写入返回既有 Return
  *     （created === false）；同键不同内容（fromBranchId/text）以
- *     ReturnConflictError 拒绝；并发同键由 turns.idempotency_key 部分
- *     唯一索引裁决，判负事务整体回滚（无悬挂 episode）后重读对齐。
- *     Return 状态词汇：draft（客户端草稿，未持久化）/ confirmed
- *     （已落库、deliveredRunId === null）/ delivered（deliveredRunId
- *     !== null）——持久态由 deliveredRunId 派生，无独立状态列；
+ *     ReturnConflictError 拒绝；并发同键由树内唯一索引
+ *     UNIQUE(tree_id, idempotency_key)（signed v3 §3.4：Tree 内命名
+ *     空间，跨 Tree 同键各自有效）裁决，判负事务整体回滚（无悬挂
+ *     episode）后重读对齐。Return 状态词汇：draft（客户端草稿，
+ *     未持久化、非模型上下文）/ saved（已落库，deliveredRunId ===
+ *     null 且尚无采用尝试）/ adoption attempted（已有 Run 组装过，
+ *     含失败/中止；仍 pending）/ successfully adopted
+ *     （deliveredRunId !== null——首次成功采用）——持久态由
+ *     deliveredRunId + 采用尝试关联派生，无独立状态列；
  *   - 全部产品状态即时写入 TreeAI DB（事实源）；重启后由 DB 重建。
  *
  * 会话连续性模型（全部可从 DB 重建，cursor 只是缓存）：
@@ -127,6 +141,12 @@ import { EventRecorder, parseSerializedError, piRuntimeEventKindToType } from "@
  * 评估——latest run 的 session 引用（无 run 的分支用 origin 锚点 run 的
  * 引用），以实时文件存在性探针修正 DB 缓存（见 #probeSessionAvailability；
  * 只探存在、绝不读内容）。null = 该分支尚无会话（Trunk 从未 prompt）。
+ *
+ * returnAttempts（已签署 W1 v3.0 §3.2）：该分支 role === "return" turns 的
+ * 采用尝试投影——每次组装该 Return 的主干 Run 一条（Run 结果随附；
+ * turns[].deliveredRunId 则只标记首次成功采用）。安全边界与 RunDiagnostics
+ * 一致：runId / runState / failure code+message / 时间戳，绝不含 session
+ * 引用、路径或 details。
  */
 export interface BranchView {
   readonly branch: Branch;
@@ -134,6 +154,17 @@ export interface BranchView {
   readonly originStatus: AnchorStatus | null;
   readonly sessionAvailability: "available" | "unavailable" | null;
   readonly turns: readonly Turn[];
+  readonly returnAttempts: readonly ReturnAttemptView[];
+}
+
+/** 单次 Return 采用尝试的安全投影（Return→Run 关联 + 该 Run 的结果）。 */
+export interface ReturnAttemptView {
+  readonly turnId: TurnId;
+  readonly runId: RunId;
+  readonly runState: RunState;
+  readonly failure: { readonly code: TreeAIErrorCode; readonly message: string } | null;
+  readonly attemptedAt: IsoTimestamp;
+  readonly terminalAt: IsoTimestamp | null;
 }
 
 export interface SessionCursorInfo {
@@ -338,11 +369,27 @@ export class ReturnConflictError extends Error {
   }
 }
 
-/** submitReturn 的结果：turn 为新建或幂等重放的 Return；created 标记本次调用是否新建落库。 */
+/**
+ * Return 提交后的回程导航结果（已签署 W1 v3.0 §3.5：保存成功与导航结果
+ * 分离呈现——导航失败不回滚、不抛错，如实随响应/状态返回）。
+ * - navigated：游标已对准 Trunk 续聊点；
+ * - no-session：Trunk 尚无 session（new-session 续聊点，无可导航对象；
+ *   首次 Trunk prompt 时建立 session——Return 照常保存）；
+ * - failed：导航尝试失败（运行期错误，如 session 文件缺失 →
+ *   session-corrupt）。Return 已保存，失败如实携带 code/message。
+ */
+export type ReturnNavigationOutcome =
+  | { readonly status: "navigated" }
+  | { readonly status: "no-session" }
+  | { readonly status: "failed"; readonly code: TreeAIErrorCode; readonly message: string };
+
+/** submitReturn 的结果：turn 为新建或幂等重放的 Return；created 标记本次调用是否新建落库；navigation 为保存后的回程导航结果（与保存结果分离）。 */
 export interface ReturnSubmission {
   readonly turn: Turn;
   /** false = 幂等重放（同键同内容的既有 Return，本次调用零写入）。 */
   readonly created: boolean;
+  /** 先保存后导航（signed v3 §3.5）：保存成功后对 Trunk 的导航尝试结果。 */
+  readonly navigation: ReturnNavigationOutcome;
 }
 
 /* ------------------------------------------------------------------ */
@@ -768,12 +815,19 @@ export class TreeStudioService {
     const trunk = branches.find((b) => b.parentBranchId === null) ?? null;
     const views: BranchView[] = branches.map((branch) => {
       const origin = this.repository.findBranchOrigin(branch.id);
+      const turns = this.repository.listTurns(branch.id);
+      // 采用尝试投影（signed v3 §3.2）：return turns 各自的尝试历史
+      // （关联 + Run 结果；安全字段同 RunDiagnostics）。
+      const returnAttempts = turns
+        .filter((turn) => turn.role === "return")
+        .flatMap((turn) => this.#returnAttemptViews(turn));
       return {
         branch,
         origin,
         originStatus: origin === null ? null : this.#anchorStatus(origin),
         sessionAvailability: this.#branchSessionAvailability(branch),
-        turns: this.repository.listTurns(branch.id),
+        turns,
+        returnAttempts,
       };
     });
     return {
@@ -782,6 +836,21 @@ export class TreeStudioService {
       branches: views,
       cursor: this.#cursorInfo(tree.id),
     };
+  }
+
+  /** 单个 return turn 的采用尝试安全投影（追加序；Run 结果随附，无 session 引用/路径/details）。 */
+  #returnAttemptViews(turn: Turn): ReturnAttemptView[] {
+    return this.repository.listReturnAdoptionAttempts(turn.id).map((attempt) => {
+      const run = this.repository.getRun(attempt.runId);
+      return {
+        turnId: turn.id,
+        runId: attempt.runId,
+        runState: run.state,
+        failure: run.failure === undefined ? null : { code: run.failure.code, message: run.failure.message },
+        attemptedAt: attempt.attemptedAt,
+        terminalAt: run.terminalAt,
+      };
+    });
   }
 
   #cursorInfo(treeId: TreeId): SessionCursorInfo | null {
@@ -987,6 +1056,18 @@ export class TreeStudioService {
 
       const episode = this.repository.createEpisode(branch.id);
       const run = this.repository.createRun(episode.id, preRef);
+      // 采用尝试关联（已签署 W1 v3.0 §3.2）：本次 Run 的确定输入（组合
+      // 文本）已包含这些 pending Return → 各记一条 Return→Run 关联。
+      // Run 结果（succeeded/failed/aborted）由 runs 行自身记录，读取面以
+      // 关联 + run 状态联合投影；失败/中止后 Return 保持 pending，
+      // 下一次主干 prompt 会再次组装并新增关联（pending 重注入不变）。
+      if (pendingReturns.length > 0) {
+        this.repository.transaction(() => {
+          for (const pending of pendingReturns) {
+            this.repository.recordReturnAdoptionAttempt(pending.id, run.id);
+          }
+        });
+      }
       this.repository.updateRunState(run.id, "running");
       this.#activeRun = {
         treeId: tree.id,
@@ -1067,6 +1148,8 @@ export class TreeStudioService {
           text: result.message,
           piEntryId: result.reference.entryId,
         });
+        // 首次成功采用标记（条件 UPDATE：至多写一次；此前的失败/中止尝试
+        // 只留在 return_adoption_attempts，Return 的 pending 过滤随之解除）。
         for (const pending of pendingReturns) {
           this.repository.markReturnDelivered(pending.id, run.id);
         }
@@ -1309,21 +1392,25 @@ export class TreeStudioService {
    * （客户端生成，跨失败重试保持稳定），targetAnchor 为提交时出处分支
    * origin 的快照（原分叉点的展示定位）。
    *
-   * 写入顺序即契约（先导航后落库的既有次序不变）：
-   * 1. 幂等重放检查（先于导航、零写入）：同键同内容（fromBranchId +
-   *    text）→ 直接返回既有 Return（created === false）；同键不同内容
-   *    → ReturnConflictError。响应丢失后的客户端重试因此不会产生第二条
-   *    Return；
-   * 2. 导航回 Trunk 续聊点：导航失败（如 Pi session 文件缺失 →
-   *    session-corrupt）在任何 Return 落库之前抛出 → 同键重试不重复；
-   * 3. 单事务落库（episode + return turn）。并发同键竞争由
-   *    turns.idempotency_key 部分唯一索引裁决：判负方事务整体回滚
-   *    （无悬挂 episode），按键重读——同内容返回既有 Return
-   *    （created === false），不同内容 ReturnConflictError。
-   *
-   * Trunk 尚无 session（new-session）时不导航、不建 session（与
-   * switchBranch 语义一致），Return 直接落库，待首次 Trunk prompt 时建
-   * session 并送达（送达恰一次，见 prompt / markReturnDelivered）。
+   * 写入顺序即契约（已签署 W1 v3.0 §3.5：先保存，后导航）：
+   * 1. 校验产品对象（tree/branch/出处 origin/Trunk 定位）与提交身份；
+   * 2. 幂等重放检查（零写入）：同键同内容（fromBranchId + text）→
+   *    直接返回既有 Return（created === false）；同键不同内容 →
+   *    ReturnConflictError（零写入，不尝试导航）。响应丢失后的客户端
+   *    重试因此不会产生第二条 Return；
+   * 3. 单事务落库（episode + return turn）——Return 的可靠保存不以
+   *    Pi 导航成功为前提：session 缺失/损坏、无 session 的新 Trunk 均
+   *    照常保存。并发同键竞争由树内唯一索引 UNIQUE(tree_id,
+   *    idempotency_key) 裁决：判负方事务整体回滚（无悬挂 episode），
+   *    按键重读——同内容返回既有 Return（created === false），不同
+   *    内容 ReturnConflictError；
+   * 4. 保存成功后再尝试回程导航（switchBranch 对准 Trunk 续聊点）。
+   *    导航失败不回滚、不抛错：结果如实随 ReturnSubmission.navigation
+   *    返回（failed + code/message），由 HTTP/UI 分开呈现「已保存，
+   *    返回主线失败」；重放路径同样尝试导航（重试即重新导航的载体）。
+   *    Trunk 尚无 session（new-session）→ navigation "no-session"
+   *    （无可导航对象；首次 Trunk prompt 时建立 session 并采用，
+   *    见 prompt / markReturnDelivered）。
    */
   async submitReturn(
     treeId: TreeId,
@@ -1342,10 +1429,16 @@ export class TreeStudioService {
     if (branch.treeId !== tree.id) {
       throw new InvalidArgumentError(`branch ${fromBranchId} belongs to tree ${branch.treeId}, not ${tree.id}`);
     }
-    // 幂等重放（先于导航与任何写入）：同键同内容 → 既有 Return；同键异容 → 冲突。
+    const branches = this.repository.listBranches(tree.id);
+    const trunk = branches.find((b) => b.parentBranchId === null);
+    if (trunk === undefined) {
+      throw new InvalidArgumentError(`tree ${tree.id} has no trunk (root) branch`);
+    }
+    // 幂等重放（先于任何写入）：同键同内容 → 既有 Return；同键异容 → 冲突。
     const replay = this.repository.findReturnByIdempotencyKey(tree.id, idempotencyKey);
     if (replay !== null) {
-      return { turn: this.#alignWithExistingReturn(idempotencyKey, replay, branch.id, text), created: false };
+      const turn = this.#alignWithExistingReturn(idempotencyKey, replay, branch.id, text);
+      return { turn, created: false, navigation: await this.#navigateBackToTrunk(tree.id, trunk.id) };
     }
     const origin = this.repository.findBranchOrigin(branch.id);
     if (origin === null) {
@@ -1353,23 +1446,16 @@ export class TreeStudioService {
         `branch ${fromBranchId} has no origin; only anchored branches can submit a return`,
       );
     }
-    const branches = this.repository.listBranches(tree.id);
-    const trunk = branches.find((b) => b.parentBranchId === null);
-    if (trunk === undefined) {
-      throw new InvalidArgumentError(`tree ${tree.id} has no trunk (root) branch`);
-    }
-    // 先导航后写入：导航失败（运行期 TreeAIError，如 session 文件缺失）
-    // 在任何 Return 持久化之前抛出 → 重试不产生重复 Return。
-    await this.switchBranch(tree.id, trunk.id);
     const targetAnchor: ReturnTargetAnchor = {
       sourceBranchId: origin.sourceBranchId,
       anchorTurnId: origin.anchorTurnId,
       anchorEntryId: origin.anchorEntryId,
       selection: origin.selection,
     };
+    let turn: Turn;
     try {
       // 单事务：唯一索引判负时 episode 随 return 一并回滚，不留悬挂回合。
-      const turn = this.repository.transaction(() => {
+      turn = this.repository.transaction(() => {
         const episode = this.repository.createEpisode(trunk.id);
         return this.repository.createTurn({
           treeId: tree.id,
@@ -1382,17 +1468,38 @@ export class TreeStudioService {
           targetAnchor,
         });
       });
-      return { turn, created: true };
     } catch (error) {
       // 并发同键竞争：唯一索引判负 → 事务已回滚，按键重读并按内容对齐；
       // 非同键竞争的约束失败（重读为空）原样上抛。
       if (error instanceof ConstraintViolationError) {
         const raced = this.repository.findReturnByIdempotencyKey(tree.id, idempotencyKey);
         if (raced !== null) {
-          return { turn: this.#alignWithExistingReturn(idempotencyKey, raced, branch.id, text), created: false };
+          return {
+            turn: this.#alignWithExistingReturn(idempotencyKey, raced, branch.id, text),
+            created: false,
+            navigation: await this.#navigateBackToTrunk(tree.id, trunk.id),
+          };
         }
       }
       throw error;
+    }
+    // 保存成功后再导航：失败不回滚、不抛错（结果分离呈现，signed v3 §3.5）。
+    const navigation = await this.#navigateBackToTrunk(tree.id, trunk.id);
+    return { turn, created: true, navigation };
+  }
+
+  /**
+   * 保存后的回程导航尝试（对准 Trunk 续聊点）。Trunk 尚无 session →
+   * "no-session"（无可导航对象）；导航成功 → "navigated"；失败 →
+   * "failed" + TreeAIError code/message（导航失败绝不影响已保存的 Return）。
+   */
+  async #navigateBackToTrunk(treeId: TreeId, trunkId: BranchId): Promise<ReturnNavigationOutcome> {
+    try {
+      const cursor = await this.switchBranch(treeId, trunkId);
+      return cursor === null ? { status: "no-session" } : { status: "navigated" };
+    } catch (error) {
+      const treeAIError = toTreeAIError(error);
+      return { status: "failed", code: treeAIError.code, message: treeAIError.message };
     }
   }
 

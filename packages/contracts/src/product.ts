@@ -24,24 +24,34 @@
  * - piEntryId：仅 assistant turn 携带（PiPromptResult.reference.entryId，
  *   即该 Run 完成后的叶条目）；user turn 经 PiRuntime 契约拿不到自身
  *   条目 id，固定为 null；
- * - deliveredRunId：仅 return turn 使用——把它送入主干 Pi 上下文的
- *   那次主干 Run（见产品服务）；未送达为 null；
+ * - deliveredRunId：仅 return turn 使用——首次成功采用它的那次主干 Run
+ *   （见产品服务）；此前/此后可以有失败或中止的采用尝试（记录于
+ *   persistence 的 return_adoption_attempts 关联表，migration 0006），
+ *   但 deliveredRunId 只记录第一次成功采用；尚未成功采用为 null；
  * - idempotencyKey：仅 return turn 使用——提交方为一次逻辑提交生成的
  *   稳定幂等键（建议 UUID）；提交重试携带同键：同键同内容（fromBranchId
- *   与 text）重放同一条 Return，同键不同内容视为冲突。存储层以部分
- *   唯一索引强制同键至多一条 Return；历史 Return（迁移前落库）为 null；
+ *   与 text）重放同一条 Return，同键不同内容视为冲突。存储层以每 Tree
+ *   部分唯一索引 UNIQUE(tree_id, idempotency_key) 强制同键在同一棵树内
+ *   至多一条 Return（不同树可各自使用同键，signed W1 v3.0 §3.4）；
+ *   历史 Return（迁移前落库）为 null；
  * - targetAnchor：仅 return turn 使用——提交时对出处分支 BranchOrigin
  *   的快照（sourceBranchId/anchorTurnId/anchorEntryId/selection），
  *   标识该 Return 的原分叉点（"原分叉点附近"的展示锚点）；历史 Return
  *   为 null。
  *
- * Return 状态词汇（draft/confirmed/delivered；持久层不新增列，
- * 持久态由 deliveredRunId 派生）：
- * - draft：客户端编辑中的 Return 草稿（含幂等键与文本），未持久化；
- * - confirmed：已落库、deliveredRunId === null——等待下一次主干 prompt
- *   送入 Pi 上下文；
- * - delivered：deliveredRunId !== null——已由该主干 Run 送入 Pi 上下文
- *   （送达恰一次，见产品服务）。
+ * Return 状态词汇（signed W1 v3.0 §3.2：draft/saved/adoption attempt/
+ * successfully adopted；持久层不新增状态列，saved/attempted/adopted
+ * 持久态由 deliveredRunId 与 return_adoption_attempts 派生）：
+ * - draft：客户端编辑中的 Return 草稿（含幂等键与文本），未持久化——
+ *   仅存在于浏览器本地，不是模型上下文的一部分；
+ * - saved：已落库（deliveredRunId === null 且尚无采用尝试）——保存成功
+ *   与返回主线导航成功是两件独立的事（保存先于导航，§3.5）：导航失败
+ *   时 Return 仍是已保存；
+ * - adoption attempted：某个主干 Run 的确定输入已包含该 Return
+ *   （return_adoption_attempts 有记录），但尚未成功——失败/中止的尝试
+ *   不消耗该 Return，仍在下一次主干 prompt 前重新注入；
+ * - successfully adopted：deliveredRunId !== null——首次成功完成的那次
+ *   主干 Run 已把它送入 Pi 上下文（恰记录一次，此后不再重复注入）。
  *
  * BranchOrigin 不变量：
  * - 每个非根分支至多一条 origin 记录（根分支/无锚点分支没有）；
@@ -89,7 +99,7 @@ export interface Turn {
   readonly piEntryId: PiEntryId | null;
   /** role === "return" 时的出处分支；其他 role 为 null。 */
   readonly fromBranchId: BranchId | null;
-  /** 把该 return 送入主干 Pi 上下文的 Run；未送达为 null。 */
+  /** 首次成功采用该 return 的主干 Run（signed v3 §3.2）；尚未成功采用为 null。失败/中止的采用尝试记录在 return_adoption_attempts，不改变本字段。 */
   readonly deliveredRunId: RunId | null;
   /** role === "return" 时的提交幂等键（同键重试对齐同一条 Return）；其他 role 为 null。 */
   readonly idempotencyKey: string | null;

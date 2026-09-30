@@ -672,6 +672,7 @@ button.panel-close:hover { background: #dcebe0; }
 
 .drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
 .drawer-list li { margin: 5px 0; line-height: 1.5; }
+.drawer-list li.attempt { margin: 2px 0 2px 14px; color: var(--muted); font-size: 11px; }
 .drawer-list.journal-list li { font-family: var(--font-mono); font-size: 11px; }
 
 /* journal 加载失败态的重试（W2 §2.7 打开-加载失败；issue #3 P1——

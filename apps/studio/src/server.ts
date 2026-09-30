@@ -10,9 +10,13 @@
  * （TreeAIError code "user-abort"）→ 409；其余运行期 TreeAIError → 502
  * （上游失败）；PersistenceError → 500；其余 → 500。
  *
- * POST /api/trees/:id/return 幂等语义：新建 Return → 201；同
- * idempotencyKey 同内容重放 → 200（同一 returnTurn，零新写入）；同键
- * 不同内容 → 409 return-conflict。两种成功均返回 {returnTurn, state}。
+ * POST /api/trees/:id/return 幂等语义（保存先于导航，signed W1 v3.0
+ * §3.5）：新建 Return → 201；同 idempotencyKey 同内容重放 → 200（同一
+ * returnTurn，零新写入）；同键不同内容 → 409 return-conflict。两种成功
+ * 均返回 {returnTurn, navigation, state}——navigation 为保存后回程导航
+ * 的结果（navigated / no-session / failed+code+message）：导航失败不是
+ * HTTP 错误（Return 已保存），客户端按「已保存，返回主线失败」分开呈现；
+ * 主干尚无 session 时仍照常保存（navigation "no-session"）。
  *
  * GET /api/trees/:id/events —— SSE（text/event-stream, no-store）：
  * 连接即发送 snapshot 事件（当前 getTreeDiagnostics 投影），随后转发该
@@ -352,10 +356,11 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         }
         if (action === "return" && method === "POST") {
           const body = await readJsonBody(req);
-          // 幂等 Return：新建 201 / 同键同内容重放 200（同一 returnTurn，
-          // 零新写入）/ 同键不同内容 409 return-conflict；导航失败（如
-          // session 文件缺失 → 502 session-corrupt）时 Return 未写入，
-          // 同键重试不重复。
+          // 幂等 Return（保存先于导航，signed v3 §3.5）：新建 201 / 同键
+          // 同内容重放 200（同一 returnTurn，零新写入）/ 同键不同内容 409
+          // return-conflict。保存成功后的回程导航失败不映射为 HTTP 错误
+          // ——Return 已保存，导航结果随 navigation 字段分离呈现（failed
+          // + code/message），重放路径同样返回导航结果（重试即重新导航）。
           const submission = await service.submitReturn(
             treeId,
             requireString(body, "fromBranchId") as BranchId,
@@ -364,6 +369,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           );
           sendJson(res, submission.created ? 201 : 200, {
             returnTurn: submission.turn,
+            navigation: submission.navigation,
             state: service.getTreeState(treeId),
           });
           return;

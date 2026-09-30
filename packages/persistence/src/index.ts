@@ -23,6 +23,7 @@ export {
   type EpisodeRecovery,
   type BranchRecovery,
   type RestoreOptions,
+  type ReturnAdoptionAttempt,
   type SessionFileSweepResult,
   type SetBranchOriginInput,
   type TreeRecovery,
