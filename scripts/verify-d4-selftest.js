@@ -53,6 +53,11 @@ function buildSyntheticTree(dest) {
     join(dest, "docs", "adr", "ADR-003-d4-material-sources-versions-run-origins.md"),
     { recursive: true, force: true },
   );
+  cpSync(
+    join(ROOT, "docs", "adr", "ADR-004-d4-material-branching-and-first-question.md"),
+    join(dest, "docs", "adr", "ADR-004-d4-material-branching-and-first-question.md"),
+    { recursive: true, force: true },
+  );
 }
 
 function runVerifier(root, runsRoot) {
@@ -159,6 +164,17 @@ const SCENARIOS = [
     },
     expectCheck: "docs-integrity-d4",
     expectNeedle: "D4-project-v1.md",
+  },
+  {
+    id: "inject-missing-adr-004",
+    inject: (root) => {
+      rmSync(
+        join(root, "docs", "adr", "ADR-004-d4-material-branching-and-first-question.md"),
+        { force: true },
+      );
+    },
+    expectCheck: "docs-integrity-d4",
+    expectNeedle: "ADR-004 missing",
   },
   {
     id: "inject-unwired-entrypoint",

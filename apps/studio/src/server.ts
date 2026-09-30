@@ -161,7 +161,6 @@ import {
   MaterialBranchConflictError,
   MaterialBranchingService,
   MaterialFirstQuestionConflictError,
-  type MaterialContextView,
 } from "./materials/branching.ts";
 import type { SearchDocumentKind } from "./search/search-engine.ts";
 import {
