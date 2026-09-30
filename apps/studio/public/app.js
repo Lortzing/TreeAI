@@ -5590,7 +5590,18 @@ function renderMaterialBranchFlow() {
   input.disabled = flow.submitting;
   input.addEventListener("input", () => {
     const current = state.materialBranching;
-    if (current !== null) current.firstQuestion = input.value;
+    if (current !== null) {
+      current.firstQuestion = input.value;
+      /* 草稿随挂起意图持久化（同 Return 草稿纪律——刷新/重启后续走不丢输入）。 */
+      if (state.currentTreeId !== null) {
+        persistPendingMaterialIntent(
+          state.currentTreeId,
+          materialSelectionIdentity(current.selection),
+          current.intentKey,
+          input.value,
+        );
+      }
+    }
   });
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
