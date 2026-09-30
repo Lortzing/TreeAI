@@ -306,8 +306,9 @@ try {
   check(/升级成功/.test(upgrade.stdout), "输出升级成功", upgrade.stdout);
   check(/数据未做任何改动/.test(upgrade.stdout), "输出数据未动说明", upgrade.stdout);
   check(readdirHasBackup(dirname(extracted), basename(extracted)), "旧版本备份目录存在", dirname(extracted));
-  const upgradedUrl = parseUrlFrom(upgrade.stdout)?.url ?? base2;
-  const upgradedTrees = await httpJson(`${upgradedUrl}/api/trees`);
+  const upgradedUrl = parseUrlFrom(upgrade.stdout);
+  check(upgradedUrl !== null, "升级成功输出含实际 url=", upgrade.stdout);
+  const upgradedTrees = await httpJson(`${upgradedUrl?.url ?? base2}/api/trees`);
   check(upgradedTrees.body?.["trees"]?.some((t) => t["id"] === treeId), "升级后数据保留（树仍在）");
 
   /* ---- 10. 卸载 ---- */

@@ -773,7 +773,12 @@ async function cmdUpgrade(args: readonly string[]): Promise<number> {
   );
   out(`treeai-launcher: 用户数据未做任何改动：${dataDir()}`);
   const urlMatch = /url=(http:\/\/127\.0\.0\.1:\d+)/.exec(probeText);
-  if (urlMatch !== null) openBrowser(urlMatch[1]!, { noBrowser: false });
+  if (urlMatch !== null) {
+    out(`treeai-launcher: url=${urlMatch[1]}`);
+    openBrowser(urlMatch[1]!, { noBrowser: false });
+  } else {
+    fail("升级成功但无法解析新实例 URL（内部探针输出异常）——请运行 doctor 检查");
+  }
   logLine(`upgrade ${oldVersion} -> ${newManifest.bundleVersion} ok`);
   return 0;
 }
