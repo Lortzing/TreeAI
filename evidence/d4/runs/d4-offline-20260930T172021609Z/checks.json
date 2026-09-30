@@ -1,0 +1,27 @@
+{
+  "runId": "d4-offline-20260930T172021609Z",
+  "checks": [
+    {
+      "durationMs": 2487,
+      "status": "FAIL",
+      "exitCode": 2,
+      "error": {
+        "message": "post-restore search rebuild diverges for 'K-means': [\"material:tree_2fa313d3-395b-472d-b1f9-742dd9491248:material:matver_fadd0cb3-1aed-4d36-b5c6-cf90b1e1c0fd\",\"material:tree_d4aee582-529c-415e-a637-2ab2fc7ea89f:material:matver_fadd0cb3-1aed-4d36-b5c6-cf90b1e1c0fd\",\"material:tree_2fa313d3-395b-472d-b1f9-742dd9491248:material:matver_b22149e0-8d54-4119-878e-0d8fc458ce1a\",\"material:tree_d4aee582-529c-415e-a637-2ab2fc7ea89f:material:matver_b22149e0-8d54-4119-878e-0d8fc458ce1a\"] vs [\"material:tree_2fa313d3-395b-472d-b1f9-742dd9491248:material:matver_5ea959b3-c3b5-4319-bf71-51353a23ca25\",\"material:tree_d4aee582-529c-415e-a637-2ab2fc7ea89f:material:matver_5ea959b3-c3b5-4319-bf71-51353a23ca25\",\"material:tree_2fa313d3-395b-472d-b1f9-742dd9491248:material:matver_fadd0cb3-1aed-4d36-b5c6-cf90b1e1c0fd\",\"material:tree_d4aee582-529c-415e-a637-2ab2fc7ea89f:material:matver_fadd0cb3-1aed-4d36-b5c6-cf90b1e1c0fd\",\"material:tree_2fa313d3-395b-472d-b1f9-742dd9491248:material:matver_b22149e0-8d54-4119-878e-0d8fc458ce1a\",\"material:tree_d4aee582-529c-415e-a637-2ab2fc7ea89f:material:matver_b22149e0-8d54-4119-878e-0d8fc458ce1a\"]"
+      },
+      "detail": "export→empty-dir restore→integrity compare clean (facts/returns/excerpts survive); corrupted package refused (target stays empty, source byte-identical); material new version keeps old excerpt linkage; whole-session deletion degrades availability honestly with all fact rows readable and unchanged; parse cancel holds after restore; per-request search rebuild identical over source and restored databases; browser-path items stay with run:d4-browser (not claimed here)",
+      "id": "b5-restore-integrity"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

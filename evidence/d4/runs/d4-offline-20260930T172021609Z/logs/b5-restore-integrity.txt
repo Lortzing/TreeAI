@@ -1,0 +1,17 @@
+b5 restore/asset-integrity check
+dataset: representative facts built through the real import pipeline + repositories (2 trees, 3 branches, 2 runs, 3 turns incl. a return, material v1+v2, terminology annotation+dispatch)
+cli export: exit 0 → /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-b5-restore-5zmDAq/pkg
+cli restore: exit 0 → /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-b5-restore-5zmDAq/restored
+integrity compare: every fact table row and material blob survives the round trip (0 problems)
+saved facts: 3 trunk turns incl. 1 return; material origin excerpt still slices exactly from the restored v1 text
+material new version: v3 ready; version chain now 3 versions (old versions kept)
+old excerpt linkage: the v1-anchored origin still resolves against the unchanged v1 canonical text
+corrupted package: CLI refused with exit 2 (treeai-studio restore: refused (checksum-mismatch): entry 'facts/turns.json' fails its SHA-256 checksum (package tampered or corrupted))
+existing data unchanged: source database byte-identical; the empty target stays empty
+non-empty target: refused (target-not-empty)
+sessions package: export → restore → integrity compare 0 problems (carried references rewritten)
+session deletion sweep: 2 distinct session file(s) referenced; 2 now missing on disk → availability honestly degraded
+facts readable after session deletion: 3 trunk turns, material v2 readable, all fact row counts unchanged (session loss never cascades — new exploration is the explicit product path, charter §1 path 6)
+parse cancel after restore: canceled state holds, late result discarded, 1 version(s) none ready; restored facts untouched
+index rebuild: '轮廓系数' → 7 hit(s), identical sequence over source and restored databases
+index rebuild: 'DBSCAN' → 4 hit(s), identical sequence over source and restored databases

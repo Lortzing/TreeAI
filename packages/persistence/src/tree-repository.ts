@@ -1214,6 +1214,23 @@ export class TreeRepository {
   }
 
   /**
+   * 材料来源存在性探针（D4-3，ADR-004）：该分支是否带有
+   * material_branch_origins 行。材料来源的**完整读取**归
+   * MaterialRepository.getBranchOrigin（ADR-003 §2 统一读取），本探针只
+   * 服务产品服务的续聊点/Return 前置判定——材料分支无 Turn 来源也无 run
+   * 时的 new-session 语义、材料分支 Return 的 targetAnchor=null 路径——
+   * 不复制来源读模型。表随 migration 0008 落地，打开即存在。
+   */
+  hasMaterialBranchOrigin(branchId: BranchId): boolean {
+    this.#assertOpen();
+    assertNonEmptyString(branchId, "branch id");
+    return (
+      this.#db!.prepare("SELECT 1 AS hit FROM material_branch_origins WHERE branch_id = ?").get(branchId) !==
+      undefined
+    );
+  }
+
+  /**
    * 标记 return turn 已由某次主干 Run 成功采用（deliveredRunId 只记录
    * **首次成功采用**的 Run——条件 UPDATE 保证至多写一次；不可二次送达，
    * 成功之后的 Run 不再重复注入）。采用尝试的完整历史（含失败/中止的

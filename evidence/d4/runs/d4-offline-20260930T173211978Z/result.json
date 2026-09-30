@@ -1,0 +1,41 @@
+{
+  "runId": "d4-offline-20260930T173211978Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-30T17:32:11.979Z",
+  "endedAt": "2026-09-30T17:32:12.215Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 3,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "durationMs": 111,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "14 deterministic scenarios passed on the real service stack (echo runtime, zero credentials)",
+      "id": "b3-material-exploration"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only b3-material-exploration executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

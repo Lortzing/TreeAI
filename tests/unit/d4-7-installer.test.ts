@@ -45,6 +45,7 @@ import {
   validateBundleLayout,
   validateBundleManifest,
   validateLauncherConfig,
+  windowsSelfDeleteScript,
 } from "../../scripts/d4/installer/core.ts";
 import { shimFilesFor } from "../../scripts/d4/installer/shims.ts";
 
@@ -481,9 +482,11 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
   const root = mkdtempSync(join(tmpdir(), "treeai-d47-ps1-"));
   try {
     writeFileSync(join(root, "treeai.ps1"), treeaiPs1Content());
-    /* posix 上 Join-Path $root "node\\node.exe" 是含字面反斜杠的文件名——
-       造同名可执行 stub 即可让脚本原样跑通（Windows 上该链路由 CI 冒烟实测）。 */
-    const stub = "node\\node.exe";
+    /* POSIX pwsh 会把 Join-Path 子路径里的 "\\" 规范化为 "/"（实测
+       `/…/node\node.exe` → `/…/node/node.exe`），stub 落在与真实产物相同的
+       node/node.exe 布局即可两边一致；Windows 上该链路由 CI 冒烟实测。 */
+    mkdirSync(join(root, "node"), { recursive: true });
+    const stub = join("node", "node.exe");
     writeFileSync(
       join(root, stub),
       '#!/bin/sh\nprintf \'%s\\n\' "$@" > "$TREEAI_ARGV_OUT"\n',
@@ -501,10 +504,11 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
       rmSync(argvOut, { force: true });
       return lines;
     };
-    /* 带额外参数：argv 必须是 [launcher.ts, start, --no-browser]，绝无 '+'。 */
+    /* 带额外参数：argv 必须是 [launcher.ts, start, --no-browser]，绝无 '+'。
+       POSIX pwsh 会把子路径的 "\\" 规范化为 "/"，两种分隔符都接受。 */
     const withArgs = invoke(["start", "--no-browser"]);
     assert.equal(withArgs.length, 3, `argv 不得混入多余参数：${JSON.stringify(withArgs)}`);
-    assert.match(withArgs[0]!, /launcher\\launcher\.ts$/);
+    assert.match(withArgs[0]!, /launcher[\\/]launcher\.ts$/);
     assert.deepEqual(withArgs.slice(1), ["start", "--no-browser"]);
     /* 无剩余参数：argv 必须恰好 [launcher.ts, doctor]——无 '+'、无空串。 */
     const bare = invoke(["doctor"]);
@@ -513,4 +517,33 @@ test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows �
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+/* Windows 卸载自删除（run 36747308856 回归：PS 5.1 Remove-Item 删不掉超
+   MAX_PATH 260 的 node_modules 深路径——最深相对路径 179 字符，稍深的
+   解压目录即超限，30 次重试全失败、目录残留）。修复纪律：robocopy 以
+   空目录 /MIR 镜像目标先清场（robocopy 原生支持长路径），再删已空的
+   短路径目录；重试循环等待 launcher 自身 node.exe 退出解锁。 */
+test("windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归）", () => {
+  const script = windowsSelfDeleteScript("D:\\a\\_temp\\smoke with spaces\\TreeAI App", "D:\\data dir\\uninstall-selfdelete.log");
+  /* 目标/日志路径按 PS 单引号字符串注入（内部 ' 加倍转义）。 */
+  assert.match(script, /\$target = 'D:\\a\\_temp\\smoke with spaces\\TreeAI App'/);
+  assert.match(script, /\$logPath = 'D:\\data dir\\uninstall-selfdelete\.log'/);
+  const quoted = windowsSelfDeleteScript("C:\\dir with 'quote'", "C:\\d 'q'\\u.log");
+  assert.match(quoted, /'C:\\dir with ''quote''/);
+  assert.match(quoted, /'C:\\d ''q''\\u\.log'/);
+  /* 临时目录用 Win32 GetTempPath（环境块缺 TEMP 仍可用——macOS pwsh 实测
+     $env:TEMP 为 null 曾使 Join-Path 抛错）。 */
+  assert.match(script, /\[System\.IO\.Path\]::GetTempPath\(\)/);
+  /* 每轮先 robocopy /MIR 清场（长路径），Remove-Item 只删已空目录。 */
+  assert.match(script, /robocopy \$empty \$target \/MIR \/NFL \/NDL \/NJH \/NJS \/NP/);
+  assert.match(script, /Remove-Item -LiteralPath \$target -Recurse -Force -ErrorAction Stop/);
+  /* 40 次 × 1s 重试（冒烟侧 waitFor 45s 窗口内）；逐尝试写日志（robocopy
+     退出码 + 残留计数 + Remove-Item 失败原因——run 36760164991 起定位用）。 */
+  assert.match(script, /for\(\$i=0; \$i -lt 40; \$i\+\+\)/);
+  assert.match(script, /Log \('attempt ' \+ \$i \+ ' robocopy=' \+ \$rc \+ ' left=' \+ \$left/);
+  assert.match(script, /if \(-not \$done\) \{ exit 1 \}/);
+  assert.match(script, /exit 0/);
+  /* 空目录临时文件自身也要清理。 */
+  assert.match(script, /Remove-Item -LiteralPath \$empty -Recurse -Force/);
 });

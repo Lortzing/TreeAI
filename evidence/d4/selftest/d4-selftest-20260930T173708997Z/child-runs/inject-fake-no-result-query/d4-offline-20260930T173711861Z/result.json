@@ -1,0 +1,57 @@
+{
+  "runId": "d4-offline-20260930T173711861Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-30T17:37:11.861Z",
+  "endedAt": "2026-09-30T17:37:11.986Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 4,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 22,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "b4 noResult q-neg-01: text actually present in the corpus"
+      },
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 25,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity-d4, docs-integrity-d4, entrypoints-d4 executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

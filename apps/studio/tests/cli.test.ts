@@ -317,3 +317,58 @@ test("the wired policy engine allows in-root reads and denies out-of-root reads,
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* D4-5 数据可携带：export 子命令 / --import-package 模式解析面          */
+/* （进程级真实走通由 verify:d4 b5 行的 d4-b5-restore.ts 覆盖——那里经
+   index.ts 的模式接线跑真实 CLI 子进程；本文件只测 parseArgs 语义。） */
+/* ------------------------------------------------------------------ */
+
+test("D4-5: 'export' subcommand parses --out/--include-sessions/--readable and lands in export mode", () => {
+  const options = parseArgs(["export", "--out", "/tmp/pkg-out"]);
+  assert.equal(options.mode, "export");
+  assert.equal(options.outDir, resolve("/tmp/pkg-out"));
+  assert.equal(options.includeSessions, false);
+  assert.equal(options.readable, false);
+  assert.equal(options.importPackageDir, null);
+  /* 既有字段不受影响（缺省面完整）。 */
+  assert.equal(options.driver, "echo");
+  assert.equal(options.port, 8787);
+
+  const full = parseArgs(["export", "--out", "pkg2", "--data", "/tmp/data", "--include-sessions", "--readable"]);
+  assert.equal(full.mode, "export");
+  assert.equal(full.outDir, resolve("pkg2"));
+  assert.equal(full.dataDir, resolve("/tmp/data"));
+  assert.equal(full.includeSessions, true);
+  assert.equal(full.readable, true);
+
+  /* export 专属布尔 flag 不吞掉后续 key/value 对。 */
+  const interleaved = parseArgs(["export", "--include-sessions", "--out", "pkg3"]);
+  assert.equal(interleaved.outDir, resolve("pkg3"));
+  assert.equal(interleaved.includeSessions, true);
+});
+
+test("D4-5: '--import-package DIR' parses into import mode and stays exclusive with 'export'", () => {
+  const options = parseArgs(["--import-package", "/tmp/pkg", "--data", "/tmp/restore-target"]);
+  assert.equal(options.mode, "import");
+  assert.equal(options.importPackageDir, resolve("/tmp/pkg"));
+  assert.equal(options.dataDir, resolve("/tmp/restore-target"));
+  assert.equal(options.outDir, null);
+
+  assert.throws(
+    () => parseArgs(["export", "--out", "x", "--import-package", "y"]),
+    /'export' and --import-package are separate modes/,
+  );
+});
+
+test("D4-5: export/import mode-confused and missing-value argvs fail with clear errors", () => {
+  assert.throws(() => parseArgs(["export"]), /export subcommand requires --out <dir>/);
+  assert.throws(() => parseArgs(["export", "--out", "  "]), /--out must be a non-empty directory path/);
+  assert.throws(() => parseArgs(["--out", "x"]), /--out applies only to the export subcommand/);
+  assert.throws(() => parseArgs(["--include-sessions"]), /--include-sessions applies only to the export subcommand/);
+  assert.throws(() => parseArgs(["--readable"]), /--readable applies only to the export subcommand/);
+  assert.throws(() => parseArgs(["--import-package"]), /bad or missing value/);
+  /* 无 D4-5 参数 → 既有 server 模式零变化。 */
+  assert.equal(parseArgs([]).mode, "server");
+  assert.equal(parseArgs(["--port", "9"]).mode, "server");
+});

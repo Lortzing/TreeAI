@@ -42,7 +42,9 @@ import { EvidenceWriter } from "../tests/support/verifier/evidence.ts";
 import { verifyD4FixturesIntegrity } from "../tests/support/verifier/d4-probes.ts";
 import { runB1ImportCheck } from "../tests/support/verifier/d4-b1-import.ts";
 import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
+import { runB3ExplorationCheck } from "../tests/support/verifier/d4-b3-exploration.ts";
 import { runB4SearchCheck } from "../tests/support/verifier/d4-b4-search.ts";
+import { runB5RestoreCheck } from "../tests/support/verifier/d4-b5-restore.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -278,6 +280,15 @@ const CHECKS = [
           if (!adr.includes(marker)) problems.push(`ADR-003 missing marker: ${marker}`);
         }
       }
+      const adr4Path = join(ROOT, "docs", "adr", "ADR-004-d4-material-branching-and-first-question.md");
+      const adr4 = existsSync(adr4Path) ? readFileSync(adr4Path, "utf8") : null;
+      if (adr4 === null) {
+        problems.push("ADR-004 missing");
+      } else {
+        for (const marker of ["**状态：Accepted", "决策一", "决策四", "测试义务"]) {
+          if (!adr4.includes(marker)) problems.push(`ADR-004 missing marker: ${marker}`);
+        }
+      }
       const contractsPath = join(ROOT, "docs", "d4", "D4-contracts.md");
       const contracts = existsSync(contractsPath) ? readFileSync(contractsPath, "utf8") : null;
       if (contracts === null) {
@@ -431,11 +442,52 @@ const CHECKS = [
     },
   },
   {
+    id: "b3-material-exploration",
+    // REAL executing check (D4-3): the material exploration loop runs on the
+    // real service stack (MaterialImportService + MaterialRangeResolver +
+    // MaterialBranchingService over the real TreeStudioService, offline echo
+    // Pi runtime — zero credentials) against frozen B1 fixtures plus
+    // deterministic data generated inside the check. Covers the offline-
+    // executable core of charter §3.3/B3: create-from-selection (md + pdf),
+    // context window honesty (24,000-unit cap, truncation marker, oversized
+    // selection refusal), independent run origin, idempotent first question
+    // (replay + post-restart determinism), 409 conflicts, reconcile-before-
+    // action (unknown/failed), restore vs explicit new + look-alike/cross-tree
+    // isolation, material return with source card, missing-session explicit
+    // new exploration, non-ready refusal. The REAL-Pi part of charter B3
+    // (browser evidence at the final candidate SHA) stays with
+    // run:d4-browser --mode real-pi — see b3-real-exploration.
+    fn: async () => {
+      const d4Root = join(ROOT, "tests", "fixtures", "d4");
+      if (!existsSync(d4Root)) {
+        return {
+          status: "NOT_RUN",
+          exitCode: null,
+          reason: "tests/fixtures/d4 not present in this tree",
+        };
+      }
+      const outcome = await runB3ExplorationCheck(d4Root);
+      log("b3-material-exploration", `b3 material exploration check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
+  },
+  {
     id: "b3-real-exploration",
     fn: notRunCheck(
       "b3-real-exploration",
       "D4-3",
-      "material exploration loop not implemented; real-Pi evidence is produced by run:d4-browser --mode real-pi, not offline",
+      "the backend loop is delivered and executed offline (b3-material-exploration, echo runtime); the REAL-Pi browser evidence for charter B3 (≥1 markdown + ≥1 pdf branch, ≥2 follow-up rounds each, cross-branch isolation, return closed loop, double-click/response-loss/restart) is produced by run:d4-browser --mode real-pi at the final candidate SHA — not offline",
     ),
   },
   {
@@ -479,7 +531,36 @@ const CHECKS = [
   },
   {
     id: "b5-restore-integrity",
-    fn: notRunCheck("b5-restore-integrity", "D4-5", "export/restore not implemented"),
+    // REAL executing check (D4-5): export/restore portability through the
+    // actual CLI entry (subprocesses running apps/studio/src/index.ts export /
+    // --import-package) against a representative dataset built by the real
+    // import pipeline + repositories. Covers the offline-mechanical slice of
+    // charter B5: empty-dir restore integrity compare (saved facts/returns/
+    // excerpts survive), corrupted package refused with the target and source
+    // untouched, material new version keeps old excerpt linkage, whole-session
+    // deletion degrades availability honestly (facts stay readable; explicit
+    // new exploration is the product path), parse cancel holds after restore,
+    // and per-request search rebuild identical over source and restored
+    // databases (B5 索引删除重建). The browser-path items of B5 (restart+
+    // resume in a real browser, the explicit-new-exploration UI affordance)
+    // stay with run:d4-browser / the final candidate-SHA regression — not
+    // claimed here.
+    fn: async () => {
+      const outcome = await runB5RestoreCheck(ROOT);
+      log("b5-restore-integrity", `b5 restore/asset-integrity check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
   },
   {
     id: "b6-scale-performance",

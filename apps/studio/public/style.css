@@ -156,6 +156,114 @@ body {
 #material-list li.muted { font-size: 12px; color: var(--muted); line-height: 1.5; }
 #material-list .drawer-retry { margin-top: 4px; }
 
+/* D4-4 搜索（issue #8 工作包 D4-4，charter §5）：侧栏第四段——跨已保存
+   产品事实的检索面。表单（输入 + 范围开关 + 来源类型筛选 + 执行）是静态
+   DOM（app.js 只同步开关态）；结果列表与材料列表同形态（全宽左对齐按钮
+   行，白名单换行），行内并排 session 不可用注记 + 「⑃ 新探索」换轨入口。
+   旧版本命中的「旧版本」标注用暖金（版本诚实同 D4-2 的 older 标注色系）。 */
+#search-section { gap: 7px; }
+#search-input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+#search-input:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+#search-input::placeholder { color: var(--muted); }
+
+.search-scope, .search-kinds { display: flex; flex-wrap: wrap; gap: 5px; }
+.search-scope-toggle, .search-kind-toggle {
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.search-scope-toggle:hover:not(:disabled), .search-kind-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+.search-scope-toggle.active, .search-kind-toggle.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+#search-run { width: 100%; }
+#search-status { margin: 0; font-size: 11px; line-height: 1.5; }
+
+#search-results { list-style: none; margin: 0; padding: 0; }
+#search-results li { margin: 4px 0; }
+#search-results li.muted { font-size: 12px; line-height: 1.5; }
+#search-results button.search-hit {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+#search-results button.search-hit:hover { background: var(--surface-dim); }
+.search-hit-kind {
+  display: inline-block;
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
+  margin-right: 6px;
+  border-radius: 4px;
+  vertical-align: 1px;
+}
+.search-hit-kind.k-material { background: var(--green-wash); color: var(--green-deep); }
+.search-hit-kind.k-annotation { background: var(--gold-wash); color: var(--gold-deep); }
+.search-hit-kind.k-return { background: var(--gold); color: #fff; }
+.search-hit-kind.k-turn { background: var(--surface-dim); color: var(--ink-soft); border: 1px solid var(--line); }
+.search-hit-title { font-weight: 600; }
+.search-hit-meta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: normal;
+}
+.search-hit-meta .search-old-version { color: var(--gold-deep); font-weight: 600; }
+.search-hit-excerpt {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.search-hit-session {
+  margin: 2px 0 4px;
+  padding: 5px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  background: var(--gold-wash);
+  font-size: 11px;
+  color: var(--gold-deep);
+  line-height: 1.45;
+}
+.search-hit-session-text { display: block; }
+.search-hit-explore {
+  margin-top: 4px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: var(--gold);
+  color: #fff;
+  cursor: pointer;
+}
+.search-hit-explore:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+
+
 /* 树列表加载失败态（W2 §2.1）：常驻错误 + 重试——与 8 秒自动隐藏横幅
    不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
    “Retrying…” 文案（诚实待态）。 */

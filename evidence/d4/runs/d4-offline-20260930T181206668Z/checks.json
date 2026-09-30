@@ -1,0 +1,129 @@
+{
+  "runId": "d4-offline-20260930T181206668Z",
+  "checks": [
+    {
+      "durationMs": 24,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "79 files hashed; B1 12 md + 12 pdf + 8 negatives + 1 version pair(s); B2 75 valid / 17 invalid; B4 55 positive / 12 no-result",
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 28,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "durationMs": 3914,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 1044,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 248,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 224.511042",
+      "id": "unit-tests-d4"
+    },
+    {
+      "durationMs": 103,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "24/24 ready fixtures round-trip byte-exact (markdown 12 + pdf 12); 8/8 negatives rejected with the frozen reason (emptyx1, invalid-utf8x1, nul-bytex1, whitespace-onlyx1, encryptedx1, corruptx1, no-text-layerx2); same-bytes reuse 24/24; version pairs 1 executed / 1 registered; oversize probes: 3/3 probes rejected correctly (3 registered)",
+      "id": "b1-import-versions"
+    },
+    {
+      "durationMs": 72,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "75/75 valid selections resolved exactly through the product range layer (repeat-word-2nd x10, cross-line x11, unicode-family x12, long-tail x9); 17/17 invalid selections rejected with the frozen category reason (out-of-boundsx2, zero-lengthx1, reversedx1, surrogate-splitx1, combining-splitx1, emoji-splitx1, cross-pagex2, block-mismatchx2, excerpt-mismatchx2, stale-versionx2, unsupported-materialx2); mis-locations 0 (charter B2 requires 0)",
+      "id": "b2-precise-anchors"
+    },
+    {
+      "durationMs": 98,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "14 deterministic scenarios passed on the real service stack (echo runtime, zero credentials)",
+      "id": "b3-material-exploration"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "the backend loop is delivered and executed offline (b3-material-exploration, echo runtime); the REAL-Pi browser evidence for charter B3 (≥1 markdown + ≥1 pdf branch, ≥2 follow-up rounds each, cross-branch isolation, return closed loop, double-click/response-loss/restart) is produced by run:d4-browser --mode real-pi at the final candidate SHA — not offline (owner: D4-3)",
+      "id": "b3-real-exploration"
+    },
+    {
+      "durationMs": 8,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "55/55 positive queries hit their pre-specified target in the top-5 (worst rank 3; all phrase-tier; charter floor 95%); 12/12 no-result queries returned zero hits; corpus 35 facts → 35 documents via the product assembly path",
+      "id": "b4-cross-material-find"
+    },
+    {
+      "durationMs": 2383,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "export→empty-dir restore→integrity compare clean (facts/returns/excerpts survive); corrupted package refused (target stays empty, source byte-identical); material new version keeps old excerpt linkage; whole-session deletion degrades availability honestly with all fact rows readable and unchanged; parse cancel holds after restore; per-request search rebuild identical over source and restored databases; browser-path items stay with run:d4-browser (not claimed here)",
+      "id": "b5-restore-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "scale dataset generator + performance measurement not implemented (spec frozen at tests/fixtures/d4/b6-scale) (owner: D4-6)",
+      "id": "b6-scale-performance"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "beta closeout pending; automated part runs via run:d4-browser, manual part belongs to the D4-G3 human sequence (owner: D4-6)",
+      "id": "b7-beta-usability"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute (owner: D4-7)",
+      "id": "b8-install-crossplatform"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "large-scale tree navigation not implemented (spec frozen at tests/fixtures/d4/b9-nav) (owner: D4-8)",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

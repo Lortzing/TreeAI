@@ -153,13 +153,16 @@ UPDATE branches SET origin_kind = 'turn'
 | `PUT /api/trees/:treeId/materials/:materialId/reading-position` | 持久化阅读位置 | 204 |
 | `GET /api/trees/:treeId/materials/:materialId/reading-position` | 读取持久化阅读位置（**D4-2 落地新增**：PUT 的读侧对应；阅读位置按 Tree×材料隔离，分支探索位置是分支自身产品事实，互不覆盖——charter §3.2） | 200 `{readingPosition: MaterialReadingPosition \| null}` |
 | `POST /api/trees/:treeId/materials/:materialId/versions/:versionId/resolve-selection` | 统一区间/锚点解析（**D4-2 落地新增**：`{locator, excerpt?, blockId?, anchor?{versionId, sourceHash?}}` → 规范选区；零误定位，绝不以相似文字兜底。B2 冻结无效类别即拒绝原因码词汇表：invalid-locator/needle-not-found/out-of-bounds/reversed/zero-length/surrogate-split/combining-split/emoji-split/excerpt-mismatch/stale-version/cross-page/cross-block/block-mismatch；实现见 apps/studio/src/materials/range-resolver.ts） | 200 `{selection, block}`；区间纪律拒绝 400+原因码；非 ready 409 `material-not-ready` |
-| `POST /api/trees/:treeId/branches/from-material` | 材料建枝+首问：`{selection, firstQuestion, intentKey, mode:"resume-or-create"\|"new"}` | 201 新建；200 幂等重放（同键同内容）；409 同键不同内容；非 ready 版本 409 `material-not-ready`；校验失败 400（含原因码） |
+| `POST /api/trees/:treeId/branches/from-material` | 材料建枝（**D4-3 落地：与首问拆两步**——建枝/恢复零 Run/Turn，响应携带组合上下文视图供 UI 在提交前说明材料范围；差异记录于 ADR-004 §6）：`{selection, intentKey, mode:"resume-or-create"\|"new"}` | mode `new` → 201 新建 / 200 同键幂等重放 / 409 同键不同选区；mode `resume-or-create`（缺省）→ 同来源已有探索 200 恢复（intentKey 不绑定）/ 无则 201 新建；非 ready 版本 409 `material-not-ready`；校验失败 400（含原因码） |
+| `POST /api/trees/:treeId/material-first-question` | 幂等首问（**D4-3 落地新增**，ADR-004 决策四「先对账后行动」）：`{intentKey, firstQuestion}`，目标分支经 `(treeId, intentKey)` 绑定解析 | 200 `{branch, dispatch:"succeeded"\|"failed"\|"unknown", outcome, error, landed}`（unknown = 在途 Run 对账不决不盲发；failed = 明确失败可重试）；首问已用不同内容落库 → 409 `material-first-question-conflict` |
+| `POST /api/trees/:treeId/material-return` | 材料 Branch 的 Return + 来源卡（**D4-3 落地新增**，ADR-004 §8）：`{fromBranchId, text, idempotencyKey}`；复用 submitReturn（保存先于导航、采用尝试/成功分离），targetAnchor 恒 null（不伪造主线锚点），卡片含材料标题/版本/块·页/摘录/确认时间/采用记录 + sourceJump | 201 新建；200 同键同内容幂等重放；同键不同内容 409 `return-conflict` |
+| `POST /api/trees/:treeId/branches/:branchId/material-new-exploration` | 缺 session 的显式新探索（**D4-3 落地新增**，W1 §3.4 + 材料上下文随行）：`{text}` | 200 `{outcome, state}`；session 仍可用 / 无历史 session → 409 `new-exploration-conflict` |
 | `POST /api/trees/:treeId/search` | 当前树内搜索：`{text, kinds?}`，kinds ⊆ `material`\|`annotation`\|`return`\|`turn`（**D4-4 落地**：空/纯空白 text 或非法 kinds（非数组/空数组/未知成员）→ 400；未知树 → 404；未装配 → 503 `search-not-wired`；检索纯只读，不创建任何产品事实） | 200 `{hits:[SearchHit]}`（零命中如实空数组，不编造） |
 | `POST /api/search` | 全部树搜索：`{text, kinds?}`（**D4-4 落地**：同一请求校验面；范围 = 库内全部树——产品为单 forest 工作室，枚举不重造 studio 的 forest 约定） | 200 `{hits:[SearchHit]}` |
 
 `SearchHit`：`{kind, treeId, treeTitle, materialId?, materialTitle?, versionId?, versionLabel?, oldVersion: boolean, blockId?, start?, end?, excerpt, title, createdAt}`。只索引已保存产品事实；未提交草稿、临时解释缓存、凭据不入索引（charter §5）。D4-4 落地口径：可空字段以**缺省**表达（非 null），引擎附加的 refId/matchType/matchCount 不出 HTTP 面；`start`/`end` 恒在（材料 = 版本 canonicalText 内 UTF-16 偏移，可精确跳转；非材料 = 索引正文内偏移，仅辅助展示）；`treeTitle` = tree id（产品树无显示名字段，与 UI 树列表同源）；`versionLabel` = 版本链位（v1、v2…，1 起按导入序）；材料按**版本**入索引（同材料多版本 = 多文档；`oldVersion` 由版本链推导——链尾（最新导入）即当前版本，无论解析成败；非 ready 版本无 canonicalText，诚实不入索引）。
 
-**既有 API 零破坏**；材料分支的 `source` 揭示、`new-exploration`、`return` 复用现有端点，来源经统一 `getBranchOrigin` 判别类型。
+**既有 API 零破坏**；材料分支的 `source` 揭示沿用现有端点语义（来源经统一 `getBranchOrigin` 判别类型），`return` 与缺 session `new-exploration` 在 D4-3 落地为上表材料专用端点（复用同一 `submitReturn`/新探索服务路径，叠加材料来源卡与材料上下文——ADR-004 §6/§8）。
 
 ## 4. 搜索设计边界（D4-4 实施细则另行落地）
 
@@ -169,14 +172,21 @@ UPDATE branches SET origin_kind = 'turn'
 - 索引可从产品数据 `npm run` 命令重建；索引删除重建是 B5 故障注入项。
   （**D4-4 落地**：索引是每请求在进程内从产品数据确定性重建的派生结构，无持久化索引表——「删除索引重建后结果逐字一致」结构性恒真（下一请求即全新重建；引擎确定性由 serialize/restore/乱序全等测试覆盖）；引擎的 serialize/restore 缝保留未来持久化路径，届时再评估重建命令。）
 
-## 5. 导出/恢复设计边界（D4-5 实施细则另行落地）
+## 5. 导出/恢复设计边界（**D4-5 已落地**，`wip/d4-5-export`）
 
 - CLI 而非 HTTP：`treeai-studio export --out <dir>` 与 `--import-package <dir>`（恢复目标是**空数据目录**；不承诺合并两个已用库——charter §5）。
+  （**D4-5 落地**：`node apps/studio/src/index.ts export --out <dir> [--data DIR] [--include-sessions] [--readable]` 与 `node apps/studio/src/index.ts --import-package <dir> --data DIR`；两种模式完成即退出、不启动服务器、不创建 sessions/workspace；拒绝以稳定原因码干净退出（exit 2，`PortabilityError.code`）。实现：`apps/studio/src/portability/`。）
 - 包结构：`manifest.json`（schemaVersion、条目清单+SHA-256、产品库 schema 版本）+ `blobs/`（材料原件）+ `facts/`（Tree/Branch/来源/Return/已保存批注与版本元信息的确定性序列化）。
+  （**D4-5 落地**：包格式 `treeai-export-1`。`manifest.json` 携带 schemaVersion=1 / packageFormat / productSchemaVersion（= `PRAGMA user_version`）/ exportedAt / includesSessions / readable / counts / 全部条目（kind+path+bytes+sha256，按 path 排序）；`facts/<table>.json` 为冻结事实表全集（`FACT_TABLES`，19 张表，空表也写文件，恢复端要求集合恰好相等——多/少都拒绝）；`blobs/<sha256>` 内容寻址；同一库 + 同一注入时钟 → 全包逐字节确定（含清单）。`material_blobs`/`schema_migrations` 不走 facts（前者 = blobs/ 目录条目；后者由恢复端迁移自然重建）。）
 - 默认**不含**凭据、临时缓存、原始运行日志；含 Pi session 的选项必须显式选择并标注敏感内容。
+  （**D4-5 落地**：默认排除 journal.jsonl、workspace/、pi-agent/ 与 sessions/；`--include-sessions` 显式包含时复制被引用的 session 原件并在包根携带 `SESSIONS-SENSITIVE.txt` 显著标注；引用了但磁盘缺失的 session 文件**如实计数**（`sessionFilesMissing`），不伪造不静默；同名 basename 冲突如实拒绝。恢复端：随包 session 落 `<data>/sessions/` 并改写 `session_references`/`tree_active_navigation` 的 `session_file`；未随包的引用保持原路径（指向旧位置，可用性探针如实判 missing-file）。）
 - 导入流程：临时区验证 schema、校验和、引用完整性与路径安全（拒绝路径穿越/超限包）→ 原子落位；失败不覆盖已有数据。
+  （**D4-5 落地**：四层验证——清单（schema/格式/产品 schema 版本/条目形状/重复路径/超限声明）→ 条目与包目录**双向全量比对**（多出文件/缺失文件/字节大小/SHA-256/逐种类命名规则；拒绝符号链接与非常规文件）→ facts 形状（冻结列集逐列相等、行/格类型、nullability）+ 引用完整性（全外键闭包 + 主键唯一性，blobs 以内容寻址集合参与）→ 落库后 `PRAGMA foreign_key_check` + `integrity_check`；全部通过才 rename 原子落位（rename 前复核目标仍为空）。目标非空（含文件目标）明确拒绝（`target-not-empty`/`target-not-a-directory`），既有文件逐字节不变；任何失败目标零落位、源数据零接触、暂存区清理。导出侧另有写面路径护栏（可读导出文件名含穿越段即拒绝）。）
 - 缺省恢复承诺：产品事实可读 + 可显式新探索；不承诺旧 Pi 上下文可续（W1 §3.4 语义）。
 - `export --readable`：Markdown 可读导出（Tree 主线、Return、批注、材料摘录）。
+  （**D4-5 落地**：`readable/`（README 索引 + `materials/<id>.md` 版本链/阅读位置/来源锚点/ready 版本规范文本全文 + `trees/<id>.md` 分支/回合（user/assistant/return）/来源（Turn/材料）/Return 采用/术语批注/Run 与 session 可用性如实呈现），确定性渲染、进清单校验，无 runtime 可读。）
+
+（**D4-5 迁移决定：零迁移**。导出元信息全部派生自既有表与 blobs——产品库 schema 版本取 `PRAGMA user_version`，无任何库内导出元数据表。原「export-metadata」预留号按弃用处理、不取号（`assertContiguous` 按实际交付顺序流转，见 coordination/d4/README.md 迁移表）。）
 
 ## 6. 冻结验收集格式（tests/fixtures/d4/，随 D4-0 入仓）
 

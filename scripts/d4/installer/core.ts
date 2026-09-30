@@ -614,3 +614,47 @@ export function tarExtractArgs(archivePath: string, intoDir: string): string[] {
   const flag = archivePath.endsWith(".tar.xz") ? "-xJf" : archivePath.endsWith(".tar.gz") ? "-xzf" : "-xf";
   return [flag, archivePath, "-C", intoDir, "--no-same-owner"];
 }
+
+/**
+ * Windows 卸载自删除脚本（cmdUninstall 派发的分离 PowerShell 用；抽出为
+ * 纯函数供单测锁定）。
+ *
+ * 背景（CI run 36747308856 win-x64 首次跑到卸载段）：安装目录内
+ * app/node_modules 最深相对路径 179 字符，解压目录稍深即超 Windows
+ * MAX_PATH 260——PowerShell 5.1 的 Remove-Item 无法删除长路径子项，
+ * 30 次重试全部失败，卸载后目录残留。修复：先 robocopy 以空目录 /MIR
+ * 镜像目标（robocopy 原生支持长路径，经典清场手法）把目录清空，再删除
+ * 已空的短路径目录本身；循环重试等待 launcher 自身 node.exe 退出释放
+ * 文件锁（运行中的 exe 所在目录不可删）。
+ */
+export function windowsSelfDeleteScript(bundleRoot: string, logPath: string): string {
+  const ps = (value: string) => value.replace(/'/g, "''");
+  return [
+    "$target = '" + ps(bundleRoot) + "'",
+    "$logPath = '" + ps(logPath) + "'",
+    "function Log([string]$m) { try { Add-Content -LiteralPath $logPath -Value ((Get-Date -Format o) + ' ' + $m) -ErrorAction Stop } catch {} }",
+    /* GetTempPath()（Win32 API）比 $env:TEMP 稳：环境块缺 TEMP 时仍能取到。 */
+    "$empty = Join-Path ([System.IO.Path]::GetTempPath()) ('treeai-uninst-' + [guid]::NewGuid().ToString('N'))",
+    "$done = $false",
+    "try {",
+    "  Log ('start pid=' + $PID + ' target=' + $target)",
+    "  Log ('top=' + ((Get-ChildItem -LiteralPath $target -Force -ErrorAction SilentlyContinue | Select-Object -First 20 -ExpandProperty Name) -join ','))",
+    "  [void](New-Item -ItemType Directory -Path $empty -Force)",
+    "  for($i=0; $i -lt 40; $i++) {",
+    "    [void](robocopy $empty $target /MIR /NFL /NDL /NJH /NJS /NP)",
+    "    $rc = $LASTEXITCODE",
+    "    if (-not (Test-Path -LiteralPath $target)) { $done = $true; break }",
+    "    try { Remove-Item -LiteralPath $target -Recurse -Force -ErrorAction Stop; $done = $true; break }",
+    "    catch {",
+    "      $left = (Get-ChildItem -LiteralPath $target -Force -ErrorAction SilentlyContinue | Measure-Object).Count",
+    "      Log ('attempt ' + $i + ' robocopy=' + $rc + ' left=' + $left + ' remove-failed: ' + $_.Exception.Message)",
+    "      Start-Sleep -Seconds 1",
+    "    }",
+    "  }",
+    "} catch { Log ('fatal: ' + $_.Exception.Message) }",
+    "Log ('done=' + $done)",
+    "[void](Remove-Item -LiteralPath $empty -Recurse -Force)",
+    "if (-not $done) { exit 1 }",
+    "exit 0",
+  ].join("\n");
+}

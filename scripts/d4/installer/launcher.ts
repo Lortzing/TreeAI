@@ -68,6 +68,7 @@ import {
   validateBundleLayout,
   validateBundleManifest,
   validateLauncherConfig,
+  windowsSelfDeleteScript,
 } from "./core.ts";
 
 /* ------------------------------------------------------------------ */
@@ -832,12 +833,11 @@ async function cmdUninstall(args: readonly string[]): Promise<number> {
   }
 
   /* 自删除：POSIX 直接删（脚本已读入内存）；Windows 上 node.exe 正在本目录
-     运行、文件被锁，先退出进程再由分离的 PowerShell 延迟删除。 */
+     运行、文件被锁，先退出进程再由分离的 PowerShell 延迟删除。删除脚本用
+     robocopy 空→目标 /MIR 先清场（PS 5.1 Remove-Item 删不掉超 MAX_PATH 的
+     node_modules 深路径，run 36747308856），实现与单测在 core.ts。 */
   if (process.platform === "win32") {
-    const script =
-      `for($i=0; $i -lt 30; $i++) { ` +
-      `try { Remove-Item -LiteralPath '${BUNDLE_ROOT.replace(/'/g, "''")}' -Recurse -Force -ErrorAction Stop; exit 0 } ` +
-      `catch { Start-Sleep -Seconds 1 } }; exit 1`;
+    const script = windowsSelfDeleteScript(BUNDLE_ROOT, join(dataDir(), "uninstall-selfdelete.log"));
     const child = spawn("powershell", ["-NoProfile", "-Command", script], {
       detached: true,
       stdio: "ignore",
