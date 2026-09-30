@@ -278,6 +278,15 @@ const CHECKS = [
           if (!adr.includes(marker)) problems.push(`ADR-003 missing marker: ${marker}`);
         }
       }
+      const adr4Path = join(ROOT, "docs", "adr", "ADR-004-d4-material-branching-and-first-question.md");
+      const adr4 = existsSync(adr4Path) ? readFileSync(adr4Path, "utf8") : null;
+      if (adr4 === null) {
+        problems.push("ADR-004 missing");
+      } else {
+        for (const marker of ["**状态：Accepted", "决策一", "决策四", "测试义务"]) {
+          if (!adr4.includes(marker)) problems.push(`ADR-004 missing marker: ${marker}`);
+        }
+      }
       const contractsPath = join(ROOT, "docs", "d4", "D4-contracts.md");
       const contracts = existsSync(contractsPath) ? readFileSync(contractsPath, "utf8") : null;
       if (contracts === null) {

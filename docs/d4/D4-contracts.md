@@ -153,13 +153,16 @@ UPDATE branches SET origin_kind = 'turn'
 | `PUT /api/trees/:treeId/materials/:materialId/reading-position` | 持久化阅读位置 | 204 |
 | `GET /api/trees/:treeId/materials/:materialId/reading-position` | 读取持久化阅读位置（**D4-2 落地新增**：PUT 的读侧对应；阅读位置按 Tree×材料隔离，分支探索位置是分支自身产品事实，互不覆盖——charter §3.2） | 200 `{readingPosition: MaterialReadingPosition \| null}` |
 | `POST /api/trees/:treeId/materials/:materialId/versions/:versionId/resolve-selection` | 统一区间/锚点解析（**D4-2 落地新增**：`{locator, excerpt?, blockId?, anchor?{versionId, sourceHash?}}` → 规范选区；零误定位，绝不以相似文字兜底。B2 冻结无效类别即拒绝原因码词汇表：invalid-locator/needle-not-found/out-of-bounds/reversed/zero-length/surrogate-split/combining-split/emoji-split/excerpt-mismatch/stale-version/cross-page/cross-block/block-mismatch；实现见 apps/studio/src/materials/range-resolver.ts） | 200 `{selection, block}`；区间纪律拒绝 400+原因码；非 ready 409 `material-not-ready` |
-| `POST /api/trees/:treeId/branches/from-material` | 材料建枝+首问：`{selection, firstQuestion, intentKey, mode:"resume-or-create"\|"new"}` | 201 新建；200 幂等重放（同键同内容）；409 同键不同内容；非 ready 版本 409 `material-not-ready`；校验失败 400（含原因码） |
+| `POST /api/trees/:treeId/branches/from-material` | 材料建枝（**D4-3 落地：与首问拆两步**——建枝/恢复零 Run/Turn，响应携带组合上下文视图供 UI 在提交前说明材料范围；差异记录于 ADR-004 §6）：`{selection, intentKey, mode:"resume-or-create"\|"new"}` | mode `new` → 201 新建 / 200 同键幂等重放 / 409 同键不同选区；mode `resume-or-create`（缺省）→ 同来源已有探索 200 恢复（intentKey 不绑定）/ 无则 201 新建；非 ready 版本 409 `material-not-ready`；校验失败 400（含原因码） |
+| `POST /api/trees/:treeId/material-first-question` | 幂等首问（**D4-3 落地新增**，ADR-004 决策四「先对账后行动」）：`{intentKey, firstQuestion}`，目标分支经 `(treeId, intentKey)` 绑定解析 | 200 `{branch, dispatch:"succeeded"\|"failed"\|"unknown", outcome, error, landed}`（unknown = 在途 Run 对账不决不盲发；failed = 明确失败可重试）；首问已用不同内容落库 → 409 `material-first-question-conflict` |
+| `POST /api/trees/:treeId/material-return` | 材料 Branch 的 Return + 来源卡（**D4-3 落地新增**，ADR-004 §8）：`{fromBranchId, text, idempotencyKey}`；复用 submitReturn（保存先于导航、采用尝试/成功分离），targetAnchor 恒 null（不伪造主线锚点），卡片含材料标题/版本/块·页/摘录/确认时间/采用记录 + sourceJump | 201 新建；200 同键同内容幂等重放；同键不同内容 409 `return-conflict` |
+| `POST /api/trees/:treeId/branches/:branchId/material-new-exploration` | 缺 session 的显式新探索（**D4-3 落地新增**，W1 §3.4 + 材料上下文随行）：`{text}` | 200 `{outcome, state}`；session 仍可用 / 无历史 session → 409 `new-exploration-conflict` |
 | `POST /api/trees/:treeId/search` | 当前树内搜索：`{text, kinds?}`，kinds ⊆ `material`\|`annotation`\|`return`\|`turn`（**D4-4 落地**：空/纯空白 text 或非法 kinds（非数组/空数组/未知成员）→ 400；未知树 → 404；未装配 → 503 `search-not-wired`；检索纯只读，不创建任何产品事实） | 200 `{hits:[SearchHit]}`（零命中如实空数组，不编造） |
 | `POST /api/search` | 全部树搜索：`{text, kinds?}`（**D4-4 落地**：同一请求校验面；范围 = 库内全部树——产品为单 forest 工作室，枚举不重造 studio 的 forest 约定） | 200 `{hits:[SearchHit]}` |
 
 `SearchHit`：`{kind, treeId, treeTitle, materialId?, materialTitle?, versionId?, versionLabel?, oldVersion: boolean, blockId?, start?, end?, excerpt, title, createdAt}`。只索引已保存产品事实；未提交草稿、临时解释缓存、凭据不入索引（charter §5）。D4-4 落地口径：可空字段以**缺省**表达（非 null），引擎附加的 refId/matchType/matchCount 不出 HTTP 面；`start`/`end` 恒在（材料 = 版本 canonicalText 内 UTF-16 偏移，可精确跳转；非材料 = 索引正文内偏移，仅辅助展示）；`treeTitle` = tree id（产品树无显示名字段，与 UI 树列表同源）；`versionLabel` = 版本链位（v1、v2…，1 起按导入序）；材料按**版本**入索引（同材料多版本 = 多文档；`oldVersion` 由版本链推导——链尾（最新导入）即当前版本，无论解析成败；非 ready 版本无 canonicalText，诚实不入索引）。
 
-**既有 API 零破坏**；材料分支的 `source` 揭示、`new-exploration`、`return` 复用现有端点，来源经统一 `getBranchOrigin` 判别类型。
+**既有 API 零破坏**；材料分支的 `source` 揭示沿用现有端点语义（来源经统一 `getBranchOrigin` 判别类型），`return` 与缺 session `new-exploration` 在 D4-3 落地为上表材料专用端点（复用同一 `submitReturn`/新探索服务路径，叠加材料来源卡与材料上下文——ADR-004 §6/§8）。
 
 ## 4. 搜索设计边界（D4-4 实施细则另行落地）
 
