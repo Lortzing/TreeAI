@@ -302,6 +302,7 @@ const CHECK_DEFS = [
   { id: "model-error-convergence", modes: MODES },
   { id: "server-restart-recovery", modes: MODES },
   { id: "missing-session-degradation", modes: MODES },
+  { id: "new-exploration-flow", modes: MODES },
   {
     id: "response-loss-midstream",
     modes: ["real-pi"],
@@ -3289,6 +3290,136 @@ async function main() {
       `page did not recover after session restore: ${JSON.stringify(recovered)}`);
     await snap("missing-session-recovered");
     return { detail: `session file(s) moved away → banner + fail-closed send + typed-in input + new-exploration entry (v3 §4.4) + recovery affordance; restored → full recovery on reload (${String(moved.length)} file(s))` };
+  });
+
+  await runCheck("new-exploration-flow", async () => {
+    /* v3 §4.4（issue #7 P0-2）浏览器面：真实 confirm 对话框的取消/确认两
+       路都驱动——取消零 POST；确认后换轨成功、横幅下线、发送解锁、标记
+       回合渲染；主树分支集不变、回合 +2（phase 末 containment）。 */
+    const stateBefore = await api("GET", `/api/trees/${encodeURIComponent(sc.treeId)}/state`);
+    const branchesBefore = (stateBefore.body?.branches ?? []).length;
+    const mainTrunkId = stateBefore.body?.trunkBranchId;
+    assert(typeof mainTrunkId === "string" && mainTrunkId.length > 0, "main tree state has no trunk branch id");
+    const trunkViewBefore = (stateBefore.body?.branches ?? []).find((view) => view.branch?.id === mainTrunkId);
+    const trunkTurnsBefore = trunkViewBefore?.turns?.length ?? 0;
+
+    /* 移走 session 文件 → 整页刷新 → 降级。 */
+    const sessionsDir = join(sc.dataDir, "sessions");
+    const files = readdirSync(sessionsDir).filter((f) => !f.startsWith("."));
+    assert(files.length > 0, "no session files to move");
+    const moved = [];
+    for (const file of files) {
+      renameSync(join(sessionsDir, file), join(sessionsDir, `${file}.moved`));
+      moved.push(file);
+    }
+    await navigate(sc.studioUrl);
+    await waitForJs("document.getElementById('session-banner') !== null && !document.getElementById('session-banner').hidden", 10_000, "banner visible after session loss");
+
+    /* confirm 对话框的 CDP 处理：**单例**一次性监听（累积多个监听会在
+       第二个对话框上竞争应答）；未应答的对话框会阻塞页面——意外对话框
+       一律 accept 解锁。 */
+    let dialogResolveNext = null;
+    let dialogAcceptNext = true;
+    let dialogHandlerInstalled = false;
+    const installDialogHandler = () => {
+      if (dialogHandlerInstalled) return;
+      dialogHandlerInstalled = true;
+      chrome.cdp.on("Page.javascriptDialogOpening", (params) => {
+        const resolve = dialogResolveNext;
+        dialogResolveNext = null;
+        const accept = resolve !== null ? dialogAcceptNext : true;
+        chrome.cdp
+          .send("Page.handleJavaScriptDialog", { accept, promptText: "" })
+          .then(
+            () => {
+              if (resolve !== null) resolve(params);
+            },
+            () => {
+              if (resolve !== null) resolve(params);
+            },
+          );
+      });
+    };
+    installDialogHandler();
+    const dialogPromise = (accept) =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          dialogResolveNext = null;
+          reject(new Error("no javascript dialog opened within 5s"));
+        }, 5_000);
+        dialogAcceptNext = accept;
+        dialogResolveNext = (params) => {
+          clearTimeout(timer);
+          resolve(params);
+        };
+      });
+
+    /* 取消路径：输入首问 → 点换轨 → confirm 取消 → 零 POST、横幅仍在。
+       （期望先于点击注册：对话框可能在 click 的 ACK 之前打开。） */
+    await typeInto("#prompt-input", "The browser-face first question of the new exploration.", { replace: true });
+    const cancelDialogP = dialogPromise(false);
+    await click("#new-exploration");
+    const cancelledDialog = await cancelDialogP;
+    assert(cancelledDialog !== null, "the confirm dialog opened");
+    assert(String(cancelledDialog.message ?? "").includes("NOT restored"), `the dialog states the consequences honestly: ${String(cancelledDialog.message).slice(0, 120)}`);
+    await sleep(400);
+    const postedWhileCancelled = chrome.netLog.some((e) => e.url.includes("/new-exploration"));
+    assert(!postedWhileCancelled, "a cancelled confirmation posts nothing");
+    assert(
+      (await evalJs("document.getElementById('session-banner').hidden")) === false,
+      "the banner stays after the cancelled confirmation",
+    );
+
+    /* 确认路径：再点 → confirm 确认 → POST → 横幅下线、发送解锁、输入清空。 */
+    const acceptDialogP = dialogPromise(true);
+    await click("#new-exploration");
+    await acceptDialogP;
+    await waitForJs(
+      "document.getElementById('session-banner').hidden === true && document.getElementById('send').disabled === false",
+      CLI.promptTimeoutMs,
+      "the confirmed new exploration clears the banner and unlocks the composer",
+    );
+    await waitForJs(
+      "document.getElementById('conversation').textContent.includes('[new exploration from saved content')",
+      CLI.promptTimeoutMs,
+      "the marker turn renders in the conversation",
+    );
+    const cleared = await evalJs(
+      "(() => { return { input: document.getElementById('prompt-input').value, exploreHidden: document.getElementById('new-exploration').hidden, marker: document.getElementById('conversation').textContent.includes('The browser-face first question of the new exploration.') }; })()",
+    );
+    assert(cleared.input === "", "the input clears after the confirmed exploration");
+    assert(cleared.exploreHidden === true, "the new-exploration entry hides once available");
+    assert(cleared.marker === true, "the typed question stays readable after the marker");
+
+    /* 服务器核对：trunk 恢复可用、回合 +2、user turn 携带标记。 */
+    const stateAfter = await api("GET", `/api/trees/${encodeURIComponent(sc.treeId)}/state`);
+    const trunkView = (stateAfter.body?.branches ?? []).find((view) => view.branch?.id === mainTrunkId);
+    assert(
+      trunkView?.sessionAvailability === "available",
+      `the trunk recovers on the new session (server-verified; got ${JSON.stringify(trunkView?.sessionAvailability)})`,
+    );
+    assert((trunkView?.turns ?? []).length === trunkTurnsBefore + 2, `trunk turns +2 (got ${String((trunkView?.turns ?? []).length)} vs ${String(trunkTurnsBefore)})`);
+    assert(
+      typeof trunkView.turns[trunkView.turns.length - 2]?.text === "string" &&
+        trunkView.turns[trunkView.turns.length - 2].text.includes("[new exploration from saved content"),
+      "the persisted user turn carries the honest not-restored marker",
+    );
+
+    /* Phase-end containment：分支集不变。 */
+    assert(
+      (stateAfter.body?.branches ?? []).length === branchesBefore,
+      `branch set unchanged (got ${String((stateAfter.body?.branches ?? []).length)} vs ${String(branchesBefore)})`,
+    );
+
+    /* 还原被移走的旧 session 文件（新会话已是事实源；旧文件恢复为惰性文件，供后续检查整洁）。 */
+    for (const file of moved) {
+      renameSync(join(sessionsDir, `${file}.moved`), join(sessionsDir, file));
+    }
+    await snap("new-exploration-flow");
+    return {
+      detail:
+        "v3 §4.4 browser face: session moved away → banner + fail-closed; typed first question → confirm cancel (zero POST, dialog states NOT restored) → confirm accept → POST /new-exploration → banner clears, composer unlocks, honest marker turn renders (page + server), trunk +2 turns, branch set unchanged",
+    };
   });
 
   await runCheck("response-loss-midstream", async () => {

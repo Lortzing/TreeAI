@@ -214,6 +214,7 @@ const CHECK_DEFS = [
   { id: "diagnostics-projection", modes: BOTH },
   { id: "journal-no-leak", modes: BOTH },
   { id: "restart-persistence", modes: BOTH },
+  { id: "new-exploration", modes: BOTH },
   {
     id: "mid-flight-abort",
     modes: ["real-pi"],
@@ -915,6 +916,7 @@ async function main() {
     await phaseDiagnostics();
     await phaseJournal();
     await phaseRestart();
+    await phaseNewExploration();
     await phaseAbort();
     if (MODE === "real-pi") {
       await phaseModelError();
@@ -2037,6 +2039,117 @@ async function phaseRestart() {
       assert(run.terminalAt !== null, `run ${String(run.runId)} is not terminal after the restart`);
     }
     return { detail: "SIGKILL + same-data restart: tree/branches/turns/cursor intact; trunk continuation works" };
+  });
+}
+
+/** v3 §4.4（issue #7 P0-2）：session 删除后的 fail-closed 与用户确认的显式换轨（独立探针树，主树计数不动）。 */
+async function phaseNewExploration() {
+  await runCheck("new-exploration", async () => {
+    /* 主树基线快照（phase 末 containment 校验用）。 */
+    const mainBefore = await fetchState();
+    const mainCountsBefore = mainBefore.branches.map((view) => `${String(view.branch.id)}:${String(turnCount(mainBefore, view.branch.id))}`);
+
+    /* 探针树：一轮 Trunk prompt（marker 供 session 文件识别）。 */
+    const marker = "new-exploration-probe";
+    const created = await api(sc.port, "POST", "/api/trees", {});
+    const probeTreeId = created.body?.tree?.id;
+    const probeTrunk = created.body?.trunkBranchId;
+    assert(typeof probeTreeId === "string" && typeof probeTrunk === "string", `probe tree creation failed: ${errDetail(created)}`);
+    const t1 = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(probeTreeId)}/prompt`,
+      { branchId: probeTrunk, text: `${marker} q1` },
+    );
+    assert(t1.status === 200, `probe trunk prompt failed: ${errDetail(t1)}`);
+    const probeAnswer = t1.body?.outcome?.assistantTurn?.text;
+
+    /* 整进程重启（清内存 cursor/会话）+ 删除探针树的 session 文件（按内容定位）。 */
+    const current = sc.studios[sc.studios.length - 1];
+    current.child.kill("SIGKILL");
+    await waitForExit(current.child, 10_000);
+    const sessionsDir = join(sc.dataDir, "sessions");
+    const probeSession = readdirSync(sessionsDir)
+      .map((f) => join(sessionsDir, f))
+      .find((p) => {
+        try {
+          return readFileSync(p, "utf8").includes(marker);
+        } catch {
+          return false;
+        }
+      });
+    assert(probeSession !== undefined, "the probe tree's session file is identifiable by its marker");
+    rmSync(probeSession);
+    const studio = await startStudio(sc.dataDir);
+    sc.studios.push(studio);
+    sc.port = studio.port;
+
+    /* fail-closed 纪律不变：普通续聊 502 session-corrupt。 */
+    const failed = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(probeTreeId)}/prompt`,
+      { branchId: probeTrunk, text: "normal continuation must fail closed" },
+    );
+    assert(
+      failed.status === 502 && failed.body?.error?.code === "session-corrupt",
+      `normal continuation after session loss: ${String(failed.status)} ${JSON.stringify(failed.body?.error?.code ?? null)}`,
+    );
+
+    /* 显式换轨：200 + 首问成功 + 诚实标记 + 旧历史可读 + 恢复可用。 */
+    const exploration = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(probeTreeId)}/branches/${encodeURIComponent(probeTrunk)}/new-exploration`,
+      { text: "the new exploration first question" },
+    );
+    assert(exploration.status === 200, `new exploration failed: ${errDetail(exploration)}`);
+    assert(exploration.body?.outcome?.run?.state === "succeeded", "the new exploration's first question must succeed");
+    const userTurn = exploration.body?.outcome?.userTurn;
+    assert(
+      typeof userTurn?.text === "string" && userTurn.text.includes("[new exploration from saved content"),
+      "the user turn carries the honest not-restored marker",
+    );
+    assert(userTurn.text.endsWith("the new exploration first question"), "the typed question stays readable after the marker");
+    const probeState = await api(sc.port, "GET", `/api/trees/${encodeURIComponent(probeTreeId)}/state`);
+    const probeView = (probeState.body?.branches ?? []).find((view) => view.branch.id === probeTrunk);
+    assert(probeView?.sessionAvailability === "available", "the probe trunk recovers on the new session");
+    assert(probeView.turns.length === 4, `old history + two new turns (got ${String(probeView?.turns?.length ?? -1)})`);
+    assert(probeView.turns[0]?.text === `${marker} q1`, "the old user turn is untouched");
+    assert(probeView.turns[1]?.text === probeAnswer, "the old assistant turn is untouched");
+
+    /* session 已可用 → 再次换轨 409（应走普通续聊）。 */
+    const conflict = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(probeTreeId)}/branches/${encodeURIComponent(probeTrunk)}/new-exploration`,
+      { text: "should conflict now" },
+    );
+    assert(
+      conflict.status === 409 && conflict.body?.error?.code === "new-exploration-conflict",
+      `healthy-session new exploration must 409 (got ${String(conflict.status)} ${JSON.stringify(conflict.body?.error?.code ?? null)})`,
+    );
+
+    /* 普通续聊恢复（续聊点 = 新 session 的最新 run）。 */
+    const followUp = await api(
+      sc.port,
+      "POST",
+      `/api/trees/${encodeURIComponent(probeTreeId)}/prompt`,
+      { branchId: probeTrunk, text: "back to normal continuation" },
+    );
+    assert(followUp.status === 200, `normal continuation on the new session failed: ${errDetail(followUp)}`);
+
+    /* Phase-end containment：主树分支集与回合数不变。 */
+    const mainAfter = await fetchState();
+    const mainCountsAfter = mainAfter.branches.map((view) => `${String(view.branch.id)}:${String(turnCount(mainAfter, view.branch.id))}`);
+    assert(
+      JSON.stringify(mainCountsAfter) === JSON.stringify(mainCountsBefore),
+      `main-tree counts changed during the new-exploration phase: ${JSON.stringify(mainCountsAfter)} vs ${JSON.stringify(mainCountsBefore)}`,
+    );
+    return {
+      detail:
+        "v3 §4.4 on a probe tree: session deleted → normal continuation fail-closed (502 session-corrupt) → explicit new exploration 200 (first question succeeds, honest not-restored marker, old history readable, availability recovers) → healthy re-exploration 409 → normal continuation works again; main tree untouched",
+    };
   });
 }
 
