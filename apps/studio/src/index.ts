@@ -67,7 +67,7 @@ import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
 import { SearchService } from "./search/search-service.ts";
-import { exportPackage, restorePackage, SESSIONS_SENSITIVE_MARKER } from "./portability/index.ts";
+import { exportPackage, PortabilityError, restorePackage, SESSIONS_SENSITIVE_MARKER } from "./portability/index.ts";
 import { createStudioServer } from "./server.ts";
 
 let piApiKeyValueGuard: string | null = null;
@@ -113,12 +113,23 @@ async function main(): Promise<void> {
      数据目录，服务器启动路径的 sessions/workspace 创建不得提前发生；
      两种模式都不启动服务器，完成后退出。 -------- */
   if (options.mode === "export") {
-    const result = exportPackage({
-      dbPath: join(options.dataDir, "treeai.db"),
-      outDir: options.outDir!,
-      includeSessions: options.includeSessions,
-      readable: options.readable,
-    });
+    let result;
+    try {
+      result = exportPackage({
+        dbPath: join(options.dataDir, "treeai.db"),
+        outDir: options.outDir!,
+        includeSessions: options.includeSessions,
+        readable: options.readable,
+      });
+    } catch (error) {
+      /* 可携带层拒绝（稳定原因码）：干净退出（2），不落栈——目标/源数据
+         已由服务层保证原样。 */
+      if (error instanceof PortabilityError) {
+        process.stderr.write(`treeai-studio export: refused (${error.code}): ${error.message}\n`);
+        process.exit(2);
+      }
+      throw error;
+    }
     const lines = [
       `treeai-studio export: package written to ${result.outDir}`,
       `treeai-studio export: format ${result.manifest.packageFormat} ` +
@@ -146,7 +157,17 @@ async function main(): Promise<void> {
     return;
   }
   if (options.mode === "import") {
-    const result = restorePackage({ packageDir: options.importPackageDir!, dataDir: options.dataDir });
+    let result;
+    try {
+      result = restorePackage({ packageDir: options.importPackageDir!, dataDir: options.dataDir });
+    } catch (error) {
+      /* 同上：拒绝码干净退出；失败时目标原样（charter §5）。 */
+      if (error instanceof PortabilityError) {
+        process.stderr.write(`treeai-studio restore: refused (${error.code}): ${error.message}\n`);
+        process.exit(2);
+      }
+      throw error;
+    }
     const lines = [
       `treeai-studio restore: package validated and restored into ${result.dataDir}`,
       `treeai-studio restore: format ${result.manifest.packageFormat} ` +
