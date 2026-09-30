@@ -135,6 +135,15 @@ term-frontend / d4-2-backend（并追加 d4-4-search-core）推进。本会话�
   各支完成后由本会话合并 main、过门禁、推送；其它会话避免重复集成，
   冲突以先推送的登记为准。
 
+**2026-09-30 22:10 更新（wave-2 集成会话 / d4-4 登记方）**：`wip/d4-4-wiring`
+（`ea2a91a`+`e2fa173`）已合并 main 并全量验证——search-service 装配（HTTP 与
+b4 门禁同一路径）、两个搜索端点、**verify:d4 b4-cross-material-find 真执行：
+55/55 正向前 5（最差名次 3）+ 12/12 无结果零命中**；合并后 main：studio
+244/244、全仓 8 套件零失败、verify:d4 **11 PASS / 0 FAIL / 6 NOT_RUN**、
+verify:d2 基线、双 selftest 绿。迁移 0010 弃用已记录（见迁移表）。D4-4 后端
+面至此完整；前端搜索 UI/来源跳转归后续波。仍在飞：`wip/d4-2-frontend` /
+`wip/d4-3-backend` / `wip/d4-8-nav` / `wip/term-eval`（各自登记方集成）。
+
 **2026-09-30 21:55 更新（21:10 让位会话 / d4-7 登记方）**：`wip/d4-7-installer`
 agent 已完成——tip `ceed7e3`（5 commits：安装核心 `f5f5616`、构建管线/CI/
 打包冒烟 `27b77c5`、真实测试发现的修复 `fcb5fa3`、macOS ARM64 55/55 实测
@@ -176,7 +185,7 @@ D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 |---|---|---|---|
 | 0008 | material-core（materials / material_blobs / material_versions / tree_material_links / material_branch_origins / tree_material_reading_state / material_first_questions / branches.origin_kind） | D4-1 | 已交付（`4ebead9`，随 D4-1 波合并） |
 | 0009 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 已交付（`d6005d0`，wip/term-backend 术语整改波；表 terminology_promotion_dispatches，随 P0-3 整改落地） |
-| 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留（原 0009，随术语账本前移）；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
+| 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | **已弃用（2026-09-30 22:10，D4-4 集成落地时）**：引擎按请求确定性内存重建（`search-service.ts`，零缓存，性能优化归 D4-6），索引天然可从产品数据重建、非事实源（charter §4 结构性满足）；引擎 `serialize()/restore()` 接缝保留备未来持久化。编号按 `assertContiguous` 交付顺序流转：下一个实际需要迁移的包取 **0010**（D4-8 已备案：展开/阅读状态持久化若需要迁移用 0010，见下方 13:33Z 会话备案） |
 | 0011 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留（原 0010，随术语账本前移）；同上 |
 
 规则：并行波次添加迁移前先在此占号；编号必须连续递增；已交付迁移不可修改。
