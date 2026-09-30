@@ -599,3 +599,18 @@ export function isSymlink(path: string): boolean {
     return false;
   }
 }
+
+/**
+ * tar 解包参数（构建 packager 与 packaged-bundle 冒烟共用）。
+ *
+ * 恒带 `--no-same-owner`（GNU/bsdtar 均支持）：rootless 容器（user-namespace
+ * root，如本仓验收容器）里 tar 默认尝试恢复归档内 UID/GID，会在 nodejs.org
+ * 发行包这类属主与当前用户不同的归档上失败退出（issue #8 增量验收 2026-09-30
+ * P2 建议）。解出的文件一律重新 staging/校验，无人依赖保留的属主，关闭属主
+ * 恢复在所有环境安全。压缩格式由后缀显式选择（.tar.xz/.tar.gz），其余（zip
+ * 经 bsdtar 的兜底路径）交给 -xf 自动探测。
+ */
+export function tarExtractArgs(archivePath: string, intoDir: string): string[] {
+  const flag = archivePath.endsWith(".tar.xz") ? "-xJf" : archivePath.endsWith(".tar.gz") ? "-xzf" : "-xf";
+  return [flag, archivePath, "-C", intoDir, "--no-same-owner"];
+}

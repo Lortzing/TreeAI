@@ -36,7 +36,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateBundleLayout, validateBundleManifest } from "./core.ts";
+import { tarExtractArgs, validateBundleLayout, validateBundleManifest } from "./core.ts";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -113,10 +113,35 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** 解压产物（tar.gz/tar.xz/zip 全平台；Windows 自带 bsdtar 可解 zip）。 */
+/** 解压产物（tar.gz/tar.xz/zip 全平台）。
+ *  zip 不能无条件交给 PATH 里的 tar：Git Bash/部分 Linux 的 GNU tar 不识别
+ *  zip（CI win-x64 实测退出码 128）。zip 路径按序尝试：Windows System32
+ *  bsdtar（绝对路径，不受 Git Bash PATH 遮蔽）→ unzip → PowerShell
+ *  Expand-Archive（Windows 兜底）；tar.gz/tar.xz 仍走 tar。tar 调用恒带
+ *  --no-same-owner（rootless 容器属主恢复失败回归，issue #8 P2）。 */
 function extractArchive(archivePath, intoDir) {
   mkdirSync(intoDir, { recursive: true });
-  execVisible("tar", ["-xf", archivePath, "-C", intoDir]);
+  if (archivePath.endsWith(".zip")) {
+    if (process.platform === "win32") {
+      const system32Tar = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
+      if (existsSync(system32Tar)) {
+        execVisible(system32Tar, ["-xf", archivePath, "-C", intoDir, "--no-same-owner"]);
+        return;
+      }
+      execVisible("powershell.exe", [
+        "-NoProfile",
+        "-Command",
+        `Expand-Archive -LiteralPath ${JSON.stringify(archivePath)} -DestinationPath ${JSON.stringify(intoDir)} -Force`,
+      ]);
+      return;
+    }
+    const hasUnzip = spawnSync("which", ["unzip"], { encoding: "utf8" }).status === 0;
+    if (hasUnzip) {
+      execVisible("unzip", ["-q", "-o", archivePath, "-d", intoDir]);
+      return;
+    }
+  }
+  execVisible("tar", tarExtractArgs(archivePath, intoDir));
 }
 function execVisible(command, argv) {
   const res = run(command, argv, { timeoutMs: 300_000 });

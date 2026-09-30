@@ -18,7 +18,8 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -40,10 +41,12 @@ import {
   parseRuntimeState,
   portCandidates,
   requiredShimFiles,
+  tarExtractArgs,
   validateBundleLayout,
   validateBundleManifest,
   validateLauncherConfig,
 } from "../../scripts/d4/installer/core.ts";
+import { shimFilesFor } from "../../scripts/d4/installer/shims.ts";
 
 /* launcher.ts 是自执行入口（import 即运行），不能在测试里做值导入；
    用 type-only 导入把它和 shims.ts 纳入 tests-typecheck 的覆盖
@@ -407,4 +410,107 @@ test("shims/launcher 类型层纳入检查（type-only import）", () => {
   const readmes: Array<ReturnType<ShimsExports["bundleReadme"]>> = [];
   const options: LauncherStartOptions[] = [];
   assert.deepEqual([files.length, readmes.length, options.length], [0, 0, 0]);
+});
+
+/* rootless 容器回归（issue #8 增量验收 2026-09-30 P2）：tar 解包必须恒带
+   --no-same-owner——user-namespace root 下 GNU tar 恢复归档 UID/GID 会在
+   nodejs.org 发行包（属主≠当前用户）上失败退出；本仓解包后一律重新
+   staging/校验，关闭属主恢复在所有环境安全。 */
+test("tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归）", () => {
+  assert.deepEqual(tarExtractArgs("node-v24.21.0-linux-x64.tar.xz", "/tmp/x"), [
+    "-xJf",
+    "node-v24.21.0-linux-x64.tar.xz",
+    "-C",
+    "/tmp/x",
+    "--no-same-owner",
+  ]);
+  assert.deepEqual(tarExtractArgs("treeai-studio-0.0.0-darwin-arm64.tar.gz", "/tmp/y"), [
+    "-xzf",
+    "treeai-studio-0.0.0-darwin-arm64.tar.gz",
+    "-C",
+    "/tmp/y",
+    "--no-same-owner",
+  ]);
+  /* 非 tar 后缀（zip 经 bsdtar 兜底路径）交给 -xf 自动探测，flag 仍在。 */
+  assert.deepEqual(tarExtractArgs("treeai-studio-0.0.0-win-x64.zip", "/tmp/z"), [
+    "-xf",
+    "treeai-studio-0.0.0-win-x64.zip",
+    "-C",
+    "/tmp/z",
+    "--no-same-owner",
+  ]);
+});
+
+/* ------------------------------------------------------------------ */
+/* Windows 入口垫片 treeai.ps1（run 36729293982 回归，issue #8 增量验收）*/
+/* ------------------------------------------------------------------ */
+
+/* PowerShell 命令（参数）模式下的裸 "+" 是字面参数：曾以
+   `… launcher.ts" @($Command) + @($Rest)` 传参，CI win-x64 的 start 全线
+   「不认识的参数：+」退出（doctor 恰因不解析参数而漏过）。修正纪律：参数
+   必须先在表达式模式拼成数组（并过滤无剩余参数时的 $null），再以 @var
+   展开传给 node。 */
+function treeaiPs1Content(): string {
+  const ps1 = shimFilesFor("win-x64").find((f) => f.path === "treeai.ps1");
+  assert.ok(ps1, "win-x64 产物必须含 treeai.ps1");
+  return ps1.content;
+}
+
+test("shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接", () => {
+  const content = treeaiPs1Content();
+  /* 表达式模式先行拼装 + $null 过滤（ValueFromRemainingArguments 无剩余参数时为 $null）。 */
+  assert.match(content, /\$nodeArgs = @\(\$Command\) \+ @\(\$Rest\)/);
+  assert.match(content, /\$null -ne \$_/);
+  const callLine = content
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.startsWith("& "));
+  assert.ok(callLine, "treeai.ps1 必须有显式 node 调用行");
+  assert.match(callLine, /launcher\\launcher\.ts"\) @nodeArgs$/);
+  /* 调用行出现「) + @」即回归（参数位的数组拼接是字面 '+'）。 */
+  assert.doesNotMatch(callLine, /\)\s\+\s@/);
+});
+
+test("shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖）", () => {
+  if (process.platform === "win32") return;
+  const probe = spawnSync("pwsh", ["-NoProfile", "-Command", "exit 0"], { encoding: "utf8" });
+  if (probe.status !== 0) {
+    process.stdout.write("  [SKIP] 本机无 pwsh（内容断言已另行覆盖；CI 三平台 runner 预装 pwsh）\n");
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), "treeai-d47-ps1-"));
+  try {
+    writeFileSync(join(root, "treeai.ps1"), treeaiPs1Content());
+    /* posix 上 Join-Path $root "node\\node.exe" 是含字面反斜杠的文件名——
+       造同名可执行 stub 即可让脚本原样跑通（Windows 上该链路由 CI 冒烟实测）。 */
+    const stub = "node\\node.exe";
+    writeFileSync(
+      join(root, stub),
+      '#!/bin/sh\nprintf \'%s\\n\' "$@" > "$TREEAI_ARGV_OUT"\n',
+      { flag: "wx" },
+    );
+    chmodSync(join(root, stub), 0o755);
+    const argvOut = join(root, "argv.txt");
+    const invoke = (args: string[]) => {
+      const res = spawnSync("pwsh", ["-NoProfile", "-File", join(root, "treeai.ps1"), ...args], {
+        encoding: "utf8",
+        env: { ...process.env, TREEAI_ARGV_OUT: argvOut },
+      });
+      assert.equal(res.status, 0, `pwsh ${args.join(" ")} 退出码非 0：\n${res.stdout}\n${res.stderr}`);
+      const lines = readFileSync(argvOut, "utf8").split("\n").filter((l) => l !== "");
+      rmSync(argvOut, { force: true });
+      return lines;
+    };
+    /* 带额外参数：argv 必须是 [launcher.ts, start, --no-browser]，绝无 '+'。 */
+    const withArgs = invoke(["start", "--no-browser"]);
+    assert.equal(withArgs.length, 3, `argv 不得混入多余参数：${JSON.stringify(withArgs)}`);
+    assert.match(withArgs[0]!, /launcher\\launcher\.ts$/);
+    assert.deepEqual(withArgs.slice(1), ["start", "--no-browser"]);
+    /* 无剩余参数：argv 必须恰好 [launcher.ts, doctor]——无 '+'、无空串。 */
+    const bare = invoke(["doctor"]);
+    assert.equal(bare.length, 2, `无剩余参数时 argv 不得混入 '+' 或空串：${JSON.stringify(bare)}`);
+    assert.deepEqual(bare.slice(1), ["doctor"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

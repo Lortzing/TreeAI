@@ -88,7 +88,8 @@ jobs:
         shell: bash
         run: |
           node -e '
-            const { readFileSync, createHash } = require("node:fs");
+            const { readFileSync } = require("node:fs");
+            const { createHash } = require("node:crypto");
             const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");
             let bad = 0;
             for (const line of lines) {

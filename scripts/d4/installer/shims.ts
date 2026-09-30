@@ -69,7 +69,12 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
-& (Join-Path $root "node\\node.exe") (Join-Path $root "launcher\\launcher.ts") @($Command) + @($Rest)
+# 参数必须先拼成数组再以 @var 展开：PowerShell 命令模式下的裸 "+" 会被当作
+# 字面参数传给 node（CI win-x64 实测 start 不认识的参数：+）。$Rest 无剩余
+# 参数时可能为 $null，过滤后 splat。
+$nodeArgs = @($Command) + @($Rest)
+$nodeArgs = @($nodeArgs | Where-Object { $null -ne $_ })
+& (Join-Path $root "node\\node.exe") (Join-Path $root "launcher\\launcher.ts") @nodeArgs
 exit $LASTEXITCODE
 `,
   };

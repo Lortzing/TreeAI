@@ -58,6 +58,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
+import { tarExtractArgs } from "./installer/core.ts";
 import {
   BUNDLE_MANIFEST_SCHEMA,
   ESBUILD_PLATFORM_PACKAGE,
@@ -244,12 +245,11 @@ function extractArchive(archivePath, intoDir) {
     if (hasUnzip) {
       execFileSync("unzip", ["-q", "-o", archivePath, "-d", intoDir], { stdio: "inherit" });
     } else {
-      execFileSync("tar", ["-xf", archivePath, "-C", intoDir], { stdio: "inherit" });
+      execFileSync("tar", tarExtractArgs(archivePath, intoDir), { stdio: "inherit" });
     }
     return;
   }
-  const flag = archivePath.endsWith(".tar.xz") ? "-xJf" : "-xzf";
-  execFileSync("tar", [flag, archivePath, "-C", intoDir], { stdio: "inherit" });
+  execFileSync("tar", tarExtractArgs(archivePath, intoDir), { stdio: "inherit" });
 }
 process.stdout.write("package-installer: 解包 Node 发行包…\n");
 try {
