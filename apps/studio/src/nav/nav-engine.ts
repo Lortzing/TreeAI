@@ -24,8 +24,10 @@
  *    首个 user Turn 作标题 + getBranchOriginKind 逐页取来源类型）——
  *    索引是派生缓存：可用 invalidate(treeId) 显式失效重建，游标携带
  *    索引版本号，跨版本游标按「过期游标」显式报错（不静默跳页）；
- *  - 本内核不持久化任何 UI 状态（展开/折叠/阅读位置属接线/前端增量；
- *    持久化如需迁移 0010 号，属集成协调资源，本增量不写迁移）。
+ *  - 本内核不持久化任何 UI 状态：展开/折叠/阅读位置的持久化在接线
+ *    增量落地（packages/persistence migration 0010 nav_tree_expand_state +
+ *    TreeRepository.saveNavExpandState；引擎索引跨进程重建是惰性的，
+ *    重启即重算——索引不是事实源）。
  *
  * 诚实边界：引擎级 p95（B9 nav-p95 的引擎侧证据）≠ 浏览器 verdict——
  * DOM/虚拟化/键盘属前端增量；跨进程缓存失效策略（写入方主动 invalidate
@@ -163,10 +165,34 @@ export interface NavTreeSearchHit {
   readonly createdAt: IsoTimestamp;
 }
 
+/** 树搜索页（确定性全序 + 偏移游标）。 */
+export interface NavTreeSearchPage {
+  readonly hits: readonly NavTreeSearchHit[];
+  readonly nextCursor: string | null;
+}
+
+/** Branch 搜索页（确定性全序 + 偏移游标；命中与 searchBranches 同序）。 */
+export interface NavBranchSearchPage {
+  readonly hits: readonly NavBranchSearchHit[];
+  readonly nextCursor: string | null;
+}
+
+export type NavEngineErrorCode =
+  | "unknown-tree"
+  | "unknown-branch"
+  | "invalid-argument"
+  | "invalid-cursor"
+  | "stale-cursor"
+  | "data-integrity";
+
 export class NavEngineError extends Error {
-  constructor(message: string) {
+  /** 稳定原因码（HTTP 接线据此映射 404/400；见 server.ts D4-8 段）。 */
+  readonly code: NavEngineErrorCode;
+
+  constructor(code: NavEngineErrorCode, message: string) {
     super(`nav-engine: ${message}`);
     this.name = "NavEngineError";
+    this.code = code;
   }
 }
 
@@ -187,7 +213,7 @@ export const NAV_SEARCH_MAX_LIMIT = 500;
 function assertLimit(value: number | undefined, max: number, what: string, fallback: number): number {
   if (value === undefined) return fallback;
   if (!Number.isInteger(value) || value < 1 || value > max) {
-    throw new NavEngineError(`${what} must be an integer between 1 and ${String(max)} (got ${String(value)})`);
+    throw new NavEngineError("invalid-argument", `${what} must be an integer between 1 and ${String(max)} (got ${String(value)})`);
   }
   return value;
 }
@@ -195,7 +221,7 @@ function assertLimit(value: number | undefined, max: number, what: string, fallb
 function assertMode(mode: NavSearchMode | undefined): NavSearchMode {
   if (mode === undefined) return "substring";
   if (mode !== "exact" && mode !== "prefix" && mode !== "substring") {
-    throw new NavEngineError(`search mode must be 'exact' | 'prefix' | 'substring' (got ${String(mode)})`);
+    throw new NavEngineError("invalid-argument", `search mode must be 'exact' | 'prefix' | 'substring' (got ${String(mode)})`);
   }
   return mode;
 }
@@ -218,14 +244,14 @@ function decodeCursor(cursor: string): CursorPayload {
   try {
     parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as CursorPayload;
   } catch {
-    throw new NavEngineError(`invalid cursor (not a navigation cursor): ${cursor.slice(0, 40)}`);
+    throw new NavEngineError("invalid-cursor", `invalid cursor (not a navigation cursor): ${cursor.slice(0, 40)}`);
   }
   if (
     typeof parsed !== "object" || parsed === null ||
     typeof parsed.v !== "number" || !Number.isInteger(parsed.v) ||
     typeof parsed.o !== "number" || !Number.isInteger(parsed.o) || parsed.o < 0
   ) {
-    throw new NavEngineError(`invalid cursor payload: ${cursor.slice(0, 40)}`);
+    throw new NavEngineError("invalid-cursor", `invalid cursor payload: ${cursor.slice(0, 40)}`);
   }
   return parsed;
 }
@@ -302,7 +328,7 @@ export class TreeNavEngine {
   #buildIndex(treeId: string): TreeIndex {
     const tree = this.#repository.findTree(treeId as TreeId);
     if (tree === null) {
-      throw new NavEngineError(`unknown tree '${treeId}'`);
+      throw new NavEngineError("unknown-tree", `unknown tree '${treeId}'`);
     }
     const branches = this.#repository.listBranches(treeId as TreeId);
     const entries = new Map<string, NavIndexEntry>();
@@ -321,6 +347,7 @@ export class TreeNavEngine {
         const parent = entries.get(branch.parentBranchId);
         if (parent === undefined) {
           throw new NavEngineError(
+            "data-integrity",
             `tree ${treeId}: branch ${branch.id} references parent ${branch.parentBranchId} that precedes it (data integrity)`,
           );
         }
@@ -355,7 +382,7 @@ export class TreeNavEngine {
     }
     const trunk = branches.find((branch) => branch.parentBranchId === null) ?? null;
     if (trunk === null) {
-      throw new NavEngineError(`tree ${treeId} has no trunk branch (data integrity)`);
+      throw new NavEngineError("data-integrity", `tree ${treeId} has no trunk branch (data integrity)`);
     }
     const version = (this.#indexVersions.get(treeId) ?? 0) + 1;
     this.#indexVersions.set(treeId, version);
@@ -408,7 +435,7 @@ export class TreeNavEngine {
   #entryFor(index: TreeIndex, branchId: string): NavIndexEntry {
     const entry = index.entries.get(branchId);
     if (entry === undefined) {
-      throw new NavEngineError(`unknown branch '${branchId}' in tree '${index.treeId}'`);
+      throw new NavEngineError("unknown-branch", `unknown branch '${branchId}' in tree '${index.treeId}'`);
     }
     return entry;
   }
@@ -418,6 +445,7 @@ export class TreeNavEngine {
     const payload = decodeCursor(cursor);
     if (payload.v !== index.version) {
       throw new NavEngineError(
+        "stale-cursor",
         `stale cursor (built for index version ${String(payload.v)}, current ${String(index.version)}); ` +
           "restart pagination from the first page after invalidation",
       );
@@ -481,6 +509,7 @@ export class TreeNavEngine {
     const maxDepth = options.maxDepth ?? 2;
     if (!Number.isInteger(maxDepth) || maxDepth < 0 || maxDepth > NAV_SUBTREE_MAX_DEPTH) {
       throw new NavEngineError(
+        "invalid-argument",
         `subtree maxDepth must be an integer between 0 and ${String(NAV_SUBTREE_MAX_DEPTH)} (got ${String(maxDepth)})`,
       );
     }
@@ -553,7 +582,7 @@ export class TreeNavEngine {
   locateBranch(branchId: string): NavLocation {
     const branch = this.#repository.findBranch(branchId as BranchId);
     if (branch === null) {
-      throw new NavEngineError(`unknown branch '${branchId}'`);
+      throw new NavEngineError("unknown-branch", `unknown branch '${branchId}'`);
     }
     const index = this.#indexFor(branch.treeId);
     const entry = this.#entryFor(index, branchId);
@@ -638,6 +667,7 @@ export class TreeNavEngine {
       const payload = decodeCursor(options.cursor);
       if (payload.v !== this.#treeSummariesVersion) {
         throw new NavEngineError(
+          "stale-cursor",
           `stale cursor (built for summary version ${String(payload.v)}, current ${String(this.#treeSummariesVersion)}); ` +
             "restart pagination from the first page",
         );
@@ -660,7 +690,7 @@ export class TreeNavEngine {
   getTreeOverview(treeId: string): NavTreeOverview {
     const tree = this.#repository.findTree(treeId as TreeId);
     if (tree === null) {
-      throw new NavEngineError(`unknown tree '${treeId}'`);
+      throw new NavEngineError("unknown-tree", `unknown tree '${treeId}'`);
     }
     const index = this.#indexFor(treeId);
     return {
@@ -725,7 +755,7 @@ export class TreeNavEngine {
         : [options.treeId];
     if (scopeTreeIds.length === 1) {
       const known = this.#repository.findTree(scopeTreeIds[0] as TreeId);
-      if (known === null) throw new NavEngineError(`unknown tree '${scopeTreeIds[0]}'`);
+      if (known === null) throw new NavEngineError("unknown-tree", `unknown tree '${scopeTreeIds[0]}'`);
     }
     const hits: NavBranchSearchHit[] = [];
     for (const treeId of scopeTreeIds) {
@@ -750,5 +780,122 @@ export class TreeNavEngine {
       }
     }
     return hits;
+  }
+
+  /* ------------------------------ 搜索分页（HTTP 接线面） ------------------------------ */
+
+  /** 树搜索页（确定性全序 + 偏移游标；nextCursor === null 即末页）。 */
+  searchTreesPage(
+    text: string,
+    options: { readonly mode?: NavSearchMode; readonly limit?: number; readonly cursor?: string } = {},
+  ): NavTreeSearchPage {
+    const limit = assertLimit(options.limit, NAV_SEARCH_MAX_LIMIT, "search limit", NAV_SEARCH_DEFAULT_LIMIT);
+    const mode = assertMode(options.mode);
+    const query = typeof text === "string" ? text.trim() : "";
+    if (query.length === 0) return { hits: [], nextCursor: null };
+    const needle = fold(query);
+    const offset = this.#searchCursorOffset(options.cursor);
+    const hits: NavTreeSearchHit[] = [];
+    let matched = 0;
+    let more = false;
+    for (const tree of this.#treeSummaryList()) {
+      const titleMatch = tree.title !== null && matchByMode(fold(tree.title), needle, mode);
+      const idMatch = !titleMatch && matchByMode(fold(tree.treeId), needle, mode);
+      if (!titleMatch && !idMatch) continue;
+      if (matched >= offset + limit) {
+        more = true;
+        break;
+      }
+      if (matched >= offset) {
+        hits.push({
+          treeId: tree.treeId,
+          forestId: tree.forestId,
+          title: tree.title,
+          matchedOn: titleMatch ? "title" : "id",
+          createdAt: tree.createdAt,
+        });
+      }
+      matched += 1;
+    }
+    return { hits, nextCursor: more ? encodeCursor(this.#treeSummariesVersion, offset + limit) : null };
+  }
+
+  /**
+   * Branch 搜索页（确定性全序 + 偏移游标）。命中与 searchBranches 同序
+   * （森林序 → 树创建序 → 分支创建序）——同输入恒同输出，翻页无重复无
+   * 空洞；游标携带全局摘要版本（任一树 invalidate 即过期，显式报错）。
+   */
+  searchBranchesPage(
+    text: string,
+    options: {
+      readonly mode?: NavSearchMode;
+      readonly treeId?: string | null;
+      readonly limit?: number;
+      readonly cursor?: string;
+    } = {},
+  ): NavBranchSearchPage {
+    const limit = assertLimit(options.limit, NAV_SEARCH_MAX_LIMIT, "search limit", NAV_SEARCH_DEFAULT_LIMIT);
+    const mode = assertMode(options.mode);
+    const query = typeof text === "string" ? text.trim() : "";
+    if (query.length === 0) return { hits: [], nextCursor: null };
+    const needle = fold(query);
+    const scopeTreeIds: readonly string[] =
+      options.treeId === undefined || options.treeId === null
+        ? this.#treeSummaryList().map((tree) => tree.treeId)
+        : [options.treeId];
+    if (scopeTreeIds.length === 1) {
+      const known = this.#repository.findTree(scopeTreeIds[0] as TreeId);
+      if (known === null) throw new NavEngineError("unknown-tree", `unknown tree '${scopeTreeIds[0]}'`);
+    }
+    const offset = this.#searchCursorOffset(options.cursor);
+    const hits: NavBranchSearchHit[] = [];
+    let matched = 0;
+    let more = false;
+    for (const treeId of scopeTreeIds) {
+      const index = this.#indexFor(treeId);
+      for (const branchId of index.order) {
+        const entry = index.entries.get(branchId)!;
+        const titleMatch = entry.title !== null && matchByMode(fold(entry.title), needle, mode);
+        const idMatch = !titleMatch && matchByMode(fold(entry.branch.id), needle, mode);
+        if (!titleMatch && !idMatch) continue;
+        if (matched >= offset + limit) {
+          more = true;
+          break;
+        }
+        if (matched >= offset) {
+          hits.push({
+            branchId: entry.branch.id,
+            treeId: index.treeId,
+            treeTitle: index.treeTitle,
+            title: entry.title,
+            matchedOn: titleMatch ? "title" : "id",
+            depth: entry.depth,
+            path: this.fullPath(index.treeId, entry.branch.id),
+            originKind: this.#materialRepository.getBranchOriginKind(entry.branch.id as BranchId),
+            createdAt: entry.branch.createdAt,
+          });
+        }
+        matched += 1;
+      }
+      if (more) break;
+    }
+    return { hits, nextCursor: more ? encodeCursor(this.#treeSummariesVersion, offset + limit) : null };
+  }
+
+  /**
+   * 搜索游标偏移（携带全局摘要版本——任何 invalidate(treeId) 都会使全部
+   * 搜索游标过期：宁可让调用方从头再查，也不在变了序的结果里静默跳页）。
+   */
+  #searchCursorOffset(cursor: string | undefined): number {
+    if (cursor === undefined) return 0;
+    const payload = decodeCursor(cursor);
+    if (payload.v !== this.#treeSummariesVersion) {
+      throw new NavEngineError(
+        "stale-cursor",
+        `stale search cursor (built for summary version ${String(payload.v)}, current ${String(this.#treeSummariesVersion)}); ` +
+          "restart search pagination from the first page",
+      );
+    }
+    return payload.o;
   }
 }

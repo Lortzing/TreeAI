@@ -462,6 +462,93 @@ test("branch search: exact/prefix/substring, case folding, matchedOn, tree scope
   }
 });
 
+test("search pagination: deterministic pages without duplicates or gaps; cursor discipline", () => {
+  const h = makeHarness();
+  try {
+    const { treeId, trunk } = makeTree(h, "t-page");
+    const other = makeTree(h, "t-page-other");
+    // 7 条命中（本树 4 + 他树 3），页大小 3 → 3 页（3/3/1）
+    for (let i = 1; i <= 4; i += 1) {
+      makeTitledBranch(h, treeId, trunk, `分页笔记 第${String(i)}条`);
+    }
+    for (let i = 1; i <= 3; i += 1) {
+      makeTitledBranch(h, other.treeId, other.trunk, `分页笔记 别树${String(i)}`);
+    }
+
+    const collected: string[] = [];
+    let cursor: string | undefined;
+    let pages = 0;
+    for (;;) {
+      const page = h.engine.searchBranchesPage("分页笔记", { mode: "substring", limit: 3, cursor });
+      pages += 1;
+      assert.ok(page.hits.length <= 3, "page size is bounded by the limit");
+      collected.push(...page.hits.map((hit) => hit.branchId));
+      if (page.nextCursor === null) break;
+      cursor = page.nextCursor;
+      assert.ok(pages <= 10, "pagination must terminate");
+    }
+    assert.equal(collected.length, 7, "all 7 hits collected across pages");
+    assert.equal(new Set(collected).size, 7, "no duplicates across pages");
+    assert.equal(pages, 3, "7 hits at limit 3 must paginate as 3 pages (3/3/1)");
+
+    // 分页序 === 不分页全量序（确定性全序）
+    const unpaginated = h.engine.searchBranches("分页笔记", { mode: "substring", limit: 100 });
+    assert.deepEqual(collected, unpaginated.map((hit) => hit.branchId));
+
+    // 树范围 + 分页：不泄漏他树
+    const scopedFirst = h.engine.searchBranchesPage("分页笔记", { mode: "substring", treeId: treeId, limit: 2 });
+    assert.equal(scopedFirst.hits.length, 2);
+    assert.ok(scopedFirst.hits.every((hit) => hit.treeId === treeId));
+    assert.ok(scopedFirst.nextCursor !== null);
+    const scopedSecond = h.engine.searchBranchesPage("分页笔记", {
+      mode: "substring",
+      treeId: treeId,
+      limit: 2,
+      cursor: scopedFirst.nextCursor,
+    });
+    assert.equal(scopedSecond.hits.length, 2);
+    assert.equal(scopedSecond.nextCursor, null, "scoped search ends after its own hits");
+    assert.ok(scopedSecond.hits.every((hit) => hit.treeId === treeId));
+
+    // 树搜索分页：t-page 前缀命中 2 棵树
+    const treePage = h.engine.searchTreesPage("t-page", { mode: "prefix", limit: 1 });
+    assert.equal(treePage.hits.length, 1);
+    assert.ok(treePage.nextCursor !== null);
+    const treePage2 = h.engine.searchTreesPage("t-page", { mode: "prefix", limit: 1, cursor: treePage.nextCursor });
+    assert.equal(treePage2.hits.length, 1);
+    assert.equal(treePage2.nextCursor, null);
+
+    // 空查询：诚实空页（游标 null）
+    const empty = h.engine.searchBranchesPage("   ", { mode: "substring" });
+    assert.deepEqual(empty, { hits: [], nextCursor: null });
+
+    // 非法游标显式报错（invalid-cursor）；invalidate 后游标过期（stale-cursor）
+    assert.throws(
+      () => h.engine.searchBranchesPage("分页笔记", { cursor: "not-a-cursor" }),
+      (e: unknown) => e instanceof NavEngineError && e.code === "invalid-cursor",
+    );
+    const staleSeed = h.engine.searchBranchesPage("分页笔记", { mode: "substring", limit: 2 });
+    assert.ok(staleSeed.nextCursor !== null);
+    h.engine.invalidate(other.treeId);
+    assert.throws(
+      () =>
+        h.engine.searchBranchesPage("分页笔记", {
+          mode: "substring",
+          limit: 2,
+          cursor: staleSeed.nextCursor!,
+        }),
+      (e: unknown) => e instanceof NavEngineError && e.code === "stale-cursor",
+    );
+    // 未知树（scoped）：unknown-tree
+    assert.throws(
+      () => h.engine.searchBranchesPage("x", { treeId: "no-such-tree" }),
+      (e: unknown) => e instanceof NavEngineError && e.code === "unknown-tree",
+    );
+  } finally {
+    h.close();
+  }
+});
+
 test("same-name disambiguation: identical titles under different parents carry distinct full paths", () => {
   const h = makeHarness();
   try {

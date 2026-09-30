@@ -67,6 +67,7 @@ import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
 import { SearchService } from "./search/search-service.ts";
+import { NavService } from "./nav/nav-service.ts";
 import { exportPackage, PortabilityError, restorePackage, SESSIONS_SENSITIVE_MARKER } from "./portability/index.ts";
 import { createStudioServer } from "./server.ts";
 
@@ -321,8 +322,14 @@ async function main(): Promise<void> {
      持久化索引表——索引只是可从产品数据重建的派生结构。 */
   const search = new SearchService({ treeRepository: repository, materialRepository });
 
+  /* 大规模树导航（issue #8 D4-8，charter §5）：同一产品库两仓储上的查询
+     内核（树列表/子节点分页/子树展开/完整路径/跨树定位/标题搜索）+ 展开
+     状态持久化（migration 0010）。只读产品事实，从不读 run/session 可用
+     性；读索引惰性构建，进程内缓存、重启重算（索引不是事实源）。 */
+  const nav = new NavService({ repository, materialRepository });
+
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
-  const studio = createStudioServer({ service, staticDir, terminology, materials, search });
+  const studio = createStudioServer({ service, staticDir, terminology, materials, search, nav });
   const port = await studio.listen(options.port);
 
   const banner = [

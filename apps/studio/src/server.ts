@@ -100,6 +100,14 @@
  *   （非数组/空数组/未知成员）→ 400。零命中如实空数组（不编造）。搜索
  *   纯只读：不创建任何产品事实（项目书 §4「浏览/搜索不创建 Turn」）。
  *
+ * 大规模树导航 API（issue #8 D4-8，charter §5；未注入 nav 服务 → 503
+ * nav-not-wired 如实说明）：/api/nav/* 只读产品事实（trees/branches/
+ * turns/origins），从不读 run/session 可用性——产品树 ≠ 运行 session 树
+ * （session 全部消失时导航结果逐字节不变）。单次响应永不携带整棵树载荷
+ * （children/subtree 均有 limit 上限 + 游标续页——按需加载）。详见区段
+ * 注释（路由清单与错误映射）；展开状态 PUT → 204，读取无状态 → null
+ * 诚实空态（重启后展开状态与阅读位置不丢：migration 0010）。
+ *
  * 材料建枝 API（issue #8 D4-3，charter §3.3 / ADR-004；未注入 materials
  *   → 503 如实说明；契约 §3「from-material 拆两步」的差异记录见
  *   D4-contracts.md §3 D4-3 落地增量）：
@@ -168,6 +176,8 @@ import {
   SearchService,
   toContractSearchHit,
 } from "./search/search-service.ts";
+import { NavEngineError, type NavSearchMode } from "./nav/nav-engine.ts";
+import { NavService } from "./nav/nav-service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -200,6 +210,12 @@ export interface StudioServerOptions {
    * 绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
    */
   readonly search?: SearchService | null;
+  /**
+   * 大规模树导航服务（issue #8 D4-8，charter §5；缺省不注入 → /api/nav/*
+   * 路由 503，如实说明未装配，绝不伪装成功）。宿主（index.ts / 测试）
+   * 注入完整装配；树写入方须调用 nav.invalidate(treeId) 失效读索引。
+   */
+  readonly nav?: NavService | null;
 }
 
 export interface StudioServer {
@@ -280,6 +296,26 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof MaterialFirstQuestionConflictError) {
     // 材料首问内容冲突（首问已用不同内容落库）——改问走普通续聊。
     sendJson(res, 409, { error: { code: "material-first-question-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof NavEngineError) {
+    // 大规模树导航（issue #8 D4-8）：稳定原因码 → 状态码。必须在下方
+    // TreeAIError 鸭子类型分支之前（NavEngineError 也携带字符串 code）。
+    if (err.code === "unknown-tree" || err.code === "unknown-branch") {
+      sendJson(res, 404, { error: { code: "not-found", message: err.message } } satisfies ApiErrorBody);
+      return;
+    }
+    if (err.code === "stale-cursor") {
+      // 索引版本已变（invalidate 后旧游标）——客户端须从首页重开分页。
+      sendJson(res, 409, { error: { code: "stale-cursor", message: err.message } } satisfies ApiErrorBody);
+      return;
+    }
+    if (err.code === "data-integrity") {
+      sendJson(res, 500, { error: { code: "data-integrity", message: err.message } } satisfies ApiErrorBody);
+      return;
+    }
+    // invalid-argument / invalid-cursor：调用方输入错误。
+    sendJson(res, 400, { error: { code: err.code, message: err.message } } satisfies ApiErrorBody);
     return;
   }
   if (err instanceof TypeError) {
@@ -470,6 +506,52 @@ function sendNoContent(res: ServerResponse): void {
   res.end();
 }
 
+/**
+ * 导航查询参数 → 数值（issue #8 D4-8）：非数字/非整数交由引擎层校验
+ * （NavEngineError invalid-argument → 400，原因码稳定）。
+ */
+function navNumberParam(raw: string, name: string): number {
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    throw new InvalidArgumentError(`query parameter '${name}' must be a number (got '${raw}')`);
+  }
+  return parsed;
+}
+
+/** 导航分页查询参数（cursor/limit；缺省走引擎默认）。 */
+function navPageOptions(url: URL): { readonly cursor?: string; readonly limit?: number } {
+  const cursor = url.searchParams.get("cursor");
+  const limit = url.searchParams.get("limit");
+  return {
+    ...(cursor === null ? {} : { cursor }),
+    ...(limit === null ? {} : { limit: navNumberParam(limit, "limit") }),
+  };
+}
+
+/**
+ * 展开状态 PUT 请求体（issue #8 D4-8）：{expandedBranchIds, selectedBranchId?}。
+ * 数组形状在此校验（400）；成员存在性/树归属在仓储层校验（404/400）。
+ */
+function parseNavExpandStateBody(body: Record<string, unknown>): {
+  readonly expandedBranchIds: readonly BranchId[];
+  readonly selectedBranchId: BranchId | null;
+} {
+  const raw = body["expandedBranchIds"];
+  if (!Array.isArray(raw) || raw.some((id) => typeof id !== "string")) {
+    throw new InvalidArgumentError("request field 'expandedBranchIds' must be an array of branch ids");
+  }
+  const selected = body["selectedBranchId"];
+  if (selected !== undefined && selected !== null && typeof selected !== "string") {
+    throw new InvalidArgumentError(
+      "request field 'selectedBranchId' must be a branch id string or null (reading position)",
+    );
+  }
+  return {
+    expandedBranchIds: raw as readonly BranchId[],
+    selectedBranchId: (selected as BranchId | null | undefined) ?? null,
+  };
+}
+
 function asTreeId(raw: string): TreeId {
   return decodeURIComponent(raw) as TreeId;
 }
@@ -479,6 +561,9 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   const terminology = options.terminology ?? null;
   const materials = options.materials ?? null;
   const search = options.search ?? null;
+  /* D4-8 大规模树导航服务（issue #8 charter §5）：未装配即为 null →
+     /api/nav/* 路由 503 nav-not-wired，绝不伪装成功。 */
+  const nav = options.nav ?? null;
   /* D4-2 统一区间/锚点解析层：与材料服务同一仓储派生（materials 未装配
      即为 null → 解析路由 503 materials-not-wired，绝不伪装成功）。 */
   const materialRanges =
@@ -1173,6 +1258,198 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         sendJson(res, 200, { hits: hits.map(toContractSearchHit) });
         return;
       }
+
+      /* ==================== D4-8 大规模树导航区段（issue #8，charter §5） ====================
+         只读产品事实（trees/branches/turns/origins），从不读 run/session
+         可用性——产品树 ≠ 运行 session 树（session 全部消失时导航结果
+         逐字节不变）。单次响应永不携带整棵树载荷（按需分页：children/
+         subtree 均有 limit 上限 + 游标续页）。未装配 nav → 503。
+
+           GET  /api/nav/trees?cursor=&limit=                       —— 森林/树列表（标量摘要，无全树载荷）
+           GET  /api/nav/trees/:treeId                              —— 单树概览（节点数/最大深度/标题）
+           GET  /api/nav/trees/:treeId/branches/:branchId/children?cursor=&limit=
+                                                                     —— 子节点分页（按需加载核心查询）
+           GET  /api/nav/trees/:treeId/branches/:branchId/subtree?maxDepth=&cursor=&limit=
+                                                                     —— 深度受限子树展开（BFS + 游标续页）
+           GET  /api/nav/trees/:treeId/branches/:branchId/path      —— 根→本节点完整路径（含本节点；
+                                                                         100 层深链完整返回）
+           GET  /api/nav/branches/:branchId/locate                  —— 跨树定位（树/祖先链/兄弟位次/来源）
+           GET  /api/nav/search/trees?text=&mode=&limit=&cursor=    —— 树标题/标识搜索（确定性序 + 分页）
+           GET  /api/nav/search/branches?text=&mode=&treeId=&limit=&cursor=
+                                                                     —— Branch 标题/标识搜索（命中带完整
+                                                                         路径——同名消歧按 id 精确定位）
+           GET  /api/nav/trees/:treeId/expand-state                 —— 展开状态读取（无 → null 诚实空态）
+           PUT  /api/nav/trees/:treeId/expand-state                 —— 展开状态整组写入（body
+                                                                         {expandedBranchIds, selectedBranchId?}
+                                                                         → 204；校验成员树归属）
+
+         错误映射（NavEngineError 稳定原因码）：unknown-tree/unknown-branch
+         → 404；invalid-argument/invalid-cursor → 400；stale-cursor → 409
+         （索引失效后旧游标，从首页重开）；仓储层 EntityNotFound → 404、
+         InvalidArgument → 400（展开状态校验）。 */
+      if (pathname === "/api/nav" || pathname.startsWith("/api/nav/")) {
+        if (nav === null) {
+          sendJson(res, 503, {
+            error: { code: "nav-not-wired", message: "the tree navigation service is not wired in this process" },
+          });
+          return;
+        }
+        const navTreesListMatch = pathname === "/api/nav/trees";
+        const navTreeMatch = /^\/api\/nav\/trees\/([^/]+)$/.exec(pathname);
+        const navChildrenMatch = /^\/api\/nav\/trees\/([^/]+)\/branches\/([^/]+)\/children$/.exec(pathname);
+        const navSubtreeMatch = /^\/api\/nav\/trees\/([^/]+)\/branches\/([^/]+)\/subtree$/.exec(pathname);
+        const navPathMatch = /^\/api\/nav\/trees\/([^/]+)\/branches\/([^/]+)\/path$/.exec(pathname);
+        const navExpandStateMatch = /^\/api\/nav\/trees\/([^/]+)\/expand-state$/.exec(pathname);
+        const navLocateMatch = /^\/api\/nav\/branches\/([^/]+)\/locate$/.exec(pathname);
+        const navTreeSearchMatch = pathname === "/api/nav/search/trees";
+        const navBranchSearchMatch = pathname === "/api/nav/search/branches";
+        const isNavRoute =
+          navTreesListMatch ||
+          navTreeMatch !== null ||
+          navChildrenMatch !== null ||
+          navSubtreeMatch !== null ||
+          navPathMatch !== null ||
+          navExpandStateMatch !== null ||
+          navLocateMatch !== null ||
+          navTreeSearchMatch ||
+          navBranchSearchMatch;
+        if (isNavRoute) {
+          const engine = nav.engine;
+          if (navTreesListMatch) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            sendJson(res, 200, engine.listTrees(navPageOptions(url)));
+            return;
+          }
+          if (navTreeMatch !== null) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            sendJson(res, 200, engine.getTreeOverview(asTreeId(navTreeMatch[1]!)));
+            return;
+          }
+          if (navChildrenMatch !== null) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            sendJson(
+              res,
+              200,
+              engine.listChildren(
+                decodeURIComponent(navChildrenMatch[1]!),
+                decodeURIComponent(navChildrenMatch[2]!) as BranchId,
+                navPageOptions(url),
+              ),
+            );
+            return;
+          }
+          if (navSubtreeMatch !== null) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            const options = navPageOptions(url);
+            const maxDepthRaw = url.searchParams.get("maxDepth");
+            sendJson(
+              res,
+              200,
+              engine.expandSubtree(
+                decodeURIComponent(navSubtreeMatch[1]!),
+                decodeURIComponent(navSubtreeMatch[2]!) as BranchId,
+                {
+                  ...options,
+                  ...(maxDepthRaw === null ? {} : { maxDepth: navNumberParam(maxDepthRaw, "maxDepth") }),
+                },
+              ),
+            );
+            return;
+          }
+          if (navPathMatch !== null) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            sendJson(res, 200, {
+              treeId: decodeURIComponent(navPathMatch[1]!),
+              branchId: decodeURIComponent(navPathMatch[2]!),
+              path: engine.fullPath(decodeURIComponent(navPathMatch[1]!), decodeURIComponent(navPathMatch[2]!)),
+            });
+            return;
+          }
+          if (navExpandStateMatch !== null) {
+            const treeId = asTreeId(navExpandStateMatch[1]!);
+            if (method === "GET") {
+              sendJson(res, 200, { expandState: nav.getExpandState(treeId) });
+              return;
+            }
+            if (method === "PUT") {
+              const body = parseNavExpandStateBody(await readJsonBody(req));
+              nav.saveExpandState({ treeId, ...body });
+              sendNoContent(res);
+              return;
+            }
+            sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+            return;
+          }
+          if (navLocateMatch !== null) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            sendJson(res, 200, engine.locateBranch(decodeURIComponent(navLocateMatch[1]!) as BranchId));
+            return;
+          }
+          if (navTreeSearchMatch || navBranchSearchMatch) {
+            if (method !== "GET") {
+              sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+              return;
+            }
+            const text = url.searchParams.get("text") ?? "";
+            if (text.trim().length === 0) {
+              throw new InvalidArgumentError("query parameter 'text' must be a non-empty (not blank) string");
+            }
+            const modeRaw = url.searchParams.get("mode");
+            if (modeRaw !== null && modeRaw !== "exact" && modeRaw !== "prefix" && modeRaw !== "substring") {
+              throw new InvalidArgumentError(
+                `query parameter 'mode' must be 'exact' | 'prefix' | 'substring' (got '${modeRaw}')`,
+              );
+            }
+            const mode = modeRaw as NavSearchMode | null;
+            const limitRaw = url.searchParams.get("limit");
+            const cursor = url.searchParams.get("cursor") ?? undefined;
+            if (navTreeSearchMatch) {
+              sendJson(
+                res,
+                200,
+                engine.searchTreesPage(text, {
+                  ...(mode === null ? {} : { mode }),
+                  ...(limitRaw === null ? {} : { limit: navNumberParam(limitRaw, "limit") }),
+                  ...(cursor === undefined ? {} : { cursor }),
+                }),
+              );
+              return;
+            }
+            const scopeTreeId = url.searchParams.get("treeId");
+            sendJson(
+              res,
+              200,
+              engine.searchBranchesPage(text, {
+                ...(mode === null ? {} : { mode }),
+                ...(scopeTreeId === null ? {} : { treeId: decodeURIComponent(scopeTreeId) }),
+                ...(limitRaw === null ? {} : { limit: navNumberParam(limitRaw, "limit") }),
+                ...(cursor === undefined ? {} : { cursor }),
+              }),
+            );
+            return;
+          }
+        }
+        // 已识别 /api/nav/* 前缀但无匹配路由 → 404（与其他未匹配路径一致）。
+      }
+      /* ==================== D4-8 大规模树导航区段结束 ==================== */
 
       const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics|events|journal))?$/.exec(pathname);
       if (treeMatch !== null) {
