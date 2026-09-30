@@ -300,3 +300,14 @@ main。合并复验：typecheck、全仓 **688/688**（+13 ui-search）、verify
 UI 无 console 错误）。D4-4 行已更新（浏览器探针 d4-search-recover 的翻转留给
 浏览器证据波）。仍在飞：C（wip/d4-8-nav，其 worktree 含上轮未提交的 4490 行
 先前实现，agent 已按保全纪律接管续作）、E（wip/d4-browser-probes）。
+
+**2026-10-01 集成记录（续二）**：E（`wip/d4-browser-probes`，tip `ab7f328`）与
+F（`wip/d4-3-frontend`，tip `8b309f8`）已合并 main。E 落地 run:d4-browser 的
+B1/B2 浏览器面三探针 + 本会话续作 d4-search-recover 探针（合计 8 PASS /
+0 FAIL / 2 NOT_RUN——后者属 real-pi 门），并实测揪出两个真浏览器阅读器缺陷
+（恢复滚动对齐、捕获条拖拽位移），当场修复并以探针硬断言/UI 套件锁定。
+F 交付 D4-3 前端（建枝两步流/上下文声明/首问四态/恢复另开/材料 Return/
+新探索，16 场景）。合并复验：typecheck、全仓 **705/705**、verify:d4
+13-0-5、双 selftest、verify:d2 21-0-0-1、run:d4-browser 8-0-2。C 原 agent
+停滞 6.5h（零写入）已停止，先前会话的 4490 行 D4-8 nav 实现按保全纪律提交至
+`wip/d4-8-nav`（`45c35cc`）并合入 main 基线，C2 已接续（时间纪律明确）。
