@@ -1,0 +1,20 @@
+b9 large-scale tree nav check
+generator CLI run A (with --load-check): exit 0
+generator CLI run B (fresh process): exit 0
+generator determinism: two independent CLI runs byte-identical (structure truth sha256 4f36f4e51337a561…, manifest 619de9b093a994b7…, 100 trees / 10000 non-trunk branches)
+load: 10100 branch rows / 100 trees / 769 turn + 319 material origins into a real persistence DB in 1437ms (repository APIs, deterministic clock)
+engine probes (cold engine, engine-level evidence — NOT the browser verdict): 11/11 pass; p95 0.7ms over 65 scripted ops (limit 300ms); b9-big cold first open 100ms (limit 2000ms)
+tree list: 100 trees paged at limit 40, no duplicates, all covered
+structure truth vs API (nodes): 100% — 10100/10100 node views compared (parent/depth/title/originKind/childCount), 0 divergences, across 104 subtree pages; largest page 191940 bytes (< 1 MiB)
+structure truth vs API (locate): 100% — 10100/10100 branches located by id (tree/ancestors/path/sibling position), 1088 origin refs all match, in 987ms
+deep chain: /path of b9-deep-c100 returns the complete 101-node chain (depths 0..100, ids = truth)
+wide tree: 220 root children paged at limit 50 in exact truth order (no dups/gaps)
+same-name disambiguation: 66 identical-title hits each carry a distinct full path; 66 locate-by-id round trips match
+empty tree: usable — nodeCount 1, honest empty children page, single-node subtree, null title
+expand-state persistence: PUT → simulated restart (all connections closed, fresh assembly) → GET byte-identical (expanded set + selected branch survive; migration 0010)
+session degradation: sweep marked every synthetic session file unavailable (10099 references across 10099 files); nav endpoints re-queried below
+product tree ≠ run/session trees: sampled nav responses byte-identical after every session went unavailable
+NOT_RUN: nav-p95 (browser): p95 of scripted expand/switch operations in a real browser — frontend wave / run:d4-browser, not claimed here (engine-side p95 recorded as evidence only)
+NOT_RUN: virtualization: DOM node count growing with the viewport rather than the full tree — frontend wave, not claimed here
+NOT_RUN: keyboard: keyboard navigation with focus surviving virtualization — frontend wave, not claimed here
+NOT_RUN: browser-face first-open: b9-big first open in a real browser — frontend wave / run:d4-browser, not claimed here
