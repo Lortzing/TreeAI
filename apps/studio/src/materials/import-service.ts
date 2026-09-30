@@ -675,6 +675,18 @@ export class MaterialImportService {
     });
   }
 
+  /**
+   * 读取持久化阅读位置（GET …/reading-position → 200 {readingPosition|null}；
+   * D4-2 读取面）。阅读位置按 Tree×材料持久化（charter §3.2「原文阅读与
+   * 分支探索各自保留位置」的阅读侧；探索位置是分支自身的产品事实，另一
+   * 存储，互不覆盖）。
+   */
+  getReadingPosition(treeId: TreeId, materialId: MaterialId): MaterialReadingPosition | null {
+    this.#assertTree(treeId);
+    this.#findTreeMaterial(treeId, materialId);
+    return this.repository.findReadingPosition(treeId, materialId);
+  }
+
   /* ------------------------------ 内部：校验 ------------------------------ */
 
   #assertTree(treeId: TreeId): void {

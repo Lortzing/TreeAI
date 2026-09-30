@@ -1,0 +1,24 @@
+{
+  "runId": "d4-offline-20260930T130650413Z",
+  "checks": [
+    {
+      "durationMs": 82,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "75/75 valid selections resolved exactly through the product range layer (repeat-word-2nd x10, cross-line x11, unicode-family x12, long-tail x9); 17/17 invalid selections rejected with the frozen category reason (out-of-boundsx2, zero-lengthx1, reversedx1, surrogate-splitx1, combining-splitx1, emoji-splitx1, cross-pagex2, block-mismatchx2, excerpt-mismatchx2, stale-versionx2, unsupported-materialx2); mis-locations 0 (charter B2 requires 0)",
+      "id": "b2-precise-anchors"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

@@ -41,6 +41,7 @@ import { dirname } from "node:path";
 import { EvidenceWriter } from "../tests/support/verifier/evidence.ts";
 import { verifyD4FixturesIntegrity } from "../tests/support/verifier/d4-probes.ts";
 import { runB1ImportCheck } from "../tests/support/verifier/d4-b1-import.ts";
+import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -392,11 +393,41 @@ const CHECKS = [
   },
   {
     id: "b2-precise-anchors",
-    fn: notRunCheck(
-      "b2-precise-anchors",
-      "D4-2",
-      "markdown/pdf readers and range layer not implemented; B2 executes against tests/fixtures/d4/b2-anchors once D4-2 lands",
-    ),
+    // REAL executing check (D4-2): the frozen B2 selection set runs through the
+    // product range/anchor resolution layer (MaterialRangeResolver) on top of
+    // the real import pipeline (MaterialImportService + MaterialRepository).
+    // All valid selections must resolve to exactly the stored truth (100%,
+    // incl. repeat-word-2nd / cross-line / unicode / long-tail coverage); all
+    // invalid selections must be rejected with the correct frozen category
+    // reason (stale-version executes the md-vpair version pair; unsupported
+    // materials refuse anchoring as material-not-ready); any successful
+    // resolution of a frozen-invalid selection counts as a mis-location (0
+    // required). The browser-selection part of charter B2 stays a later
+    // run:d4-browser concern — this check's scope is the mechanical layer.
+    fn: async () => {
+      const d4Root = join(ROOT, "tests", "fixtures", "d4");
+      if (!existsSync(d4Root)) {
+        return {
+          status: "NOT_RUN",
+          exitCode: null,
+          reason: "tests/fixtures/d4 not present in this tree",
+        };
+      }
+      const outcome = await runB2AnchorsCheck(d4Root);
+      log("b2-precise-anchors", `b2 precise anchors check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
   },
   {
     id: "b3-real-exploration",

@@ -151,6 +151,8 @@ UPDATE branches SET origin_kind = 'turn'
 | `GET /api/trees/:treeId/materials/:materialId/versions/:versionId?afterBlock=&limit=` | canonicalText 分块读取（默认从头，limit 块） | 200 `{blocks:[{block, text}], nextAfterBlock, textUnits}` |
 | `POST /api/trees/:treeId/materials/:materialId/parse-tasks/:taskId/cancel` | 取消解析（迟到结果不挂靠） | 200/409 |
 | `PUT /api/trees/:treeId/materials/:materialId/reading-position` | 持久化阅读位置 | 204 |
+| `GET /api/trees/:treeId/materials/:materialId/reading-position` | 读取持久化阅读位置（**D4-2 落地新增**：PUT 的读侧对应；阅读位置按 Tree×材料隔离，分支探索位置是分支自身产品事实，互不覆盖——charter §3.2） | 200 `{readingPosition: MaterialReadingPosition \| null}` |
+| `POST /api/trees/:treeId/materials/:materialId/versions/:versionId/resolve-selection` | 统一区间/锚点解析（**D4-2 落地新增**：`{locator, excerpt?, blockId?, anchor?{versionId, sourceHash?}}` → 规范选区；零误定位，绝不以相似文字兜底。B2 冻结无效类别即拒绝原因码词汇表：invalid-locator/needle-not-found/out-of-bounds/reversed/zero-length/surrogate-split/combining-split/emoji-split/excerpt-mismatch/stale-version/cross-page/cross-block/block-mismatch；实现见 apps/studio/src/materials/range-resolver.ts） | 200 `{selection, block}`；区间纪律拒绝 400+原因码；非 ready 409 `material-not-ready` |
 | `POST /api/trees/:treeId/branches/from-material` | 材料建枝+首问：`{selection, firstQuestion, intentKey, mode:"resume-or-create"\|"new"}` | 201 新建；200 幂等重放（同键同内容）；409 同键不同内容；非 ready 版本 409 `material-not-ready`；校验失败 400（含原因码） |
 | `POST /api/trees/:treeId/search` | 当前树内搜索：`{text, kinds:["material"\|"annotation"\|"return"\|"turn"]}` | 200 `{hits:[SearchHit]}` |
 | `POST /api/search` | 全部树搜索：`{text, kinds}` | 200 |
@@ -227,7 +229,7 @@ npm run run:d4-browser -- --mode real-pi
 | 工作包 | 从本设计拿什么 | 先决 |
 |---|---|---|
 | D4-1 | §1 类型、§2 迁移 0008、§6 B1 真值 | 本文档 |
-| D4-2 | §3 分块读取 API、§6 B2 选区集 | D4-1 |
+| D4-2 | §3 分块读取 API、§6 B2 选区集、§3 D4-2 落地增量（GET reading-position + resolve-selection） | D4-1 |
 | D4-3 | §3 from-material 端点、ADR-003 §4/§5 测试义务 | D4-0/2、术语②共享接口 |
 | D4-4 | §4 边界、迁移 0009、B4 冻结集 | D4-1 |
 | D4-5 | §5 边界、迁移 0010 | D4-1/3/4 |
