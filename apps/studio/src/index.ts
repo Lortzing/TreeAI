@@ -38,6 +38,11 @@
  * - 产品状态全部落在 --data 目录的 TreeAI 数据库（treeai.db）、Pi session
  *   文件（sessions/）与审计 journal（journal.jsonl，P1：run 生命周期
  *   事件的追加式记录，跨重启续用）；重启后原样恢复。
+ * - D4-5 数据可携带（issue #8 契约 §5，CLI 而非 HTTP）：
+ *     node src/index.ts export --out <dir> [--data DIR]
+ *                              [--include-sessions] [--readable]
+ *     node src/index.ts --import-package <dir> --data DIR   # 仅空数据目录
+ *   两种模式完成即退出，不启动服务器（详见 apps/studio/src/portability/）。
  */
 
 import { mkdirSync, statSync } from "node:fs";
@@ -62,6 +67,7 @@ import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
 import { SearchService } from "./search/search-service.ts";
+import { exportPackage, restorePackage, SESSIONS_SENSITIVE_MARKER } from "./portability/index.ts";
 import { createStudioServer } from "./server.ts";
 
 let piApiKeyValueGuard: string | null = null;
@@ -101,6 +107,67 @@ async function loadPiToolPolicy(wiring: PiToolWiring, workspace: string): Promis
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
+
+  /* -------- D4-5 数据可携带：export / --import-package 模式（issue #8
+     契约 §5——CLI 而非 HTTP）。先于一切目录创建执行：恢复目标必须是空
+     数据目录，服务器启动路径的 sessions/workspace 创建不得提前发生；
+     两种模式都不启动服务器，完成后退出。 -------- */
+  if (options.mode === "export") {
+    const result = exportPackage({
+      dbPath: join(options.dataDir, "treeai.db"),
+      outDir: options.outDir!,
+      includeSessions: options.includeSessions,
+      readable: options.readable,
+    });
+    const lines = [
+      `treeai-studio export: package written to ${result.outDir}`,
+      `treeai-studio export: format ${result.manifest.packageFormat} ` +
+        `(manifest schema v${String(result.manifest.schemaVersion)}, product schema v${String(result.manifest.productSchemaVersion)})`,
+      `treeai-studio export: facts — ${Object.entries(result.factCounts)
+        .filter(([table]) => table !== "blobs" && table !== "sessions" && table !== "sessionFilesMissing" && table !== "readableFiles")
+        .map(([table, count]) => `${table}=${String(count)}`)
+        .join(", ")}, blobs=${String(result.factCounts["blobs"] ?? 0)}`,
+    ];
+    if (options.includeSessions) {
+      lines.push(
+        `treeai-studio export: SENSITIVE — Pi session transcripts included ` +
+          `(${String(result.sessionFilesCopied.length)} copied, ${String(result.sessionFilesMissing.length)} referenced-but-missing); ` +
+          "the package is marked " + SESSIONS_SENSITIVE_MARKER,
+      );
+    } else {
+      lines.push(
+        "treeai-studio export: sessions excluded by default (sensitive raw transcripts; pass --include-sessions to embed them)",
+      );
+    }
+    if (options.readable) {
+      lines.push(`treeai-studio export: readable markdown export at ${join(result.outDir, "readable")}`);
+    }
+    process.stdout.write(`${lines.join("\n")}\n`);
+    return;
+  }
+  if (options.mode === "import") {
+    const result = restorePackage({ packageDir: options.importPackageDir!, dataDir: options.dataDir });
+    const lines = [
+      `treeai-studio restore: package validated and restored into ${result.dataDir}`,
+      `treeai-studio restore: format ${result.manifest.packageFormat} ` +
+        `(product schema v${String(result.manifest.productSchemaVersion)}, exported ${result.manifest.exportedAt})`,
+      `treeai-studio restore: ${String(result.rowsRestored)} fact rows, ${String(result.blobsRestored)} material blobs`,
+    ];
+    if (result.sessionsRestored > 0) {
+      lines.push(
+        `treeai-studio restore: ${String(result.sessionsRestored)} session file(s) restored ` +
+          `(${String(result.sessionReferencesRewritten)} reference(s) rewritten to the new sessions directory)`,
+      );
+    } else {
+      lines.push(
+        "treeai-studio restore: no Pi sessions in the package — old Pi context is NOT continuable by design; " +
+          "materials/origins/returns stay readable and exploration restarts explicitly (charter D4 §1 path 6)",
+      );
+    }
+    process.stdout.write(`${lines.join("\n")}\n`);
+    return;
+  }
+
   const piSetup: PiDriverWiring | null =
     options.driver === "pi" ? resolvePiDriverWiring(options, process.env) : null;
   if (piSetup !== null) {

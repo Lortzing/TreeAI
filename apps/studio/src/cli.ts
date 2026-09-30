@@ -68,13 +68,34 @@ export interface CliOptions {
   readonly terminologyModelId: string;
   /** 术语执行器的累计预算（估算 token，chars/4 口径；缺省 1,000,000）。 */
   readonly terminologyBudgetTokens: number;
+  /**
+   * D4-5 运行模式（issue #8 契约 §5，CLI 而非 HTTP）：
+   * - "server"：既有本地服务（缺省）；
+   * - "export"：`export --out <dir>` 把 --data 的全部已保存产品事实导出为
+   *   版本化包（默认不含凭据/缓存/运行日志/Pi session；--include-sessions
+   *   显式包含并显著标注敏感；--readable 附带可读 Markdown 导出），完成后
+   *   退出；
+   * - "import"：`--import-package <dir>` 把包恢复到 --data（仅空数据目录），
+   *   完成后退出。两种模式都不启动服务器、不创建 sessions/workspace。
+   */
+  readonly mode: "server" | "export" | "import";
+  /** export 模式的包输出目录（--out；仅 export 模式非 null）。 */
+  readonly outDir: string | null;
+  /** export 模式：显式包含 Pi session 原件（敏感内容；随包显著标注）。 */
+  readonly includeSessions: boolean;
+  /** export 模式：附带人类可读 Markdown 导出（readable/）。 */
+  readonly readable: boolean;
+  /** import 模式的包目录（--import-package；仅 import 模式非 null）。 */
+  readonly importPackageDir: string | null;
 }
 
 const USAGE =
   "usage: node src/index.ts [--port N] [--data DIR] [--driver echo|pi] " +
   "[--provider ID] [--model ID] [--agent-dir DIR] " +
   "[--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR] " +
-  "[--terminology-provider ID] [--terminology-model ID] [--terminology-budget N]";
+  "[--terminology-provider ID] [--terminology-model ID] [--terminology-budget N] " +
+  "[--import-package DIR]\n" +
+  "       node src/index.ts export --out DIR [--data DIR] [--include-sessions] [--readable]";
 
 /** 逗号分隔列表解析：剔除空白项；未给出 → null（区分「显式空列表」）。 */
 function parseList(value: string | undefined): readonly string[] | null {
@@ -83,6 +104,10 @@ function parseList(value: string | undefined): readonly string[] | null {
 }
 
 export function parseArgs(argv: readonly string[]): CliOptions {
+  /* D4-5：`export` 子命令（export --out <dir> [--include-sessions]
+     [--readable]）；`--import-package <dir>` 走 flag 形态（契约 §5）。 */
+  const exportSubcommand = argv[0] === "export";
+  const rest = exportSubcommand ? argv.slice(1) : [...argv];
   const options: {
     port?: number;
     dataDir?: string;
@@ -95,10 +120,20 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     terminologyProvider?: string;
     terminologyModel?: string;
     terminologyBudget?: string;
+    out?: string;
+    importPackage?: string;
+    includeSessions?: boolean;
+    readable?: boolean;
   } = {};
-  for (let i = 0; i < argv.length; i += 2) {
-    const flag = argv[i];
-    const value = argv[i + 1];
+  for (let i = 0; i < rest.length; ) {
+    const flag = rest[i]!;
+    if (flag === "--include-sessions" || flag === "--readable") {
+      if (flag === "--include-sessions") options.includeSessions = true;
+      else options.readable = true;
+      i += 1;
+      continue;
+    }
+    const value = rest[i + 1];
     if (flag === undefined || value === undefined) {
       throw new Error(`${USAGE} (bad or missing value for '${String(flag)}')`);
     }
@@ -113,8 +148,39 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     else if (flag === "--terminology-provider") options.terminologyProvider = value;
     else if (flag === "--terminology-model") options.terminologyModel = value;
     else if (flag === "--terminology-budget") options.terminologyBudget = value;
+    else if (flag === "--out") options.out = value;
+    else if (flag === "--import-package") options.importPackage = value;
     else throw new Error(`unknown flag: ${flag}`);
+    i += 2;
   }
+  const importPackageDir = options.importPackage ?? null;
+  const outDir = options.out ?? null;
+  if (exportSubcommand && importPackageDir !== null) {
+    throw new Error("'export' and --import-package are separate modes; pass only one of them");
+  }
+  if (exportSubcommand) {
+    if (outDir === null) {
+      throw new Error("the export subcommand requires --out <dir> (the package output directory)");
+    }
+    if (outDir.trim() === "") {
+      throw new Error("--out must be a non-empty directory path");
+    }
+  } else {
+    if (outDir !== null) {
+      throw new Error("--out applies only to the export subcommand");
+    }
+    if (options.includeSessions === true) {
+      throw new Error("--include-sessions applies only to the export subcommand (sessions are excluded by default)");
+    }
+    if (options.readable === true) {
+      throw new Error("--readable applies only to the export subcommand");
+    }
+  }
+  const mode: "server" | "export" | "import" = exportSubcommand
+    ? "export"
+    : importPackageDir !== null
+      ? "import"
+      : "server";
   const driver = options.driver ?? "echo";
   if (driver !== "echo" && driver !== "pi") {
     throw new Error(`--driver must be 'echo' or 'pi' (got '${driver}')`);
@@ -186,6 +252,11 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     terminologyProviderId: options.terminologyProvider ?? providerId,
     terminologyModelId: options.terminologyModel ?? modelId,
     terminologyBudgetTokens: terminologyBudget,
+    mode,
+    outDir: outDir === null ? null : resolve(outDir),
+    includeSessions: options.includeSessions === true,
+    readable: options.readable === true,
+    importPackageDir: importPackageDir === null ? null : resolve(importPackageDir),
   };
 }
 
