@@ -53,11 +53,26 @@ D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 | 编号 | 名称 | 归属 | 状态 |
 |---|---|---|---|
 | 0008 | material-core（materials / material_blobs / material_versions / tree_material_links / material_branch_origins / tree_material_reading_state / material_first_questions / branches.origin_kind） | D4-1 | 已交付（`4ebead9`，随 D4-1 波合并） |
-| 0009 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
-| 0010 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留；同上 |
-| 0011 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 已登记；若术语整改最终不需迁移，在此记录弃用并保持连续性 |
+| 0009 | terminology-dispatch-ledger（issue #7 术语整改：首问 payload hash / 派发状态 / Run 引用等不可变账本，2026-09-30 验收 P0 要求） | 术语（issue #7，非 D4） | 进行中（术语整改波，见「波次占用」）；按 `assertContiguous` 连续性约束实际落为 0009 |
+| 0010 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留（原 0009，随术语账本前移）；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
+| 0011 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留（原 0010，随术语账本前移）；同上 |
 
 规则：并行波次添加迁移前先在此占号；编号必须连续递增；已交付迁移不可修改。
+
+**编号更正（2026-09-30，术语整改波开工时）**：本表曾是「意图登记」而非交付
+顺序——`assertContiguous` 机械强制下一个迁移文件必须是 **0009**（0011 登记
+时 0009/0010 尚不存在）。实际交付顺序据此更正：**0009 =
+terminology-dispatch-ledger（术语首问派发账本，issue #7 整改，本波交付）**；
+0010 = search-index（D4-4 预留）；0011 = export-metadata（D4-5 预留）。若
+术语整改最终不需迁移，在此记录弃用并保持连续。
+
+## 波次占用（并行会话协调）
+
+| 波次 | 状态 | 文件面 |
+|---|---|---|
+| **issue #7 术语整改**（缓存键/推广原子性/首问账本/预算/取消记账 + 前端 turnOverlaysFor/refreshTerminology） | **进行中（2026-09-30 20:45 起，本会话占用）** | `apps/studio/src/terminology.ts`、`packages/persistence/src/{tree-repository.ts,migrations/0009-*}`、`packages/contracts/src/*`（usage 类型增量）、`apps/studio/public/app.js`、`apps/studio/tests/{terminology,ui-probe}.test.ts` |
+
+其他并行会话在开工前读本表 + `git log --oneline -5`；与进行中波次文件面重叠的工作等其收口后再动。
 
 ## 公共契约登记（packages/contracts）
 
