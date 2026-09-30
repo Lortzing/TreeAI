@@ -1,0 +1,69 @@
+b4 cross-material find check
+corpus: 35 frozen facts → 35 documents via buildSearchDocuments (material x12, annotation x11, return x6, turn x6)
+b4 positive q-pos-01: target frag-101 at rank 2 (phrase, x1)
+b4 positive q-pos-02: target anno-101 at rank 1 (phrase, x3)
+b4 positive q-pos-03: target anno-102 at rank 1 (phrase, x3)
+b4 positive q-pos-04: target frag-103 at rank 1 (phrase, x1)
+b4 positive q-pos-05: target frag-104 at rank 1 (phrase, x1, scoped tree-b4-01)
+b4 positive q-pos-06: target turn-102 at rank 1 (phrase, x1)
+b4 positive q-pos-07: target frag-201 at rank 2 (phrase, x1, scoped tree-b4-02)
+b4 positive q-pos-08: target anno-201 at rank 1 (phrase, x2)
+b4 positive q-pos-09: target anno-202 at rank 1 (phrase, x2)
+b4 positive q-pos-10: target ret-201 at rank 1 (phrase, x1)
+b4 positive q-pos-11: target ret-201 at rank 2 (phrase, x1)
+b4 positive q-pos-12: target frag-301 at rank 1 (phrase, x1)
+b4 positive q-pos-13: target anno-302 at rank 1 (phrase, x1)
+b4 positive q-pos-14: target turn-301 at rank 1 (phrase, x1, scoped tree-b4-03)
+b4 positive q-pos-15: target ret-302 at rank 1 (phrase, x1)
+b4 positive q-pos-16: target ret-302 at rank 1 (phrase, x1)
+b4 positive q-pos-17: target frag-303 at rank 2 (phrase, x1)
+b4 positive q-pos-18: target frag-305 at rank 1 (phrase, x2)
+b4 positive q-pos-19: target frag-305 at rank 1 (phrase, x1)
+b4 positive q-pos-20: target frag-305 at rank 1 (phrase, x1)
+b4 positive q-pos-21: target turn-101 at rank 2 (phrase, x1)
+b4 positive q-pos-22: target ret-101 at rank 1 (phrase, x1)
+b4 positive q-pos-23: target ret-102 at rank 1 (phrase, x1)
+b4 positive q-pos-24: target frag-103 at rank 1 (phrase, x1)
+b4 positive q-pos-25: target frag-202 at rank 1 (phrase, x1)
+b4 positive q-pos-26: target ret-301 at rank 1 (phrase, x1)
+b4 positive q-pos-27: target frag-302 at rank 2 (phrase, x5)
+b4 positive q-pos-28: target anno-301 at rank 1 (phrase, x2)
+b4 positive q-pos-29: target frag-105 at rank 1 (phrase, x1)
+b4 positive q-pos-30: target frag-105 at rank 1 (phrase, x1)
+b4 positive q-pos-31: target frag-105 at rank 1 (phrase, x1)
+b4 positive q-pos-32: target frag-104 at rank 2 (phrase, x1)
+b4 positive q-pos-33: target frag-303 at rank 1 (phrase, x1)
+b4 positive q-pos-34: target frag-305 at rank 1 (phrase, x1)
+b4 positive q-pos-35: target frag-305 at rank 1 (phrase, x5)
+b4 positive q-pos-36: target anno-104 at rank 1 (phrase, x2)
+b4 positive q-pos-37: target anno-204 at rank 1 (phrase, x2)
+b4 positive q-pos-38: target anno-303 at rank 1 (phrase, x2, scoped tree-b4-03)
+b4 positive q-pos-39: target anno-103 at rank 1 (phrase, x1)
+b4 positive q-pos-40: target frag-102 at rank 2 (phrase, x6)
+b4 positive q-pos-41: target frag-102 at rank 2 (phrase, x5)
+b4 positive q-pos-42: target frag-201 at rank 2 (phrase, x4, scoped tree-b4-02)
+b4 positive q-pos-43: target anno-201 at rank 1 (phrase, x1)
+b4 positive q-pos-44: target anno-201 at rank 1 (phrase, x1)
+b4 positive q-pos-45: target anno-203 at rank 1 (phrase, x1)
+b4 positive q-pos-46: target anno-102 at rank 1 (phrase, x1)
+b4 positive q-pos-47: target turn-202 at rank 1 (phrase, x1)
+b4 positive q-pos-48: target turn-202 at rank 1 (phrase, x1)
+b4 positive q-pos-49: target turn-302 at rank 1 (phrase, x1)
+b4 positive q-pos-50: target frag-201 at rank 1 (phrase, x1)
+b4 positive q-pos-51: target frag-102 at rank 1 (phrase, x1)
+b4 positive q-pos-52: target frag-202 at rank 3 (phrase, x8)
+b4 positive q-pos-53: target ret-202 at rank 2 (phrase, x1)
+b4 positive q-pos-54: target ret-202 at rank 1 (phrase, x1)
+b4 positive q-pos-55: target frag-202 at rank 1 (phrase, x1)
+b4 no-result q-neg-01 "马卡龙烘焙温度": zero hits — nothing fabricated
+b4 no-result q-neg-02 "小提琴协奏曲": zero hits — nothing fabricated
+b4 no-result q-neg-03 "票据贴现率": zero hits — nothing fabricated
+b4 no-result q-neg-04 "企鹅迁徙路线": zero hits — nothing fabricated
+b4 no-result q-neg-05 "分子料理": zero hits — nothing fabricated
+b4 no-result q-neg-06 "庭审质证": zero hits — nothing fabricated
+b4 no-result q-neg-07 "杜鹃花扦插": zero hits — nothing fabricated
+b4 no-result q-neg-08 "玄武岩柱状节理": zero hits — nothing fabricated
+b4 no-result q-neg-09 "glockenspiel": zero hits — nothing fabricated
+b4 no-result q-neg-10 "hurdy-gurdy": zero hits — nothing fabricated
+b4 no-result q-neg-11 "defenestration": zero hits — nothing fabricated
+b4 no-result q-neg-12 "bakeMacaronTimer": zero hits — nothing fabricated
