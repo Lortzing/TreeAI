@@ -5554,9 +5554,12 @@ function renderSearchHitRow(hit) {
  * 判断——来源跳转永不因此受阻；§5：结果跳转后可继续原探索，session 不可
  * 用时显示显式新探索入口）。只对**当前已加载树态**中可解析、且解析到
  * session 不可用分支的命中呈现（跨树命中的可用性在跳转后由该分支面板的
- * 既有 v3 §4.4 换轨面呈现——不在数据未载时猜测）。「⑃ 新探索」打开该支
- * 线面板并聚焦输入框：面板 composer 的「Start new exploration」按钮即既有
- * 显式换轨入口（首问在其旁输入），本入口不另造第二条换轨路径。
+ * 既有 v3 §4.4 换轨面呈现——不在数据未载时猜测）。「⑃ 新探索」按命中所
+ * 在分支路由：支线命中打开该支线面板并聚焦其 composer（面板的
+ * 「Start new exploration」按钮即既有显式换轨入口，首问在其旁输入）；
+ * 主线命中聚焦主线 composer（主线分支无面板语义——openBranchPanel 对主
+ * 线早退；主线输入框旁的换轨入口就是既有面）。本入口不另造第二条换轨
+ * 路径。
  */
 function searchHitSessionNote(hit, key) {
   if (state.treeState === null || hit.treeId !== state.currentTreeId) return null;
@@ -5588,11 +5591,16 @@ function searchHitSessionNote(hit, key) {
   explore.addEventListener("click", () => {
     closeSidebar();
     void guard(async () => {
-      await openBranchPanel(branchId, { trigger: { kind: "search-hit", hitKey: key } });
+      /* 主线命中的换轨面是主线 composer（v3 §4.4——主线输入框旁的换轨
+         入口；openBranchPanel 对主线分支本就无面板语义）；支线命中打开
+         该支线面板（面板 composer 的换轨入口）。 */
+      if (branchId !== trunkBranchId()) {
+        await openBranchPanel(branchId, { trigger: { kind: "search-hit", hitKey: key } });
+      }
     }).then(() => {
       /* guard 收尾（busy 解锁 + composer 锁定态重算）后聚焦输入框——busy
          期间输入框被瞬态禁用，聚焦必须等解锁后再判。 */
-      const input = $("panel-prompt-input");
+      const input = $(branchId === trunkBranchId() ? "prompt-input" : "panel-prompt-input");
       if (!input.disabled) input.focus();
     });
   });

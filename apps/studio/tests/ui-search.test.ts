@@ -277,8 +277,9 @@ function makeTurn(
   };
 }
 
-/** 树一的完整树态（两套件场景共用；时间戳两树互异——定位匹配的消歧面）。 */
-function treeOneState(): TreeState {
+/** 树一的完整树态（两套件场景共用；时间戳两树互异——定位匹配的消歧面）。
+ *  trunkUnavailable = 主线 session 不可用（主线命中的换轨面变体）。 */
+function treeOneState(trunkUnavailable = false): TreeState {
   const trunkBranch: Branch = { id: T1_TRUNK, treeId: TREE_ONE, parentBranchId: null, createdAt: ISO };
   const origin = (branchId: string): Origin => ({
     branchId,
@@ -296,7 +297,7 @@ function treeOneState(): TreeState {
         branch: trunkBranch,
         origin: null,
         originStatus: null,
-        sessionAvailability: "available",
+        sessionAvailability: trunkUnavailable ? "unavailable" : "available",
         turns: [
           makeTurn("u1", TREE_ONE, T1_TRUNK, "user", U1_TEXT, "2026-09-29T01:00:00.000Z"),
           makeTurn("a1", TREE_ONE, T1_TRUNK, "assistant", A1_TEXT, "2026-09-29T02:00:00.000Z"),
@@ -900,6 +901,8 @@ const settle = async (rounds = 12): Promise<void> => {
 interface WorldOptions {
   /** 首个 GET /api/trees 返回空（无树启动场景）。 */
   noTrees?: boolean;
+  /** 树一主线 session 不可用（主线命中的换轨面变体）。 */
+  trunkUnavailable?: boolean;
   /** 首个 /search 请求失败一次（500 脚本错误）。 */
   searchFailOnce?: boolean;
   /** /search 未装配（503 search-not-wired——如实说明，绝不伪装成功）。 */
@@ -1020,7 +1023,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 
   const materials = [makeVersionedMaterial()];
   const treeStates = new Map<string, TreeState>([
-    [TREE_ONE, treeOneState()],
+    [TREE_ONE, treeOneState(options.trunkUnavailable === true)],
     [TREE_TWO, treeTwoState()],
   ]);
 
@@ -1578,6 +1581,42 @@ test("session-unavailable hits show the explicit new-exploration entry alongside
     world.el("panel-prompt-input").placeholder,
     /type the first question of a new exploration/,
   );
+});
+
+test("a trunk hit in a session-unavailable trunk shows the same entry, and it routes to the trunk composer (no branch panel exists for the trunk)", async () => {
+  const world = await createWorld({ trunkUnavailable: true });
+
+  /* 主线答案命中（a1 在 trunk-1，其 session 不可用）。 */
+  const expected = expectedHits("分治与递归的可靠性", { treeIds: [TREE_ONE] });
+  assert.equal(expected.length, 1);
+  assert.equal(expected[0]!.kind, "turn");
+
+  await world.runSearch("分治与递归的可靠性");
+  const row = world.hitRows()[0]!;
+  const session = row.parentElement!.querySelector(".search-hit-session");
+  assert.ok(session !== null, "a trunk hit in an unavailable trunk carries the session note too");
+  const explore = session.querySelector(".search-hit-explore")!;
+
+  /* 来源跳转照常：主线定位（无支线面板、无 switch），正文可读。 */
+  row.click();
+  await settle(25);
+  const turnEl = world.turnElementById("conversation", "a1");
+  assert.ok(turnEl.textContent!.startsWith(A1_TEXT), "the saved trunk answer stays readable");
+  assert.equal((turnEl.lastScrollIntoView as { block?: string } | null)?.block, "center");
+  assert.equal(world.el("branch-panel").hidden, true, "a trunk hit opens no branch panel");
+  assert.equal(world.requestsOf("/switch").length, 0);
+
+  /* 「⑃ 新探索」路由到主线 composer（主线分支无面板语义——openBranchPanel
+     对主线本就早退；换轨面是主线输入框旁的既有 v3 §4.4 入口）。 */
+  explore.click();
+  await settle(25);
+  assert.ok(
+    world.document.activeElement === world.el("prompt-input"),
+    "the trunk composer takes focus for the first question",
+  );
+  assert.equal(world.el("send").disabled, true, "continuing the dead trunk session stays fail-closed");
+  assert.equal(world.el("new-exploration").hidden, false, "the trunk's explicit new-exploration entry is visible");
+  assert.equal(world.el("branch-panel").hidden, true, "no branch panel is opened for the trunk");
 });
 
 /* ------------------------------------------------------------------ */
