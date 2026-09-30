@@ -45,6 +45,23 @@
 数组形态、内联图跳过、字体惰性物化 + 测试）已按保全纪律提交至
 `wip/d4-1-pdf-parser`（`dd29f96`），未合入本波，供后续 PDF 波评估。
 
+**2026-09-30 21:15 更新（wave-2 集成会话）**：`wip/d4-2-backend`（`b3854ab`）
+已合并 main 并全量验证（studio 204/204、verify:d4 10 PASS/0 FAIL/7 NOT_RUN、
+b2-precise-anchors 真执行 75/75+17/17 零误定位）；`dd29f96` PDF 加固也已
+合并（b1 仍 24/24）。仍在飞：`wip/term-backend` / `wip/term-frontend`
+（术语整改，agent 在写）/ `wip/d4-7-installer` / `wip/d4-4-search-core`。
+
+**接管更正 + 让位（2026-09-30 21:15 本地）**：上条「接管记录」基于过期
+快照——波次登记会话（treeai-loop 11:39Z firing，`local_a3d676f3`）在本
+会话检查后约 2 分钟恢复运行，其自身与 agent 一直在 term-backend /
+term-frontend / d4-2-backend（并追加 d4-4-search-core）推进。本会话此前
+向 term-backend / term-frontend 派出的两个 agent **全程零编辑零写入**
+（检测到在飞写入者后转入监控，已停止），worktree 内容全部属于该会话的
+操作，无混合污染。**让位决定**：term-backend / term-frontend / d4-2-backend
+/ d4-4-search-core 四支以该会话为准；本会话仅保留 `wip/d4-7-installer`
+（未受影响，agent 在飞）并在其完成后由本会话集成、过门禁、推送。各分支
+的集成与推送以登记方为准，避免双会话重复集成。
+
 ## 上一波（2026-09-30 晚，已完成）
 
 D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
