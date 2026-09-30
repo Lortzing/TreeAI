@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "d3-evidence-manifest-1",
+  "boundCommit": "92a2e3a2061437bdce7a2246765133578e236dc4",
+  "recordedAt": "2026-09-30T09:53:44.952Z",
+  "environment": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin arm64",
+    "gitDirty": true
+  },
+  "commands": [
+    {
+      "id": "git-head",
+      "command": "git rev-parse HEAD",
+      "exitCode": 0,
+      "durationMs": 8,
+      "outputTail": [
+        "92a2e3a2061437bdce7a2246765133578e236dc4"
+      ]
+    },
+    {
+      "id": "node-version",
+      "command": "[HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --version",
+      "exitCode": 0,
+      "durationMs": 11,
+      "outputTail": [
+        "v24.21.0"
+      ]
+    },
+    {
+      "id": "npm-version",
+      "command": "npm --version",
+      "exitCode": 0,
+      "durationMs": 52,
+      "outputTail": [
+        "11.19.0"
+      ]
+    },
+    {
+      "id": "app-js-syntax",
+      "command": "[HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --check apps/studio/public/app.js",
+      "exitCode": 0,
+      "durationMs": 20,
+      "outputTail": []
+    },
+    {
+      "id": "typecheck",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "durationMs": 3833,
+      "outputTail": [
+        "",
+        "> treeai@0.0.0 typecheck",
+        "> node scripts/typecheck.js",
+        "",
+        "[typecheck] checking @treeai/runtime-smoke (apps/runtime-smoke)",
+        "[typecheck] checking @treeai/studio (apps/studio)",
+        "[typecheck] checking @treeai/contracts (packages/contracts)",
+        "[typecheck] checking @treeai/event-journal (packages/event-journal)",
+        "[typecheck] checking @treeai/persistence (packages/persistence)",
+        "[typecheck] checking @treeai/runtime-pi (packages/runtime-pi)",
+        "[typecheck] checking @treeai/tool-policy (packages/tool-policy)",
+        "",
+        "typecheck summary (Gate 0 scaffold):",
+        "  checked: @treeai/runtime-smoke, @treeai/studio, @treeai/contracts, @treeai/event-journal, @treeai/persistence, @treeai/runtime-pi, @treeai/tool-policy",
+        "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run."
+      ]
+    },
+    {
+      "id": "studio-tests",
+      "command": "npm test --workspace @treeai/studio",
+      "exitCode": 0,
+      "durationMs": 6770,
+      "outputTail": [
+        "✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (67.176375ms)",
+        "✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (79.381959ms)",
+        "✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (142.72925ms)",
+        "✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (334.385875ms)",
+        "✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (558.198ms)",
+        "✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (106.6865ms)",
+        "✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (79.846083ms)",
+        "✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (40.399625ms)",
+        "✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (94.920166ms)",
+        "✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (68.839542ms)",
+        "✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (69.675792ms)",
+        "✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (71.492084ms)",
+        "✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (67.644083ms)",
+        "✔ A2 cross-line selection: offsets and the revealed text span the line break intact (67.00575ms)",
+        "✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (300.8095ms)",
+        "✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (54.908625ms)",
+        "✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (57.045833ms)",
+        "✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (2.910167ms)",
+        "✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (1.232291ms)",
+        "✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (102.306875ms)",
+        "✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (57.826042ms)",
+        "✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (124.061416ms)",
+        "✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (90.193417ms)",
+        "✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (63.028584ms)",
+        "✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (395.645ms)",
+        "✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (314.613584ms)",
+        "✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (59.474708ms)",
+        "✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (280.52125ms)",
+        "✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (278.53025ms)",
+        "✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (68.285875ms)",
+        "✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (291.267709ms)",
+        "✔ a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch (287.022375ms)",
+        "ℹ tests 117",
+        "ℹ suites 0",
+        "ℹ pass 117",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 5126.133625"
+      ]
+    },
+    {
+      "id": "root-tests",
+      "command": "npm test",
+      "exitCode": 0,
+      "durationMs": 17688,
+      "outputTail": [
+        "✔ empty item list -> ALL_PASS / exit 0 (a verifier with zero checks is a bug caught elsewhere) (0.041833ms)",
+        "✔ exit-code consistency: PASS must be 0 (0.109084ms)",
+        "✔ exit-code consistency: FAIL needs non-zero exit AND structured error (0.06025ms)",
+        "✔ exit-code consistency: BLOCKED/NOT_RUN need reason, never exit 0 (0.064334ms)",
+        "✔ exit-code consistency: unknown status is a problem (0.038708ms)",
+        "ℹ tests 75",
+        "ℹ suites 0",
+        "ℹ pass 75",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 809.003833",
+        "✔ e2e dual-branch: one session tree, two sibling branches, append-only (12.561042ms)",
+        "✔ e2e switch-back: navigateTree to the branch point, context rebuilt, fork continues (14.132833ms)",
+        "✔ e2e restart-recovery: dispose, restore, continue; I6 host-crash convergence (9.693209ms)",
+        "✔ e2e session-missing: deleted file -> session-corrupt, availability degraded, domain data intact (4.469458ms)",
+        "✔ e2e policy-overreach: default denials, approval is not allow, decisions journaled (4.56375ms)",
+        "✔ e2e error-convergence: model error, user abort, dispose, host crash each reach the right terminal (314.4555ms)",
+        "✔ evidence writer: guarded writes mask injected secrets and record leaks (3.740417ms)",
+        "✔ scenario records written by every e2e test conform to the scenarioResult schema shape (0.418625ms)",
+        "ℹ tests 8",
+        "ℹ suites 0",
+        "ℹ pass 8",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 446.290042",
+        "✔ the six frozen scenario ids are exactly the task-book list (0.547625ms)",
+        "✔ all six scenarios PASS against the fake driver and validate against scenarioResult (3227.60075ms)",
+        "✔ loadPiDriver reports the honest state (real module or NOT_RUN reason) (312.611417ms)",
+        "ℹ tests 3",
+        "ℹ suites 0",
+        "ℹ pass 3",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 3622.217375"
+      ]
+    },
+    {
+      "id": "verify-d2",
+      "command": "npm run verify:d2",
+      "exitCode": 3,
+      "durationMs": 24179,
+      "outputTail": [
+        "",
+        "> treeai@0.0.0 verify:d2",
+        "> node scripts/verify-d2.js",
+        "",
+        "verify-d2 1.0.0 — offline acceptance run",
+        "root: [HOME]/Projects/TreeAI",
+        "evidence: [HOME]/Projects/TreeAI/evidence/d2/runs/d2-offline-20260930T095413465Z",
+        "",
+        "  [PASS] fixtures-integrity",
+        "  [PASS] schema-validator-selftest",
+        "  [PASS] secret-scanner-selftest",
+        "  [PASS] typecheck",
+        "  [PASS] tests-typecheck",
+        "  [PASS] unit-tests-contracts",
+        "  [PASS] unit-tests-runtime-pi",
+        "  [PASS] unit-tests-persistence",
+        "  [PASS] unit-tests-tool-policy",
+        "  [PASS] unit-tests-event-journal",
+        "  [PASS] unit-tests-agent-f",
+        "  [PASS] integration-tests-agent-f",
+        "  [PASS] live-framework-selftest",
+        "  [PASS] runtime-smoke",
+        "  [PASS] unit-tests-studio",
+        "  [PASS] pi-version-pin",
+        "  [PASS] secret-scan-workspace",
+        "  [PASS] residual-resources",
+        "  [NOT_RUN] d1-repro — explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization",
+        "  [PASS] exit-codes",
+        "  [PASS] evidence-write-hygiene",
+        "  [PASS] schema-validation",
+        "",
+        "verify-d2 summary:",
+        "  21 PASS, 0 FAIL, 0 BLOCKED, 1 NOT_RUN",
+        "  verdict: INCOMPLETE (exit 3)",
+        "  evidence: [HOME]/Projects/TreeAI/evidence/d2/runs/d2-offline-20260930T095413465Z"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "apps/studio/public/app.js",
+      "sha256": "3abca99b5613acff0c5a24a67f8aa65acdbdf8e8ebdee15368196834b4e31735"
+    },
+    {
+      "path": "apps/studio/public/index.html",
+      "sha256": "3be017fec96e2d65bad9f9d556c354874372993545e906b49cd11241959561bb"
+    },
+    {
+      "path": "apps/studio/public/style.css",
+      "sha256": "cb33afc87ee9f176385cdd63a75ae9fda9d63dbf8d50520b096880a4fd5c98ee"
+    },
+    {
+      "path": "evidence/d3/offline/20260930T095344950Z-evidence-manifest/result.md",
+      "sha256": "b3d0d2b9c26dd319d348ed32815d000944861c7c08a443eac898bfe2517e5ce9"
+    },
+    {
+      "path": "evidence/d3/offline/20260930T095344950Z-evidence-manifest/manifest.json",
+      "sha256": "725bc4e2b767659b97977aaf6a2e571243186af7a85bbce553e60d69d299013a"
+    }
+  ],
+  "notes": [
+    "append-only: the run directory is created fresh; an existing directory aborts the script (exit 1) before any command runs",
+    "verify:d2 exit code is recorded verbatim and is NOT part of this manifest's exit criteria — CI gates it separately via the d2-offline workflow (its local exit code can reflect pre-existing untracked-evidence secret-scan findings that do not exist in a clean checkout)",
+    "command outputs are truncated to the last 40 lines; home-directory paths and secret-shaped content are masked before writing (repo secret-scanner rules); the run dir is rescanned after writing",
+    "manifest.json self-hash rule: its own artifacts entry's sha256 is computed over the canonical serialization (JSON.stringify(manifest, null, 2) + trailing newline) with that entry's sha256 set to the empty string; re-derive the same way to verify",
+    "facts only — no gate verdicts: Gate 0-2 / A1-A7 conclusions belong to the owner (docs/d3/D3-status.md); real-Pi and trial evidence is tracked separately under evidence/d3/real-pi/ and evidence/d3/trials/"
+  ]
+}
