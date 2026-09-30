@@ -26,7 +26,17 @@
   （55 正向 top-5 命中、12 无结果零命中）；**不碰** server.ts / 迁移 /
   package.json / app.js——迁移 0010（更正记录后归 D4-4）与 HTTP 接线留待
   集成，与上四支无文件冲突。
-- D4-2 前端阅读器不在本波（app.js 由 term-frontend 独占）。
+- `wip/d4-2-frontend`（worktree d4-2-frontend，2026-09-30 21:40 追加，基于
+  main `f64969c`；登记会话：wave-1 派发会话 local_b0c1d2ca，agent 在飞）：
+  D4-2 前端阅读器 **Markdown 增量**——材料列表面、分块懒加载阅读视图
+  （保留 canonicalText 偏移映射）、选区捕获（grapheme-safe、块内可锚定
+  纪律，D4-3 建枝前只如实呈现载荷）、阅读位置保存/恢复、版本可辨认
+  （旧版本可读）、PDF 如实「下一增量」状态。文件面：public/{app.js,
+  style.css,index.html} + tests/ui-material-reader.test.ts——**不碰**
+  server.ts / materials / search / 迁移，与在飞各支无文件冲突。
+- D4-2 前端阅读器不在本波（app.js 由 term-frontend 独占）。【已过时——
+  term-frontend 已于 `c59c2a0` 合并，app.js 解除独占；Markdown 增量由上条
+  `wip/d4-2-frontend` 认领，PDF 增量待后续波次】
 - `wip/d4-7-installer`（worktree d4-7-installer，2026-09-30 21:20 追加，基于
   main `a6f411d`）：D4-7 安装程序/跨平台工程——打包本地服务＋系统浏览器
   方案、三平台安装产物与校验和、首次启动/诊断/升级/卸载脚本、三平台 CI
