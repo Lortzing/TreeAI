@@ -40,6 +40,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import { Socket } from "node:net";
 import { createInterface } from "node:readline/promises";
 import { Writable } from "node:stream";
@@ -832,18 +833,55 @@ async function cmdUninstall(args: readonly string[]): Promise<number> {
     );
   }
 
-  /* 自删除：POSIX 直接删（脚本已读入内存）；Windows 上 node.exe 正在本目录
-     运行、文件被锁，先退出进程再由分离的 PowerShell 延迟删除。删除脚本用
-     robocopy 空→目标 /MIR 先清场（PS 5.1 Remove-Item 删不掉超 MAX_PATH 的
-     node_modules 深路径，run 36747308856），实现与单测在 core.ts。 */
+  /* 自删除：POSIX 直接删（脚本已读入内存）；Windows 分两段。段一在本进程
+   * 内同步删除 node/ 以外的一切——运行中的 node.exe 是唯一被锁文件（本进程
+   * 自身；CWD 不在本目录），app/ 的 node_modules 深路径由 Node 的 rmSync 处
+   * 理（libuv 走 \\?\ 前缀，不受 MAX_PATH 限制）。段二把 node/ 与根目录交
+   * 给分离 PowerShell 收尾。不能把全部删除押在分离进程上：CI runner 实测
+   * 它三版脚本零日志零删除（run 36760164991/36764463430——进程疑似从未起
+   * 来）。两段都写数据目录日志（--delete-data 后数据目录已删，写失败静默）。 */
   if (process.platform === "win32") {
-    const script = windowsSelfDeleteScript(BUNDLE_ROOT, join(dataDir(), "uninstall-selfdelete.log"));
-    const child = spawn("powershell", ["-NoProfile", "-Command", script], {
+    const logPath = join(dataDir(), "uninstall-selfdelete.log");
+    const logLineSelf = (message: string) => {
+      try {
+        appendFileSync(logPath, `${new Date().toISOString()} ${message}\n`);
+      } catch {
+        /* 数据目录已删除（--delete-data）或不可写：诊断日志尽力而为 */
+      }
+    };
+    try {
+      const before = readdirSync(BUNDLE_ROOT);
+      for (const entry of before) {
+        if (entry === "node") continue;
+        rmSync(join(BUNDLE_ROOT, entry), { recursive: true, force: true });
+      }
+      const left = readdirSync(BUNDLE_ROOT);
+      logLineSelf(`launcher-stage removed ${String(before.length - left.length)}/${String(before.length)} top-level, left: ${left.join(",")}`);
+      out(`treeai-launcher: 安装目录内容已删除（node 运行时随进程退出由后台收尾）：${BUNDLE_ROOT}`);
+    } catch (err) {
+      logLineSelf(`launcher-stage failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    /* 脚本落 %TEMP% 再以 -File 调用——与 .bat → treeai.ps1 的既有工作链路
+       同构（-Command 传整段脚本在 CI runner 上三版零执行，run 36764463430）。 */
+    const script = windowsSelfDeleteScript(BUNDLE_ROOT, logPath);
+    let scriptPath = join(tmpdir(), `treeai-uninst-${String(process.pid)}.ps1`);
+    try {
+      writeFileSync(scriptPath, script, { encoding: "utf8" });
+    } catch {
+      scriptPath = join(BUNDLE_ROOT, "uninst.ps1");
+      try {
+        writeFileSync(scriptPath, script, { encoding: "utf8" });
+      } catch (err) {
+        logLineSelf(`script-stage write failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    const child = spawn("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath], {
       detached: true,
       stdio: "ignore",
       windowsHide: true,
     });
     child.unref();
+    logLineSelf(`handoff spawned powershell -File ${scriptPath} (pid=${String(child.pid)})`);
     out(`treeai-launcher: 安装目录删除已排队（Windows 需等本进程退出后完成）：${BUNDLE_ROOT}`);
   } else {
     rmSync(BUNDLE_ROOT, { recursive: true, force: true });
