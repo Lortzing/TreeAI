@@ -45,6 +45,7 @@ import { runB2AnchorsCheck } from "../tests/support/verifier/d4-b2-anchors.ts";
 import { runB3ExplorationCheck } from "../tests/support/verifier/d4-b3-exploration.ts";
 import { runB4SearchCheck } from "../tests/support/verifier/d4-b4-search.ts";
 import { runB5RestoreCheck } from "../tests/support/verifier/d4-b5-restore.ts";
+import { runB6ScaleCheck } from "../tests/support/verifier/d4-b6-scale.ts";
 import { runB9NavCheck } from "../tests/support/verifier/d4-b9-nav.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
@@ -565,10 +566,49 @@ const CHECKS = [
   },
   {
     id: "b6-scale-performance",
+    // REAL executing check (D4-6): the frozen B6 scale dataset (spec at
+    // tests/fixtures/d4/b6-scale/spec.json) is generated deterministically by
+    // scripts/d4/gen-b6-scale-dataset.mjs (two CLI runs byte-identical +
+    // --load-check into a real persistence DB), loaded through the real
+    // parsers + repository APIs (100 materials / exactly 1M canonical units /
+    // 1,000 non-trunk branches / 10,000 saved facts), and measured through the
+    // REAL service/HTTP surface on a server assembled like index.ts:
+    // search p95 ≤500ms over the 50 frozen needle queries (warm, per-request
+    // rebuild path; cold reported separately), material-open p95 ≤2s over 30
+    // existing-material opens (first visible blocks page, large PDFs
+    // included), the 10 MiB/100-page frozen sample imports to parse-ready
+    // ≤30s, cancel answers ≤200ms with late results structurally discarded,
+    // scroll block-page p95 ≤200ms. CPU/memory/OS + loadavg recorded;
+    // near-limit probes are rerun once with both runs recorded (parallel-wave
+    // machine honesty). The browser face of B6 stays NOT claimed: see
+    // b6-browser-face.
+    fn: async () => {
+      const outcome = await runB6ScaleCheck(ROOT);
+      log("b6-scale-performance", `b6 scale/performance check\n${[...outcome.lines, ...outcome.notRun.map((n) => `NOT_RUN: ${n}`)].join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
+  },
+  {
+    id: "b6-browser-face",
     fn: notRunCheck(
-      "b6-scale-performance",
+      "b6-browser-face",
       "D4-6",
-      "scale dataset generator + performance measurement not implemented (spec frozen at tests/fixtures/d4/b6-scale)",
+      "B6 browser face pending the frontend wave: real-browser scrolling smoothness (no >200ms main-thread segments " +
+        "while paging the reader), keydown-to-render input latency for search-as-you-type and question input, search " +
+        "hit-list render latency, and cold app boot — the offline b6-scale-performance row records server-side " +
+        "timings (block-page fetches, tree-scoped searches, cancellation round trips) as necessary-but-not-sufficient " +
+        "evidence only; browser evidence belongs to run:d4-browser / the final candidate-SHA regression",
     ),
   },
   {
