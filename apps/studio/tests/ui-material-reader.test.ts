@@ -1970,6 +1970,40 @@ test("armed selection survives async refreshes and page appends: block elements 
   assert.ok(true, "mouseup flushes the deferred chrome update (renderAll + reader chrome)");
 });
 
+test("capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift)", async () => {
+  const world = await createWorld({ materials: [MD01_SCRIPT] });
+  await world.openMaterial("mat-md01");
+  const block = world.blockElement("blk-1");
+  const line = firstLineNode(block);
+
+  /* 拖拽窗口开启后，全局 selectionchange（真实浏览器拖选中持续触发）不得
+     就地更新捕获条——条从提示态长到 armed 高度会把正文整体推移（真实
+     Chrome 实测 ~115px），连续拖选的释放点随位移带偏。冻结到 mouseup
+     冲刷；触屏 selectionchange（无拖拽窗口）不受影响（见下一用例）。 */
+  world.matBlocks().dispatchEvent("mousedown", {});
+  world.setSelection(world.makeRange(line, 0, line, 2));
+  world.document.dispatchEvent("selectionchange", {});
+  await settle(5);
+  assert.equal(
+    selectionBar(world).querySelector(".mat-payload"),
+    null,
+    "the capture bar does not arm mid-drag (content frozen until mouseup)",
+  );
+  assert.match(
+    selectionBar(world).textContent!,
+    /select text in the material/,
+    "the idle hint stays in place during the drag window",
+  );
+
+  world.matBlocks().dispatchEvent("mouseup", {});
+  await settle(25);
+  assert.match(
+    selectionBar(world).querySelector(".mat-payload")!.textContent!,
+    /UTF-16 \[13, 15\)/,
+    "mouseup flushes the deferred bar update with the captured selection",
+  );
+});
+
 test("touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT] });
   await world.openMaterial("mat-md01");
