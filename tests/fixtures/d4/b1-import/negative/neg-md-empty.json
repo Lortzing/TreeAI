@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-md-empty",
+  "kind": "markdown",
+  "outcome": "rejected",
+  "reason": "empty",
+  "detail": "Zero-byte file; d4-md-v1 rejects with reason 'empty' before decoding."
+}

@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-md-nul-byte",
+  "kind": "markdown",
+  "outcome": "rejected",
+  "reason": "nul-byte",
+  "detail": "Valid zh text with an embedded U+0000 between content lines; rejected with reason 'nul-byte' (valid UTF-8, but NUL is a binary-pollution signal)."
+}

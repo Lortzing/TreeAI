@@ -1,0 +1,128 @@
+{
+  "fixtureId": "md-02",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# The Event Loop: Notes From a JavaScript Learner\n\nFor a long time I wrote JavaScript without really understanding how it runs. Callbacks, promises, async/await — they all seemed to work by magic. The magic disappeared once I sat down and studied the event loop, the single mechanism that decides when every piece of my code actually executes.\n\n## One thread, one call stack\n\nJavaScript executes on a single thread with a single call stack. When a function is called, a frame is pushed onto the stack; when it returns, the frame is popped. If a function takes too long, nothing else can run — the page freezes. That is why long computations either get chunked, moved into a worker, or rewritten to yield back to the browser.\n\nThe single-threaded design is a simplification, not a limitation to fight. It removes whole categories of bugs: race conditions on shared memory, deadlocks between competing locks, subtle interleavings that only reproduce on Tuesdays. The price is that we must never block the stack for long.\n\n## The queues\n\nAround the call stack live several queues, and keeping them apart is most of the work:\n\n- The macrotask queue holds callbacks from timers, DOM events, and I/O completion.\n- The microtask queue holds promise reactions and queueMicrotask callbacks.\n- Microtasks always drain completely before the next macrotask starts.\n\nWhen the stack empties, the runtime finishes all pending microtasks first, then takes exactly one macrotask, then drains microtasks again. This two-level structure explains the classic interview puzzle: a setTimeout(fn, 0) callback always runs after a resolved promise callback, because the promise reaction is a microtask and the timer is a macrotask.\n\n## Promises are a queue discipline in disguise\n\nBefore promises, we chained callbacks by hand, and every step could split into success and failure paths that drifted apart. A promise is an object that wraps a future value and hands you a thenable chain: each then registers a microtask, so callbacks run in a deterministic order regardless of when the value arrives. Async/await is sugar over the same machinery — an await pauses the async function, schedules the rest of it as a microtask continuation, and frees the stack.\n\nThe practical lesson I keep relearning: never assume ordering from how the code is written. Ordering comes from which queue each callback lands in and when the stack empties. When in doubt, I trace three things: which stack frame am I in, which queue does this callback come from, and is the stack about to drain.\n\n## Rendering wants its turn\n\nBetween macrotasks, the browser gets a chance to render. If a microtask keeps spawning more microtasks, rendering never happens, because the microtask queue never drains. A classic mistake is an infinite chain of promises that locks the page just as effectively as a while(true) loop. The fix is to break the chain deliberately — yield to a macrotask, split the work into chunks, or move it off the main thread entirely.\n\n## Cheat sheet\n\n- One call stack; long frames freeze everything.\n- Microtasks drain fully between macrotasks.\n- Promise callbacks are microtasks; timers are macrotasks.\n- Rendering happens between macrotasks, never mid-microtask-drain.\n\nThe event loop was the moment JavaScript stopped feeling like a bag of tricks and started feeling like a designed system. Every async pattern I have learned since is just a new way to hand work to a queue.\n",
+  "textUnits": 3443,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 51,
+      "text": "# The Event Loop: Notes From a JavaScript Learner\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 51,
+      "end": 345,
+      "text": "For a long time I wrote JavaScript without really understanding how it runs. Callbacks, promises, async/await — they all seemed to work by magic. The magic disappeared once I sat down and studied the event loop, the single mechanism that decides when every piece of my code actually executes.\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 345,
+      "end": 376,
+      "text": "## One thread, one call stack\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 376,
+      "end": 726,
+      "text": "JavaScript executes on a single thread with a single call stack. When a function is called, a frame is pushed onto the stack; when it returns, the frame is popped. If a function takes too long, nothing else can run — the page freezes. That is why long computations either get chunked, moved into a worker, or rewritten to yield back to the browser.\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 726,
+      "end": 1020,
+      "text": "The single-threaded design is a simplification, not a limitation to fight. It removes whole categories of bugs: race conditions on shared memory, deadlocks between competing locks, subtle interleavings that only reproduce on Tuesdays. The price is that we must never block the stack for long.\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 1020,
+      "end": 1035,
+      "text": "## The queues\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 1035,
+      "end": 1123,
+      "text": "Around the call stack live several queues, and keeping them apart is most of the work:\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 1123,
+      "end": 1354,
+      "text": "- The macrotask queue holds callbacks from timers, DOM events, and I/O completion.\n- The microtask queue holds promise reactions and queueMicrotask callbacks.\n- Microtasks always drain completely before the next macrotask starts.\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 1354,
+      "end": 1708,
+      "text": "When the stack empties, the runtime finishes all pending microtasks first, then takes exactly one macrotask, then drains microtasks again. This two-level structure explains the classic interview puzzle: a setTimeout(fn, 0) callback always runs after a resolved promise callback, because the promise reaction is a microtask and the timer is a macrotask.\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 1708,
+      "end": 1756,
+      "text": "## Promises are a queue discipline in disguise\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 1756,
+      "end": 2234,
+      "text": "Before promises, we chained callbacks by hand, and every step could split into success and failure paths that drifted apart. A promise is an object that wraps a future value and hands you a thenable chain: each then registers a microtask, so callbacks run in a deterministic order regardless of when the value arrives. Async/await is sugar over the same machinery — an await pauses the async function, schedules the rest of it as a microtask continuation, and frees the stack.\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 2234,
+      "end": 2549,
+      "text": "The practical lesson I keep relearning: never assume ordering from how the code is written. Ordering comes from which queue each callback lands in and when the stack empties. When in doubt, I trace three things: which stack frame am I in, which queue does this callback come from, and is the stack about to drain.\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 2549,
+      "end": 2578,
+      "text": "## Rendering wants its turn\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 2578,
+      "end": 3000,
+      "text": "Between macrotasks, the browser gets a chance to render. If a microtask keeps spawning more microtasks, rendering never happens, because the microtask queue never drains. A classic mistake is an infinite chain of promises that locks the page just as effectively as a while(true) loop. The fix is to break the chain deliberately — yield to a macrotask, split the work into chunks, or move it off the main thread entirely.\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 3000,
+      "end": 3016,
+      "text": "## Cheat sheet\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 3016,
+      "end": 3237,
+      "text": "- One call stack; long frames freeze everything.\n- Microtasks drain fully between macrotasks.\n- Promise callbacks are microtasks; timers are macrotasks.\n- Rendering happens between macrotasks, never mid-microtask-drain.\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 3237,
+      "end": 3443,
+      "text": "The event loop was the moment JavaScript stopped feeling like a bag of tricks and started feeling like a designed system. Every async pattern I have learned since is just a new way to hand work to a queue.\n"
+    }
+  ]
+}

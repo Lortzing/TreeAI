@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-md-whitespace-only",
+  "kind": "markdown",
+  "outcome": "rejected",
+  "reason": "whitespace-only",
+  "detail": "Only Unicode whitespace (spaces, tabs, NBSP U+00A0, ideographic space U+3000, line breaks incl. a CRLF); no meaningful content, rejected with reason 'whitespace-only'."
+}

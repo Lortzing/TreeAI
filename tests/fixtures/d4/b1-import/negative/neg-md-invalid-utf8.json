@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-md-invalid-utf8",
+  "kind": "markdown",
+  "outcome": "rejected",
+  "reason": "invalid-utf8",
+  "detail": "Valid zh study-note text whose third section contains 0xE8 followed by 0xFF 0xAE (illegal continuation); strict TextDecoder(fatal) rejects the whole material with reason 'invalid-utf8'."
+}

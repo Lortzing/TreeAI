@@ -1,0 +1,149 @@
+{
+  "fixtureId": "md-03",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# Git 工作流双语笔记 / Git Workflow Notes\n\n我把团队里最容易踩坑的 Git 操作整理成这份双语笔记。每一条先用中文记下我的理解，再用英文写一句给国际协作者看的表述，方便直接贴进 pull request 的说明里。\n\n## 分支策略 / Branching model\n\n中文：主干分支保持随时可发布，所有功能在短生命周期的 feature branch 上开发。分支名带上 issue 编号，例如 feature/1024-tree-render。分支活得越久，合并冲突越痛，所以目标是一周内合并。\n\nEnglish: keep the main branch always releasable; build features on short-lived branches named after their issue, for example feature/1024-tree-render. The longer a branch lives, the more painful the merge, so aim to land it within a week.\n\n## 提交粒度 / Commit discipline\n\n中文：一个提交只做一件事。混合了重构与新功能的提交在 review 时没法讨论，回滚时也没法拆开。提交信息第一行用祈使句概括改动，正文解释为什么这么改——why 比 what 重要，因为 what 可以从 diff 里读出来。\n\nEnglish: one commit should do one thing. A commit that mixes refactoring with a new feature is hard to review and impossible to revert selectively. Write the subject line in the imperative mood, and use the body to explain why — the diff already says what.\n\n## 合并前必做 / Before you merge\n\n中文：合并前先 rebase 到最新的 main，跑一遍完整测试，确认 diff 里没有调试代码和无关格式化改动。`git diff main...HEAD` 只看本分支的净改动，比反复看累计 diff 靠谱得多。\n\nEnglish: rebase onto the latest main, run the full test suite, and scan the diff for leftover debug code and drive-by formatting changes. `git diff main...HEAD` shows exactly what your branch contributes, which beats staring at a cumulative diff.\n\n## 撤销的三种姿势 / Three ways to undo\n\n中文：`git restore <file>` 撤销工作区改动；`git reset --soft HEAD~1` 收回最后一次提交但保留改动；`git revert <sha>` 生成一个反向提交，是公共分支上唯一安全的撤销方式。改写已经推送的历史是团队红线，除非分支明确标注为可强制推送。\n\nEnglish: `git restore <file>` discards working-tree changes; `git reset --soft HEAD~1` undoes the last commit but keeps the changes staged; `git revert <sha>` creates an inverse commit, which is the only safe undo on shared branches. Rewriting pushed history is off-limits unless a branch is explicitly marked force-pushable.\n\n## 冲突处理 / Resolving conflicts\n\n中文：遇到冲突先 `git log --merge` 看双方改动的动机，再决定保留哪边。冲突标记里的代码经常两边都过时，正确的解法通常是两边都不抄，按当前设计重写这一段。解完冲突必须跑测试，因为「编译通过」不等于「语义正确」。\n\nEnglish: when you hit a conflict, run `git log --merge` to see the intent on both sides before choosing. Both halves of a conflict block are often outdated; the right resolution is usually to rewrite the section against the current design. Always run the tests after resolving, because a clean compile is not the same as correct behavior.\n\n## 小抄 / Cheat sheet\n\n- 中文：先想好撤销方案再动手；公共分支只用 revert。\n- English: plan your undo before your change; on shared branches, revert only.\n\n这份笔记的存在本身就是一个提醒：Git 的命令不难记，难的是团队对「什么算干净历史」达成一致。工作流是约定，不是工具属性。\n",
+  "textUnits": 2482,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 36,
+      "text": "# Git 工作流双语笔记 / Git Workflow Notes\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 36,
+      "end": 123,
+      "text": "我把团队里最容易踩坑的 Git 操作整理成这份双语笔记。每一条先用中文记下我的理解，再用英文写一句给国际协作者看的表述，方便直接贴进 pull request 的说明里。\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 123,
+      "end": 150,
+      "text": "## 分支策略 / Branching model\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 150,
+      "end": 266,
+      "text": "中文：主干分支保持随时可发布，所有功能在短生命周期的 feature branch 上开发。分支名带上 issue 编号，例如 feature/1024-tree-render。分支活得越久，合并冲突越痛，所以目标是一周内合并。\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 266,
+      "end": 506,
+      "text": "English: keep the main branch always releasable; build features on short-lived branches named after their issue, for example feature/1024-tree-render. The longer a branch lives, the more painful the merge, so aim to land it within a week.\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 506,
+      "end": 535,
+      "text": "## 提交粒度 / Commit discipline\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 535,
+      "end": 650,
+      "text": "中文：一个提交只做一件事。混合了重构与新功能的提交在 review 时没法讨论，回滚时也没法拆开。提交信息第一行用祈使句概括改动，正文解释为什么这么改——why 比 what 重要，因为 what 可以从 diff 里读出来。\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 650,
+      "end": 908,
+      "text": "English: one commit should do one thing. A commit that mixes refactoring with a new feature is hard to review and impossible to revert selectively. Write the subject line in the imperative mood, and use the body to explain why — the diff already says what.\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 908,
+      "end": 937,
+      "text": "## 合并前必做 / Before you merge\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 937,
+      "end": 1046,
+      "text": "中文：合并前先 rebase 到最新的 main，跑一遍完整测试，确认 diff 里没有调试代码和无关格式化改动。`git diff main...HEAD` 只看本分支的净改动，比反复看累计 diff 靠谱得多。\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 1046,
+      "end": 1294,
+      "text": "English: rebase onto the latest main, run the full test suite, and scan the diff for leftover debug code and drive-by formatting changes. `git diff main...HEAD` shows exactly what your branch contributes, which beats staring at a cumulative diff.\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 1294,
+      "end": 1327,
+      "text": "## 撤销的三种姿势 / Three ways to undo\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 1327,
+      "end": 1475,
+      "text": "中文：`git restore <file>` 撤销工作区改动；`git reset --soft HEAD~1` 收回最后一次提交但保留改动；`git revert <sha>` 生成一个反向提交，是公共分支上唯一安全的撤销方式。改写已经推送的历史是团队红线，除非分支明确标注为可强制推送。\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 1475,
+      "end": 1802,
+      "text": "English: `git restore <file>` discards working-tree changes; `git reset --soft HEAD~1` undoes the last commit but keeps the changes staged; `git revert <sha>` creates an inverse commit, which is the only safe undo on shared branches. Rewriting pushed history is off-limits unless a branch is explicitly marked force-pushable.\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 1802,
+      "end": 1833,
+      "text": "## 冲突处理 / Resolving conflicts\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 1833,
+      "end": 1948,
+      "text": "中文：遇到冲突先 `git log --merge` 看双方改动的动机，再决定保留哪边。冲突标记里的代码经常两边都过时，正确的解法通常是两边都不抄，按当前设计重写这一段。解完冲突必须跑测试，因为「编译通过」不等于「语义正确」。\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 1948,
+      "end": 2288,
+      "text": "English: when you hit a conflict, run `git log --merge` to see the intent on both sides before choosing. Both halves of a conflict block are often outdated; the right resolution is usually to rewrite the section against the current design. Always run the tests after resolving, because a clean compile is not the same as correct behavior.\n\n"
+    },
+    {
+      "blockId": "blk-17",
+      "kind": "markdown-block",
+      "start": 2288,
+      "end": 2309,
+      "text": "## 小抄 / Cheat sheet\n\n"
+    },
+    {
+      "blockId": "blk-18",
+      "kind": "markdown-block",
+      "start": 2309,
+      "end": 2420,
+      "text": "- 中文：先想好撤销方案再动手；公共分支只用 revert。\n- English: plan your undo before your change; on shared branches, revert only.\n\n"
+    },
+    {
+      "blockId": "blk-19",
+      "kind": "markdown-block",
+      "start": 2420,
+      "end": 2482,
+      "text": "这份笔记的存在本身就是一个提醒：Git 的命令不难记，难的是团队对「什么算干净历史」达成一致。工作流是约定，不是工具属性。\n"
+    }
+  ]
+}

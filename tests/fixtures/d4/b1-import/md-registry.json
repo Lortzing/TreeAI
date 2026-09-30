@@ -1,0 +1,176 @@
+{
+  "kind": "markdown",
+  "fixtures": [
+    {
+      "fixtureId": "md-01",
+      "file": "markdown/md-01.md",
+      "expected": "markdown/md-01.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "md-02",
+      "file": "markdown/md-02.md",
+      "expected": "markdown/md-02.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "en"
+      ]
+    },
+    {
+      "fixtureId": "md-03",
+      "file": "markdown/md-03.md",
+      "expected": "markdown/md-03.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "zh",
+        "en",
+        "bilingual"
+      ]
+    },
+    {
+      "fixtureId": "md-04",
+      "file": "markdown/md-04.md",
+      "expected": "markdown/md-04.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "code",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "md-05",
+      "file": "markdown/md-05.md",
+      "expected": "markdown/md-05.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "repeated-words",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "md-06",
+      "file": "markdown/md-06.md",
+      "expected": "markdown/md-06.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "emoji",
+        "astral",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "md-07",
+      "file": "markdown/md-07.md",
+      "expected": "markdown/md-07.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "combining",
+        "unicode"
+      ]
+    },
+    {
+      "fixtureId": "md-08",
+      "file": "markdown/md-08.md",
+      "expected": "markdown/md-08.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "cross-line",
+        "zh",
+        "code"
+      ]
+    },
+    {
+      "fixtureId": "md-09",
+      "file": "markdown/md-09.md",
+      "expected": "markdown/md-09.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "links",
+        "en"
+      ]
+    },
+    {
+      "fixtureId": "md-10",
+      "file": "markdown/md-10.md",
+      "expected": "markdown/md-10.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "long-tail",
+        "en"
+      ]
+    },
+    {
+      "fixtureId": "md-11",
+      "file": "markdown/md-11.md",
+      "expected": "markdown/md-11.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "long-tail",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "md-12",
+      "file": "markdown/md-12.md",
+      "expected": "markdown/md-12.expected.json",
+      "outcome": "ready",
+      "coverage": [
+        "full-width",
+        "crlf",
+        "whitespace",
+        "unicode"
+      ]
+    }
+  ],
+  "negativeFixtures": [
+    {
+      "fixtureId": "neg-md-empty",
+      "file": "negative/neg-md-empty.md",
+      "outcome": "rejected",
+      "reason": "empty",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-md-invalid-utf8",
+      "file": "negative/neg-md-invalid-utf8.md",
+      "outcome": "rejected",
+      "reason": "invalid-utf8",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-md-nul-byte",
+      "file": "negative/neg-md-nul-byte.md",
+      "outcome": "rejected",
+      "reason": "nul-byte",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-md-whitespace-only",
+      "file": "negative/neg-md-whitespace-only.md",
+      "outcome": "rejected",
+      "reason": "whitespace-only",
+      "coverage": [
+        "negative"
+      ]
+    }
+  ],
+  "versionPairs": [
+    {
+      "materialKey": "md-vpair",
+      "description": "API 分页设计笔记 v1（偏移量分页）→ v2（游标分页）：共享头两块与尾两块，中段设计段整体替换，供改版/失效锚点测试。",
+      "v1File": "version-pairs/md-vpair-v1.md",
+      "v1Expected": "version-pairs/md-vpair-v1.expected.json",
+      "v2File": "version-pairs/md-vpair-v2.md",
+      "v2Expected": "version-pairs/md-vpair-v2.expected.json"
+    }
+  ]
+}
