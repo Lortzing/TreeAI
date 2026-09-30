@@ -351,6 +351,12 @@ function pad(value: number, width: number): string {
 /* 单位分配（冻结规则；总和精确 1,000,000）                              */
 /* ------------------------------------------------------------------ */
 
+/** 长文合计单元（8 md × 52,000 + 4 pdf × 51,000）。 */
+const B6_LONG_MD_TOTAL_UNITS = B6_LONG_MARKDOWN_COUNT * B6_LONG_MARKDOWN_UNITS; // 416,000
+const B6_LONG_PDF_TOTAL_UNITS = B6_LONG_PDF_COUNT * B6_LONG_PDF_UNITS; // 204,000
+const B6_SHORT_MATERIAL_COUNT =
+  B6_MATERIAL_COUNT - B6_LONG_MARKDOWN_COUNT - B6_LONG_PDF_COUNT; // 88
+
 /**
  * 材料 i 的计划单元数：
  *  - md idx 0..7（长文）= 52,000；pdf idx 70..73（长文）= 51,000；
@@ -362,8 +368,9 @@ export function b6MaterialUnits(materialIndex: number): number {
   if (materialIndex >= B6_MARKDOWN_COUNT && materialIndex < B6_MARKDOWN_COUNT + B6_LONG_PDF_COUNT) {
     return B6_LONG_PDF_UNITS;
   }
-  const base = Math.floor((B6_TOTAL_TEXT_UNITS - 416_000 - 204_000) / 88); // 4,318
-  const remainder = B6_TOTAL_TEXT_UNITS - 416_000 - 204_000 - base * 88; // 16
+  const shortsBudget = B6_TOTAL_TEXT_UNITS - B6_LONG_MD_TOTAL_UNITS - B6_LONG_PDF_TOTAL_UNITS; // 380,000
+  const base = Math.floor(shortsBudget / B6_SHORT_MATERIAL_COUNT); // 4,318
+  const remainder = shortsBudget - base * B6_SHORT_MATERIAL_COUNT; // 16
   const shortIndex =
     materialIndex < B6_MARKDOWN_COUNT
       ? materialIndex - B6_LONG_MARKDOWN_COUNT // md 短文 0..61

@@ -259,6 +259,33 @@ function sha256File(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
+/** 结果封装（早退与正常收尾共用同一 detail 措辞）。 */
+function outcome(
+  problems: readonly string[],
+  lines: readonly string[],
+  notRun: readonly string[],
+): B6ScaleCheckOutcome {
+  const passed = problems.length === 0;
+  const detail =
+    "generator determinism (2 CLI runs byte-identical over all 103 artifacts + in-process truth equality + --load-check " +
+    "into a real DB); corpus loaded through real parsers + repository APIs (100 versions / exactly 1,000,000 units / " +
+    "1,010 branches / 10,000 saved facts); search-p95 warm ≤500ms over the 50 frozen needle queries on the real " +
+    "per-request-rebuild HTTP path (cold/warm reported separately; every query hits its frozen offset); material-open " +
+    "p95 ≤2s over 30 existing-material opens incl. large PDFs via first-blocks fetch (cold/hot + resume-opens " +
+    "recorded); the 10 MiB/100-page frozen sample imports to parse-ready ≤30s through the real import pipeline; " +
+    "cancel answers ≤200ms with late results structurally discarded; scroll block-page p95 ≤200ms; input/scroll " +
+    "server timings recorded as evidence — the browser face (scroll smoothness, keydown latency, hit-list render, " +
+    "cold boot) is NOT claimed and stays with the frontend wave / run:d4-browser";
+  return {
+    status: passed ? "PASS" : "FAIL",
+    exitCode: passed ? 0 : 2,
+    detail,
+    lines,
+    problems,
+    notRun,
+  };
+}
+
 /** 目录内全部文件的相对路径集合（确定性遍历）。 */
 function listFilesRecursive(dir: string, prefix = ""): string[] {
   const out: string[] = [];
@@ -316,46 +343,49 @@ export async function runB6ScaleCheck(root: string): Promise<B6ScaleCheckOutcome
         problems.push(
           `generator CLI failed (A exit ${String(runA.status)}: ${runA.stderr.slice(0, 300)}; B exit ${String(runB.status)}: ${runB.stderr.slice(0, 300)})`,
         );
+        return outcome(problems, lines, notRun); // 无生成物则后续探针无法执行（如实失败，不伪装）
+      }
+      const filesA = listFilesRecursive(genA);
+      const filesB = listFilesRecursive(genB);
+      if (JSON.stringify(filesA) !== JSON.stringify(filesB)) {
+        problems.push(`generator determinism FAILED: artifact sets differ (${String(filesA.length)} vs ${String(filesB.length)} files)`);
       } else {
-        const filesA = listFilesRecursive(genA);
-        const filesB = listFilesRecursive(genB);
-        if (JSON.stringify(filesA) !== JSON.stringify(filesB)) {
-          problems.push(`generator determinism FAILED: artifact sets differ (${String(filesA.length)} vs ${String(filesB.length)} files)`);
-        } else {
-          let identical = 0;
-          let mismatch: string | null = null;
-          for (const rel of filesA) {
-            if (readFileSync(join(genA, rel)).equals(readFileSync(join(genB, rel)))) identical += 1;
-            else {
-              mismatch = rel;
-              break;
-            }
+        let identical = 0;
+        let mismatch: string | null = null;
+        for (const rel of filesA) {
+          if (readFileSync(join(genA, rel)).equals(readFileSync(join(genB, rel)))) identical += 1;
+          else {
+            mismatch = rel;
+            break;
           }
-          if (mismatch !== null) {
-            problems.push(`generator determinism FAILED across processes: ${mismatch} differs between two CLI runs`);
+        }
+        if (mismatch !== null) {
+          problems.push(`generator determinism FAILED across processes: ${mismatch} differs between two CLI runs`);
+        } else {
+          // 跨进程复核：进程内引擎重生成真值，必须与 CLI 产物逐字节相等。
+          const inProcessTruth = serializeB6Dataset(generateB6Dataset());
+          const cliTruth = readFileSync(join(genA, "b6-truth.json"), "utf8");
+          if (inProcessTruth !== cliTruth) {
+            problems.push("in-process engine truth differs from the CLI artifact (cross-process determinism broken)");
           } else {
-            // 跨进程复核：进程内引擎重生成真值，必须与 CLI 产物逐字节相等。
-            const inProcessTruth = serializeB6Dataset(generateB6Dataset());
-            const cliTruth = readFileSync(join(genA, "b6-truth.json"), "utf8");
-            if (inProcessTruth !== cliTruth) {
-              problems.push("in-process engine truth differs from the CLI artifact (cross-process determinism broken)");
+            const manifest = JSON.parse(readFileSync(join(genA, "b6-manifest.json"), "utf8")) as {
+              truthSha256?: string;
+              totals?: { totalTextUnits?: number; savedFacts?: number; nonTrunkBranches?: number };
+            };
+            if (manifest.truthSha256 !== sha256File(join(genA, "b6-truth.json"))) {
+              problems.push("manifest truthSha256 does not match the written truth file");
             } else {
-              const manifest = JSON.parse(readFileSync(join(genA, "b6-manifest.json"), "utf8")) as {
-                truthSha256?: string;
-                totals?: { totalTextUnits?: number; savedFacts?: number; nonTrunkBranches?: number };
-              };
-              if (manifest.truthSha256 !== sha256File(join(genA, "b6-truth.json"))) {
-                problems.push("manifest truthSha256 does not match the written truth file");
-              } else {
-                lines.push(
-                  `generator determinism: ${String(identical)}/${String(filesA.length)} artifacts byte-identical across two CLI runs ` +
-                    `(+ in-process engine reproduces the truth exactly); totals: 100 materials / ${String(manifest.totals?.totalTextUnits)} units / ` +
-                    `${String(manifest.totals?.nonTrunkBranches)} non-trunk branches / ${String(manifest.totals?.savedFacts)} saved facts`,
-                );
-              }
+              lines.push(
+                `generator determinism: ${String(identical)}/${String(filesA.length)} artifacts byte-identical across two CLI runs ` +
+                  `(+ in-process engine reproduces the truth exactly); totals: 100 materials / ${String(manifest.totals?.totalTextUnits)} units / ` +
+                  `${String(manifest.totals?.nonTrunkBranches)} non-trunk branches / ${String(manifest.totals?.savedFacts)} saved facts`,
+              );
             }
           }
         }
+      }
+      if (problems.length > 0) {
+        return outcome(problems, lines, notRun);
       }
     }
 
@@ -424,47 +454,74 @@ export async function runB6ScaleCheck(root: string): Promise<B6ScaleCheckOutcome
         );
       }
 
-      /* ---- 4) material-open-p95：30 次现有材料打开至可读 + 4 次深处恢复 ---- */
+      /* ---- 4) material-open-p95：30 次现有材料打开至可读（冷）+ 热复开 + 深处恢复 ---- */
       {
         const openIndices = [
           ...[70, 71, 72, 73], // 长文 PDF（59 页：首页 ≠ 全文——「先渲染可见页」路径）
           ...[0, 1, 2, 3, 4, 5, 6, 7], // 长文 markdown（52,000 单元）
           ...[10, 20, 30, 40, 50, 60, 15, 25, 35, 45, 55, 65, 75, 80, 85, 90, 95, 99], // 短文混合
         ];
-        const openTimes: number[] = [];
-        for (const index of openIndices) {
+        // 单次打开 = 材料详情 + 首屏块页（阅读器「打开至可读」的真实两步）。
+        const openOnce = async (index: number): Promise<number | null> => {
           const material = dataset.materials[index]!;
           const { result: detail, ms: detailMs } = await timedCall(
             corpusServer.url(`/api/trees/${material.treeId}/materials/${material.materialId}`),
           );
           if (detail.status !== 200) {
             problems.push(`open ${material.materialId}: detail HTTP ${String(detail.status)}`);
-            continue;
+            return null;
           }
           const versions = detail.body.versions as any[];
           const current = versions[versions.length - 1];
           if (current.parseStatus !== "ready") {
             problems.push(`open ${material.materialId}: current version not ready (${String(current.parseStatus)})`);
-            continue;
+            return null;
           }
           const { result: blocks, ms: blocksMs } = await timedCall(
             corpusServer.url(`/api/trees/${material.treeId}/materials/${material.materialId}/versions/${material.versionId}`),
           );
           if (blocks.status !== 200 || blocks.body.blocks.length === 0) {
             problems.push(`open ${material.materialId}: first blocks page HTTP ${String(blocks.status)} / empty`);
-            continue;
+            return null;
           }
           if (blocks.body.textUnits !== material.units) {
             problems.push(
               `open ${material.materialId}: textUnits ${String(blocks.body.textUnits)} != truth ${String(material.units)}`,
             );
           }
-          openTimes.push(detailMs + blocksMs);
+          return detailMs + blocksMs;
+        };
+        const coldTimes: number[] = [];
+        for (const index of openIndices) {
+          const ms = await openOnce(index);
+          if (ms !== null) coldTimes.push(ms);
         }
-        const stats = timing(openTimes);
+        let stats = timing(coldTimes);
+        // 并发复测策略（环境行所声明）：p95 落入限额 80% 带内 → 整探针复测
+        // 一次，两次都记录，以复测为裁决。
+        if (stats.p95Ms > RERUN_BAND_RATIO * OPEN_P95_LIMIT_MS) {
+          const rerunTimes: number[] = [];
+          for (const index of openIndices) {
+            const ms = await openOnce(index);
+            if (ms !== null) rerunTimes.push(ms);
+          }
+          const rerun = timing(rerunTimes);
+          lines.push(
+            `material-open p95 ${fmt(stats.p95Ms)}ms neared the limit — rerun recorded too: p95 ${fmt(rerun.p95Ms)}ms ` +
+              `(verdict from the rerun; loadavg ${os.loadavg().map((v) => v.toFixed(2)).join("/")})`,
+          );
+          stats = rerun;
+        }
         if (stats.count !== 30) {
           problems.push(`material-open: only ${String(stats.count)}/30 opens completed`);
         }
+        // 热复开（charter measurementRules：冷/热分开报告）。
+        const hotTimes: number[] = [];
+        for (const index of openIndices) {
+          const ms = await openOnce(index);
+          if (ms !== null) hotTimes.push(ms);
+        }
+        const hotStats = timing(hotTimes);
         // 恢复打开（深处 afterBlock——长 PDF 的 60% 处；证据记录，不计入 30 次）。
         const resumeTimes: number[] = [];
         for (const index of [70, 71, 72, 73]) {
@@ -486,69 +543,76 @@ export async function runB6ScaleCheck(root: string): Promise<B6ScaleCheckOutcome
           resumeTimes.push(ms);
         }
         const resumeStats = timing(resumeTimes);
-        if (stats.p95Ms > RERUN_BAND_RATIO * OPEN_P95_LIMIT_MS) {
-          lines.push(
-            `material-open p95 ${fmt(stats.p95Ms)}ms neared the ${String(OPEN_P95_LIMIT_MS)}ms limit (rerun policy note; numbers above are the recorded run)`,
-          );
-        }
         if (stats.p95Ms > OPEN_P95_LIMIT_MS) {
           problems.push(`material-open-p95 FAILED: p95 ${fmt(stats.p95Ms)}ms > ${String(OPEN_P95_LIMIT_MS)}ms`);
         } else {
           lines.push(
-            `material-open-p95: PASS — ${String(stats.count)} opens of existing materials (detail + first visible blocks page; ` +
-              `4 long PDFs + 8 long md + 18 shorts) p50 ${fmt(stats.p50Ms)}ms / p95 ${fmt(stats.p95Ms)}ms / max ${fmt(stats.maxMs)}ms ` +
-              `≤ ${String(OPEN_P95_LIMIT_MS)}ms; resume-opens deep inside the long PDFs (60% afterBlock): p50 ${fmt(resumeStats.p50Ms)}ms / ` +
-              `max ${fmt(resumeStats.maxMs)}ms (evidence)`,
+            `material-open-p95: PASS — ${String(stats.count)} cold opens of existing materials (detail + first visible ` +
+              `blocks page; 4 long PDFs + 8 long md + 18 shorts) p50 ${fmt(stats.p50Ms)}ms / p95 ${fmt(stats.p95Ms)}ms / ` +
+              `max ${fmt(stats.maxMs)}ms ≤ ${String(OPEN_P95_LIMIT_MS)}ms; hot re-opens p50 ${fmt(hotStats.p50Ms)}ms / ` +
+              `p95 ${fmt(hotStats.p95Ms)}ms (cold/hot reported separately); resume-opens deep inside the long PDFs ` +
+              `(60% afterBlock): p50 ${fmt(resumeStats.p50Ms)}ms / max ${fmt(resumeStats.maxMs)}ms (evidence)`,
           );
         }
       }
 
       /* ---- 6a) 滚动（服务端切片页取回；>20 次连续取页） ---- */
       {
-        const fetchTimes: number[] = [];
-        // 长 markdown（221 块）细粒度翻页（limit 5）直至翻完或取满 30 页。
-        {
-          const material = dataset.materials[0]!;
-          let cursor: string | null = null;
-          for (let page = 0; page < 30; page += 1) {
-            const url = new URLSearchParams({ limit: "5" });
-            if (cursor !== null) url.set("afterBlock", cursor);
-            const { result, ms } = await timedCall(
-              corpusServer.url(
-                `/api/trees/${material.treeId}/materials/${material.materialId}/versions/${material.versionId}?${url.toString()}`,
-              ),
-            );
-            if (result.status !== 200) {
-              problems.push(`scroll md: HTTP ${String(result.status)}`);
-              break;
+        const runScrollPass = async (): Promise<TimingStats> => {
+          const fetchTimes: number[] = [];
+          // 长 markdown（221 块）细粒度翻页（limit 5）直至翻完或取满 30 页。
+          {
+            const material = dataset.materials[0]!;
+            let cursor: string | null = null;
+            for (let page = 0; page < 30; page += 1) {
+              const url = new URLSearchParams({ limit: "5" });
+              if (cursor !== null) url.set("afterBlock", cursor);
+              const { result, ms } = await timedCall(
+                corpusServer.url(
+                  `/api/trees/${material.treeId}/materials/${material.materialId}/versions/${material.versionId}?${url.toString()}`,
+                ),
+              );
+              if (result.status !== 200) {
+                problems.push(`scroll md: HTTP ${String(result.status)}`);
+                break;
+              }
+              fetchTimes.push(ms);
+              cursor = result.body.nextAfterBlock;
+              if (cursor === null) break;
             }
-            fetchTimes.push(ms);
-            cursor = result.body.nextAfterBlock;
-            if (cursor === null) break;
           }
-        }
-        // 长 PDF（59 页块）缺省 limit 翻完。
-        {
-          const material = dataset.materials[70]!;
-          let cursor: string | null = null;
-          for (;;) {
-            const url = new URLSearchParams({});
-            if (cursor !== null) url.set("afterBlock", cursor);
-            const { result, ms } = await timedCall(
-              corpusServer.url(
-                `/api/trees/${material.treeId}/materials/${material.materialId}/versions/${material.versionId}?${url.toString()}`,
-              ),
-            );
-            if (result.status !== 200) {
-              problems.push(`scroll pdf: HTTP ${String(result.status)}`);
-              break;
+          // 长 PDF（59 页块）缺省 limit 翻完。
+          {
+            const material = dataset.materials[70]!;
+            let cursor: string | null = null;
+            for (;;) {
+              const url = new URLSearchParams({});
+              if (cursor !== null) url.set("afterBlock", cursor);
+              const { result, ms } = await timedCall(
+                corpusServer.url(
+                  `/api/trees/${material.treeId}/materials/${material.materialId}/versions/${material.versionId}?${url.toString()}`,
+                ),
+              );
+              if (result.status !== 200) {
+                problems.push(`scroll pdf: HTTP ${String(result.status)}`);
+                break;
+              }
+              fetchTimes.push(ms);
+              cursor = result.body.nextAfterBlock;
+              if (cursor === null) break;
             }
-            fetchTimes.push(ms);
-            cursor = result.body.nextAfterBlock;
-            if (cursor === null) break;
           }
+          return timing(fetchTimes);
+        };
+        let stats = await runScrollPass();
+        if (stats.p95Ms > RERUN_BAND_RATIO * SCROLL_P95_LIMIT_MS) {
+          const rerun = await runScrollPass();
+          lines.push(
+            `scroll p95 ${fmt(stats.p95Ms)}ms neared the limit — rerun recorded too: p95 ${fmt(rerun.p95Ms)}ms ` +
+              `(verdict from the rerun; loadavg ${os.loadavg().map((v) => v.toFixed(2)).join("/")})`,
+          );
+          stats = rerun;
         }
-        const stats = timing(fetchTimes);
         if (stats.count < 20) {
           problems.push(`scroll: only ${String(stats.count)} block-page fetches completed (< 20)`);
         }
@@ -736,23 +800,5 @@ export async function runB6ScaleCheck(root: string): Promise<B6ScaleCheckOutcome
     rmSync(base, { recursive: true, force: true });
   }
 
-  const passed = problems.length === 0;
-  const detail =
-    "generator determinism (2 CLI runs byte-identical over all 103 artifacts + in-process truth equality + --load-check " +
-    "into a real DB); corpus loaded through real parsers + repository APIs (100 versions / exactly 1,000,000 units / " +
-    "1,010 branches / 10,000 saved facts); search-p95 warm ≤500ms over the 50 frozen needle queries on the real " +
-    "per-request-rebuild HTTP path (cold/warm reported separately; every query hits its frozen offset); material-open " +
-    "p95 ≤2s over 30 existing-material opens incl. large PDFs via first-blocks fetch (resume-opens recorded); the " +
-    "10 MiB/100-page frozen sample imports to parse-ready ≤30s through the real import pipeline; cancel answers " +
-    "≤200ms with late results structurally discarded; scroll block-page p95 ≤200ms; input/scroll server timings " +
-    "recorded as evidence — the browser face (scroll smoothness, keydown latency, hit-list render, cold boot) is " +
-    "NOT claimed and stays with the frontend wave / run:d4-browser";
-  return {
-    status: passed ? "PASS" : "FAIL",
-    exitCode: passed ? 0 : 2,
-    detail,
-    lines,
-    problems,
-    notRun,
-  };
+  return outcome(problems, lines, notRun);
 }
