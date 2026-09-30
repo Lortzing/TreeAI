@@ -1,0 +1,155 @@
+{
+  "runId": "d2-offline-20260930T135427723Z",
+  "checks": [
+    {
+      "durationMs": 8,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "113 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "keyword corpus clean",
+      "id": "schema-validator-selftest"
+    },
+    {
+      "durationMs": 3,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "23 rules fired on the synthetic corpus, clean corpus clean",
+      "id": "secret-scanner-selftest"
+    },
+    {
+      "durationMs": 3673,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 516,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 1940,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "negative type tests: 7/7 rejected as expected\nok: no Pi imports in packages/contracts (src + tests)",
+      "id": "unit-tests-contracts"
+    },
+    {
+      "durationMs": 1478,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 547.356916",
+      "id": "unit-tests-runtime-pi"
+    },
+    {
+      "durationMs": 1072,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 484.431791",
+      "id": "unit-tests-persistence"
+    },
+    {
+      "durationMs": 577,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 102.919417",
+      "id": "unit-tests-tool-policy"
+    },
+    {
+      "durationMs": 1031,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 57.906584",
+      "id": "unit-tests-event-journal"
+    },
+    {
+      "durationMs": 850,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 819.745875",
+      "id": "unit-tests-agent-f"
+    },
+    {
+      "durationMs": 487,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 449.451375",
+      "id": "integration-tests-agent-f"
+    },
+    {
+      "durationMs": 3707,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 3666.650333",
+      "id": "live-framework-selftest"
+    },
+    {
+      "durationMs": 2020,
+      "status": "PASS",
+      "exitCode": 0,
+      "id": "runtime-smoke"
+    },
+    {
+      "durationMs": 7328,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 5553.153625",
+      "id": "unit-tests-studio"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "declared \"0.85.1\" / installed \"0.85.1\"",
+      "id": "pi-version-pin"
+    },
+    {
+      "durationMs": 215,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "938 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "durationMs": 12,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no treeai-* temp leftovers",
+      "id": "residual-resources"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization",
+      "id": "d1-repro"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ]
+}

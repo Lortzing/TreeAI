@@ -1,0 +1,53 @@
+{
+  "runId": "d2-offline-20260930T135452922Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-30T13:54:52.923Z",
+  "endedAt": "2026-09-30T13:54:53.059Z",
+  "verdict": "ALL_PASS",
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 0,
+  "results": [
+    {
+      "durationMs": 9,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "113 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 43,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "131 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity, secret-scan-workspace executed",
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}
