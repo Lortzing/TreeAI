@@ -20,6 +20,12 @@
   （75 有效 100% / 17 无效零误定位）。
 - 注意：term-backend 与 d4-2-backend 都会改 `apps/studio/src/server.ts`
   （术语路由 vs 材料路由）——集成时由集成会话解决冲突。
+- `wip/d4-4-search-core`（worktree d4-4-search-core，2026-09-30 20:58 追加，基于
+  main `a6f411d`；登记会话：wave-1 的五个 agent 派发会话，agent 在飞）：
+  D4-4 搜索引擎核心——纯模块（`apps/studio/src/search/`）+ 冻结 B4 集验证
+  （55 正向 top-5 命中、12 无结果零命中）；**不碰** server.ts / 迁移 /
+  package.json / app.js——迁移 0010（更正记录后归 D4-4）与 HTTP 接线留待
+  集成，与上四支无文件冲突。
 - D4-2 前端阅读器不在本波（app.js 由 term-frontend 独占）。
 - `wip/d4-7-installer`（worktree d4-7-installer，2026-09-30 21:20 追加，基于
   main `a6f411d`）：D4-7 安装程序/跨平台工程——打包本地服务＋系统浏览器
