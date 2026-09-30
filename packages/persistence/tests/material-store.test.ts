@@ -893,3 +893,183 @@ test("reading positions upsert by (tree_id, material_id) with block discipline",
     );
   });
 });
+
+/* ------------------------------ 解析状态迁移（D4-1 导入服务流水线） ------------------------------ */
+
+test("parse-result transitions: pending→parsing→terminal; terminal rows structurally refuse late updates (late-result discard backstop)", () => {
+  withWorld((world) => {
+    /* 辅助面基线：hasTree / 空库恢复为 no-op。 */
+    assert.equal(world.mat.hasTree(world.treeId), true);
+    assert.equal(world.mat.hasTree("tree-missing" as TreeId), false);
+    assert.equal(world.mat.failNonTerminalParseVersions("parse-interrupted: x"), 0);
+
+    const material = world.mat.createMaterial({ title: "flow.md" });
+    const pending = world.mat.insertVersion({
+      materialId: material.id,
+      bytes: utf8("Alpha\n\nBeta"),
+      parserKind: "markdown",
+      parserVersion: "d4-md-v1",
+      parseStatus: "pending",
+      canonicalText: "",
+      blocks: [],
+    });
+    assert.equal(pending.parseStatus, "pending");
+    assert.equal(pending.textUnits, 0);
+
+    /* pending → parsing（中间态，仅状态位迁移）。 */
+    const parsing = world.mat.updateVersionParseResult({
+      versionId: pending.id,
+      parseStatus: "parsing",
+      canonicalText: "",
+      blocks: [],
+    });
+    assert.ok(parsing !== null);
+    assert.equal(parsing.parseStatus, "parsing");
+    assert.equal(parsing.parseError, null);
+    assert.equal(parsing.textUnits, 0);
+
+    /* parsing → ready：canonicalText + 连续覆盖块落库，textUnits 重算。 */
+    const text = "Alpha\n\nBeta";
+    const ready = world.mat.updateVersionParseResult({
+      versionId: pending.id,
+      parseStatus: "ready",
+      canonicalText: text,
+      blocks: markdownBlocks(text),
+    });
+    assert.ok(ready !== null);
+    assert.equal(ready.parseStatus, "ready");
+    assert.equal(ready.textUnits, text.length);
+    assert.equal(world.mat.getVersionContent(pending.id).canonicalText, text);
+    assert.equal(world.mat.getVersionContent(pending.id).blocks.length, 2);
+
+    /* 终态守卫（迟到结果结构性拒绝）：ready 后任何迁移改零行 → null，
+       原行原样（绝不复活/覆盖）。 */
+    assert.equal(
+      world.mat.updateVersionParseResult({
+        versionId: pending.id,
+        parseStatus: "failed",
+        parseError: "late: should not apply",
+        canonicalText: "",
+        blocks: [],
+      }),
+      null,
+    );
+    assert.equal(
+      world.mat.updateVersionParseResult({ versionId: pending.id, parseStatus: "canceled", canonicalText: "", blocks: [] }),
+      null,
+    );
+    assert.equal(
+      world.mat.updateVersionParseResult({
+        versionId: pending.id,
+        parseStatus: "ready",
+        canonicalText: "OVERWRITTEN",
+        blocks: markdownBlocks("OVERWRITTEN"),
+      }),
+      null,
+    );
+    assert.equal(world.mat.findVersion(pending.id)!.parseStatus, "ready");
+    assert.equal(world.mat.getVersionContent(pending.id).canonicalText, text, "the ready row is untouched by refused late updates");
+
+    /* 取消守卫：pending → canceled 直接成立；迟到的 ready 迁移被拒绝。 */
+    const second = world.mat.insertVersion({
+      materialId: material.id,
+      bytes: utf8("Gamma\n\nDelta"),
+      parserKind: "markdown",
+      parserVersion: "d4-md-v1",
+      parseStatus: "pending",
+      canonicalText: "",
+      blocks: [],
+    });
+    const canceled = world.mat.updateVersionParseResult({
+      versionId: second.id,
+      parseStatus: "canceled",
+      canonicalText: "",
+      blocks: [],
+    });
+    assert.ok(canceled !== null);
+    assert.equal(canceled.parseStatus, "canceled");
+    assert.equal(
+      world.mat.updateVersionParseResult({
+        versionId: second.id,
+        parseStatus: "ready",
+        canonicalText: text,
+        blocks: markdownBlocks(text),
+      }),
+      null,
+      "a late parse result cannot resurrect a canceled version",
+    );
+    assert.equal(world.mat.findVersion(second.id)!.parseStatus, "canceled");
+    assert.equal(world.mat.getVersionContent(second.id).canonicalText, "", "no canonical text is attached to a canceled version");
+
+    /* 导入即终态（ready）的版本同样不可迁移。 */
+    const { versionId: importedReady } = importMarkdown(world.mat, material.id, "Direct\n\nReady");
+    assert.equal(
+      world.mat.updateVersionParseResult({
+        versionId: importedReady,
+        parseStatus: "parsing",
+        canonicalText: "",
+        blocks: [],
+      }),
+      null,
+    );
+
+    /* 输入校验：failed 缺原因 / 非 ready 携带文本或块 / ready 块覆盖断裂 / 未知版本。 */
+    const third = world.mat.insertVersion({
+      materialId: material.id,
+      bytes: utf8("Epsilon\n\nZeta"),
+      parserKind: "markdown",
+      parserVersion: "d4-md-v1",
+      parseStatus: "pending",
+      canonicalText: "",
+      blocks: [],
+    });
+    assert.throws(
+      () =>
+        world.mat.updateVersionParseResult({
+          versionId: third.id,
+          parseStatus: "failed",
+          canonicalText: "",
+          blocks: [],
+        }),
+      InvalidArgumentError,
+    );
+    assert.throws(
+      () =>
+        world.mat.updateVersionParseResult({
+          versionId: third.id,
+          parseStatus: "parsing",
+          canonicalText: "x",
+          blocks: [],
+        }),
+      InvalidArgumentError,
+    );
+    assert.throws(
+      () =>
+        world.mat.updateVersionParseResult({
+          versionId: third.id,
+          parseStatus: "ready",
+          canonicalText: "ab",
+          blocks: markdownBlocks("abc"),
+        }),
+      InvalidArgumentError,
+    );
+    assert.throws(
+      () =>
+        world.mat.updateVersionParseResult({
+          versionId: "matver-missing" as MaterialVersionId,
+          parseStatus: "canceled",
+          canonicalText: "",
+          blocks: [],
+        }),
+      EntityNotFoundError,
+    );
+
+    /* 宿主中断恢复：仅 pending/parsing 收敛 failed；ready/canceled 不受影响。 */
+    assert.equal(world.mat.failNonTerminalParseVersions("parse-interrupted: the host process exited before parsing completed"), 1);
+    const recovered = world.mat.findVersion(third.id)!;
+    assert.equal(recovered.parseStatus, "failed");
+    assert.match(recovered.parseError!, /^parse-interrupted:/);
+    assert.equal(world.mat.findVersion(pending.id)!.parseStatus, "ready");
+    assert.equal(world.mat.findVersion(second.id)!.parseStatus, "canceled");
+  });
+});

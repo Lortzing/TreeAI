@@ -50,9 +50,12 @@ export {
   type InsertMaterialBranchOriginInput,
   type InsertMaterialVersionInput,
   type MaterialFirstQuestion,
+  type MaterialParseTransitionStatus,
   type MaterialRepositoryOptions,
   type MaterialSelectionContext,
+  type MaterialVersionContent,
   type TreeMaterialLink,
+  type UpdateVersionParseResultInput,
   type UpsertReadingPositionInput,
 } from "./material-repository.ts";
 

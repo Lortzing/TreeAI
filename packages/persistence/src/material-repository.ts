@@ -153,6 +153,30 @@ export interface InsertMaterialVersionInput {
   readonly blocks: readonly MaterialBlock[];
 }
 
+/** updateVersionParseResult 允许的目标状态（解析流水线的中间态与终态）。 */
+export type MaterialParseTransitionStatus = "parsing" | "ready" | "failed" | "canceled";
+
+export interface UpdateVersionParseResultInput {
+  readonly versionId: MaterialVersionId;
+  /** 目标状态：'parsing'（中间态）或终态 'ready' | 'failed' | 'canceled'。 */
+  readonly parseStatus: MaterialParseTransitionStatus;
+  /** failed 必填（原因码+说明）；其他状态必须 null/缺省。 */
+  readonly parseError?: string | null;
+  /**
+   * ready：解析产出 canonicalText（块覆盖校验同 insertVersion）；
+   * 非 ready：必须为空串（规范文本只随 ready 落库——超限/失败文本不存储）。
+   */
+  readonly canonicalText: string;
+  readonly blocks: readonly MaterialBlock[];
+}
+
+/** 版本内容读取（分块读取 API 的存储面；canonicalText 只在此暴露）。 */
+export interface MaterialVersionContent {
+  readonly version: MaterialVersion;
+  readonly canonicalText: string;
+  readonly blocks: readonly MaterialBlock[];
+}
+
 export interface TreeMaterialLink {
   readonly treeId: TreeId;
   readonly materialId: MaterialId;
@@ -592,6 +616,13 @@ export class MaterialRepository {
     return rows.map(rowToMaterial);
   }
 
+  /** 树存在性探针（导入服务在写入前校验树作用域用；不读取树内容）。 */
+  hasTree(treeId: TreeId): boolean {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    return this.#findTreeRow(treeId) !== undefined;
+  }
+
   /* ------------------------------ 原件（内容寻址） ------------------------------ */
 
   /**
@@ -721,6 +752,154 @@ export class MaterialRepository {
       )
       .all(materialId) as unknown as MaterialVersionRow[];
     return rows.map(rowToMaterialVersion);
+  }
+
+  /** 单版本读取（无则 null）。 */
+  findVersion(versionId: MaterialVersionId): MaterialVersion | null {
+    this.#assertOpen();
+    assertNonEmptyString(versionId, "material version id");
+    const row = this.#findVersionRow(versionId);
+    return row === undefined ? null : rowToMaterialVersion(row);
+  }
+
+  /**
+   * 解析流水线的状态迁移（D4-1 导入服务专用）：
+   * pending/parsing → parsing | ready | failed | canceled。
+   *
+   * **迟到结果结构性拒绝**（charter §3.2「迟到结果不挂靠」的存储层守卫）：
+   * UPDATE 以 `WHERE parse_status IN ('pending','parsing')` 为条件——版本一旦
+   * 到达任一终态（ready/failed/canceled/unsupported/rejected），任何后续
+   * 迁移请求都改零行。本方法此时返回 **null**（不抛错、不改写、不复活）；
+   * 调用方（导入服务）据此丢弃迟到结果。取消与解析完成之间的竞争由此由
+   * 数据库行本身仲裁：先落库者赢，后者必然收到 null。
+   *
+   * ready：canonicalText/blocks 落库（块覆盖校验同 insertVersion，
+   * text_units 重算）；failed：parseError 必填、canonicalText 必须为空
+   * （超限/失败文本不存储——「在耗尽资源前明确拒绝」的存储面）；parsing/
+   * canceled：canonicalText 必须为空。未知版本抛 EntityNotFoundError。
+   */
+  updateVersionParseResult(input: UpdateVersionParseResultInput): MaterialVersion | null {
+    this.#assertOpen();
+    assertNonEmptyString(input.versionId, "material version id");
+    const allowed: readonly MaterialParseTransitionStatus[] = ["parsing", "ready", "failed", "canceled"];
+    if (!allowed.includes(input.parseStatus)) {
+      throw new InvalidArgumentError(
+        `parse transition status must be one of {${allowed.join(", ")}} (got '${String(input.parseStatus)}')`,
+      );
+    }
+    const isFailure = input.parseStatus === "failed";
+    const parseError = input.parseError ?? null;
+    if (isFailure && (typeof parseError !== "string" || parseError.trim().length === 0)) {
+      throw new InvalidArgumentError("parse transition to 'failed' requires a parseError (reason code + note)");
+    }
+    if (!isFailure && parseError !== null) {
+      throw new InvalidArgumentError(`parseError must not be provided for parse transition '${input.parseStatus}'`);
+    }
+    if (typeof input.canonicalText !== "string") {
+      throw new InvalidArgumentError("canonicalText must be a string");
+    }
+    if (input.parseStatus !== "ready" && input.canonicalText.length > 0) {
+      throw new InvalidArgumentError(
+        `canonicalText must be empty for parse transition '${input.parseStatus}' ` +
+          "(canonical text is stored only with the ready state)",
+      );
+    }
+    if (!Array.isArray(input.blocks)) {
+      throw new InvalidArgumentError("blocks must be an array of MaterialBlock");
+    }
+    if (input.parseStatus === "ready") {
+      assertValidBlockCoverage(input.blocks, input.canonicalText.length, this.#parserKindOf(input.versionId));
+    } else if (input.blocks.length > 0) {
+      throw new InvalidArgumentError(
+        `blocks must be empty for parse transition '${input.parseStatus}' (blocks are stored only with the ready state)`,
+      );
+    }
+    return this.transaction((): MaterialVersion | null => {
+      const db = this.#db!;
+      let changes: { changes: number | bigint };
+      try {
+        changes = db
+          .prepare(
+            `UPDATE material_versions
+               SET parse_status = ?, parse_error = ?, text_units = ?, canonical_text = ?, block_map_json = ?
+             WHERE version_id = ? AND parse_status IN ('pending', 'parsing')`,
+          )
+          .run(
+            input.parseStatus,
+            parseError,
+            input.canonicalText.length,
+            input.canonicalText,
+            JSON.stringify(input.blocks),
+            input.versionId,
+          ) as unknown as { changes: number | bigint };
+      } catch (error) {
+        throw mapSqliteError(error, "updating material version parse result");
+      }
+      if (Number(changes.changes) === 0) {
+        const row = db
+          .prepare(`SELECT version_id FROM material_versions WHERE version_id = ?`)
+          .get(input.versionId);
+        if (row === undefined) throw new EntityNotFoundError("material version", input.versionId);
+        return null; // 版本已终态：迟到迁移结构性拒绝（不复活、不改写）。
+      }
+      const updated = db
+        .prepare(`SELECT ${MATERIAL_VERSION_COLUMNS} FROM material_versions WHERE version_id = ?`)
+        .get(input.versionId) as MaterialVersionRow | undefined;
+      if (updated === undefined) {
+        throw new DatabaseCorruptError(
+          `material version ${input.versionId} not readable after parse-result update (schema integrity violation)`,
+        );
+      }
+      return rowToMaterialVersion(updated);
+    });
+  }
+
+  /**
+   * 版本内容读取（canonicalText + 块图；分块分页归服务层，本方法整版返回
+   * ——本地单用户规模下的直接读取面）。未知版本抛 EntityNotFoundError。
+   */
+  getVersionContent(versionId: MaterialVersionId): MaterialVersionContent {
+    this.#assertOpen();
+    assertNonEmptyString(versionId, "material version id");
+    const row = this.#findVersionRow(versionId);
+    if (row === undefined) throw new EntityNotFoundError("material version", versionId);
+    return {
+      version: rowToMaterialVersion(row),
+      canonicalText: row.canonical_text,
+      blocks: decodeBlockMap(row.version_id, row.block_map_json),
+    };
+  }
+
+  /**
+   * 宿主中断恢复（与 TreeRepository.failNonTerminalRuns 同一纪律）：把库中
+   * 仍处 pending/parsing 的版本收敛为 failed（parseError 给出原因）。解析
+   * 任务是进程内状态，重启后不可续——与其永远悬置，不如如实失败。
+   * 返回收敛行数。
+   */
+  failNonTerminalParseVersions(parseError: string): number {
+    this.#assertOpen();
+    if (typeof parseError !== "string" || parseError.trim().length === 0) {
+      throw new InvalidArgumentError("parseError must be a non-empty string");
+    }
+    try {
+      const result = this.#db!
+        .prepare(
+          `UPDATE material_versions
+             SET parse_status = 'failed', parse_error = ?
+           WHERE parse_status IN ('pending', 'parsing')`,
+        )
+        .run(parseError);
+      return Number(result.changes);
+    } catch (error) {
+      throw mapSqliteError(error, "failing non-terminal material versions");
+    }
+  }
+
+  /** 版本的 parser_kind（迁移校验用；未知版本抛 EntityNotFoundError）。 */
+  #parserKindOf(versionId: MaterialVersionId): MaterialParserKind {
+    const row = this.#findVersionRow(versionId);
+    if (row === undefined) throw new EntityNotFoundError("material version", versionId);
+    return assertParserKind(row.parser_kind, `material version ${versionId}`);
   }
 
   /* ------------------------------ 树链接 ------------------------------ */
