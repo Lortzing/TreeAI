@@ -263,6 +263,197 @@ body {
 }
 .search-hit-explore:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
 
+/* D4-8 大规模树导航（issue #8 工作包 D4-8，charter §5）：侧栏 Navigate 段
+   ——树查找（输入 + Find + 结果列表）+ 层级树视图（有界滚动容器内的虚
+   拟化窗口）。.nav-item 固定行高 34px 是虚拟化窗口的行高常数（与 app.js
+   NAV_ROW_HEIGHT_PX 同值——改一处必须同步另一处）；长标题截断 + title
+   全文；id 徽标即同名节点的身份；.nav-item.focused 是 roving tabindex 键
+   盘焦点的可见态（窗口重划后焦点行必在 DOM）。 */
+#nav-section { flex: 1.2 1 0; min-height: 220px; }
+
+#nav-tree-search, #nav-node-search {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+#nav-tree-search:focus, #nav-node-search:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+#nav-tree-search::placeholder, #nav-node-search::placeholder { color: var(--muted); }
+
+.nav-find-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.nav-find-row button {
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-find-row button:hover { background: var(--surface-dim); }
+.nav-find-row .muted { font-size: 10.5px; line-height: 1.4; }
+
+#nav-tree-results, #nav-node-results { list-style: none; margin: 4px 0 6px; padding: 0; max-height: 168px; overflow-y: auto; }
+#nav-tree-results li, #nav-node-results li { margin: 2px 0; }
+#nav-tree-results button, #nav-node-results button {
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: normal;
+}
+#nav-tree-results button:hover, #nav-node-results button:hover { background: var(--surface-dim); }
+#nav-tree-results button.active, #nav-node-results button.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+.nav-finder-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-finder-meta { display: block; font-size: 10.5px; color: var(--muted); }
+#nav-tree-results li.muted, #nav-node-results li.muted { font-size: 12px; color: var(--muted); line-height: 1.5; }
+#nav-tree-results .drawer-retry, #nav-node-results .drawer-retry { margin-left: 4px; }
+.nav-hit-path { display: block; font-size: 10.5px; color: var(--muted); white-space: normal; }
+.nav-more { width: 100%; text-align: left; font-size: 11.5px; }
+
+#nav-surface {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+#nav-tree-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#nav-tree-meta { margin: 0 0 2px; }
+#nav-tree-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
+#nav-tree-actions button { font-size: 11px; padding: 3px 7px; }
+
+#nav-path { display: flex; flex-wrap: wrap; align-items: center; gap: 1px 0; margin: 2px 0; }
+.nav-path-step {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 11.5px;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-path-step:hover { background: var(--surface-dim); }
+.nav-path-step.active { background: var(--green-wash); border-color: var(--green-line); color: var(--green-deep); font-weight: 600; }
+.nav-path-sep { color: var(--muted); font-size: 11px; margin: 0 1px; }
+.nav-path-more {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: underline;
+  padding: 2px 3px;
+}
+
+/* 有界滚动容器：虚拟化窗口的事实源（窗口外只留 spacer 高度占位）。 */
+#nav-tree-scroll {
+  flex: 1 1 0;
+  min-height: 132px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+}
+#nav-tree { list-style: none; margin: 0; padding: 3px 0; }
+/* 固定行高（虚拟化常数）+ 收起子树零行（DOM-free）。 */
+.nav-item { height: 34px; display: flex; align-items: center; margin: 0; }
+.nav-row { display: flex; align-items: center; gap: 4px; width: 100%; min-width: 0; height: 100%; }
+.nav-toggle {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+}
+.nav-toggle.leaf { cursor: default; }
+.nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: left;
+}
+.nav-label:hover { background: var(--surface); }
+/* 长标题截断——全文在 title 属性（hover 可读完整标题）。 */
+.nav-title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-id {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--muted);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-count { flex: 0 0 auto; font-size: 10px; color: var(--muted); }
+.nav-item.active > .nav-row > .nav-label {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+/* 键盘焦点行的可见态（roving tabindex——焦点不因虚拟化消失的可见保证）。 */
+.nav-item.focused { outline: 2px solid var(--green); outline-offset: -2px; border-radius: var(--radius); }
+.nav-status-row { margin: 0; padding: 5px 10px; font-size: 11.5px; color: var(--muted); min-height: 20px; }
+.nav-status-row.failed { color: var(--danger); }
+.nav-status-row .drawer-retry, .nav-more-row .drawer-retry { font-size: 11px; padding: 3px 8px; margin-left: 4px; }
+.nav-more-row { margin: 0; padding: 2px 10px; }
+.nav-more-row .nav-more {
+  width: 100%;
+  text-align: left;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 4px 8px;
+}
+.nav-more-row .nav-more:hover:not(:disabled) { background: var(--surface); color: var(--ink); }
+#nav-tree-status { margin: 2px 0 0; }
 
 /* 树列表加载失败态（W2 §2.1）：常驻错误 + 重试——与 8 秒自动隐藏横幅
    不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
@@ -1549,6 +1740,12 @@ button.panel-close:hover { background: #dcebe0; }
   .mat-selection-bar .mat-selection-actions button { width: 100%; padding: 8px 12px; font-size: 13px; }
   .mat-blocks { padding: 14px 12px 22px; font-size: 15px; }
   .material-block .mat-code-line, .material-block .mat-code { font-size: 12px; }
+
+  /* D4-8 导航面（触屏）：<720px 查找/Find 按钮加大触点、结果区放宽限高
+     （行高 34px 的虚拟化常数不变——媒体查询不改行高，窗口数学恒定）。 */
+  .nav-find-row button { padding: 8px 14px; font-size: 13px; }
+  #nav-tree-results, #nav-node-results { max-height: 216px; }
+  .nav-toggle { width: 26px; height: 30px; }
 
   #composer, #panel-composer, #return-panel { padding: 10px 14px 12px; }
   #composer, #panel-composer { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
