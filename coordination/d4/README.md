@@ -64,6 +64,20 @@
   迁移 0010 预计按引擎按请求确定性重建的设计**弃用**（无库内索引表），
   集成时在此记录。文件面：search/、server.ts（标记区段）、
   tests/、verify-d4.js、docs/d4/D4-contracts.md §3——与在飞各支无冲突。
+- `wip/d4-3-backend`（worktree d4-3-backend，2026-09-30 22:05 追加，基于
+  main `92c883f`；登记会话：21:10 让位会话，agent 在飞）：D4-3 原文探索
+  闭环**后端**——复用建枝/Origin/Run/Return 底层的材料建枝服务
+  （显式材料运行起点：选区+邻近段落+材料标题/版本+首问为真实输入，不造
+  假历史回答；开工 ADR-004 说明 session 复用/独立决策并测试）、幂等首问
+  （material_first_questions 表 + 0009 派发账本纪律）、同来源恢复已有探索
+  /显式另开、Return 材料来源卡（主线锚点缺失按确认时间放置+原文跳转）、
+  缺 session 显式新探索、确定性故障测试 + verify:d4 b3 离线部分。
+  **文件面**：`apps/studio/src/materials/branching.ts`（新）+ service.ts
+  接线、server.ts（材料建枝区段）、persistence 仓库函数（表已存在于 0008，
+  无新迁移）、`tests/support/verifier/d4-b3-*.ts`、verify-d4.js（b3 接线，
+  与 d4-4-wiring 的 b4 接线可能冲突，集成方解决）、docs/adr/ADR-004（新）。
+  **不碰** app.js（d4-2-frontend 在飞）、search/（d4-4-wiring）、b9-nav。
+  B3 的真实 Pi 浏览器证据属最终候选 SHA 回归，不在本支。
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
