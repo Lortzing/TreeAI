@@ -56,11 +56,13 @@
 数组形态、内联图跳过、字体惰性物化 + 测试）已按保全纪律提交至
 `wip/d4-1-pdf-parser`（`dd29f96`），未合入本波，供后续 PDF 波评估。
 
-**2026-09-30 21:15 更新（wave-2 集成会话）**：`wip/d4-2-backend`（`b3854ab`）
-已合并 main 并全量验证（studio 204/204、verify:d4 10 PASS/0 FAIL/7 NOT_RUN、
-b2-precise-anchors 真执行 75/75+17/17 零误定位）；`dd29f96` PDF 加固也已
-合并（b1 仍 24/24）。仍在飞：`wip/term-backend` / `wip/term-frontend`
-（术语整改，agent 在写）/ `wip/d4-7-installer` / `wip/d4-4-search-core`。
+**2026-09-30 21:25 更新（wave-2 集成会话）**：术语整改三支已全部合并 main
+并推送（`c59c2a0`）——`wip/term-backend`（`d6005d0`，迁移 0009）、
+`wip/term-frontend`（`1e86c84`）、`wip/d4-2-backend`（`b3854ab`）+
+`dd29f96` PDF 加固。合并后 main：全量 566 pass / 0 fail、verify:d2 基线、
+verify:d4 10 PASS / 0 FAIL / 7 NOT_RUN。仍在飞（各自登记方集成）：
+`wip/d4-7-installer`（21:10 让位会话）、`wip/term-eval`（同上）、
+`wip/d4-4-search-core`（按 21:15 让位记录由 wave-2 集成会话集成，agent 在飞）。
 
 **接管更正 + 让位（2026-09-30 21:15 本地）**：上条「接管记录」基于过期
 快照——波次登记会话（treeai-loop 11:39Z firing，`local_a3d676f3`）在本
