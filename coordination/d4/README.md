@@ -4,6 +4,26 @@
 负责人统一协调」。本目录是 D4 波次的协调登记处，由 D4 集成侧维护；各工作包
 动下列资源前必须先在此登记领取。
 
+## 当前波次（进行中，2026-09-30 晚）
+
+集成会话（treeai-loop）正在 `wip/d4-wave2`（基于 87cbd2c 之前的 084e55d：
+D4-0 落仓 + D4-1 markdown 链合并）上收口 D4-0/D4-1：
+
+- `wip/d4-1-pdf-parser`（worktree d4-1-pdf-parser）：PDF 文字层解析器 +
+  import 接线 + verify:d4 b1 执行化，代理进行中。
+- `wip/d4-fixtures-md`（worktree d4-fixtures-md）：B1 markdown 侧 fixtures +
+  版本对 + B2 选区/无效集 + manifest.json，代理进行中。
+- `wip/d4-fixtures-search`（worktree d4-fixtures-search）：B4 冻结查询集，
+  代理进行中。
+- 完成后：合并三支 → 重生成两份 MANIFEST.sha256（d4 子树 + tests/fixtures
+  根）→ 全量验证（typecheck / 全 workspace 测试 / verify:d2 / verify:d4 及
+  两份 selftest）→ 回填 D4-status → 落 main 并 push。
+- 术语③前端已独立验证（131/131 studio + typecheck + verify:d2 基线不变）
+  并已落 main（87cbd2c），不在本波 D4 分支内。
+
+若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
+`.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
+
 ## 迁移编号登记（packages/persistence/src/migrations/）
 
 已交付：0001–0007（D2/D3，不可修改——见 `packages/persistence/README.md` 与
