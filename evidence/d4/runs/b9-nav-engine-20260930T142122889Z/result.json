@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "b9-nav-engine-1",
+  "runId": "b9-nav-engine-20260930T142122889Z",
+  "scope": "engine-level evidence only — NOT the B9 browser verdict; DOM/virtualization/keyboard/restart-state belong to the D4-8 wiring/frontend increments",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "command": "node scripts/d4/run-b9-nav-engine-check.mjs",
+  "durationMs": 2158,
+  "dataset": {
+    "setId": "b9-nav",
+    "seed": "d4-b9-2026-09-30",
+    "spec": "tests/fixtures/d4/b9-nav/spec.json (frozen)",
+    "specSha256": "47cf268d4cdb9ed6384c030dc8f255799f7f96878f7128ed4a4efb8a2d332a98",
+    "fixturesManifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "structureTruthSha256": "4f36f4e51337a56179eba5b9876adb11d0489eb2c4fede00aa5e15a58607c280",
+    "structureTruthBytes": 3314999,
+    "manifestSha256": "619de9b093a994b704181c74ecc5d0e09b2d4c56c03279d4ae159eeeb1174838",
+    "totals": {
+      "trees": 100,
+      "specialTrees": 6,
+      "normalTrees": 94,
+      "branchRows": 10100,
+      "nonTrunkBranches": 10000,
+      "maxDepth": 100,
+      "turnOrigins": 769,
+      "materialOrigins": 319,
+      "titledNodes": 10099
+    }
+  },
+  "load": {
+    "forests": 1,
+    "trees": 100,
+    "branches": 10100,
+    "episodes": 10099,
+    "runs": 10099,
+    "userTurns": 10099,
+    "assistantTurns": 727,
+    "materials": 4,
+    "materialVersions": 4,
+    "treeMaterialLinks": 144,
+    "turnOrigins": 769,
+    "materialOrigins": 319,
+    "elapsedMs": 1521.96775,
+    "clockTicks": 42465
+  },
+  "probeSummary": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "performance": {
+    "firstOpenMs": 63.923,
+    "warmupMs": 16.317,
+    "opCount": 65,
+    "p95Ms": 0.713,
+    "medianMs": 0.019,
+    "maxMs": 1.303,
+    "limits": {
+      "p95Ms": 300,
+      "firstOpenMs": 2000
+    },
+    "note": "engine-level timings (in-process service calls on the loaded local database); not the browser p95"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "b9-nav-engine-environment-1",
+  "generatedAt": "2026-09-30T14:21:25.046Z",
+  "mode": "offline-engine",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "ci": false
+  },
+  "credentialPolicy": {
+    "policy": "offline",
+    "note": "engine-level check: no network, no model, no credentials; the B9 browser verdict (DOM/virtualization/keyboard) is a separate wiring/frontend increment"
+  },
+  "git": {
+    "commit": "61cf401d2460c4b1b88a0a7b98eefd1dce2b4b76",
+    "dirty": true
+  },
+  "verifier": {
+    "name": "run-b9-nav-engine-check",
+    "version": "0.1.0"
+  }
+}

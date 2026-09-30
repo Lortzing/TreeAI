@@ -1,0 +1,103 @@
+{
+  "runId": "b9-nav-engine-20260930T142122889Z",
+  "checks": [
+    {
+      "id": "dataset-determinism",
+      "status": "PASS",
+      "durationMs": 0,
+      "detail": "two generations byte-identical (2851698 bytes); structureTruthSha256 4f36f4e51337a56179eba5b9876adb11d0489eb2c4fede00aa5e15a58607c280",
+      "failures": []
+    },
+    {
+      "id": "structure-invariants",
+      "status": "PASS",
+      "durationMs": 0,
+      "detail": "totals: trees 100, non-trunk branches 10000 (branch rows 10100), maxDepth 100, turn origins 769, material origins 319; all six special-tree shape rules verified",
+      "failures": []
+    },
+    {
+      "id": "dataset-load",
+      "status": "PASS",
+      "durationMs": 1522,
+      "detail": "loaded via real repository APIs into a fresh temp data dir in 1522ms: 10100 branch rows / 10099 episodes / 10099 runs / 10099 user turns / 727 assistant turns / 4 materials (ready) / 769 turn origins / 319 material origins; sqlite integrity_check ok",
+      "failures": []
+    },
+    {
+      "id": "big-tree-first-open",
+      "status": "PASS",
+      "durationMs": 64,
+      "detail": "cold first open of b9-big (index build + first children page): 63.9ms (limit 2000ms, engine-level)",
+      "failures": []
+    },
+    {
+      "id": "locate-correctness",
+      "status": "PASS",
+      "durationMs": 25,
+      "detail": "31/31 probe nodes located with 100% correct ancestors/path/title/position/origin",
+      "failures": []
+    },
+    {
+      "id": "origins-100",
+      "status": "PASS",
+      "durationMs": 176,
+      "detail": "1088/1088 origin nodes verified 100% (turn 769 + material 319)",
+      "failures": []
+    },
+    {
+      "id": "wide-pagination",
+      "status": "PASS",
+      "durationMs": 2,
+      "detail": "b9-wide 220 root children paged at 25 and 7 per page (no dup/gap); b9-big trunk 3; b9-empty honest empty page",
+      "failures": []
+    },
+    {
+      "id": "deep-path",
+      "status": "PASS",
+      "durationMs": 2,
+      "detail": "depth-100 chain: 100 ancestors + full path (101) computed iteratively, no stack overflow; mid-chain locate + bounded expansion verified",
+      "failures": []
+    },
+    {
+      "id": "samename-disambiguation",
+      "status": "PASS",
+      "durationMs": 14,
+      "detail": "66 same-titled nodes fully disambiguated by (treeId, path); exact ⊆ substring; 4 decoys kept out of exact and covered by substring",
+      "failures": []
+    },
+    {
+      "id": "search-locate",
+      "status": "PASS",
+      "durationMs": 9,
+      "detail": "tree search (exact/prefix/id) + branch search (exact/prefix/substring, case-folded, tree-scoped, honest zero) verified against independent truth recomputation",
+      "failures": []
+    },
+    {
+      "id": "empty-tree",
+      "status": "PASS",
+      "durationMs": 0,
+      "detail": "b9-empty: honest empty children page / single-node subtree / empty path / null title overview",
+      "failures": []
+    },
+    {
+      "id": "big-tree-shape",
+      "status": "PASS",
+      "durationMs": 1,
+      "detail": "b9-big overview (5000 nodes, depth 7); depth-2 subtree 15 nodes exact; depth-3 paged 50 nodes exact",
+      "failures": []
+    },
+    {
+      "id": "tree-list",
+      "status": "PASS",
+      "durationMs": 0,
+      "detail": "100 trees paged at 40/page without dup/gap; overview spot-checks (every 10th tree) match truth",
+      "failures": []
+    },
+    {
+      "id": "nav-p95-engine",
+      "status": "PASS",
+      "durationMs": 1,
+      "detail": "65 scripted expand/switch/search ops (warm; b9-big/b9-deep/b9-wide + cross-tree search): p95 0.7ms ≤ 300ms (median 0.0ms, max 1.3ms, warmup 16ms; engine-level evidence, not the browser verdict)",
+      "failures": []
+    }
+  ]
+}
