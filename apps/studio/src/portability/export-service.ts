@@ -288,10 +288,14 @@ export class ExportService {
         counts["sessionFilesMissing"] = sessionMissing.length;
       }
 
-      /* readable/（可读 Markdown 导出）。 */
+      /* readable/（可读 Markdown 导出）。
+         路径安全护栏：文件名来自库内 id（treeId/materialId）——经恢复的
+         库可能携带任意字符串；含穿越段的 id 在此如实拒绝（绝不写出暂存
+         区之外）。 */
       if (readable) {
         const input: ReadableRenderInput = { facts: snapshot, blobs };
         for (const file of renderReadableFiles(input)) {
+          assertSafePackagePath(file.path, "readable export");
           const bytes = Buffer.from(file.content, "utf8");
           const absPath = join(staging, ...file.path.split("/"));
           mkdirSync(dirname(absPath), { recursive: true });

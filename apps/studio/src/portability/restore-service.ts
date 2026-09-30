@@ -727,7 +727,8 @@ function insertAllFacts(
         if (rewriteIndex >= 0) {
           const sessionFile = values[rewriteIndex];
           if (typeof sessionFile === "string") {
-            const basename = sessionFile.split("/").pop() ?? sessionFile;
+            /* 与导出侧同款 basename 归一（Windows 反斜杠路径按 POSIX 观）。 */
+            const basename = sessionFile.replaceAll("\\", "/").split("/").pop() ?? sessionFile;
             if (sessionBasenames.has(basename)) {
               values[rewriteIndex] = join(dataDir, "sessions", basename);
               rewritten += 1;

@@ -377,6 +377,33 @@ test("export --readable renders human-readable markdown alongside the data packa
   }
 });
 
+test("export --readable refuses database ids that would escape the package (write-side path traversal guard)", async () => {
+  const base = makeTempDir();
+  try {
+    const dataDir = join(base, "data");
+    await buildDataset(dataDir);
+    /* 直接改库：把第二棵树的 id 改成带穿越段的字符串（经恶意恢复包进入
+       库的形态）——可读导出的文件名必须因此如实拒绝，绝不写出暂存区外。 */
+    const { DatabaseSync } = await import("node:sqlite");
+    const raw = new DatabaseSync(join(dataDir, "treeai.db"));
+    try {
+      raw.exec("PRAGMA foreign_keys = OFF"); // 恶意库不会替我们守法——测试按最坏情形注入
+      raw.exec("UPDATE trees SET id = 't/../../evil' WHERE rowid = (SELECT rowid FROM trees ORDER BY rowid LIMIT 1 OFFSET 1)");
+    } finally {
+      raw.close();
+    }
+    assertPortabilityError(
+      () => exportPackage({ dbPath: join(dataDir, "treeai.db"), outDir: join(base, "pkg"), readable: true }),
+      "path-unsafe",
+      "traversal-shaped tree id",
+    );
+    assert.equal(existsSync(join(base, "pkg")), false, "no half-written package remains");
+    assert.equal(existsSync(join(base, "..", "evil.md")), false, "nothing escaped next to the package");
+  } finally {
+    cleanup(base);
+  }
+});
+
 test("export guards: refuses a non-empty --out directory and a missing database", async () => {
   const base = makeTempDir();
   try {
@@ -515,7 +542,7 @@ test("a corrupted package is rejected before anything is placed: checksum mismat
     copyPackage(pkg, corrupt);
     const turnsPath = join(corrupt, "facts", "turns.json");
     const bytes = readFileSync(turnsPath);
-    bytes[Math.floor(bytes.byteLength / 2)] ^= 0x01;
+    bytes[Math.floor(bytes.byteLength / 2)]! ^= 0x01;
     writeFileSync(turnsPath, bytes);
 
     const target = join(base, "restored");
