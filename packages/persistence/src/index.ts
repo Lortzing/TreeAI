@@ -16,6 +16,7 @@
 
 export {
   TreeRepository,
+  NAV_EXPAND_STATE_MAX_BRANCHES,
   type ActiveNavigation,
   type CreateBackupOptions,
   type CreateBranchInput,

@@ -31,6 +31,7 @@ import type {
   Forest,
   ForestId,
   IsoTimestamp,
+  NavTreeExpandState,
   ReturnTargetAnchor,
   Run,
   RunId,
@@ -75,6 +76,7 @@ import {
   rowToBranchOrigin,
   rowToEpisode,
   rowToForest,
+  rowToNavExpandState,
   rowToReturnAdoptionAttempt,
   rowToRun,
   rowToSessionReference,
@@ -87,6 +89,7 @@ import {
   type BranchRow,
   type EpisodeRow,
   type ForestRow,
+  type NavExpandStateRow,
   type ReturnAdoptionAttemptRow,
   type RunRow,
   type SessionReferenceRow,
@@ -95,6 +98,13 @@ import {
   type TreeRow,
   type TurnRow,
 } from "./serialization.ts";
+
+/**
+ * 单树展开状态 id 数量的硬上限（issue #8 D4-8）：整组快照写入必须保持
+ * 有界（5000 节点树全展开也在限内；超过即拒绝——有界状态，防无意识
+ * 无限膨胀）。
+ */
+export const NAV_EXPAND_STATE_MAX_BRANCHES = 10_000;
 
 /* ------------------------------------------------------------------ */
 /* 冻结迁移表的运行时副本（编译期以 satisfies 与 contracts 对齐）        */
@@ -1743,6 +1753,103 @@ export class TreeRepository {
       )
       .get(treeId) as ActiveNavigationRow | undefined;
     return row ? rowToActiveNavigation(row) : null;
+  }
+
+  /* ------------------------------ 树导航展开状态（issue #8 D4-8，migration 0010） ------------------------------ */
+
+  /**
+   * 整组写入某树的导航展开状态（PK tree_id 的 UPSERT）。
+   *
+   * 校验（全部先于任何写入）：
+   * - 树存在（否则 EntityNotFound）；
+   * - expandedBranchIds 每个成员存在且属于该树（幽灵/跨树 id 拒绝）；
+   * - selectedBranchId 存在且属于该树（null = 未选，诚实空态）；
+   * - 去重保序（按提交序保留首个出现）；总量 ≤ 上限（有界状态）。
+   */
+  saveNavExpandState(input: {
+    readonly treeId: TreeId;
+    readonly expandedBranchIds: readonly BranchId[];
+    readonly selectedBranchId: BranchId | null;
+  }): NavTreeExpandState {
+    this.#assertOpen();
+    assertNonEmptyString(input.treeId, "tree id");
+    if (!Array.isArray(input.expandedBranchIds)) {
+      throw new InvalidArgumentError("expandedBranchIds must be an array of branch ids");
+    }
+    if (input.expandedBranchIds.length > NAV_EXPAND_STATE_MAX_BRANCHES) {
+      throw new InvalidArgumentError(
+        `expandedBranchIds must hold at most ${String(NAV_EXPAND_STATE_MAX_BRANCHES)} ids (got ${String(input.expandedBranchIds.length)})`,
+      );
+    }
+    const db = this.#db!;
+    if (db.prepare("SELECT id FROM trees WHERE id = ?").get(input.treeId) === undefined) {
+      throw new EntityNotFoundError("tree", input.treeId);
+    }
+    const seen = new Set<string>();
+    const expanded: string[] = [];
+    for (const branchId of input.expandedBranchIds) {
+      if (typeof branchId !== "string" || branchId.length === 0) {
+        throw new InvalidArgumentError("expandedBranchIds members must be non-empty strings");
+      }
+      if (seen.has(branchId)) continue;
+      const row = db.prepare("SELECT tree_id FROM branches WHERE id = ?").get(branchId) as
+        | { tree_id: string }
+        | undefined;
+      if (row === undefined) throw new EntityNotFoundError("branch", branchId);
+      if (row.tree_id !== input.treeId) {
+        throw new InvalidArgumentError(
+          `branch ${branchId} belongs to tree ${row.tree_id}, not ${input.treeId}`,
+        );
+      }
+      seen.add(branchId);
+      expanded.push(branchId);
+    }
+    let selectedBranchId: string | null = null;
+    if (input.selectedBranchId !== null) {
+      const row = db
+        .prepare("SELECT tree_id FROM branches WHERE id = ?")
+        .get(input.selectedBranchId) as { tree_id: string } | undefined;
+      if (row === undefined) throw new EntityNotFoundError("branch", input.selectedBranchId);
+      if (row.tree_id !== input.treeId) {
+        throw new InvalidArgumentError(
+          `branch ${input.selectedBranchId} belongs to tree ${row.tree_id}, not ${input.treeId}`,
+        );
+      }
+      selectedBranchId = input.selectedBranchId;
+    }
+    const updatedAt = this.now();
+    try {
+      db.prepare(
+        `INSERT INTO nav_tree_expand_state
+           (tree_id, expanded_branch_ids_json, selected_branch_id, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(tree_id) DO UPDATE SET
+           expanded_branch_ids_json = excluded.expanded_branch_ids_json,
+           selected_branch_id = excluded.selected_branch_id,
+           updated_at = excluded.updated_at`,
+      ).run(input.treeId, JSON.stringify(expanded), selectedBranchId, updatedAt);
+    } catch (error) {
+      throw mapSqliteError(error, "saving nav expand state");
+    }
+    return {
+      treeId: input.treeId,
+      expandedBranchIds: expanded as BranchId[],
+      selectedBranchId: selectedBranchId as BranchId | null,
+      updatedAt,
+    };
+  }
+
+  /** 读取某树的导航展开状态（无则 null——诚实空态，不伪造默认展开）。 */
+  findNavExpandState(treeId: TreeId): NavTreeExpandState | null {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    const row = this.#db!
+      .prepare(
+        `SELECT tree_id, expanded_branch_ids_json, selected_branch_id, updated_at
+         FROM nav_tree_expand_state WHERE tree_id = ?`,
+      )
+      .get(treeId) as NavExpandStateRow | undefined;
+    return row === undefined ? null : rowToNavExpandState(row);
   }
 
   /* ------------------------------ 恢复查询 ------------------------------ */
