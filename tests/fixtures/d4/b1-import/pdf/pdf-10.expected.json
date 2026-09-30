@@ -1,0 +1,25 @@
+{
+  "fixtureId": "pdf-10",
+  "kind": "pdf",
+  "normalizer": "d4-pdf-v1",
+  "pages": 2,
+  "canonicalText": "Font Sampler\n字体混排样本\nThis page mixes four font faces: a bold sans-serif title, a serif CJK body, a monospace code\nlisting, and regular sans-serif paragraphs like this one. Each visual line keeps exactly one\nfont; the reading order rule is unaffected by font changes, because a line's font never\nchanges its x position or its band.\n本页混合四种字体：粗体无衬线标题、衬线中文正文、等宽代码与常规无衬线段落。\n每个视觉行只使用一种字体；字体切换不改变行与栏的阅读顺序规则，因为字体从不\n改变一行的横坐标与栏带归属。\nSection headings in a second font\n小节标题使用第二字体（粗体）渲染。标题字号大于正文，解析器不应把字号差异当\n作内容边界——只有换行符决定行边界，字号只是字形属性。\nTypographically, a bold heading carries weight without growing in point size; a size jump\nchanges rhythm instead. The sampler deliberately shows both: bold at constant size, and\nregular at increased size, in the next section.\n中文小节标题\n中文小节标题用宋体渲染，字号同样大于正文。到此为止，页面已经出现三种字号的\n文本：18pt 主标题、14pt 小节、12pt 正文。选区与摘录不感知字号，只感知文本与位\n置。\n同一行内的混排被有意避免：中文与西文分处不同的行，各自使用一种字体。这让“\n一行一个 Tj”的规范保持简单，也让提取器的解码路径单一可靠。\nCode in Courier\nconst sampler = { faces: 4, rule: \"one font per line\" };\nconsole.log(sampler.faces); // 4\nfor (const face of [\"bold\", \"serif\", \"mono\", \"sans\"]) {\n  console.log(face.padEnd(8), sampler.rule);\n}\n等宽字体行保持原有缩进语义，行首空格是内容的一部分，不会被折叠。代码行与正\n文行共享同一套栏带规则。\nMixed closing paragraph: 字体混排到此收尾。四种字体、三种字号、两种书写系统，同\n一套阅读顺序规则全部适用。若选区在任何一行上失准，问题不会出在字体上——去\n查偏移数学。\nFinal paragraph in regular sans: font variety is a rendering concern, not a text concern. The\ncanonical text records characters, not faces; a highlight spans glyphs the parser never\nmeasured. Goodbye from the sampler.",
+  "blocks": [
+    {
+      "blockId": "page-1",
+      "kind": "pdf-page",
+      "start": 0,
+      "end": 1263,
+      "page": 1,
+      "text": "Font Sampler\n字体混排样本\nThis page mixes four font faces: a bold sans-serif title, a serif CJK body, a monospace code\nlisting, and regular sans-serif paragraphs like this one. Each visual line keeps exactly one\nfont; the reading order rule is unaffected by font changes, because a line's font never\nchanges its x position or its band.\n本页混合四种字体：粗体无衬线标题、衬线中文正文、等宽代码与常规无衬线段落。\n每个视觉行只使用一种字体；字体切换不改变行与栏的阅读顺序规则，因为字体从不\n改变一行的横坐标与栏带归属。\nSection headings in a second font\n小节标题使用第二字体（粗体）渲染。标题字号大于正文，解析器不应把字号差异当\n作内容边界——只有换行符决定行边界，字号只是字形属性。\nTypographically, a bold heading carries weight without growing in point size; a size jump\nchanges rhythm instead. The sampler deliberately shows both: bold at constant size, and\nregular at increased size, in the next section.\n中文小节标题\n中文小节标题用宋体渲染，字号同样大于正文。到此为止，页面已经出现三种字号的\n文本：18pt 主标题、14pt 小节、12pt 正文。选区与摘录不感知字号，只感知文本与位\n置。\n同一行内的混排被有意避免：中文与西文分处不同的行，各自使用一种字体。这让“\n一行一个 Tj”的规范保持简单，也让提取器的解码路径单一可靠。\nCode in Courier\nconst sampler = { faces: 4, rule: \"one font per line\" };\nconsole.log(sampler.faces); // 4\nfor (const face of [\"bold\", \"serif\", \"mono\", \"sans\"]) {\n  console.log(face.padEnd(8), sampler.rule);\n}\n等宽字体行保持原有缩进语义，行首空格是内容的一部分，不会被折叠。代码行与正\n文行共享同一套栏带规则。\nMixed closing paragraph: 字体混排到此收尾。四种字体、三种字号、两种书写系统，同\n一套阅读顺序规则全部适用。若选区在任何一行上失准，问题不会出在字体上——去\n"
+    },
+    {
+      "blockId": "page-2",
+      "kind": "pdf-page",
+      "start": 1263,
+      "end": 1487,
+      "page": 2,
+      "text": "查偏移数学。\nFinal paragraph in regular sans: font variety is a rendering concern, not a text concern. The\ncanonical text records characters, not faces; a highlight spans glyphs the parser never\nmeasured. Goodbye from the sampler."
+    }
+  ]
+}

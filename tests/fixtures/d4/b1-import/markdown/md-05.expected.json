@@ -1,0 +1,128 @@
+{
+  "fixtureId": "md-05",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# 闭包学习笔记：counter 的四种写法\n\n闭包是 JavaScript 面试的常客，但我真正理解它是在给自己的 counter 计数器写出四种实现之后。闭包的定义说起来简单：函数连同它定义时所在的词法环境一起被保存，函数在四处流浪时依然记得自己出生时的变量。下面这份笔记按我尝试的顺序记录四种 counter。\n\n## 第一种：全局变量（反例）\n\n```js\nlet count = 0;\nfunction counter() {\n  count += 1;\n  return count;\n}\n```\n\n这不是闭包，是全局可变状态。任何代码都能改 count，测试之间互相污染，两个 counter 实例共享同一个变量。它是反面教材，值得放在笔记开头提醒自己：闭包解决的问题正是「状态应该跟着函数走，而不是散落在全局」。\n\n## 第二种：工厂函数\n\n```js\nfunction makeCounter() {\n  let count = 0;\n  return function () {\n    count += 1;\n    return count;\n  };\n}\n```\n\n每次调用 makeCounter 都创建一个新的词法环境，count 被内层函数捕获。调用两次工厂得到两个互不干扰的 counter，每个 counter 都闭包住自己那份 count。这就是闭包的最小完整示例：局部变量 + 捕获它的函数 + 变量活得比外层调用更久。\n\n## 第三种：立即调用表达式\n\n```js\nconst counter = (function () {\n  let count = 0;\n  return function () {\n    count += 1;\n    return count;\n  };\n})();\n```\n\nIIFE 把工厂和调用合并成一步，counter 一出生就绑定好自己的 count。模块模式在 ES Module 出现之前就是这么封装私有状态的。写法更紧凑，但可读性稍差：读代码的人要在括号迷宫里找到真正的定义。\n\n## 第四种：对象接口\n\n```js\nfunction makeCounter(start = 0) {\n  let count = start;\n  return {\n    increment() { count += 1; return count; },\n    decrement() { count -= 1; return count; },\n    value() { return count; },\n  };\n}\n```\n\n一个闭包环境可以同时喂多个方法。increment、decrement 和 value 共享同一个 count，外部却完全摸不到它。这其实是小型状态机的雏形：状态私有，接口公开，行为可组合。\n\n## 四种写法教会我的事\n\ncounter 的演化路线就是我对闭包理解的路线：先看到问题（全局状态太脏），再看到机制（词法环境被捕获），最后看到设计（用闭包封装私有状态）。面试官爱问「闭包是什么」，更值得问的是「闭包替你隐藏了什么」——答案永远是：一个别人改不到的 count。\n\n闭包不是语法糖，是作用域规则的直接后果。真正需要记住的只有一句话：函数记得自己出生的地方。\n",
+  "textUnits": 1390,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 24,
+      "text": "# 闭包学习笔记：counter 的四种写法\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 24,
+      "end": 160,
+      "text": "闭包是 JavaScript 面试的常客，但我真正理解它是在给自己的 counter 计数器写出四种实现之后。闭包的定义说起来简单：函数连同它定义时所在的词法环境一起被保存，函数在四处流浪时依然记得自己出生时的变量。下面这份笔记按我尝试的顺序记录四种 counter。\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 160,
+      "end": 177,
+      "text": "## 第一种：全局变量（反例）\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 177,
+      "end": 256,
+      "text": "```js\nlet count = 0;\nfunction counter() {\n  count += 1;\n  return count;\n}\n```\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 256,
+      "end": 366,
+      "text": "这不是闭包，是全局可变状态。任何代码都能改 count，测试之间互相污染，两个 counter 实例共享同一个变量。它是反面教材，值得放在笔记开头提醒自己：闭包解决的问题正是「状态应该跟着函数走，而不是散落在全局」。\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 366,
+      "end": 379,
+      "text": "## 第二种：工厂函数\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 379,
+      "end": 496,
+      "text": "```js\nfunction makeCounter() {\n  let count = 0;\n  return function () {\n    count += 1;\n    return count;\n  };\n}\n```\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 496,
+      "end": 632,
+      "text": "每次调用 makeCounter 都创建一个新的词法环境，count 被内层函数捕获。调用两次工厂得到两个互不干扰的 counter，每个 counter 都闭包住自己那份 count。这就是闭包的最小完整示例：局部变量 + 捕获它的函数 + 变量活得比外层调用更久。\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 632,
+      "end": 648,
+      "text": "## 第三种：立即调用表达式\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 648,
+      "end": 775,
+      "text": "```js\nconst counter = (function () {\n  let count = 0;\n  return function () {\n    count += 1;\n    return count;\n  };\n})();\n```\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 775,
+      "end": 884,
+      "text": "IIFE 把工厂和调用合并成一步，counter 一出生就绑定好自己的 count。模块模式在 ES Module 出现之前就是这么封装私有状态的。写法更紧凑，但可读性稍差：读代码的人要在括号迷宫里找到真正的定义。\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 884,
+      "end": 897,
+      "text": "## 第四种：对象接口\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 897,
+      "end": 1106,
+      "text": "```js\nfunction makeCounter(start = 0) {\n  let count = start;\n  return {\n    increment() { count += 1; return count; },\n    decrement() { count -= 1; return count; },\n    value() { return count; },\n  };\n}\n```\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 1106,
+      "end": 1203,
+      "text": "一个闭包环境可以同时喂多个方法。increment、decrement 和 value 共享同一个 count，外部却完全摸不到它。这其实是小型状态机的雏形：状态私有，接口公开，行为可组合。\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 1203,
+      "end": 1217,
+      "text": "## 四种写法教会我的事\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 1217,
+      "end": 1344,
+      "text": "counter 的演化路线就是我对闭包理解的路线：先看到问题（全局状态太脏），再看到机制（词法环境被捕获），最后看到设计（用闭包封装私有状态）。面试官爱问「闭包是什么」，更值得问的是「闭包替你隐藏了什么」——答案永远是：一个别人改不到的 count。\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 1344,
+      "end": 1390,
+      "text": "闭包不是语法糖，是作用域规则的直接后果。真正需要记住的只有一句话：函数记得自己出生的地方。\n"
+    }
+  ]
+}

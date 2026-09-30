@@ -1,0 +1,59 @@
+{
+  "runId": "d4-offline-20260930T122925751Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-09-30T12:29:25.751Z",
+  "endedAt": "2026-09-30T12:29:25.849Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 3,
+    "fail": 2,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 26,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "fixture b1-import/markdown/md-01.md hash mismatch (tampered)"
+      },
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "entry script missing: scripts/verify-d4-selftest.js"
+      },
+      "id": "entrypoints-d4"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity-d4, docs-integrity-d4, entrypoints-d4 executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

@@ -1,0 +1,61 @@
+# D4 协调区（D4-0 建立，2026-09-30）
+
+按《D4 项目书 v1.1》（issue #8）§4：「新增依赖、迁移编号、公共契约由集成
+负责人统一协调」。本目录是 D4 波次的协调登记处，由 D4 集成侧维护；各工作包
+动下列资源前必须先在此登记领取。
+
+## 当前波次（2026-09-30 晚，已完成）
+
+D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
+
+- D4-0 落仓（`3201ad0`）：项目书镜像、契约、ADR-003、本协调区、verify:d4
+  三入口、B1 PDF 侧冻结集；随后合并 D4-1 markdown 链（`084e55d`）。
+- B1 markdown 侧 + 版本对 + B2 选区/无效集（`wip/d4-fixtures-md`，
+  `a3740be`+`846e0fe`）、B4 冻结查询集（`wip/d4-fixtures-search`，`c3bcefd`）、
+  PDF 文字层解析器 + import 接线 + verify:d4 b1 真执行（`wip/d4-1-pdf-parser`，
+  `849b352`/`1e9e813`）三支并行合并。
+- 双 MANIFEST 冻结（d4 子树 79 条 + tests/fixtures 根 113 条）；
+  fixtures-integrity-d4 5/5；verify:d4 9 PASS/0 FAIL/8 NOT_RUN；
+  verify:d2 基线不变（21/0/0/1）；两份 selftest 全绿（d4 selftest 的断言
+  纪律本波修复：按子运行 result.json 断言，合成树补齐 selftest 脚本副本）。
+- 术语③前端独立落 main（`87cbd2c`），不在 D4 分支内。
+- 孤立草稿（上一会话 fixture agent 留在主工作区的未跟踪旧稿）已保存至
+  `wip/orphan-md-fixture-draft`，仅供参考，不属于冻结集。
+
+下一个工作包：D4-2（阅读与来源定位；依赖 D4-1 ✓ + 术语③区间层接口 ✓），
+然后 D4-3 markdown 纵向闭环（D4-G1）。
+
+## 迁移编号登记（packages/persistence/src/migrations/）
+
+已交付：0001–0007（D2/D3，不可修改——见 `packages/persistence/README.md` 与
+`coordination/d2/agent-c-handoff.md` 的冻结纪律）。
+
+| 编号 | 名称 | 归属 | 状态 |
+|---|---|---|---|
+| 0008 | material-core（materials / material_blobs / material_versions / tree_material_links / material_branch_origins / tree_material_reading_state / material_first_questions / branches.origin_kind） | D4-1 | 已在设计（`docs/d4/D4-contracts.md` §2）中预留，未实现 |
+| 0009 | search-index（可重建索引表，实现由 D4-4 决定） | D4-4 | 预留；若最终不需要库内索引表，须在此记录弃用原因并保持编号连续性约束（`assertContiguous`） |
+| 0010 | export-metadata（D4-5 导出包所需库内元信息） | D4-5 | 预留；同上 |
+
+规则：并行波次添加迁移前先在此占号；编号必须连续递增；已交付迁移不可修改。
+
+## 公共契约登记（packages/contracts）
+
+| 变更 | 性质 | 依据 |
+|---|---|---|
+| 新增 `src/material.ts`（MaterialId/MaterialVersionId/Material/…，纯类型） | 纯增量（non-breaking addition），按 `docs/d2/contracts-README.md` 记录即可 | ADR-003、`docs/d4/D4-contracts.md` §1 |
+| `product.ts` 既有类型 | 不改动 | ADR-003 §6 |
+
+## ADR
+
+- ADR-003（D4 材料来源类型、不可变版本与运行起点）：`docs/adr/ADR-003-d4-material-sources-versions-run-origins.md`（Accepted 2026-09-30，来源 issue #8 D4-0 指定交付）。
+
+## 验收入口与冻结集
+
+- `npm run verify:d4` / `verify:d4:selftest` / `run:d4-browser`（§8 要求的新入口；D4-0 交付骨架）。
+- 冻结验收集：`tests/fixtures/d4/`（B1/B2/B4 内容集 + B6/B9 规模规格；改动须重生成其 `MANIFEST.sha256` 并同提交，且失败样例不得移出分母）。
+- 注意：`tests/fixtures/MANIFEST.sha256`（D2 门禁）覆盖整个 `tests/fixtures/` 树——D4 fixture 变更后须按 `tests/README.md` 的配方一并重生成根清单。
+
+## 新增依赖
+
+无（D4-0 零新增 npm 依赖；PDF fixture 生成器为 Node 内置模块实现）。
+后续工作包如需新增依赖，先在此登记理由与替代方案评估，再动 package.json。

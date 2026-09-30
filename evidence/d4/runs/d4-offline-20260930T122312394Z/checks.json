@@ -1,0 +1,127 @@
+{
+  "runId": "d4-offline-20260930T122312394Z",
+  "checks": [
+    {
+      "durationMs": 26,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "MANIFEST.sha256 missing or unreadable; d4 manifest.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json'); b2 invalid: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json')"
+      },
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 32,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "durationMs": 4047,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 426,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 255,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "[HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node exited 1 (no signal)"
+      },
+      "detail": "      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n      at Test.postRun (node:internal/test_runner/test:1542:19)\n      at Test.run (node:internal/test_runner/test:1467:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }",
+      "id": "unit-tests-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "material storage/import not implemented; B1 executes against tests/fixtures/d4/b1-import once D4-1 lands (owner: D4-1)",
+      "id": "b1-import-versions"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "markdown/pdf readers and range layer not implemented; B2 executes against tests/fixtures/d4/b2-anchors once D4-2 lands (owner: D4-2)",
+      "id": "b2-precise-anchors"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "material exploration loop not implemented; real-Pi evidence is produced by run:d4-browser --mode real-pi, not offline (owner: D4-3)",
+      "id": "b3-real-exploration"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "local full-text search not implemented; B4 executes against tests/fixtures/d4/b4-search once D4-4 lands (owner: D4-4)",
+      "id": "b4-cross-material-find"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "export/restore not implemented (owner: D4-5)",
+      "id": "b5-restore-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "scale dataset generator + performance measurement not implemented (spec frozen at tests/fixtures/d4/b6-scale) (owner: D4-6)",
+      "id": "b6-scale-performance"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "beta closeout pending; automated part runs via run:d4-browser, manual part belongs to the D4-G3 human sequence (owner: D4-6)",
+      "id": "b7-beta-usability"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "installers/cross-platform not implemented; requires clean-environment installs on macOS/Windows/Ubuntu (owner: D4-7)",
+      "id": "b8-install-crossplatform"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "large-scale tree navigation not implemented (spec frozen at tests/fixtures/d4/b9-nav) (owner: D4-8)",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

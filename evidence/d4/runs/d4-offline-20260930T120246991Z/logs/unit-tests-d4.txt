@@ -1,0 +1,117 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --test tests/unit/d4-fixtures-integrity.test.ts
+✖ the real D4 fixture tree is fully consistent (hashes, truth, selections, queries) (16.195125ms)
+✖ tampered fixture content is detected (hash mismatch) (12.178667ms)
+✖ injected stray fixture file is detected (manifest divergence) (9.409917ms)
+✖ a selection with a wrong offset is detected even behind a regenerated manifest (9.183625ms)
+✖ a no-result query whose text actually exists is detected (9.207416ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 124.392625
+
+✖ failing tests:
+
+test at tests/unit/d4-fixtures-integrity.test.ts:45:1
+✖ the real D4 fixture tree is fully consistent (hashes, truth, selections, queries) (16.195125ms)
+  AssertionError [ERR_ASSERTION]: D4 fixture tree inconsistent: MANIFEST.sha256 missing or unreadable; d4 manifest.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json'); b1 md-registry.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json'); b1: markdown fixtures 0 < 12; b1: negative fixtures 4 < 8; b1: no version pair registered (required for 改版/stale-anchor tests); b2 markdown-selections.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json'); b2 invalid: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json'); b4 facts: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json'); b4 queries: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json')
+  + actual - expected
+  
+  + [
+  +   'MANIFEST.sha256 missing or unreadable',
+  +   "d4 manifest.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json')",
+  +   "b1 md-registry.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json')",
+  +   'b1: markdown fixtures 0 < 12',
+  +   'b1: negative fixtures 4 < 8',
+  +   'b1: no version pair registered (required for 改版/stale-anchor tests)',
+  +   "b2 markdown-selections.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json')",
+  +   "b2 invalid: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json')",
+  +   "b4 facts: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json')",
+  +   "b4 queries: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json')"
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file://[HOME]/Projects/TreeAI/tests/unit/d4-fixtures-integrity.test.ts:47:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'MANIFEST.sha256 missing or unreadable', "d4 manifest.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/manifest.json')", "b1 md-registry.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b1-import/md-registry.json')", 'b1: markdown fixtures 0 < 12', 'b1: negative fixtures 4 < 8', 'b1: no version pair registered (required for 改版/stale-anchor tests)', "b2 markdown-selections.json: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/markdown-selections.json')", "b2 invalid: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b2-anchors/invalid-selections.json')", "b4 facts: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/facts.json')", "b4 queries: unreadable/invalid JSON at [HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json (Error: ENOENT: no such file or directory, open '[HOME]/Projects/TreeAI/tests/fixtures/d4/b4-search/queries.json')" ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/d4-fixtures-integrity.test.ts:62:1
+✖ tampered fixture content is detected (hash mismatch) (12.178667ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-tamper.MnCp0d/d4/b1-import/markdown/md-01.md'
+      at writeFileSync (node:fs:2482:20)
+      at TestContext.<anonymous> (file://[HOME]/Projects/TreeAI/tests/unit/d4-fixtures-integrity.test.ts:67:5)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-tamper.MnCp0d/d4/b1-import/markdown/md-01.md'
+  }
+
+test at tests/unit/d4-fixtures-integrity.test.ts:78:1
+✖ injected stray fixture file is detected (manifest divergence) (9.409917ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-stray.ldTQpg/d4/b1-import/markdown/stray.md'
+      at writeFileSync (node:fs:2482:20)
+      at TestContext.<anonymous> (file://[HOME]/Projects/TreeAI/tests/unit/d4-fixtures-integrity.test.ts:82:5)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-stray.ldTQpg/d4/b1-import/markdown/stray.md'
+  }
+
+test at tests/unit/d4-fixtures-integrity.test.ts:97:1
+✖ a selection with a wrong offset is detected even behind a regenerated manifest (9.183625ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-sel.NzjgNN/d4/b2-anchors/markdown-selections.json'
+      at readFileSync (node:fs:483:20)
+      at TestContext.<anonymous> (file://[HOME]/Projects/TreeAI/tests/unit/d4-fixtures-integrity.test.ts:102:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-sel.NzjgNN/d4/b2-anchors/markdown-selections.json'
+  }
+
+test at tests/unit/d4-fixtures-integrity.test.ts:116:1
+✖ a no-result query whose text actually exists is detected (9.207416ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-nr.GvQpIG/d4/b4-search/queries.json'
+      at readFileSync (node:fs:483:20)
+      at TestContext.<anonymous> (file://[HOME]/Projects/TreeAI/tests/unit/d4-fixtures-integrity.test.ts:121:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-nr.GvQpIG/d4/b4-search/queries.json'
+  }
+

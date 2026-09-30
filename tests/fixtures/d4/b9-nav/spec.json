@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "setId": "b9-nav",
+  "purpose": "D4 项目书 §6 B9 大规模树导航验收的固定树结构数据集规格。生成器（随 D4-8 按本规格实现）必须确定性复现结构真值；优化前后不得修改本文件（修改=范围变更，须回负责人）。",
+  "charterRef": "docs/d4/D4-project-v1.md §6 B9、§5 大规模树导航",
+  "generatorStatus": "pending D4-8（规格已冻结，生成器未实现——不得据此宣称任何 B9 结果）",
+  "determinism": {
+    "seed": "d4-b9-2026-09-30",
+    "prng": "确定性 PRNG（同 b6 规则），禁止 Math.random() 与时间戳",
+    "outputRecording": "生成器输出结构真值 JSON（每节点：id、父 id、标题、深度、来源类型标记）+ manifest 哈希"
+  },
+  "dataset": {
+    "trees": {
+      "count": 100,
+      "totalBranches": 10000,
+      "specialTrees": [
+        {"treeId": "b9-big", "rule": "单棵 5000 节点树（广度优先生成，分支因子混合 2–5）"},
+        {"treeId": "b9-deep", "rule": "100 层深链（一条根到叶 100 层的链，可带少量旁枝）"},
+        {"treeId": "b9-wide", "rule": "宽树：根下 ≥200 个直接子枝"},
+        {"treeId": "b9-empty", "rule": "空树（仅 trunk）"},
+        {"treeId": "b9-samename", "rule": "同名节点树：≥50 个同名 Branch 分布在不同父下"},
+        {"treeId": "b9-longtitle", "rule": "长标题树：≥100 个标题长度 ≥200 字符的节点"}
+      ],
+      "naming": "标题由中文/英文混合模板派生；结构真值含每节点完整父路径"
+    },
+    "sourceMix": "部分 Branch 带 turn 来源、部分带 material 来源（材料来自 b6 数据集或最小 md fixture），用于「来源回程」定位验证",
+    "productTreeVsSessionTree": "展示的产品父子关系来自产品事实；不得以运行 session 树替代（charter §5）"
+  },
+  "functionalProbes": [
+    {"id": "locate-correctness", "rule": "当前节点/祖先链/来源定位正确率 100%（对照结构真值）"},
+    {"id": "nav-p95", "rule": "固定 ≥50 次展开/切换操作（脚本化、确定性顺序），p95 ≤ 300ms（加载已存本地节点）"},
+    {"id": "big-tree-first-open", "rule": "初次打开 5000 节点树到可操作 ≤ 2s"},
+    {"id": "virtualization", "rule": "展开更多节点时，DOM 节点数随可视区域增长而非随全量节点增长（记录 DOM 计数曲线）"},
+    {"id": "keyboard", "rule": "键盘可逐层移动与展开；焦点不因虚拟化消失"},
+    {"id": "search-locate", "rule": "在树导航内查找 Tree/Branch 可定位"},
+    {"id": "restart-state", "rule": "重启后展开状态与阅读位置不丢"}
+  ],
+  "measurementRules": [
+    "本地测试机配置注明（CPU/内存/OS/浏览器）",
+    "失败样例保留在分母；不得以近似节点替代错误来源（charter §5）"
+  ],
+  "acceptanceOwner": "D4-8"
+}

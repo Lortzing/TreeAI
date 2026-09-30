@@ -1,0 +1,2 @@
+{"eventId":"d2-selftest-20260930T122926962Z-e1","runId":"d2-selftest-20260930T122926962Z","seq":1,"occurredAt":"2026-09-30T12:29:26.963Z","type":"verify.run-started","payload":{"mode":"offline","verifier":"verify-d2-selftest"},"evidence":[]}
+{"eventId":"d2-selftest-20260930T122926962Z-e2","runId":"d2-selftest-20260930T122926962Z","seq":2,"occurredAt":"2026-09-30T12:29:27.952Z","type":"verify.run-finished","payload":{"verdict":"ALL_PASS","exitCode":0,"scenarios":5},"evidence":[]}

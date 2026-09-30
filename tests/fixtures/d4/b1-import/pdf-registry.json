@@ -1,0 +1,168 @@
+{
+  "kind": "pdf",
+  "fixtures": [
+    {
+      "fixtureId": "pdf-01",
+      "file": "pdf/pdf-01.pdf",
+      "expected": "pdf/pdf-01.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "pdf-02",
+      "file": "pdf/pdf-02.pdf",
+      "expected": "pdf/pdf-02.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "en"
+      ]
+    },
+    {
+      "fixtureId": "pdf-03",
+      "file": "pdf/pdf-03.pdf",
+      "expected": "pdf/pdf-03.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "zh",
+        "en"
+      ]
+    },
+    {
+      "fixtureId": "pdf-04",
+      "file": "pdf/pdf-04.pdf",
+      "expected": "pdf/pdf-04.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "code"
+      ]
+    },
+    {
+      "fixtureId": "pdf-05",
+      "file": "pdf/pdf-05.pdf",
+      "expected": "pdf/pdf-05.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "repeated-words",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "pdf-06",
+      "file": "pdf/pdf-06.pdf",
+      "expected": "pdf/pdf-06.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "two-column"
+      ]
+    },
+    {
+      "fixtureId": "pdf-07",
+      "file": "pdf/pdf-07.pdf",
+      "expected": "pdf/pdf-07.expected.json",
+      "outcome": "ready",
+      "pages": 4,
+      "coverage": [
+        "header-footer"
+      ]
+    },
+    {
+      "fixtureId": "pdf-08",
+      "file": "pdf/pdf-08.pdf",
+      "expected": "pdf/pdf-08.expected.json",
+      "outcome": "ready",
+      "pages": 10,
+      "coverage": [
+        "multipage"
+      ]
+    },
+    {
+      "fixtureId": "pdf-09",
+      "file": "pdf/pdf-09.pdf",
+      "expected": "pdf/pdf-09.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "combining",
+        "full-width"
+      ]
+    },
+    {
+      "fixtureId": "pdf-10",
+      "file": "pdf/pdf-10.pdf",
+      "expected": "pdf/pdf-10.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "fonts"
+      ]
+    },
+    {
+      "fixtureId": "pdf-11",
+      "file": "pdf/pdf-11.pdf",
+      "expected": "pdf/pdf-11.expected.json",
+      "outcome": "ready",
+      "pages": 30,
+      "coverage": [
+        "long-tail",
+        "zh"
+      ]
+    },
+    {
+      "fixtureId": "pdf-12",
+      "file": "pdf/pdf-12.pdf",
+      "expected": "pdf/pdf-12.expected.json",
+      "outcome": "ready",
+      "pages": 2,
+      "coverage": [
+        "unicode",
+        "astral"
+      ]
+    }
+  ],
+  "negativeFixtures": [
+    {
+      "fixtureId": "neg-pdf-encrypted",
+      "file": "negative/neg-pdf-encrypted.pdf",
+      "outcome": "rejected",
+      "reason": "encrypted",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-pdf-corrupt",
+      "file": "negative/neg-pdf-corrupt.pdf",
+      "outcome": "rejected",
+      "reason": "corrupt",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-pdf-image-only",
+      "file": "negative/neg-pdf-image-only.pdf",
+      "outcome": "rejected",
+      "reason": "no-text-layer",
+      "coverage": [
+        "negative"
+      ]
+    },
+    {
+      "fixtureId": "neg-pdf-zero-text",
+      "file": "negative/neg-pdf-zero-text.pdf",
+      "outcome": "rejected",
+      "reason": "no-text-layer",
+      "coverage": [
+        "negative"
+      ]
+    }
+  ]
+}

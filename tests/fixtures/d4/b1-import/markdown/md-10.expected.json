@@ -1,0 +1,303 @@
+{
+  "fixtureId": "md-10",
+  "kind": "markdown",
+  "normalizer": "d4-md-v1",
+  "canonicalText": "# SQL From First Principles: A Learner's Long Notes\n\nI rebuilt my SQL knowledge twice. The first time I memorized syntax and forgot it within months. The second time I followed the evaluation order of a query and the mental model stuck. These notes are the second attempt, written down in full so I never have to learn it a third time.\n\n## 1. Why relational at all\n\nA relational database stores data in tables whose meaning is determined by their columns, and every query is a logical assertion about those tables. The model survived four decades because it separates what you want from how to get it: the optimizer chooses the access path, the declarative statement carries no loop. When people say SQL is declarative, this is the entire content of the claim.\n\n## 2. SELECT is not a loop\n\nA SELECT statement describes a transformation over unordered sets. There is no first row unless you ask for one with ORDER BY, and there is no iteration unless a cursor explicitly opens one. Internalizing this single fact prevents a whole family of bugs: assumptions about row order, assumptions about duplicate elimination, assumptions about when filters apply.\n\n## 3. The logical evaluation order\n\nThe clauses of a query are logically evaluated in this order: FROM, then WHERE, then GROUP BY, then HAVING, then SELECT, then ORDER BY, then LIMIT. The written order differs, which is why an alias defined in SELECT cannot be referenced in WHERE — the alias does not exist yet at that stage. Once I could recite this order, every \"unknown column\" error became self-explanatory.\n\n## 4. WHERE versus HAVING\n\nWHERE filters rows before grouping; HAVING filters groups after aggregation. A condition that references an aggregate must live in HAVING, because aggregates only exist once groups form. Conversely, a non-aggregate condition belongs in WHERE, where the engine can use indexes to skip rows early. Same result, very different cost.\n\n## 5. JOIN is a filtered product\n\nEvery join is conceptually a Cartesian product followed by a predicate. An INNER JOIN keeps the pairs that satisfy the ON condition. A LEFT JOIN additionally keeps unmatched left rows padded with NULLs. The NULL padding is where most join bugs hide: a WHERE clause on the right table's columns silently converts a LEFT JOIN back into an INNER JOIN, because NULL fails every comparison.\n\n## 6. NULL is not a value\n\nNULL means unknown, and unknown propagates. NULL = NULL evaluates to unknown, not true, which is why you must use IS NULL instead of = NULL. Aggregates skip NULLs — COUNT(*) counts rows, COUNT(col) counts non-null values, and the difference between those two numbers is a free NULL census for the column. GROUP BY treats all NULLs as one group, which is at least a documented, consistent choice.\n\n## 7. Aggregation changes the grain\n\nWhen you write GROUP BY, every output column must be either a grouping key or an aggregate. This rule forces you to state the grain of the result: one row per what? Per customer, per order, per day? Queries that mix grains produce random-looking numbers that are actually deterministic nonsense — the aggregate computed over a blend of two different units of analysis.\n\n## 8. Correlated subqueries\n\nA subquery can reference columns from the outer query. The classic pattern is finding rows that hold a per-group maximum:\n\n```sql\nSELECT order_id, customer_id, total\nFROM orders o\nWHERE total = (\n  SELECT MAX(total) FROM orders\n  WHERE customer_id = o.customer_id\n);\n```\n\nThe inner query re-evaluates per outer row, which reads clearly but can cost quadratic time. Modern planners often rewrite it into a join over a derived table, but I keep both shapes in my toolbox: the correlated form states intent, the derived form states the plan.\n\n## 9. Window functions keep the grain\n\nAn aggregate with GROUP BY collapses rows; a window function annotates them. SUM(...) OVER (PARTITION BY customer_id) adds the customer total to every order row without collapsing anything. The three moving parts are PARTITION BY (which rows share the frame), ORDER BY within the partition (running totals, rankings), and the frame specification (rows between...). Ranking questions — top three per group — are window territory, full stop.\n\n```sql\nSELECT name, department, salary,\n  RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS dept_rank\nFROM employees;\n```\n\n## 10. CTEs are documentation\n\nA WITH clause names intermediate results. Used well, a chain of CTEs reads like a proof: each step has a name and one job. Used badly, CTEs materialize giant intermediate tables that the planner cannot push predicates through. In older engines, CTEs were always materialized; modern engines mostly inline them, but I still keep hot paths in derived tables to stay predictable.\n\n## 11. Set operations and their duplicates\n\nUNION removes duplicates; UNION ALL keeps them. EXCEPT and INTERSECT follow the same duplicate-eliminating semantics. When performance matters and duplicates are impossible by construction, UNION ALL is the correct default. A union of two selects is only meaningful when column counts and types line up — the engine will coerce types when it can, which produces a different set of surprises than failing outright.\n\n## 12. Indexes are read amplifiers\n\nAn index is a sorted copy of a subset of a table. It accelerates reads that match its ordering — equality, range, prefix — and taxes every write, because each index must be maintained. A composite index on (a, b) serves queries on a, and on a and b, but not on b alone: the leftmost prefix rule. Indexing is a budget allocation problem, not a checkbox exercise.\n\n## 13. The query planner deserves respect\n\nEXPLAIN shows the plan; EXPLAIN ANALYZE shows the plan with real row counts and timings. The single most useful habit I built was comparing the estimated rows with actual rows in EXPLAIN ANALYZE output. When the estimate is off by two orders of magnitude, the chosen join order is probably wrong, and the fix usually is a statistics refresh or an index the planner could not imagine using from the predicate as written.\n\n## 14. Transactions and isolation\n\nA transaction bundles statements into an all-or-nothing unit with the ACID properties: atomicity, consistency, isolation, durability. Isolation levels describe which anomalies are permitted: dirty reads, non-repeatable reads, phantom reads. READ COMMITTED (the default in most engines) prevents dirty reads only; SERIALIZABLE prevents all three, at the price of throughput. Most application bugs I have debugged came from assuming SERIALIZABLE semantics while running READ COMMITTED.\n\n## 15. Locking and deadlocks\n\nTwo-phase locking is how engines implement serializability: acquire locks as you go, release them all at commit. Two transactions each holding what the other wants produce a deadlock, and the engine resolves it by aborting one victim. The defensive patterns are always the same: touch rows and tables in a consistent order, keep transactions short, and do not hold a transaction open across a user think-time.\n\n## 16. Migration discipline\n\nSchema changes are code changes. Every migration in our project is a reviewed, versioned, forward-only script with a paired rollback sketch. Additive changes (new nullable column, new index) deploy before the code that uses them; destructive changes wait a release cycle behind the code that stopped using them. The queue of pending migrations is also a log of the schema's history, which answers \"when did this column stop being written\" without archaeology.\n\n## 17. Reading a slow query\n\nMy checklist for a slow query, in order: EXPLAIN ANALYZE first, then check row estimates, then look for functions wrapped around indexed columns (they defeat the index), then count the rows actually needed versus rows scanned, and only then consider hints or rewrites. Nine times out of ten the winning change is adding a covering index or deleting a join that the SELECT list never used. The tenth time, the query is fine and the table has simply outgrown its indexing strategy, which is a capacity conversation, not a tuning one.\n\n## 18. What I would tell a beginner\n\nLearn the evaluation order before the syntax. Write GROUP BY queries by first stating the grain out loud. Use EXPLAIN ANALYZE the way you use a debugger — not as a last resort, but as the first reflex. And keep a long notes file like this one; the act of writing the model down is what made it mine, and the far end of this document is where I finally stopped being afraid of the query planner.\n\nThe deepest lesson from two passes through SQL: a query language is a thinking discipline. The engine is happy to run anything you can parse; correctness comes entirely from knowing which rows your words actually select.\n",
+  "textUnits": 8760,
+  "blocks": [
+    {
+      "blockId": "blk-0",
+      "kind": "markdown-block",
+      "start": 0,
+      "end": 53,
+      "text": "# SQL From First Principles: A Learner's Long Notes\n\n"
+    },
+    {
+      "blockId": "blk-1",
+      "kind": "markdown-block",
+      "start": 53,
+      "end": 337,
+      "text": "I rebuilt my SQL knowledge twice. The first time I memorized syntax and forgot it within months. The second time I followed the evaluation order of a query and the mental model stuck. These notes are the second attempt, written down in full so I never have to learn it a third time.\n\n"
+    },
+    {
+      "blockId": "blk-2",
+      "kind": "markdown-block",
+      "start": 337,
+      "end": 366,
+      "text": "## 1. Why relational at all\n\n"
+    },
+    {
+      "blockId": "blk-3",
+      "kind": "markdown-block",
+      "start": 366,
+      "end": 762,
+      "text": "A relational database stores data in tables whose meaning is determined by their columns, and every query is a logical assertion about those tables. The model survived four decades because it separates what you want from how to get it: the optimizer chooses the access path, the declarative statement carries no loop. When people say SQL is declarative, this is the entire content of the claim.\n\n"
+    },
+    {
+      "blockId": "blk-4",
+      "kind": "markdown-block",
+      "start": 762,
+      "end": 790,
+      "text": "## 2. SELECT is not a loop\n\n"
+    },
+    {
+      "blockId": "blk-5",
+      "kind": "markdown-block",
+      "start": 790,
+      "end": 1154,
+      "text": "A SELECT statement describes a transformation over unordered sets. There is no first row unless you ask for one with ORDER BY, and there is no iteration unless a cursor explicitly opens one. Internalizing this single fact prevents a whole family of bugs: assumptions about row order, assumptions about duplicate elimination, assumptions about when filters apply.\n\n"
+    },
+    {
+      "blockId": "blk-6",
+      "kind": "markdown-block",
+      "start": 1154,
+      "end": 1190,
+      "text": "## 3. The logical evaluation order\n\n"
+    },
+    {
+      "blockId": "blk-7",
+      "kind": "markdown-block",
+      "start": 1190,
+      "end": 1568,
+      "text": "The clauses of a query are logically evaluated in this order: FROM, then WHERE, then GROUP BY, then HAVING, then SELECT, then ORDER BY, then LIMIT. The written order differs, which is why an alias defined in SELECT cannot be referenced in WHERE — the alias does not exist yet at that stage. Once I could recite this order, every \"unknown column\" error became self-explanatory.\n\n"
+    },
+    {
+      "blockId": "blk-8",
+      "kind": "markdown-block",
+      "start": 1568,
+      "end": 1595,
+      "text": "## 4. WHERE versus HAVING\n\n"
+    },
+    {
+      "blockId": "blk-9",
+      "kind": "markdown-block",
+      "start": 1595,
+      "end": 1926,
+      "text": "WHERE filters rows before grouping; HAVING filters groups after aggregation. A condition that references an aggregate must live in HAVING, because aggregates only exist once groups form. Conversely, a non-aggregate condition belongs in WHERE, where the engine can use indexes to skip rows early. Same result, very different cost.\n\n"
+    },
+    {
+      "blockId": "blk-10",
+      "kind": "markdown-block",
+      "start": 1926,
+      "end": 1960,
+      "text": "## 5. JOIN is a filtered product\n\n"
+    },
+    {
+      "blockId": "blk-11",
+      "kind": "markdown-block",
+      "start": 1960,
+      "end": 2347,
+      "text": "Every join is conceptually a Cartesian product followed by a predicate. An INNER JOIN keeps the pairs that satisfy the ON condition. A LEFT JOIN additionally keeps unmatched left rows padded with NULLs. The NULL padding is where most join bugs hide: a WHERE clause on the right table's columns silently converts a LEFT JOIN back into an INNER JOIN, because NULL fails every comparison.\n\n"
+    },
+    {
+      "blockId": "blk-12",
+      "kind": "markdown-block",
+      "start": 2347,
+      "end": 2374,
+      "text": "## 6. NULL is not a value\n\n"
+    },
+    {
+      "blockId": "blk-13",
+      "kind": "markdown-block",
+      "start": 2374,
+      "end": 2771,
+      "text": "NULL means unknown, and unknown propagates. NULL = NULL evaluates to unknown, not true, which is why you must use IS NULL instead of = NULL. Aggregates skip NULLs — COUNT(*) counts rows, COUNT(col) counts non-null values, and the difference between those two numbers is a free NULL census for the column. GROUP BY treats all NULLs as one group, which is at least a documented, consistent choice.\n\n"
+    },
+    {
+      "blockId": "blk-14",
+      "kind": "markdown-block",
+      "start": 2771,
+      "end": 2808,
+      "text": "## 7. Aggregation changes the grain\n\n"
+    },
+    {
+      "blockId": "blk-15",
+      "kind": "markdown-block",
+      "start": 2808,
+      "end": 3178,
+      "text": "When you write GROUP BY, every output column must be either a grouping key or an aggregate. This rule forces you to state the grain of the result: one row per what? Per customer, per order, per day? Queries that mix grains produce random-looking numbers that are actually deterministic nonsense — the aggregate computed over a blend of two different units of analysis.\n\n"
+    },
+    {
+      "blockId": "blk-16",
+      "kind": "markdown-block",
+      "start": 3178,
+      "end": 3207,
+      "text": "## 8. Correlated subqueries\n\n"
+    },
+    {
+      "blockId": "blk-17",
+      "kind": "markdown-block",
+      "start": 3207,
+      "end": 3330,
+      "text": "A subquery can reference columns from the outer query. The classic pattern is finding rows that hold a per-group maximum:\n\n"
+    },
+    {
+      "blockId": "blk-18",
+      "kind": "markdown-block",
+      "start": 3330,
+      "end": 3479,
+      "text": "```sql\nSELECT order_id, customer_id, total\nFROM orders o\nWHERE total = (\n  SELECT MAX(total) FROM orders\n  WHERE customer_id = o.customer_id\n);\n```\n\n"
+    },
+    {
+      "blockId": "blk-19",
+      "kind": "markdown-block",
+      "start": 3479,
+      "end": 3747,
+      "text": "The inner query re-evaluates per outer row, which reads clearly but can cost quadratic time. Modern planners often rewrite it into a join over a derived table, but I keep both shapes in my toolbox: the correlated form states intent, the derived form states the plan.\n\n"
+    },
+    {
+      "blockId": "blk-20",
+      "kind": "markdown-block",
+      "start": 3747,
+      "end": 3786,
+      "text": "## 9. Window functions keep the grain\n\n"
+    },
+    {
+      "blockId": "blk-21",
+      "kind": "markdown-block",
+      "start": 3786,
+      "end": 4227,
+      "text": "An aggregate with GROUP BY collapses rows; a window function annotates them. SUM(...) OVER (PARTITION BY customer_id) adds the customer total to every order row without collapsing anything. The three moving parts are PARTITION BY (which rows share the frame), ORDER BY within the partition (running totals, rankings), and the frame specification (rows between...). Ranking questions — top three per group — are window territory, full stop.\n\n"
+    },
+    {
+      "blockId": "blk-22",
+      "kind": "markdown-block",
+      "start": 4227,
+      "end": 4362,
+      "text": "```sql\nSELECT name, department, salary,\n  RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS dept_rank\nFROM employees;\n```\n\n"
+    },
+    {
+      "blockId": "blk-23",
+      "kind": "markdown-block",
+      "start": 4362,
+      "end": 4393,
+      "text": "## 10. CTEs are documentation\n\n"
+    },
+    {
+      "blockId": "blk-24",
+      "kind": "markdown-block",
+      "start": 4393,
+      "end": 4771,
+      "text": "A WITH clause names intermediate results. Used well, a chain of CTEs reads like a proof: each step has a name and one job. Used badly, CTEs materialize giant intermediate tables that the planner cannot push predicates through. In older engines, CTEs were always materialized; modern engines mostly inline them, but I still keep hot paths in derived tables to stay predictable.\n\n"
+    },
+    {
+      "blockId": "blk-25",
+      "kind": "markdown-block",
+      "start": 4771,
+      "end": 4815,
+      "text": "## 11. Set operations and their duplicates\n\n"
+    },
+    {
+      "blockId": "blk-26",
+      "kind": "markdown-block",
+      "start": 4815,
+      "end": 5230,
+      "text": "UNION removes duplicates; UNION ALL keeps them. EXCEPT and INTERSECT follow the same duplicate-eliminating semantics. When performance matters and duplicates are impossible by construction, UNION ALL is the correct default. A union of two selects is only meaningful when column counts and types line up — the engine will coerce types when it can, which produces a different set of surprises than failing outright.\n\n"
+    },
+    {
+      "blockId": "blk-27",
+      "kind": "markdown-block",
+      "start": 5230,
+      "end": 5266,
+      "text": "## 12. Indexes are read amplifiers\n\n"
+    },
+    {
+      "blockId": "blk-28",
+      "kind": "markdown-block",
+      "start": 5266,
+      "end": 5629,
+      "text": "An index is a sorted copy of a subset of a table. It accelerates reads that match its ordering — equality, range, prefix — and taxes every write, because each index must be maintained. A composite index on (a, b) serves queries on a, and on a and b, but not on b alone: the leftmost prefix rule. Indexing is a budget allocation problem, not a checkbox exercise.\n\n"
+    },
+    {
+      "blockId": "blk-29",
+      "kind": "markdown-block",
+      "start": 5629,
+      "end": 5672,
+      "text": "## 13. The query planner deserves respect\n\n"
+    },
+    {
+      "blockId": "blk-30",
+      "kind": "markdown-block",
+      "start": 5672,
+      "end": 6093,
+      "text": "EXPLAIN shows the plan; EXPLAIN ANALYZE shows the plan with real row counts and timings. The single most useful habit I built was comparing the estimated rows with actual rows in EXPLAIN ANALYZE output. When the estimate is off by two orders of magnitude, the chosen join order is probably wrong, and the fix usually is a statistics refresh or an index the planner could not imagine using from the predicate as written.\n\n"
+    },
+    {
+      "blockId": "blk-31",
+      "kind": "markdown-block",
+      "start": 6093,
+      "end": 6128,
+      "text": "## 14. Transactions and isolation\n\n"
+    },
+    {
+      "blockId": "blk-32",
+      "kind": "markdown-block",
+      "start": 6128,
+      "end": 6613,
+      "text": "A transaction bundles statements into an all-or-nothing unit with the ACID properties: atomicity, consistency, isolation, durability. Isolation levels describe which anomalies are permitted: dirty reads, non-repeatable reads, phantom reads. READ COMMITTED (the default in most engines) prevents dirty reads only; SERIALIZABLE prevents all three, at the price of throughput. Most application bugs I have debugged came from assuming SERIALIZABLE semantics while running READ COMMITTED.\n\n"
+    },
+    {
+      "blockId": "blk-33",
+      "kind": "markdown-block",
+      "start": 6613,
+      "end": 6643,
+      "text": "## 15. Locking and deadlocks\n\n"
+    },
+    {
+      "blockId": "blk-34",
+      "kind": "markdown-block",
+      "start": 6643,
+      "end": 7054,
+      "text": "Two-phase locking is how engines implement serializability: acquire locks as you go, release them all at commit. Two transactions each holding what the other wants produce a deadlock, and the engine resolves it by aborting one victim. The defensive patterns are always the same: touch rows and tables in a consistent order, keep transactions short, and do not hold a transaction open across a user think-time.\n\n"
+    },
+    {
+      "blockId": "blk-35",
+      "kind": "markdown-block",
+      "start": 7054,
+      "end": 7083,
+      "text": "## 16. Migration discipline\n\n"
+    },
+    {
+      "blockId": "blk-36",
+      "kind": "markdown-block",
+      "start": 7083,
+      "end": 7544,
+      "text": "Schema changes are code changes. Every migration in our project is a reviewed, versioned, forward-only script with a paired rollback sketch. Additive changes (new nullable column, new index) deploy before the code that uses them; destructive changes wait a release cycle behind the code that stopped using them. The queue of pending migrations is also a log of the schema's history, which answers \"when did this column stop being written\" without archaeology.\n\n"
+    },
+    {
+      "blockId": "blk-37",
+      "kind": "markdown-block",
+      "start": 7544,
+      "end": 7573,
+      "text": "## 17. Reading a slow query\n\n"
+    },
+    {
+      "blockId": "blk-38",
+      "kind": "markdown-block",
+      "start": 7573,
+      "end": 8106,
+      "text": "My checklist for a slow query, in order: EXPLAIN ANALYZE first, then check row estimates, then look for functions wrapped around indexed columns (they defeat the index), then count the rows actually needed versus rows scanned, and only then consider hints or rewrites. Nine times out of ten the winning change is adding a covering index or deleting a join that the SELECT list never used. The tenth time, the query is fine and the table has simply outgrown its indexing strategy, which is a capacity conversation, not a tuning one.\n\n"
+    },
+    {
+      "blockId": "blk-39",
+      "kind": "markdown-block",
+      "start": 8106,
+      "end": 8143,
+      "text": "## 18. What I would tell a beginner\n\n"
+    },
+    {
+      "blockId": "blk-40",
+      "kind": "markdown-block",
+      "start": 8143,
+      "end": 8539,
+      "text": "Learn the evaluation order before the syntax. Write GROUP BY queries by first stating the grain out loud. Use EXPLAIN ANALYZE the way you use a debugger — not as a last resort, but as the first reflex. And keep a long notes file like this one; the act of writing the model down is what made it mine, and the far end of this document is where I finally stopped being afraid of the query planner.\n\n"
+    },
+    {
+      "blockId": "blk-41",
+      "kind": "markdown-block",
+      "start": 8539,
+      "end": 8760,
+      "text": "The deepest lesson from two passes through SQL: a query language is a thinking discipline. The engine is happy to run anything you can parse; correctness comes entirely from knowing which rows your words actually select.\n"
+    }
+  ]
+}

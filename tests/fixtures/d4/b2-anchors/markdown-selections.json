@@ -1,0 +1,727 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "kind": "markdown",
+  "items": [
+    {
+      "id": "md-sel-01",
+      "fixture": "md-01",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归与分治学习笔记",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-0",
+        "start": 2,
+        "end": 11,
+        "excerpt": "递归与分治学习笔记"
+      }
+    },
+    {
+      "id": "md-sel-02",
+      "fixture": "md-01",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "分治不是另一种技术",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-6",
+        "start": 448,
+        "end": 457,
+        "excerpt": "分治不是另一种技术"
+      }
+    },
+    {
+      "id": "md-sel-03",
+      "fixture": "md-03",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "主干分支保持随时可发布",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 153,
+        "end": 164,
+        "excerpt": "主干分支保持随时可发布"
+      }
+    },
+    {
+      "id": "md-sel-04",
+      "fixture": "md-05",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "每次调用 makeCounter 都创建一个新的词法环境",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-7",
+        "start": 496,
+        "end": 524,
+        "excerpt": "每次调用 makeCounter 都创建一个新的词法环境"
+      }
+    },
+    {
+      "id": "md-sel-05",
+      "fixture": "md-08",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "管道的哲学是每个程序做好一件事",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-11",
+        "start": 778,
+        "end": 793,
+        "excerpt": "管道的哲学是每个程序做好一件事"
+      }
+    },
+    {
+      "id": "md-sel-06",
+      "fixture": "md-12",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "全角空格（U+3000）在中文排版里充当缩进",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 63,
+        "end": 85,
+        "excerpt": "全角空格（U+3000）在中文排版里充当缩进"
+      }
+    },
+    {
+      "id": "md-sel-07",
+      "fixture": "md-06",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "评审通过后由作者自己点合并",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-14",
+        "start": 959,
+        "end": 972,
+        "excerpt": "评审通过后由作者自己点合并"
+      }
+    },
+    {
+      "id": "md-sel-08",
+      "fixture": "md-02",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "single thread with a single call stack",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 401,
+        "end": 439,
+        "excerpt": "single thread with a single call stack"
+      }
+    },
+    {
+      "id": "md-sel-09",
+      "fixture": "md-02",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "Microtasks drain fully between macrotasks",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-15",
+        "start": 3067,
+        "end": 3108,
+        "excerpt": "Microtasks drain fully between macrotasks"
+      }
+    },
+    {
+      "id": "md-sel-10",
+      "fixture": "md-09",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "MDN Web Docs",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 104,
+        "end": 116,
+        "excerpt": "MDN Web Docs"
+      }
+    },
+    {
+      "id": "md-sel-11",
+      "fixture": "md-10",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "Window functions keep the grain",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-20",
+        "start": 3753,
+        "end": 3784,
+        "excerpt": "Window functions keep the grain"
+      }
+    },
+    {
+      "id": "md-sel-12",
+      "fixture": "md-10",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "leftmost prefix rule",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-28",
+        "start": 5540,
+        "end": 5560,
+        "excerpt": "leftmost prefix rule"
+      }
+    },
+    {
+      "id": "md-sel-13",
+      "fixture": "md-04",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "type MyPick<T, K extends keyof T> = {",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-4",
+        "start": 243,
+        "end": 280,
+        "excerpt": "type MyPick<T, K extends keyof T> = {"
+      }
+    },
+    {
+      "id": "md-sel-14",
+      "fixture": "md-04",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "-readonly [P in keyof T]: T[P];",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-9",
+        "start": 607,
+        "end": 638,
+        "excerpt": "-readonly [P in keyof T]: T[P];"
+      }
+    },
+    {
+      "id": "md-sel-15",
+      "fixture": "md-10",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "SELECT order_id, customer_id, total",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-18",
+        "start": 3337,
+        "end": 3372,
+        "excerpt": "SELECT order_id, customer_id, total"
+      }
+    },
+    {
+      "id": "md-sel-16",
+      "fixture": "md-08",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "awk '{print $1}' access.log",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-12",
+        "start": 831,
+        "end": 858,
+        "excerpt": "awk '{print $1}' access.log"
+      }
+    },
+    {
+      "id": "md-sel-17",
+      "fixture": "md-05",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "闭包",
+        "occurrence": 4
+      },
+      "expected": {
+        "blockId": "blk-4",
+        "start": 259,
+        "end": 261,
+        "excerpt": "闭包"
+      }
+    },
+    {
+      "id": "md-sel-18",
+      "fixture": "md-05",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "counter",
+        "occurrence": 3
+      },
+      "expected": {
+        "blockId": "blk-1",
+        "start": 150,
+        "end": 157,
+        "excerpt": "counter"
+      }
+    },
+    {
+      "id": "md-sel-19",
+      "fixture": "md-01",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归",
+        "occurrence": 5
+      },
+      "expected": {
+        "blockId": "blk-1",
+        "start": 116,
+        "end": 118,
+        "excerpt": "递归"
+      }
+    },
+    {
+      "id": "md-sel-20",
+      "fixture": "md-02",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "microtask",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "blk-8",
+        "start": 1411,
+        "end": 1420,
+        "excerpt": "microtask"
+      }
+    },
+    {
+      "id": "md-sel-21",
+      "fixture": "md-11",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "剪枝",
+        "occurrence": 4
+      },
+      "expected": {
+        "blockId": "blk-49",
+        "start": 4707,
+        "end": 4709,
+        "excerpt": "剪枝"
+      }
+    },
+    {
+      "id": "md-sel-22",
+      "fixture": "md-01",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "顺序不要颠倒。\n- 每次分解必须向基线靠近",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-12",
+        "start": 1015,
+        "end": 1036,
+        "excerpt": "顺序不要颠倒。\n- 每次分解必须向基线靠近"
+      }
+    },
+    {
+      "id": "md-sel-23",
+      "fixture": "md-04",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "[P in K]: T[P];\n};",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-4",
+        "start": 283,
+        "end": 301,
+        "excerpt": "[P in K]: T[P];\n};"
+      }
+    },
+    {
+      "id": "md-sel-24",
+      "fixture": "md-05",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "count += 1;\n    return count;",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-6",
+        "start": 454,
+        "end": 483,
+        "excerpt": "count += 1;\n    return count;"
+      }
+    },
+    {
+      "id": "md-sel-25",
+      "fixture": "md-07",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "分解形式吗？\n- 归一化会让历史偏移失效",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-14",
+        "start": 1229,
+        "end": 1249,
+        "excerpt": "分解形式吗？\n- 归一化会让历史偏移失效"
+      }
+    },
+    {
+      "id": "md-sel-26",
+      "fixture": "md-08",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "- format and print data\nprintf (3p)",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-4",
+        "start": 237,
+        "end": 272,
+        "excerpt": "- format and print data\nprintf (3p)"
+      }
+    },
+    {
+      "id": "md-sel-27",
+      "fixture": "md-08",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "203.0.113.7\n    843",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-12",
+        "start": 908,
+        "end": 927,
+        "excerpt": "203.0.113.7\n    843"
+      }
+    },
+    {
+      "id": "md-sel-28",
+      "fixture": "md-10",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "WHERE total = (\n  SELECT MAX(total) FROM orders",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-18",
+        "start": 3387,
+        "end": 3434,
+        "excerpt": "WHERE total = (\n  SELECT MAX(total) FROM orders"
+      }
+    },
+    {
+      "id": "md-sel-29",
+      "fixture": "md-06",
+      "category": "emoji",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "🚀",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "blk-7",
+        "start": 368,
+        "end": 370,
+        "excerpt": "🚀"
+      }
+    },
+    {
+      "id": "md-sel-30",
+      "fixture": "md-06",
+      "category": "emoji",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "👨‍💻",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-12",
+        "start": 833,
+        "end": 838,
+        "excerpt": "👨‍💻"
+      }
+    },
+    {
+      "id": "md-sel-31",
+      "fixture": "md-06",
+      "category": "emoji",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "👍🏽",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-8",
+        "start": 476,
+        "end": 480,
+        "excerpt": "👍🏽"
+      }
+    },
+    {
+      "id": "md-sel-32",
+      "fixture": "md-06",
+      "category": "emoji",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "1️⃣ 2️⃣ 3️⃣",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-5",
+        "start": 293,
+        "end": 304,
+        "excerpt": "1️⃣ 2️⃣ 3️⃣"
+      }
+    },
+    {
+      "id": "md-sel-33",
+      "fixture": "md-06",
+      "category": "unicode",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "🇨🇳 🇺🇸",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-12",
+        "start": 728,
+        "end": 737,
+        "excerpt": "🇨🇳 🇺🇸"
+      }
+    },
+    {
+      "id": "md-sel-34",
+      "fixture": "md-07",
+      "category": "combining",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "café",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 221,
+        "end": 226,
+        "excerpt": "café"
+      }
+    },
+    {
+      "id": "md-sel-35",
+      "fixture": "md-07",
+      "category": "unicode",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "नमस्ते",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-6",
+        "start": 539,
+        "end": 545,
+        "excerpt": "नमस्ते"
+      }
+    },
+    {
+      "id": "md-sel-36",
+      "fixture": "md-09",
+      "category": "links",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "[MDN Web Docs](https://developer.mozilla.org/zh-CN/docs/Web)",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-3",
+        "start": 103,
+        "end": 163,
+        "excerpt": "[MDN Web Docs](https://developer.mozilla.org/zh-CN/docs/Web)"
+      }
+    },
+    {
+      "id": "md-sel-37",
+      "fixture": "md-09",
+      "category": "links",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "<https://www.typescriptlang.org/play>",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-4",
+        "start": 345,
+        "end": 382,
+        "excerpt": "<https://www.typescriptlang.org/play>"
+      }
+    },
+    {
+      "id": "md-sel-38",
+      "fixture": "md-10",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "The deepest lesson from two passes through SQL",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-41",
+        "start": 8539,
+        "end": 8585,
+        "excerpt": "The deepest lesson from two passes through SQL"
+      }
+    },
+    {
+      "id": "md-sel-39",
+      "fixture": "md-10",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "a capacity conversation, not a tuning one",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-38",
+        "start": 8062,
+        "end": 8103,
+        "excerpt": "a capacity conversation, not a tuning one"
+      }
+    },
+    {
+      "id": "md-sel-40",
+      "fixture": "md-11",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "先写状态，再写转移，最后写边界",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-58",
+        "start": 5683,
+        "end": 5698,
+        "excerpt": "先写状态，再写转移，最后写边界"
+      }
+    },
+    {
+      "id": "md-sel-41",
+      "fixture": "md-11",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "字符串哈希是另一条路",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-56",
+        "start": 5399,
+        "end": 5409,
+        "excerpt": "字符串哈希是另一条路"
+      }
+    },
+    {
+      "id": "md-sel-42",
+      "fixture": "md-11",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "全文完",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "blk-58",
+        "start": 5724,
+        "end": 5727,
+        "excerpt": "全文完"
+      }
+    },
+    {
+      "id": "md-sel-43",
+      "fixture": "md-03",
+      "category": "zh",
+      "locator": {
+        "kind": "utf16-range",
+        "start": 2467,
+        "end": 2480
+      },
+      "expected": {
+        "blockId": "blk-19",
+        "start": 2467,
+        "end": 2480,
+        "excerpt": "工作流是约定，不是工具属性"
+      }
+    },
+    {
+      "id": "md-sel-44",
+      "fixture": "md-12",
+      "category": "unicode",
+      "locator": {
+        "kind": "utf16-range",
+        "start": 269,
+        "end": 299
+      },
+      "expected": {
+        "blockId": "blk-6",
+        "start": 269,
+        "end": 299,
+        "excerpt": "ＡＢＣＸＹＺ、数字 ０１２３４５６７８９、标点 ，。？！「」"
+      }
+    },
+    {
+      "id": "md-sel-45",
+      "fixture": "md-10",
+      "category": "en",
+      "locator": {
+        "kind": "utf16-range",
+        "start": 6369,
+        "end": 6383
+      },
+      "expected": {
+        "blockId": "blk-32",
+        "start": 6369,
+        "end": 6383,
+        "excerpt": "READ COMMITTED"
+      }
+    }
+  ]
+}

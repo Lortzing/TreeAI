@@ -1,0 +1,487 @@
+{
+  "version": 1,
+  "frozenAt": "2026-09-30",
+  "kind": "pdf",
+  "items": [
+    {
+      "id": "pdf-sel-01",
+      "fixture": "pdf-01",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 0,
+        "end": 2,
+        "excerpt": "递归"
+      }
+    },
+    {
+      "id": "pdf-sel-02",
+      "fixture": "pdf-01",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "层之后就会\n迷失。更有",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 135,
+        "end": 146,
+        "excerpt": "层之后就会\n迷失。更有"
+      }
+    },
+    {
+      "id": "pdf-sel-03",
+      "fixture": "pdf-02",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "stack overflow",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 1702,
+        "end": 1716,
+        "excerpt": "stack overflow"
+      }
+    },
+    {
+      "id": "pdf-sel-04",
+      "fixture": "pdf-02",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "stack",
+        "occurrence": 3
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 1241,
+        "end": 1246,
+        "excerpt": "stack"
+      }
+    },
+    {
+      "id": "pdf-sel-05",
+      "fixture": "pdf-02",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "e the\nfunct",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 554,
+        "end": 565,
+        "excerpt": "e the\nfunct"
+      }
+    },
+    {
+      "id": "pdf-sel-06",
+      "fixture": "pdf-03",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "闭包",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 0,
+        "end": 2,
+        "excerpt": "闭包"
+      }
+    },
+    {
+      "id": "pdf-sel-07",
+      "fixture": "pdf-03",
+      "category": "en",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "closure",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 16,
+        "end": 23,
+        "excerpt": "closure"
+      }
+    },
+    {
+      "id": "pdf-sel-08",
+      "fixture": "pdf-03",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "closure",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 346,
+        "end": 353,
+        "excerpt": "closure"
+      }
+    },
+    {
+      "id": "pdf-sel-09",
+      "fixture": "pdf-04",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "fibNaive",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 160,
+        "end": 168,
+        "excerpt": "fibNaive"
+      }
+    },
+    {
+      "id": "pdf-sel-10",
+      "fixture": "pdf-04",
+      "category": "code",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归终止条件",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 195,
+        "end": 201,
+        "excerpt": "递归终止条件"
+      }
+    },
+    {
+      "id": "pdf-sel-11",
+      "fixture": "pdf-05",
+      "category": "zh",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 6,
+        "end": 8,
+        "excerpt": "递归"
+      }
+    },
+    {
+      "id": "pdf-sel-12",
+      "fixture": "pdf-05",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 9,
+        "end": 11,
+        "excerpt": "递归"
+      }
+    },
+    {
+      "id": "pdf-sel-13",
+      "fixture": "pdf-05",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归",
+        "occurrence": 8
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 139,
+        "end": 141,
+        "excerpt": "递归"
+      }
+    },
+    {
+      "id": "pdf-sel-14",
+      "fixture": "pdf-06",
+      "category": "two-column-left",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "自顶向下",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 21,
+        "end": 25,
+        "excerpt": "自顶向下"
+      }
+    },
+    {
+      "id": "pdf-sel-15",
+      "fixture": "pdf-06",
+      "category": "two-column-right",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "自底向上",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 619,
+        "end": 623,
+        "excerpt": "自底向上"
+      }
+    },
+    {
+      "id": "pdf-sel-16",
+      "fixture": "pdf-06",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "全部内容，\n案由小问题",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 70,
+        "end": 81,
+        "excerpt": "全部内容，\n案由小问题"
+      }
+    },
+    {
+      "id": "pdf-sel-17",
+      "fixture": "pdf-07",
+      "category": "header",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "问题分解手记 · 第 1 章 分解",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 0,
+        "end": 17,
+        "excerpt": "问题分解手记 · 第 1 章 分解"
+      }
+    },
+    {
+      "id": "pdf-sel-18",
+      "fixture": "pdf-07",
+      "category": "repeat-word-2nd",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "问题分解手记 · 第 1 章 分解",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "page-2",
+        "start": 799,
+        "end": 816,
+        "excerpt": "问题分解手记 · 第 1 章 分解"
+      }
+    },
+    {
+      "id": "pdf-sel-19",
+      "fixture": "pdf-07",
+      "category": "footer",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "第 3 页",
+        "occurrence": 2
+      },
+      "expected": {
+        "blockId": "page-3",
+        "start": 2389,
+        "end": 2394,
+        "excerpt": "第 3 页"
+      }
+    },
+    {
+      "id": "pdf-sel-20",
+      "fixture": "pdf-08",
+      "category": "multipage",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "手记完",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-10",
+        "start": 9220,
+        "end": 9223,
+        "excerpt": "手记完"
+      }
+    },
+    {
+      "id": "pdf-sel-21",
+      "fixture": "pdf-08",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "十个章节不是十个孤岛",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-10",
+        "start": 8802,
+        "end": 8812,
+        "excerpt": "十个章节不是十个孤岛"
+      }
+    },
+    {
+      "id": "pdf-sel-22",
+      "fixture": "pdf-08",
+      "category": "long-tail",
+      "locator": {
+        "kind": "utf16-range",
+        "start": 8499,
+        "end": 8515
+      },
+      "expected": {
+        "blockId": "page-9",
+        "start": 8499,
+        "end": 8515,
+        "excerpt": "lanced tree  O(l"
+      }
+    },
+    {
+      "id": "pdf-sel-23",
+      "fixture": "pdf-11",
+      "category": "cross-line",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "巴从这里开始。\n本节要点回顾：",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-29",
+        "start": 3597,
+        "end": 3612,
+        "excerpt": "巴从这里开始。\n本节要点回顾："
+      }
+    },
+    {
+      "id": "pdf-sel-24",
+      "fixture": "pdf-09",
+      "category": "unicode",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "café",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 120,
+        "end": 125,
+        "excerpt": "café"
+      }
+    },
+    {
+      "id": "pdf-sel-25",
+      "fixture": "pdf-09",
+      "category": "unicode",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "ＡＢＣＤＥＦＧ",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 510,
+        "end": 517,
+        "excerpt": "ＡＢＣＤＥＦＧ"
+      }
+    },
+    {
+      "id": "pdf-sel-26",
+      "fixture": "pdf-10",
+      "category": "fonts",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "Font Sampler",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 0,
+        "end": 12,
+        "excerpt": "Font Sampler"
+      }
+    },
+    {
+      "id": "pdf-sel-27",
+      "fixture": "pdf-11",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "递归的三个检查点",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-29",
+        "start": 3530,
+        "end": 3538,
+        "excerpt": "递归的三个检查点"
+      }
+    },
+    {
+      "id": "pdf-sel-28",
+      "fixture": "pdf-11",
+      "category": "long-tail",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "长文样本至此收束",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-30",
+        "start": 3716,
+        "end": 3724,
+        "excerpt": "长文样本至此收束"
+      }
+    },
+    {
+      "id": "pdf-sel-29",
+      "fixture": "pdf-12",
+      "category": "unicode",
+      "locator": {
+        "kind": "text-occurrence",
+        "needle": "𠀋𠀖𠀪𠀲𠁆",
+        "occurrence": 1
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 153,
+        "end": 163,
+        "excerpt": "𠀋𠀖𠀪𠀲𠁆"
+      }
+    },
+    {
+      "id": "pdf-sel-30",
+      "fixture": "pdf-12",
+      "category": "unicode",
+      "locator": {
+        "kind": "utf16-range",
+        "start": 153,
+        "end": 159
+      },
+      "expected": {
+        "blockId": "page-1",
+        "start": 153,
+        "end": 159,
+        "excerpt": "𠀋𠀖𠀪"
+      }
+    }
+  ]
+}

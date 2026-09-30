@@ -1,53 +1,64 @@
-# D4 — status record（独立矩阵跟踪，issue #7 跟踪补充 2026-09-30）
+# D4 — 独立状态矩阵（D4-status）
 
-Status record for the **D4 independent matrix** the owner brought into
-tracking (issue #7 跟踪补充, owner directive 2026-09-30 15:23):
-「既定 D4 纳入跟踪……术语功能不替代 D4；D3 人工项延后不阻止可独立推进
-的 D4 工程」。This document records **status only**; it does not freeze a
-D4 scope — per the same comment, **不重新创造一套范围**.
+维护纪律：本表只记录状态与证据，不冻结范围。范围来源是
+[D4 项目书 v1.1（issue #8，2026-09-30）](./D4-project-v1.md)（仓内逐字镜像）。
+每行必须含：任务ID、状态、实现代码、被测完整SHA、证据类型、结果、阻断/整改、
+复验条件。**禁止仅写「功能已完成」。**
 
-## Current state: the authoritative D4 task book has not been located
+## 范围来源变更记录
 
-Searched honestly (2026-09-30, this wave):
+- **2026-09-30**：issue #8 发布《D4 项目书 v1.0》，76 秒后修订为 **v1.1**
+  （标题与正文同步修订）。v1.1 的关键修正：负责人明确确认 D3 v1「留到 D4」
+  的**五个领域全部为必需范围**（PDF/Markdown 阅读、跨材料搜索、安装程序/
+  跨平台、性能、大规模树导航）；v1.0 对安装/跨平台的排除是错误的；D4-7
+  （安装与跨平台）与 D4-8（大规模树导航）由此成为独立工作包，验收新增
+  B8/B9。**此前（本文件旧版）记录的「权威 D4 任务书未定位」阻断由此解除**——
+  旧版判断在当时的证据下成立，现由 issue #8 v1.1 提供权威范围，无需继续
+  等待一份旧 D4 文件。
+- 本表按 v1.1 维护；v1.0 的历史判断保留在上文，不删除、不改写。
 
-1. **Repo tree** (`main` @ `085f979`, full text over tracked `*.md` /
-   `*.ts` / `*.mjs` / `*.json`): no D4 planning/delivery document, no D4
-   task matrix, no D4 references beyond hash-string coincidences. The
-   untracked-in-repo D1 agent task book also carries no D4 section.
-2. **Owner delivery folder** (the same local source that carried the D1/D2/D3
-   documents, `TreeAI_D1_…`/`TreeAI_D2_…`/`TreeAI_D3_…`): only D1/D2/D3
-   documents exist there — **no D4 document**.
-3. **What does exist** (recorded verbatim, NOT promoted to scope):
-   - `TreeAI_D3_规划表.md` (D3 plan v1), 「留到 D4」row:
-     *PDF/Markdown 阅读、跨材料搜索、正式安装包与跨平台适配、性能优化、
-     大规模树导航* — a deferral list inside the D3 plan, not a D4 matrix.
-   - `TreeAI_D3_规划表_v2.0_2026-09-29.md` (the plan the issue #7 acceptance
-     read) writes those areas as 后续验证 — again not a frozen D4 task
-     matrix (the acceptance comment states this explicitly and rules that
-     these suggestions cannot be upgraded to D4 blockers from these
-     documents alone).
+## D4 工作包矩阵
 
-## What is needed (owner-side, blocking D4 engineering verification)
+| 任务ID | 状态 | 实现代码 | 被测完整SHA | 证据类型 | 结果 | 阻断/整改 | 复验条件 |
+|---|---|---|---|---|---|---|---|
+| D4-0 契约与范围落仓 | **已交付**（2026-09-30 本波，`3201ad0` 落仓、`4ebead9` 绑定证据） | `docs/d4/D4-project-v1.md`（镜像）、`docs/d4/D4-contracts.md`、`docs/adr/ADR-003-*.md`、`coordination/d4/README.md`、`tests/fixtures/d4/**`、`scripts/verify-d4.js`、`scripts/verify-d4-selftest.js`、`scripts/run-d4-browser.mjs`、`scripts/d4/`（生成工具）、`tests/support/verifier/d4-probes.ts`、`tests/unit/d4-fixtures-integrity.test.ts` | `4ebead9`（证据目录 `evidence/d4/runs/d4-offline-20260930T123353276Z`、`evidence/d4/selftest/d4-selftest-20260930T123424523Z`） | verify:d4 离线运行 + selftest 注入 | scoped 全绿：fixtures-integrity-d4（79 文件；B1 12 md+12 pdf+8 负例+1 版本对；B2 75 有效/17 无效；B4 55 正向/12 无结果）、docs、entrypoints、typecheck、tests-typecheck、unit-tests-d4、exit-codes、evidence-hygiene；selftest 7/7（控制组 exit 0 + 6 项注入全部检出；本波修复其断言纪律后达成，过程记录在案） | 无 | 候选 SHA 按 §8 全量重跑 |
+| D4-1 材料存储和导入 | **工程已交付**（markdown+pdf 导入闭环，离线机械证据）；B1 浏览器面待 D4-2 阅读器 | `packages/persistence/src/material-repository.ts`、迁移 `0008-material-core`、`packages/contracts/src/material.ts`、`apps/studio/src/materials/{markdown-parser,pdf-parser,import-service}.ts`、`apps/studio/src/server.ts` 材料 API、`tests/support/verifier/d4-b1-import.ts` | `4ebead9`（b1 执行记录：`evidence/d4/runs/d4-offline-20260930T123353276Z/logs/b1-import-versions.txt`） | verify:d4 `b1-import-versions` 真执行 + studio 178/178 + 全仓 508/508（unit 80、integration 8、live 3） | 24/24 ready fixtures 字节级回读一致（12 md + 12 pdf）；8/8 负例按冻结理由拒绝；同字节重导复用版本 24/24；版本对 v1→v2 链执行且旧版本可读；3/3 超限负例按 manifest 配方确定性生成并在解析/持久化前拒绝。PDF 解析器 corpus 外边界如实记录：xref/object stream、非 FlateDecode 滤镜、嵌入字体、Form XObject 内文本 unsupported（稳定拒绝理由，不伪装成功） | B1 证据列的「真实浏览器」部分依赖 D4-2 阅读器，属后续工作包，不计为本包阻断 | 候选 SHA 全量 verify:d4 + 真实浏览器（B1 证据列） |
+| D4-2 阅读与来源定位 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1 | B2 选区集起测；术语③区间层接口对齐 |
+| D4-3 原文探索闭环 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0/2、W1 整改、术语②接口 | ADR-003 §5 测试义务全部落地；B3 |
+| D4-4 找回既有思考 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1 | 迁移 0009；B4 冻结查询集 ≥95% 前 5 命中 |
+| D4-5 数据可携带与可恢复 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1/3/4 | B5 故障注入矩阵 |
+| D4-6 性能与 Beta 收口 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1～5、7、8 | B6 规模数据集（规格已冻结于 `tests/fixtures/d4/b6-scale/`）+ B7 |
+| D4-7 安装程序与跨平台 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0；目标环境见下文 | B8：三平台干净安装实测（Windows 原生，非 WSL） |
+| D4-8 大规模树导航 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0 | B9：结构规格已冻结于 `tests/fixtures/d4/b9-nav/` |
 
-Per the issue #7 comment's own 复验条件: the next D4 delivery should
-**provide or reference the established D4 document**, making explicit the
-already-confirmed items, boundaries, acceptance commands, and evidence
-requirements. Engineering cannot and will not invent that scope. Once the
-authoritative document lands (in-repo or referenced), this record will carry
-the per-item matrix: code linkage, tested SHA, and how each item was
-verified (executed / recorded / inferred / unverifiable), with remediation
-and re-verification conditions — the same discipline as the D3 status
-record.
+## 门禁状态
 
-## Relationship to the current engineering waves
+| 门 | 状态 | 说明 |
+|---|---|---|
+| D4-G0 | **工程面已过**（D4-0 于 `4ebead9` 交付并绑定离线证据；见矩阵首行） | 契约（ADR-003 + D4-contracts）、固定测试集（tests/fixtures/d4，含 B1/B2/B4 冻结集与双 MANIFEST）、实施拆分（D4-contracts §8）、验收入口（verify:d4 三入口 + selftest）已入仓并机械验证；继承 W1 v3 产品原则（ADR-003 状态说明段）。G0 无人工项 |
+| D4-G1 | 未到 | Markdown 纵向路径（原文→Branch→Return→重启→找回）待 D4-1/2/3 + D4-4 |
+| D4-G2 | 未到 | B1–B6、B8–B9 + B7 自动部分 + D3/W1/术语回归 |
+| D4-G3 | 未到 | Mac 体验签收 → 3–5 人独立试用（负责人顺序，工程不提前代行） |
 
-- The issue #7 waves (W1 P0/P1 remediation `32f4778`, terminology ①② core
-  `cd0784c`, extract-prompt tightening `433f448`, runner extension `92a2e3a`,
-  evidence binding `085f979`) are **D3/W1/terminology work** — they are not
-  D4 progress and are not counted as such.
-- Per the comment, D4 engineering may proceed independently of the deferred
-  D3 manual items (Mac sign-off, trials) once its authoritative scope is
-  available.
-- The final stop condition (per the comment) now includes D4 having
-  verifiable acceptance with no blockers — which first requires the scope
-  document above.
+## D4-7 支持矩阵记录（charter §5：D4-0 记录具体测试 OS/浏览器版本）
+
+| 平台 | 目标版本 | 本仓当前实测环境 | 状态 |
+|---|---|---|---|
+| macOS Apple Silicon | macOS 26.6.2（25G83），Apple M4 / 16 GB，Node 24.21.0，npm 11.19.0，Chrome 153.0.8010.37（headless，CDP） | 同左（D4-0 波次工作机） | 可实测 |
+| Windows 11 x64 | Windows 11（版本号待环境实测时记录），Chrome 最新稳定 | 无 | **BLOCKED：无目标环境**——B8 不得以跨平台构建成功替代运行验证 |
+| Ubuntu 24.04 LTS x64 | Ubuntu 24.04 LTS，Chrome 最新稳定 | 无 | **BLOCKED：无目标环境**（同上） |
+
+## 与其他工作流的关系（不重复计入 D4）
+
+- W1 P0/P1 整改、术语①②核心与最小③切片（`32f4778`…`085f979`）是
+  D3/W1/术语工作，不是 D4 进度。**术语③完整前端已于 2026-09-30 晚交付并落
+  main（`87cbd2c`）**：正文/操作分层、统一区间覆盖、选择期间不重绘、
+  工具条/解释卡完整状态（issue #7 C ③），随交付验证 studio 131/131、
+  typecheck、verify:d2 基线不变。按项目书 §2 它与材料阅读区整合但
+  **保持独立验收记录**，不计入 D4 进度；D4-2 只复用其区间层接口，
+  不以 D4 进度抵扣术语交付。
+- D3 人工项（Mac 签收、3–5 人试用）按负责人计划延后，不阻止 D4 工程
+  （issue #7 跟踪补充）。
+- 最终停止条件（全项目）：D3、既定 D4（本文件矩阵）、W1 v3 必须整改、
+  术语三部分与前端，以及规定顺序的人工签收全部具备可核验验收且无阻断
+  （issue #8 §9）。

@@ -1,0 +1,7 @@
+{
+  "fixtureId": "neg-pdf-zero-text",
+  "kind": "pdf",
+  "outcome": "rejected",
+  "reason": "no-text-layer",
+  "detail": "Structurally valid single page whose content stream is empty (/Length 0)."
+}
