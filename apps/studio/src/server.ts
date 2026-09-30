@@ -74,6 +74,20 @@
  *   丢弃（版本行条件 UPDATE 由数据库仲裁，不可能复活/覆盖已取消状态）。
  *   PUT  …/materials/:materialId/reading-position —— 持久化阅读位置
  *   （{versionId, blockId?, focusStart?}；校验失败 400）→ 204 无 body。
+ *
+ * 材料阅读与来源定位 API（issue #8 D4-2，契约 §3 + D4-2 落地增量）：
+ *   GET  …/materials/:materialId/reading-position —— 读取持久化阅读位置
+ *   → 200 {readingPosition: MaterialReadingPosition | null}。阅读位置按
+ *   Tree×材料持久化（charter §3.2 阅读侧）；分支探索位置是分支自身的
+ *   产品事实（runs/turns），两者各自保留、互不覆盖。
+ *   POST …/materials/:materialId/versions/:versionId/resolve-selection
+ *   —— 统一区间/锚点解析：body {locator:{kind:"utf16-range"|"text-
+ *   occurrence", …}, excerpt?, blockId?, anchor?{versionId, sourceHash?}}
+ *   → 200 {selection, block}（规范 MaterialSelection；零误定位——绝不以
+ *   相似文字兜底）；区间纪律拒绝 → 400 + 稳定原因码（invalid-locator/
+ *   needle-not-found/out-of-bounds/reversed/zero-length/surrogate-split/
+ *   combining-split/emoji-split/excerpt-mismatch/stale-version/cross-page/
+ *   cross-block/block-mismatch）；非 ready 版本 → 409 material-not-ready。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -106,6 +120,7 @@ import {
   MaterialUnsupportedError,
   ParseTaskNotCancelableError,
 } from "./materials/import-service.ts";
+import { MaterialRangeResolver, type ResolveSelectionInput } from "./materials/range-resolver.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -316,6 +331,10 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   const { service, staticDir } = options;
   const terminology = options.terminology ?? null;
   const materials = options.materials ?? null;
+  /* D4-2 统一区间/锚点解析层：与材料服务同一仓储派生（materials 未装配
+     即为 null → 解析路由 503 materials-not-wired，绝不伪装成功）。 */
+  const materialRanges =
+    materials === null ? null : new MaterialRangeResolver({ repository: materials.repository });
   /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
   const sseResponses = new Set<ServerResponse>();
 
@@ -676,7 +695,8 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         return;
       }
 
-      /* 持久化阅读位置（UPSERT 整体替换 → 204 无 body）。 */
+      /* 持久化阅读位置（UPSERT 整体替换 → 204 无 body；D4-2 增读侧：
+         GET → 200 {readingPosition: MaterialReadingPosition | null}）。 */
       const readingPositionMatch = /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/reading-position$/.exec(pathname);
       if (readingPositionMatch !== null) {
         if (materials === null) {
@@ -687,6 +707,10 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         }
         const treeId = asTreeId(readingPositionMatch[1]!);
         const materialId = decodeURIComponent(readingPositionMatch[2]!) as MaterialId;
+        if (method === "GET") {
+          sendJson(res, 200, { readingPosition: materials.getReadingPosition(treeId, materialId) });
+          return;
+        }
         if (method === "PUT") {
           const body = await readJsonBody(req);
           const blockIdRaw = body["blockId"];
@@ -706,6 +730,87 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           return;
         }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      /* D4-2 阅读与来源定位（issue #8 工作包 D4-2）——统一区间/锚点解析：
+         POST …/versions/:versionId/resolve-selection
+         body {locator, excerpt?, blockId?, anchor?} → 200 {selection, block}
+         （规范 MaterialSelection：切片/块/UTF-16 边界/sourceHash 全通过）；
+         区间纪律拒绝 → 400 + 稳定原因码（invalid-locator / needle-not-found /
+         out-of-bounds / reversed / zero-length / surrogate-split /
+         combining-split / emoji-split / excerpt-mismatch / stale-version /
+         cross-page / cross-block / block-mismatch）；非 ready 版本 → 409
+         material-not-ready（与分块读取同一纪律）。未装配 → 503。 */
+      const resolveSelectionMatch =
+        /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/versions\/([^/]+)\/resolve-selection$/.exec(pathname);
+      if (resolveSelectionMatch !== null) {
+        if (materials === null || materialRanges === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(resolveSelectionMatch[1]!);
+        const materialId = decodeURIComponent(resolveSelectionMatch[2]!) as MaterialId;
+        const versionId = decodeURIComponent(resolveSelectionMatch[3]!) as MaterialVersionId;
+        materials.getReadingPosition(treeId, materialId); // 树/材料作用域（404 于解析之前）
+        const body = await readJsonBody(req);
+        const locatorRaw = body["locator"];
+        if (locatorRaw === null || typeof locatorRaw !== "object" || Array.isArray(locatorRaw)) {
+          throw new InvalidArgumentError("request field 'locator' must be an object {kind, ...}");
+        }
+        const anchorRaw = body["anchor"];
+        if (anchorRaw !== undefined && (anchorRaw === null || typeof anchorRaw !== "object" || Array.isArray(anchorRaw))) {
+          throw new InvalidArgumentError("request field 'anchor' must be an object {versionId, sourceHash?}");
+        }
+        let anchor: ResolveSelectionInput["anchor"] | undefined;
+        if (anchorRaw !== undefined) {
+          const anchorRecord = anchorRaw as Record<string, unknown>;
+          const anchorVersionId = anchorRecord["versionId"];
+          if (typeof anchorVersionId !== "string" || anchorVersionId.length === 0) {
+            throw new InvalidArgumentError("request field 'anchor.versionId' must be a non-empty string");
+          }
+          const anchorHash = anchorRecord["sourceHash"];
+          if (anchorHash !== undefined && typeof anchorHash !== "string") {
+            throw new InvalidArgumentError("request field 'anchor.sourceHash' must be a string");
+          }
+          anchor = {
+            versionId: anchorVersionId as MaterialVersionId,
+            ...(anchorHash === undefined ? {} : { sourceHash: anchorHash }),
+          };
+        }
+        const excerptRaw = body["excerpt"];
+        if (excerptRaw !== undefined && typeof excerptRaw !== "string") {
+          throw new InvalidArgumentError("request field 'excerpt' must be a string");
+        }
+        const blockIdRaw = body["blockId"];
+        if (blockIdRaw !== undefined && typeof blockIdRaw !== "string") {
+          throw new InvalidArgumentError("request field 'blockId' must be a string");
+        }
+        const input: ResolveSelectionInput = {
+          materialId,
+          versionId,
+          locator: locatorRaw as ResolveSelectionInput["locator"],
+          ...(excerptRaw === undefined ? {} : { excerpt: excerptRaw }),
+          ...(blockIdRaw === undefined ? {} : { blockId: blockIdRaw }),
+          ...(anchor === undefined ? {} : { anchor }),
+        };
+        const resolution = materialRanges.resolve(input);
+        if (!resolution.ok) {
+          const { code, message } = resolution.rejection;
+          if (code === "material-not-ready") {
+            sendJson(res, 409, { error: { code, message } } satisfies ApiErrorBody);
+          } else {
+            sendJson(res, 400, { error: { code, message } } satisfies ApiErrorBody);
+          }
+          return;
+        }
+        sendJson(res, 200, { selection: resolution.result.selection, block: resolution.result.block });
         return;
       }
 

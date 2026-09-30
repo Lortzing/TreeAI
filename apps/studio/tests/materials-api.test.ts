@@ -144,7 +144,7 @@ async function until(predicate: () => Promise<boolean> | boolean, what: string, 
   assert.fail(`timed out waiting for ${what}`);
 }
 
-/** 三块 markdown（blk-0 "One\n\n" / blk-1 "Two\n\n" / blk-2 "Three"，18 units）。 */
+/** 三块 markdown（blk-0 "One\n\n" [0,5) / blk-1 "Two\n\n" [5,10) / blk-2 "Three" [10,15)，15 units）。 */
 const THREE_BLOCKS = "One\n\nTwo\n\nThree";
 
 /** 受控门控假解析器（HTTP 注入）：parse() 挂起直到 release()。 */
@@ -698,7 +698,10 @@ test("reading position: PUT 204 upsert + detail read-back; validation failures a
       ).status,
       404,
     );
-    assert.equal((await call(studio.url(positionPath), "GET")).status, 405);
+    /* D4-2 起 reading-position 增读侧：GET → 200（回读最后写入的位置；
+       详尽 GET 语义见 materials-reading-api.test.ts）。 */
+    assert.equal((await call(studio.url(positionPath), "GET")).status, 200);
+    assert.equal((await call(studio.url(positionPath), "DELETE")).status, 405);
   } finally {
     await closeAll(running);
     cleanupDir(dir);
