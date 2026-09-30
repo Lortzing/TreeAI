@@ -79,6 +79,17 @@
   **不碰** app.js（d4-2-frontend 在飞）、search/（d4-4-wiring）、b9-nav。
   B3 的真实 Pi 浏览器证据属最终候选 SHA 回归，不在本支。
 
+- `wip/d4-5-export`（worktree d4-5-export，2026-09-30 22:06 追加，基于 main
+  `8d2e240`；登记会话：wave-2 集成会话，agent 在飞）：D4-5 数据可携带与可恢复
+  ——CLI 导出/空目录恢复（charter §5 导出恢复 + contracts §5：版本化包
+  manifest+blobs+facts、校验和、损坏拒绝/原子落位、缺 session 降级、
+  Markdown 可读导出）+ B5 离线机械部分（导出→空目录恢复→完整性比对、
+  损坏包拒绝且现有数据不变）接 verify:d4。**零迁移目标**：导出元信息从
+  既有表+blobs 派生；若确需迁移必须先停下报告（0010 已备案归 D4-8，
+  不可占用）。文件面：`scripts/d4/export/`、导出/恢复服务与测试、
+  verify-d4.js（b5 接线，与 d4-3-backend 的 b3 接线可能冲突，集成方解决）
+  ——不碰 app.js / search / materials 解析器 / 迁移。
+
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
 
