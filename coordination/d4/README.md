@@ -11,7 +11,8 @@
 
 - `wip/term-backend`（worktree term-backend）：术语后端 P0×3 + P1×2 ——
   缓存语境键、推广事务原子性（bindTerminologyPromotion 单事务/冲突零副作用）、
-  首问 payload hash + 派发账本（迁移 0011 已登记）、预算预留、取消记账。
+  首问 payload hash + 派发账本（迁移编号按下方更正记录：实际落 **0009**）、
+  预算预留、取消记账。
 - `wip/term-frontend`（worktree term-frontend）：app.js `turnOverlaysFor`
   来源/切片联合校验（P0）+ `refreshTerminology` 跨树竞态守卫（P1）。
 - `wip/d4-2-backend`（worktree d4-2-backend）：D4-2 后端——材料读取 API、
@@ -23,6 +24,13 @@
 
 若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
 `.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
+
+**接管记录（2026-09-30 21:10 本地 / treeai-loop 调度会话）**：登记该波的
+会话已结束且三分支零提交零改动（波次实际未开工）；本会话确认无并行会话
+在飞后**接管本波**，三分支已 ff 至 main `15c7a99` 后开工，验收口径不变。
+另外：d4-1-pdf-parser worktree 里遗留的未提交 PDF 解析器加固（bfrange
+数组形态、内联图跳过、字体惰性物化 + 测试）已按保全纪律提交至
+`wip/d4-1-pdf-parser`（`dd29f96`），未合入本波，供后续 PDF 波评估。
 
 ## 上一波（2026-09-30 晚，已完成）
 
