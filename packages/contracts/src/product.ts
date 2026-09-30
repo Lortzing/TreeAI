@@ -62,6 +62,7 @@
  * - anchorEntryId === anchorTurn.piEntryId（分支在 Pi 会话树内的分叉点）。
  */
 import type { Brand } from "./branding.js";
+import type { TreeAIError } from "./errors.js";
 import type {
   BranchId,
   EpisodeId,
@@ -175,6 +176,45 @@ export interface TerminologyAnnotation {
   /** 推广幂等键（与 promotedBranchId 同时落库）。 */
   readonly promotionKey: string | null;
   readonly createdAt: IsoTimestamp;
+}
+
+/**
+ * 术语推广首问派发账本（issue #7 P0 整改，2026-09-30 验收；persistence
+ * migration 0011）。
+ *
+ * 不变量：
+ * - 每条批注至多一行（annotation_id 唯一）——与推广绑定（promotedBranchId
+ *   + promotionKey）在同一事务内落库（意图登记）；
+ * - firstQuestionHash 是首问**不可变 payload**（组合上下文 + 问题全文）的
+ *   SHA-256：同键重放携带不同 payload 即冲突（409），绝不静默换问题；
+ * - dispatchState 状态机：pending（已登记、从未派发）→ dispatched（派发
+ *   在途/进程中断——结果未知）→ succeeded（已送达，runId 非空）|
+ *   failed（明确失败，可重试：failed → dispatched）；
+ * - attempts 只统计**实际发出的派发尝试**（markSent 自增）；「至多一次成功
+ *   首问」由 succeeded 终态保证，failed 后的重试是显式允许的新尝试；
+ * - 绝不以「分支上是否有 Turn」推断派发结果——重放判定只走本账本，
+ *   dispatched（未知结果）必须先对账（Turn/Run 证据）再决定是否重发。
+ */
+export type TerminologyDispatchState = "pending" | "dispatched" | "succeeded" | "failed";
+
+/** 术语推广首问派发账本行。 */
+export interface TerminologyPromotionDispatch {
+  readonly id: string;
+  readonly annotationId: string;
+  readonly treeId: TreeId;
+  readonly promotionKey: string;
+  readonly branchId: BranchId;
+  /** 首问不可变 payload 的 SHA-256（十六进制）。 */
+  readonly firstQuestionHash: string;
+  readonly dispatchState: TerminologyDispatchState;
+  /** 实际派发尝试次数（0 = 从未发出）。 */
+  readonly attempts: number;
+  /** 已知成功派发的 Run 引用（仅 succeeded 终态非空；失败 Run 经分支 episode 可查）。 */
+  readonly runId: RunId | null;
+  /** dispatchState === "failed" 时的明确失败（脱敏 code + message）。 */
+  readonly failure: TreeAIError | null;
+  readonly createdAt: IsoTimestamp;
+  readonly updatedAt: IsoTimestamp;
 }
 
 /**
