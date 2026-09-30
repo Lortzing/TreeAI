@@ -456,6 +456,76 @@ details.return-excerpt .return-excerpt-full {
 }
 .turn .branch-here:hover { background: var(--green-wash); }
 .turn .selection-hint { display: none; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+/* 术语解释入口（issue #7 C ③）：与建支线同排的安静按钮；无选区禁用。 */
+.turn .term-explain {
+  display: inline-block;
+  margin-top: 10px;
+  margin-right: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px dashed var(--gold);
+  border-radius: 6px;
+  background: none;
+  color: var(--gold-deep);
+  cursor: pointer;
+}
+.turn .term-explain:hover:not(:disabled) { background: var(--gold-wash); }
+.turn .term-explain:disabled { opacity: 0.55; cursor: default; }
+
+/* 术语解释卡（瞬态任务面 + 保存/推广动作；渲染在对应答案之后）。 */
+.term-explain-card {
+  margin: 6px 0 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--gold-line);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  font-family: var(--font-read);
+  font-size: 14px;
+}
+.term-explain-card .term-explain-head {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+.term-explain-card .term-explain-body {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.term-explain-card .term-explain-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.term-explain-card .term-explain-actions input {
+  flex: 1 1 200px;
+  min-width: 160px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.term-explain-card .term-explain-close,
+.term-explain-card .term-explain-retry {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-explain-card .term-explain-close:hover,
+.term-explain-card .term-explain-retry:hover { background: var(--wash); }
 .turn.has-selection .selection-hint { display: inline; }
 
 /* P1 流式占位 turn（M5）：静态指示——caret 不闪烁，无循环动画。 */

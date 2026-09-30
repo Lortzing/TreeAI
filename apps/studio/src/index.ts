@@ -6,6 +6,8 @@
  *                     [--driver echo|pi] [--provider ID] [--model ID]
  *                     [--agent-dir DIR]
  *                     [--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR]
+ *                     [--terminology-provider ID] [--terminology-model ID]
+ *                     [--terminology-budget N]
  *
  * - 默认 driver 为 echo：离线确定性回声驱动（经 runtime-pi 的端口注入
  *   缝隙驱动真实 PiRuntime 实现；无网络、无模型、无 ~/.pi 访问），
@@ -26,6 +28,13 @@
  *   require-approval 不执行并以 policy-denied 收敛该次 run（fail
  *   closed），决策以安全投影记入 journal（tool.decision）。应用层策略，
  *   不是 OS 沙箱。
+ * - 术语执行器（issue #7 C ①，隔离装配）：--terminology-provider /
+ *   --terminology-model 指定术语执行器的 provider/model（缺省同主模型），
+ *   --terminology-budget 指定累计预算（估算 token，chars/4 口径，缺省
+ *   1,000,000）。执行器持有**独立 runtime 实例**（独立 sessionDir =
+ *   <data>/terminology/sessions、独立 workspace、thinkingLevel="off"
+ *   非推理装配）；解释/提取是瞬态任务，绝不触碰主 Pi 会话/游标/pending
+ *   Return；用量记账持久化于 TreeAI DB 的 terminology_state kv。
  * - 产品状态全部落在 --data 目录的 TreeAI 数据库（treeai.db）、Pi session
  *   文件（sessions/）与审计 journal（journal.jsonl，P1：run 生命周期
  *   事件的追加式记录，跨重启续用）；重启后原样恢复。
@@ -50,6 +59,7 @@ import {
 } from "./cli.ts";
 import { EchoSdkPort } from "./echo-port.ts";
 import { TreeStudioService } from "./service.ts";
+import { TerminologyExecutor, TerminologyService } from "./terminology.ts";
 import { createStudioServer } from "./server.ts";
 
 let piApiKeyValueGuard: string | null = null;
@@ -145,8 +155,61 @@ async function main(): Promise<void> {
     journal,
   });
 
+  /* 术语三部分（issue #7 C ①）：隔离执行器——独立 runtime 实例（独立
+     sessionDir/workspace/模型选择）、非推理 thinkingLevel="off"、独立
+     provider/model（--terminology-provider/--terminology-model，缺省同主
+     模型）、预算 fail-closed、用量跨重启持久化（repository kv）。解释/
+     提取是瞬态任务：绝不触碰主 Pi 会话/游标/pending Return。 */
+  const terminologyDir = join(options.dataDir, "terminology");
+  const terminologySessions = join(terminologyDir, "sessions");
+  const terminologyWorkspace = join(terminologyDir, "workspace");
+  mkdirSync(terminologySessions, { recursive: true });
+  mkdirSync(terminologyWorkspace, { recursive: true });
+  const terminologyModel = {
+    providerId: options.terminologyProviderId,
+    modelId: options.terminologyModelId,
+  };
+  let terminologyRuntime: PiRuntime;
+  if (piSetup === null) {
+    terminologyRuntime = createPiRuntimeFromConfig({
+      port: new EchoSdkPort({ model: terminologyModel }),
+      defaultCwd: terminologyWorkspace,
+      thinkingLevel: "off",
+    });
+  } else {
+    terminologyRuntime = createPiRuntime({
+      agentDir: piSetup.agentDir,
+      defaultCwd: terminologyWorkspace,
+      credentials: piSetup.credentials,
+      thinkingLevel: "off",
+    });
+  }
+  const terminologyUsageKey = "usage";
+  const persistedUsage = repository.getTerminologyState(terminologyUsageKey);
+  let initialUsage: { total: { requests: number; promptChars: number; completionChars: number }; lateResultsDiscarded: number } | null = null;
+  if (persistedUsage !== null) {
+    try {
+      initialUsage = JSON.parse(persistedUsage) as typeof initialUsage;
+    } catch {
+      initialUsage = null; /* 损坏 kv 不挂启动：从零记账（旧值保留不读） */
+    }
+  }
+  const terminologyExecutor = new TerminologyExecutor({
+    runtime: terminologyRuntime,
+    model: terminologyModel,
+    sessionDir: terminologySessions,
+    cwd: terminologyWorkspace,
+    budgetTokens: options.terminologyBudgetTokens,
+    cacheEnabled: true,
+    initialUsage,
+    onUsage: (usage) => {
+      repository.setTerminologyState(terminologyUsageKey, JSON.stringify(usage));
+    },
+  });
+  const terminology = new TerminologyService({ repository, executor: terminologyExecutor, studio: service });
+
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
-  const studio = createStudioServer({ service, staticDir });
+  const studio = createStudioServer({ service, staticDir, terminology });
   const port = await studio.listen(options.port);
 
   const banner = [
@@ -174,6 +237,10 @@ async function main(): Promise<void> {
         "; writes/shell/network denied (fail closed)",
     );
   }
+  banner.push(
+    `treeai-studio: terminology executor isolated (model=${options.terminologyProviderId}/${options.terminologyModelId}, ` +
+      `budget=${String(options.terminologyBudgetTokens)} est tokens, thinking=off)`,
+  );
   banner.push("");
   process.stdout.write(scrubSecret(banner.join("\n")));
 
@@ -184,6 +251,7 @@ async function main(): Promise<void> {
     void (async () => {
       try {
         await service.dispose();
+        await terminologyExecutor.dispose();
         repository.close();
         // journal close 排空内部写入队列后落盘（追加式文件，重启续用）。
         await journal.close();

@@ -27,6 +27,8 @@ import type {
   TreeAIError,
   TreeAIErrorCode,
   TreeId,
+  TerminologyAnnotation,
+  TerminologyMode,
   Turn,
   TurnId,
   TurnRole,
@@ -106,6 +108,22 @@ export interface ReturnAdoptionAttemptRow {
   return_turn_id: string;
   run_id: string;
   attempted_at: string;
+}
+export interface TerminologyAnnotationRow {
+  id: string;
+  tree_id: string;
+  branch_id: string;
+  anchor_turn_id: string;
+  sel_start: number;
+  sel_end: number;
+  sel_text: string;
+  source_hash: string;
+  term: string;
+  explanation: string;
+  mode: string;
+  promoted_branch_id: string | null;
+  promotion_key: string | null;
+  created_at: string;
 }
 export interface ActiveNavigationRow {
   tree_id: string;
@@ -343,6 +361,36 @@ export function rowToReturnAdoptionAttempt(row: ReturnAdoptionAttemptRow): {
   attemptedAt: IsoTimestamp;
 } {
   return { runId: row.run_id as RunId, attemptedAt: row.attempted_at as IsoTimestamp };
+}
+
+const TERMINOLOGY_MODES = new Set(["term", "range", "auto"]);
+
+function assertTerminologyMode(mode: string, context: string): TerminologyMode {
+  if (!TERMINOLOGY_MODES.has(mode)) {
+    throw new Error(`${context}: unknown terminology mode '${mode}'`);
+  }
+  return mode as TerminologyMode;
+}
+
+export function rowToTerminologyAnnotation(row: TerminologyAnnotationRow): TerminologyAnnotation {
+  return {
+    id: row.id,
+    treeId: row.tree_id as TreeId,
+    branchId: row.branch_id as BranchId,
+    anchorTurnId: row.anchor_turn_id as TurnId,
+    selection: {
+      start: Number(row.sel_start),
+      end: Number(row.sel_end),
+      text: row.sel_text,
+    },
+    sourceHash: row.source_hash,
+    term: row.term,
+    explanation: row.explanation,
+    mode: assertTerminologyMode(row.mode, `terminology annotation ${row.id}`),
+    promotedBranchId: (row.promoted_branch_id as BranchId | null) ?? null,
+    promotionKey: row.promotion_key ?? null,
+    createdAt: row.created_at as IsoTimestamp,
+  };
 }
 
 export function rowToActiveNavigation(row: ActiveNavigationRow): {

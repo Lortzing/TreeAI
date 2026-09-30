@@ -60,12 +60,21 @@ export interface CliOptions {
    * 仅在 --pi-tools 给出时合法。
    */
   readonly policyReadRoots: readonly string[] | null;
+  /**
+   * 术语执行器的 provider（issue #7 C ① 隔离 provider；缺省 = 主 provider）。
+   */
+  readonly terminologyProviderId: string;
+  /** 术语执行器的 model（缺省 = 主 model）。 */
+  readonly terminologyModelId: string;
+  /** 术语执行器的累计预算（估算 token，chars/4 口径；缺省 1,000,000）。 */
+  readonly terminologyBudgetTokens: number;
 }
 
 const USAGE =
   "usage: node src/index.ts [--port N] [--data DIR] [--driver echo|pi] " +
   "[--provider ID] [--model ID] [--agent-dir DIR] " +
-  "[--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR]";
+  "[--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR] " +
+  "[--terminology-provider ID] [--terminology-model ID] [--terminology-budget N]";
 
 /** 逗号分隔列表解析：剔除空白项；未给出 → null（区分「显式空列表」）。 */
 function parseList(value: string | undefined): readonly string[] | null {
@@ -83,6 +92,9 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     agentDir?: string;
     piTools?: string;
     policyReadRoots?: string;
+    terminologyProvider?: string;
+    terminologyModel?: string;
+    terminologyBudget?: string;
   } = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
@@ -98,6 +110,9 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     else if (flag === "--agent-dir") options.agentDir = value;
     else if (flag === "--pi-tools") options.piTools = value;
     else if (flag === "--policy-read-roots") options.policyReadRoots = value;
+    else if (flag === "--terminology-provider") options.terminologyProvider = value;
+    else if (flag === "--terminology-model") options.terminologyModel = value;
+    else if (flag === "--terminology-budget") options.terminologyBudget = value;
     else throw new Error(`unknown flag: ${flag}`);
   }
   const driver = options.driver ?? "echo";
@@ -151,6 +166,10 @@ export function parseArgs(argv: readonly string[]): CliOptions {
       `--driver pi requires --provider and --model, and the ${PI_API_KEY_ENV} environment variable for the in-memory API key`,
     );
   }
+  const terminologyBudget = Number(options.terminologyBudget ?? "1000000");
+  if (!Number.isInteger(terminologyBudget) || terminologyBudget <= 0) {
+    throw new Error(`--terminology-budget must be a positive integer (got '${String(options.terminologyBudget)}')`);
+  }
   const dataDir = resolve(options.dataDir ?? "./treeai-studio-data");
   return {
     port: options.port ?? 8787,
@@ -164,6 +183,9 @@ export function parseArgs(argv: readonly string[]): CliOptions {
         : null,
     piTools,
     policyReadRoots,
+    terminologyProviderId: options.terminologyProvider ?? providerId,
+    terminologyModelId: options.terminologyModel ?? modelId,
+    terminologyBudgetTokens: terminologyBudget,
   };
 }
 

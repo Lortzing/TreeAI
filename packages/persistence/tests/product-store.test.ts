@@ -47,19 +47,30 @@ test("migrations bring a fresh database to the current product schema", () => {
 
     const raw = new DatabaseSync(path);
     const tables = raw
-      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('turns', 'branch_origins', 'tree_active_navigation')")
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN " +
+          "('turns', 'branch_origins', 'tree_active_navigation', 'return_adoption_attempts', " +
+          "'terminology_annotations', 'terminology_state')",
+      )
       .all() as Array<{ name: string }>;
     assert.deepEqual(
       tables.map((t) => t.name).sort(),
-      ["branch_origins", "tree_active_navigation", "turns"],
-      "product migrations must create the product and navigation tables",
+      [
+        "branch_origins",
+        "return_adoption_attempts",
+        "terminology_annotations",
+        "terminology_state",
+        "tree_active_navigation",
+        "turns",
+      ],
+      "product migrations must create the product, navigation, adoption-attempt and terminology tables",
     );
     const versions = raw.prepare("SELECT version FROM schema_migrations ORDER BY version").all() as Array<{
       version: number;
     }>;
     assert.deepEqual(
       versions.map((v) => Number(v.version)),
-      [1, 2, 3, 4, 5, 6],
+      [1, 2, 3, 4, 5, 6, 7],
       "all product migrations must be registered on a fresh database",
     );
     raw.close();
@@ -846,6 +857,122 @@ test("product state survives repository reopen (fact-source persistence)", () =>
     assert.ok(active !== null);
     assert.equal(active.branchId, ids.secondBranchId);
     assert.equal(active.reference.entryId, "entry-0001");
+    repo2.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
+
+test("terminology annotations round-trip with anchor integrity, range dedup, at-most-one promotion binding, and kv state", () => {
+  const dir = makeTempDir();
+  try {
+    const repo = TreeRepository.open({ path: dbPath(dir), now: makeClock(), generateId: makeIdGenerator("t") });
+    const ids = setupDomainWithRun(repo);
+    const answer = repo.createTurn({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      episodeId: ids.episodeId,
+      runId: ids.runId,
+      role: "assistant",
+      text: "The entropy of a distribution measures uncertainty.",
+      piEntryId: "entry-0042",
+    });
+
+    /* 保存 + 往返：切片一致、sourceHash/term/explanation/mode 原样。 */
+    const created = repo.createTerminologyAnnotation({
+      treeId: ids.treeId,
+      branchId: ids.rootBranchId,
+      anchorTurnId: answer.id,
+      selection: { start: 4, end: 11, text: "entropy" },
+      sourceHash: "a".repeat(64),
+      term: "entropy",
+      explanation: "A measure of uncertainty.",
+      mode: "term",
+    });
+    assert.equal(created.term, "entropy");
+    assert.equal(created.mode, "term");
+    assert.equal(created.promotedBranchId, null);
+    assert.deepEqual(repo.listTerminologyAnnotations(ids.treeId).map((a) => a.id), [created.id]);
+    assert.deepEqual(
+      repo.findTerminologyAnnotationByRange(ids.treeId, answer.id, 4, 11)?.id,
+      created.id,
+      "the range lookup finds the annotation",
+    );
+
+    /* 锚定完整性：切片失配 / 越界 / 非答案锚点 → InvalidArgumentError。 */
+    assert.throws(
+      () =>
+        repo.createTerminologyAnnotation({
+          treeId: ids.treeId,
+          branchId: ids.rootBranchId,
+          anchorTurnId: answer.id,
+          selection: { start: 4, end: 11, text: "ENTROPY" },
+          sourceHash: "a".repeat(64),
+          term: "x",
+          explanation: "y",
+          mode: "term",
+        }),
+      InvalidArgumentError,
+    );
+    assert.throws(
+      () =>
+        repo.createTerminologyAnnotation({
+          treeId: ids.treeId,
+          branchId: ids.secondBranchId,
+          anchorTurnId: answer.id,
+          selection: { start: 0, end: 3, text: "The" },
+          sourceHash: "a".repeat(64),
+          term: "x",
+          explanation: "y",
+          mode: "range",
+        }),
+      InvalidArgumentError,
+    );
+
+    /* 同选区去重：唯一索引判负 → ConstraintViolationError。 */
+    assert.throws(
+      () =>
+        repo.createTerminologyAnnotation({
+          treeId: ids.treeId,
+          branchId: ids.rootBranchId,
+          anchorTurnId: answer.id,
+          selection: { start: 4, end: 11, text: "entropy" },
+          sourceHash: "a".repeat(64),
+          term: "entropy",
+          explanation: "different",
+          mode: "range",
+        }),
+      ConstraintViolationError,
+    );
+
+    /* 幂等推广绑定：首次生效；再绑（同键重放读路径）返回 false。 */
+    const promotedBranch = repo.createBranch(ids.treeId, { parentBranchId: ids.rootBranchId });
+    assert.equal(repo.bindTerminologyPromotion(created.id, "promo-key", promotedBranch.id), true);
+    assert.equal(repo.bindTerminologyPromotion(created.id, "promo-key-2", ids.secondBranchId), false);
+    const bound = repo.getTerminologyAnnotation(created.id);
+    assert.equal(bound.promotedBranchId, promotedBranch.id);
+    assert.equal(bound.promotionKey, "promo-key");
+    assert.equal(
+      repo.findTerminologyAnnotationByPromotionKey(ids.treeId, "promo-key")?.id,
+      created.id,
+      "the promotion key replays to the annotation",
+    );
+
+    /* kv 状态往返。 */
+    assert.equal(repo.getTerminologyState("usage"), null);
+    repo.setTerminologyState("usage", '{"total":{"requests":1}}');
+    assert.equal(repo.getTerminologyState("usage"), '{"total":{"requests":1}}');
+    repo.setTerminologyState("usage", '{"total":{"requests":2}}');
+    assert.equal(repo.getTerminologyState("usage"), '{"total":{"requests":2}}', "UPSERT overwrites");
+
+    /* 跨重开持久化。 */
+    repo.close();
+    const repo2 = TreeRepository.open({ path: dbPath(dir) });
+    const reloaded = repo2.listTerminologyAnnotations(ids.treeId);
+    assert.equal(reloaded.length, 1);
+    assert.equal(reloaded[0]!.explanation, "A measure of uncertainty.");
+    assert.equal(reloaded[0]!.promotedBranchId, promotedBranch.id);
+    assert.equal(repo2.getTerminologyState("usage"), '{"total":{"requests":2}}');
     repo2.close();
   } finally {
     cleanupTempDir(dir);

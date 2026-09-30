@@ -19,6 +19,7 @@ export {
   type ActiveNavigation,
   type CreateBackupOptions,
   type CreateBranchInput,
+  type CreateTerminologyAnnotationInput,
   type CreateTurnInput,
   type EpisodeRecovery,
   type BranchRecovery,

@@ -155,6 +155,22 @@ const state = {
   /** @type {FocusReturnRefT|null} */ drawerFocusReturn: null,
   /** 打开抽屉时定位到的 run（delivered 卡反查）。 @type {string|null} */
   drawerFocusRunId: null,
+  /**
+   * 术语解释卡（issue #7 C ③ 最小面）：当前活跃的解释（瞬态任务结果或
+   * 已保存批注）。null = 无卡。单用户语义：同一时刻至多一张解释卡。
+   * @type {{
+   *   branchId: string, turnId: string,
+   *   selection: {start:number,end:number,text:string},
+   *   mode: "term"|"range",
+   *   state: "loading"|"explained"|"saved"|"failed",
+   *   explanation: string|null, error: string|null,
+   *   annotation: {id:string,term:string,explanation:string,promotedBranchId:string|null,selection:Object,mode:string,createdAt:string}|null,
+   *   promotionKey: string|null, promoting: boolean
+   * }|null}
+   */
+  termExplain: null,
+  /** 术语读模型（解释卡保存/推广后刷新；drawer Terms 节的数据面）。 */
+  terminology: null,
 };
 
 /** Diagnostics poll timer — fallback while a prompt is active and SSE is down. */
@@ -802,12 +818,26 @@ function renderTurnsInto(container, view, branchId, stick) {
       branchButton.addEventListener("click", () =>
         guard(() => branchFromTurn(div, turn), branchId === st.trunkBranchId ? "main" : "panel"),
       );
-      div.append(document.createElement("br"), branchButton, hint);
+      /* 术语解释入口（issue #7 C ③ 最小面）：选区（点词双击/任意划线）即
+         武装；无选区禁用（解释需要明确区间，不做整答案回退）。 */
+      const explainButton = document.createElement("button");
+      explainButton.className = "term-explain";
+      explainButton.textContent = "⌖ Explain selection";
+      explainButton.disabled = true;
+      explainButton.title = "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
+      explainButton.addEventListener("click", () => {
+        const sel = selectionOffsetsWithin(div, turn.text);
+        if (sel === null) return;
+        guard(() => explainSelection(branchId, turn, sel), branchId === st.trunkBranchId ? "main" : "panel");
+      });
+      div.append(document.createElement("br"), branchButton, explainButton, hint);
       div.addEventListener("mouseup", () => {
         const sel = selectionOffsetsWithin(div, turn.text);
         div.classList.toggle("has-selection", sel !== null);
         branchButton.textContent =
           sel !== null ? "⑃ Branch from selection" : "⑃ Branch from here";
+        explainButton.disabled = sel === null;
+        explainButton.textContent = sel !== null ? "⌖ Explain selection" : "⌖ Explain selection";
       });
     }
     container.append(div);
@@ -815,6 +845,15 @@ function renderTurnsInto(container, view, branchId, stick) {
     if (turn.role === "assistant") {
       for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
         container.append(returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id), "anchored"));
+      }
+      /* 术语解释卡：渲染在对应答案（及其 Return 卡）之后。 */
+      if (
+        state.termExplain !== null &&
+        state.termExplain.branchId === branchId &&
+        state.termExplain.turnId === turn.id
+      ) {
+        const card = termExplainCard();
+        if (card !== null) container.append(card);
       }
     }
   }
@@ -1556,6 +1595,8 @@ function resetTransientView() {
   state.streaming = null;
   state.forceSessionBanner = false;
   state.forcePanelSessionNote = false;
+  state.termExplain = null;
+  state.terminology = null;
 }
 
 async function openTree(treeId) {
@@ -2119,10 +2160,14 @@ async function openDrawer(opts = {}) {
   state.drawerFocusRunId = opts.focusRunId ?? null;
   state.drawerFocusReturn = opts.trigger ?? { kind: "element", element: $("source-drawer-toggle") };
   state.journalEvents = null; /* 三态复位：进入加载中（防上次的陈旧态闪现） */
+  state.terminology = null; /* 术语读模型同批拉取 */
   renderDrawer();
   showDrawer();
   $("source-drawer").focus(); /* 焦点入抽屉（W2 §2.7） */
   void loadJournal();
+  void refreshTerminology().then(() => {
+    if (state.drawerOpen) renderDrawer();
+  });
 }
 
 /**
@@ -2264,6 +2309,44 @@ function renderDrawer() {
     drawer.append(list);
   }
 
+  /* 术语批注（issue #7 C ③）：已保存批注的出处（术语/摘录/来源分支/
+     推广去向）+ 执行器用量（requests 为精确计数，est tokens 为诚实估算）。
+     三态呈现与 journal 同纪律：加载中 / 已载（可为空）/ 失败。 */
+  const termsTitle = document.createElement("h3");
+  termsTitle.textContent = "Terminology";
+  drawer.append(termsTitle);
+  const terminology = state.terminology;
+  if (terminology === null) {
+    drawer.append(mutedLine("loading terminology…"));
+  } else if (!terminology.ok) {
+    drawer.append(mutedLine("terminology failed to load — close and reopen the drawer to retry"));
+  } else if (terminology.annotations.length === 0) {
+    drawer.append(mutedLine("no saved term annotations yet — select a term in an answer and “Explain selection”"));
+  } else {
+    const list = document.createElement("ul");
+    list.className = "drawer-list";
+    for (const annotation of terminology.annotations) {
+      const li = document.createElement("li");
+      const promotedNote =
+        annotation.promotedBranchId === null
+          ? "not promoted"
+          : `promoted to ${branchLabel(annotation.promotedBranchId)}`;
+      li.textContent =
+        `“${annotation.term}” (${annotation.mode}) from ${branchLabel(annotation.branchId)} · ` +
+        `anchored on “${annotation.selection.text}” · ${promotedNote}`;
+      list.append(li);
+    }
+    drawer.append(list);
+    const usageNote = document.createElement("p");
+    usageNote.className = "muted";
+    const usage = terminology.usage;
+    usageNote.textContent =
+      `terminology executor: ${String(usage.total.requests)} request(s), ` +
+      `est. ${String(usage.estTokens)}/${String(usage.budgetTokens)} tokens (chars/4 estimate), ` +
+      `${String(usage.lateResultsDiscarded)} late result(s) discarded, cache ${terminology.cacheEnabled ? "on" : "off"}`;
+    drawer.append(usageNote);
+  }
+
   /* journal 尾部（保守摘要；最新在后）。三态（W2 §2.7 / issue #3 P1）：
      加载中 / 已载（可为空——如实空态）/ 加载失败（失败 + 重试，绝不
      伪装成无事件）。 */
@@ -2337,6 +2420,226 @@ function mutedLine(text) {
   p.className = "muted";
   p.textContent = text;
   return p;
+}
+
+/* ------------------------------ 术语三部分（issue #7 C ③ 最小面） ------------------------------ */
+
+/** 术语读模型拉取（解释卡保存/推广后与抽屉打开时刷新；失败不伪装空态——
+    三态：null = 未载 / {ok:true,…} = 已载 / {ok:false} = 拉取失败）。 */
+async function refreshTerminology() {
+  if (state.currentTreeId === null) return;
+  try {
+    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology`);
+    state.terminology = { ok: true, ...payload };
+  } catch {
+    state.terminology = { ok: false };
+  }
+}
+
+/**
+ * 解释选区（瞬态任务——不落任何树产品事实；隔离执行器）。卡内呈现任务
+ * 结果（loading/explained/saved/failed），保存与推广是显式后续动作。
+ */
+async function explainSelection(branchId, turn, selection) {
+  const mode = selection.text.trim().includes(" ") ? "range" : "term";
+  state.termExplain = {
+    branchId,
+    turnId: turn.id,
+    selection,
+    mode,
+    state: "loading",
+    explanation: null,
+    error: null,
+    annotation: null,
+    promotionKey: null,
+    promoting: false,
+    firstQuestion: "",
+  };
+  renderAll();
+  try {
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/explain`,
+      "POST",
+      { branchId, anchorTurnId: turn.id, selection, mode },
+    );
+    if (payload.annotation !== null) {
+      state.termExplain = {
+        ...state.termExplain,
+        state: "saved",
+        annotation: payload.annotation,
+        explanation: payload.annotation.explanation,
+      };
+    } else if (payload.task !== null && payload.task.state.kind === "succeeded") {
+      state.termExplain = { ...state.termExplain, state: "explained", explanation: payload.task.state.explanation };
+    } else if (payload.task !== null && payload.task.state.kind === "failed") {
+      state.termExplain = {
+        ...state.termExplain,
+        state: "failed",
+        error: `${payload.task.state.code}: ${payload.task.state.message}`,
+      };
+    } else {
+      state.termExplain = { ...state.termExplain, state: "failed", error: "the explain task ended without a result" };
+    }
+  } catch (err) {
+    state.termExplain = {
+      ...state.termExplain,
+      state: "failed",
+      error: String(err && err.message ? err.message : err),
+    };
+  }
+  renderAll();
+}
+
+/** 显式保存批注（产品事实；同选区去重——服务端返回既有批注）。 */
+async function saveTermAnnotation() {
+  const card = state.termExplain;
+  if (card === null || card.explanation === null) return;
+  const payload = await api(
+    `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/annotations`,
+    "POST",
+    {
+      branchId: card.branchId,
+      anchorTurnId: card.turnId,
+      selection: card.selection,
+      mode: card.mode,
+      term: card.selection.text,
+      explanation: card.explanation,
+    },
+  );
+  state.termExplain = { ...card, state: "saved", annotation: payload.annotation };
+  await refreshTerminology();
+  renderAll();
+}
+
+/**
+ * 幂等推广（issue #7 C ②）：从已保存批注建枝并派发首问（复用底层
+ * Anchor/Branch/Origin/Run/回程/Return）。幂等键跨失败重试稳定；成功后
+ * 以支线面板打开新分支。
+ */
+async function promoteTermAnnotation() {
+  const card = state.termExplain;
+  if (card === null || card.annotation === null) return;
+  const firstQuestion = card.firstQuestion;
+  if (firstQuestion.trim() === "") {
+    showError("Type the first question for the follow-up branch first.", "panel");
+    $("term-first-question").focus();
+    return;
+  }
+  const promotionKey = card.promotionKey ?? crypto.randomUUID();
+  state.termExplain = { ...card, promotionKey, promoting: true };
+  renderAll();
+  try {
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology/annotations/${encodeURIComponent(card.annotation.id)}/promote`,
+      "POST",
+      { idempotencyKey: promotionKey, firstQuestion },
+    );
+    state.treeState = payload.state;
+    await refreshTerminology();
+    state.termExplain = null;
+    renderAll();
+    await openBranchPanel(payload.branch.id, {
+      alignCursor: false,
+      trigger: { kind: "main-input" },
+    });
+    if (payload.firstQuestionError !== null) {
+      showError(
+        `Branch created, but the first question failed (${payload.firstQuestionError.code}: ${payload.firstQuestionError.message}). ` +
+          "The saved annotation keeps its promotion — reopen the term and promote again with the same key to retry.",
+        "panel",
+      );
+    }
+  } catch (err) {
+    state.termExplain = { ...state.termExplain, promoting: false };
+    renderAll();
+    throw err;
+  }
+}
+
+function closeTermExplain() {
+  state.termExplain = null;
+  renderAll();
+}
+
+/** 解释卡（渲染在对应 assistant 答案之后）：任务态如实 + 保存/推广动作。 */
+function termExplainCard() {
+  const card = state.termExplain;
+  if (card === null) return null;
+  const div = document.createElement("div");
+  div.className = "term-explain-card";
+  const head = document.createElement("p");
+  head.className = "term-explain-head";
+  const modeNote = card.mode === "term" ? "term" : "span";
+  head.textContent = `⌖ Explain — “${card.selection.text}” (${modeNote}, offsets ${String(card.selection.start)}..${String(card.selection.end)})`;
+  div.append(head);
+  if (card.state === "loading") {
+    div.append(mutedLine("explaining (isolated terminology task)…"));
+    return div;
+  }
+  if (card.state === "failed") {
+    div.append(mutedLine(`explanation failed — ${card.error}`));
+    const retry = document.createElement("button");
+    retry.className = "term-explain-retry";
+    retry.textContent = "Retry";
+    retry.addEventListener("click", () =>
+      guard(
+        () =>
+          explainSelection(card.branchId, { id: card.turnId, text: "", branchId: card.branchId }, card.selection),
+        "panel",
+      ),
+    );
+    const close = document.createElement("button");
+    close.className = "term-explain-close";
+    close.textContent = "Close";
+    close.addEventListener("click", closeTermExplain);
+    div.append(retry, close);
+    return div;
+  }
+  const body = document.createElement("p");
+  body.className = "term-explain-body";
+  body.textContent = card.explanation ?? "";
+  div.append(body);
+  const actions = document.createElement("div");
+  actions.className = "term-explain-actions";
+  if (card.state === "explained") {
+    const save = document.createElement("button");
+    save.className = "accent term-save";
+    save.textContent = "Save as annotation";
+    save.addEventListener("click", () => guard(saveTermAnnotation, "panel"));
+    actions.append(save);
+  } else if (card.state === "saved" && card.annotation !== null) {
+    if (card.annotation.promotedBranchId === null) {
+      const label = document.createElement("span");
+      label.className = "muted";
+      label.textContent = "saved — promote to a follow-up branch:";
+      const input = document.createElement("input");
+      input.id = "term-first-question";
+      input.type = "text";
+      input.value = card.firstQuestion;
+      input.placeholder = "First question for the follow-up branch…";
+      input.addEventListener("input", () => {
+        if (state.termExplain !== null) state.termExplain.firstQuestion = input.value;
+      });
+      const promote = document.createElement("button");
+      promote.className = "accent term-promote";
+      promote.textContent = card.promoting ? "Promoting…" : "⑃ Promote to branch";
+      promote.disabled = card.promoting;
+      promote.addEventListener("click", () => guard(promoteTermAnnotation, "panel"));
+      actions.append(label, input, promote);
+    } else {
+      const note = document.createElement("span");
+      note.className = "muted";
+      note.textContent = `saved — already promoted to ${branchLabel(card.annotation.promotedBranchId)}`;
+      actions.append(note);
+    }
+  }
+  const close = document.createElement("button");
+  close.className = "term-explain-close";
+  close.textContent = "Close";
+  close.addEventListener("click", closeTermExplain);
+  actions.append(close);
+  div.append(actions);
+  return div;
 }
 
 /* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */

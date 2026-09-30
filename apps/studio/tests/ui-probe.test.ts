@@ -440,6 +440,24 @@ interface Backend {
   sourceMode: "available" | "changed" | "unavailable";
   /** POST /prompt 追加的 echo 回合计数（turn id 分配用）。 */
   promptCounter: number;
+  /** 已保存术语批注（/terminology/* 路由的服务端状态）。 */
+  termAnnotations: StubTermAnnotation[];
+}
+
+/** 术语批注的服务端桩形状（fetch 桩内部使用）。 */
+interface StubTermAnnotation {
+  id: string;
+  treeId: string;
+  branchId: string;
+  anchorTurnId: string;
+  selection: { start: number; end: number; text: string };
+  sourceHash: string;
+  term: string;
+  explanation: string;
+  mode: string;
+  promotedBranchId: string | null;
+  promotionKey: string | null;
+  createdAt: string;
 }
 
 /* ------------------------------ unknown 收窄辅助（不使用 any） ------------------------------ */
@@ -1159,6 +1177,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     branchCounter: 0,
     sourceMode: "available",
     promptCounter: 0,
+    termAnnotations: [],
   };
 
   const viewByBranch = (branchId: string): BranchView | undefined =>
@@ -1351,6 +1370,121 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       view.sessionAvailability = "available";
       backend.treeState.cursor = { treeId: TREE, branchId, entryId: assistantTurn.piEntryId! };
       return respond(200, { outcome: { kind: "completed" }, state: backend.treeState });
+    }
+    m = /^\/api\/trees\/([^/]+)\/terminology$/.exec(p);
+    if (m !== null && method === "GET") {
+      return respond(200, {
+        annotations: backend.termAnnotations,
+        tasks: [],
+        usage: {
+          total: { requests: 1, promptChars: 10, completionChars: 10 },
+          estTokens: 5,
+          lateResultsDiscarded: 0,
+          budgetTokens: 1_000_000,
+        },
+        cacheEnabled: true,
+      });
+    }
+    m = /^\/api\/trees\/([^/]+)\/terminology\/explain$/.exec(p);
+    if (m !== null && method === "POST") {
+      const record = asRecord(body);
+      assert.ok(record !== null, "POST /terminology/explain body must be an object");
+      const branchId = typeof record.branchId === "string" ? record.branchId : "";
+      const anchorTurnId = typeof record.anchorTurnId === "string" ? record.anchorTurnId : "";
+      const selection = asRecord(record.selection);
+      assert.ok(selection !== null, "POST /terminology/explain must carry a selection");
+      const sel = {
+        start: Number(selection.start),
+        end: Number(selection.end),
+        text: String(selection.text ?? ""),
+      };
+      /* 服务端语义：既有同选区批注 → 直接返回（零模型调用）；否则瞬态任务
+         成功（脚本化解释文本）。 */
+      const existing = backend.termAnnotations.find(
+        (a) => a.anchorTurnId === anchorTurnId && a.selection.start === sel.start && a.selection.end === sel.end,
+      );
+      if (existing !== undefined) {
+        return respond(200, { annotation: existing, task: null });
+      }
+      return respond(200, {
+        annotation: null,
+        task: {
+          id: "term-task-1",
+          kind: "explain",
+          mode: typeof record.mode === "string" ? record.mode : "term",
+          treeId: TREE,
+          term: sel.text,
+          selection: sel,
+          createdAt: ISO,
+          state: { kind: "succeeded", explanation: `Scripted explanation of “${sel.text}”.`, candidates: null, cached: false, usage: { requests: 1, promptChars: 10, completionChars: 10 } },
+        },
+      });
+    }
+    m = /^\/api\/trees\/([^/]+)\/terminology\/annotations$/.exec(p);
+    if (m !== null && method === "POST") {
+      const record = asRecord(body);
+      assert.ok(record !== null, "POST /terminology/annotations body must be an object");
+      const anchorTurnId = typeof record.anchorTurnId === "string" ? record.anchorTurnId : "";
+      const selection = asRecord(record.selection);
+      assert.ok(selection !== null, "POST /terminology/annotations must carry a selection");
+      const sel = {
+        start: Number(selection.start),
+        end: Number(selection.end),
+        text: String(selection.text ?? ""),
+      };
+      const existing = backend.termAnnotations.find(
+        (a) => a.anchorTurnId === anchorTurnId && a.selection.start === sel.start && a.selection.end === sel.end,
+      );
+      if (existing !== undefined) {
+        return respond(200, { annotation: existing, created: false });
+      }
+      const annotation = {
+        id: `term-ann-${String(backend.termAnnotations.length + 1)}`,
+        treeId: TREE,
+        branchId: typeof record.branchId === "string" ? record.branchId : "trunk-1",
+        anchorTurnId,
+        selection: sel,
+        sourceHash: "f".repeat(64),
+        term: sel.text,
+        explanation: typeof record.explanation === "string" ? record.explanation : "",
+        mode: typeof record.mode === "string" ? record.mode : "term",
+        promotedBranchId: null,
+        promotionKey: null,
+        createdAt: ISO,
+      };
+      backend.termAnnotations.push(annotation);
+      return respond(201, { annotation, created: true });
+    }
+    {
+      const promoteMatch = /^\/api\/trees\/([^/]+)\/terminology\/annotations\/([^/]+)\/promote$/.exec(p);
+      if (promoteMatch !== null && method === "POST") {
+        const record = asRecord(body);
+        assert.ok(record !== null, "POST promote body must be an object");
+        const annotationId = decodeURIComponent(promoteMatch[2]!);
+        const annotation = backend.termAnnotations.find((a) => a.id === annotationId);
+        assert.ok(annotation !== undefined, `promote must target a known annotation (got ${annotationId})`);
+        const key = typeof record.idempotencyKey === "string" ? record.idempotencyKey : "";
+        assert.ok(key !== "", "promote must carry an idempotencyKey");
+        if (annotation.promotedBranchId === null) {
+          annotation.promotedBranchId = `branch-term-${String(backend.branchCounter + 10)}`;
+          annotation.promotionKey = key;
+          backend.branchCounter += 1;
+          const branch = {
+            id: annotation.promotedBranchId,
+            treeId: TREE,
+            parentBranchId: annotation.branchId,
+            createdAt: ISO,
+          };
+          backend.treeState.branches.push(makeBranchView(branch, null, "available", []));
+        }
+        return respond(201, {
+          branch: backend.treeState.branches.find((v) => v.branch.id === annotation.promotedBranchId)?.branch ?? null,
+          outcome: { kind: "completed" },
+          firstQuestionError: null,
+          created: true,
+          state: backend.treeState,
+        });
+      }
     }
     m = /^\/api\/trees\/([^/]+)\/prompt$/.exec(p);
     if (m !== null && method === "POST") {
@@ -3261,4 +3395,95 @@ test("return card fallback placement (issue #7 P1): the targetAnchor snapshot di
   const delivered = cardOf("r-delivered");
   assert.ok(delivered.textContent.includes("successfully adopted into Trunk context"), "the delivered badge renders");
   assert.ok(delivered.textContent.includes(", adopted "), "the card carries the adoption time from the attempt record");
+});
+
+/* ------------------------------------------------------------------ */
+/* 28. 术语三部分最小面（issue #7 C ③）：解释 → 保存 → 幂等推广           */
+/* ------------------------------------------------------------------ */
+
+test("terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch", async () => {
+  const world = await createWorld();
+  const a2 = world.turnElement("conversation", "a2");
+  const textNode = a2.firstChild;
+  assert.ok(textNode instanceof StubText);
+  world.setSelection(new StubTextRange(textNode, 0, 5));
+  a2.dispatchEvent("mouseup", {});
+
+  /* 选区武装：解释按钮可用；无选区禁用。 */
+  const explainButton = a2.querySelector(".term-explain");
+  assert.ok(explainButton !== null, "assistant answers carry the Explain affordance");
+  assert.equal(explainButton.disabled, false, "a selection arms the explain button");
+  world.setSelection(null);
+  a2.dispatchEvent("mouseup", {});
+  assert.equal(a2.querySelector(".term-explain")!.disabled, true, "no selection disarms it");
+  world.setSelection(new StubTextRange(textNode, 0, 5));
+  a2.dispatchEvent("mouseup", {});
+
+  /* 解释：瞬态任务结果呈卡（隔离执行器语义——不渲染为 turn）。 */
+  explainButton.click();
+  await settle();
+  const explainPost = world.lastRequest("/terminology/explain");
+  assert.ok(explainPost !== null && explainPost.method === "POST", "the explain button posts to the terminology route");
+  const body = asRecord(explainPost.body);
+  assert.ok(body !== null);
+  assert.equal(body.branchId, "trunk-1");
+  assert.equal(body.anchorTurnId, "a2");
+  assert.equal(body.mode, "term", "a single-word selection is term mode");
+  const card = world.el("conversation").querySelector(".term-explain-card");
+  assert.ok(card !== null, "the explain card renders after the answer");
+  assert.ok(card.textContent.includes("Scripted explanation of"), "the card shows the task result");
+  assert.ok(card.querySelector(".term-save") !== null, "the card offers the explicit save action");
+  assert.equal(
+    world.el("conversation").querySelectorAll(".turn").length,
+    4,
+    "the transient explain result never renders as a product turn",
+  );
+
+  /* 保存 → 批注成为事实；卡面切换到推广动作（首问输入 + Promote）。 */
+  card.querySelector(".term-save")!.click();
+  await settle();
+  const savePost = world.lastRequest("/terminology/annotations");
+  assert.ok(savePost !== null && savePost.method === "POST");
+  const saveBody = asRecord(savePost.body);
+  assert.ok(saveBody !== null);
+  assert.equal(saveBody.term, "Secon", "the annotation term is the selection text");
+  const savedCard = world.el("conversation").querySelector(".term-explain-card");
+  assert.ok(savedCard !== null);
+  assert.ok(savedCard.textContent.includes("saved — promote to a follow-up branch"), "the saved card offers promotion");
+  const input = savedCard.querySelector("#term-first-question");
+  assert.ok(input !== null, "the promotion first-question input renders");
+
+  /* 首问草稿跨重渲保持（输入落 state，renderAll 不丢）。 */
+  input.value = "Why does this term matter here?";
+  input.dispatchEvent("input", {});
+  world.liveSse().emit("run-terminal", { runId: "run-x" });
+  await settle();
+  const inputAfterRerender = world.byId("term-first-question");
+  assert.ok(inputAfterRerender !== null, "the promotion input survives the re-render");
+  assert.equal(inputAfterRerender.value, "Why does this term matter here?", "the first-question draft survives re-renders");
+
+  /* 推广：POST promote（幂等键 + 首问）→ 新支线面板打开。 */
+  inputAfterRerender.parentElement!.querySelector(".term-promote")!.click();
+  await settle();
+  const promotePost = world.lastRequest("/promote");
+  assert.ok(promotePost !== null && promotePost.method === "POST", "promotion posts to the promote route");
+  const promoteBody = asRecord(promotePost.body);
+  assert.ok(promoteBody !== null);
+  assert.ok(typeof promoteBody.idempotencyKey === "string" && promoteBody.idempotencyKey !== "");
+  assert.equal(promoteBody.firstQuestion, "Why does this term matter here?");
+  assert.equal(world.el("branch-panel").hidden, false, "the promoted branch opens in the panel");
+  assert.equal(
+    world.el("conversation").querySelector(".term-explain-card"),
+    null,
+    "the card closes after promotion",
+  );
+
+  /* 抽屉：Terminology 节列出已保存批注与用量（诚实估算口径）。 */
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const drawer = world.el("source-drawer");
+  assert.ok(drawer.textContent.includes("Terminology"), "the drawer has a Terminology section");
+  assert.ok(drawer.textContent.includes("“Secon” (term) from Trunk"), "the annotation lists with its term and source branch");
+  assert.ok(drawer.textContent.includes("promoted to"), "the promotion destination is listed");
+  assert.ok(drawer.textContent.includes("chars/4 estimate"), "the usage note labels its estimate honestly");
 });

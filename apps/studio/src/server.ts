@@ -56,7 +56,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { BranchId, RunId, TreeId } from "@treeai/contracts";
+import type { BranchId, RunId, TerminologyMode, TreeId, TurnId } from "@treeai/contracts";
 import {
   ConstraintViolationError,
   EntityNotFoundError,
@@ -64,6 +64,10 @@ import {
   PersistenceError,
 } from "@treeai/persistence";
 import { RunNotActiveError, NewExplorationConflictError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
+import {
+  TerminologyPromotionConflictError,
+  type TerminologyService,
+} from "./terminology.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -81,6 +85,11 @@ export interface StudioServerOptions {
   readonly service: TreeStudioService;
   /** 静态文件目录（public/）。 */
   readonly staticDir: string;
+  /**
+   * 术语三部分服务（issue #7 C；缺省不注入 → 术语路由 503，如实说明
+   * 未装配，绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
+   */
+  readonly terminology?: TerminologyService | null;
 }
 
 export interface StudioServer {
@@ -126,6 +135,11 @@ function sendError(res: ServerResponse, err: unknown): void {
     // 「以保存内容开始新的探索」的前置条件不满足（session 仍可用 / 无历史
     // session）——与分支当前状态冲突，零写入。
     sendJson(res, 409, { error: { code: "new-exploration-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof TerminologyPromotionConflictError) {
+    // 术语推广冲突（同批注异键 / 并发竞争判负）——既有推广不变。
+    sendJson(res, 409, { error: { code: "terminology-promotion-conflict", message: err.message } } satisfies ApiErrorBody);
     return;
   }
   if (err instanceof TypeError) {
@@ -191,6 +205,7 @@ function asTreeId(raw: string): TreeId {
 
 export function createStudioServer(options: StudioServerOptions): StudioServer {
   const { service, staticDir } = options;
+  const terminology = options.terminology ?? null;
   /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
   const sseResponses = new Set<ServerResponse>();
 
@@ -314,6 +329,106 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           requireString(body, "text"),
         );
         sendJson(res, 200, { outcome, state: service.getTreeState(treeId) });
+        return;
+      }
+
+      /* 术语三部分（issue #7 C）：/api/trees/:id/terminology/*。
+         未装配（terminology === null）→ 503 如实说明，绝不伪装成功。 */
+      const terminologyMatch = /^\/api\/trees\/([^/]+)\/terminology(?:\/(.*))?$/.exec(pathname);
+      if (terminologyMatch !== null) {
+        const term = terminology;
+        if (term === null || term === undefined) {
+          sendJson(res, 503, {
+            error: { code: "terminology-not-wired", message: "the terminology service is not wired in this process" },
+          });
+          return;
+        }
+        const treeId = asTreeId(terminologyMatch[1]!);
+        const rest = terminologyMatch[2] ?? "";
+        if (rest === "" && method === "GET") {
+          sendJson(res, 200, term.readModel(treeId));
+          return;
+        }
+        if (rest === "explain" && method === "POST") {
+          const body = await readJsonBody(req);
+          const selection = body["selection"];
+          if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
+            throw new InvalidArgumentError("request field 'selection' must be an object {start, end, text}");
+          }
+          const mode = body["mode"];
+          if (mode !== "term" && mode !== "range") {
+            throw new InvalidArgumentError("request field 'mode' must be 'term' or 'range'");
+          }
+          const outcome = await term.explain({
+            treeId,
+            branchId: requireString(body, "branchId") as BranchId,
+            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
+            selection: selection as { start: number; end: number; text: string },
+            mode: mode as TerminologyMode,
+          });
+          sendJson(res, 200, outcome);
+          return;
+        }
+        if (rest === "extract" && method === "POST") {
+          const body = await readJsonBody(req);
+          const task = await term.extract({
+            treeId,
+            branchId: requireString(body, "branchId") as BranchId,
+            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
+          });
+          sendJson(res, 200, { task });
+          return;
+        }
+        if (rest === "annotations" && method === "POST") {
+          const body = await readJsonBody(req);
+          const selection = body["selection"];
+          if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
+            throw new InvalidArgumentError("request field 'selection' must be an object {start, end, text}");
+          }
+          const mode = body["mode"];
+          if (mode !== "term" && mode !== "range" && mode !== "auto") {
+            throw new InvalidArgumentError("request field 'mode' must be 'term' | 'range' | 'auto'");
+          }
+          const saved = term.saveAnnotation({
+            treeId,
+            branchId: requireString(body, "branchId") as BranchId,
+            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
+            selection: selection as { start: number; end: number; text: string },
+            mode: mode as TerminologyMode,
+            term: requireString(body, "term"),
+            explanation: requireString(body, "explanation"),
+          });
+          sendJson(res, saved.created ? 201 : 200, { annotation: saved.annotation, created: saved.created });
+          return;
+        }
+        const promoteMatch = /^annotations\/([^/]+)\/promote$/.exec(rest);
+        if (promoteMatch !== null && method === "POST") {
+          const body = await readJsonBody(req);
+          const promotion = await term.promote({
+            treeId,
+            annotationId: decodeURIComponent(promoteMatch[1]!),
+            idempotencyKey: requireString(body, "idempotencyKey"),
+            firstQuestion: requireString(body, "firstQuestion"),
+          });
+          sendJson(res, promotion.created ? 201 : 200, { ...promotion, state: service.getTreeState(treeId) });
+          return;
+        }
+        const cancelMatch = /^tasks\/([^/]+)\/cancel$/.exec(rest);
+        if (cancelMatch !== null && method === "POST") {
+          sendJson(res, 200, { task: term.executor.cancel(decodeURIComponent(cancelMatch[1]!)) });
+          return;
+        }
+        if (rest === "preferences" && method === "PUT") {
+          const body = await readJsonBody(req);
+          const cacheEnabled = body["cacheEnabled"];
+          if (typeof cacheEnabled !== "boolean") {
+            throw new InvalidArgumentError("request field 'cacheEnabled' must be a boolean");
+          }
+          term.setCachePreference(cacheEnabled);
+          sendJson(res, 200, { cacheEnabled: term.executor.cacheEnabled });
+          return;
+        }
+        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
         return;
       }
 

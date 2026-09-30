@@ -130,3 +130,70 @@ export interface BranchOrigin {
   readonly selection: TurnSelection;
   readonly createdAt: IsoTimestamp;
 }
+
+/* ------------------------------------------------------------------ */
+/* 术语三部分（issue #7 C）：批注与推广的共享形状                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 术语批注的模式。manual 两式（点词 / 任意划线）是本波交付面；auto
+ * （整段候选提取）是执行器能力——**自动保存不开**（质量门禁未过前，
+ * auto 结果只作为任务面呈现，不落批注）。
+ */
+export type TerminologyMode = "term" | "range" | "auto";
+
+/**
+ * 术语批注：一条已保存的「术语 → 解释」产品事实，锚定在某条 assistant
+ * 答案内的选区上（与 BranchOrigin 同一选区纪律：绝对 UTF-16 偏移 +
+ * 切片一致不变量）。持久化归 persistence（migration 0007）。
+ *
+ * 不变量：
+ * - anchorTurnId 指向 branchId 分支上的 assistant turn，selection 满足
+ *   0 <= start <= end <= turn.text.length 且
+ *   turn.text.slice(start, end) === selection.text（锚定完整性）；
+ * - sourceHash 是锚点答案全文在批注时刻的 SHA-256 指纹（漂移检测与
+ *   执行器缓存键的组成；与切片不变量互补）；
+ * - 同一 (tree, anchorTurn, start, end) 至多一条（去重；重复解释同一
+ *   选区返回既有批注）；
+ * - promotedBranchId 至多绑定一次（幂等推广：同键重放返回同一分支，
+ *   不重复建枝、不重复派发首问）。
+ */
+export interface TerminologyAnnotation {
+  readonly id: string;
+  readonly treeId: TreeId;
+  readonly branchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  readonly selection: TurnSelection;
+  readonly sourceHash: string;
+  /** 被批注的术语（点词模式 = 词；划线模式 = 选区文本）。 */
+  readonly term: string;
+  /** 保存的解释文本。 */
+  readonly explanation: string;
+  readonly mode: TerminologyMode;
+  /** 幂等推广绑定的目标分支（null = 尚未推广）。 */
+  readonly promotedBranchId: BranchId | null;
+  /** 推广幂等键（与 promotedBranchId 同时落库）。 */
+  readonly promotionKey: string | null;
+  readonly createdAt: IsoTimestamp;
+}
+
+/**
+ * 术语执行器的用量记账（实测口径）：请求次数与字符数是精确计数；
+ * estTokens 是 chars/4 的**诚实估算**（当前 Pi 契约面不透出 token 用量，
+ * PiPromptResult 只有 message + reference——估算如标注，绝不冒充实测）。
+ */
+export interface TerminologyUsageDelta {
+  readonly requests: number;
+  readonly promptChars: number;
+  readonly completionChars: number;
+}
+
+export interface TerminologyUsageAccount {
+  readonly total: TerminologyUsageDelta;
+  /** 累计估算 token（prompt+completion chars/4，口径同上）。 */
+  readonly estTokens: number;
+  /** 取消后到达并被丢弃的迟到结果数（请求已发生，用量照记）。 */
+  readonly lateResultsDiscarded: number;
+  /** 预算上限（估算 token 口径）；达到后新任务 fail-closed。 */
+  readonly budgetTokens: number;
+}

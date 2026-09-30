@@ -207,6 +207,14 @@ export interface PromptOutcome {
  */
 export interface PromptOptions {
   readonly newExploration?: boolean;
+  /**
+   * 服务端生成的组合前缀（模型输入上下文，不落用户 turn；术语推广的
+   * 「术语 + 解释 + 摘录」上下文块——与 pending Return 的组合同一纪律：
+   * 组合是输入面事实，用户 turn 保持用户原文 + 显式标记）。
+   */
+  readonly composedPrefix?: string;
+  /** 用户 turn 的显式标记前缀（转录可审计；如术语推广的 follow-up 标记）。 */
+  readonly turnPrefix?: string;
 }
 
 export interface BranchCreation {
@@ -1133,7 +1141,13 @@ export class TreeStudioService {
       const pendingReturns = this.repository
         .listTurns(branch.id)
         .filter((turn) => turn.role === "return" && turn.deliveredRunId === null);
-      const composedText = composePromptText(pendingReturns, explorationPrefix === null ? text : explorationPrefix + text);
+      /* 组合前缀（新探索 / 术语推广）：模型输入面事实，用户 turn 只带显式
+         标记（NEW_EXPLORATION_TURN_PREFIX / options.turnPrefix）。 */
+      const composedPrefix =
+        explorationPrefix ?? (options?.composedPrefix === undefined || options.composedPrefix === "" ? null : options.composedPrefix);
+      const turnPrefix =
+        explorationPrefix !== null ? NEW_EXPLORATION_TURN_PREFIX : options?.turnPrefix ?? null;
+      const composedText = composePromptText(pendingReturns, composedPrefix === null ? text : composedPrefix + text);
 
       const episode = this.repository.createEpisode(branch.id);
       const run = this.repository.createRun(episode.id, preRef);
@@ -1218,10 +1232,10 @@ export class TreeStudioService {
           episodeId: episode.id,
           runId: run.id,
           role: "user",
-          /* 新探索的转录标记（v3 §4.4 不冒充旧会话恢复）：服务端生成的
-             显式前缀随用户 turn 落库——数据库层面可审计该分支在何处换轨
-             到新会话；用户输入原文保持在其后完整可读。 */
-          text: explorationPrefix === null ? text : `${NEW_EXPLORATION_TURN_PREFIX}\n\n${text}`,
+          /* 转录标记（新探索 v3 §4.4 / 术语推广）：服务端生成的显式前缀随
+             用户 turn 落库——数据库层面可审计该回合的输入语境；用户输入
+             原文保持在其后完整可读。 */
+          text: turnPrefix === null ? text : `${turnPrefix}\n\n${text}`,
         });
         const assistantTurn = this.repository.createTurn({
           treeId: tree.id,

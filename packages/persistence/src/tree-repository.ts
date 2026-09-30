@@ -38,6 +38,8 @@ import type {
   RunStateTransitions,
   SessionAvailability,
   SessionReference,
+  TerminologyAnnotation,
+  TerminologyMode,
   Tree,
   TreeAIError,
   TreeId,
@@ -75,6 +77,7 @@ import {
   rowToReturnAdoptionAttempt,
   rowToRun,
   rowToSessionReference,
+  rowToTerminologyAnnotation,
   rowToTree,
   rowToTurn,
   type ActiveNavigationRow,
@@ -85,6 +88,7 @@ import {
   type ReturnAdoptionAttemptRow,
   type RunRow,
   type SessionReferenceRow,
+  type TerminologyAnnotationRow,
   type TreeRow,
   type TurnRow,
 } from "./serialization.ts";
@@ -160,6 +164,19 @@ export interface CreateTurnInput {
   readonly idempotencyKey?: string | null;
   /** role "return" 专属目标锚点快照（提交时 BranchOrigin 的拷贝）；其他 role 必须为 null/缺省。 */
   readonly targetAnchor?: ReturnTargetAnchor | null;
+}
+
+/** 保存术语批注的输入（contracts product.ts TerminologyAnnotation 不变量的仓储层校验）。 */
+export interface CreateTerminologyAnnotationInput {
+  readonly treeId: TreeId;
+  readonly branchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  readonly selection: TurnSelection;
+  /** 锚点答案全文的 SHA-256 指纹（批注时刻）。 */
+  readonly sourceHash: string;
+  readonly term: string;
+  readonly explanation: string;
+  readonly mode: TerminologyMode;
 }
 
 /** 设置 Branch 出处锚点（每分支至多一条）。 */
@@ -1248,6 +1265,212 @@ export class TreeRepository {
       )
       .all(turnId) as unknown as ReturnAdoptionAttemptRow[];
     return rows.map(rowToReturnAdoptionAttempt);
+  }
+
+  /* --------------------- 术语三部分（terminology_annotations / terminology_state，migration 0007） --------------------- */
+
+  /**
+   * 保存术语批注（issue #7 C ②）。锚定完整性（选区切片一致、锚点 turn
+   * 属于该分支的 assistant turn）在此校验；同一 (tree, anchorTurn, start,
+   * end) 至多一条（唯一索引 idx_terminology_annotations_range——重复保存
+   * 以 ConstraintViolationError 拒绝，服务层读路径先查重返回既有批注）。
+   */
+  createTerminologyAnnotation(input: CreateTerminologyAnnotationInput): TerminologyAnnotation {
+    this.#assertOpen();
+    assertNonEmptyString(input.treeId, "tree id");
+    assertNonEmptyString(input.branchId, "branch id");
+    assertNonEmptyString(input.anchorTurnId, "anchor turn id");
+    assertNonEmptyString(input.sourceHash, "source hash");
+    assertNonEmptyString(input.term, "term");
+    assertNonEmptyString(input.explanation, "explanation");
+    if (input.mode !== "term" && input.mode !== "range" && input.mode !== "auto") {
+      throw new InvalidArgumentError(`terminology mode must be 'term' | 'range' | 'auto' (got '${String(input.mode)}')`);
+    }
+    const tree = this.findTree(input.treeId);
+    if (tree === null) throw new EntityNotFoundError("tree", input.treeId);
+    const branch = this.findBranch(input.branchId);
+    if (branch === null) throw new EntityNotFoundError("branch", input.branchId);
+    if (branch.treeId !== tree.id) {
+      throw new InvalidArgumentError(`branch ${input.branchId} belongs to tree ${branch.treeId}, not ${tree.id}`);
+    }
+    const anchorTurn = this.findTurn(input.anchorTurnId);
+    if (anchorTurn === null) throw new EntityNotFoundError("turn", input.anchorTurnId);
+    if (anchorTurn.branchId !== input.branchId) {
+      throw new InvalidArgumentError(
+        `anchor turn ${input.anchorTurnId} belongs to branch ${anchorTurn.branchId}, not ${input.branchId}`,
+      );
+    }
+    if (anchorTurn.role !== "assistant") {
+      throw new InvalidArgumentError("terminology annotations must reference an assistant turn (an answer)");
+    }
+    const selection = input.selection;
+    if (
+      typeof selection !== "object" ||
+      selection === null ||
+      !Number.isInteger(selection.start) ||
+      !Number.isInteger(selection.end) ||
+      selection.start < 0 ||
+      selection.end < selection.start ||
+      selection.end > anchorTurn.text.length
+    ) {
+      throw new InvalidArgumentError(
+        `selection [${String(selection?.start)}, ${String(selection?.end)}) is out of bounds for the anchor answer (${anchorTurn.text.length} chars)`,
+      );
+    }
+    if (anchorTurn.text.slice(selection.start, selection.end) !== selection.text) {
+      throw new InvalidArgumentError(
+        "selection text does not match the anchor answer at the given offsets (anchor integrity violation)",
+      );
+    }
+    const createdAt = this.now();
+    const id = this.#newId("term");
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO terminology_annotations
+             (id, tree_id, branch_id, anchor_turn_id, sel_start, sel_end, sel_text, source_hash,
+              term, explanation, mode, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          id,
+          input.treeId,
+          input.branchId,
+          input.anchorTurnId,
+          selection.start,
+          selection.end,
+          selection.text,
+          input.sourceHash,
+          input.term,
+          input.explanation,
+          input.mode,
+          createdAt,
+        );
+    } catch (error) {
+      throw mapSqliteError(error, "creating terminology annotation");
+    }
+    return this.getTerminologyAnnotation(id);
+  }
+
+  getTerminologyAnnotation(id: string): TerminologyAnnotation {
+    const found = this.findTerminologyAnnotation(id);
+    if (found === null) throw new EntityNotFoundError("terminology annotation", id);
+    return found;
+  }
+
+  findTerminologyAnnotation(id: string): TerminologyAnnotation | null {
+    this.#assertOpen();
+    assertNonEmptyString(id, "terminology annotation id");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, anchor_turn_id, sel_start, sel_end, sel_text, source_hash,
+                term, explanation, mode, promoted_branch_id, promotion_key, created_at
+         FROM terminology_annotations WHERE id = ?`,
+      )
+      .get(id) as TerminologyAnnotationRow | undefined;
+    return row ? rowToTerminologyAnnotation(row) : null;
+  }
+
+  /** 树的全部批注（追加序）。 */
+  listTerminologyAnnotations(treeId: TreeId): TerminologyAnnotation[] {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    const rows = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, anchor_turn_id, sel_start, sel_end, sel_text, source_hash,
+                term, explanation, mode, promoted_branch_id, promotion_key, created_at
+         FROM terminology_annotations WHERE tree_id = ? ORDER BY created_at, rowid`,
+      )
+      .all(treeId) as unknown as TerminologyAnnotationRow[];
+    return rows.map(rowToTerminologyAnnotation);
+  }
+
+  /** 同一选区的既有批注（去重读路径；无则 null）。 */
+  findTerminologyAnnotationByRange(
+    treeId: TreeId,
+    anchorTurnId: TurnId,
+    start: number,
+    end: number,
+  ): TerminologyAnnotation | null {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    assertNonEmptyString(anchorTurnId, "anchor turn id");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, anchor_turn_id, sel_start, sel_end, sel_text, source_hash,
+                term, explanation, mode, promoted_branch_id, promotion_key, created_at
+         FROM terminology_annotations
+         WHERE tree_id = ? AND anchor_turn_id = ? AND sel_start = ? AND sel_end = ?`,
+      )
+      .get(treeId, anchorTurnId, start, end) as TerminologyAnnotationRow | undefined;
+    return row ? rowToTerminologyAnnotation(row) : null;
+  }
+
+  /**
+   * 绑定批注的幂等推广（issue #7 C ②：推广至多一次）。条件 UPDATE：
+   * promoted_branch_id 为空才写入——首个到达的 (promotionKey, branchId)
+   * 生效；已绑定（重放/双击/响应丢失重试）返回 false，调用方按键对齐
+   * （同键 → 既有分支重放；异键 → 冲突上抛）。
+   */
+  bindTerminologyPromotion(annotationId: string, promotionKey: string, branchId: BranchId): boolean {
+    this.#assertOpen();
+    assertNonEmptyString(annotationId, "terminology annotation id");
+    assertNonEmptyString(promotionKey, "promotion key");
+    assertNonEmptyString(branchId, "branch id");
+    const annotation = this.findTerminologyAnnotation(annotationId);
+    if (annotation === null) throw new EntityNotFoundError("terminology annotation", annotationId);
+    if (this.findBranch(branchId) === null) throw new EntityNotFoundError("branch", branchId);
+    if (annotation.promotedBranchId !== null) return false;
+    const result = this.#db!
+      .prepare(
+        `UPDATE terminology_annotations
+         SET promoted_branch_id = ?, promotion_key = ?
+         WHERE id = ? AND promoted_branch_id IS NULL`,
+      )
+      .run(branchId, promotionKey, annotationId);
+    return Number(result.changes) > 0;
+  }
+
+  /** 按推广幂等键找批注（重放对齐路径；无则 null）。 */
+  findTerminologyAnnotationByPromotionKey(treeId: TreeId, promotionKey: string): TerminologyAnnotation | null {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    assertNonEmptyString(promotionKey, "promotion key");
+    const row = this.#db!
+      .prepare(
+        `SELECT id, tree_id, branch_id, anchor_turn_id, sel_start, sel_end, sel_text, source_hash,
+                term, explanation, mode, promoted_branch_id, promotion_key, created_at
+         FROM terminology_annotations WHERE tree_id = ? AND promotion_key = ?`,
+      )
+      .get(treeId, promotionKey) as TerminologyAnnotationRow | undefined;
+    return row ? rowToTerminologyAnnotation(row) : null;
+  }
+
+  /** 执行器键值状态读取（用量/预算/缓存偏好；缺失为 null）。 */
+  getTerminologyState(key: string): string | null {
+    this.#assertOpen();
+    assertNonEmptyString(key, "terminology state key");
+    const row = this.#db!.prepare("SELECT key, value FROM terminology_state WHERE key = ?").get(key) as
+      | { key: string; value: string }
+      | undefined;
+    return row?.value ?? null;
+  }
+
+  /** 执行器键值状态写入（UPSERT；值由调用方以 JSON 文本提供）。 */
+  setTerminologyState(key: string, value: string): void {
+    this.#assertOpen();
+    assertNonEmptyString(key, "terminology state key");
+    assertNonEmptyString(value, "terminology state value");
+    try {
+      this.#db!
+        .prepare(
+          `INSERT INTO terminology_state (key, value) VALUES (?, ?)
+           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        )
+        .run(key, value);
+    } catch (error) {
+      throw mapSqliteError(error, "writing terminology state");
+    }
   }
 
   saveActiveNavigation(treeId: TreeId, branchId: BranchId, reference: SessionReference): ActiveNavigation {
