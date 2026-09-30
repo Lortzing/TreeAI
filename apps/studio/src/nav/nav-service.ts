@@ -18,6 +18,7 @@
 
 import type { BranchId, NavTreeExpandState, TreeId } from "@treeai/contracts";
 import type { MaterialRepository, TreeRepository } from "@treeai/persistence";
+import { EntityNotFoundError } from "@treeai/persistence";
 import { TreeNavEngine } from "./nav-engine.ts";
 
 export interface NavServiceOptions {
@@ -42,8 +43,15 @@ export class NavService {
     this.engine.invalidate(treeId);
   }
 
-  /** 读取某树的展开状态（无则 null——诚实空态，不伪造默认展开）。 */
+  /**
+   * 读取某树的展开状态（无则 null——诚实空态，不伪造默认展开）。
+   * 未知树 → EntityNotFoundError（HTTP 404）：与其它导航端点一致，
+   * 不把「树不存在」伪装成「树存在但无状态」。
+   */
   getExpandState(treeId: TreeId): NavTreeExpandState | null {
+    if (this.#repository.findTree(treeId) === null) {
+      throw new EntityNotFoundError("tree", treeId);
+    }
     return this.#repository.findNavExpandState(treeId);
   }
 
