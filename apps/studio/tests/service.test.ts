@@ -30,7 +30,7 @@ import type {
 import { EntityNotFoundError, InvalidArgumentError } from "@treeai/persistence";
 import { classifyPiFailure, createPiRuntimeFromConfig } from "@treeai/runtime-pi";
 import type { TreeState } from "../src/service.ts";
-import { composePromptText, ReturnConflictError, RunNotActiveError } from "../src/service.ts";
+import { composePromptText, NewExplorationConflictError, ReturnConflictError, RunNotActiveError } from "../src/service.ts";
 import type { TreeStudioService } from "../src/service.ts";
 import { EchoSdkPort, ECHO_FAILURE_MESSAGE } from "../src/echo-port.ts";
 import { cleanupDir, makeStudioInstance, makeTempDataDir } from "./helpers.ts";
@@ -561,7 +561,7 @@ test("concurrent prompt is rejected as a conflict and leaves no phantom run", as
   }
 });
 
-test("anchor status preserves duplicate and cross-line selections and degrades when source is unavailable", async () => {
+test("anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2)", async () => {
   const dir = makeTempDataDir();
   try {
     const studio = makeStudioInstance(dir);
@@ -592,11 +592,17 @@ test("anchor status preserves duplicate and cross-line selections and degrades w
     assert.equal(available.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus, "available");
     assert.equal(available.branches.find((v) => v.branch.id === crossLineBranch.branch.id)?.originStatus, "available");
 
+    /* 来源定位与 session 可用性分离（signed v3 §1.2，issue #7 P0-1）：
+       锚点 run 的 session 降级（DB 缓存评 unavailable）不再降格来源状态——
+       来源身份与选区文本未变，originStatus 如实保持 available。（session
+       维度的呈现与文件级缺失场景由下方 P0-1/P0-2 两个用例覆盖：这里文件
+       仍在，实时探针如实把 missing-file 降级修复为 available。） */
     repository.updateSessionAvailability(answer.run.id, { status: "unavailable", reason: "missing-file" });
-    const unavailable = service.getTreeState(created.tree.id);
+    const sessionDegraded = service.getTreeState(created.tree.id);
     assert.equal(
-      unavailable.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus,
-      "unavailable",
+      sessionDegraded.branches.find((v) => v.branch.id === duplicateBranch.branch.id)?.originStatus,
+      "available",
+      "session unavailability does not degrade the anchor status (v3 §1.2 dimension separation)",
     );
     await studio.shutdown();
   } finally {
@@ -902,6 +908,228 @@ test("missing session: submit saves the return first, navigation fails separatel
     const adopted = await studio2.service.prompt(treeId, trunkId, "trunk question after recovery");
     assert.equal(adopted.run.state, "succeeded");
     assert.equal(adopted.deliveredReturns, 1);
+    await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1): a deleted session still locates the database original; cursor alignment fails separately", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const { treeId, trunkId, branchId, origin } = await makeTreeWithAnchoredBranch(service);
+
+    /* 整实例重启 + session 文件缺失（保留内容供恢复）。 */
+    const sessionsDir = join(dir, "sessions");
+    const sessionFiles = readdirSync(sessionsDir);
+    assert.equal(sessionFiles.length, 1, "one session file per tree");
+    const sessionFile = join(sessionsDir, sessionFiles[0]!);
+    const sessionContent = readFileSync(sessionFile, "utf8");
+    await studio.shutdown();
+    rmSync(sessionFile);
+
+    const studio2 = makeStudioInstance(dir);
+    const { service: service2 } = studio2;
+
+    /* 维度分离：session 维度如实 unavailable；来源维度（身份/切片未变）
+       如实 available——删除 session 后数据库原文仍可准确定位。 */
+    const state = service2.getTreeState(treeId);
+    const branchView = findBranchView(state, branchId);
+    assert.equal(branchView.sessionAvailability, "unavailable", "the session dimension degrades honestly");
+    assert.equal(branchView.originStatus, "available", "the source dimension is untouched by session loss (v3 §1.2)");
+
+    /* 揭示：纯产品定位照常成功（available + 落库快照原文）；Pi 游标对齐
+       作为独立结果失败（session-corrupt），不降格来源状态。 */
+    const cursorBeforeReveal = state.cursor;
+    const reveal = await service2.revealBranchOrigin(treeId, branchId);
+    assert.equal(reveal.status, "available", "the source is locatable from the database despite the missing session");
+    assert.equal(reveal.sourceBranchId, trunkId);
+    assert.deepEqual(reveal.selection, origin.selection, "reveal returns the saved excerpt verbatim");
+    assert.ok(reveal.navigation !== null, "a navigation outcome is always present for an available source");
+    assert.equal(reveal.navigation.status, "failed", "cursor alignment fails separately (session-corrupt)");
+    assert.equal(reveal.navigation.status === "failed" ? reveal.navigation.code : "", "session-corrupt");
+    assert.deepEqual(
+      service2.getTreeState(treeId).cursor,
+      cursorBeforeReveal,
+      "the failed alignment leaves the cursor untouched",
+    );
+
+    /* session 文件恢复后重揭示：定位不变，游标对齐这次成功（分离结果的
+       另一面——对齐恢复不影响来源判定的稳定性）。 */
+    writeFileSync(sessionFile, sessionContent, "utf8");
+    const reReveal = await service2.revealBranchOrigin(treeId, branchId);
+    assert.equal(reReveal.status, "available");
+    assert.deepEqual(reReveal.selection, origin.selection);
+    assert.equal(reReveal.navigation?.status, "navigated", "alignment recovers once the session file is back");
+    assert.equal(service2.getTreeState(treeId).cursor?.branchId, trunkId);
+    await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2)", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const { treeId, trunkId, branchId, origin } = await makeTreeWithAnchoredBranch(service);
+    const oldBranchTurns = service.getTreeState(treeId).branches
+      .find((v) => v.branch.id === branchId)!
+      .turns.map((t) => ({ id: t.id, role: t.role, text: t.text }));
+    assert.equal(oldBranchTurns.length, 2, "the branch has its own follow-up round before the loss");
+
+    const sessionsDir = join(dir, "sessions");
+    const sessionFiles = readdirSync(sessionsDir);
+    assert.equal(sessionFiles.length, 1, "one session file per tree");
+    const oldSessionFile = sessionFiles[0]!;
+    await studio.shutdown();
+    rmSync(join(sessionsDir, oldSessionFile));
+
+    const studio2 = makeStudioInstance(dir);
+    const { service: service2 } = studio2;
+
+    /* fail-closed 纪律不变：普通续聊照常拒绝（绝不静默重建 session）。 */
+    await assert.rejects(
+      () => service2.prompt(treeId, branchId, "normal continuation must fail closed"),
+      (err: unknown) => err instanceof Error && (err as { code?: unknown }).code === "session-corrupt",
+    );
+
+    /* 显式换轨：新 session + 保存内容上下文 + 首问必须成功。 */
+    const outcome = await service2.promptNewExploration(treeId, branchId, "fresh start question");
+    assert.equal(outcome.run.state, "succeeded", "the first question of the new exploration succeeds");
+    assert.ok(outcome.userTurn.text.includes("[new exploration from saved content"));
+    assert.ok(outcome.userTurn.text.endsWith("fresh start question"), "the typed question stays readable after the marker");
+    /* 保存内容确实进入了模型上下文（echo 答案 = 新 session 上全部 user
+       文本的回声——上下文块 + 首问，含锚点摘录与旧历史）。 */
+    assert.ok(outcome.assistantTurn.text.includes(origin.selection.text), "the anchored excerpt is carried in");
+    assert.ok(outcome.assistantTurn.text.includes("fresh start question"));
+    assert.ok(
+      oldBranchTurns.some((t) => t.role === "assistant" && outcome.assistantTurn.text.includes(t.text)),
+      "the saved branch history is carried in",
+    );
+
+    /* 新 session 是事实上的新文件（旧文件已删；新 run 引用它）。 */
+    const newSessionFiles = readdirSync(sessionsDir).filter((f) => !f.startsWith("."));
+    assert.equal(newSessionFiles.length, 1, "a new session file exists after the exploration");
+    assert.notEqual(newSessionFiles[0], oldSessionFile, "the new session is a different file");
+    assert.equal(outcome.run.session.sessionFile.endsWith(newSessionFiles[0]!), true);
+
+    /* 旧历史保持可读 + 来源关系不动（不冒充旧会话恢复：旧 turn 原样追加
+       在后，origin 不改写）。 */
+    const stateAfter = service2.getTreeState(treeId);
+    const branchViewAfter = findBranchView(stateAfter, branchId);
+    const turnsAfter = branchViewAfter.turns;
+    assert.equal(turnsAfter.length, oldBranchTurns.length + 2, "old turns stay, exactly two new turns append");
+    for (let i = 0; i < oldBranchTurns.length; i += 1) {
+      assert.equal(turnsAfter[i]!.id, oldBranchTurns[i]!.id, `old turn ${String(i)} is untouched`);
+      assert.equal(turnsAfter[i]!.text, oldBranchTurns[i]!.text);
+    }
+    assert.deepEqual(
+      studio2.repository.findBranchOrigin(branchId)?.selection,
+      origin.selection,
+      "the source relation (origin) is preserved, not rewritten",
+    );
+    assert.equal(branchViewAfter.sessionAvailability, "available", "the branch continues on the new session");
+    assert.equal(branchViewAfter.originStatus, "available", "the source stays locatable (P0-1)");
+
+    /* 换轨后普通续聊恢复（续聊点 = 新 session 的最新 run）。 */
+    const normal = await service2.prompt(treeId, branchId, "back to normal continuation");
+    assert.equal(normal.run.state, "succeeded");
+    assert.ok(normal.assistantTurn.text.includes("back to normal continuation"));
+
+    /* session 已可用时再次换轨 → 前置条件冲突（应走普通续聊），零写入。 */
+    const turnsBeforeConflict = service2.getTreeState(treeId).branches
+      .find((v) => v.branch.id === branchId)!
+      .turns.length;
+    await assert.rejects(
+      () => service2.promptNewExploration(treeId, branchId, "should conflict now"),
+      (err: unknown) => err instanceof NewExplorationConflictError,
+    );
+    assert.equal(
+      service2.getTreeState(treeId).branches.find((v) => v.branch.id === branchId)!.turns.length,
+      turnsBeforeConflict,
+      "the rejected new exploration writes nothing",
+    );
+    await studio2.shutdown();
+  } finally {
+    cleanupDir(dir);
+  }
+});
+
+test("new exploration preconditions (v3 §4.4): available session and never-prompted trunks are refused as conflicts; an anchored branch with a lost anchor session explores from the excerpt alone", async () => {
+  const dir = makeTempDataDir();
+  try {
+    const studio = makeStudioInstance(dir);
+    const { service } = studio;
+    const created = service.createTree();
+    const treeId = created.tree.id;
+    const trunkId = created.trunkBranch.id;
+
+    /* 无历史 session（Trunk 从未 prompt）：换轨拒绝——普通 prompt 即新建。 */
+    await assert.rejects(
+      () => service.promptNewExploration(treeId, trunkId, "nothing to explore from"),
+      (err: unknown) => err instanceof NewExplorationConflictError,
+    );
+
+    /* 健康分支（session 可用）：换轨拒绝——应走普通续聊。 */
+    await service.prompt(treeId, trunkId, "tree-one question");
+    await assert.rejects(
+      () => service.promptNewExploration(treeId, trunkId, "still healthy"),
+      (err: unknown) =>
+        err instanceof NewExplorationConflictError && err.message.includes("available session"),
+    );
+
+    /* issue #7 场景 6：以保存的原答案建锚定支线（无 run），其续聊点 =
+       锚点 run 的 session 引用；session 丢失后首次 prompt 失败，显式新探索
+       以锚点摘录为起点成功（不能以「可创建但首问失败」交差）。 */
+    const tree2 = service.createTree();
+    const treeId2 = tree2.tree.id;
+    const trunk2 = tree2.trunkBranch.id;
+    const t1 = await service.prompt(treeId2, trunk2, "q1");
+    const branch = service.createBranchFromSelection(treeId2, trunk2, t1.assistantTurn.id, {
+      start: 0,
+      end: 5,
+      text: t1.assistantTurn.text.slice(0, 5),
+    });
+    const sessionsDir = join(dir, "sessions");
+    const sessionFiles = readdirSync(sessionsDir);
+    assert.equal(sessionFiles.length, 2, "one session file per tree lineage");
+    /* 按内容定位 tree-2 的 session 文件：含其 trunk prompt "q1"，不含
+       tree-1 的 "tree-one question"。 */
+    const tree2File = sessionFiles
+      .map((f) => join(sessionsDir, f))
+      .find((p) => {
+        const content = readFileSync(p, "utf8");
+        return content.includes("q1") && !content.includes("tree-one question");
+      });
+    assert.ok(tree2File !== undefined, "the tree-2 session file is identifiable");
+    await studio.shutdown();
+    rmSync(tree2File);
+
+    const studio2 = makeStudioInstance(dir);
+    const { service: service2 } = studio2;
+    const branchState = service2.getTreeState(treeId2);
+    const branchView = branchState.branches.find((v) => v.branch.id === branch.branch.id);
+    assert.ok(branchView !== undefined);
+    assert.equal(branchView.sessionAvailability, "unavailable", "the anchored branch's continuation point is the lost anchor session");
+
+    await assert.rejects(
+      () => service2.prompt(treeId2, branch.branch.id, "first prompt fails closed"),
+      (err: unknown) => err instanceof Error && (err as { code?: unknown }).code === "session-corrupt",
+    );
+
+    const outcome = await service2.promptNewExploration(treeId2, branch.branch.id, "explore from the excerpt");
+    assert.equal(outcome.run.state, "succeeded", "the new exploration's first question succeeds where the normal prompt failed");
+    assert.ok(
+      outcome.assistantTurn.text.includes(t1.assistantTurn.text.slice(0, 5)),
+      "the anchor excerpt is the carried-in starting context",
+    );
+    assert.ok(outcome.userTurn.text.includes("explore from the excerpt"));
+    /* 分支自身无历史（无 run）：上下文块不含「Saved history」段。 */
+    assert.ok(!outcome.assistantTurn.text.includes("[Saved history on this branch]"));
     await studio2.shutdown();
   } finally {
     cleanupDir(dir);

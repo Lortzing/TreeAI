@@ -3151,12 +3151,12 @@ async function main() {
     assert(card !== undefined, "no return card on trunk after submit");
     assert(card.text.includes("aspen"), `return card does not carry the return text: ${truncate(card.text, 120)}`);
     assert(card.delivered === false, "return card is already delivered before the next trunk run");
-    assert((card.deliveryText ?? "").includes("confirmed"), `pending delivery badge text unexpected: ${String(card.deliveryText)}`);
+    assert((card.deliveryText ?? "").includes("saved — pending adoption"), `pending delivery badge text unexpected: ${String(card.deliveryText)}`);
     /* 来源抽屉：Returns 区显示 not yet delivered。 */
     await click("#source-drawer-toggle");
     await waitForJs("document.getElementById('source-drawer') !== null && !document.getElementById('source-drawer').hidden", 10_000, "sources drawer open");
     const drawerText = await evalJs("document.getElementById('source-drawer').textContent");
-    assert(drawerText.includes("not yet delivered"), `drawer return entry missing pending state: ${truncate(drawerText, 200)}`);
+    assert(drawerText.includes("saved, pending adoption"), `drawer return entry missing pending state: ${truncate(drawerText, 200)}`);
     await snap("return-flow-drawer");
     /* 抽屉头部的可见关闭按钮（issue #6 附-4 的鼠标关闭路径）：覆盖层开着
        时真实点击 #drawer-close——click 助手的 elementFromPoint 防护证明
@@ -3258,15 +3258,23 @@ async function main() {
     const summary = await snap("missing-session");
     const bannerVisible = !summary.main.sessionBanner.hidden && (summary.main.sessionBanner.text ?? "").length > 0;
     assert(bannerVisible, `session banner not visible after session loss: ${JSON.stringify(summary.main.sessionBanner)}`);
-    /* fail-closed：composer 禁用（或提示后禁用），恢复动作如实呈现。 */
+    /* fail-closed + v3 §4.4：发送禁用（普通续聊 fail-closed），输入保持
+       可输入（新探索首问的输入面），「⑃ Start new exploration」显式换轨
+       入口出现且可用，恢复动作如实呈现。 */
     const composerState = await evalJs(
       `(() => { const input = document.getElementById('prompt-input'); ` +
+      "const send = document.getElementById('send'); " +
+      "const explore = document.getElementById('new-exploration'); " +
       "const recovery = [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Branch from latest available answer')); " +
-      "return { disabled: input === null ? null : input.disabled, " +
+      "return { inputDisabled: input === null ? null : input.disabled, sendDisabled: send === null ? null : send.disabled, " +
+      "exploreHidden: explore === null ? null : explore.hidden, exploreDisabled: explore === null ? null : explore.disabled, " +
       "recoveryPresent: recovery !== undefined && recovery !== null, recoveryDisabled: recovery === undefined || recovery === null ? null : recovery.disabled, " +
       "bannerText: document.getElementById('session-banner') === null ? '' : document.getElementById('session-banner').textContent }; })()",
     );
-    assert(composerState.disabled === true, `trunk composer not disabled after session loss (disabled=${String(composerState.disabled)})`);
+    assert(composerState.inputDisabled === false, `trunk input should stay typed-in for the new exploration's first question (disabled=${String(composerState.inputDisabled)})`);
+    assert(composerState.sendDisabled === true, `trunk send not disabled after session loss (disabled=${String(composerState.sendDisabled)})`);
+    assert(composerState.exploreHidden === false, "the explicit new-exploration entry (v3 §4.4) is not presented");
+    assert(composerState.exploreDisabled === false, "the new-exploration entry is not actionable");
     assert(composerState.recoveryPresent === true, "recovery affordance (Branch from latest available answer) not presented");
     /* 还原 session 文件 → 刷新即恢复。 */
     for (const file of moved) {
@@ -3280,7 +3288,7 @@ async function main() {
     assert(recovered.disabled === false && recovered.bannerHidden === true,
       `page did not recover after session restore: ${JSON.stringify(recovered)}`);
     await snap("missing-session-recovered");
-    return { detail: `session file(s) moved away → banner + fail-closed composer + recovery affordance; restored → full recovery on reload (${String(moved.length)} file(s))` };
+    return { detail: `session file(s) moved away → banner + fail-closed send + typed-in input + new-exploration entry (v3 §4.4) + recovery affordance; restored → full recovery on reload (${String(moved.length)} file(s))` };
   });
 
   await runCheck("response-loss-midstream", async () => {

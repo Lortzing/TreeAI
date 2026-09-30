@@ -42,6 +42,13 @@
  *   进程内活动会话 cursor 与续聊点不一致时：
  *     同 session 文件 → navigateTree（D2 回归能力，同 session 不换文件）；
  *     不同文件/无活动会话 → restoreSession。
+ *   「以保存内容开始新的探索」（signed v3 §4.4）：整树/分支 session 丢失后，
+ *     用户显式确认的换轨入口（promptNewExploration）——仅在续聊点 session
+ *     当前不可用时成立；创建全新 session，锚点摘录 + 分支已保存历史作为
+ *     首问上下文带入并声明旧上下文未恢复（用户 turn 携带显式标记，不冒充
+ *     旧会话恢复）；成功后该分支续聊点 = 新 session，旧历史保持可读，
+ *     来源关系（origin）不动。绝不在普通续聊路径静默重建 session
+ *     （fail-closed 纪律不变：session 不可用的普通 prompt 照常拒绝）。
  *
  * 诊断面（A5，最小诚实）：getTreeDiagnostics 提供安全投影——运行面状态
  *   （idle/streaming/aborting）、在途 run 定位、DB 全量 run 行
@@ -188,6 +195,20 @@ export interface PromptOutcome {
   readonly deliveredReturns: number;
 }
 
+/**
+ * prompt 选项。「以保存内容开始新的探索」（signed v3 §4.4）：
+ * newExploration === true 时要求该分支续聊点的 session **当前不可用**
+ * （可用 → NewExplorationConflictError，应走普通续聊；无历史 session →
+ * 同样拒绝，普通 prompt 即会新建），然后创建**全新 session** 作为该分支
+ * 的续聊载体：锚点摘录与分支已保存历史作为首问上下文显式带入，并注明
+ * 旧运行上下文未恢复（不冒充旧会话恢复——用户 turn 携带显式标记）。
+ * 首问成功后分支续聊点 = 新 session（latest run 的引用）；旧历史保持
+ * 可读（append-only，来源关系不动）。
+ */
+export interface PromptOptions {
+  readonly newExploration?: boolean;
+}
+
 export interface BranchCreation {
   readonly branch: Branch;
   readonly origin: BranchOrigin;
@@ -195,11 +216,30 @@ export interface BranchCreation {
 
 export type AnchorStatus = "available" | "changed" | "unavailable";
 
+/**
+ * 揭示后的 Pi 游标对齐结果（signed v3 §1.2：来源定位与游标对齐分离，
+ * 游标对齐**独立可失败**——失败不降格来源状态，数据库原文仍可定位高亮）。
+ * - navigated：活动 Pi 会话已对准锚点条目（游标落在出处分支）；
+ * - failed：对齐尝试失败（锚点 session 缺失/损坏或运行期错误；code +
+ *   message 如实携带）。来源状态不受影响——揭示返回的产品定位（分支/
+ *   turn/绝对偏移/摘录）仍然准确。
+ */
+export type AnchorNavigationOutcome =
+  | { readonly status: "navigated" }
+  | { readonly status: "failed"; readonly code: TreeAIErrorCode; readonly message: string };
+
+/**
+ * 锚点揭示结果：sourceBranchId/anchorTurnId/status/selection 为**纯产品
+ * 定位**（读数据库原文、版本/切片与身份判定，与 session 可用性无关，
+ * signed v3 §1.2）；navigation 为 status === "available" 时对 Pi 游标的
+ * 对齐尝试结果（null = 未尝试，即来源本身已降级）。
+ */
 export interface AnchorLocation {
   readonly sourceBranchId: BranchId;
   readonly anchorTurnId: TurnId;
   readonly status: AnchorStatus;
   readonly selection: TurnSelection;
+  readonly navigation: AnchorNavigationOutcome | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -368,6 +408,22 @@ export class ReturnConflictError extends Error {
     this.name = "ReturnConflictError";
   }
 }
+
+/**
+ * 「以保存内容开始新的探索」与分支当前状态冲突（signed v3 §4.4 的前置
+ * 条件不满足）→ 操作冲突（409）：分支尚无历史 session（普通 prompt 即会
+ * 新建）、或续聊点 session 仍可用（应走普通续聊）。不产生任何写入。
+ */
+export class NewExplorationConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NewExplorationConflictError";
+  }
+}
+
+/** 用户 turn 上的新探索标记（产品事实：不冒充旧会话恢复——转录可审）。 */
+export const NEW_EXPLORATION_TURN_PREFIX =
+  "[new exploration from saved content — the previous session was not restored]";
 
 /**
  * Return 提交后的回程导航结果（已签署 W1 v3.0 §3.5：保存成功与导航结果
@@ -869,6 +925,15 @@ export class TreeStudioService {
     this.repository.saveActiveNavigation(treeId, branchId, reference);
   }
 
+  /**
+   * 锚点完整性三态（signed v3 §1.2：来源定位读**产品原文、版本/切片与
+   * 身份**，与 session 可用性无关——session 损害是续聊维度的事实，不再
+   * 降格来源状态；删除 session 后数据库原文仍可准确定位揭示）：
+   * - unavailable：出处分支或锚点 turn 已不存在（事实缺失）；
+   * - changed：事实尚在但锚点不变量破坏（branchId/role/piEntryId/偏移/
+   *   切片失配，或锚点 runId 悬空——模式完整性违规）；
+   * - available：以上全部不成立——来源身份与文本未变，可准确定位。
+   */
   #anchorStatus(origin: BranchOrigin): AnchorStatus {
     const sourceBranch = this.repository.findBranch(origin.sourceBranchId);
     const anchorTurn = this.repository.findTurn(origin.anchorTurnId);
@@ -885,8 +950,7 @@ export class TreeStudioService {
       return "changed";
     }
     if (anchorTurn.runId === null) return "changed";
-    const run = this.repository.findRun(anchorTurn.runId);
-    return run === null || run.session.availability.status === "unavailable" ? "unavailable" : "available";
+    return this.repository.findRun(anchorTurn.runId) === null ? "changed" : "available";
   }
 
   /**
@@ -1029,7 +1093,7 @@ export class TreeStudioService {
    * tree.navigated）缓冲后归属本次创建的 run；run 落库记录显式
    * queued→running；运行期事件实时归属。收敛由运行时事件派生（见文件头）。
    */
-  async prompt(treeId: TreeId, branchId: BranchId, text: string): Promise<PromptOutcome> {
+  async prompt(treeId: TreeId, branchId: BranchId, text: string, options?: PromptOptions): Promise<PromptOutcome> {
     if (typeof text !== "string" || text.trim().length === 0) {
       throw new InvalidArgumentError("prompt text must be a non-empty string");
     }
@@ -1045,14 +1109,31 @@ export class TreeStudioService {
     const prelude: PiRuntimeEvent[] = [];
     this.#promptPrelude = prelude;
     try {
-      const continuation = this.#resolveContinuation(branch);
+      let continuation = this.#resolveContinuation(branch);
+      /* 新探索（signed v3 §4.4）：仅在续聊点 session 当前不可用时成立。
+         校验与续聊点解析同在操作锁内——判负零写入（无 session/run/turn）。 */
+      let explorationPrefix: string | null = null;
+      if (options?.newExploration === true) {
+        if (continuation.kind !== "reference") {
+          throw new NewExplorationConflictError(
+            `branch ${branchId} has no prior session to start a new exploration from; a normal prompt will create one`,
+          );
+        }
+        if (this.#probeSessionAvailability(continuation.reference) !== "unavailable") {
+          throw new NewExplorationConflictError(
+            `branch ${branchId} still has an available session; continue with a normal prompt instead of starting a new exploration`,
+          );
+        }
+        explorationPrefix = this.#newExplorationContext(branch);
+        continuation = { kind: "new-session" };
+      }
       const preRef = await this.#ensureSessionAt(tree.id, branch.id, continuation);
 
       // 未送达的 return 在这次 prompt 送入 Pi 上下文。
       const pendingReturns = this.repository
         .listTurns(branch.id)
         .filter((turn) => turn.role === "return" && turn.deliveredRunId === null);
-      const composedText = composePromptText(pendingReturns, text);
+      const composedText = composePromptText(pendingReturns, explorationPrefix === null ? text : explorationPrefix + text);
 
       const episode = this.repository.createEpisode(branch.id);
       const run = this.repository.createRun(episode.id, preRef);
@@ -1137,7 +1218,10 @@ export class TreeStudioService {
           episodeId: episode.id,
           runId: run.id,
           role: "user",
-          text,
+          /* 新探索的转录标记（v3 §4.4 不冒充旧会话恢复）：服务端生成的
+             显式前缀随用户 turn 落库——数据库层面可审计该分支在何处换轨
+             到新会话；用户输入原文保持在其后完整可读。 */
+          text: explorationPrefix === null ? text : `${NEW_EXPLORATION_TURN_PREFIX}\n\n${text}`,
         });
         const assistantTurn = this.repository.createTurn({
           treeId: tree.id,
@@ -1170,6 +1254,46 @@ export class TreeStudioService {
       // journal 落盘排空（确定性：prompt settle 时该 run 的全部 journal 事件已写入）。
       await this.#journalTail;
     }
+  }
+
+  /**
+   * 新探索的首问上下文（v3 §4.4「明确带入摘录/收获以及旧运行上下文缺失」）：
+   * 一段服务端生成的说明块，随首问文本一起送入新 session——
+   * - 显式声明：这是从保存内容开始的新探索，旧运行上下文**未恢复**；
+   * - 锚点摘录（origin 的选区快照，来源关系随 origin 保持不动）；
+   * - 分支已保存历史（该分支全部 turn，作为文本重新带入，不是会话恢复）。
+   */
+  #newExplorationContext(branch: Branch): string {
+    const lines: string[] = [
+      "[New exploration on this branch — the previous session is no longer available and was not restored. " +
+        "The anchored excerpt and the saved history below are re-included as the starting context; " +
+        "the earlier run context is missing.]",
+    ];
+    const origin = this.repository.findBranchOrigin(branch.id);
+    if (origin !== null) {
+      lines.push("", `[Anchored excerpt]: "${origin.selection.text}"`);
+    }
+    const turns = this.repository.listTurns(branch.id);
+    if (turns.length > 0) {
+      lines.push("", "[Saved history on this branch]:");
+      for (const turn of turns) {
+        lines.push(`${turn.role}: ${turn.text}`);
+      }
+    }
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  /**
+   * 「以保存内容开始新的探索」（signed v3 §4.4）：用户显式确认后，在该
+   * 分支上以全新 session 续聊——锚点摘录与已保存历史作为首问上下文带入
+   * （#newExplorationContext），旧运行上下文缺失如实声明，用户 turn 携带
+   * 新探索标记。前置条件（不满足 → NewExplorationConflictError 409，零
+   * 写入）：分支有历史 session 且当前不可用。成功后分支续聊点 = 新
+   * session，旧历史保持可读；返回与 prompt 相同的 PromptOutcome。
+   */
+  async promptNewExploration(treeId: TreeId, branchId: BranchId, text: string): Promise<PromptOutcome> {
+    return this.prompt(treeId, branchId, text, { newExploration: true });
   }
 
   /* ------------------------------ 中止 ------------------------------ */
@@ -1346,6 +1470,19 @@ export class TreeStudioService {
     return this.#cursorInfo(treeId);
   }
 
+  /**
+   * 锚点揭示（signed v3 §1.2：来源定位与 Pi 游标对齐分离）：
+   * 1. **纯产品定位**（status/selection）读数据库原文、版本/切片与身份
+   *    判定（#anchorStatus），与 session 可用性无关——session 文件缺失/
+   *    损坏时 status 仍为 available，数据库原文照常可定位高亮；文本
+   *    changed 时拒绝假定位（返回落库快照原文，不回退、不静默重锚）。
+   * 2. status === "available" 时**另行尝试**把活动 Pi 会话对准锚点条目
+   *    （navigateTree / restoreSession）：成功 → navigation "navigated"
+   *    （游标落出处分支）；失败 → navigation "failed"（code/message 如实
+   *    携带），**不降格来源状态**（揭示的产品定位仍然准确）。锚点
+   *    session 经存在性探针判不可用时不再发起运行期调用（同样的失败，
+   *    少一次注定失败的 restore）。
+   */
   async revealBranchOrigin(treeId: TreeId, branchId: BranchId): Promise<AnchorLocation> {
     const tree = this.repository.getTree(treeId);
     const branch = this.repository.getBranch(branchId);
@@ -1357,24 +1494,36 @@ export class TreeStudioService {
       throw new InvalidArgumentError(`branch ${branchId} has no anchor origin`);
     }
     const source = this.repository.findBranch(origin.sourceBranchId);
-    let status = this.#anchorStatus(origin);
+    const status = this.#anchorStatus(origin);
+    let navigation: AnchorNavigationOutcome | null = null;
     if (status === "available" && source !== null) {
+      // #anchorStatus === "available" 保证锚点 turn/run 存在且不变量完好。
       const anchorTurn = this.repository.findTurn(origin.anchorTurnId);
       if (anchorTurn !== null && anchorTurn.runId !== null) {
         const anchorRun = this.repository.getRun(anchorTurn.runId);
         const target: SessionReference = { ...anchorRun.session, entryId: origin.anchorEntryId };
-        try {
-          const cursor = this.#cursor;
-          const reference =
-            cursor !== null && cursor.reference.sessionFile === target.sessionFile
-              ? await this.runtime.navigateTree({ entryId: target.entryId })
-              : (await this.runtime.restoreSession(target)).reference;
-          this.#setCursor(tree.id, source.id, reference);
-        } catch {
-          status = "unavailable";
+        if (this.#probeSessionAvailability(anchorRun.session) === "unavailable") {
+          // 锚点 session 判不可用（存在性探针）：不发起注定失败的运行期
+          // 调用，游标不动，对齐失败如实分离返回（来源定位不受影响）。
+          navigation = {
+            status: "failed",
+            code: "session-corrupt",
+            message: "the anchor session is unavailable; the source text was located from the database",
+          };
+        } else {
+          try {
+            const cursor = this.#cursor;
+            const reference =
+              cursor !== null && cursor.reference.sessionFile === target.sessionFile
+                ? await this.runtime.navigateTree({ entryId: target.entryId })
+                : (await this.runtime.restoreSession(target)).reference;
+            this.#setCursor(tree.id, source.id, reference);
+            navigation = { status: "navigated" };
+          } catch (error) {
+            const treeAIError = toTreeAIError(error);
+            navigation = { status: "failed", code: treeAIError.code, message: treeAIError.message };
+          }
         }
-      } else {
-        status = "unavailable";
       }
     }
     return {
@@ -1382,6 +1531,7 @@ export class TreeStudioService {
       anchorTurnId: origin.anchorTurnId,
       status,
       selection: origin.selection,
+      navigation,
     };
   }
 

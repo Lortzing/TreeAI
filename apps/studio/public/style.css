@@ -407,6 +407,39 @@ button.delivery-link {
 }
 button.delivery-link:hover { background: var(--green-wash); }
 
+/* P1 降级 Return 卡的摘录（issue #7）：短摘录随 meta 的引用式呈现；
+   长摘录折叠（<details>，原生键盘可达；summary 为前缀切片 + 省略号，
+   展开是落库快照原文）。 */
+.turn.return .return-excerpt {
+  display: block;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 4px;
+}
+details.return-excerpt { margin: 4px 0 6px; }
+details.return-excerpt > summary {
+  cursor: pointer;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  list-style-position: inside;
+}
+details.return-excerpt[open] > summary { color: var(--gold-deep); }
+details.return-excerpt .return-excerpt-full {
+  display: block;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* “从这建支线”：安静虚线（诚实操作，不抢阅读）。 */
 .turn .branch-here {
   display: inline-block;

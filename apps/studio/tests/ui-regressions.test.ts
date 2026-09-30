@@ -739,6 +739,8 @@ interface StubWindow {
     clear(): void;
   };
   getSelection(): { rangeCount: number };
+  /** 新探索二次确认（v3 §4.4）：脚本化返回值，调用消息被记录。 */
+  confirm(message: string): boolean;
 }
 
 /* ------------------------------ world 工厂 ------------------------------ */
@@ -786,6 +788,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   /* ---------------- window / localStorage 桩 ---------------- */
 
   const localStorageStore = new Map<string, string>();
+  /* window.confirm 脚本（v3 §4.4 新探索二次确认）：默认确认。 */
+  const confirmCalls: string[] = [];
+  let confirmResult = true;
   const windowStub: StubWindow = {
     /* 桩计时器一律 unref：测试结束后残留的动效/横幅计时器不得拖住进程。 */
     setTimeout: (fn, ms) => setTimeout(fn, ms).unref(),
@@ -811,6 +816,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       },
     },
     getSelection: () => ({ rangeCount: 0 }),
+    confirm: (message) => {
+      confirmCalls.push(message);
+      return confirmResult;
+    },
   };
 
   /* ---------------- 脚本化后端 ---------------- */
@@ -1116,10 +1125,12 @@ test("trunk prompt failure: streaming placeholder cleared, recovery banner rende
   assert.equal(error.getAttribute("role"), "alert", "§2.4: the visible main banner carries role=alert (announced)");
   assert.equal(error.getAttribute("tabindex"), "0", "§2.4: the visible main banner is Tab-reachable");
 
-  /* 输入文本保留（改写重发）；fail-closed：session 不可用后续聊入口禁用。 */
+  /* 输入文本保留（改写重发）；fail-closed：session 不可用后发送禁用，输入
+     保持可输入（v3 §4.4：新探索首问的输入面）。 */
   assert.equal(input.value, "Please continue.", "the unsent prompt text is retained for editing");
   assert.equal(world.el("send").disabled, true, "fail-closed: trunk composer disabled after session-corrupt");
-  assert.equal(world.el("prompt-input").disabled, true, "fail-closed: trunk input disabled after session-corrupt");
+  assert.equal(world.el("prompt-input").disabled, false, "v3 §4.4: the input stays typed-in for the new exploration");
+  assert.equal(world.el("new-exploration").hidden, false, "v3 §4.4: the new-exploration entry appears after session-corrupt");
 
   /* 诊断面终局：失败 run 呈现（不停留在 streaming 中间态）。 */
   assert.equal(world.el("run-status").textContent, "idle", "runtime state returns to idle");
@@ -1415,7 +1426,8 @@ test("degraded revealOrigin applies the server-returned state: badges and degrad
   assert.equal(world.el("panel-session-note").hidden, false, "the server-returned degraded availability renders the panel note");
   assert.ok(world.tabButton("branch-1")!.textContent.includes("session missing"), "the branch tab badge reflects the server-returned degraded state");
   assert.equal(world.el("panel-send").disabled, true, "fail-closed composer follows the applied degraded state");
-  assert.equal(world.el("panel-prompt-input").disabled, true, "fail-closed panel input follows the applied degraded state");
+  assert.equal(world.el("panel-prompt-input").disabled, false, "v3 §4.4: the panel input stays typed-in for the new exploration");
+  assert.equal(world.el("panel-new-exploration").hidden, false, "v3 §4.4: the panel new-exploration entry follows the degraded state");
 });
 
 /* ------------------------------------------------------------------ */

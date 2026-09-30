@@ -364,6 +364,113 @@ test("return with a missing Pi session file: saved first (201), navigation faile
   }
 });
 
+test("new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text", async () => {
+  const dir = makeTempDataDir();
+  const running: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, running);
+    const created = await call(studio.url("/api/trees"), "POST", {});
+    const treeId: string = created.body.tree.id;
+    const trunkBranchId: string = created.body.trunkBranchId;
+    const treePath = (action?: string) =>
+      `/api/trees/${encodeURIComponent(treeId)}${action === undefined ? "" : `/${action}`}`;
+
+    const t1 = await call(studio.url(treePath("prompt")), "POST", { branchId: trunkBranchId, text: "hi" });
+    assert.equal(t1.status, 200);
+    const branchRes = await call(studio.url(treePath("branches")), "POST", {
+      sourceBranchId: trunkBranchId,
+      anchorTurnId: t1.body.outcome.assistantTurn.id,
+      selection: { start: 0, end: 2, text: t1.body.outcome.assistantTurn.text.slice(0, 2) },
+    });
+    const branchId: string = branchRes.body.branch.id;
+    const b1 = await call(studio.url(treePath("prompt")), "POST", { branchId, text: "b1" });
+    assert.equal(b1.status, 200);
+
+    /* 健康分支：换轨前置条件不满足 → 409 new-exploration-conflict。 */
+    const healthyConflict = await call(
+      studio.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`),
+      "POST",
+      { text: "should conflict" },
+    );
+    assert.equal(healthyConflict.status, 409, "a healthy session refuses the new exploration");
+    assert.equal(healthyConflict.body.error.code, "new-exploration-conflict");
+
+    /* 空文本 → 400（与 prompt 同一校验）。 */
+    const empty = await call(
+      studio.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`),
+      "POST",
+      { text: "  " },
+    );
+    assert.equal(empty.status, 400);
+
+    /* 整进程重启 + session 文件缺失。 */
+    await studio.close();
+    const sessionsDir = join(dir, "sessions");
+    const sessionFiles = readdirSync(sessionsDir);
+    assert.equal(sessionFiles.length, 1, "one session file per tree");
+    rmSync(join(sessionsDir, sessionFiles[0]!));
+    const studio2 = await startStudio(dir, running);
+
+    /* 普通续聊 fail-closed（502 session-corrupt）不变。 */
+    const failed = await call(studio2.url(treePath("prompt")), "POST", { branchId, text: "normal fails closed" });
+    assert.equal(failed.status, 502);
+    assert.equal(failed.body.error.code, "session-corrupt");
+
+    /* 显式换轨：200，新 session 首问完成，保存内容作为上下文带入。 */
+    const exploration = await call(
+      studio2.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`),
+      "POST",
+      { text: "exploration question" },
+    );
+    assert.equal(exploration.status, 200, "the new exploration's first question succeeds over HTTP");
+    assert.equal(exploration.body.outcome.run.state, "succeeded");
+    assert.ok(exploration.body.outcome.userTurn.text.includes("[new exploration from saved content"));
+    assert.ok(exploration.body.outcome.assistantTurn.text.includes("exploration question"));
+    assert.ok(
+      exploration.body.outcome.assistantTurn.text.includes("b1"),
+      "the saved branch history is carried into the new session",
+    );
+    /* 状态面：分支恢复可用、旧历史保持可读（2 旧 turn + 2 新 turn）。 */
+    const state = exploration.body.state;
+    const branchView = state.branches.find((v: any) => v.branch.id === branchId);
+    assert.equal(branchView.sessionAvailability, "available");
+    assert.equal(branchView.turns.length, 4, "old history stays readable, two new turns append");
+    assert.equal(
+      branchView.turns
+        .slice(0, 2)
+        .map((t: any) => t.text)
+        .join("\n"),
+      "b1\necho:[hi|b1]",
+      "the old turns are untouched",
+    );
+
+    /* 换轨后：session 已可用 → 再次换轨 409（应走普通续聊）。 */
+    const conflictAfter = await call(
+      studio2.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`),
+      "POST",
+      { text: "now healthy again" },
+    );
+    assert.equal(conflictAfter.status, 409);
+    assert.equal(conflictAfter.body.error.code, "new-exploration-conflict");
+
+    /* 未知分支 → 404；方法错误 → 405。 */
+    const unknownBranch = await call(
+      studio2.url(`/api/trees/${encodeURIComponent(treeId)}/branches/branch-nope/new-exploration`),
+      "POST",
+      { text: "x" },
+    );
+    assert.equal(unknownBranch.status, 404);
+    const wrongMethod = await call(
+      studio2.url(`/api/trees/${encodeURIComponent(treeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`),
+      "GET",
+    );
+    assert.equal(wrongMethod.status, 405);
+  } finally {
+    await closeAll(running);
+    cleanupDir(dir);
+  }
+});
+
 test("HTTP layer rejects malformed bodies and unknown routes predictably", async () => {
   const dir = makeTempDataDir();
   const running: RunningStudio[] = [];

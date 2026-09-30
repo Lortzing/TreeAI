@@ -6,9 +6,22 @@
  *
  * 错误映射：EntityNotFoundError → 404；InvalidArgumentError/
  * ConstraintViolationError → 400；RunNotActiveError/ReturnConflictError
- * （同幂等键不同内容）/契约违规（如并发 prompt，TypeError）/用户中止
- * （TreeAIError code "user-abort"）→ 409；其余运行期 TreeAIError → 502
+ * （同幂等键不同内容）/NewExplorationConflictError（新探索前置条件不满足）
+ * /契约违规（如并发 prompt，TypeError）/用户中止（TreeAIError code
+ * "user-abort"）→ 409；其余运行期 TreeAIError → 502
  * （上游失败）；PersistenceError → 500；其余 → 500。
+ *
+ * POST /api/trees/:id/branches/:branchId/source —— 锚点揭示（signed v3
+ * §1.2：来源定位与 Pi 游标对齐分离）：source 为纯产品定位（status 三态 +
+ * selection 快照，与 session 可用性无关），source.navigation 为
+ * status==="available" 时对 Pi 游标的独立对齐结果（navigated / failed+code
+ * +message——失败不降格来源状态，数据库原文照常可定位高亮）。
+ *
+ * POST /api/trees/:id/branches/:branchId/new-exploration —— 用户显式确认的
+ * 「以保存内容开始新的探索」（signed v3 §4.4）：body {text}；200 =
+ * {outcome, state}（新 session 首问完成，保存内容已作为上下文带入）；
+ * 409 new-exploration-conflict = 前置条件不满足（session 仍可用 / 无历史
+ * session）；400 = 空文本。
  *
  * POST /api/trees/:id/return 幂等语义（保存先于导航，signed W1 v3.0
  * §3.5）：新建 Return → 201；同 idempotencyKey 同内容重放 → 200（同一
@@ -50,7 +63,7 @@ import {
   InvalidArgumentError,
   PersistenceError,
 } from "@treeai/persistence";
-import { RunNotActiveError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
+import { RunNotActiveError, NewExplorationConflictError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -107,6 +120,12 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof ReturnConflictError) {
     // 同幂等键已绑定不同内容的 Return——重试语义冲突（既有 Return 不变）。
     sendJson(res, 409, { error: { code: "return-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof NewExplorationConflictError) {
+    // 「以保存内容开始新的探索」的前置条件不满足（session 仍可用 / 无历史
+    // session）——与分支当前状态冲突，零写入。
+    sendJson(res, 409, { error: { code: "new-exploration-conflict", message: err.message } } satisfies ApiErrorBody);
     return;
   }
   if (err instanceof TypeError) {
@@ -273,6 +292,28 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         const treeId = asTreeId(sourceMatch[1]!);
         const source = await service.revealBranchOrigin(treeId, decodeURIComponent(sourceMatch[2]!) as BranchId);
         sendJson(res, 200, { source, state: service.getTreeState(treeId) });
+        return;
+      }
+
+      /* POST /api/trees/:treeId/branches/:branchId/new-exploration —— 用户
+         显式确认的「以保存内容开始新的探索」（signed v3 §4.4）：分支续聊点
+         session 不可用时的换轨入口。200 = 首问完成（新 session + 保存内容
+         上下文，PromptOutcome）；409 new-exploration-conflict = 前置条件不
+         满足（session 仍可用 / 无历史 session），零写入；400 = 空文本。 */
+      const newExplorationMatch = /^\/api\/trees\/([^/]+)\/branches\/([^/]+)\/new-exploration$/.exec(pathname);
+      if (newExplorationMatch !== null) {
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(newExplorationMatch[1]!);
+        const body = await readJsonBody(req);
+        const outcome = await service.promptNewExploration(
+          treeId,
+          decodeURIComponent(newExplorationMatch[2]!) as BranchId,
+          requireString(body, "text"),
+        );
+        sendJson(res, 200, { outcome, state: service.getTreeState(treeId) });
         return;
       }
 

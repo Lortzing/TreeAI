@@ -1015,6 +1015,8 @@ interface StubWindow {
     clear(): void;
   };
   getSelection(): { rangeCount: number; getRangeAt(index: number): StubTextRange };
+  /** 新探索二次确认（v3 §4.4）：脚本化返回值，调用消息被记录。 */
+  confirm(message: string): boolean;
 }
 
 /* ------------------------------ world 工厂 ------------------------------ */
@@ -1035,6 +1037,10 @@ interface World {
   setSelection(range: StubTextRange | null): void;
   /** 指定容器内按 turnId 取 .turn 元素（断言存在）。 */
   turnElement(containerId: string, turnId: string): StubElement;
+  /** window.confirm 脚本化返回值（v3 §4.4 新探索二次确认；默认 true）。 */
+  setConfirmResult(value: boolean): void;
+  /** window.confirm 收到的消息序列（断言确认文案如实告知换轨后果）。 */
+  readonly confirmCalls: readonly string[];
 }
 
 interface WorldOptions {
@@ -1078,6 +1084,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   /* 脚本化选区（null = 无选区 → app.js 的 selectionOffsetsWithin 回退整条
      答案语义；StubTextRange = 文本节点上的选区 → 绝对偏移语义）。 */
   let scriptedSelection: StubTextRange | null = null;
+  /* window.confirm 脚本（v3 §4.4 新探索二次确认）：默认确认。 */
+  const confirmCalls: string[] = [];
+  let confirmResult = true;
   const windowStub: StubWindow = {
     /* 桩计时器一律 unref：测试结束后残留的动效/横幅计时器不得拖住进程。 */
     setTimeout: (fn, ms) => setTimeout(fn, ms).unref(),
@@ -1114,6 +1123,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         return range;
       },
     }),
+    confirm: (message) => {
+      confirmCalls.push(message);
+      return confirmResult;
+    },
   };
 
   /* ---------------- 脚本化 echo 后端 ---------------- */
@@ -1300,6 +1313,45 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         state: backend.treeState,
       });
     }
+    m = /^\/api\/trees\/([^/]+)\/branches\/([^/]+)\/new-exploration$/.exec(p);
+    if (m !== null && method === "POST") {
+      /* 服务端语义（v3 §4.4）：仅在目标分支 session 不可用时换轨——新
+         session 首问，用户 turn 携带新探索标记 + 原文，分支恢复可用。 */
+      const record = asRecord(body);
+      assert.ok(record !== null, "POST /new-exploration body must be an object");
+      const branchId = decodeURIComponent(m[2]!);
+      const text = record.text;
+      assert.ok(typeof text === "string" && text.trim() !== "", "POST /new-exploration must carry a non-empty text");
+      const view = viewByBranch(branchId);
+      assert.ok(view !== undefined, `POST /new-exploration must target a known branch (got ${branchId})`);
+      if (view.sessionAvailability === "available") {
+        return respond(409, {
+          error: { code: "new-exploration-conflict", message: "branch still has an available session" },
+        });
+      }
+      backend.promptCounter += 1;
+      const runId = `run-ne${backend.promptCounter}`;
+      view.turns.push(
+        makeTurn(
+          `ne${backend.promptCounter}u`,
+          branchId,
+          "user",
+          `[new exploration from saved content — the previous session was not restored]\n\n${text}`,
+          { runId, piEntryId: `pi-ne${backend.promptCounter}u` },
+        ),
+      );
+      const assistantTurn = makeTurn(
+        `ne${backend.promptCounter}a`,
+        branchId,
+        "assistant",
+        `echo:[exploration ${text}]`,
+        { runId, piEntryId: `pi-ne${backend.promptCounter}a` },
+      );
+      view.turns.push(assistantTurn);
+      view.sessionAvailability = "available";
+      backend.treeState.cursor = { treeId: TREE, branchId, entryId: assistantTurn.piEntryId! };
+      return respond(200, { outcome: { kind: "completed" }, state: backend.treeState });
+    }
     m = /^\/api\/trees\/([^/]+)\/prompt$/.exec(p);
     if (m !== null && method === "POST") {
       /* echo 驱动语义（src/echo-port.ts 的 echoAnswer）：答案 = 该分支上
@@ -1393,6 +1445,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       assert.ok(found !== undefined, `missing .turn[data-turn-id=${turnId}] in #${containerId}`);
       return found;
     },
+    setConfirmResult: (value) => {
+      confirmResult = value;
+    },
+    confirmCalls,
   };
 }
 
@@ -1644,7 +1700,9 @@ test("branch panel degradation: recovery action posts an exact whole-answer /bra
   assert.equal(recovery.disabled, false, "recovery enabled while the trunk session is still available");
   assert.ok(recovery.title.includes("Trunk"), "button title names the recovery source branch");
   assert.equal(world.el("panel-send").disabled, true, "fail-closed: unavailable branch composer stays disabled");
-  assert.equal(world.el("panel-prompt-input").disabled, true, "fail-closed: unavailable branch input stays disabled");
+  assert.equal(world.el("panel-prompt-input").disabled, false, "v3 §4.4: the input stays typed-in (the new exploration's first question)");
+  assert.equal(world.el("panel-new-exploration").hidden, false, "v3 §4.4: the explicit new-exploration entry appears");
+  assert.equal(world.el("panel-new-exploration").disabled, false, "the new-exploration entry is actionable");
 
   /* 恢复：面板容器度量预设（首渲染贴底断言用）→ 从 trunk 最新 assistant
      答案（a2）整条建支线。 */
@@ -1981,12 +2039,14 @@ test("trunk session banner: disabled with reason when nothing is available; cros
   assert.ok(reason !== null);
   assert.equal(
     reason.textContent,
-    "no session currently available — start a new Tree or restore the session file",
+    "no session currently available — start a new exploration from saved content (composer below), or start a new Tree / restore the session file",
     "the disabled state explains the reason",
   );
   assert.ok(banner.querySelector(".session-banner-dismiss") !== null, "banner keeps its Dismiss control");
   assert.equal(world.el("send").disabled, true, "fail-closed: trunk composer disabled while the trunk session is missing");
-  assert.equal(world.el("prompt-input").disabled, true, "fail-closed: trunk input disabled while the trunk session is missing");
+  assert.equal(world.el("prompt-input").disabled, false, "v3 §4.4: the trunk input stays typed-in (the new exploration's first question)");
+  assert.equal(world.el("new-exploration").hidden, false, "v3 §4.4: the explicit new-exploration entry appears");
+  assert.equal(world.el("new-exploration").disabled, false, "the new-exploration entry is actionable even with no recovery candidate");
 
   /* Trunk 不可用、branch-1 可用：候选 = branch-1 的最新 assistant 答案（ba1）。 */
   world.setAvailability("branch-1", "available");
@@ -3005,4 +3065,200 @@ test("post-rework CSS: restored rules are present and the removed anti-patterns 
     "the static caret is only muted color",
   );
   assert.ok(!/@keyframes blink/.test(flat), "no blink keyframes anywhere");
+});
+
+/* ------------------------------------------------------------------ */
+/* 26. 新探索入口（v3 §4.4，issue #7 P0-2）：确认流 + 精确载荷 + 收尾    */
+/* ------------------------------------------------------------------ */
+
+test("new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation", async () => {
+  const world = await createWorld();
+  const input = world.el("prompt-input");
+  const banner = world.el("session-banner");
+
+  /* trunk session 丢失：横幅 + 发送禁用 + 输入保持可输入 + 换轨入口出现。 */
+  world.setAvailability("trunk-1", "unavailable");
+  world.liveSse().emit("run-terminal", { runId: "run-x" });
+  await settle();
+  assert.equal(banner.hidden, false, "trunk unavailable: the session banner shows");
+  assert.equal(world.el("send").disabled, true, "fail-closed: the normal send stays disabled");
+  assert.equal(input.disabled, false, "v3 §4.4: the input stays typed-in for the first question");
+  assert.equal(world.el("new-exploration").hidden, false, "the new-exploration entry appears");
+  assert.equal(world.el("new-exploration").disabled, false, "the entry is actionable");
+
+  /* 空文本守卫：无 POST、无 confirm，错误提示输入首问。 */
+  input.value = "   ";
+  world.el("new-exploration").click();
+  await settle();
+  assert.equal(world.requestsOf("/new-exploration").length, 0, "empty text posts nothing");
+  assert.equal(world.confirmCalls.length, 0, "empty text never reaches the confirmation");
+  assert.equal(world.el("error-banner").hidden, false, "the empty-text guard explains what to type");
+  assert.ok(world.el("error-banner").textContent.includes("first question"), "the guard names the first question");
+
+  /* 取消确认：confirm 如实呈现换轨后果，取消则零 POST、状态不动。 */
+  input.value = "First question of the new exploration.";
+  world.setConfirmResult(false);
+  world.el("new-exploration").click();
+  await settle();
+  assert.equal(world.requestsOf("/new-exploration").length, 0, "a cancelled confirmation posts nothing");
+  assert.equal(world.confirmCalls.length, 1, "the confirmation dialog was shown");
+  assert.ok(world.confirmCalls[0]!.includes("NOT restored"), "the dialog states honestly that the old context is not restored");
+  assert.ok(world.confirmCalls[0]!.includes("new session"), "the dialog states that a new session is created");
+  assert.equal(banner.hidden, false, "the banner stays (nothing happened)");
+
+  /* 确认换轨：POST /branches/:id/new-exploration 携带精确载荷；成功后
+     横幅下线、发送恢复、输入清空、换轨入口隐藏、标记回合渲染。 */
+  world.setConfirmResult(true);
+  world.el("new-exploration").click();
+  await settle();
+  const post = world.lastRequest("/new-exploration");
+  assert.ok(post !== null && post.method === "POST", "the confirmed flow posts to the new-exploration route");
+  assert.ok(post.path.endsWith("/branches/trunk-1/new-exploration"), "the route targets the trunk branch");
+  const body = asRecord(post.body);
+  assert.ok(body !== null);
+  assert.equal(body.text, "First question of the new exploration.");
+  assert.equal(banner.hidden, true, "the banner clears once the new session is live");
+  assert.equal(world.el("send").disabled, false, "the normal composer unlocks on the new session");
+  assert.equal(world.el("new-exploration").hidden, true, "the new-exploration entry hides once available");
+  assert.equal(input.value, "", "the input clears after the successful exploration");
+  const conversation = world.el("conversation");
+  assert.ok(conversation.textContent.includes("[new exploration from saved content"), "the marker turn renders honestly");
+  assert.ok(conversation.textContent.includes("First question of the new exploration."), "the typed question renders after the marker");
+  assert.equal(world.document.activeElement, input, "focus returns to the composer input");
+});
+
+/* ------------------------------------------------------------------ */
+/* 27. 降级 Return 卡（issue #7 P1）：快照区分来源去向 + 摘录 + 确认时间  */
+/* ------------------------------------------------------------------ */
+
+test("return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time", async () => {
+  const world = await createWorld();
+  const longExcerpt = "L".repeat(200);
+  const trunk = world.backend.treeState.branches.find((v) => v.branch.id === "trunk-1");
+  assert.ok(trunk !== undefined);
+  /* branch-1 上的长答案（r-long 的锚点：切片逐字匹配 → 来源位于其他分支）。 */
+  const branchOne = world.backend.treeState.branches.find((v) => v.branch.id === "branch-1");
+  assert.ok(branchOne !== undefined);
+  branchOne.turns.push(makeTurn("ba2", "branch-1", "assistant", longExcerpt));
+  /* 四张回退放置的 Return（锚点均不在主干视图）：来源位于其他分支 /
+     已变化（切片失配）/ 缺失（turn 不存在）/ 长摘录折叠。 */
+  trunk.turns.push(
+    makeTurn("r-else", "trunk-1", "return", "Conclusion from a nested branch.", {
+      runId: null,
+      piEntryId: null,
+      fromBranchId: "branch-1",
+      idempotencyKey: "idem-else",
+      targetAnchor: {
+        sourceBranchId: "branch-1",
+        anchorTurnId: "ba1",
+        anchorEntryId: "pi-ba1",
+        selection: { start: 0, end: 5, text: BA1_TEXT.slice(0, 5) },
+      },
+    }),
+    makeTurn("r-changed", "trunk-1", "return", "Conclusion whose anchor drifted.", {
+      runId: null,
+      piEntryId: null,
+      fromBranchId: "branch-1",
+      idempotencyKey: "idem-changed",
+      targetAnchor: {
+        sourceBranchId: "branch-1",
+        anchorTurnId: "ba1",
+        anchorEntryId: "pi-ba1",
+        selection: { start: 0, end: 5, text: "XXXXX" },
+      },
+    }),
+    makeTurn("r-missing", "trunk-1", "return", "Conclusion whose anchor is gone.", {
+      runId: null,
+      piEntryId: null,
+      fromBranchId: "branch-1",
+      idempotencyKey: "idem-missing",
+      targetAnchor: {
+        sourceBranchId: "branch-1",
+        anchorTurnId: "turn-gone",
+        anchorEntryId: "",
+        selection: { start: 0, end: 5, text: "YYYYY" },
+      },
+    }),
+    makeTurn("r-long", "trunk-1", "return", "Conclusion with a long excerpt.", {
+      runId: null,
+      piEntryId: null,
+      fromBranchId: "branch-1",
+      idempotencyKey: "idem-long",
+      targetAnchor: {
+        sourceBranchId: "branch-1",
+        anchorTurnId: "ba2",
+        anchorEntryId: "pi-ba2",
+        selection: { start: 0, end: longExcerpt.length, text: longExcerpt },
+      },
+    }),
+  );
+  /* 已送达卡（锚定放置）：deliveredRunId + 采用尝试记录 → 卡面反查首次
+     成功采用的时间。 */
+  trunk.turns.push(
+    makeTurn("r-delivered", "trunk-1", "return", "Delivered conclusion.", {
+      runId: null,
+      piEntryId: null,
+      fromBranchId: "branch-1",
+      idempotencyKey: "idem-delivered",
+      deliveredRunId: "run-delivered-1",
+      targetAnchor: {
+        sourceBranchId: "trunk-1",
+        anchorTurnId: "a1",
+        anchorEntryId: "pi-a1",
+        selection: { start: 0, end: 5, text: "First" },
+      },
+    }),
+  );
+  trunk.returnAttempts.push({
+    turnId: "r-delivered",
+    runId: "run-delivered-1",
+    runState: "succeeded",
+    failure: null,
+    attemptedAt: ISO,
+    terminalAt: ISO,
+  });
+
+  /* 重新打开树刷新读模型并重渲。 */
+  const treeButton = world.el("tree-list").querySelectorAll("button")[0];
+  assert.ok(treeButton !== undefined);
+  treeButton.click();
+  await settle();
+
+  const conversation = world.el("conversation");
+  const cardOf = (turnId: string): StubElement => {
+    const found = conversation.querySelectorAll(".turn").find((t) => t.dataset.turnId === turnId);
+    assert.ok(found !== undefined, `card ${turnId} renders in the trunk view`);
+    return found;
+  };
+
+  /* 确认时间在卡面（产品 createdAt）；来源位于其他分支如实命名。 */
+  const elsewhere = cardOf("r-else");
+  assert.ok(elsewhere.textContent.includes("· saved "), "the card carries the saved time (product createdAt)");
+  assert.ok(
+    elsewhere.textContent.includes(`source on Branch 1 (anchored on “${BA1_TEXT.slice(0, 5)}”)`),
+    "the fallback names the other branch and keeps the excerpt readable",
+  );
+
+  /* 已变化 / 缺失：区分注记 + 摘录仍在卡面。 */
+  const changed = cardOf("r-changed");
+  assert.ok(changed.textContent.includes("source changed (anchored on “XXXXX”)"), "a drifted anchor reports changed, not missing");
+  const missing = cardOf("r-missing");
+  assert.ok(missing.textContent.includes("source missing (anchored on “YYYYY”)"), "a gone anchor reports missing");
+
+  /* 长摘录：折叠（details + summary 前缀切片 + 全文在卡内）。 */
+  const long = cardOf("r-long");
+  const details = long.querySelector("details");
+  assert.ok(details !== null, "a long excerpt collapses into a details element");
+  assert.ok(long.textContent.includes("source on Branch 1"), "the note still names the source");
+  assert.ok(
+    long.textContent.includes(`“${"L".repeat(100)}…”`),
+    "the summary carries a prefix slice of the excerpt",
+  );
+  const full = details.querySelector(".return-excerpt-full");
+  assert.ok(full !== null && full.textContent === `“${longExcerpt}”`, "the full excerpt stays in the card, expandable");
+
+  /* 已送达卡：首次成功采用的时间从采用尝试记录反查。 */
+  const delivered = cardOf("r-delivered");
+  assert.ok(delivered.textContent.includes("successfully adopted into Trunk context"), "the delivered badge renders");
+  assert.ok(delivered.textContent.includes(", adopted "), "the card carries the adoption time from the attempt record");
 });

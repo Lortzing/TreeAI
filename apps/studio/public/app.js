@@ -7,13 +7,16 @@
  *    「来源揭示 / 回主干」操作（不随滚动消失）；
  *  - 分支 tab 保留为切换器：支线 tab = 打开该支线面板；Trunk tab = 收起
  *    面板回主线。切换仍 POST /switch（服务端对齐 Pi 游标），UI 不再整页换视图；
- *  - 锚点 Return 卡渲染在主干 targetAnchor 原分叉点附近（W1 §2.2）；
- *    采用状态词汇（signed v3 §3.2）：saved — pending adoption（已保存，
- *    尚无 Run 组装过）→ adoption attempted（已有 Run 组装过、其中尚无
- *    成功——失败/中止后仍 pending，随下次主干讨论重试）→ successfully
- *    adopted（deliveredRunId 首次成功采用，可反查来源抽屉中该 run 的
- *    出处条目）；提交后的回程导航失败以「已保存，返回主线失败」分开
- *    呈现（signed v3 §3.5），绝不把已保存的 Return 伪装成未提交；
+ *  - 锚点 Return 卡渲染在主干 targetAnchor 原分叉点附近（W1 §2.2）；降级
+ *    放置（锚点不在当前视图）同样携带 targetAnchor 快照并区分「来源位于
+ *    其他 Branch / 已变化 / 缺失」（issue #7 P1：摘录 + 来源路径在卡面
+ *    可读，长摘录折叠；确认时间取产品 createdAt，首次成功采用时间从采用
+ *    尝试记录反查）；采用状态词汇（signed v3 §3.2）：saved — pending
+ *    adoption（已保存，尚无 Run 组装过）→ adoption attempted（已有 Run
+ *    组装过、其中尚无成功——失败/中止后仍 pending，随下次主干讨论重试）
+ *    → successfully adopted（deliveredRunId 首次成功采用，可反查来源抽屉
+ *    中该 run 的出处条目）；提交后的回程导航失败以「已保存，返回主线失
+ *    败」分开呈现（signed v3 §3.5），绝不把已保存的 Return 伪装成未提交；
  *  - Return 草稿持久化于 localStorage（key = tree+branch；W1 §2.1：draft
  *    仅客户端，不落 TreeAI DB、不是模型上下文、未显式提交前永不生效）；
  *    提交成功 / 响应丢失对账命中（幂等键 + 来源分支 + 文本全同）即清除；
@@ -34,10 +37,14 @@
  *    活动如实空态——Studio 离线以空工具 allowlist 运行）；journal 拉取
  *    三态呈现——加载中 / 已载（含如实空态）/ 加载失败 + 重试（失败绝不
  *    伪装成“无事件”，W2 §2.7 打开-加载失败、issue #3 P1）；
- *  - 缺失 session 降级（A4/W2 §2.8）：分支徽标 + 横幅（树保持可读、续聊
- *    fail-closed 且入口禁用并说明原因），恢复方式是可直接执行的按钮
- *    （从 session 仍可用的最新 assistant 答案整条建支线——近似说明见
- *    findSessionRecoveryAnchor），session-corrupt 失败时同样提示。横幅
+ *  - 缺失 session 降级（A4/W2 §2.8 + v3 §4.4）：分支徽标 + 横幅（树保持
+ *    可读、续聊发送 fail-closed 且入口禁用并说明原因），恢复方式是可直接
+ *    执行的按钮（从 session 仍可用的最新 assistant 答案整条建支线——近似
+ *    说明见 findSessionRecoveryAnchor）**加上**「以保存内容开始新的探索」
+ *    （v3 §4.4：session 不可用分支的显式换轨入口——输入框保持可输入以
+ *    键入首问，「⑃ Start new exploration」提交经 confirm 二次确认，服务
+ *    端新建 session 并把锚点摘录 + 已保存历史作为首问上下文带入；绝不
+ *    冒充旧会话恢复）；session-corrupt 失败时同样提示。横幅
  *    dismiss 为页面级持久状态（重渲不复活；主干恢复可用或执行恢复动作
  *    时清除）。prompt 失败（含 session-corrupt）的终局渲染是硬保证：
  *    流式占位清除、恢复横幅/降级提示、最终树态与诊断面都在错误上抛前
@@ -243,19 +250,35 @@ async function guard(fn, view = "main") {
 }
 
 /**
- * 续聊入口锁定（W2 §2.2 在途锁定 + §2.8 fail-closed）：
- * busy（单在途 prompt）或目标分支 session 不可用时禁用输入与发送。
+ * 续聊入口锁定（W2 §2.2 在途锁定 + §2.8 fail-closed + v3 §4.4）：
+ * busy（单在途 prompt）→ 输入与发送全禁；
+ * 目标分支 session 不可用 → **发送 fail-closed 禁用**，但输入保持可输入
+ * （v3 §4.4：用户在新探索的首问就是在被禁的普通续聊入口旁输入的——
+ * 「⑃ Start new exploration」按钮随可用性显隐，承接显式换轨提交）。
+ * 占位文案同步换轨语境（不可用时引导输入新探索首问）。
  */
 function updateComposerLocks() {
   const busy = state.busy;
   const trunkView = state.treeState === null ? null : branchView(trunkBranchId());
-  const trunkLocked = busy || (trunkView !== null && trunkView.sessionAvailability === "unavailable");
-  $("prompt-input").disabled = trunkLocked;
+  const trunkUnavailable = trunkView !== null && trunkView.sessionAvailability === "unavailable";
+  const trunkLocked = busy || trunkUnavailable;
+  $("prompt-input").disabled = busy;
+  $("prompt-input").placeholder = trunkUnavailable
+    ? "Session missing on the Trunk — type the first question of a new exploration, then “Start new exploration”…"
+    : "Ask on the Trunk…";
   $("send").disabled = trunkLocked;
+  $("new-exploration").hidden = !trunkUnavailable;
+  $("new-exploration").disabled = busy;
   const panelView = state.panelBranchId === null ? null : branchView(state.panelBranchId);
-  const panelLocked = busy || (panelView !== null && panelView.sessionAvailability === "unavailable");
-  $("panel-prompt-input").disabled = panelLocked;
+  const panelUnavailable = panelView !== null && panelView.sessionAvailability === "unavailable";
+  const panelLocked = busy || panelUnavailable;
+  $("panel-prompt-input").disabled = busy;
+  $("panel-prompt-input").placeholder = panelUnavailable
+    ? "Session missing on this branch — type the first question of a new exploration, then “Start new exploration”…"
+    : "Continue this branch…";
   $("panel-send").disabled = panelLocked;
+  $("panel-new-exploration").hidden = !panelUnavailable;
+  $("panel-new-exploration").disabled = busy;
   $("submit-return").disabled = busy;
   $("new-tree").disabled = busy;
 }
@@ -417,7 +440,8 @@ function renderSessionBanner() {
   text.className = "session-banner-text";
   text.textContent =
     "Session missing on this branch — the tree stays fully readable (the database is the source of truth), " +
-    "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.";
+    "but continuing here will fail. Recovery: start a new exploration from saved content (button next to the " +
+    "composer below), branch from a turn whose session is still available, or start a fresh Tree.";
   banner.append(text);
   banner.append(sessionRecoveryControls("main"));
   const dismiss = document.createElement("button");
@@ -474,7 +498,8 @@ function sessionRecoveryControls(surface) {
     button.disabled = true;
     const reason = document.createElement("span");
     reason.className = "session-recovery-reason";
-    reason.textContent = "no session currently available — start a new Tree or restore the session file";
+    reason.textContent =
+      "no session currently available — start a new exploration from saved content (composer below), or start a new Tree / restore the session file";
     wrap.append(button, reason);
   } else {
     button.title = `branch from the latest answer on ${branchLabel(anchor.branchId)} (whose session is still available)`;
@@ -499,13 +524,61 @@ function selectionOffsetsWithin(element, text) {
   return { start, end: start + selected.length, text: selected };
 }
 
+/** 长摘录折叠阈值（P1 降级卡）：超过即以 <details> 折叠（原生键盘可达）。 */
+const RETURN_EXCERPT_COLLAPSE_THRESHOLD = 120;
+
+/** 摘录元素（P1）：完整文本始终在卡片内（短摘录内联引用，长摘录折叠——
+    <summary> 携带前缀切片 + 省略号，展开后是落库快照原文）。 */
+function returnExcerptElement(text) {
+  if (text.length <= RETURN_EXCERPT_COLLAPSE_THRESHOLD) return null;
+  const details = document.createElement("details");
+  details.className = "return-excerpt collapsible";
+  const summary = document.createElement("summary");
+  summary.textContent = `“${text.slice(0, 100)}…”`;
+  const full = document.createElement("span");
+  full.className = "return-excerpt-full";
+  full.textContent = `“${text}”`;
+  details.append(summary, full);
+  return details;
+}
+
 /**
- * Return 卡片（W2 §2.4 + M3/M4 + signed v3 §3.2）：锚点答案在当前视图内
- * → 紧随其后渲染（meta 含选区摘录，满足“原分叉点附近”）；锚点缺失（历史
- * Return 或锚点在其他分支）→ 按时间顺序原位渲染并降级标注。采用状态词
- * 汇（signed v3 §3.2）：saved（已保存，待采用）→ attempted（采用尝试过，
- * 仍待成功）→ delivered（首次成功采用，deliveredRunId 即该 run，点击打开
- * 来源抽屉定位）。草稿（draft）仅存在于浏览器本地，不出现在卡片词汇里。
+ * 回退放置的来源判定（P1：区分「来源位于其他 Branch / 已变化 / 缺失」）：
+ * 以 targetAnchor 快照在树状态里反查锚点 turn——查不到 → missing；查到但
+ * role/切片不再匹配快照 → changed；查到且仍匹配 → 该锚点在其他分支
+ * （elsewhere，携带其所在分支）。树状态缺失（极端）按 missing。
+ */
+function returnFallbackReason(turn) {
+  const st = state.treeState;
+  const anchor = turn.targetAnchor;
+  if (st === null || anchor === null) return { kind: "missing", anchor: null };
+  let anchorTurn = null;
+  for (const view of st.branches) {
+    const found = view.turns.find((t) => t.id === anchor.anchorTurnId);
+    if (found !== undefined) {
+      anchorTurn = found;
+      break;
+    }
+  }
+  if (anchorTurn === null) return { kind: "missing", anchor };
+  const stillHolds =
+    anchorTurn.role === "assistant" &&
+    anchorTurn.text.slice(anchor.selection.start, anchor.selection.end) === anchor.selection.text;
+  if (!stillHolds) return { kind: "changed", anchor };
+  return { kind: "elsewhere", anchor, anchorBranchId: anchorTurn.branchId };
+}
+
+/**
+ * Return 卡片（W2 §2.4 + M3/M4 + signed v3 §3.2 + issue #7 P1）：
+ * - placement "anchored"：锚点答案在当前视图内 → 紧随其后渲染，meta 携带
+ *   摘录与来源分支（短摘录内联；长摘录折叠元素）；
+ * - placement "fallback"：锚点不在当前视图 → 按时间顺序原位渲染，meta 以
+ *   targetAnchor 快照区分「来源位于其他 Branch / 已变化 / 缺失」，摘录照常
+ *   在卡面可读（折叠规则同上）；
+ * - 确认时间（P1）：saved <createdAt> 取产品 turn.createdAt；首次成功采用
+ *   的送达时间从采用尝试记录反查（deliveredRunId 对应 run 的 terminalAt）。
+ * 采用状态词汇（signed v3 §3.2）：saved → attempted → delivered（点击
+ * delivered 徽标反查来源抽屉）。草稿（draft）仅浏览器本地。
  *
  * M3/M4 的动效 class 在插入/状态变化后的短观测窗口（MOTION_EPOCH_MS）内
  * 随重渲保持——状态刷新（SSE 终态 + prompt 响应）可能在一个动效周期内
@@ -521,7 +594,16 @@ function returnAttemptsFor(view, turnId) {
   return (view.returnAttempts ?? []).filter((attempt) => attempt.turnId === turnId);
 }
 
-function returnCard(turn, anchor, attempts) {
+/** 时间戳的产品事实格式化（P1：确认/采用时间都取产品 turn/run 字段）。 */
+function formatProductTime(iso) {
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
+
+function returnCard(turn, anchor, attempts, placement) {
   const treeKey = `${state.currentTreeId}:${turn.id}`;
   const nowMs = Date.now();
   const div = document.createElement("div");
@@ -542,11 +624,35 @@ function returnCard(turn, anchor, attempts) {
   const meta = document.createElement("span");
   meta.className = "meta";
   const from = branchLabel(turn.fromBranchId ?? "");
-  const anchorNote =
-    anchor !== null
+  const savedAt = formatProductTime(turn.createdAt);
+  /* 锚点注记（P1）：anchored = 摘录 + 来源分支内联；fallback = 以
+     targetAnchor 快照区分来源去向（其他 Branch / 已变化 / 缺失），摘录
+     随卡面可读（短内联 / 长折叠）。 */
+  let anchorNote;
+  let excerptElement = null;
+  const shortExcerpt = anchor !== null && anchor.selection.text.length <= RETURN_EXCERPT_COLLAPSE_THRESHOLD;
+  if (placement === "anchored" && anchor !== null) {
+    anchorNote = shortExcerpt
       ? ` · anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`
-      : " · original anchor unavailable";
-  meta.append(document.createTextNode(`↩ Return from ${from}${anchorNote}`));
+      : ` · anchored on a long selection from ${branchLabel(anchor.sourceBranchId)}`;
+    excerptElement = returnExcerptElement(anchor.selection.text);
+  } else if (anchor !== null) {
+    const reason = returnFallbackReason(turn);
+    const inline = shortExcerpt ? ` (anchored on “${anchor.selection.text}”)` : "";
+    if (reason.kind === "elsewhere") {
+      anchorNote = ` · source on ${branchLabel(reason.anchor.sourceBranchId)}${inline}`;
+    } else if (reason.kind === "changed") {
+      anchorNote = ` · source changed${inline}`;
+    } else if (reason.anchor !== null) {
+      anchorNote = ` · source missing${inline}`;
+    } else {
+      anchorNote = " · original anchor unavailable";
+    }
+    excerptElement = returnExcerptElement(anchor.selection.text);
+  } else {
+    anchorNote = " · original anchor unavailable";
+  }
+  meta.append(document.createTextNode(`↩ Return from ${from} · saved ${savedAt}${anchorNote}`));
 
   const delivered = turn.deliveredRunId !== null;
   const delivery = document.createElement(delivered ? "button" : "span");
@@ -564,8 +670,15 @@ function returnCard(turn, anchor, attempts) {
   }
   if (delivered) {
     /* deliveredRunId 只表示首次成功采用的 run（signed v3 §3.2）；
-       此前的失败/中止尝试记录在来源抽屉（Sources → Attempts）。 */
-    delivery.textContent = `successfully adopted into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…)`;
+       此前的失败/中止尝试记录在来源抽屉（Sources → Attempts）。
+       P1：送达时间从采用尝试记录反查该 run 的 terminalAt（产品事实；
+       记录缺失的旧快照如实省略）。 */
+    const deliveredAttempt = attempts.find((attempt) => attempt.runId === turn.deliveredRunId);
+    const adoptedNote =
+      deliveredAttempt !== undefined && deliveredAttempt.terminalAt !== null
+        ? `, adopted ${formatProductTime(deliveredAttempt.terminalAt)}`
+        : "";
+    delivery.textContent = `successfully adopted into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…${adoptedNote})`;
     delivery.title = `first successfully adopted into Trunk run ${turn.deliveredRunId} — open sources`;
     div.dataset.deliveredRunId = turn.deliveredRunId;
     div.title = `first successfully adopted into Trunk run ${turn.deliveredRunId}`;
@@ -588,7 +701,9 @@ function returnCard(turn, anchor, attempts) {
   }
   state.seenDeliveredRunIds.set(treeKey, turn.deliveredRunId);
   meta.append(delivery);
-  div.append(meta, document.createTextNode(turn.text));
+  div.append(meta);
+  if (excerptElement !== null) div.append(excerptElement);
+  div.append(document.createTextNode(turn.text));
   return div;
 }
 
@@ -635,7 +750,9 @@ function renderTurnsInto(container, view, branchId, stick) {
   for (const turn of view.turns) {
     if (turn.role === "return") {
       if (isAnchored(turn)) continue; /* 已随锚点答案渲染 */
-      container.append(returnCard(turn, null, returnAttemptsFor(view, turn.id))); /* 降级：锚点不在当前视图 */
+      /* 降级放置（P1）：锚点不在当前视图——targetAnchor 快照随卡传递，
+         区分来源位于其他 Branch / 已变化 / 缺失，摘录照常在卡面可读。 */
+      container.append(returnCard(turn, turn.targetAnchor, returnAttemptsFor(view, turn.id), "fallback"));
       continue;
     }
 
@@ -697,7 +814,7 @@ function renderTurnsInto(container, view, branchId, stick) {
 
     if (turn.role === "assistant") {
       for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
-        container.append(returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id)));
+        container.append(returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id), "anchored"));
       }
     }
   }
@@ -785,7 +902,8 @@ function renderPanelSessionNote(view) {
   note.append(
     document.createTextNode(
       "Session missing on this branch — the branch stays fully readable (the database is the source of truth), " +
-        "but continuing here will fail. Recovery: start a fresh Tree, or branch from a turn whose session is still available.",
+        "but continuing here will fail. Recovery: start a new exploration from saved content (button next to the " +
+        "composer below), branch from a turn whose session is still available, or start a fresh Tree.",
     ),
   );
   note.append(sessionRecoveryControls("panel"));
@@ -1573,12 +1691,16 @@ function restoreFocusRef(ref) {
 }
 
 /**
- * 锚点揭示（W2 §2.6）：available → 定位 + 一次性脉冲高亮 + 滚动 + 焦点
- * 移至锚点 turn；锚点在主线 → 主面板内揭示（面板保持打开）；锚点在其他
- * 支线 → 打开该支线面板呈现。changed/unavailable → 降级不伪造：摘录仍在
- * 面板头部可读，如实报告状态。降级路径同样先落地服务端返回的 state——
- * 徽标 / 降级提示必须与服务端判定一致（W1 §3.4 如实呈现），绝不能出现
- * 「错误说降级、徽标仍 available」的矛盾 UI。
+ * 锚点揭示（W2 §2.6 + signed v3 §1.2：来源定位与 Pi 游标对齐分离）：
+ * status available → 定位 + 一次性脉冲高亮 + 滚动 + 焦点移至锚点 turn——
+ * **无论 navigation 成败**（产品定位来自数据库原文，session 缺失/损坏不再
+ * 阻断准确高亮）；navigation failed → 如实以面板横幅提示「定位成功但
+ * 活动会话未能对准」（后续 prompt 自导航，不受影响）。锚点在主线 → 主
+ * 面板内揭示（面板保持打开）；锚点在其他支线 → 打开该支线面板呈现。
+ * changed/unavailable → 降级不伪造：摘录仍在面板头部可读，如实报告状态。
+ * 降级路径同样先落地服务端返回的 state——徽标 / 降级提示必须与服务端
+ * 判定一致（W1 §3.4 如实呈现），绝不能出现「错误说降级、徽标仍
+ * available」的矛盾 UI。
  */
 async function revealOrigin(branchId) {
   if (branchId === null || state.currentTreeId === null) return;
@@ -1604,9 +1726,21 @@ async function revealOrigin(branchId) {
     start: payload.source.selection.start,
     end: payload.source.selection.end,
   };
+  const navigation = payload.source.navigation ?? null;
+  const navigationFailed =
+    navigation !== null && navigation.status === "failed"
+      ? `${navigation.code}: ${navigation.message}`
+      : null;
   if (payload.source.sourceBranchId === trunkBranchId()) {
     renderAll();
     revealAnchorTurn(payload.source.anchorTurnId);
+    if (navigationFailed !== null) {
+      showError(
+        `Source located from the saved database text (highlighted above); aligning the live session failed ` +
+          `(${navigationFailed}). Prompts navigate on their own, so continuing is unaffected.`,
+        "panel",
+      );
+    }
     return;
   }
   await openBranchPanel(payload.source.sourceBranchId, {
@@ -1615,6 +1749,13 @@ async function revealOrigin(branchId) {
     trigger: { kind: "element", element: $("panel-view-source") },
   });
   revealAnchorTurn(payload.source.anchorTurnId);
+  if (navigationFailed !== null) {
+    showError(
+      `Source located from the saved database text (highlighted); aligning the live session failed ` +
+        `(${navigationFailed}). Prompts navigate on their own, so continuing is unaffected.`,
+      "panel",
+    );
+  }
 }
 
 /**
@@ -1683,6 +1824,52 @@ async function refreshTreeStateQuietly() {
   } catch {
     /* 保留当前树态；原始错误照常上抛由 guard 呈现 */
   }
+}
+
+/**
+ * 「以保存内容开始新的探索」（signed v3 §4.4）：session 不可用分支的显式
+ * 换轨入口（主线/面板 composer 的「⑃ Start new exploration」）。首问文本
+ * 取自当前输入框；点击即用户确认流（confirm 二次确认：新会话、旧上下文
+ * 不恢复、旧历史保持可读——不冒充旧会话恢复）。成功 → 树态落地、输入清
+ * 空、session 恢复可用（横幅/降级提示随之下线）、焦点回输入框；前置条件
+ * 不满足（409，session 仍可用/无历史 session）由 guard 呈现原错误。
+ */
+async function startNewExploration(viewKind) {
+  const isPanel = viewKind === "panel";
+  const branchId = isPanel ? state.panelBranchId : trunkBranchId();
+  const input = $(isPanel ? "panel-prompt-input" : "prompt-input");
+  if (branchId === null) return;
+  const text = input.value;
+  if (text.trim() === "") {
+    showError(
+      "Type the first question for the new exploration first, then start it.",
+      isPanel ? "panel" : "main",
+    );
+    input.focus();
+    return;
+  }
+  const confirmed = window.confirm(
+    "Start a new exploration on this branch from saved content?\n\n" +
+      "A new session will be created: the anchored excerpt and the saved history are re-included as the " +
+      "first question's context, but the previous run context is NOT restored (this is not a session restore). " +
+      "The old history stays readable.",
+  );
+  if (!confirmed) return;
+  const payload = await api(
+    `/api/trees/${encodeURIComponent(state.currentTreeId)}/branches/${encodeURIComponent(branchId)}/new-exploration`,
+    "POST",
+    { text },
+  );
+  state.treeState = payload.state;
+  input.value = "";
+  if (isPanel) state.forcePanelSessionNote = false;
+  else state.forceSessionBanner = false;
+  /* 用户执行了换轨动作：清除横幅 dismiss 记录（横幅按当前事实重新呈现）。 */
+  const trunk = trunkBranchId();
+  if (trunk !== null) state.dismissedSessionBannerTrunks.delete(trunk);
+  renderAll({ stick: branchId });
+  await refreshDiagnostics();
+  input.focus();
 }
 
 /** Abort the active run. Bypasses the busy guard on purpose: the whole point
@@ -2201,6 +2388,10 @@ $("panel-prompt-input").addEventListener("keydown", (event) => {
   }
 });
 $("submit-return").addEventListener("click", () => guard(submitReturn, "panel"));
+/* 新探索（v3 §4.4）：session 不可用分支的显式换轨入口（按钮仅在不可用时
+   可见，见 updateComposerLocks）。 */
+$("new-exploration").addEventListener("click", () => guard(() => startNewExploration("main")));
+$("panel-new-exploration").addEventListener("click", () => guard(() => startNewExploration("panel"), "panel"));
 $("abort-run").addEventListener("click", () => void abortActiveRun());
 $("source-drawer-toggle").addEventListener("click", () => void toggleDrawer());
 /* 面板收起动作的失败呈现在主线横幅（面板此刻已收起/未开）。 */

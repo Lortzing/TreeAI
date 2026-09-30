@@ -1,17 +1,25 @@
-# W1 产品契约（草案，待负责人签署）
+# W1 产品契约（仓内镜像，符合性标准为已签署 v3.0）
 
-> **状态：DRAFT — 待签署（正文已对齐已签署 v3.0）。** 本文档是仓库内起草
-> 的 W1 契约文本，回应 GitHub issue #2《D3 验收：Gate 2 No Go 与修订方案》
-> （2026-09-29）的 Gate 0 缺口之一：「W1 Anchor/Return/失败幂等契约未冻
-> 结」。签署权在负责人；在负责人签署之前，本文档不冻结任何契约、不构成
-> Gate 0 通过——Gate 0–2 与 A1–A7 的验收均为负责人决策（见
+> **状态：仓内镜像——符合性标准是仓外已签署 v3.0。** 仓外《TreeAI W1
+> 产品与研发联合契约 v3.0》已于 2026-09-30 **签署生效**；issue #7
+> （2026-09-30 验收）裁定：W1 v3 产品决策**已授权签署、已完成，不重复
+> 要求签署**，以签署版为符合性标准，仓内旧 DRAFT/待裁决文字不覆盖它。
+> 本文档是签署版语义的仓内实现对照镜像：正文随实现对齐签署版；**研发
+> 未符合条目在 §7 汇总**（当前：术语三部分 ①②③ 全部未交付）。本文档
+> 不再携带签署请求；Gate 0–2 与 A1–A7 的验收仍为负责人决策（见
 > `docs/d3/D3-status.md`，该文件只记录状态）。
 >
-> **已签署 v3.0 对齐（2026-09-30）**：仓外《TreeAI W1 产品与研发联合契约
-> v3.0》已于 2026-09-30 签署生效。其与本草案相抵触之处已按签署版改正本文
-> 正文并同步实现与测试（保存先于导航 §2.4 / 幂等键按 Tree 唯一 §2.3 /
-> 采用尝试与首次成功采用分离 §2.1、§2.6 / `changed` 锚点不阻断仍有效的
-> 续聊 §1.3）；签署版与本文的等价性仍需负责人对照确认（§6-11）。
+> **v3.0 对齐（2026-09-30）**：保存先于导航 §2.4 / 幂等键按 Tree 唯一
+> §2.3 / 采用尝试与首次成功采用分离 §2.1、§2.6 / `changed` 锚点不阻断
+> 仍有效的续聊 §1.3——均已实现并有测试。**issue #7 P0/P1 整改
+> （2026-09-30 本波落地）**：来源定位/续聊分离（§1.2/§1.3——锚点状态
+> 不再由 session 可用性降格，揭示的 Pi 游标对齐作为独立可失败的
+> navigation 结果分离返回）；整树 session 丢失后的显式新探索（§3.4——
+> `promptNewExploration`，用户确认换轨：新 session + 摘录/已保存历史
+> 作为首问上下文 + 旧上下文缺失声明，旧历史保持可读）；降级 Return 卡
+> （§2.2/§6-5/§6-8——回退放置携带 targetAnchor 快照，区分来源位于其他
+> Branch/已变化/缺失，摘录 + 确认时间在卡面，长摘录折叠，首次成功采用
+> 时间从采用尝试记录反查）。
 >
 > **实现基线（2026-09-29 勘定，issue #5）**：本文本已对照实际实现与测试
 > 逐条核实——载体为 `packages/contracts/src/product.ts`、
@@ -22,25 +30,24 @@
 > 为 `apps/studio/tests/` 全部套件（套件在 issue #5 波次持续扩充：
 > `ui-probe`、`ui-regressions` 一律**文件级**引用，不作场景名/计数引用）
 > 与 `tests/integration/scenarios.test.ts`（D2 层支撑）。各节标注
-> **已实现待冻结**：语义已实现并有自动化证据，但**未经负责人签署，不构
-> 成冻结**。核实中发现的草稿与代码不一致处已在正文改正并汇总于 §6
-> （勘误与实现对照；§6-8/10/11 为待负责人决定的开放项，§6-2/6-3/6-9
-> 已按 2026-09-30 签署版裁定）。文档与代码的一致
+> **已实现**：语义已实现并有自动化证据（符合性以签署版为准，不再以
+> 仓内签署为冻结前提）。文档与代码的一致
 > 性以绑定 commit SHA 的证据（`evidence/d3/`）为准，不以本文档自述为准。
 
 | 项目 | 内容 |
 | --- | --- |
-| 文档状态 | DRAFT 待签署（§4 状态行与实现对照已同步至当前实现；签署区块见文末，留空） |
-| 依据 | issue #2（2026-09-29）P0 与 A2–A5 缺口；2026-09-29 逐条核实对照（issue #5） |
+| 文档状态 | 仓内镜像（符合性标准 = 仓外已签署 v3.0，2026-09-30；issue #7 裁定不重复签署） |
+| 依据 | issue #2（2026-09-29）P0 与 A2–A5 缺口；issue #5（2026-09-29）逐条核实；issue #7（2026-09-30）P0/P1 整改与术语范围 |
 | 契约载体 | `packages/contracts/src/product.ts`（TurnSelection / Turn / BranchOrigin / ReturnTargetAnchor 共享形状）、`apps/studio/src/service.ts`（产品语义）、`apps/studio/src/server.ts`（HTTP 映射）、`apps/studio/public/app.js`（客户端 draft/幂等键语义） |
 | 证据口径 | 自动化离线 → `evidence/d3/offline/`；真实 Pi 与目标 Mac → `evidence/d3/real-pi/` |
 
 ## 1. 锚点（Anchor）契约
 
-> **状态：已实现待冻结。** 判定与降级语义见 `service.ts` `#anchorStatus()`
-> （L872 起）、`revealBranchOrigin()`（L1349 起）与 `persistence` 的
-> `setBranchOrigin()` 校验；证据：service 套件（见 §4 R1/R2）。`changed`
-> 判定分支已有直接用例（直改 DB 构造，§6-3）。
+> **状态：已实现（issue #7 P0-1 波次对齐 v3 §1.2）。** 判定与降级语义见
+> `service.ts` `#anchorStatus()`、`revealBranchOrigin()`（来源定位与
+> Pi 游标对齐分离）与 `persistence` 的 `setBranchOrigin()` 校验；证据：
+> service 套件（见 §4 R1/R2）。`changed` 判定分支已有直接用例（直改 DB
+> 构造，§6-3）；session 不可用不再降格来源状态（P0-1，下表 + §1.3）。
 
 ### 1.1 选区：绝对字符偏移
 
@@ -61,25 +68,26 @@
 以 Range 前缀长度求绝对偏移、不搜索 = `app.js` `selectionOffsetsWithin()`
 （L487 起）；高亮按偏移切片 = `renderTurnsInto()`（L603 起）。
 
-### 1.2 锚点完整性三态
+### 1.2 锚点完整性三态（issue #7 P0-1：与 session 可用性分离）
 
 每个锚定分支的 origin 在读取时判定为三态之一。判定规则（每条独立成立
-即归类）：
+即归类）——**来源维度只读产品事实**（数据库原文、版本/切片与身份），
+**与 Pi session 可用性无关**（signed v3 §1.2：来源身份与文本未变，揭示
+就必须可用；session 损害是续聊维度的事实，由 `sessionAvailability`
+单独呈现）：
 
 | 状态 | 判定条件（任一成立） | 语义 |
 | --- | --- | --- |
-| `unavailable` | 出处分支（`sourceBranchId`）已不存在；或锚点 turn（`anchorTurnId`）已不存在；或锚点 turn 所属 run 的 session 不可用（`availability.status === "unavailable"`）或该 run 查询不到 | 事实缺失或会话不可达，锚点不可用 |
-| `changed` | 锚点 turn 存在但 `branchId !== sourceBranchId`；或 `role !== "assistant"`；或 `piEntryId !== origin.anchorEntryId`；或偏移越界（`start < 0`、`end < start`、`end > text.length`）；或 `text.slice(start, end) !== selection.text`；或锚点 turn 无 `runId` | 事实尚在，但不再满足锚点不变量 |
-| `available` | 以上全部不成立 | 锚点完好，可定位、可揭示 |
+| `unavailable` | 出处分支（`sourceBranchId`）已不存在；或锚点 turn（`anchorTurnId`）已不存在 | 事实缺失，锚点不可用 |
+| `changed` | 锚点 turn 存在但 `branchId !== sourceBranchId`；或 `role !== "assistant"`；或 `piEntryId !== origin.anchorEntryId`；或偏移越界（`start < 0`、`end < start`、`end > text.length`）；或 `text.slice(start, end) !== selection.text`；或锚点 turn 无 `runId` 或 runId 悬空 | 事实尚在，但不再满足锚点不变量 |
+| `available` | 以上全部不成立 | 来源身份与文本未变，可准确定位、可揭示（**即使锚点 session 文件已删除**——数据库原文照常定位高亮） |
 
-实体缺失（分支/turn 查不到）优先判为 `unavailable`；其余按不变量逐条判
-`changed`；最后以锚点 run 的 session 可用性决定 `unavailable` / `available`。
+实现对照：逐条一致（`service.ts` `#anchorStatus()`——实体缺失
+→ unavailable；branchId/role/piEntryId/偏移/切片/runId 悬空 → changed；
+否则 available。**不再读取 run.session.availability**——issue #7 裁定旧
+实现「仍用 run.session.availability 判来源」违反 v3 §1.2，已改正）。
 
-实现对照：逐条一致（`service.ts` `#anchorStatus()`，L872 起——实体缺失
-→ unavailable；branchId/role/piEntryId/偏移/切片/runId → changed；锚点
-run session 不可用 → unavailable）。
-
-### 1.3 降级语义（不伪造）
+### 1.3 降级语义（不伪造）与揭示的分离结果
 
 `changed` / `unavailable` 锚点：
 
@@ -94,18 +102,32 @@ run session 不可用 → unavailable）。
   损坏阻断续聊，互不放大、也绝不静默换锚；
 - UI 不得把降级态渲染成可用态；降级视图必须给出可执行的去向（见 §3.4）。
 
-实现对照：摘录恒显 = `app.js` `renderPanelAnchorContext()`（L752 起，
-与 originStatus 同屏呈现）；揭示拒绝并如实报告 = `revealOrigin()`
-（L1583 起，"Source reference {status}; saved excerpt remains
-available."）+ `service.ts` `revealBranchOrigin()` 只在 available 时定位；
-续聊门控与锚点状态**相互独立** = `service.ts` `#resolveContinuation()`
-只看「分支自身最新 run（无则 origin 锚点 run）的 session 引用 + 可用性
-探针」，不看 `#anchorStatus()`——`changed` 锚点的分支仍可续聊（§6-3）；
-fail-closed 的续聊（session 不可用）见 §3.4。
+`available` 锚点的揭示（**issue #7 P0-1：来源定位与 Pi 游标对齐分离**）：
+`revealBranchOrigin()` 返回**纯产品定位**（sourceBranchId / anchorTurnId /
+status / selection——全部来自数据库事实）+ **独立的 navigation 结果**：
+
+- `navigated`——活动 Pi 会话已对准锚点条目（游标落出处分支）；
+- `failed`（`code` + `message`，如 `session-corrupt`）——对齐尝试失败
+  （锚点 session 缺失/损坏或运行期错误）。**失败不降格来源状态**：
+  揭示返回的绝对偏移/摘录仍然准确，UI 照常高亮数据库原文，并如实提示
+  「定位成功但活动会话未对准」（后续 prompt 自导航，续聊不受影响）。
+
+实现对照：摘录恒显 = `app.js` `renderPanelAnchorContext()`（与
+originStatus 同屏呈现）；揭示拒绝并如实报告 = `revealOrigin()`
+（"Source reference {status}; saved excerpt remains available."）；
+分离结果呈现 = `revealOrigin()` 对 `source.navigation.status === "failed"`
+在**高亮照常落地后**以面板横幅如实提示（不吞掉、不降级）；
+导航分离 = `service.ts` `revealBranchOrigin()`（锚点 session 经存在性
+探针判不可用时不发起注定失败的运行期调用，`navigation` 携带
+`session-corrupt` 如实分离返回）；续聊门控与锚点状态**相互独立** =
+`service.ts` `#resolveContinuation()` 只看「分支自身最新 run（无则
+origin 锚点 run）的 session 引用 + 可用性探针」，不看 `#anchorStatus()`
+——`changed` 锚点的分支仍可续聊（§6-3）；fail-closed 的续聊（session
+不可用）见 §3.4。
 
 ## 2. Return 契约
 
-> **状态：已实现待冻结。** 语义核心 = `service.ts` `submitReturn()` /
+> **状态：已实现（符合性标准 = 已签署 v3.0）。** 语义核心 = `service.ts` `submitReturn()` /
 > `prompt()` / `composePromptText()`；HTTP 映射 = `server.ts`；客户端
 > draft/幂等键 = `app.js`；证据：service / api / ui-probe 套件（见 §4
 > R3–R8）。
@@ -147,14 +169,17 @@ Attempt`）；首次成功采用 = `prompt()` 成功收敛事务内 `markReturnD
 - 快照在提交时冻结：此后锚点退化（`changed` / `unavailable`）不移动、
   不改写已提交 Return 卡的位置，卡上保存的摘录仍然可读（与 §1.3 一致）。
 
-实现对照：快照构造 = `service.ts` `submitReturn()`（L1415–1495 内，取自
+实现对照：快照构造 = `service.ts` `submitReturn()`（取自
 origin，与提交同事务落库；service 测试「return persists its target anchor
 snapshot of the branch origin」）；卡按 `targetAnchor.anchorTurnId` 定位 =
-`app.js` `renderTurnsInto()`（L603 起，锚定路径 L700 / 降级路径 L638）+
-`returnCard()` 反查入口（L524 起）。**边界（如实）**：锚点 turn 不在当前
-视图（如嵌套支线的 Return，其锚点在非主干分支）时，卡面降级为 "original
-anchor unavailable"——摘录仍可经来源抽屉的 Returns 节读取（`renderDrawer`
-L1980 起，Returns 节含采用尝试明细），但卡面本身不再重复摘录（§6-5）。
+`app.js` `renderTurnsInto()`（锚定路径 / 降级路径）+
+`returnCard()` 反查入口。**降级放置（issue #7 P1 已实现，§6-5/§6-8
+关闭）**：锚点 turn 不在当前视图（如嵌套支线的 Return，其锚点在非主干
+分支）时，卡面**同样携带 targetAnchor 快照**并区分「来源位于其他
+Branch / 已变化 / 缺失」（`returnFallbackReason()` 按快照反查树状态），
+摘录 + 来源路径在卡面可读（短摘录内联、长摘录 `<details>` 折叠），确认
+时间取产品 `turn.createdAt`，首次成功采用时间从采用尝试记录反查
+（`deliveredRunId` 对应 run 的 `terminalAt`）。
 
 ### 2.3 idempotencyKey：幂等键（按 Tree 唯一，已签署 v3.0 §3.4）
 
@@ -308,7 +333,7 @@ failed in the response; same-key retries replay without duplicates」。
 
 ## 3. 失败幂等契约
 
-> **状态：已实现待冻结。** 语义核心 = `service.ts` `prompt()` / `abort()` /
+> **状态：已实现（符合性标准 = 已签署 v3.0）。** 语义核心 = `service.ts` `prompt()` / `abort()` /
 > `recoverInterruptedRuns()` / `#probeSessionAvailability()`；证据：service /
 > api / events 套件 + `tests/integration/scenarios.test.ts`（D2 层收敛语义，
 > 见 §4 R9–R13）。§3.2 含一处对旧稿的**勘误**（§6-1）。
@@ -362,15 +387,32 @@ DB，诊断面不外泄）；journal 恢复 = 构造函数（L594 起）。
 - **续聊 fail closed**：续聊如实失败（`502 session-corrupt`），**绝不静默
   重建 session**——重建即分叉历史，破坏 Pi 会话树与 DB 事实的一致性；
 - **恢复提示必须可执行**：引导用户**从既有 turn 创建新分支**继续工作。
-  该恢复不修复、也不伪装受影响分支的历史连续性，只给出继续工作的路径。
+  该恢复不修复、也不伪装受影响分支的历史连续性，只给出继续工作的路径；
+- **「以保存内容开始新的探索」（signed v3 §4.4，issue #7 P0-2 已实现）**：
+  session 不可用的分支提供**用户显式确认的换轨入口**
+  （`promptNewExploration`）：仅在分支续聊点 session 当前不可用时成立
+  （可用 → `409 new-exploration-conflict`，应走普通续聊；无历史 session →
+  同样拒绝）。确认后创建**全新 session**——锚点摘录与该分支已保存历史
+  作为首问上下文显式带入，并声明旧运行上下文**未恢复**（不冒充旧会话
+  恢复：用户 turn 携带 `[new exploration from saved content …]` 标记，
+  数据库层面可审计）；首问成功后分支续聊点 = 新 session，**旧历史保持
+  可读**（append-only），来源关系（origin）不动。UI 入口：composer 的
+  「⑃ Start new exploration」（输入框保持可输入以键入首问；confirm 二次
+  确认如实告知换轨后果）；普通续聊路径的 fail-closed 纪律不变。
 
 实现对照：可读性 = 读模型只查 DB；如实呈现 = `sessionAvailability` 实时
-存在性探针修正 DB 缓存（`#probeSessionAvailability` L923 起：missing-file
+存在性探针修正 DB 缓存（`#probeSessionAvailability`：missing-file
 且文件已恢复 → available；version-mismatch/corrupt → 维持 unavailable；
 只探存在、绝不读内容）；fail-closed = 续聊走 `#ensureSessionAt` →
 restoreSession 失败即抛（无重建路径）；可执行恢复 = `app.js`
 "⑃ Branch from latest available answer"（横幅与面板降级提示共用，无候选
-时禁用并说明原因——恢复是绕行不是解锁，fail-closed 入口保持禁用）。
+时禁用并说明原因——恢复是绕行不是解锁，fail-closed 入口保持禁用）+
+**「⑃ Start new exploration」**（主线/面板 composer，v3 §4.4）；
+换轨语义 = `service.ts` `promptNewExploration()`（前置校验 +
+`#newExplorationContext()` 上下文块 + `#ensureSessionAt` new-session +
+用户 turn 标记）；HTTP = `server.ts`
+`POST /api/trees/:treeId/branches/:branchId/new-exploration`（200
+`{outcome, state}` / 409 `new-exploration-conflict` / 400 空文本）。
 
 ### 3.5 模型错误
 
@@ -396,8 +438,8 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
 
 | # | 契约规则 | 测试类别 | 断言要点 | 自动化（离线） | 人工（目标 Mac / 真实 Pi） |
 | --- | --- | --- | --- | --- | --- |
-| R1 | 选区以绝对偏移定位（§1.1） | 双击（重复词 / 跨行 / 长答案） | 重复词第二处、跨行、长答案选区揭示高亮命中原位置，不依赖字符串搜索 | service.test.ts「anchor status preserves duplicate and cross-line selections and degrades when source is unavailable」（重复词第二处 + 跨行偏移不变量）、「branch anchoring is validated (answer role, slice integrity, bounds)」；长答案 UI 级已补：ui-probe §18（数千字符多段答案后段选区——精确偏移、揭示切片恰切两侧、非整条回退）+ 浏览器面 `selection-deep-long`（真实 Chromium 拖选、真实模型 13997 字符答案后段 13971–13996，见 W2 §4 长答案行） | 目标 Mac 完整操作一遍（A2，含数千字符长答案） |
-| R2 | 锚点三态判定与降级（§1.2–1.3） | 缺失 session | 判定规则逐条命中；降级时摘录可读、揭示拒绝且如实报告、不伪造；续聊不被锚点降级阻断（自身上下文有效则继续，signed v3 §1.2） | available/unavailable 判定与降级：service.test.ts 同上用例（session 不可用 → originStatus unavailable）；api.test.ts 主流程（`/source` available）；`changed` 判定与降级直接用例已补——service.test.ts「changed anchor (DB-constructed): …（W1 §6-3）」直改 DB 构造切片失配（originStatus 如实 changed + 同 turn 对照 available、摘录可读、揭示拒绝无回退、无静默修复；changed 不阻断续聊的边界一并如实锁定，§6-3） | 真实 session 缺失抽查 |
+| R1 | 选区以绝对偏移定位（§1.1） | 双击（重复词 / 跨行 / 长答案） | 重复词第二处、跨行、长答案选区揭示高亮命中原位置，不依赖字符串搜索 | service.test.ts「anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2)」（重复词第二处 + 跨行偏移不变量 + 维度分离）、「branch anchoring is validated (answer role, slice integrity, bounds)」；长答案 UI 级已补：ui-probe §18（数千字符多段答案后段选区——精确偏移、揭示切片恰切两侧、非整条回退）+ 浏览器面 `selection-deep-long`（真实 Chromium 拖选、真实模型 13997 字符答案后段 13971–13996，见 W2 §4 长答案行） | 目标 Mac 完整操作一遍（A2，含数千字符长答案） |
+| R2 | 锚点三态判定与降级（§1.2–§1.3，issue #7 P0-1：与 session 分离） | 缺失 session | 判定规则逐条命中（**只读产品事实**）；降级时摘录可读、揭示拒绝且如实报告、不伪造；session 不可用**不降格来源状态**；揭示的游标对齐作为独立 navigation 结果分离返回；续聊不被锚点降级阻断（signed v3 §1.2） | service.test.ts 同上用例（session 降级 → originStatus 仍 available、sessionAvailability 独立呈现）+「source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1)」（删除 session 文件后揭示照常定位 + navigation failed 分离 + 恢复后 navigated）；api.test.ts 主流程（`/source` available）；`changed` 判定与降级直接用例——service.test.ts「changed anchor (DB-constructed): …（W1 §6-3）」直改 DB 构造切片失配（originStatus 如实 changed + 同 turn 对照 available、摘录可读、揭示拒绝无回退、无静默修复；changed 不阻断续聊的边界一并如实锁定，§6-3） | 真实 session 缺失抽查 |
 | R3 | draft 不生效（§2.1） | 双击 | 草稿不落库、不进 Pi 上下文、不渲染为产品 turn | `apps/studio/tests/ui-probe.test.ts`（文件级：草稿持久化与防双击场景——草稿仅存 localStorage 并携带幂等键，Return 卡仅在提交后出现于树状态）；"不进 DB / Pi 上下文"按构造成立（draft 只存在于客户端输入框与 localStorage，无落库通道） | UI 可见性确认（刷新后草稿恢复、未提交不渲染） |
 | R4 | 首次成功采用恰一次 + 尝试面如实（§2.6） | 双击 / 模型错误 | 首次成功收敛的主干 Run 置 `deliveredRunId` 恰一次；失败/中止 run 不置、留下采用尝试记录、下次重新注入；成功后不再新增尝试 | service.test.ts「full D3 vertical slice…」（`deliveredReturns === 1`；重启后再 prompt `deliveredReturns === 0`——不重复注入）+「composePromptText prefixes pending returns deterministically」+「failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4)」（已扩展：失败 run 留 `returnAttempts` 记录、成功后尝试面含失败+成功两条、再后无新尝试） | 真实 Pi 成功采用一次验证 |
 | R5 | 同键同内容 → 同一 Return（§2.3） | 双击 | 双击提交第二次 `200` 重放；DB 仅一条已保存 Return | api.test.ts「return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key」；service.test.ts「return idempotency: same key+content replays the same turn; different content conflicts」+「return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4)」；`apps/studio/tests/ui-probe.test.ts`（文件级：DOM 级防双击恰一次 POST） | UI 双击提交按钮（实机口径） |
@@ -407,19 +449,19 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
 | R9 | 单在途 prompt（§3.1） | 并发 | 第二并发 prompt `409`，零 episode/run/turn 写入 | service.test.ts「concurrent prompt is rejected as a conflict and leaves no phantom run」；api.test.ts「diagnostics and abort endpoints…」（并发 409 + 无幽灵 run） | — |
 | R10 | 中止语义（§3.2） | 中止 | 非活动 run → `409`；user-abort → `aborted` 不改写 `failed`；已 settle 的 abort 无效果 | service.test.ts「abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed」（含 404/400/409 映射与中止后上下文隔离）；api.test.ts 同名面（「diagnostics and abort endpoints…」）；events.test.ts「abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees」；D2 层支撑：tests/integration/scenarios.test.ts「e2e error-convergence…」 | 真实 Pi 中途点停止 |
 | R11 | 重启收敛（§3.3） | 重启收敛 | 非终态 run 重启后 `failed`（host-interrupted）；DB 事实源；重启后流程可继续 | service.test.ts「startup recovery converges interrupted runs to failed (I6 host-interrupt semantics)」+「full D3 vertical slice…」（重启恢复 + 分支/主干续聊）；api.test.ts「HTTP API serves the UI and the full D3 flow, surviving a restart」；events.test.ts「process restart: journal and diagnostics converge consistently (host-crash semantics)」 | kill 宿主后重启复现 |
-| R12 | 缺失 session fail-closed + 可执行恢复（§3.4） | 缺失 session | 树/分支/turn 可读；续聊 `502` 不静默重建；恢复提示（从既有 turn 开新分支）可执行 | events.test.ts「session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path」+「session availability derivation: live probe refines the cached assessment honestly」；`apps/studio/tests/ui-probe.test.ts`（文件级：恢复动作精确载荷、横幅禁用与原因场景） | 文件级移除 session，按 UI 提示恢复 |
+| R12 | 缺失 session fail-closed + 可执行恢复 + 显式新探索（§3.4，v3 §4.4） | 缺失 session | 树/分支/turn 可读；续聊 `502` 不静默重建；恢复提示（从既有 turn 开新分支）可执行；**显式新探索**：用户确认换轨（新 session + 保存内容上下文 + 旧上下文未恢复声明）、首问成功、旧历史不变、session 可用时 409 拒绝换轨 | events.test.ts「session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path」+「session availability derivation: live probe refines the cached assessment honestly」；service.test.ts「whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2)」+「new exploration preconditions (v3 §4.4)…」（健康分支/无历史 session 409、锚点 session 丢失的支线从摘录起步）；api.test.ts「new exploration over HTTP (v3 §4.4)…」（200/409/400/404/405 全映射）；`apps/studio/tests/ui-probe.test.ts`（文件级：恢复动作精确载荷、横幅禁用与原因、新探索确认流 + 精确载荷 + 收尾） | 文件级移除 session，按 UI 提示恢复 + 实机走一遍新探索确认流 |
 | R13 | 模型错误收敛（§3.5） | 模型错误 | run `failed` + failure 记录；无 assistant turn；已保存 Return 不被标记首次成功采用 | events.test.ts「model error injection: run converges failed across HTTP, diagnostics, journal and SSE」（`/fail` 注入：failed + code/message + 零 turn + journal/诊断面一致）；安全投影：service.test.ts「diagnostics read model: safe projection only (no session refs, details, causes, paths)」；「已保存 Return 不被标记」直接用例已补（service.test.ts「failed prompt never delivers the pending return…（W1 §6-4）」：失败后 Return 仍待采用、下次成功 prompt 首次成功采用恰一次、再后不重发） | 真实 Pi 侧错误配置一次 |
 
 ## 5. 明确非目标
 
-- **本文档不签署 Gate 0。** W1 契约冻结需要负责人签署（下方签署区块）；
-  在此之前本文档仅为草案文本——"已实现待冻结"只陈述实现与证据状态，
-  **不构成负责人同意**。
+- **本文档不是签署文本。** 符合性标准是仓外已签署 v3.0（2026-09-30，
+  issue #7 裁定不重复签署）；本文档是其仓内实现对照镜像（§7 汇总研发
+  未符合条目）。
 - Gate 0–2 与 A1–A7 的 Go / No-Go 均为负责人决策；仓库文档只记录状态，
   绝不声称签署或通过（见 `docs/d3/D3-status.md`）。
-- W1 契约冻结 ≠ D3 Go：issue #2 的 Go 条件另要求 `evidence/d3/` 下的真实
-  Pi 操作证据、故障/幂等测试、设计对照与 3–5 人试用记录，全部绑定同一
-  commit SHA 并经负责人签署。
+- W1 契约符合 ≠ D3 Go：issue #2/#7 的 Go 条件另要求 `evidence/d3/` 下的
+  真实 Pi 操作证据、故障/幂等测试、设计对照、术语三部分与 3–5 人试用
+  记录，绑定最终候选 commit SHA 并经负责人验收。
 - 未写入本文档的行为不因本文档而冻结；契约的后续修改需负责人批准并
   追加变更记录（沿用 `coordination/d2/` 的 CONTRACT-CHANGE 纪律）。本文
   2026-09-29 的逐条核实（§6）是**对齐实现的事实陈述**，不是契约变更；
@@ -427,16 +469,15 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
   其中标注"待 owner 裁决"的偏差（§6-1/5）与开放项（§6-8/10/11）在负责
   人裁定前不改变现状。
 
-## 6. 勘误与实现对照（2026-09-29 核实；2026-09-30 已按签署版 v3.0 复核）
+## 6. 勘误与实现对照（2026-09-29 核实；2026-09-30 按签署版 v3.0 与 issue #7 复核）
 
 本节汇总 2026-09-29 对照代码核实本契约时发现的**草稿与代码不一致处与
 证据缺口**（正文已按代码改正或加注；`app.js` 相关行号已随 `8fd8684`
-更新；逐条待负责人在冻结时裁决）。第 1–7 条为勘误与对照；第 8–11 条为
-**待负责人决定的开放项**——实现已择一而行，但相应规则未写入契约，冻结
-前需裁定（冻结规则 / 显式接受现状 / 要求改实现）。**2026-09-30 更新**：
-仓外《TreeAI W1 产品与研发联合契约 v3.0》已签署生效，§6-2/6-3/6-9 已
-按签署版裁定并落地实现与测试（下述各条已注明）；其余各条仍待负责人
-在仓内签署时逐条裁决。
+更新）。第 1–7 条为勘误与对照；第 8–11 条原为**待负责人决定的开放项**
+——**2026-09-30 起符合性标准为仓外已签署 v3.0**（issue #7 裁定不重复
+签署）：§6-2/6-3/6-9 已按签署版裁定并落地；§6-5/6-8 已按 issue #7 P1
+整改落地（降级 Return 卡）；§6-1/6-10/6-11 保持如实标注（v3 未覆盖的
+细节，以实现现状为准、留待后续契约修订）。
 
 1. **§3.2 abort 错误码（已改正）**：旧稿称非活动目标"一律 409"。实际
    映射：已终态 / 无在途 / 另有在途 → `409`（`RunNotActiveError`）；跨树
@@ -475,10 +516,13 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
    注入 Return 的组合文本下不可用），断言 run failed + Return 仍待采用
    （留采用尝试记录）+ 下次成功 prompt 首次成功采用恰一次 + 再后不重发。
    签署版 v3.0 §3.2 把"失败不消耗 Return"升格为签署语义（§2.6 已同步）。
-5. **§2.2 降级 Return 卡的摘录（加注）**：锚点 turn 在当前视图内时卡面
-   呈现摘录；锚点不在当前视图（如嵌套支线的 Return）时卡面降级为
-   "original anchor unavailable"，摘录仅在来源抽屉 Returns 节可读。若契约
-   要求卡面恒显摘录，属 UI 待办（owner 决策）。
+5. **§2.2 降级 Return 卡的摘录（已按 issue #7 P1 整改落地）**：旧实现
+   锚点不在当前视图时卡面降级为 "original anchor unavailable"、摘录仅在
+   来源抽屉可读。issue #7 P1 要求卡面携带 targetAnchor 快照并区分来源
+   去向——已实现：`returnCard()` 回退放置区分「来源位于其他 Branch /
+   已变化 / 缺失」（`returnFallbackReason()`），摘录 + 来源路径在卡面
+   （长摘录 `<details>` 折叠），确认时间取产品 createdAt，首次成功采用
+   时间从采用尝试记录反查（ui-probe 场景锁定）。
 6. **实现基线表述过时（已改正）**：旧稿"实现本契约的代码变更与本文档
    同一 push 提交"不再成立——实现分布在 `8671136`（幂等/targetAnchor）、
    `6ff7146`（事件/journal/降级）、`d061b5f`（UI 改版）及 issue #3/#4 波
@@ -494,11 +538,12 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
    Return，断言直接落库（已保存 + targetAnchor 快照完整 + navigation
    "no-session"）、零 session 创建 / 零新 run，首次主干 prompt 才建
    session 并首次成功采用恰一次（deliveredRunId 绑定该 run；再后不重注入）。
-8. **Return 卡的回退放置规则未写入契约（开放项）**：锚点回合不在当前
-   渲染分支（历史 Return、嵌套支线的 Return）时，卡按时间序原位渲染并
-   降级标注（`app.js` `renderTurnsInto` L603 起、`returnCard` L524）；
-   §2.2 只约定「原分叉点附近」，未写该回退的放置规则。需冻结回退规则
-   或显式接受回退（与 §6-5 的摘录呈现问题相关但独立）。
+8. **Return 卡的回退放置规则（已按 issue #7 P1 整改落地）**：锚点回合不在
+   当前渲染分支（历史 Return、嵌套支线的 Return）时，卡按时间序原位渲染，
+   **携带 targetAnchor 快照**并区分来源去向（其他 Branch / 已变化 / 缺失），
+   摘录 + 来源路径在卡面（长摘录折叠）——实现为 `app.js` `renderTurnsInto()`
+   回退路径 + `returnCard()`/`returnFallbackReason()`（ui-probe 场景锁定）。
+   §6-5 的摘录呈现问题随之一并关闭。
 9. **提交失败后的客户端状态（已按签署版 v3.0 §3.6 裁定为产品义务）**：
    签署版 §3.6 把收尾规则写入契约：未知结果先对账（键+来源+文本全同才按
    成功处理）；确认成功清草稿、未知/失败保留草稿面板与重试入口；冲突显
@@ -512,24 +557,40 @@ code / message，不外泄 details、原始 cause、session 引用与路径。
     without a key still round-trips (legacy shape)」）；§2.3 约定客户端
     恒带 UUID（唯一索引仅约束非空值）。无键 Return 是否属于冻结契约待
     裁定。
-11. **与仓外联合讨论稿的等价性（开放项收窄）**：本契约文本源自仓外联合
-    讨论稿的仓内整理。仓外《TreeAI W1 产品与研发联合契约 v3.0》已于
-    2026-09-30 **签署生效**，本稿正文已按签署版对齐（保存先于导航
+11. **与仓外联合讨论稿的等价性（按 issue #7 收束）**：本契约文本源自仓外
+    联合讨论稿的仓内整理。仓外《TreeAI W1 产品与研发联合契约 v3.0》已于
+    2026-09-30 **签署生效**；issue #7（2026-09-30 验收）裁定：**以签署版
+    为符合性标准，仓内旧 DRAFT/待裁决文字不覆盖它，不再要求对照签署或
+    重复签署**。本稿正文按签署版与 issue #7 整改项对齐（保存先于导航
     §2.4 / 幂等键按 Tree 唯一 §2.3 / 采用尝试与首次成功采用分离 §2.1、
-    §2.6 / changed 锚点不阻断仍有效的续聊 §1.3 / 收尾分别控制 §2.5）；
-    但仓内无法核验签署版全文与本稿逐字等价——仍需负责人对照签署版
-    确认对齐无遗漏（issue #5 P0「W1 与 W2 签收」的签署前提之一）。
+    §2.6 / changed 锚点不阻断仍有效的续聊 §1.3 / 收尾分别控制 §2.5 /
+    来源定位与游标对齐分离 §1.2–1.3 / 显式新探索 §3.4 / 降级 Return 卡
+    §2.2、§6-5、§6-8）；仓内与签署版的差异以签署版为准。
+
+## 7. 研发未符合条目（issue #7 口径，滚动更新）
+
+符合性标准 = 已签署 v3.0。截至 2026-09-30 本波（issue #7 P0/P1 整改
+后），W1 范围内的未符合/未交付项：
+
+- **术语三部分（issue #7 C 表，全部 NOT_RUN）**：①标注/提取（独立轻量
+  无工具辅助执行器：UTF-16/重复词/跨行/emoji 选区、sourceHash、去重
+  密度/代码 URL 排除、三模式/缓存偏好/任务状态/预算 usage/取消迟到结果、
+  非推理参数透传与实测成本、冻结质量集）；②另一个建枝入口（点词/划线
+  解释 → 保存批注或追问推广，复用底层 Anchor/Branch/Origin/Run/Return，
+  10 次零正式事实/主会话副作用、幂等推广/响应丢失/双击/重启、同锚点恢复
+  或明确另开）；③配套前端（正文/操作分层、统一标注/来源区间、选择期间
+  不重绘、模式/工具条/解释卡/批注/已有探索及完整失败状态、响应式/键盘/
+  触屏/reduced-motion/回程草稿焦点）。质量目标（来源匹配 100%、有用率
+  ≥90%、关键理解障碍覆盖 ≥80%、负例误标 ≤10%）均未跑、无分母。
+- **最终候选版本回归**：新版负面路径（P0-1/P0-2/P1 的行为变化）与旧
+  30 项一起的真实浏览器/真实 Pi 跑批待最终候选 SHA 统一执行（issue #7
+  下一步 3——本轮已落地浏览器/echo 面自测与离线全绿，真实 Pi 面待
+  受控凭据环境）。
 
 ## 签署
 
-> **待签署**——按 issue #5 P0 口径：产品 / 研发共同冻结，并由负责人签
-> 署；签署前本契约为 DRAFT，不冻结任何语义。签署人应对照 §1–§3 正文
-> 与 §6 勘误及开放项逐条裁定（尤其 §6-1/5/8/10/11；§6-2/6-3/6-9 已按
-> 2026-09-30 签署版 v3.0 裁定），并在结论列写明
-> "冻结"或"需修订（附修订项）"。
-
-| 角色 | 签署 | 日期 | 结论（冻结 / 需修订） |
-| --- | --- | --- | --- |
-| 产品（Product） |  |  |  |
-| 研发（Engineering） |  |  |  |
-| 负责人（Owner） |  |  |  |
+> **符合性标准在仓外**：仓外《TreeAI W1 产品与研发联合契约 v3.0》已于
+> 2026-09-30 签署生效（issue #7 裁定：已完成、不重复要求签署）。本仓内
+> 镜像不携带签署请求——上表仅作历史记录保留；语义冻结以签署版为准，
+> 仓内文档与实现的符合性由绑定 SHA 的证据（`evidence/d3/`）与负责人
+> 验收（issues）裁定。

@@ -83,6 +83,8 @@
                 <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
                 <div class="composer-actions">
                   <button id="send" class="primary">Send</button>
+                  <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
+                  <button id="new-exploration" class="accent" hidden>⑃ Start new exploration</button>
                 </div>
               </div>
             </div>
@@ -115,6 +117,8 @@
                   <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
                   <div class="composer-actions">
                     <button id="panel-send" class="primary">Send</button>
+                    <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
+                    <button id="panel-new-exploration" class="accent" hidden>⑃ Start new exploration</button>
                   </div>
                 </div>
                 <div id="return-panel">
