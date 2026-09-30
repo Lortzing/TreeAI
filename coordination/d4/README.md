@@ -70,9 +70,14 @@ terminology-dispatch-ledger（术语首问派发账本，issue #7 整改，本�
 
 | 波次 | 状态 | 文件面 |
 |---|---|---|
-| **issue #7 术语整改**（缓存键/推广原子性/首问账本/预算/取消记账 + 前端 turnOverlaysFor/refreshTerminology） | **进行中（2026-09-30 20:45 起，本会话占用）** | `apps/studio/src/terminology.ts`、`packages/persistence/src/{tree-repository.ts,migrations/0009-*}`、`packages/contracts/src/*`（usage 类型增量）、`apps/studio/public/app.js`、`apps/studio/tests/{terminology,ui-probe}.test.ts` |
+| issue #7 术语整改 + D4-2 后端 | **进行中——由「当前波次」一节登记的 worktree 分支拥有（`wip/term-backend` / `wip/term-frontend` / `wip/d4-2-backend`，基于 `57a8abb`/`5570208`）** | 见上文「当前波次」清单 |
 
-其他并行会话在开工前读本表 + `git log --oneline -5`；与进行中波次文件面重叠的工作等其收口后再动。
+**更正记录（2026-09-30 20:50）**：本会话曾在 `013c1eb` 以「波次占用」表认领
+术语整改波——该认领基于过期信息（未读到 `5570208` 的在飞登记）而**作废**：
+上述三个 worktree 分支的登记更早、仍在推进，术语整改与 D4-2 后端以它们为
+准，其他会话（含本会话）不重复实现。本会话角色改为：main 增量验证与推送
+兜底。`013c1eb` 中的迁移编号更正（术语账本实际落为 0009）仍然有效，供
+term-backend 分支采纳。
 
 ## 公共契约登记（packages/contracts）
 
