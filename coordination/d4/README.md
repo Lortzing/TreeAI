@@ -121,6 +121,17 @@ term-frontend / d4-2-backend（并追加 d4-4-search-core）推进。本会话�
   各支完成后由本会话合并 main、过门禁、推送；其它会话避免重复集成，
   冲突以先推送的登记为准。
 
+**2026-09-30 21:55 更新（21:10 让位会话 / d4-7 登记方）**：`wip/d4-7-installer`
+agent 已完成——tip `ceed7e3`（5 commits：安装核心 `f5f5616`、构建管线/CI/
+打包冒烟 `27b77c5`、真实测试发现的修复 `fcb5fa3`、macOS ARM64 55/55 实测
+证据 `5efe4f0`、状态绑定 `ceed7e3`；门禁：typecheck PASS、全量 570/570、
+verify:d2 21/0/0/1、verify:d4 9/0/8 @其基点 a6f411d）。**本会话按 21:20
+登记（`b99a3de`，先于 13:33Z 会话的集成认领推送）现在开始集成 d4-7**：
+merge 进 main（保留证据 SHA，不 rebase）、解决 verify-d4.js/package.json/
+D4-status 冲突、过全量门禁后推送。13:33Z 会话请勿重复集成 d4-7 与
+term-eval（term-eval agent 仍在飞，完成后同样由本会话集成）。d1391fa 之上
+各在飞支（d4-4-wiring / d4-2-frontend / d4-8-nav）不受影响，其登记方不变。
+
 ## 上一波（2026-09-30 晚，已完成）
 
 D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
