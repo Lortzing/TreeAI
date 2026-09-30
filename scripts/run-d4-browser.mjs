@@ -57,7 +57,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
-import { probeImportMaterial, probeReadAndSelect, probeRestartContinue } from "./d4/browser/material-probes.mjs";
+import { probeImportMaterial, probeReadAndSelect, probeRestartContinue, probeSearchRecover } from "./d4/browser/material-probes.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
@@ -530,7 +530,7 @@ const CHECK_DEFS = [
   { id: "d4-branch-from-material", modes: ["real-pi"], notRun: { selftest: "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料建枝/首问未实现（owner: D4-3）" } },
   { id: "d4-return-from-material", modes: ["real-pi"], notRun: { selftest: "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料 Return 未实现（owner: D4-3）" } },
   { id: "d4-restart-continue", modes: ["selftest", "real-pi"] },
-  { id: "d4-search-recover", modes: ["selftest", "real-pi"], notRun: { selftest: "搜索 UI 未落地（owner: D4-4 前端波次进行中；HTTP/引擎面已由离线 b4-cross-material-find 覆盖，浏览器 UI 面待其前端落地）", "real-pi": "搜索 UI 未落地（owner: D4-4 前端波次进行中；HTTP/引擎面已由离线 b4-cross-material-find 覆盖，浏览器 UI 面待其前端落地）" } },
+  { id: "d4-search-recover", modes: ["selftest", "real-pi"] },
 ];
 
 const results = [];
@@ -745,7 +745,7 @@ async function main() {
     await runCheck("d4-branch-from-material", null);
     await runCheck("d4-return-from-material", null);
     await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
-    await runCheck("d4-search-recover", null);
+    await runCheck("d4-search-recover", () => probeSearchRecover(probeCtx));
 
     finish(0);
   } catch (err) {

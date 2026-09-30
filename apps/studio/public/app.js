@@ -4245,20 +4245,23 @@ async function loadMaterialFirstPage(reader, opts) {
     afterBlock = page.nextAfterBlock;
   }
   reader.firstPageState = "loaded";
+  /* 先定注记再单次渲染，滚动放最后：原顺序（渲染→滚动→为注记再渲染）
+     会在平滑滚动进行中 detach 块容器——Chrome 取消滚动并把 scrollTop 归
+     0（实测 0 vs 7208），重渲染的保位恢复也救不回已取消的动画。 */
+  if (jumpBlockId !== null) {
+    /* 搜索命中定位注记（chrome 渲染时读取 searchJump——已由调用方设定，
+       不与位置恢复注记混写）。 */
+  } else {
+    reader.restoredToBlockId = restoreBlockId;
+  }
   renderMaterialReader();
   if (targetBlockId !== null) {
     const target = materialBlockElement(targetBlockId);
     if (target !== null && typeof target.scrollIntoView === "function") {
-      target.scrollIntoView({ block: "start", behavior: scrollBehavior() });
-    }
-    if (jumpBlockId !== null) {
-      /* 搜索命中定位注记（chrome 渲染时读取 searchJump——补一次让注记
-         落位；位置恢复注记仍走 restoredToBlockId，两者不混写）。 */
-      renderMaterialReader();
-    } else {
-      reader.restoredToBlockId = restoreBlockId;
-      /* 恢复注记在 chrome 渲染时读取 restoredToBlockId——补一次让注记落位。 */
-      renderMaterialReader();
+      /* 恢复/命中跳转用即时滚动：平滑滚动是异步动画，其后任何重渲的
+         detach 都会取消动画并丢 scrollTop（真实 Chrome 实测 183/7208）；
+         即时落位同步生效，配合渲染保位跨重渲稳定。 */
+      target.scrollIntoView({ block: "start", behavior: "auto" });
     }
   }
 }
@@ -4400,6 +4403,11 @@ function renderMaterialReader() {
     return;
   }
   const preservedBlocks = document.getElementById("mat-blocks");
+  /* Chrome 丢弃被 detach 的滚动容器的 scrollTop（实测 5464→0；DOM 桩的
+     scrollTop 跨 detach 存活，桩测不出）。重渲染保持滚动位置——位置恢复/
+     注记补渲不再把视口拉回顶部。内容合法重置的路径（打开新材料前已清空
+     子元素）scrollTop 自然归 0，不受影响。 */
+  const preservedScrollTop = preservedBlocks === null ? null : preservedBlocks.scrollTop;
   root.replaceChildren();
 
   /* 头部：标题 + 关闭（覆盖层打开时盖住侧栏入口，阅读器内需要可见关闭）。 */
@@ -4494,6 +4502,7 @@ function renderMaterialReader() {
   /* 块容器：优先移回既有元素（身份/子树/监听全部保留）。 */
   const blocksEl = preservedBlocks ?? createMaterialBlocksElement();
   root.append(blocksEl);
+  if (preservedScrollTop !== null && preservedScrollTop > 0) blocksEl.scrollTop = preservedScrollTop;
 
   /* 尾部状态。 */
   const tail = document.createElement("div");
@@ -4974,6 +4983,15 @@ function findLiveMaterialSelection() {
 function updateMatSelectionBar() {
   const bar = document.getElementById("mat-selection-bar");
   if (bar === null) return;
+  if (state.selectionDragActive) {
+    /* 拖拽窗口内捕获条内容冻结：全局 selectionchange 在拖选中持续触发，
+       条从 ~54px 长到 ~169px 会把正文整体推下 ~115px（真实 Chrome 实测，
+       DOM 桩测不出），连续拖选的释放点随位移带偏。与 renderMaterialReader
+       的「选择期间不重绘」同族——mouseup 冲刷经 renderMaterialReader 重放
+       本函数（触屏 selectionchange 无拖拽窗口，不受影响）。 */
+    materialPendingUpdate = true;
+    return;
+  }
   bar.replaceChildren();
   const reader = state.materialReader;
   if (reader === null) return;
