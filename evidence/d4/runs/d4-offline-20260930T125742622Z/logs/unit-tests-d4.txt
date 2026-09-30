@@ -1,0 +1,15 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --test tests/unit/d4-fixtures-integrity.test.ts
+✔ the real D4 fixture tree is fully consistent (hashes, truth, selections, queries) (30.309ms)
+✔ tampered fixture content is detected (hash mismatch) (43.342084ms)
+✔ injected stray fixture file is detected (manifest divergence) (32.202667ms)
+✔ a selection with a wrong offset is detected even behind a regenerated manifest (35.183834ms)
+✔ a no-result query whose text actually exists is detected (34.303959ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.641917
+

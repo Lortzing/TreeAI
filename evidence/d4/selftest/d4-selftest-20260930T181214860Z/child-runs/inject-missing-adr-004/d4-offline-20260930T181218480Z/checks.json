@@ -1,0 +1,42 @@
+{
+  "runId": "d4-offline-20260930T181218480Z",
+  "checks": [
+    {
+      "durationMs": 23,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "79 files hashed; B1 12 md + 12 pdf + 8 negatives + 1 version pair(s); B2 75 valid / 17 invalid; B4 55 positive / 12 no-result",
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "ADR-004 missing"
+      },
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 27,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "run-d4-browser --help exited 1"
+      },
+      "id": "entrypoints-d4"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

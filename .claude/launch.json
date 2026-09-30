@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "treeai-studio-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "apps/studio/src/index.ts",
+        "--port",
+        "8792",
+        "--data",
+        "/tmp/treeai-d3-browser-echo-20260930",
+        "--driver",
+        "echo"
+      ],
+      "port": 8792
+    },
+    {
+      "name": "treeai-studio-pi",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "set -a; source .env.studio.local; exec npm run start --workspace @treeai/studio -- --port 8793 --data /tmp/treeai-studio-pi-20260929 --driver pi --provider deepseek --model deepseek-flash"
+      ],
+      "port": 8793,
+      "url": "http://localhost:8793"
+    }
+  ]
+}

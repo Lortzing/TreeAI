@@ -46,6 +46,9 @@ function buildSyntheticTree(dest) {
   cpSync(join(ROOT, "scripts", "verify-d4.js"), join(dest, "scripts", "verify-d4.js"), { recursive: true, force: true });
   cpSync(join(ROOT, "scripts", "verify-d4-selftest.js"), join(dest, "scripts", "verify-d4-selftest.js"), { recursive: true, force: true });
   cpSync(join(ROOT, "scripts", "run-d4-browser.mjs"), join(dest, "scripts", "run-d4-browser.mjs"), { recursive: true, force: true });
+  /* run-d4-browser 的探针实现模块（B1/B2 浏览器面波次起拆分到 scripts/d4/browser/）；
+     合成树不复制则 --help 的 import 在合成树里失败，control 场景误报。 */
+  cpSync(join(ROOT, "scripts", "d4", "browser"), join(dest, "scripts", "d4", "browser"), { recursive: true, force: true });
   cpSync(join(ROOT, "tests"), join(dest, "tests"), { recursive: true });
   cpSync(join(ROOT, "docs", "d4"), join(dest, "docs", "d4"), { recursive: true });
   cpSync(
