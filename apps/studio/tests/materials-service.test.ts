@@ -4,27 +4,36 @@
  * 覆盖（服务层，HTTP 面见 materials-api.test.ts）：
  * - happy path：markdown 导入 → 异步任务 pending→parsing→ready；
  *   分块读取（块图/textUnits/游标分页）；
+ * - PDF 导入（d4-pdf-v1 默认装配）：真实 fixture（pdf-01）→ ready 版本、
+ *   page-N 块图（含 page 字段）与冻结真值全等、分页游标、树内同字节复用；
+ * - PDF 负例：corrupt fixture → 版本 failed（原因码入 parseError）、读取
+ *   409 语义（MaterialNotReadyError）；页数上限（注入 maxPages）→
+ *   pages-exceeded，超限文本不落库；
+ * - 自定义注册表缺 pdf 槽位 → 415 语义的诚实 "not wired" 拒绝；
  * - 版本语义：树内同字节复用（created=false，零新行）；同材料新字节追加
  *   新版本（版本链完整、旧版本可读、同字节经 versions 端点复用）；
- * - 上限（charter §5）：默认冻结值（20 MiB / 1,000,000 units）；小限额
- *   注入 → material-too-large 在解析前拒绝（零持久化）；
+ * - 上限（charter §5）：默认冻结值（20 MiB / 1,000,000 units / 200 页）；
+ *   小限额注入 → material-too-large 在解析前拒绝（零持久化）；
  * - 规范文本超限 → 版本 failed text-units-exceeded（超限文本不落库）；
  * - 取消（受控门控假解析器）：cancel → canceled；放行迟到结果 → 状态保持
  *   canceled、迟到丢弃计数、无 ready 版本、无规范文本（迟到不挂靠）；
  * - 宿主中断恢复：遗留 parsing 版本在新服务实例构造时收敛 failed
  *   （parse-interrupted）；
- * - 诚实拒绝：未知扩展名 / 未装配的 pdf（pending-integration 说明）/
- *   空文件名 / 空字节 / 未知树——全部零持久化；
+ * - 诚实拒绝：未知扩展名 / 空文件名 / 空字节 / 未知树——全部零持久化；
  * - 非 ready 版本读取 → MaterialNotReadyError（绝不伪装空成功文档）。
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { MaterialBlock, MaterialId, TreeId } from "@treeai/contracts";
 import { EntityNotFoundError, InvalidArgumentError } from "@treeai/persistence";
 import {
   DEFAULT_MAX_FILE_BYTES,
+  DEFAULT_MAX_PAGES,
   DEFAULT_MAX_TEXT_UNITS,
+  D4_MD_V1_PARSER,
   MaterialImportService,
   MaterialNotReadyError,
   MaterialTooLargeError,
@@ -36,10 +45,21 @@ import {
 import { cleanupDir, makeStudioInstance, makeTempDataDir } from "./helpers.ts";
 
 const ENCODER = new TextEncoder();
+const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", import.meta.url));
 
 function utf8(text: string): Uint8Array {
   return ENCODER.encode(text);
 }
+
+function b1Bytes(rel: string): Uint8Array {
+  return new Uint8Array(readFileSync(`${B1_ROOT}${rel}`));
+}
+
+/** B1 冻结真值（pdf-01：2 页中文笔记）。 */
+const PDF_01 = JSON.parse(readFileSync(`${B1_ROOT}pdf/pdf-01.expected.json`, "utf8")) as {
+  canonicalText: string;
+  blocks: readonly { blockId: string; start: number; end: number; page: number; text: string }[];
+};
 
 /** 轮询等待条件成立（解析任务是微任务/近即时，留足余量）。 */
 async function until(predicate: () => boolean, what: string, attempts = 200): Promise<void> {
@@ -227,9 +247,16 @@ test("limits: frozen defaults; small injected limits reject before parsing with 
     assert.deepEqual(studio.materials.limits, {
       maxFileBytes: DEFAULT_MAX_FILE_BYTES,
       maxTextUnits: DEFAULT_MAX_TEXT_UNITS,
+      maxPages: DEFAULT_MAX_PAGES,
     });
     assert.equal(DEFAULT_MAX_FILE_BYTES, 20 * 1024 * 1024, "20 MiB (charter §5)");
     assert.equal(DEFAULT_MAX_TEXT_UNITS, 1_000_000, "1,000,000 UTF-16 units (charter §5)");
+    assert.equal(DEFAULT_MAX_PAGES, 200, "200 text-PDF pages (charter §5)");
+    /* 默认注册表两槽位齐装（markdown + pdf）。 */
+    assert.deepEqual(studio.materials.precheckImport((studio.service.createTree().tree).id, "paper.pdf"), {
+      parserKind: "pdf",
+      parserVersion: "d4-pdf-v1",
+    });
   } finally {
     await studio.shutdown();
     cleanupDir(dir);
@@ -248,6 +275,149 @@ test("limits: frozen defaults; small injected limits reject before parsing with 
   } finally {
     await small.shutdown();
     cleanupDir(smallDir);
+  }
+});
+
+test("pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination", async () => {
+  const dir = makeTempDataDir();
+  const studio = makeStudioInstance(dir);
+  try {
+    const { tree } = studio.service.createTree();
+    const result = await studio.materials.importMaterial(tree.id, {
+      filename: "递归学习笔记 v1.pdf",
+      bytes: b1Bytes("pdf/pdf-01.pdf"),
+    });
+    assert.equal(result.created, true);
+    assert.equal(result.version.parserKind, "pdf");
+    assert.equal(result.version.parserVersion, "d4-pdf-v1");
+    await until(
+      () => studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus === "ready",
+      "the pdf version to become ready",
+    );
+    const version = studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!;
+    assert.equal(version.textUnits, PDF_01.canonicalText.length, "textUnits match the frozen truth");
+
+    /* 块图：page-N 块 + page 字段 + 文本切片与真值全等。 */
+    const full = studio.materials.readVersionBlocks(tree.id, result.material.id, result.version.id, {});
+    assert.equal(full.nextAfterBlock, null);
+    assert.deepEqual(
+      full.blocks.map((entry) => entry.block),
+      PDF_01.blocks.map((block) => ({
+        blockId: block.blockId,
+        kind: "pdf-page",
+        start: block.start,
+        end: block.end,
+        page: block.page,
+      })),
+      "the stored block map (incl. page) matches the frozen truth",
+    );
+    assert.deepEqual(
+      full.blocks.map((entry) => entry.text),
+      PDF_01.blocks.map((block) => block.text),
+      "block text slices match the frozen truth",
+    );
+
+    /* 分页游标：按页块推进。 */
+    const page1 = studio.materials.readVersionBlocks(tree.id, result.material.id, result.version.id, { limit: 1 });
+    assert.deepEqual(page1.blocks.map((entry) => entry.block.blockId), ["page-1"]);
+    assert.equal(page1.nextAfterBlock, "page-1");
+    const page2 = studio.materials.readVersionBlocks(tree.id, result.material.id, result.version.id, {
+      afterBlock: "page-1",
+      limit: 1,
+    });
+    assert.deepEqual(page2.blocks.map((entry) => entry.block.blockId), ["page-2"]);
+    assert.equal(page2.nextAfterBlock, null);
+
+    /* 树内同字节复用（不同文件名）：零新行、零新任务。 */
+    const reimport = await studio.materials.importMaterial(tree.id, {
+      filename: "renamed copy.pdf",
+      bytes: b1Bytes("pdf/pdf-01.pdf"),
+    });
+    assert.equal(reimport.created, false);
+    assert.equal(reimport.material.id, result.material.id);
+    assert.equal(reimport.version.id, result.version.id);
+    assert.equal(reimport.parseTaskId, null);
+    assert.equal(studio.materialRepository.listVersions(result.material.id).length, 1);
+
+    const task = studio.materials.getParseTask(result.parseTaskId!)!;
+    assert.equal(task.parserKind, "pdf");
+    assert.equal(task.parserVersion, "d4-pdf-v1");
+    assert.equal(task.state, "ready");
+  } finally {
+    await studio.shutdown();
+    cleanupDir(dir);
+  }
+});
+
+test("pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready", async () => {
+  const dir = makeTempDataDir();
+  const studio = makeStudioInstance(dir);
+  try {
+    const { tree } = studio.service.createTree();
+    const result = await studio.materials.importMaterial(tree.id, {
+      filename: "broken.pdf",
+      bytes: b1Bytes("negative/neg-pdf-corrupt.pdf"),
+    });
+    await until(
+      () => studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus === "failed",
+      "the corrupt pdf version to fail",
+    );
+    const version = studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!;
+    assert.match(version.parseError!, /^corrupt:/);
+    assert.equal(version.textUnits, 0, "no canonical text is stored for a rejected document");
+    assert.throws(
+      () => studio.materials.readVersionBlocks(tree.id, result.material.id, result.version.id, {}),
+      (error: unknown) => error instanceof MaterialNotReadyError && error.parseStatus === "failed",
+    );
+  } finally {
+    await studio.shutdown();
+    cleanupDir(dir);
+  }
+});
+
+test("pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting", async () => {
+  const dir = makeTempDataDir();
+  const studio = makeStudioInstance(dir, { materialImport: { limits: { maxPages: 5 } } });
+  try {
+    const { tree } = studio.service.createTree();
+    const result = await studio.materials.importMaterial(tree.id, {
+      filename: "算法学习手记.pdf",
+      bytes: b1Bytes("pdf/pdf-08.pdf"),
+    });
+    await until(
+      () => studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus === "failed",
+      "the over-page pdf version to fail",
+    );
+    const version = studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!;
+    assert.match(version.parseError!, /^pages-exceeded:/);
+    assert.ok(version.parseError!.includes("10 pages"), "the reason names the actual page count");
+    assert.equal(version.textUnits, 0, "the over-limit text is never persisted");
+  } finally {
+    await studio.shutdown();
+    cleanupDir(dir);
+  }
+});
+
+test("custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence", async () => {
+  const dir = makeTempDataDir();
+  const studio = makeStudioInstance(dir, { materialImport: { parsers: { markdown: D4_MD_V1_PARSER } } });
+  try {
+    const { tree } = studio.service.createTree();
+    await assert.rejects(
+      () => studio.materials.importMaterial(tree.id, { filename: "paper.pdf", bytes: utf8("%PDF-1.7") }),
+      (error: unknown) =>
+        error instanceof MaterialUnsupportedError && error.message.includes("pdf") && error.message.includes("not wired"),
+    );
+    assert.throws(() => studio.materials.precheckImport(tree.id, "paper.pdf"), MaterialUnsupportedError);
+    /* markdown 槽位照常可用（自定义注册表不整体失效）。 */
+    assert.deepEqual(studio.materials.precheckImport(tree.id, "notes.md"), {
+      parserKind: "markdown",
+      parserVersion: "d4-md-v1",
+    });
+    assert.deepEqual(studio.materials.listTreeMaterials(tree.id), [], "the rejection persists nothing");
+  } finally {
+    await studio.shutdown();
+    cleanupDir(dir);
   }
 });
 
@@ -346,7 +516,7 @@ test("host interruption recovery: a version left parsing converges to failed (pa
   }
 });
 
-test("honest rejections before any persistence: unknown extension, unwired pdf, empty input, unknown tree", async () => {
+test("honest rejections before any persistence: unknown extension, empty input, unknown tree", async () => {
   const dir = makeTempDataDir();
   const studio = makeStudioInstance(dir);
   try {
@@ -361,13 +531,6 @@ test("honest rejections before any persistence: unknown extension, unwired pdf, 
       () => studio.materials.importMaterial(tree.id, { filename: "notes.docx", bytes: utf8("x") }),
       (error: unknown) =>
         error instanceof MaterialUnsupportedError && error.message.includes(".docx") && error.message.includes("markdown"),
-    );
-
-    /* .pdf 在 D4-1 集成前：诚实 pending-integration 拒绝（绝不伪成功）。 */
-    await assert.rejects(
-      () => studio.materials.importMaterial(tree.id, { filename: "paper.pdf", bytes: utf8("%PDF-1.7") }),
-      (error: unknown) =>
-        error instanceof MaterialUnsupportedError && error.message.includes("pdf parser lands with D4-1 integration"),
     );
 
     /* 空文件名 / 空字节 → 400 语义。 */
@@ -386,12 +549,16 @@ test("honest rejections before any persistence: unknown extension, unwired pdf, 
       EntityNotFoundError,
     );
 
-    /* 预检面与导入面同口径。 */
+    /* 预检面与导入面同口径；.pdf 在默认注册表已装配（415 只留给缺位种类，
+       见自定义注册表用例）。 */
     assert.throws(() => studio.materials.precheckImport(tree.id, "a.docx"), MaterialUnsupportedError);
-    assert.throws(() => studio.materials.precheckImport(tree.id, "a.pdf"), MaterialUnsupportedError);
     assert.deepEqual(studio.materials.precheckImport(tree.id, "a.MARKDOWN"), {
       parserKind: "markdown",
       parserVersion: "d4-md-v1",
+    });
+    assert.deepEqual(studio.materials.precheckImport(tree.id, "a.pdf"), {
+      parserKind: "pdf",
+      parserVersion: "d4-pdf-v1",
     });
 
     /* 上述拒绝全部零持久化。 */

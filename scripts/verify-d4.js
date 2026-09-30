@@ -40,6 +40,7 @@ import { dirname } from "node:path";
 
 import { EvidenceWriter } from "../tests/support/verifier/evidence.ts";
 import { verifyD4FixturesIntegrity } from "../tests/support/verifier/d4-probes.ts";
+import { runB1ImportCheck } from "../tests/support/verifier/d4-b1-import.ts";
 import { checkExitCodeConsistency, computeVerdict } from "../tests/support/verifier/verdict.ts";
 import { readJson, runCommand, tailLines, truncate, utcRunId } from "../tests/support/verifier/util.ts";
 
@@ -357,11 +358,37 @@ const CHECKS = [
   // ---- acceptance-matrix rows: NOT_RUN until their work package lands ----
   {
     id: "b1-import-versions",
-    fn: notRunCheck(
-      "b1-import-versions",
-      "D4-1",
-      "material storage/import not implemented; B1 executes against tests/fixtures/d4/b1-import once D4-1 lands",
-    ),
+    // REAL executing check (D4-1): the import pipeline runs against whatever
+    // b1-import registries exist at runtime (md/pdf enumerated generically);
+    // ready fixtures must round-trip to their frozen truth byte-exactly,
+    // negatives must be rejected with the frozen reason, same-bytes re-import
+    // must reuse the version, version pairs execute when locatable, and the
+    // manifest-registered oversize probes (>20MiB / >200 pages / >1M units)
+    // are generated deterministically here and must be refused.
+    fn: async () => {
+      const d4Root = join(ROOT, "tests", "fixtures", "d4");
+      if (!existsSync(d4Root)) {
+        return {
+          status: "NOT_RUN",
+          exitCode: null,
+          reason: "tests/fixtures/d4 not present in this tree",
+        };
+      }
+      const outcome = await runB1ImportCheck(d4Root);
+      log("b1-import-versions", `b1 import/versions check\n${outcome.lines.join("\n")}`);
+      if (outcome.status === "FAIL") {
+        return {
+          status: "FAIL",
+          exitCode: 2,
+          error: { message: outcome.problems.join("; ") },
+          detail: truncate(outcome.detail, 4000),
+        };
+      }
+      if (outcome.status === "NOT_RUN") {
+        return { status: "NOT_RUN", exitCode: null, reason: outcome.detail };
+      }
+      return { status: "PASS", exitCode: 0, detail: outcome.detail };
+    },
   },
   {
     id: "b2-precise-anchors",
