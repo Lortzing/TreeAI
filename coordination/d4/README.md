@@ -311,3 +311,14 @@ F 交付 D4-3 前端（建枝两步流/上下文声明/首问四态/恢复另开
 13-0-5、双 selftest、verify:d2 21-0-0-1、run:d4-browser 8-0-2。C 原 agent
 停滞 6.5h（零写入）已停止，先前会话的 4490 行 D4-8 nav 实现按保全纪律提交至
 `wip/d4-8-nav`（`45c35cc`）并合入 main 基线，C2 已接续（时间纪律明确）。
+
+**2026-10-01 集成记录（续三）**：C2（`wip/d4-8-nav`，tip `2b4ee19`）已合并
+main——保全快照复验 16/16 绿后续作，交付 nav API（/api/nav/*）、迁移 0010
+（nav_tree_expand_state，按登记归属 D4-8）、b9 离线执行（10,100/10,100 对照
+冻结结构真值）。合并复验：typecheck、全仓 **738/738**、verify:d4 **14-0-5**
+（b1–b5 + b9 全部真执行）、双 selftest、verify:d2 21-0-0-1、run:d4-browser
+8-0-2。至此 D4-0/1/2(md)/3/4/5/7(工程)/8(后端) 工程面全部在 main；剩余：
+D4-2 PDF 阅读器增量、D4-8 前端、D4-6 性能/Beta 收口、B3/B8 真实 Pi 与目标机
+（owner）。win-x64 卸载三连败根因仍在查（分离 PowerShell 在 CI runner 上
+零执行——已改两段式：launcher 同步删 node/ 外全部 + -File 脚本收尾，待新
+CI 轮验证）。
