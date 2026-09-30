@@ -135,9 +135,12 @@ export class ExportService {
     const snapshot = new Map<string, FactsFileShape>();
     for (const spec of FACT_TABLES) {
       const columns = spec.columns.map((column) => column.name);
-      const rows = this.#db
+      /* node:sqlite 的 .all() 返回按列名键的对象行——按冻结列序转数组，
+         使 facts 文件/可读导出/比较层共享同一确定形状。 */
+      const objectRows = this.#db
         .prepare(`SELECT ${columns.join(", ")} FROM ${spec.table} ORDER BY ${spec.orderBy}`)
-        .all() as unknown as (string | number | null)[][];
+        .all() as unknown as ReadonlyArray<Record<string, string | number | null>>;
+      const rows = objectRows.map((row) => columns.map((column) => row[column] ?? null));
       snapshot.set(spec.table, { table: spec.table, columns, rows });
     }
     return snapshot;

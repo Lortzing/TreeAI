@@ -192,7 +192,8 @@ export async function buildRepresentativeDataset(
     sourceBranchId: trunk.id,
     anchorTurnId: anchorTurn.id,
     anchorEntryId: "entry-0001",
-    selection: { start: 0, end: 3, text: "轮廓系数同时考" },
+    /* 选区文本 = 锚点回答 [0,3) 的真实切片（仓储侧锚点完整性校验）。 */
+    selection: { start: 0, end: 3, text: anchorTurn.text.slice(0, 3) },
   });
 
   /* —— 失败 Run（failed + failure_json + 缺失 session 引用）—— */
@@ -210,17 +211,21 @@ export async function buildRepresentativeDataset(
 
   /* —— 材料建枝来源（material_branch_origins）：锚定 v1 的选区 —— */
   const v1Content = materialRepository.getVersionContent(materialV1);
-  const firstBlock = v1Content.blocks[0];
-  if (firstBlock === undefined) throw new Error("representative dataset: v1 has no blocks");
   const mStart = v1Content.canonicalText.indexOf("K-means");
   const mEnd = mStart + "K-means".length;
+  if (mStart < 0) throw new Error("representative dataset: v1 canonicalText has no 'K-means'");
+  /* 选区必须整体落在宿主块内（仓储侧块纪律校验）——按真实块表定位。 */
+  const hostBlock = v1Content.blocks.find((block) => block.start <= mStart && mEnd <= block.end);
+  if (hostBlock === undefined) {
+    throw new Error("representative dataset: no single v1 block contains the 'K-means' selection");
+  }
   materialRepository.insertMaterialBranchOrigin({
     branchId: materialBranch.id,
     treeId: tree.id,
     selection: {
       materialId,
       versionId: materialV1,
-      blockId: firstBlock.blockId,
+      blockId: hostBlock.blockId,
       start: mStart,
       end: mEnd,
       excerpt: v1Content.canonicalText.slice(mStart, mEnd),
@@ -236,11 +241,14 @@ export async function buildRepresentativeDataset(
   });
 
   /* —— 阅读位置（tree_material_reading_state）—— */
+  const v2Content = materialRepository.getVersionContent(materialV2);
+  const v2FirstBlock = v2Content.blocks[0];
+  if (v2FirstBlock === undefined) throw new Error("representative dataset: v2 has no blocks");
   materialRepository.upsertReadingPosition({
     treeId: tree.id,
     materialId,
     versionId: materialV2,
-    blockId: firstBlock.blockId,
+    blockId: v2FirstBlock.blockId,
     focusStart: 0,
   });
 
@@ -257,7 +265,7 @@ export async function buildRepresentativeDataset(
       sourceBranchId: trunk.id,
       anchorTurnId: anchorTurn.id,
       anchorEntryId: "entry-0001",
-      selection: { start: 0, end: 3, text: "轮廓系数同时考" },
+      selection: { start: 0, end: 3, text: anchorTurn.text.slice(0, 3) },
     },
   });
   treeRepository.recordReturnAdoptionAttempt(adoptedReturn.id, mainRun.id);
@@ -268,7 +276,8 @@ export async function buildRepresentativeDataset(
     treeId: tree.id,
     branchId: trunk.id,
     anchorTurnId: anchorTurn.id,
-    selection: { start: 0, end: 4, text: "轮廓系数同时" },
+    /* 选区文本 = 锚点回答 [0,4) 的真实切片（锚点完整性校验）。 */
+    selection: { start: 0, end: 4, text: anchorTurn.text.slice(0, 4) },
     sourceHash: sha256Of(anchorTurn.text),
     term: "轮廓系数",
     explanation: "轮廓系数（silhouette coefficient）衡量簇内内聚与簇间分离，取值 -1..1。",
@@ -343,9 +352,11 @@ export function readTableRows(db: DatabaseSync, table: string): (string | number
   const spec = FACT_TABLES.find((candidate) => candidate.table === table);
   if (spec === undefined) throw new Error(`unknown fact table '${table}'`);
   const columns = spec.columns.map((column) => column.name);
-  return db
+  /* node:sqlite 的 .all() 返回按列名键的对象行——按冻结列序转数组。 */
+  const objectRows = db
     .prepare(`SELECT ${columns.join(", ")} FROM ${table} ORDER BY ${spec.orderBy}`)
-    .all() as unknown as (string | number | null)[][];
+    .all() as unknown as ReadonlyArray<Record<string, string | number | null>>;
+  return objectRows.map((row) => columns.map((column) => row[column] ?? null));
 }
 
 export interface ComparisonOptions {
