@@ -4,25 +4,26 @@
 负责人统一协调」。本目录是 D4 波次的协调登记处，由 D4 集成侧维护；各工作包
 动下列资源前必须先在此登记领取。
 
-## 当前波次（进行中，2026-09-30 晚）
+## 当前波次（2026-09-30 晚，已完成）
 
-集成会话（treeai-loop）正在 `wip/d4-wave2`（基于 87cbd2c 之前的 084e55d：
-D4-0 落仓 + D4-1 markdown 链合并）上收口 D4-0/D4-1：
+D4-0/D4-1 首波已在 `wip/d4-wave2` 收口（代码/证据 `4ebead9`）：
 
-- `wip/d4-1-pdf-parser`（worktree d4-1-pdf-parser）：PDF 文字层解析器 +
-  import 接线 + verify:d4 b1 执行化，代理进行中。
-- `wip/d4-fixtures-md`（worktree d4-fixtures-md）：B1 markdown 侧 fixtures +
-  版本对 + B2 选区/无效集 + manifest.json，代理进行中。
-- `wip/d4-fixtures-search`（worktree d4-fixtures-search）：B4 冻结查询集，
-  代理进行中。
-- 完成后：合并三支 → 重生成两份 MANIFEST.sha256（d4 子树 + tests/fixtures
-  根）→ 全量验证（typecheck / 全 workspace 测试 / verify:d2 / verify:d4 及
-  两份 selftest）→ 回填 D4-status → 落 main 并 push。
-- 术语③前端已独立验证（131/131 studio + typecheck + verify:d2 基线不变）
-  并已落 main（87cbd2c），不在本波 D4 分支内。
+- D4-0 落仓（`3201ad0`）：项目书镜像、契约、ADR-003、本协调区、verify:d4
+  三入口、B1 PDF 侧冻结集；随后合并 D4-1 markdown 链（`084e55d`）。
+- B1 markdown 侧 + 版本对 + B2 选区/无效集（`wip/d4-fixtures-md`，
+  `a3740be`+`846e0fe`）、B4 冻结查询集（`wip/d4-fixtures-search`，`c3bcefd`）、
+  PDF 文字层解析器 + import 接线 + verify:d4 b1 真执行（`wip/d4-1-pdf-parser`，
+  `849b352`/`1e9e813`）三支并行合并。
+- 双 MANIFEST 冻结（d4 子树 79 条 + tests/fixtures 根 113 条）；
+  fixtures-integrity-d4 5/5；verify:d4 9 PASS/0 FAIL/8 NOT_RUN；
+  verify:d2 基线不变（21/0/0/1）；两份 selftest 全绿（d4 selftest 的断言
+  纪律本波修复：按子运行 result.json 断言，合成树补齐 selftest 脚本副本）。
+- 术语③前端独立落 main（`87cbd2c`），不在 D4 分支内。
+- 孤立草稿（上一会话 fixture agent 留在主工作区的未跟踪旧稿）已保存至
+  `wip/orphan-md-fixture-draft`，仅供参考，不属于冻结集。
 
-若另一会话读到本节且上述分支仍未合并：**不要重复实现**，先检查
-`.claude/worktrees/` 对应 worktree 的 git log/status 判断进度。
+下一个工作包：D4-2（阅读与来源定位；依赖 D4-1 ✓ + 术语③区间层接口 ✓），
+然后 D4-3 markdown 纵向闭环（D4-G1）。
 
 ## 迁移编号登记（packages/persistence/src/migrations/）
 

@@ -21,8 +21,8 @@
 
 | 任务ID | 状态 | 实现代码 | 被测完整SHA | 证据类型 | 结果 | 阻断/整改 | 复验条件 |
 |---|---|---|---|---|---|---|---|
-| D4-0 契约与范围落仓 | **已交付，待本波证据绑定**（本行由证据绑定提交回填 SHA） | `docs/d4/D4-project-v1.md`（镜像）、`docs/d4/D4-contracts.md`、`docs/adr/ADR-003-*.md`、`coordination/d4/README.md`、`tests/fixtures/d4/**`、`scripts/verify-d4.js`、`scripts/verify-d4-selftest.js`、`scripts/run-d4-browser.mjs`、`tests/support/verifier/d4-probes.ts`、`tests/unit/d4-fixtures-integrity.test.ts` | （本波证据绑定提交回填） | 仓内文档+代码+冻结集+验收入口 | verify:d4（scoped）绿 + selftest 全部注入被检出 + fixtures 完整性绿 | 无 | D4-G0：契约、固定测试集与实施拆分入仓（已满足即过 G0 工程面；G0 无人工项） |
-| D4-1 材料存储和导入 | NOT_STARTED | — | — | — | 未实现 | 等待开工 | 迁移 0008 按 ADR-003/D4-contracts 实施；B1 fixtures 起测 |
+| D4-0 契约与范围落仓 | **已交付**（2026-09-30 本波，`3201ad0` 落仓、`4ebead9` 绑定证据） | `docs/d4/D4-project-v1.md`（镜像）、`docs/d4/D4-contracts.md`、`docs/adr/ADR-003-*.md`、`coordination/d4/README.md`、`tests/fixtures/d4/**`、`scripts/verify-d4.js`、`scripts/verify-d4-selftest.js`、`scripts/run-d4-browser.mjs`、`scripts/d4/`（生成工具）、`tests/support/verifier/d4-probes.ts`、`tests/unit/d4-fixtures-integrity.test.ts` | `4ebead9`（证据目录 `evidence/d4/runs/d4-offline-20260930T123353276Z`、`evidence/d4/selftest/d4-selftest-20260930T123424523Z`） | verify:d4 离线运行 + selftest 注入 | scoped 全绿：fixtures-integrity-d4（79 文件；B1 12 md+12 pdf+8 负例+1 版本对；B2 75 有效/17 无效；B4 55 正向/12 无结果）、docs、entrypoints、typecheck、tests-typecheck、unit-tests-d4、exit-codes、evidence-hygiene；selftest 7/7（控制组 exit 0 + 6 项注入全部检出；本波修复其断言纪律后达成，过程记录在案） | 无 | 候选 SHA 按 §8 全量重跑 |
+| D4-1 材料存储和导入 | **工程已交付**（markdown+pdf 导入闭环，离线机械证据）；B1 浏览器面待 D4-2 阅读器 | `packages/persistence/src/material-repository.ts`、迁移 `0008-material-core`、`packages/contracts/src/material.ts`、`apps/studio/src/materials/{markdown-parser,pdf-parser,import-service}.ts`、`apps/studio/src/server.ts` 材料 API、`tests/support/verifier/d4-b1-import.ts` | `4ebead9`（b1 执行记录：`evidence/d4/runs/d4-offline-20260930T123353276Z/logs/b1-import-versions.txt`） | verify:d4 `b1-import-versions` 真执行 + studio 178/178 + 全仓 508/508（unit 80、integration 8、live 3） | 24/24 ready fixtures 字节级回读一致（12 md + 12 pdf）；8/8 负例按冻结理由拒绝；同字节重导复用版本 24/24；版本对 v1→v2 链执行且旧版本可读；3/3 超限负例按 manifest 配方确定性生成并在解析/持久化前拒绝。PDF 解析器 corpus 外边界如实记录：xref/object stream、非 FlateDecode 滤镜、嵌入字体、Form XObject 内文本 unsupported（稳定拒绝理由，不伪装成功） | B1 证据列的「真实浏览器」部分依赖 D4-2 阅读器，属后续工作包，不计为本包阻断 | 候选 SHA 全量 verify:d4 + 真实浏览器（B1 证据列） |
 | D4-2 阅读与来源定位 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1 | B2 选区集起测；术语③区间层接口对齐 |
 | D4-3 原文探索闭环 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-0/2、W1 整改、术语②接口 | ADR-003 §5 测试义务全部落地；B3 |
 | D4-4 找回既有思考 | NOT_STARTED | — | — | — | 未实现 | 依赖 D4-1 | 迁移 0009；B4 冻结查询集 ≥95% 前 5 命中 |
@@ -35,7 +35,7 @@
 
 | 门 | 状态 | 说明 |
 |---|---|---|
-| D4-G0 | **工程面满足条件**（D4-0 入仓；见上行），最终判定随本波证据绑定 | 契约（ADR-003 + D4-contracts）、固定测试集（tests/fixtures/d4）、实施拆分（D4-contracts §8）已入仓；继承 W1 v3 产品原则（ADR-003 状态说明段） |
+| D4-G0 | **工程面已过**（D4-0 于 `4ebead9` 交付并绑定离线证据；见矩阵首行） | 契约（ADR-003 + D4-contracts）、固定测试集（tests/fixtures/d4，含 B1/B2/B4 冻结集与双 MANIFEST）、实施拆分（D4-contracts §8）、验收入口（verify:d4 三入口 + selftest）已入仓并机械验证；继承 W1 v3 产品原则（ADR-003 状态说明段）。G0 无人工项 |
 | D4-G1 | 未到 | Markdown 纵向路径（原文→Branch→Return→重启→找回）待 D4-1/2/3 + D4-4 |
 | D4-G2 | 未到 | B1–B6、B8–B9 + B7 自动部分 + D3/W1/术语回归 |
 | D4-G3 | 未到 | Mac 体验签收 → 3–5 人独立试用（负责人顺序，工程不提前代行） |
@@ -51,9 +51,12 @@
 ## 与其他工作流的关系（不重复计入 D4）
 
 - W1 P0/P1 整改、术语①②核心与最小③切片（`32f4778`…`085f979`）是
-  D3/W1/术语工作，不是 D4 进度。术语③完整前端仍未交付（正文区间层、
-  工具条、解释卡完整状态与交互）——按项目书 §2，它与材料阅读区整合但
-  **保持独立验收记录**，D4-2 只复用其接口，不以 D4 进度抵扣术语交付。
+  D3/W1/术语工作，不是 D4 进度。**术语③完整前端已于 2026-09-30 晚交付并落
+  main（`87cbd2c`）**：正文/操作分层、统一区间覆盖、选择期间不重绘、
+  工具条/解释卡完整状态（issue #7 C ③），随交付验证 studio 131/131、
+  typecheck、verify:d2 基线不变。按项目书 §2 它与材料阅读区整合但
+  **保持独立验收记录**，不计入 D4 进度；D4-2 只复用其区间层接口，
+  不以 D4 进度抵扣术语交付。
 - D3 人工项（Mac 签收、3–5 人试用）按负责人计划延后，不阻止 D4 工程
   （issue #7 跟踪补充）。
 - 最终停止条件（全项目）：D3、既定 D4（本文件矩阵）、W1 v3 必须整改、
