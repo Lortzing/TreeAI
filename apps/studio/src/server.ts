@@ -90,6 +90,15 @@
  *   needle-not-found/out-of-bounds/reversed/zero-length/surrogate-split/
  *   combining-split/emoji-split/excerpt-mismatch/stale-version/cross-page/
  *   cross-block/block-mismatch）；非 ready 版本 → 409 material-not-ready。
+ *
+ * 搜索 API（issue #8 D4-4，契约 §3；未注入 search 服务 → 503 如实说明）：
+ *   POST /api/trees/:treeId/search —— 当前树内搜索（默认范围=当前树；
+ *   未知树 404）。POST /api/search —— 全部树搜索。body {text, kinds?}
+ *   （kinds ⊆ material|annotation|return|turn）→ 引擎选项；200
+ *   {hits:[SearchHit]}——契约裁剪面：可空字段缺省（非 null），引擎附加
+ *   refId/matchType/matchCount 剥离。空/纯空白 text → 400；kinds 非法
+ *   （非数组/空数组/未知成员）→ 400。零命中如实空数组（不编造）。搜索
+ *   纯只读：不创建任何产品事实（项目书 §4「浏览/搜索不创建 Turn」）。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -123,6 +132,12 @@ import {
   ParseTaskNotCancelableError,
 } from "./materials/import-service.ts";
 import { MaterialRangeResolver, type ResolveSelectionInput } from "./materials/range-resolver.ts";
+import type { SearchDocumentKind } from "./search/search-engine.ts";
+import {
+  SEARCH_DOCUMENT_KINDS,
+  SearchService,
+  toContractSearchHit,
+} from "./search/search-service.ts";
 
 const MAX_BODY_BYTES = 1_000_000;
 const SSE_HEARTBEAT_MS = 15_000;
@@ -150,6 +165,11 @@ export interface StudioServerOptions {
    * 未装配，绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
    */
   readonly materials?: MaterialImportService | null;
+  /**
+   * 搜索服务（issue #8 D4-4；缺省不注入 → 搜索路由 503，如实说明未装配，
+   * 绝不伪装成功）。宿主（index.ts / 测试）注入完整装配。
+   */
+  readonly search?: SearchService | null;
 }
 
 export interface StudioServer {
@@ -319,6 +339,39 @@ function decodeFilenameHeader(req: IncomingMessage): string {
   }
 }
 
+/**
+ * 搜索请求体（契约 §3，issue #8 D4-4）：{text, kinds?} → 引擎选项。
+ * 空/纯空白 text（无任何可检索单元）→ 400；kinds 非法（非数组/空数组/
+ * 未知成员）→ 400（引擎对这些 fail-fast 抛 SearchEngineError，必须在
+ * HTTP 面先行校验成 400，不得漏成 500）。
+ */
+function parseSearchQuery(body: Record<string, unknown>): {
+  readonly text: string;
+  readonly kinds?: ReadonlyArray<SearchDocumentKind>;
+} {
+  const text = body["text"];
+  if (typeof text !== "string" || text.trim().length === 0) {
+    throw new InvalidArgumentError("request field 'text' must be a non-empty (not blank) string");
+  }
+  const rawKinds = body["kinds"];
+  if (rawKinds === undefined) return { text };
+  if (!Array.isArray(rawKinds) || rawKinds.length === 0) {
+    throw new InvalidArgumentError(
+      "request field 'kinds' must be a non-empty array of 'material' | 'annotation' | 'return' | 'turn'",
+    );
+  }
+  const kinds: SearchDocumentKind[] = [];
+  for (const entry of rawKinds) {
+    if (typeof entry !== "string" || !SEARCH_DOCUMENT_KINDS.has(entry)) {
+      throw new InvalidArgumentError(
+        `request field 'kinds' must contain only 'material' | 'annotation' | 'return' | 'turn' (got ${String(entry)})`,
+      );
+    }
+    if (!kinds.includes(entry as SearchDocumentKind)) kinds.push(entry as SearchDocumentKind);
+  }
+  return { text, kinds };
+}
+
 /** 204 No Content（无 body；阅读位置 PUT 的成功响应）。 */
 function sendNoContent(res: ServerResponse): void {
   res.writeHead(204, { "cache-control": "no-store" });
@@ -333,6 +386,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   const { service, staticDir } = options;
   const terminology = options.terminology ?? null;
   const materials = options.materials ?? null;
+  const search = options.search ?? null;
   /* D4-2 统一区间/锚点解析层：与材料服务同一仓储派生（materials 未装配
      即为 null → 解析路由 503 materials-not-wired，绝不伪装成功）。 */
   const materialRanges =
@@ -815,6 +869,35 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           return;
         }
         sendJson(res, 200, { selection: resolution.result.selection, block: resolution.result.block });
+        return;
+      }
+
+      /* D4-4 找回既有思考 —— 搜索（issue #8 D4-4，契约 §3；未注入 search
+         服务 → 503 如实说明，绝不伪装成功）：
+         POST /api/trees/:treeId/search —— 当前树内搜索（默认范围=当前树；
+         未知树 → 404，树作用域校验在检索之前、请求体校验之后）。
+         POST /api/search —— 全部树搜索。body {text, kinds?} → 引擎选项；
+         200 {hits:[SearchHit]}（契约裁剪：可空字段缺省、引擎附加字段
+         剥离）；零命中如实空数组。搜索纯只读（不创建产品事实）。 */
+      const treeSearchMatch = /^\/api\/trees\/([^/]+)\/search$/.exec(pathname);
+      if (treeSearchMatch !== null || pathname === "/api/search") {
+        if (search === null) {
+          sendJson(res, 503, {
+            error: { code: "search-not-wired", message: "the search service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = treeSearchMatch === null ? null : asTreeId(treeSearchMatch[1]!);
+        const query = parseSearchQuery(await readJsonBody(req));
+        const hits = search.search(query.text, {
+          treeId,
+          ...(query.kinds === undefined ? {} : { kinds: query.kinds }),
+        });
+        sendJson(res, 200, { hits: hits.map(toContractSearchHit) });
         return;
       }
 
