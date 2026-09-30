@@ -1,6 +1,7 @@
 /**
  * MaterialRepository：D4 材料层仓储（材料 / 内容寻址原件 / 不可变版本 /
- * 树链接 / 材料来源 / 阅读状态 / 首问幂等，migration 0008）。
+ * 树链接 / 材料来源 / 阅读状态 / 首问幂等 / 材料建枝原子落库，migration
+ * 0008；D4-3 增 createMaterialBranch，ADR-004）。
  *
  * 边界（ADR-001 §4、ADR-003 §1）：
  * - TreeAI DB 是产品事实源；本仓储不依赖、不访问 Pi session 文件；
@@ -35,6 +36,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import type {
+  Branch,
   BranchOrigin,
   BranchId,
   IsoTimestamp,
@@ -217,6 +219,30 @@ export interface InsertMaterialBranchOriginInput {
   readonly branchId: BranchId;
   readonly treeId: TreeId;
   readonly selection: MaterialSelection;
+}
+
+/**
+ * 材料建枝的原子落库输入（D4-3，ADR-004）：Branch 行 + 材料来源 + 首问
+ * 意图绑定三方写入同一事务的载荷。
+ */
+export interface CreateMaterialBranchInput {
+  readonly treeId: TreeId;
+  /** 父分支（材料建枝服务传所属树的 Trunk；必须属于同一 Tree）。 */
+  readonly parentBranchId: BranchId;
+  readonly selection: MaterialSelection;
+  /** 提交意图身份（树内唯一；同键重放返回既有绑定，零新行）。 */
+  readonly intentKey: string;
+  /** 分支 id 注入（测试确定性；缺省 branch_&lt;uuid&gt;）。 */
+  readonly branchId?: BranchId;
+}
+
+/** 材料建枝落库结果；replayed=true 时为同键幂等重放（零新行）。 */
+export interface CreateMaterialBranchResult {
+  readonly branch: Branch;
+  readonly origin: MaterialBranchOrigin;
+  readonly question: MaterialFirstQuestion;
+  /** false = 本次调用新建；true = 同键既有绑定原样返回。 */
+  readonly replayed: boolean;
 }
 
 /** getMaterialSelection 的校验结果：选区 + 锚定所需的材料与版本上下文。 */
@@ -1325,6 +1351,126 @@ export class MaterialRepository {
       )
       .get(treeId, intentKey) as FirstQuestionRow | undefined;
     return row ? rowToFirstQuestion(row) : null;
+  }
+
+  /* ------------------------------ 材料建枝（D4-3，ADR-004） ------------------------------ */
+
+  /**
+   * 材料建枝的原子落库（D4-3，ADR-004）：Branch 行 + 材料来源
+   * （material_branch_origins，含 ready 门槛与选区纪律校验）+ 首问意图绑定
+   * （material_first_questions）在**同一事务**内写入——任何一步失败整体
+   * 回滚，无孤儿分支/来源/绑定（与术语推广 promote 的单事务纪律同源，
+   * issue #7 P0 整改验收口径）。
+   *
+   * 事务内首查 (tree_id, intent_key)：`BEGIN IMMEDIATE` 串行化写者，查-插
+   * 之间无竞争窗口——已有绑定则原样返回既有 Branch/来源/绑定
+   * （replayed=true，零新行，不重复建枝）；同键不同 selection 的冲突判定
+   * 归调用方（材料建枝服务，409 语义），本方法只如实返回已绑定的来源。
+   *
+   * 为什么在本仓储插入 Branch 行：TreeRepository.createBranch 与本仓储的
+   * 材料来源/首问绑定分属**两个 SQLite 连接**，跨连接无法共事务（单写者
+   * 锁会互相阻塞）；本方法复制 createBranch 的最小 INSERT（列与 0001 冻结
+   * 表一致，id 前缀同 `branch_`），把三方写入收进同一事务。branches 表的
+   * 其余读写仍归 TreeRepository。
+   */
+  createMaterialBranch(input: CreateMaterialBranchInput): CreateMaterialBranchResult {
+    this.#assertOpen();
+    assertNonEmptyString(input.treeId, "tree id");
+    assertNonEmptyString(input.parentBranchId, "parent branch id");
+    assertValidSelectionShape(input.selection);
+    assertNonEmptyString(input.intentKey, "intent key");
+    return this.transaction((): CreateMaterialBranchResult => {
+      const db = this.#db!;
+      if (this.#findTreeRow(input.treeId) === undefined) throw new EntityNotFoundError("tree", input.treeId);
+      const parent = db
+        .prepare("SELECT id, tree_id FROM branches WHERE id = ?")
+        .get(input.parentBranchId) as { id: string; tree_id: string } | undefined;
+      if (parent === undefined) throw new EntityNotFoundError("branch", input.parentBranchId);
+      if (parent.tree_id !== input.treeId) {
+        throw new InvalidArgumentError(
+          `parent branch ${input.parentBranchId} belongs to tree ${parent.tree_id}, not ${input.treeId}`,
+        );
+      }
+      const existing = db
+        .prepare(
+          "SELECT intent_key, tree_id, branch_id, created_at FROM material_first_questions WHERE tree_id = ? AND intent_key = ?",
+        )
+        .get(input.treeId, input.intentKey) as FirstQuestionRow | undefined;
+      if (existing !== undefined) {
+        return this.#replayMaterialBranch(existing);
+      }
+      const branchId = input.branchId ?? (this.#newId("branch") as BranchId);
+      assertNonEmptyString(branchId, "branch id");
+      if (branchId === input.parentBranchId) {
+        throw new InvalidArgumentError(`branch ${branchId} cannot be its own parent`);
+      }
+      const createdAt = this.now();
+      try {
+        db.prepare("INSERT INTO branches (id, tree_id, parent_branch_id, created_at) VALUES (?, ?, ?, ?)").run(
+          branchId,
+          input.treeId,
+          input.parentBranchId,
+          createdAt,
+        );
+      } catch (error) {
+        throw mapSqliteError(error, "creating material branch");
+      }
+      const origin = this.insertMaterialBranchOrigin({
+        branchId,
+        treeId: input.treeId,
+        selection: input.selection,
+      });
+      const { question } = this.insertFirstQuestion({
+        treeId: input.treeId,
+        branchId,
+        intentKey: input.intentKey,
+      });
+      return {
+        branch: { id: branchId, treeId: input.treeId, parentBranchId: input.parentBranchId, createdAt },
+        origin,
+        question,
+        replayed: false,
+      };
+    });
+  }
+
+  /** 同键重放的既有绑定还原（branch + 材料来源 + 绑定行；缺行按库损坏拒绝）。 */
+  #replayMaterialBranch(existing: FirstQuestionRow): CreateMaterialBranchResult {
+    const db = this.#db!;
+    const branchRow = db
+      .prepare("SELECT id, tree_id, parent_branch_id, created_at FROM branches WHERE id = ?")
+      .get(existing.branch_id) as
+      | { id: string; tree_id: string; parent_branch_id: string | null; created_at: string }
+      | undefined;
+    if (branchRow === undefined) {
+      throw new DatabaseCorruptError(
+        `material first-question intent '${existing.intent_key}' is bound to branch ${existing.branch_id} which no longer exists ` +
+          "(schema integrity violation)",
+      );
+    }
+    const originRow = db
+      .prepare(
+        `SELECT branch_id, tree_id, material_id, version_id, block_id, start, end, excerpt, source_hash, created_at
+         FROM material_branch_origins WHERE branch_id = ?`,
+      )
+      .get(existing.branch_id) as MaterialBranchOriginRow | undefined;
+    if (originRow === undefined) {
+      throw new DatabaseCorruptError(
+        `material branch ${existing.branch_id} has a first-question binding but no material origin ` +
+          "(schema integrity violation)",
+      );
+    }
+    return {
+      branch: {
+        id: branchRow.id as BranchId,
+        treeId: branchRow.tree_id as TreeId,
+        parentBranchId: (branchRow.parent_branch_id ?? null) as BranchId | null,
+        createdAt: branchRow.created_at as IsoTimestamp,
+      },
+      origin: rowToMaterialBranchOrigin(originRow),
+      question: rowToFirstQuestion(existing),
+      replayed: true,
+    };
   }
 
   /* ------------------------------ 内部读取辅助 ------------------------------ */

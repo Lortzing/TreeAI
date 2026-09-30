@@ -1,0 +1,40 @@
+{
+  "runId": "d4-offline-20260930T173325487Z",
+  "checks": [
+    {
+      "durationMs": 22,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "b4 noResult q-neg-01: text actually present in the corpus"
+      },
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 24,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

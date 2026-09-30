@@ -46,6 +46,8 @@ export {
   MaterialRepository,
   type BranchOriginKind,
   type BranchOriginRef,
+  type CreateMaterialBranchInput,
+  type CreateMaterialBranchResult,
   type CreateMaterialInput,
   type InsertFirstQuestionInput,
   type InsertFirstQuestionResult,

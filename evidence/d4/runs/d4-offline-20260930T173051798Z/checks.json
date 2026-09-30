@@ -1,0 +1,26 @@
+{
+  "runId": "d4-offline-20260930T173051798Z",
+  "checks": [
+    {
+      "id": "b3-material-exploration",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: EntityNotFoundError: tree not found: tree_de0124c0-71ab-46b9-bd89-6b3ee53c8de4"
+      },
+      "durationMs": 60
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "runId": "d4-offline-20260930T173151080Z",
+  "checks": [
+    {
+      "id": "b3-material-exploration",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: InvalidArgumentError: material first-question intent key 'b3-sentinel-1' is not registered in tree tree_5620d169-1ffe-47b9-8a97-48d459eb168b; create the material branch with this key first"
+      },
+      "durationMs": 61
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

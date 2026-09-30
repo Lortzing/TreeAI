@@ -50,6 +50,16 @@
  *     来源关系（origin）不动。绝不在普通续聊路径静默重建 session
  *     （fail-closed 纪律不变：session 不可用的普通 prompt 照常拒绝）。
  *
+ * 材料 Branch（D4-3，ADR-004，本文件只做最小接线——材料建枝编排在
+ *   apps/studio/src/materials/branching.ts）：
+ *   - 续聊点：材料分支无 Turn 来源也无 run 时为 new-session（材料没有天然
+ *     Pi 分叉点——首问以显式材料上下文开独立 session，不伪造历史）；
+ *   - Return：材料分支的 targetAnchor 为 null（没有主线对话锚点，绝不
+ *     伪造；卡片数据由材料建枝服务读面派生），保存/导航解耦与采用语义
+ *     与 Turn 来源 Return 完全共用；
+ *   - 新探索：PromptOptions.newExplorationMaterialContext 把材料来源上下文
+ *     块带入 #newExplorationContext（材料分支无锚点摘录时的真实输入）。
+ *
  * 诊断面（A5，最小诚实）：getTreeDiagnostics 提供安全投影——运行面状态
  *   （idle/streaming/aborting）、在途 run 定位、DB 全量 run 行
  *   （runId/branchId/episodeId/state/failure code+message/createdAt/
@@ -215,6 +225,14 @@ export interface PromptOptions {
   readonly composedPrefix?: string;
   /** 用户 turn 的显式标记前缀（转录可审计；如术语推广的 follow-up 标记）。 */
   readonly turnPrefix?: string;
+  /**
+   * 材料分支（D4-3，ADR-004）：newExploration 首问时随行的材料来源上下文块
+   * （材料标题/版本 + 选区摘录 + 有界邻近窗口——由材料建枝服务持有材料
+   * 仓储组合后注入；服务层无材料仓储，不在此重复组合）。仅
+   * newExploration === true 时消费，与 #newExplorationContext 的锚点摘录块
+   * 互补（材料分支没有 Turn 来源摘录）。
+   */
+  readonly newExplorationMaterialContext?: string;
 }
 
 export interface BranchCreation {
@@ -1039,6 +1057,13 @@ export class TreeStudioService {
         },
       };
     }
+    if (this.repository.hasMaterialBranchOrigin(branch.id)) {
+      // 材料分支（D4-3，ADR-004 决策一）：无 run 且无 Turn 来源时，续聊点 =
+      // new-session——材料来源没有 Pi 分叉点（charter §3.3「材料没有天然
+      // Pi 分叉点」），首问以显式材料上下文开**独立** session（不伪造历史、
+      // 不挂靠树内任何既有运行/会话）；有 run 后照常走上方 latest run 引用。
+      return { kind: "new-session" };
+    }
     if (branch.parentBranchId === null) {
       return { kind: "new-session" };
     }
@@ -1132,7 +1157,7 @@ export class TreeStudioService {
             `branch ${branchId} still has an available session; continue with a normal prompt instead of starting a new exploration`,
           );
         }
-        explorationPrefix = this.#newExplorationContext(branch);
+        explorationPrefix = this.#newExplorationContext(branch, options?.newExplorationMaterialContext);
         continuation = { kind: "new-session" };
       }
       const preRef = await this.#ensureSessionAt(tree.id, branch.id, continuation);
@@ -1274,15 +1299,22 @@ export class TreeStudioService {
    * 新探索的首问上下文（v3 §4.4「明确带入摘录/收获以及旧运行上下文缺失」）：
    * 一段服务端生成的说明块，随首问文本一起送入新 session——
    * - 显式声明：这是从保存内容开始的新探索，旧运行上下文**未恢复**；
-   * - 锚点摘录（origin 的选区快照，来源关系随 origin 保持不动）；
+   * - 材料来源上下文块（D4-3，ADR-004：材料分支无 Turn 来源摘录，由材料
+   *   建枝服务组合的「标题/版本 + 选区摘录 + 有界邻近窗口」经
+   *   PromptOptions.newExplorationMaterialContext 注入——材料上下文是真实
+   *   输入，不是恢复的历史）；
+   * - 锚点摘录（Turn 来源分支：origin 的选区快照，来源关系随 origin 保持不动）；
    * - 分支已保存历史（该分支全部 turn，作为文本重新带入，不是会话恢复）。
    */
-  #newExplorationContext(branch: Branch): string {
+  #newExplorationContext(branch: Branch, materialContext?: string): string {
     const lines: string[] = [
       "[New exploration on this branch — the previous session is no longer available and was not restored. " +
         "The anchored excerpt and the saved history below are re-included as the starting context; " +
         "the earlier run context is missing.]",
     ];
+    if (materialContext !== undefined && materialContext.length > 0) {
+      lines.push("", "[Material source context]:", materialContext);
+    }
     const origin = this.repository.findBranchOrigin(branch.id);
     if (origin !== null) {
       lines.push("", `[Anchored excerpt]: "${origin.selection.text}"`);
@@ -1605,17 +1637,27 @@ export class TreeStudioService {
       return { turn, created: false, navigation: await this.#navigateBackToTrunk(tree.id, trunk.id) };
     }
     const origin = this.repository.findBranchOrigin(branch.id);
-    if (origin === null) {
+    const isMaterialBranch = origin === null && this.repository.hasMaterialBranchOrigin(branch.id);
+    if (origin === null && !isMaterialBranch) {
       throw new InvalidArgumentError(
         `branch ${fromBranchId} has no origin; only anchored branches can submit a return`,
       );
     }
-    const targetAnchor: ReturnTargetAnchor = {
-      sourceBranchId: origin.sourceBranchId,
-      anchorTurnId: origin.anchorTurnId,
-      anchorEntryId: origin.anchorEntryId,
-      selection: origin.selection,
-    };
+    /* 材料 Branch 的 Return（D4-3，ADR-004）：targetAnchor 为 **null**——材料
+       来源没有主线对话锚点，绝不伪造一个（charter §3.3「没有主线对话锚点时
+       按确认时间放置并提供原文跳转」）；卡片数据（材料标题/版本/块/摘录/
+       确认时间/采用记录）由材料建枝服务的读面从不可变材料来源 + return
+       turn 派生。保存与导航解耦、采用尝试/成功分离等语义与 Turn 来源
+       Return 完全共用（同一 submitReturn 路径）。 */
+    const targetAnchor: ReturnTargetAnchor | null =
+      origin === null
+        ? null
+        : {
+            sourceBranchId: origin.sourceBranchId,
+            anchorTurnId: origin.anchorTurnId,
+            anchorEntryId: origin.anchorEntryId,
+            selection: origin.selection,
+          };
     let turn: Turn;
     try {
       // 单事务：唯一索引判负时 episode 随 return 一并回滚，不留悬挂回合。

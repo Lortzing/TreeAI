@@ -99,6 +99,31 @@
  *   refId/matchType/matchCount 剥离。空/纯空白 text → 400；kinds 非法
  *   （非数组/空数组/未知成员）→ 400。零命中如实空数组（不编造）。搜索
  *   纯只读：不创建任何产品事实（项目书 §4「浏览/搜索不创建 Turn」）。
+ *
+ * 材料建枝 API（issue #8 D4-3，charter §3.3 / ADR-004；未注入 materials
+ *   → 503 如实说明；契约 §3「from-material 拆两步」的差异记录见
+ *   D4-contracts.md §3 D4-3 落地增量）：
+ *   POST /api/trees/:treeId/branches/from-material —— 材料建枝（零 Run/
+ *   Turn）+ 同来源恢复/显式另开：body {selection, intentKey,
+ *   mode:"resume-or-create"|"new"}。mode "new" → 显式另开（新 Branch + 新
+ *   session 意图，201 新建 / 200 同键幂等重放 / 409 同键不同选区）；mode
+ *   "resume-or-create"（缺省）→ 同来源已有探索则恢复（200 mode:"restored"，
+ *   续聊点导航结果与 sessionAvailability 分离携带；此时 intentKey 不绑定，
+ *   恢复的是既有 Branch），无则按 intentKey 新建（201）。建枝只落 Branch/
+ *   来源/首问绑定（浏览/搜索不创建 Turn——首问是独立显式提交）。
+ *   POST /api/trees/:treeId/material-first-question —— 幂等首问（先对账
+ *   后行动，ADR-004 决策四）：body {intentKey, firstQuestion} → 200
+ *   {branch, dispatch, outcome, error, landed}（目标分支经 (treeId,
+ *   intentKey) 绑定解析）；dispatch ∈ succeeded|failed|unknown（unknown =
+ *   在途 Run 对账不决，不盲发）；首问已用不同内容落库 → 409
+ *   material-first-question-conflict（改问走普通续聊）。
+ *   POST /api/trees/:treeId/material-return —— 材料 Branch 的 Return
+ *   （复用 submitReturn：保存先于导航、幂等键、采用尝试/成功分离）+
+ *   材料来源卡（标题/版本/块·页/摘录/确认时间/采用记录 + sourceJump；
+ *   targetAnchor 恒 null——不伪造主线锚点）：body {fromBranchId, text,
+ *   idempotencyKey}；201 新建 / 200 同键同内容重放。
+ *   POST …/branches/:branchId/material-new-exploration —— 缺 session 的显式
+ *   新探索（W1 §3.4 + 材料上下文随行）：body {text} → 200 {outcome, state}。
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -132,6 +157,11 @@ import {
   ParseTaskNotCancelableError,
 } from "./materials/import-service.ts";
 import { MaterialRangeResolver, type ResolveSelectionInput } from "./materials/range-resolver.ts";
+import {
+  MaterialBranchConflictError,
+  MaterialBranchingService,
+  MaterialFirstQuestionConflictError,
+} from "./materials/branching.ts";
 import type { SearchDocumentKind } from "./search/search-engine.ts";
 import {
   SEARCH_DOCUMENT_KINDS,
@@ -242,6 +272,16 @@ function sendError(res: ServerResponse, err: unknown): void {
     sendJson(res, 409, { error: { code: "parse-task-not-cancelable", message: err.message } } satisfies ApiErrorBody);
     return;
   }
+  if (err instanceof MaterialBranchConflictError) {
+    // 材料建枝意图冲突（同树同 intent_key 已绑定不同选区）——既有建枝不变。
+    sendJson(res, 409, { error: { code: "material-branch-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
+  if (err instanceof MaterialFirstQuestionConflictError) {
+    // 材料首问内容冲突（首问已用不同内容落库）——改问走普通续聊。
+    sendJson(res, 409, { error: { code: "material-first-question-conflict", message: err.message } } satisfies ApiErrorBody);
+    return;
+  }
   if (err instanceof TypeError) {
     // 调用方契约违规（如并发 prompt）——单用户本地工具下按操作冲突呈现。
     sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
@@ -297,6 +337,58 @@ function requireString(body: Record<string, unknown>, field: string): string {
     throw new InvalidArgumentError(`request field '${field}' must be a non-empty string`);
   }
   return value;
+}
+
+/**
+ * 材料建枝请求体的规范选区（D4-3）：{materialId, versionId, blockId, start,
+ * end, excerpt, sourceHash}——D4-2 resolve-selection 的产出形状。此处只做
+ * 形状校验；切片/块/sourceHash 锚定纪律由材料仓储 getMaterialSelection
+ * （经建枝服务）再校验。
+ */
+function parseMaterialSelection(body: Record<string, unknown>): {
+  readonly materialId: MaterialId;
+  readonly versionId: MaterialVersionId;
+  readonly blockId: string;
+  readonly start: number;
+  readonly end: number;
+  readonly excerpt: string;
+  readonly sourceHash: string;
+} {
+  const selection = body["selection"];
+  if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
+    throw new InvalidArgumentError(
+      "request field 'selection' must be an object {materialId, versionId, blockId, start, end, excerpt, sourceHash}",
+    );
+  }
+  const record = selection as Record<string, unknown>;
+  const materialId = record["materialId"];
+  const versionId = record["versionId"];
+  const blockId = record["blockId"];
+  const start = record["start"];
+  const end = record["end"];
+  const excerpt = record["excerpt"];
+  const sourceHash = record["sourceHash"];
+  if (
+    typeof materialId !== "string" ||
+    typeof versionId !== "string" ||
+    typeof blockId !== "string" ||
+    typeof excerpt !== "string" ||
+    typeof sourceHash !== "string"
+  ) {
+    throw new InvalidArgumentError("selection string fields (materialId/versionId/blockId/excerpt/sourceHash) are required");
+  }
+  if (!Number.isInteger(start) || !Number.isInteger(end)) {
+    throw new InvalidArgumentError("selection start/end must be integers (UTF-16 half-open range)");
+  }
+  return {
+    materialId: materialId as MaterialId,
+    versionId: versionId as MaterialVersionId,
+    blockId,
+    start: start as number,
+    end: end as number,
+    excerpt,
+    sourceHash,
+  };
 }
 
 /**
@@ -391,6 +483,17 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
      即为 null → 解析路由 503 materials-not-wired，绝不伪装成功）。 */
   const materialRanges =
     materials === null ? null : new MaterialRangeResolver({ repository: materials.repository });
+  /* D4-3 材料建枝服务（issue #8 charter §3.3 / ADR-004）：复用主服务
+     （studio）的 Branch/Origin/Run/Return 底层 + 材料仓储的来源/首问幂等
+     面——与解析层同一装配纪律（materials 未装配即为 null → 建枝路由 503）。 */
+  const materialBranching =
+    materials === null
+      ? null
+      : new MaterialBranchingService({
+          treeRepository: service.repository,
+          materialRepository: materials.repository,
+          studio: service,
+        });
   /** 打开中的 SSE 连接（close() 时主动终结，保证 server.close() 不被挂住）。 */
   const sseResponses = new Set<ServerResponse>();
 
@@ -871,6 +974,176 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         sendJson(res, 200, { selection: resolution.result.selection, block: resolution.result.block });
         return;
       }
+
+      /* ==================== D4-3 材料建枝区段（issue #8 charter §3.3 /
+         ADR-004；服务 apps/studio/src/materials/branching.ts）====================
+         契约 §3 的 from-material 在 D4-3 落地为两步（差异记录于
+         D4-contracts.md §3）：建枝/恢复（零 Run/Turn，返回组合上下文供 UI
+         在提交前说明材料范围）与首问（独立显式提交，先对账后行动）。
+         未装配（materials === null → materialBranching === null）→ 503
+         如实说明，绝不伪装成功。 */
+      const fromMaterialMatch = /^\/api\/trees\/([^/]+)\/branches\/from-material$/.exec(pathname);
+      if (fromMaterialMatch !== null) {
+        if (materialBranching === null) {
+          sendJson(res, 503, {
+            error: { code: "material-branching-not-wired", message: "the material branching service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(fromMaterialMatch[1]!);
+        const body = await readJsonBody(req);
+        const selection = parseMaterialSelection(body);
+        const intentKey = requireString(body, "intentKey");
+        const modeRaw = body["mode"];
+        const mode = modeRaw === undefined ? "resume-or-create" : modeRaw;
+        if (mode !== "resume-or-create" && mode !== "new") {
+          throw new InvalidArgumentError("request field 'mode' must be 'resume-or-create' or 'new'");
+        }
+        if (mode === "new") {
+          /* 显式另开：新 Branch + 新 session 意图（同键幂等重放 / 同键不同
+             选区 409，由服务层判定）。 */
+          const result = await materialBranching.restoreOrOpen({
+            treeId,
+            selection,
+            mode: "new",
+            intentKey,
+          });
+          sendJson(res, result.created ? 201 : 200, {
+            mode: "created",
+            branch: result.branch,
+            origin: result.origin,
+            context: result.context,
+            created: result.created,
+            navigation: result.navigation,
+            sessionAvailability: result.sessionAvailability,
+            state: service.getTreeState(treeId),
+          });
+          return;
+        }
+        /* resume-or-create：同来源已有探索 → 恢复（intentKey 不绑定——
+           恢复的是既有 Branch，其首问归属它自己的提交键）；无 → 按
+           intentKey 新建。恢复的导航/会话可用性结果分离携带（失败不掩盖
+           恢复本身）。 */
+        try {
+          const restored = await materialBranching.restoreOrOpen({ treeId, selection, mode: "restore" });
+          sendJson(res, 200, {
+            mode: "restored",
+            branch: restored.branch,
+            origin: restored.origin,
+            context: restored.context,
+            created: false,
+            navigation: restored.navigation,
+            sessionAvailability: restored.sessionAvailability,
+            state: service.getTreeState(treeId),
+          });
+        } catch (err) {
+          if (!(err instanceof EntityNotFoundError)) throw err;
+          const created = materialBranching.createMaterialBranch({ treeId, selection, intentKey });
+          sendJson(res, 201, {
+            mode: "created",
+            branch: created.branch,
+            origin: created.origin,
+            context: created.context,
+            created: true,
+            navigation: null,
+            sessionAvailability: null,
+            state: service.getTreeState(treeId),
+          });
+        }
+        return;
+      }
+
+      const materialFirstQuestionMatch = /^\/api\/trees\/([^/]+)\/material-first-question$/.exec(pathname);
+      if (materialFirstQuestionMatch !== null) {
+        if (materialBranching === null) {
+          sendJson(res, 503, {
+            error: { code: "material-branching-not-wired", message: "the material branching service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(materialFirstQuestionMatch[1]!);
+        const body = await readJsonBody(req);
+        /* 目标分支经 (treeId, intentKey) 绑定解析（提交意图身份）；
+           派发结局（succeeded/failed/unknown）是数据不是传输错误：200 携带
+           dispatch 字段如实呈现；同键异问 409 由错误映射统一处理。 */
+        const result = await materialBranching.firstQuestion({
+          treeId,
+          intentKey: requireString(body, "intentKey"),
+          firstQuestion: requireString(body, "firstQuestion"),
+        });
+        sendJson(res, 200, {
+          branch: result.branch,
+          dispatch: result.dispatch,
+          outcome: result.outcome,
+          error: result.error,
+          landed: result.landed,
+          state: service.getTreeState(treeId),
+        });
+        return;
+      }
+
+      const materialReturnMatch = /^\/api\/trees\/([^/]+)\/material-return$/.exec(pathname);
+      if (materialReturnMatch !== null) {
+        if (materialBranching === null) {
+          sendJson(res, 503, {
+            error: { code: "material-branching-not-wired", message: "the material branching service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(materialReturnMatch[1]!);
+        const body = await readJsonBody(req);
+        const submission = await materialBranching.submitMaterialReturn({
+          treeId,
+          fromBranchId: requireString(body, "fromBranchId") as BranchId,
+          text: requireString(body, "text"),
+          idempotencyKey: requireString(body, "idempotencyKey"),
+        });
+        sendJson(res, submission.created ? 201 : 200, {
+          returnTurn: submission.returnTurn,
+          created: submission.created,
+          navigation: submission.navigation,
+          card: submission.card,
+          state: service.getTreeState(treeId),
+        });
+        return;
+      }
+
+      const materialNewExplorationMatch =
+        /^\/api\/trees\/([^/]+)\/branches\/([^/]+)\/material-new-exploration$/.exec(pathname);
+      if (materialNewExplorationMatch !== null) {
+        if (materialBranching === null) {
+          sendJson(res, 503, {
+            error: { code: "material-branching-not-wired", message: "the material branching service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "POST") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(materialNewExplorationMatch[1]!);
+        const body = await readJsonBody(req);
+        const outcome = await materialBranching.promptNewMaterialExploration(
+          treeId,
+          decodeURIComponent(materialNewExplorationMatch[2]!) as BranchId,
+          requireString(body, "text"),
+        );
+        sendJson(res, 200, { outcome, state: service.getTreeState(treeId) });
+        return;
+      }
+      /* ==================== D4-3 材料建枝区段结束 ==================== */
 
       /* D4-4 找回既有思考 —— 搜索（issue #8 D4-4，契约 §3；未注入 search
          服务 → 503 如实说明，绝不伪装成功）：
