@@ -648,6 +648,12 @@ const byId = new Map(CHECK_DEFS.map((def) => [def.id, def]));
 /* --only 范围门（verify-d4 --only 同款纪律）：boot 检查恒随行（其余检查
    的级联前提）；范围如实入 summary（scoped 标注），绝不冒充全量。 */
 const BOOT_ALWAYS_IDS = ["chrome-boot", "studio-boot", "page-load"];
+const KNOWN_CHECK_IDS = new Set(CHECK_DEFS.map((def) => def.id));
+const UNKNOWN_ONLY = CLI.only.filter((id) => !KNOWN_CHECK_IDS.has(id));
+if (UNKNOWN_ONLY.length > 0) {
+  console.error(`run-d4-browser error: unknown --only check id(s): ${UNKNOWN_ONLY.join(", ")} (known: ${[...KNOWN_CHECK_IDS].join(", ")})`);
+  process.exit(1);
+}
 const SELECTED_CHECK_IDS = CLI.only.length === 0
   ? CHECK_DEFS.map((def) => def.id)
   : CHECK_DEFS.filter((def) => CLI.only.includes(def.id) || BOOT_ALWAYS_IDS.includes(def.id)).map((def) => def.id);
