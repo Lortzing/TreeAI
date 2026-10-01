@@ -1015,6 +1015,10 @@ export async function probeNavBrowser(ctx) {
         throw new Error(`restore-after-restart assertion failed — snapshot: ${JSON.stringify(snap)}; original: ${err instanceof Error ? err.message : String(err)}`);
       });
       await assertSelectedRowRendered(ctx, "b9-deep-c020", mirror, B9_DEEP_TREE_ID);
+      restart.oldPort = oldPort;
+      restart.newPort = ctx.studioPort();
+      restart.selectedRestored = restart.after.selectedBranchId;
+      restart.expandedCount = (restart.after.expandedBranchIds ?? []).length;
     }
 
     /* —— 7) 结构真值抽样对照（搜索命中行 + 完整路径行 + 材料来源跳转）—— */
