@@ -418,6 +418,7 @@ async function mouseSelectFrozenSelection(ctx, { treeId, material, item, truth }
  * mouseup 内捕获条不重渲、整树重渲延后——main bb4180f 修复）使拖选期间的
  * 布局稳定，释放点不再被捕获条长高带偏。选区由阅读器自身的 mouseup 路径
  * 武装（armFromEvent → armMaterialSelection），捕获载荷与冻结真值逐项全等。
+ * mouseMoved 携带 button:"left"（按压中的拖动语义，Puppeteer 同款管线）。
  */
 async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) {
   const expected = item.expected;
@@ -431,13 +432,26 @@ async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) 
   for (let i = 1; i <= steps; i += 1) {
     const x = points.from.x + ((points.to.x - points.from.x) * i) / steps;
     const y = points.from.y + ((points.to.y - points.from.y) * i) / steps;
-    await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "none", buttons: 1, modifiers: 0 });
+    await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "left", buttons: 1, modifiers: 0 });
     await sleep(30);
+  }
+  /* 拖拽窗口内先核原生选区（真实手势确实跨文本扩展到了冻结区间）。 */
+  const duringDrag = await ctx.evalJs(`(() => { const s = window.getSelection(); return s === null ? null : s.toString(); })()`);
+  if (duringDrag !== expected.excerpt) {
+    throw new Error(
+      `${item.id} (real drag): the native selection during the drag does not reproduce the frozen excerpt ` +
+        `(got ${JSON.stringify(duringDrag)}, want ${JSON.stringify(expected.excerpt)})`,
+    );
   }
   await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseReleased", x: points.to.x, y: points.to.y, button: "left", buttons: 0, clickCount: 1, modifiers: 0 });
   await sleep(300);
-  const bar = await readCaptureBar(ctx);
-  if (bar.error !== undefined) throw new Error(`${item.id}: ${bar.error}`);
+  /* 释放后原生选区会被应用自身的 mouseup 冲刷路径清除（updateMatSelectionBar
+     拖拽窗口冻结置 materialPendingUpdate → flushPendingRerender →
+     renderMaterialReader 以 root.replaceChildren() 摘挂 #mat-blocks——
+     Chrome 对 detach 的选区静默销毁，无 selectionchange）。捕获条在冲刷
+     前已同步武装（armFromEvent 先 armMaterialSelection 再排队冲刷）——
+     断言产品契约面：捕获条载荷与冻结真值逐项全等。 */
+  const bar = await waitForArmedBar(ctx, `${item.id} (real drag)`, 4000);
   assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: `${item.id} (real continuous mouse drag)` });
   await resolveSelectionAndAssert(ctx, { treeId, material, expected, canonicalText: truth.canonicalText, caseId: item.id });
   return { id: item.id, category: `${item.category}+real-mouse-drag`, blockId: expected.blockId, start: expected.start, end: expected.end };
@@ -1450,6 +1464,10 @@ export async function probeImportDenominator(ctx) {
     ...registries.flatMap((r) => r.negativeFixtures.map((f) => f.fixtureId)),
   ]);
 
+  /* 级联卫生：探针无论成败都把 UI 切回场景树（后续探针的当前树语义
+     不因本探针的中途失败而被污染）。 */
+  let denominatorTreeId = null;
+  try {
   /* 1) 真实 UI 建专用树（第二棵树；不污染场景树的下游探针语义）。 */
   const treesBefore = await ctx.evalJs(`(() => document.querySelectorAll("#tree-list button").length)()`);
   await inputClickAt(ctx, "#new-tree");
@@ -1459,6 +1477,7 @@ export async function probeImportDenominator(ctx) {
     { label: "denominator tree row appears in the sidebar" },
   );
   const treeId = await ctx.evalJs(activeTreeIdInUiExpr());
+  denominatorTreeId = treeId;
   if (typeof treeId !== "string" || treeId === scenarioTreeId) {
     throw new Error(`the new denominator tree did not become active (active=${JSON.stringify(treeId)})`);
   }
@@ -1635,7 +1654,7 @@ export async function probeImportDenominator(ctx) {
       `meta: btn.querySelector(".material-meta") === null ? null : btn.querySelector(".material-meta").textContent, ` +
       `statusText: btn.querySelector(".material-status") === null ? null : btn.querySelector(".material-status").textContent, ` +
       `statusClass: btn.querySelector(".material-status") === null ? null : btn.querySelector(".material-status").className, ` +
-      `title: btn.title })))()`,
+      `statusTitle: btn.querySelector(".material-status") === null ? null : btn.querySelector(".material-status").title })))()`,
   );
   if (sidebar.length !== expectedTotal) {
     throw new Error(`sidebar shows ${String(sidebar.length)} materials, expected ${String(expectedTotal)}`);
@@ -1667,8 +1686,8 @@ export async function probeImportDenominator(ctx) {
     if (!(typeof row.statusText === "string" && row.statusText.startsWith(`failed: ${item.reason}:`))) {
       problems.push(`${item.fixtureId}: status ${JSON.stringify(row.statusText)} does not start with "failed: ${item.reason}:"`);
     }
-    if (!(typeof row.title === "string" && row.title.startsWith(`${item.reason}:`))) {
-      problems.push(`${item.fixtureId}: title (full parseError) ${JSON.stringify(row.title)} does not start with "${item.reason}:"`);
+    if (!(typeof row.statusTitle === "string" && row.statusTitle.startsWith(`${item.reason}:`))) {
+      problems.push(`${item.fixtureId}: status title (full parseError) ${JSON.stringify(row.statusTitle)} does not start with "${item.reason}:"`);
     }
   }
   const readyCount = sidebar.filter((row) => row.statusText === "ready").length;
@@ -1715,6 +1734,15 @@ export async function probeImportDenominator(ctx) {
       `9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, ` +
       `reads refused 409 material-not-ready); the real sidebar lists all ${String(expectedTotal)} entries with honest ready/failed status`,
   };
+  } finally {
+    if (denominatorTreeId !== null && denominatorTreeId !== scenarioTreeId) {
+      try {
+        await switchTreeInUi(ctx, scenarioTreeId);
+      } catch {
+        /* 尽力而为：切换失败时如实留给后续探针的级联报告，不吞本探针的原错误。 */
+      }
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1723,14 +1751,17 @@ export async function probeImportDenominator(ctx) {
 
 /**
  * B5 恢复组合路径（D4-5 CLI + 真实浏览器）：
- *   事实建立（材料 + 材料 Branch + echo 首问 + 批注 + Return，全部真实
- *   API）→ studio 进程优雅停止 → `apps/studio export --out`（charter §5
- *   缺省不含 session）→ `--import-package` 恢复到全新空数据目录 → 在恢复
- *   目录上启动全新 studio 进程 → 真实浏览器里：重开材料阅读（与冻结真值
- *   逐字无损 + resolve-selection sourceHash 复核）、侧栏 Search 找回复原
- *   事实（对话/批注/Return 三类命中 → 来源跳转）、以及 session 未随包
- *   存活分支的 session-unavailable 如实呈现 → 显式「Start new exploration」
- *   换轨（confirm 二次确认经 CDP 接受）→ 新探索首问落地、session 恢复
+ *   事实建立（材料 + 材料 Branch + echo 首问 + 批注 + Return + 主线
+ *   turn，全部真实 API）→ studio 进程优雅停止 → `apps/studio export
+ *   --out`（charter §5 缺省不含 session）→ `--import-package` 恢复到
+ *   全新空数据目录 → 在恢复目录上启动全新 studio 进程 → 真实浏览器里：
+ *   重开材料阅读（与冻结真值逐字无损 + resolve-selection sourceHash
+ *   复核）、侧栏 Search 找回复原事实（主线 turn / Return / 材料三类
+ *   命中 → 来源跳转；支线命中行如实携带 session-unavailable 注记 +
+ *   显式换轨入口）、session 未随包存活分支经 D4-3 恢复流打开面板
+ *   （alignCursor:false——不重放注定失败的 /switch；续聊发送
+ *   fail-closed + 常驻恢复注记）→ 显式「Start new exploration」换轨
+ *   （confirm 二次确认经 CDP 接受）→ 新探索首问落地、session 恢复
  *   可用、旧历史保持可读。
  *
  * 注入的故障（如实入证，见 sidecar injectedFaults）：导出后将原数据目录
@@ -1742,8 +1773,20 @@ const B5_MARKERS = {
   question: "TreeAI-B5-恢复探针-首问-3e77",
   annotation: "TreeAI-B5-恢复探针-批注-8c14",
   ret: "TreeAI-B5-恢复探针-RETURN-52a9",
+  trunkTurn: "TreeAI-B5-恢复探针-主线-e5a1",
   newExploration: "TreeAI-B5-恢复探针-新探索-d40f",
 };
+
+/** 侧栏命中行点击（真实 DOM click 事件——与既有搜索探针同一管线）。 */
+async function clickSearchHitRow(ctx, kindLabel) {
+  const clicked = await ctx.evalJs(
+    `(() => { const hit = [...document.querySelectorAll("#search-results button.search-hit")]` +
+      `.find((b) => b.querySelector(".search-hit-kind") !== null && b.querySelector(".search-hit-kind").textContent === ${JSON.stringify(kindLabel)}); ` +
+      `if (hit === undefined) return false; hit.click(); return true; })()`,
+  );
+  if (clicked !== true) throw new Error(`no ${kindLabel} search-hit row found to click`);
+  return true;
+}
 
 export async function probeExportRestoreRecover(ctx) {
   const treeId = ctx.scenario.treeId;
@@ -1754,23 +1797,29 @@ export async function probeExportRestoreRecover(ctx) {
   const md01 = loadB1Fixture(ctx.ROOT, "md-01");
   const entry = materials["md-01"];
   if (entry.truth === undefined) entry.truth = md01.truth;
+  const b5Range = searchProbeSafeBlockRange(md01.truth);
 
   /* 1) 事实建立（幂等：scenario.b5BranchId 在即对账复用）。 */
   let branchId = ctx.scenario.b5BranchId ?? null;
   if (branchId === null) {
-    const range = searchProbeSafeBlockRange(md01.truth);
     const resolved = await searchProbeApi(
       ctx, "POST",
       `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(entry.materialId)}/versions/${encodeURIComponent(entry.versionId)}/resolve-selection`,
-      { locator: { kind: "utf16-range", start: range.start, end: range.end }, excerpt: range.excerpt, blockId: range.blockId },
+      { locator: { kind: "utf16-range", start: b5Range.start, end: b5Range.end }, excerpt: b5Range.excerpt, blockId: b5Range.blockId },
       "B5 resolve-selection (md-01 first block)",
     );
     const selection = resolved.body?.selection ?? null;
     if (selection === null) throw new Error(`B5 resolve-selection returned no canonical selection: ${JSON.stringify(resolved.body)}`);
     const intentKey = "browser-b5-restore-probe";
-    const branchRes = await ctx.api("POST", `/api/trees/${encodeURIComponent(treeId)}/branches/from-material`, { selection, intentKey, mode: "resume-or-create" }, 30_000);
+    /* mode "new"（显式另开）：同一 md-01 首块选区上已有搜索探针的探索
+       （resume-or-create 会恢复它而不绑定本探针的 intentKey——首问对账
+       会 400）；B5 需要自己的分支与提交键。 */
+    const branchRes = await ctx.api("POST", `/api/trees/${encodeURIComponent(treeId)}/branches/from-material`, { selection, intentKey, mode: "new" }, 30_000);
     if (branchRes.status !== 200 && branchRes.status !== 201) {
       throw new Error(`B5 from-material HTTP ${String(branchRes.status)}: ${JSON.stringify(branchRes.body)}`);
+    }
+    if (branchRes.body?.mode !== "created" || branchRes.body?.created !== true) {
+      throw new Error(`B5 from-material did not create a dedicated branch (mode=${JSON.stringify(branchRes.body?.mode)}): ${JSON.stringify(branchRes.body)}`);
     }
     branchId = branchRes.body?.branch?.id ?? null;
     if (branchId === null) throw new Error(`B5 from-material returned no branch: ${JSON.stringify(branchRes.body)}`);
@@ -1807,13 +1856,38 @@ export async function probeExportRestoreRecover(ctx) {
     ctx.scenario.b5BranchId = branchId;
   }
 
-  /* 2) 导出前事实核验：该分支 session 在原进程上可用（后续不可用是恢复语义，不是本来就坏）。 */
-  const branchViewOf = async () => {
+  const stateOf = async () => {
     const res = await ctx.api("GET", `/api/trees/${encodeURIComponent(treeId)}/state`);
     if (res.status !== 200) throw new Error(`B5 /state HTTP ${String(res.status)}: ${JSON.stringify(res.body)}`);
-    return (res.body?.branches ?? []).find((view) => view?.branch?.id === branchId) ?? null;
+    return res.body;
   };
-  const before = await branchViewOf();
+  const branchViewIn = (state, id) => (state?.branches ?? []).find((view) => view?.branch?.id === id) ?? null;
+
+  /* 主线事实（真实 prompt API——恢复后「来源跳转不受 session 影响」的主线
+     命中语料；主线命中不开支线面板，跳转纯只读定位）。 */
+  if (ctx.scenario.b5TrunkTurn !== true) {
+    const state0 = await stateOf();
+    const trunkBranchId = state0?.trunkBranchId ?? null;
+    if (typeof trunkBranchId !== "string") throw new Error("B5: no trunk branch in the scenario tree state");
+    const promptRes = await ctx.api(
+      "POST",
+      `/api/trees/${encodeURIComponent(treeId)}/prompt`,
+      { branchId: trunkBranchId, text: `主线记录：材料阅读的阶段性结论（${B5_MARKERS.trunkTurn}）。` },
+      60_000,
+    );
+    if (promptRes.status !== 200) {
+      throw new Error(`B5 trunk prompt HTTP ${String(promptRes.status)}: ${JSON.stringify(promptRes.body)}`);
+    }
+    const assistantText = promptRes.body?.outcome?.assistantTurn?.text ?? null;
+    if (typeof assistantText !== "string" || assistantText.length === 0) {
+      throw new Error("B5 trunk prompt outcome carries no assistant text (echo driver must answer)");
+    }
+    ctx.scenario.b5TrunkTurn = true;
+    ctx.scenario.b5TrunkBranchId = trunkBranchId;
+  }
+
+  /* 2) 导出前事实核验：该分支 session 在原进程上可用（后续不可用是恢复语义，不是本来就坏）。 */
+  const before = branchViewIn(await stateOf(), branchId);
   if (before === null || before.sessionAvailability !== "available") {
     throw new Error(`B5 branch must have an available session before export (got ${JSON.stringify(before?.sessionAvailability ?? null)})`);
   }
@@ -1857,7 +1931,8 @@ export async function probeExportRestoreRecover(ctx) {
     await switchTreeInUi(ctx, treeId);
 
     /* 6) 服务端事实：恢复进程上该分支 session 不可用 + 旧 turns 完整可读。 */
-    const after = await branchViewOf();
+    const stateAfter = await stateOf();
+    const after = branchViewIn(stateAfter, branchId);
     if (after === null) throw new Error("B5 branch missing from the restored process state");
     if (after.sessionAvailability !== "unavailable") {
       throw new Error(`B5 branch session must be unavailable on the restored process (got ${JSON.stringify(after.sessionAvailability)})`);
@@ -1873,82 +1948,169 @@ export async function probeExportRestoreRecover(ctx) {
     await inputClickAt(ctx, materialButtonSelector(entry.materialId));
     await waitFor(ctx, pageReaderLoadedExpr(md01.truth.blocks.length, "end"), { label: "restored md-01 reader (14 blocks)", timeoutMs: 25_000 });
     await assertBlocksLossless(ctx, md01.truth, { expectedCount: md01.truth.blocks.length, label: "restored md-01" });
-    const range = searchProbeSafeBlockRange(md01.truth);
     await resolveSelectionAndAssert(ctx, {
       treeId, material: entry,
-      expected: { blockId: range.blockId, start: range.start, end: range.end, excerpt: range.excerpt },
+      expected: { blockId: b5Range.blockId, start: b5Range.start, end: b5Range.end, excerpt: b5Range.excerpt },
       canonicalText: md01.truth.canonicalText,
       caseId: "b5-restored-resolve-selection",
     });
     await ctx.screenshot("restore-reader");
 
-    /* 8) 侧栏 Search 找回复原事实（真实 UI）+ 来源跳转。 */
-    const turnHits = await runUiSearch(ctx, B5_MARKERS.question, "tree");
-    const turnRow = turnHits.rows.find((row) => row.kind === "对话") ?? null;
-    if (turnRow === null) {
-      throw new Error(`B5 restored first-question turn not found via the sidebar Search (status=${JSON.stringify(turnHits.status)}, rows=${JSON.stringify(turnHits.rows.slice(0, 3))})`);
+    /* 8) 侧栏 Search 找回复原事实（真实 UI）。
+       主线 turn / Return / 材料 三类命中的来源跳转（主线与 Return 命中不
+       开支线面板——纯只读定位，不受 session 影响）；支线 turn 命中行如实
+       携带 session-unavailable 注记 + 显式换轨入口（点击该类命中开面板的
+       路径当前被 /switch 对缺失 session 的 502 拦截——本波报告的产品缺
+       陷，见证据记录；面板打开走 9) 的 D4-3 恢复流）。 */
+    const trunkHits = await runUiSearch(ctx, B5_MARKERS.trunkTurn, "tree");
+    if (trunkHits.rows.find((row) => row.kind === "对话") === null) {
+      throw new Error(`B5 restored trunk turn not found via the sidebar Search (status=${JSON.stringify(trunkHits.status)}, rows=${JSON.stringify(trunkHits.rows.slice(0, 3))})`);
     }
-    await ctx.evalJs(`(() => { const hit = [...document.querySelectorAll("#search-results button.search-hit")]` +
-      `.find((b) => b.querySelector(".search-hit-kind") !== null && b.querySelector(".search-hit-kind").textContent === "对话"); ` +
-      `if (hit === undefined) return false; hit.click(); return true; })()`);
+    await clickSearchHitRow(ctx, "对话");
     await waitFor(
       ctx,
-      `(() => { const panel = document.getElementById("branch-panel"); ` +
-        `return panel !== null && !panel.hidden && (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.question)}); })()`,
-      { label: "turn hit jump opens the restored branch panel with the saved turn", timeoutMs: 20_000 },
+      `(() => { const conv = document.getElementById("conversation"); ` +
+        `return conv !== null && (conv.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.trunkTurn)}); })()`,
+      { label: "trunk turn hit jump reveals the restored turn in the main conversation", timeoutMs: 20_000 },
     );
-    /* session-unavailable 如实呈现：常驻降级注记 + 显式换轨入口可见可用。 */
-    const unavailableUi = await waitFor(
-      ctx,
-      `(() => { const note = document.getElementById("panel-session-note"); const btn = document.getElementById("panel-new-exploration"); ` +
-        `if (note === null || btn === null || note.hidden || btn.hidden || btn.disabled) return false; ` +
-        `return { note: note.textContent, btn: btn.textContent }; })()`,
-      { label: "session-unavailable note + explicit new-exploration entry", timeoutMs: 10_000 },
-    );
-    if (!(unavailableUi.note ?? "").includes("Session missing on this branch")) {
-      throw new Error(`B5 session-unavailable note text mismatch: ${JSON.stringify(unavailableUi.note)}`);
-    }
-    await ctx.screenshot("restore-session-unavailable");
 
-    /* 9) 批注与 Return 命中 → 来源跳转。 */
-    const annoHits = await runUiSearch(ctx, B5_MARKERS.annotation, "tree");
-    if (annoHits.rows.find((row) => row.kind === "批注") === null) {
-      throw new Error(`B5 restored annotation not found via the sidebar Search (rows=${JSON.stringify(annoHits.rows.slice(0, 3))})`);
-    }
-    await ctx.evalJs(`(() => { const hit = [...document.querySelectorAll("#search-results button.search-hit")]` +
-      `.find((b) => b.querySelector(".search-hit-kind") !== null && b.querySelector(".search-hit-kind").textContent === "批注"); ` +
-      `if (hit === undefined) return false; hit.click(); return true; })()`);
-    await waitFor(
-      ctx,
-      `(() => (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.annotation)}))()`,
-      { label: "annotation hit jump reveals the restored annotation", timeoutMs: 20_000 },
-    );
     const retHits = await runUiSearch(ctx, B5_MARKERS.ret, "tree");
     if (retHits.rows.find((row) => row.kind === "Return") === null) {
       throw new Error(`B5 restored return not found via the sidebar Search (rows=${JSON.stringify(retHits.rows.slice(0, 3))})`);
     }
-    await ctx.evalJs(`(() => { const hit = [...document.querySelectorAll("#search-results button.search-hit")]` +
-      `.find((b) => b.querySelector(".search-hit-kind") !== null && b.querySelector(".search-hit-kind").textContent === "Return"); ` +
-      `if (hit === undefined) return false; hit.click(); return true; })()`);
+    await clickSearchHitRow(ctx, "Return");
     await waitFor(
       ctx,
       `(() => (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.ret)}))()`,
       { label: "return hit jump reveals the restored return card", timeoutMs: 20_000 },
     );
+
+    const turnHits = await runUiSearch(ctx, B5_MARKERS.question, "tree");
+    const turnRowIndex = turnHits.rows.findIndex((row) => row.kind === "对话");
+    if (turnRowIndex < 0) {
+      throw new Error(`B5 restored side-branch turn not found via the sidebar Search (rows=${JSON.stringify(turnHits.rows.slice(0, 3))})`);
+    }
+    const sessionNote = await ctx.evalJs(
+      `(() => { const rows = [...document.querySelectorAll("#search-results li")]; ` +
+        `const row = rows[${String(turnRowIndex)}]; if (row === undefined) return null; ` +
+        `const note = row.querySelector(".search-hit-session"); const explore = row.querySelector(".search-hit-explore"); ` +
+        `return { note: note === null ? null : note.textContent, explore: explore === null ? null : explore.textContent }; })()`,
+    );
+    if (sessionNote?.note === null || !(sessionNote.note ?? "").includes("session unavailable on this branch")) {
+      throw new Error(`B5 side-branch turn hit must carry the session-unavailable note (got ${JSON.stringify(sessionNote)})`);
+    }
+    if (sessionNote?.explore === null || !(sessionNote.explore ?? "").includes("新探索")) {
+      throw new Error(`B5 side-branch turn hit must carry the explicit new-exploration entry (got ${JSON.stringify(sessionNote)})`);
+    }
+
+    const annoHits = await runUiSearch(ctx, B5_MARKERS.annotation, "tree");
+    if (annoHits.rows.find((row) => row.kind === "批注") === null) {
+      throw new Error(`B5 restored annotation not found via the sidebar Search (rows=${JSON.stringify(annoHits.rows.slice(0, 3))})`);
+    }
+
+    const materialHits = await runUiSearch(ctx, b5Range.excerpt, "tree");
+    if (materialHits.rows.find((row) => row.kind === "材料") === null) {
+      throw new Error(`B5 restored material not found via the sidebar Search for its canonical first-block phrase (rows=${JSON.stringify(materialHits.rows.slice(0, 3))})`);
+    }
+    await clickSearchHitRow(ctx, "材料");
+    await waitFor(
+      ctx,
+      `(() => { const reader = document.getElementById("material-reader"); ` +
+        `return reader !== null && !reader.hidden && (reader.textContent ?? "").includes(${JSON.stringify(b5Range.excerpt)}); })()`,
+      { label: "material hit jump opens the restored reader at the hit", timeoutMs: 20_000 },
+    );
     await ctx.screenshot("restore-facts-recovered");
 
-    /* 10) 显式新探索（session 不可用分支的换轨入口，confirm 经 CDP 接受）。 */
+    /* 9) session 未存活分支的面板打开（D4-3 材料建枝/恢复流——真实 UI 且
+          对齐失败如实分离的路径）：阅读器内重建同一选区 → 捕获条 →
+          「⑃ Branch from material」→ 恢复二选（既有探索 + session 不可用
+          注记）→「↩ Open the existing exploration」→ 面板以
+          alignCursor:false 打开（不重放注定失败的 /switch）。 */
+    const placed = await ctx.evalJs(pageSelectCanonical(b5Range.blockId, b5Range.start, b5Range.end));
+    if (placed === null || placed.error !== undefined) {
+      throw new Error(`B5 branching-flow selection could not be placed — ${JSON.stringify(placed)}`);
+    }
+    const armedBar = await waitForArmedBar(ctx, "B5 branching-flow selection", 4000);
+    if (armedBar.payload === null) throw new Error(`B5 branching-flow bar did not arm with a payload: ${JSON.stringify(armedBar)}`);
+    /* DOM click（与复制按钮同款管线——CDP 输入点击的 press/release 分段会
+       让 0ms 解除路径抢在 release 之前，见既有注释）。 */
+    await ctx.evalJs(
+      `(() => { const btn = document.querySelector("#mat-selection-bar .mat-branch-d43"); ` +
+        `if (btn === null) return false; btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return true; })()`,
+    );
+    const choice = await waitFor(
+      ctx,
+      `(() => { const flow = document.getElementById("mat-branch-flow"); ` +
+        `if (flow === null) return false; const text = flow.textContent ?? ""; ` +
+        `return text.includes("Open the existing exploration") ? { text } : false; })()`,
+      { label: "branching flow reaches the restore-vs-new choice (existing exploration found)", timeoutMs: 15_000 },
+    );
+    if (!(choice.text ?? "").includes("the session at this branch's continuation point is unavailable")) {
+      throw new Error(`B5 choice card must state the session-unavailable honesty note (got ${JSON.stringify(choice.text)})`);
+    }
+    await ctx.evalJs(
+      `(() => { const btn = document.querySelector("#mat-branch-flow .mat-branch-resume"); ` +
+        `if (btn === null) return false; btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return true; })()`,
+    );
+    await waitFor(
+      ctx,
+      `(() => { const panel = document.getElementById("branch-panel"); ` +
+        `return panel !== null && !panel.hidden && (panel.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.question)}); })()`,
+      { label: "resume opens the restored branch panel with the saved turn (no /switch replay)", timeoutMs: 15_000 },
+    );
+    /* session-unavailable 如实呈现：常驻降级注记 + 显式换轨入口可见可用 +
+       续聊发送 fail-closed。 */
+    const unavailableUi = await waitFor(
+      ctx,
+      `(() => { const note = document.getElementById("panel-session-note"); const btn = document.getElementById("panel-new-exploration"); ` +
+        `const send = document.getElementById("panel-send"); ` +
+        `if (note === null || btn === null || note.hidden || btn.hidden || btn.disabled) return false; ` +
+        `return { note: note.textContent, btn: btn.textContent, sendDisabled: send === null ? null : send.disabled === true }; })()`,
+      { label: "session-unavailable note + explicit new-exploration entry + fail-closed send", timeoutMs: 10_000 },
+    );
+    if (!(unavailableUi.note ?? "").includes("Session missing on this branch")) {
+      throw new Error(`B5 session-unavailable note text mismatch: ${JSON.stringify(unavailableUi.note)}`);
+    }
+    if (unavailableUi.sendDisabled !== true) {
+      throw new Error("B5 panel send must stay fail-closed while the session is unavailable");
+    }
+    await ctx.screenshot("restore-session-unavailable");
+
+    /* 10) 显式新探索（面板 composer 的换轨入口，confirm 经 CDP 接受）。 */
+    let dialogsSeen = 0;
     ctx.cdpOn("Page.javascriptDialogOpening", () => {
+      dialogsSeen += 1;
       void ctx.cdpSend("Page.handleJavaScriptDialog", { accept: true }).catch(() => { /* 尽力而为 */ });
     });
     await inputClickAt(ctx, "#panel-prompt-input");
     await ctx.cdpSend("Input.insertText", { text: `新探索的第一问：请重新概括这段选区的内容要点。（${B5_MARKERS.newExploration}）` });
+    const typed = await ctx.evalJs(`(() => document.getElementById("panel-prompt-input").value)()`);
+    if (typeof typed !== "string" || !typed.includes(B5_MARKERS.newExploration)) {
+      throw new Error(`B5 panel composer did not receive the typed first question (got ${JSON.stringify(typed)})`);
+    }
     await inputClickAt(ctx, "#panel-new-exploration");
-    await waitFor(
-      ctx,
-      `(() => (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.newExploration)}))()`,
-      { label: "new-exploration first question landed on the restored branch", timeoutMs: 30_000 },
-    );
+    /* 落地轮询（失败时快照 UI 状态入错——不吞真因）。 */
+    const markerLandedExpr = `(() => (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.newExploration)}))()`;
+    {
+      const deadline = Date.now() + 30_000;
+      for (;;) {
+        if ((await ctx.evalJs(markerLandedExpr)) === true) break;
+        if (Date.now() >= deadline) {
+          const snap = await ctx.evalJs(
+            `(() => ({ inputValue: document.getElementById("panel-prompt-input").value, ` +
+              `btnHidden: document.getElementById("panel-new-exploration").hidden, ` +
+              `btnDisabled: document.getElementById("panel-new-exploration").disabled, ` +
+              `noteHidden: document.getElementById("panel-session-note").hidden, ` +
+              `panelError: (document.getElementById("panel-error-banner") === null ? null : document.getElementById("panel-error-banner").textContent ?? "").slice(0, 300), ` +
+              `mainError: (document.getElementById("error-banner") === null ? null : document.getElementById("error-banner").textContent ?? "").slice(0, 300) }))()`,
+          );
+          throw new Error(
+            `B5 new-exploration first question did not land in 30s (confirm dialogs seen: ${String(dialogsSeen)}); UI snapshot: ${JSON.stringify(snap)}`,
+          );
+        }
+        await sleep(200);
+      }
+    }
     /* 收尾态：输入清空、session 注记/换轨入口随新 session 下线、旧历史仍可读。 */
     await waitFor(
       ctx,
@@ -1967,7 +2129,7 @@ export async function probeExportRestoreRecover(ctx) {
       `(() => (document.body.textContent ?? "").includes(${JSON.stringify(B5_MARKERS.question)}))()`,
       { label: "the old saved history stays readable after the new exploration", timeoutMs: 10_000 },
     );
-    const afterExplore = await branchViewOf();
+    const afterExplore = branchViewIn(await stateOf(), branchId);
     if (afterExplore.sessionAvailability !== "available") {
       throw new Error(`B5 branch session must be available after the explicit new exploration (got ${JSON.stringify(afterExplore.sessionAvailability)})`);
     }
@@ -1988,24 +2150,34 @@ export async function probeExportRestoreRecover(ctx) {
       treeId,
       branchId,
       markers: B5_MARKERS,
-      facts: { material: entry.title, savedTurns: turnsBefore, restoredTurns: after.turns.length, turnsAfterNewExploration: afterExplore.turns.length },
+      facts: {
+        material: entry.title,
+        savedBranchTurns: turnsBefore,
+        restoredBranchTurns: after.turns.length,
+        turnsAfterNewExploration: afterExplore.turns.length,
+      },
       export: { cli: "apps/studio export --out", packageDir: "<tmp>", sessionsExcluded: true },
-      restore: { cli: "--import-package", dataDir: "<tmp>", rows: "see restore CLI stdout in studio-cli.log" },
+      restore: { cli: "--import-package", dataDir: "<tmp>" },
       restart: { oldPort, newPort: ctx.studioPort(), restoredDataDir: "<tmp>" },
       injectedFaults: [
         "original data dir sessions/ renamed aside after export (same-machine stand-in for the charter §5 default: the package carries no sessions, so on any other machine the referenced file does not exist); renamed back at probe end",
       ],
+      searchRecovery: {
+        jumpsExercised: ["trunk turn → main conversation", "return → trunk Return card", "material → restored reader at the hit"],
+        sideBranchHitRows: "carry the session-unavailable note + explicit new-exploration entry (rows not clicked: the search-hit panel-open path replays POST /switch, which the real server rejects 502 session-corrupt for a missing session file — reported to the owner, not fixed in this wave)",
+      },
       sessionPath: { before: "available", afterRestore: "unavailable", afterNewExploration: "available" },
       pageErrorsExcluded: excludedCount,
     });
     return {
       detail:
-        `facts (material + material branch + echo first-question + annotation + return) exported via the D4-5 CLI ` +
+        `facts (material + material branch + echo first-question + annotation + return + trunk turn) exported via the D4-5 CLI ` +
         `(sessions excluded by default) → restored into an empty data dir → new studio process → real browser: ` +
         `restored md-01 byte-equal to the frozen truth (resolve-selection sourceHash re-verified), sidebar Search recovered ` +
-        `turn/annotation/return with source jumps, the session-less branch honestly showed the unavailable note + explicit ` +
-        `new-exploration entry, and the explicit switch landed a fresh exploration (session available again, ` +
-        `${String(turnsBefore)} old turns + new pair readable, composer cleared)`,
+        `trunk-turn/return/material facts with source jumps and showed the session-unavailable note + explicit entry on the ` +
+        `side-branch hit rows; the D4-3 resume flow opened the session-less branch panel (alignCursor:false, no /switch replay) with ` +
+        `the fail-closed composer and recovery note, and the explicit new exploration landed a fresh session ` +
+        `(${String(turnsBefore)} old turns + new pair readable, composer cleared)`,
     };
   } finally {
     if (sessionsMoved) {
