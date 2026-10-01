@@ -1,0 +1,39 @@
+{
+  "check": "d4-return-from-material",
+  "mode": "selftest",
+  "modeNote": "echo driver — NOT B3 evidence; proves the probe/UI code path only",
+  "treeId": "tree_6c8ddabb-1ac9-4e52-8f03-7e02b288b7d7",
+  "returns": [
+    {
+      "branch": "branch_2e96dd71-75d0-4108-a739-e4a71801f515",
+      "blockId": "blk-7",
+      "marker": "TreeAI-B3-探针-MD-RETURN-2d61",
+      "fields": "material “md-01.md” · version matver_c12dd382-ff59-479b-ac58-b0064d1b152c (markdown d4-md-v1) · block blk-7 · confirmed 2026/10/1 19:52:25"
+    },
+    {
+      "branch": "branch_d5cc002b-6d3a-48b9-a729-365c643b486e",
+      "blockId": "page-2",
+      "marker": "TreeAI-B3-探针-PDF-RETURN-84f0",
+      "fields": "material “pdf-01.pdf” · version matver_84046506-09cf-4e82-90d8-b7c1e9d37ee6 (pdf d4-pdf-v1) · block page-2 · page 2 · confirmed 2026/10/1 19:52:27"
+    }
+  ],
+  "markers": {
+    "mdQ1": "TreeAI-B3-探针-MD-首问-6f2c",
+    "mdF1": "TreeAI-B3-探针-MD-追问一-a03e",
+    "mdF2": "TreeAI-B3-探针-MD-追问二-b7d1",
+    "pdfQ1": "TreeAI-B3-探针-PDF-首问-9e54",
+    "pdfF1": "TreeAI-B3-探针-PDF-追问一-77c2",
+    "pdfF2": "TreeAI-B3-探针-PDF-追问二-31b8",
+    "restartF": "TreeAI-B3-探针-重启续走-5c8a",
+    "mdRet": "TreeAI-B3-探针-MD-RETURN-2d61",
+    "pdfRet": "TreeAI-B3-探针-PDF-RETURN-84f0"
+  },
+  "lines": [
+    "md: panel View source → reader at block blk-7 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "pdf: panel View source → reader at block page-2 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "return-card source jump reopens the reader at the anchored md block",
+    "post-Return restart: SIGTERM → new process (port 57985→57985) → both Return cards on the Trunk + branch history readable"
+  ],
+  "frontendBugs": [],
+  "pageErrorsExcluded": 0
+}

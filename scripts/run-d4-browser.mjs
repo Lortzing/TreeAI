@@ -44,6 +44,21 @@
  *     翻页无 >200ms 主线程段（longtask+步延迟）、翻阅中键入
  *     keystroke-to-render、10MiB 样例真实导入 UI 取消、搜索命中渲染证据）。
  *     本地机器工程证据（环境/并发如实入 sidecar），不跨机器宣称。
+ * v0.5.0（B7 自动部分）：
+ *   - d4-beta-usability（beta-usability-probes.mjs）：B7「Beta 可用性」的
+ *     自动可执行面——README 干净环境启动（argv/entry/flags 与 README +
+ *     package.json start 对账；首启空状态诚实 + 建树流程真实可用）、宽窄
+ *     两档视口（≥1440px 与 ~390×844 mobile：侧栏/阅读器/支线面板可用、
+ *     无横向溢出、捕获条可达、关键控件 elementFromPoint 命中）、键盘
+ *     （Tab 遍历至主要控件 + Enter/Space 激活 + Escape 分层关闭含焦点
+ *     还原 + 焦点样式可见 + 阅读器方向键滚动 + 无焦点陷阱）、触屏模拟
+ *     （CDP Input.dispatchTouchEvent：tap/swipe/文本层拖选武装捕获条
+ *     （selectionchange 触路径）/tap 工具条按钮剪贴板回读）、reduced-
+ *     motion（matchMedia 生效 + 定位跳转/贴底跟随即时落位）、焦点/滚动/
+ *     草稿会话内回程（草稿保留 + 焦点还原 + 面板滚动保留 + 阅读器经
+ *     自身保存/恢复路径回到关闭位置）。selftest=echo 驱动（机制证据）；
+ *     real-pi=真实 Pi 回答。Mac 签收与 3–5 人试用属负责人 D4-G3 人工
+ *     序列——本检查 PASS 不构成 B7 全过。
  * 未落地项保持 NOT_RUN + 原因（owner 写明）——绝不静默省略，也不把
  * NOT_RUN 计为通过。
  *
@@ -443,7 +458,7 @@ async function sidecar(name, data) {
 /* Studio 进程                                                          */
 /* ------------------------------------------------------------------ */
 
-const studio = { child: null, port: 0, exited: false, stdoutRaw: "", stderrRaw: "" };
+const studio = { child: null, port: 0, exited: false, stdoutRaw: "", stderrRaw: "", lastArgv: null };
 
 function studioArgv(dataDir) {
   const argv = [STUDIO_ENTRY, "--port", String(studio.port), "--data", dataDir];
@@ -464,7 +479,9 @@ async function startStudio(dataDir, opts = {}) {
   } else {
     writeFileSync(logPath, "");
   }
-  studio.child = spawn(process.execPath, studioArgv(dataDir), {
+  const argv = studioArgv(dataDir);
+  studio.lastArgv = [...argv];
+  studio.child = spawn(process.execPath, argv, {
     cwd: ROOT,
     env: { ...process.env },
     stdio: ["ignore", "pipe", "pipe"],
@@ -641,6 +658,7 @@ const CHECK_DEFS = [
   { id: "d4-export-restore-recover", modes: ["selftest", "real-pi"] },
   { id: "d4-nav-browser", modes: ["selftest", "real-pi"] },
   { id: "d4-b6-scale-browser", modes: ["selftest", "real-pi"] },
+  { id: "d4-beta-usability", modes: ["selftest", "real-pi"] },
 ];
 
 const results = [];
@@ -776,7 +794,7 @@ function finish(code) {
        mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
-      version: "0.4.0",
+      version: "0.5.0",
       runId: sc.runId,
       mode: MODE,
       verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
@@ -820,6 +838,7 @@ const probeCtx = {
   studioOrigin: () => `http://127.0.0.1:${String(studio.port)}`,
   studioUrl: () => sc.studioUrl,
   studioDataDir: () => sc.dataDir,
+  studioArgv: () => (studio.lastArgv === null ? null : [...studio.lastArgv]),
   promptTimeoutMs: () => CLI.promptTimeoutMs,
   api,
   stopStudio: () => stopStudioProcess(),
@@ -843,7 +862,7 @@ async function main() {
   sc.dataDir = CLI.dataDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-data-"));
   sc.artifactsDir = CLI.artifactsDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-browser-artifacts-"));
   mkdirSync(sc.artifactsDir, { recursive: true });
-  console.log(`run-d4-browser 0.4.0 — mode ${MODE}`);
+  console.log(`run-d4-browser 0.5.0 — mode ${MODE}`);
   console.log(`data: ${sanitizeText(sc.dataDir)}${CLI.keepData ? " (kept)" : ""}`);
   console.log(`artifacts: ${sanitizeText(sc.artifactsDir)}`);
 
@@ -916,6 +935,12 @@ async function main() {
     if (inScope("d4-b6-scale-browser")) {
       await runCheck("d4-b6-scale-browser", async () => {
         const { probeB6ScaleBrowser: run } = await import("./d4/browser/scale-probes.mjs");
+        return run(probeCtx);
+      });
+    }
+    if (inScope("d4-beta-usability")) {
+      await runCheck("d4-beta-usability", async () => {
+        const { probeBetaUsability: run } = await import("./d4/browser/beta-usability-probes.mjs");
         return run(probeCtx);
       });
     }

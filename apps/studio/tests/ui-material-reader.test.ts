@@ -1543,8 +1543,26 @@ test("block-chunked reading: pages arrive via the afterBlock cursor, Load more i
   assert.ok(fetchCountAfterEnd >= fetchCountBefore + 1);
 });
 
-test("reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block)", async () => {
-  const world = await createWorld({ materials: [MD01_SCRIPT] });
+test("keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container)", async () => {
+  /* B7 beta 可用性探针发现：阅读器内没有任何可聚焦子元素，键盘方向键/
+     PageDown 无法滚动正文（#material-reader 的 tabindex=-1 程序聚焦目标
+     不在滚动容器内，焦点在其上时方向键滚不到 #mat-blocks）。修复：
+     #mat-blocks 成为 Tab 停靠点（tabindex=0），聚焦后即可键盘滚动。 */
+  const world = await createWorld({ materials: [MD01_SCRIPT], pageSize: 5 });
+  await world.openMaterial("mat-md01");
+  const blocks = world.matBlocks();
+  assert.equal(blocks.getAttribute("tabindex"), "0", "#mat-blocks must be a tab stop (keyboard-operable scrolling)");
+  assert.equal(
+    blocks.getAttribute("aria-label"),
+    "Material text (canonical, block by block)",
+    "the scroll container keeps its accessible name",
+  );
+  /* 键盘聚焦路径在位：tabindex 容器可聚焦（脚本桩的 focus 记录）。 */
+  blocks.focus();
+  assert.equal(world.document.activeElement, blocks, "#mat-blocks takes focus (arrow keys then scroll it)");
+});
+
+test("reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block)", async () => {  const world = await createWorld({ materials: [MD01_SCRIPT] });
   await world.openMaterial("mat-md01");
 
   /* 脚本化几何：每块 100px 高、按序排布；顶部可见块 = 首个底边越过滚动

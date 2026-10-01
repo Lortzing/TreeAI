@@ -1,0 +1,168 @@
+{
+  "runId": "d4-offline-20261001T120226116Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-01T12:02:26.119Z",
+  "endedAt": "2026-10-01T12:03:36.222Z",
+  "verdict": "INCOMPLETE",
+  "counts": {
+    "pass": 19,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 1
+  },
+  "exitCode": 3,
+  "results": [
+    {
+      "durationMs": 29,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "79 files hashed; B1 12 md + 12 pdf + 8 negatives + 1 version pair(s); B2 75 valid / 17 invalid; B4 55 positive / 12 no-result",
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 2,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 26,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "durationMs": 4543,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 1201,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 271,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 243.247333",
+      "id": "unit-tests-d4"
+    },
+    {
+      "durationMs": 114,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "24/24 ready fixtures round-trip byte-exact (markdown 12 + pdf 12); 8/8 negatives rejected with the frozen reason (emptyx1, invalid-utf8x1, nul-bytex1, whitespace-onlyx1, encryptedx1, corruptx1, no-text-layerx2); same-bytes reuse 24/24; version pairs 1 executed / 1 registered; oversize probes: 3/3 probes rejected correctly (3 registered)",
+      "id": "b1-import-versions"
+    },
+    {
+      "durationMs": 76,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "75/75 valid selections resolved exactly through the product range layer (repeat-word-2nd x10, cross-line x11, unicode-family x12, long-tail x9); 17/17 invalid selections rejected with the frozen category reason (out-of-boundsx2, zero-lengthx1, reversedx1, surrogate-splitx1, combining-splitx1, emoji-splitx1, cross-pagex2, block-mismatchx2, excerpt-mismatchx2, stale-versionx2, unsupported-materialx2); mis-locations 0 (charter B2 requires 0)",
+      "id": "b2-precise-anchors"
+    },
+    {
+      "durationMs": 98,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "14 deterministic scenarios passed on the real service stack (echo runtime, zero credentials)",
+      "id": "b3-material-exploration"
+    },
+    {
+      "durationMs": 2,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "real-pi run d4-browser-20261001T081056-32568 (mode real-pi, gitCommit c169745ce98d): md+pdf branches with real first questions, double-click + response-loss idempotency, 2 follow-up rounds each, cross-branch isolation, restart continuation, return-to-source exact excerpts, Return source cards + jump, post-return restart",
+      "id": "b3-real-exploration"
+    },
+    {
+      "durationMs": 8,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "55/55 positive queries hit their pre-specified target in the top-5 (worst rank 3; all phrase-tier; charter floor 95%); 12/12 no-result queries returned zero hits; corpus 35 facts → 35 documents via the product assembly path",
+      "id": "b4-cross-material-find"
+    },
+    {
+      "durationMs": 2590,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "export→empty-dir restore→integrity compare clean (facts/returns/excerpts survive); corrupted package refused (target stays empty, source byte-identical); material new version keeps old excerpt linkage; whole-session deletion degrades availability honestly with all fact rows readable and unchanged; parse cancel holds after restore; per-request search rebuild identical over source and restored databases; browser-path items stay with run:d4-browser (not claimed here)",
+      "id": "b5-restore-integrity"
+    },
+    {
+      "durationMs": 54594,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "generator determinism (2 CLI runs byte-identical over all 103 artifacts + in-process truth equality + --load-check into a real DB); corpus loaded through real parsers + repository APIs (100 versions / exactly 1,000,000 units / 1,010 branches / 10,000 saved facts); search-p95 warm ≤500ms over the 50 frozen needle queries on the real per-request-rebuild HTTP path (cold/warm reported separately; every query hits its frozen offset); material-open p95 ≤2s over 30 existing-material opens incl. large PDFs via first-blocks fetch (cold/hot + resume-opens recorded); the 10 MiB/100-page frozen sample imports to parse-ready ≤30s through the real import pipeline; cancel answers ≤200ms with late results structurally discarded; scroll block-page p95 ≤200ms; input/scroll server timings recorded as evidence — the browser face (scroll smoothness, keydown latency, hit-list render, cold boot) is NOT claimed and stays with the frontend wave / run:d4-browser",
+      "id": "b6-scale-performance"
+    },
+    {
+      "durationMs": 3,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "30 real-sidebar material opens p95 28.4ms (median 23.4ms, long PDFs readable with the first visible page); paging the long PDF + long md: worst longtask 0ms over 0 tasks, step-to-frame p95 12.3ms; keystroke-to-render p95 20.7ms while paging; cancel: window structurally missed (single-threaded server + synchronous parser — finding recorded; import-to-ready 615ms ≤ 30s browser-observed); search hit-list render p50 199.7ms / p95 244.7ms (evidence) — evidence run d4-browser-20261001T115206-48042 (mode selftest, gitCommit 26c5d5ac49c0984fca8a04aa11d0ca9e1c7f7dfa, recorded 2026-10-01T11:54:40.760Z); local-machine engineering evidence (environment in the sidecar; never claimed cross-machine); the final candidate-SHA regression re-runs run:d4-browser",
+      "evidenceFiles": [
+        "evidence/d4/browser/d4-browser-20261001T115206Z-beta-usability/41-b6-scale-browser.json"
+      ],
+      "id": "b6-browser-face"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "clean boot per README (argv/entry/flags reconciled; honest empty state; tree created via the empty-state action); wide 1600px + narrow 390px (mobile) viewports usable with no horizontal overflow and hit-testable key controls; keyboard: 33 Tab steps to the reader text with visible focus outlines, Enter+Space activations, 3 layered Escape closes with focus restoration, reader arrows scroll; touch: 5 taps / 1 swipes / 1 in-gesture drag-select arming the capture bar via selectionchange (clipboard read-back byte-equal); reduced-motion honored with immediate arrival; draft/focus/panel-scroll/reader-position all preserved across the in-session round trip — AUTOMATED part of B7 only: the Mac sign-off and the 3–5 person trials remain the owner's D4-G3 human sequence, so this PASS is NOT B7 complete — evidence run d4-browser-20261001T115206-48042 (mode selftest, gitCommit 26c5d5ac49c0984fca8a04aa11d0ca9e1c7f7dfa, recorded 2026-10-01T11:54:40.760Z); local-machine engineering evidence (environment in the sidecar; never claimed cross-machine); the final candidate-SHA regression re-runs run:d4-browser",
+      "evidenceFiles": [
+        "evidence/d4/browser/d4-browser-20261001T115206Z-beta-usability/45-beta-usability.json"
+      ],
+      "id": "b7-beta-usability"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute (owner: D4-7)",
+      "id": "b8-install-crossplatform"
+    },
+    {
+      "durationMs": 6331,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "generator determinism (2 CLI runs byte-identical, manifest hashes equal); structure-truth vs API 100% (all 10,100 branches located with ancestors/path/origin/sibling position matching truth; every node view compared via subtree pagination); 100-level deep chain complete; wide-tree children paged in truth order; same-name disambiguation by id; empty tree honest; lazy endpoints page-bounded (<1MiB); expand state survives simulated restart (migration 0010); nav byte-identical after every session degrades (product tree ≠ session trees); engine-side p95 + first-open recorded as evidence only — browser face (p95/virtualization/keyboard) NOT claimed, stays with the frontend wave / run:d4-browser",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "b9-big first open to usable 68ms; 55 timed expand/switch ops p95 46.4ms (median 24ms, max 115.2ms; 2 more-page ops pump-preempted, honestly recorded); virtualization: DOM rows ≤ 39 while 221 wide-tree rows are loaded; keyboard 9 steps with focus retained; expand state byte-equal across a real SIGTERM restart (selected b9-deep-c020 restored); 11 structure-truth spot checks; 1 frontend findings recorded — evidence run d4-browser-20261001T115206-48042 (mode selftest, gitCommit 26c5d5ac49c0984fca8a04aa11d0ca9e1c7f7dfa, recorded 2026-10-01T11:54:40.760Z); local-machine engineering evidence (environment in the sidecar; never claimed cross-machine); the final candidate-SHA regression re-runs run:d4-browser",
+      "evidenceFiles": [
+        "evidence/d4/browser/d4-browser-20261001T115206Z-beta-usability/39-nav-browser.json"
+      ],
+      "id": "b9-nav-browser-face"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

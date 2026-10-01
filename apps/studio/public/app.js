@@ -838,8 +838,12 @@ function renderBranchTabs() {
     }
     /* 切换语义保留：tab 点击仍 POST /switch（服务端对齐 Pi 游标）；
        UI 层面支线只开局部面板、Trunk tab 收面板回主线（不整页换视图）。
-       失败时面板可能未开/已收 → 错误呈现在主线横幅。 */
+       失败时面板可能未开/已收 → 错误呈现在主线横幅。
+       窄窗（<720px）：与 Forest 树行/材料按钮/搜索命中同一纪律——从抽屉
+       选中分支即收起侧栏，否则抽屉盖住刚打开的面板（B7 beta 可用性探针
+       发现：elementFromPoint 于面板输入框命中抽屉遮罩）。 */
     button.addEventListener("click", () => {
+      closeSidebar();
       if (isTrunk) {
         void guard(() => returnToTrunk(view.branch.id));
       } else {
@@ -5733,6 +5737,11 @@ function createMaterialBlocksElement() {
   blocksEl.id = "mat-blocks";
   blocksEl.className = "mat-blocks";
   blocksEl.setAttribute("aria-label", "Material text (canonical, block by block)");
+  /* 键盘可达的滚动区（WCAG 2.1 SC 2.1.1：可滚动内容须键盘可操作）——
+     tabindex=0 使 #mat-blocks 成为 Tab 停靠点，聚焦后方向键/PageDown
+     滚动正文（此前阅读器内无任何可聚焦子元素，键盘无法滚动阅读——
+     B7 beta 可用性探针发现）。 */
+  blocksEl.setAttribute("tabindex", "0");
   /* ③ 同族：正文按下开启拖拽窗口——窗口内 chrome 重渲延后（块追加是纯
      增量的，不触碰既有节点，无需延后）。 */
   blocksEl.addEventListener("mousedown", () => {
@@ -9431,7 +9440,14 @@ document.addEventListener("keydown", (event) => {
   }
   if (state.panelBranchId !== null) {
     event.preventDefault();
-    void guard(() => closePanel());
+    /* busy 锁在途时不静默丢弃 Esc（同 View source 的既有修复：切枝的
+       /switch 在途时按 Esc 曾被 guard 直接吞掉——面板收不起、无任何
+       反馈；B7 beta 可用性探针发现。有界等待锁释放后执行）。 */
+    void (async () => {
+      for (let i = 0; i < 50 && state.busy; i += 1) await new Promise((r) => window.setTimeout(r, 100));
+      if (state.busy) return;
+      await guard(() => closePanel());
+    })();
     return;
   }
   if (termCard !== null) {

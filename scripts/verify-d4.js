@@ -849,11 +849,127 @@ const CHECKS = [
   },
   {
     id: "b7-beta-usability",
-    fn: notRunCheck(
-      "b7-beta-usability",
-      "D4-6",
-      "beta closeout pending; automated part runs via run:d4-browser, manual part belongs to the D4-G3 human sequence",
-    ),
+    // REAL executing check (B7 automated part): audits the committed
+    // run:d4-browser evidence under evidence/d4/browser/ for the newest run whose
+    // summary carries d4-beta-usability PASS, validating the recorded sidecar's
+    // six scenario blocks against the charter B7 automated surface (clean-env
+    // start per README with an honest first-boot empty state; wide (>=1440px) and
+    // narrow (~390x844 mobile) viewports usable with no horizontal overflow and
+    // hit-testable key controls + reachable capture bar; keyboard Tab traversal
+    // to the main controls with visible focus, Enter/Space activation, layered
+    // Escape with focus restoration, reader arrow scrolling, no focus trap;
+    // simulated touch via CDP Input.dispatchTouchEvent — tap/swipe/drag-select
+    // arming the capture bar through the selectionchange path/copy tap; reduced-
+    // motion honored with immediate-arrival positioning jumps; the in-session
+    // focus/scroll/draft round trip preserving draft text, focus, panel scroll
+    // and the reader's saved reading position). The browser measurement itself
+    // runs via run:d4-browser (real Chrome + a real studio process, echo in
+    // selftest / real Pi in real-pi mode). HONEST SCOPE: this row passing is the
+    // AUTOMATED part of B7 only — the Mac experience sign-off and the 3–5 person
+    // individual trials remain the owner's D4-G3 human sequence and are never
+    // substituted by this audit.
+    fn: async () => {
+      const audit = auditBrowserEvidence(ROOT, "d4-beta-usability", "beta-usability", {
+        validate: (sidecar) => {
+          const problems = [];
+          const b = sidecar.betaUsability;
+          if (b === undefined) {
+            return ["the sidecar carries no betaUsability block"];
+          }
+          const cleanBoot = b.cleanBoot;
+          if (cleanBoot === undefined) problems.push("cleanBoot section missing");
+          else {
+            if (cleanBoot.entryConsistentWithReadme !== true || cleanBoot.flagsConsistentWithReadme !== true) {
+              problems.push("the README start-path reconciliation did not hold (entry/flags)");
+            }
+            const empty = cleanBoot.emptyStateHonest ?? {};
+            if (empty.emptyStateVisible !== true || empty.forestTreeButtons !== 0 || empty.materialsSectionHidden !== true) {
+              problems.push("the first-boot empty state is not recorded as honest (no trees / no materials / create-tree affordance)");
+            }
+            if (typeof cleanBoot.treeCreatedViaEmptyState !== "string") {
+              problems.push("the create-tree flow was not exercised on the clean boot");
+            }
+          }
+          const wn = b.wideNarrow;
+          if (wn === undefined || wn.wide === undefined || wn.narrow === undefined) {
+            problems.push("wideNarrow sections missing");
+          } else {
+            if (wn.wide.widthPx === undefined || wn.wide.widthPx < 1440) problems.push(`wide viewport ${String(wn.wide.widthPx)}px < 1440px`);
+            if (wn.narrow.widthPx === undefined || wn.narrow.widthPx > 400) problems.push(`narrow viewport ${String(wn.narrow.widthPx)}px is not the ~390px mobile window`);
+            for (const [name, section] of [["wide", wn.wide], ["narrow", wn.narrow]]) {
+              if ((section.overflowX?.documentElement ?? 99) > 1) problems.push(`${name} viewport records horizontal overflow`);
+              if (section.readerUsable !== true || section.panelUsable !== true) problems.push(`${name} viewport reader/panel not recorded usable`);
+              const hits = section.hits ?? {};
+              for (const control of ["newTree", "materialImport", "searchInput", "branchTab"]) {
+                if (hits[control] !== true) problems.push(`${name} viewport: the ${control} control is not recorded hit-testable`);
+              }
+            }
+            if (wn.narrow.drawerOpensViaToggle !== true) problems.push("the narrow sidebar drawer does not open via the toggle");
+          }
+          const kb = b.keyboard;
+          if (kb === undefined) problems.push("keyboard section missing");
+          else {
+            if (kb.tabSteps === undefined || kb.tabSteps < 1) problems.push("keyboard Tab traversal steps missing");
+            const reached = kb.reached ?? {};
+            for (const control of ["newTree", "materialImport", "searchInput", "readerContent"]) {
+              if (reached[control] !== true) problems.push(`keyboard traversal never reached ${control}`);
+            }
+            if (kb.focusStyleVisible === undefined || Object.values(kb.focusStyleVisible ?? {}).some((s) => s === null || s?.outlineStyle === "none")) {
+              problems.push("the keyboard focus indicator is not recorded visible (computed outline)");
+            }
+            if ((kb.arrowScroll?.afterDown ?? 0) <= (kb.arrowScroll?.before ?? 0)) problems.push("reader arrow scrolling not recorded effective");
+            if (kb.enterActivation === undefined || kb.spaceActivation === undefined) problems.push("Enter/Space activation not recorded");
+            if ((kb.escapeLayers ?? []).length < 3 || !(kb.escapeLayers ?? []).every((l) => l.ok === true)) {
+              problems.push("layered Escape close with focus restoration not recorded for drawer/reader/panel");
+            }
+            if (kb.noFocusTrap !== true) problems.push("the no-focus-trap assertion is not recorded");
+          }
+          const touch = b.touch;
+          if (touch === undefined) problems.push("touch section missing");
+          else {
+            if (touch.tapOpenedReader !== true) problems.push("touch tap did not open the material reader");
+            if ((touch.swipeScrolledPx ?? 0) <= 0) problems.push("the touch swipe did not scroll the reader");
+            if (touch.selectionArmedViaTouch !== true) problems.push("the in-gesture text-layer selection did not arm the capture bar (selectionchange path)");
+            if (touch.toolbarButtonTapped !== true) problems.push("the capture-bar toolbar button was not tapped");
+            if (typeof touch.copyVerification !== "string") problems.push("the copy verification is not recorded");
+          }
+          const rm = b.reducedMotion;
+          if (rm === undefined) problems.push("reducedMotion section missing");
+          else {
+            if (rm.matched !== true) problems.push("page matchMedia('(prefers-reduced-motion: reduce)') was not true under the emulation");
+            if (rm.immediateArrival !== true) problems.push("the positioning jump / stick-to-bottom was not immediate under reduce (in-transit frames recorded)");
+            if (rm.viewSourceJump === undefined || rm.viewSourceJump.anchoredBlock === undefined) problems.push("the View-source positioning jump record is missing");
+          }
+          const fsd = b.focusScrollDraft;
+          if (fsd === undefined) problems.push("focusScrollDraft section missing");
+          else {
+            if (fsd.draftPreserved !== true) problems.push("the panel draft text was not preserved across the round trip");
+            if (fsd.focusRestoredTo !== "#panel-view-source") problems.push(`focus after the round trip is ${String(fsd.focusRestoredTo)} (expected #panel-view-source)`);
+            if (fsd.panelScrollPreserved === undefined) problems.push("the panel scroll preservation record is missing");
+            const rsp = fsd.readerScrollPreserved ?? {};
+            if (rsp.restoredToBlock !== rsp.topBlockAtClose || (rsp.restoredDiffPx ?? 99) > 2) {
+              problems.push("the reader did not reopen at the saved reading position (in-session round trip)");
+            }
+          }
+          return problems;
+        },
+        describe: (sidecar) => {
+          const b = sidecar.betaUsability;
+          return (
+            `clean boot per README (argv/entry/flags reconciled; honest empty state; tree created via the empty-state action); ` +
+            `wide ${String(b.wideNarrow.wide.widthPx)}px + narrow ${String(b.wideNarrow.narrow.widthPx)}px (mobile) viewports usable ` +
+            `with no horizontal overflow and hit-testable key controls; keyboard: ${String(b.keyboard.tabSteps)} Tab steps to the reader text ` +
+            `with visible focus outlines, Enter+Space activations, ${String(b.keyboard.escapeLayers.length)} layered Escape closes with focus ` +
+            `restoration, reader arrows scroll; touch: ${String(b.touch.taps)} taps / ${String(b.touch.swipes)} swipes / ` +
+            `${String(b.touch.dragSelects)} in-gesture drag-select arming the capture bar via selectionchange (${b.touch.copyVerification}); ` +
+            `reduced-motion honored with immediate arrival; draft/focus/panel-scroll/reader-position all preserved across the in-session ` +
+            `round trip — AUTOMATED part of B7 only: the Mac sign-off and the 3–5 person trials remain the owner's D4-G3 human sequence, ` +
+            `so this PASS is NOT B7 complete`
+          );
+        },
+      });
+      return audit;
+    },
   },
   {
     id: "b8-install-crossplatform",
