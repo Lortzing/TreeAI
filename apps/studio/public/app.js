@@ -7266,11 +7266,12 @@ async function openNavTree(treeId, opts = {}) {
     renderNavTree(); /* 窗口内的展开节点即刻按需加载（navPumpLoads） */
     if (session.selectedBranchId !== null) {
       if (session.nodes.has(session.selectedBranchId)) {
-        /* 浅层选中：已在场——补完整路径行并滚到选中行。 */
-        void selectNavNode(session.selectedBranchId, { scroll: true });
+        /* 浅层选中：已在场——补完整路径行并滚到选中行。persist:false——
+           恢复读回不回写（PUT 只属于用户动作）。 */
+        void selectNavNode(session.selectedBranchId, { scroll: true, persist: false });
       } else {
         /* 深层选中：沿保存的祖先链续页直到选中行可见（重启不丢位置）。 */
-        void navRevealBranch(session, session.selectedBranchId);
+        void navRevealBranch(session, session.selectedBranchId, undefined, { persist: false });
       }
     }
   } else {
@@ -7383,13 +7384,15 @@ function navToggleExpansion(branchId) {
 /**
  * 选中节点（点击行 / Enter / 路径步 / 揭示收尾共用）：选中 + 焦点 + 完整
  * 路径行（path 端点——100 层深链完整返回）+ 滚动到选中行 + 持久化。
+ * opts.persist = false：重启恢复读回的选中（restore）——读回不回写，
+ * PUT 只属于用户动作（展开/选中/收起）。
  */
 async function selectNavNode(branchId, opts = {}) {
   const session = state.nav.session;
   if (session === null) return;
   session.selectedBranchId = branchId;
   session.focusBranchId = branchId;
-  scheduleNavPersist(session);
+  if (opts.persist !== false) scheduleNavPersist(session);
   session.path = { state: "loading", steps: [], error: null };
   renderNavPath();
   renderNavTreeActions();
@@ -7860,7 +7863,9 @@ function renderNavPath() {
   };
   const parts = [];
   if (steps.length > NAV_PATH_COLLAPSE_THRESHOLD && !session.pathShowAll) {
+    /* 首两步 + 末两步（收拢态仍保上下文两端；隐藏层数 = 总数 − 4）。 */
     parts.push(stepButton(steps[0], false));
+    parts.push(stepButton(steps[1], false));
     const more = document.createElement("button");
     more.className = "nav-path-more";
     more.textContent = `… ${String(steps.length - 4)} more level(s) — show full path`;
@@ -8043,9 +8048,11 @@ function renderNavNodeResults() {
 /**
  * 揭示某分支：沿根→该节点的完整路径逐层展开并续页（页序即创建序，目标
  * 不在已载页时按游标翻页直到出现/翻尽——有界），然后选中 + 滚动 + 聚焦。
- * locate / 分支搜索命中 / 重启恢复的深层选中共用本函数。
+ * locate / 分支搜索命中 / 重启恢复的深层选中共用本函数。opts.persist =
+ * false 透传给收尾选中（恢复读回不回写；locate/搜索命中是用户动作，照常
+ * 持久化）。
  */
-async function navRevealBranch(session, branchId, pathSteps) {
+async function navRevealBranch(session, branchId, pathSteps, opts = {}) {
   try {
     let steps = pathSteps;
     if (steps === undefined) {
@@ -8088,7 +8095,7 @@ async function navRevealBranch(session, branchId, pathSteps) {
       renderNavTree();
       return;
     }
-    await selectNavNode(branchId, { scroll: true });
+    await selectNavNode(branchId, { scroll: true, persist: opts.persist !== false });
   } catch (err) {
     if (state.nav.session !== session) return;
     session.locateNote = `locating ${branchId} failed — ${String(err && err.message ? err.message : err)}`;

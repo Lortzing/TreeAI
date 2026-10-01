@@ -324,6 +324,13 @@ class StubElement {
     void options;
   }
 
+  /* 与 ui-regressions 的桩一致：app.js 的 renderTurnsInto 用选项对象形式
+     （{top, behavior}）滚动对话容器——跳回来源跨树走 openTree → renderAll
+     时必经。 */
+  scrollTo(options: { top: number; behavior?: string }): void {
+    this.scrollTop = options.top;
+  }
+
   querySelector(sel: string): StubElement | null {
     return queryAll(this, sel)[0] ?? null;
   }
@@ -1545,7 +1552,11 @@ test("expand-state persistence: every expansion/selection PUTs the full set, and
   assert.equal(world.el("nav-surface").hidden, true, "Close hides the tree surface");
   await world.openNavTreeViaFinder("nav-deep");
   const putCountAfterReopen = world.expandPuts().length;
-  assert.equal(putCountAfterReopen, 3, "reopening restores without writing state back");
+  /* 上面共 4 个用户动作（展开主干 / 选中 d-001 / 展开 d-001 / 选中 d-002），
+     每个动作整组 PUT 一次——与本用例前两步「动作后 length 1/2」的逐动作
+     断言同口径（原作者按 3 计数是算术笔误）。重开读回恢复零回写：计数
+     与关闭前一致即为本断言的实质。 */
+  assert.equal(putCountAfterReopen, 4, "reopening restores without writing state back");
   const d002 = world.navRowRequired("d-002");
   assert.equal(d002.classList.contains("active"), true, "the saved selection is restored");
   assert.equal(d002.classList.contains("focused"), true, "the saved selection takes the roving focus");
@@ -1714,9 +1725,16 @@ test("stale-cursor 409 recovery: a cursor page after index invalidation restarts
   assert.ok(!children[0]!.path.includes("cursor="), "request 1: the first page (open)");
   assert.match(children[1]!.path, /cursor=off-50/, "request 2: the stale cursor page");
   assert.ok(!children[2]!.path.includes("cursor="), "request 3: the 409 recovery restarts from the first page");
-  /* 恢复后重载的首页与续页最终一致：w-000 恰好一行、第二页在场。 */
-  assert.equal(world.navTree().querySelectorAll(".nav-item").filter((row) => row.dataset.branchId === "w-000").length, 1, "no duplicate rows after the recovery");
+  /* 恢复后重载的首页与续页最终一致：第二页在场（当前窗口 [41,61) 内的
+     w-050 可见）；渲染窗口内无重复行；滚回顶部复查重载首页——w-000 恰好
+     一行。（w-000 是第 2 行，scrollTop=51*34 的窗口 [41,61) 不含它——
+     虚拟化行数与窗口几何由测试 2 锁定，故分窗口先后核对，断言强度不减。） */
   assert.equal(world.navRow("w-050") !== null, true, "paging continues after the recovery");
+  const windowIds = world.navTree().querySelectorAll(".nav-item").map((row) => row.dataset.branchId!);
+  assert.equal(new Set(windowIds).size, windowIds.length, "no duplicate rows in the rendered window after the recovery");
+  world.el("nav-tree-scroll").scrollTop = 0;
+  await settle(10);
+  assert.equal(world.navTree().querySelectorAll(".nav-item").filter((row) => row.dataset.branchId === "w-000").length, 1, "no duplicate rows after the recovery (window back at the reloaded first page)");
 });
 
 test("nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues", async () => {
@@ -1771,6 +1789,9 @@ test("locate current branch: cross-tree locate switches the nav tree and reveals
 test("jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin", async () => {
   const world = await createWorld();
   await world.openNavTreeViaFinder("nav-other");
+  /* 树以收起打开（仅主干行——测试 2/3 锁定的行为）：先展开主干，
+     other-b1/other-b2 才进入渲染窗口（跨树用例同一步骤）。 */
+  await world.expandToggle("other-trunk");
   await world.selectRow("other-b1");
 
   /* turn 来源：既有 revealOrigin 约定（POST /source）。 */
