@@ -457,3 +457,20 @@ term-modes 波前端在场——UI 新增零破坏）。合并复验（串行）
 三支全部落 main；D4 自动可执行面至此全齐。剩余全部为 owner 门禁（B8
 Windows/Ubuntu 目标机、Mac 签收、3–5 人试用、术语真实跑批+两人标注）与
 最终候选 SHA 全量回归（含术语②③真实浏览器/真实 Pi 纵向路径——下一波）。
+
+**2026-10-01 波次登记（术语真实浏览器/真实 Pi 纵向路径，单支，基于 main `ca5207c`）**：
+
+- `wip/term-browser-path`（worktree 隔离，agent 在飞）：issue #7 下一步 2
+  的术语半边——run:d4-browser 新增术语纵向探针（新 probe 文件 + CHECK_DEFS
+  挂接）：①阅读模式真实浏览器面（三模式选择器/gate 未过如实旁注/建议条
+  状态/预填确认前零请求/manual-only 零建议）；②术语入口纵向（关键词 term
+  + 划线句 range → 解释卡 → 批注保存 → 推广建枝首问幂等 → ≥2 轮追问 →
+  Return 来源卡 → 响应丢失重试 → 重启续走 → 已有探索恢复 + 显式另开）；
+  ③前端不变量（选择期间不重绘/复制不变/宽窄窗/焦点滚动草稿）。selftest
+  echo 全量 + **real-pi 真实执行**（deepseek，凭据按既定协议环境注入，
+  .pi-d2-live agent-dir，240s 超时）。证据落 evidence/d4/browser/
+  <-terminology> 并在 .md 明示「issue #7 术语工作搭乘 D4 harness，非 D4
+  进度」。**文件面**：scripts/run-d4-browser.mjs、scripts/d4/browser/
+  （新）、evidence/、（若发现真缺陷）最小产品修复独立提交。**不改**
+  verify:d4 行结构（术语独立追踪，verify:d4 保持 19-0-1）、docs/d4/、
+  coordination/。
