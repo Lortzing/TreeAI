@@ -4343,6 +4343,7 @@ async function refreshMaterials() {
  *   versionId: string|null,
  *   parseTaskId: string|null,
  *   dedup: boolean,
+ *   inFlightStatus: "pending"|"parsing"|null,
  *   terminalStatus: "ready"|"failed"|"canceled"|"unsupported"|"rejected"|null,
  *   terminalError: string|null,
  *   dedupVersionLabel: string|null,
@@ -4398,6 +4399,7 @@ async function importMaterialFile(file) {
     versionId: null,
     parseTaskId: null,
     dedup: false,
+    inFlightStatus: null,
     terminalStatus: null,
     terminalError: null,
     dedupVersionLabel: null,
@@ -4436,6 +4438,7 @@ async function importMaterialFile(file) {
         versionId: payload.version !== undefined && payload.version !== null ? String(payload.version.id) : null,
         parseTaskId: null,
         dedup: true,
+        inFlightStatus: null,
         terminalStatus: null,
         terminalError: null,
         dedupVersionLabel: label,
@@ -4453,6 +4456,12 @@ async function importMaterialFile(file) {
       parseTaskId:
         payload.parseTaskId !== undefined && payload.parseTaskId !== null ? String(payload.parseTaskId) : null,
       dedup: false,
+      inFlightStatus:
+        payload.version !== undefined &&
+        payload.version !== null &&
+        (payload.version.parseStatus === "pending" || payload.version.parseStatus === "parsing")
+          ? payload.version.parseStatus
+          : null,
       terminalStatus: null,
       terminalError: null,
       dedupVersionLabel: null,
@@ -4551,7 +4560,7 @@ async function pollMaterialImportStatus() {
       detail.versions.find((candidate) => candidate.id === current.versionId) ?? null;
     if (version === null) return; /* 版本不在链（异常）：保持轮询，下轮再查 */
     if (version.parseStatus === "pending" || version.parseStatus === "parsing") {
-      materialImport = { ...current, terminalStatus: null, terminalError: null };
+      materialImport = { ...current, inFlightStatus: version.parseStatus, terminalStatus: null, terminalError: null };
       updateMaterialImportStatus();
       return;
     }
@@ -4639,7 +4648,8 @@ function updateMaterialImportStatus() {
     return;
   }
   if (current.phase === "parsing") {
-    text(`“${current.filename}” imported — parsing…`, "mat-import-note");
+    const statusPart = current.inFlightStatus === null ? "" : ` (server status: ${current.inFlightStatus})`;
+    text(`“${current.filename}” imported — parsing${statusPart}…`, "mat-import-note");
     if (current.error !== null) text(` (${current.error})`, "mat-import-error");
     action(
       "Cancel parse",
@@ -4908,10 +4918,11 @@ async function loadMaterialFirstPage(reader, opts) {
          detach 都会取消动画并丢 scrollTop（真实 Chrome 实测 183/7208）；
          即时落位同步生效，配合渲染保位跨重渲稳定。 */
       target.scrollIntoView({ block: "start", behavior: "auto" });
-      /* PDF：跳转目标即「已可见」——显式渲染其文本层（scrollIntoView 在
-         脚本桩里不触发 scroll 事件，懒渲染窗口不会自动覆盖到它）。 */
-      renderPdfPageTextIn(target);
+      /* PDF：先按当前几何重估懒渲染窗口，再显式渲染跳转目标页（目标即
+         已可见；真实浏览器 scrollIntoView 后的 scroll 事件会自然重估，
+         脚本桩无事件——顺序保证目标页绝不被重估卸回占位）。 */
       updatePdfPageRendering(reader);
+      renderPdfPageTextIn(target);
     }
   }
 }
