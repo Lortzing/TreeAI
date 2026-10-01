@@ -335,16 +335,20 @@ function pickRange(text, termPick) {
     const window = trimWindow(Math.max(termPick.end, anchor.start - 6), Math.min(text.length, anchor.end + 22));
     if (window !== null) return { ...window, source: "after-term-anchor-word" };
   }
-  /* 2) term 之前的窗口。 */
+  /* 2) term 之前的窗口（止于 term 起点——不重叠）。 */
   let window = trimWindow(Math.max(0, termPick.start - 34), termPick.start);
   if (window !== null) return { ...window, source: "before-term" };
-  /* 3) 任意含空白窗口。 */
-  const firstSpace = text.indexOf(" ");
-  if (firstSpace >= 0) {
-    const nextSpace = text.indexOf(" ", firstSpace + 1);
-    if (nextSpace >= 0) {
-      window = trimWindow(Math.max(0, firstSpace - 4), Math.min(text.length, nextSpace + 8));
-      if (window !== null) return { ...window, source: "generic-space-window" };
+  /* 3) term 之后的任意含空白窗口（起于 term 终点——不重叠；真实模型以中文
+     为主的回答可能没有第二个 ≥3 字符的英文词，锚定词路径缺席时的兜底。
+     此前兜底取全文首个空白窗口，可能与 term 区间重叠——正文区间覆盖按
+     产品语义跳过重叠批注（不双重下划线），探针的「双覆盖并存」断言即
+     违反自身不重叠前提（真实 Pi 第三跑实测复现）。 */
+  const firstSpaceAfter = text.indexOf(" ", termPick.end);
+  if (firstSpaceAfter >= 0) {
+    const nextSpaceAfter = text.indexOf(" ", firstSpaceAfter + 1);
+    if (nextSpaceAfter >= 0) {
+      window = trimWindow(Math.max(termPick.end, firstSpaceAfter - 2), Math.min(text.length, nextSpaceAfter + 6));
+      if (window !== null) return { ...window, source: "after-term-space-window" };
     }
   }
   return null;
@@ -1062,15 +1066,31 @@ export async function probeTerminologyPath(ctx) {
           `return card !== null && card.querySelector("#term-first-question") !== null; })()`,
         { label: "range annotation saved (the card offers the promotion first-question input)" },
       );
-      await waitFor(
-        ctx,
-        `(() => { const turn = document.querySelector(${JSON.stringify(trunkTurnSelector(anchorTurnId))}); ` +
-          `if (turn === null) return false; ` +
-          `const marks = [...turn.querySelectorAll(".term-annotation-mark")]; ` +
-          `return marks.length === 2 && marks.some((m) => m.textContent === ${JSON.stringify(termPick.text)}) ` +
-          `&& marks.some((m) => m.textContent === ${JSON.stringify(rangePick.text)}); })()`,
-        { label: "both saved annotations render as live underline overlays (term + range, non-overlapping)" },
-      );
+      try {
+        await waitFor(
+          ctx,
+          `(() => { const turn = document.querySelector(${JSON.stringify(trunkTurnSelector(anchorTurnId))}); ` +
+            `if (turn === null) return false; ` +
+            `const marks = [...turn.querySelectorAll(".term-annotation-mark")]; ` +
+            `return marks.length === 2 && marks.some((m) => m.textContent === ${JSON.stringify(termPick.text)}) ` +
+            `&& marks.some((m) => m.textContent === ${JSON.stringify(rangePick.text)}); })()`,
+          { label: "both saved annotations render as live underline overlays (term + range, non-overlapping)", timeoutMs: answerTimeoutMs },
+        );
+      } catch (err) {
+        const read = await terminologyViaApi(ctx, treeId).catch(() => null);
+        const snap = await ctx.evalJs(
+          `(() => { const turn = document.querySelector(${JSON.stringify(trunkTurnSelector(anchorTurnId))}); ` +
+            `if (turn === null) return { turnMissing: true }; ` +
+            `const marks = [...turn.querySelectorAll(".term-annotation-mark")]; ` +
+            `const bodyText = (() => { const walker = document.createTreeWalker(turn, NodeFilter.SHOW_TEXT, ` +
+              `{ acceptNode: (n) => (n.parentElement !== null && n.parentElement.closest(".turn-actions") !== null) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); ` +
+              `const parts = []; for (;;) { const n = walker.nextNode(); if (n === null) break; parts.push(n.data); } return parts.join(""); })(); ` +
+            `return { markCount: marks.length, markTexts: marks.map((m) => m.textContent), bodyLen: bodyText.length, ` +
+              `bodySlice: bodyText.slice(${Number(rangePick.start)}, ${Number(rangePick.end)}) }; })()`,
+        ).catch(() => null);
+        await ctx.sidecar("range-overlay-debug", { annotations: read?.annotations ?? null, snap, termPick, rangePick }).catch(() => {});
+        throw new Error(`both-annotation overlay wait failed — debug sidecar range-overlay-debug (server annotations + DOM marks recorded); original: ${err instanceof Error ? err.message : String(err)}`);
+      }
       const readAfterRangeSave = await terminologyViaApi(ctx, treeId);
       const rangeAnnotation = (readAfterRangeSave?.annotations ?? []).find(
         (entry) => entry?.anchorTurnId === anchorTurnId && entry?.selection?.start === rangePick.start && entry?.selection?.end === rangePick.end);
