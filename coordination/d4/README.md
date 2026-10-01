@@ -395,3 +395,33 @@ gitDirty false，**14 PASS / 0 FAIL / 0 NOT_RUN**，
 `evidence/d4/browser/d4-browser-20261001T102316Z-b2-full-denominator-main`）。
 至此 B2 的证据列（映射断言＋浏览器选区与截图）全分母闭环；剩余仍全部为
 负责人门禁（B8 目标机、Mac 签收、3–5 人试用、B7 收口、术语有用率标注）。
+
+**2026-10-01 波次登记（B7 自动面 + 术语①阅读模式 + 术语①评测基建，三支并行，均基于 main `84c9164`）**：
+
+- `wip/term-eval-runner`（worktree 隔离，agent 在飞）：术语冻结评测**基建**收口
+  ——合并 `wip/term-eval` 的 eval-set-dev/frozen（180+180）＋ runner
+  `scripts/run-terminology-eval.mjs`（dev 可调 / 冻结一次性、分任务指标、
+  空输出如实记录、echo 离线校验、两人标注表输出）＋ 零依赖 TF-IDF/TextRank
+  基线 ＋ 评测集完整性测试（180+180、分组防泄漏、中文 ≥240、负例 ≥25%、
+  六类覆盖）。**文件面**：`apps/studio/terminology/`（新文件）、
+  `scripts/run-terminology-eval.mjs`（新）、`scripts/terminology/`（新）、
+  `apps/studio/tests/terminology-eval*.test.ts`（新）、根 package.json
+  scripts 条目。真实模型跑批与两人标注为 owner 事项，本支只交付可执行基建。
+- `wip/term-modes`（worktree 隔离，agent 在飞）：术语①**三种阅读模式**
+  （仅手动默认 / 少量提示 / 辅助阅读）＋ 触发范围（assistant 回答完成）＋
+  每段/每回答密度上限 ＋ 无建议/部分/预算暂停/来源失效四状态；
+  **质量门禁未过 → 自动派发保持关闭**（服务端 gate 默认 false，测试可强开
+  验证行为）。**文件面**：`apps/studio/src/terminology.ts`、server.ts 术语
+  路由区段、`public/{app.js,index.html,style.css}`、新测试文件。不碰
+  scripts/、docs/、materials/search/nav。
+- `wip/d4-beta-usability`（worktree 隔离，agent 在飞）：B7 **自动部分**浏览器
+  探针——run:d4-browser 新增 `d4-beta-usability`（README 干净环境启动、
+  宽窄窗、键盘遍历、触屏模拟（CDP touch）、reduced-motion 即时落位、
+  焦点/滚动/草稿回程）＋ verify:d4 `b7-beta-usability` 行从 notRunCheck 翻
+  为证据审计（人工 Mac 签收/试用如实保留 owner D4-G3，PASS ≠ B7 全过）。
+  **文件面**：`scripts/run-d4-browser.mjs`、`scripts/d4/browser/`（新探针）、
+  `scripts/verify-d4.js`、`evidence/d4/browser/`。若探针发现真实前端缺陷，
+  最小修复并独立成提交（app.js 与 term-modes 可能交叠，集成方排序合并）。
+- 集成纪律：三支均不改 docs/d3/D3-status.md、docs/d4/D4-status.md、
+  coordination/（集成会话统一收口）；各自全量门禁绿后由集成会话按
+  A（term-eval-runner）→ B（term-modes）→ C（d4-beta-usability）顺序合并。
