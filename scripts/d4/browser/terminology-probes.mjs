@@ -481,13 +481,22 @@ async function waitForArmedToolbar(ctx, caseId, { expectMode, timeoutMs = 6000 }
     { label: `${caseId}: the selection toolbar armed`, timeoutMs },
   ).then((bar) => {
     const problems = [];
-    if (expectMode !== undefined && !(bar.label ?? "").includes(`"${expectMode}"`)) {
+    if (expectMode !== undefined && !(bar.label ?? "").startsWith(`Selection actions — ${expectMode} `)) {
       problems.push(`aria-label does not name the ${expectMode} mode: ${JSON.stringify(bar.label)}`);
     }
     if (expectMode === "term" && bar.explainLabel !== "⌖ Explain term") problems.push(`term toolbar label: ${JSON.stringify(bar.explainLabel)}`);
     if (expectMode === "span" && bar.explainLabel !== "⌖ Explain span") problems.push(`span toolbar label: ${JSON.stringify(bar.explainLabel)}`);
     if (problems.length > 0) throw new Error(`${caseId}: armed toolbar mismatch — ${problems.join("; ")}`);
     return bar;
+  }).catch(async (err) => {
+    const snap = await ctx.evalJs(
+      `(() => ({ selection: String(window.getSelection()), ` +
+        `assistantTurns: document.querySelectorAll("#conversation .turn.assistant").length, ` +
+        `actions: document.querySelectorAll("#conversation .turn-actions").length, ` +
+        `explainButtons: [...document.querySelectorAll("#conversation .term-explain")].map((b) => b.disabled), ` +
+        `activeId: document.activeElement?.id || null }))()`,
+    ).catch(() => null);
+    throw new Error(`${caseId}: toolbar never armed — snapshot: ${JSON.stringify(snap)}; original: ${err instanceof Error ? err.message : String(err)}`);
   });
 }
 
@@ -544,10 +553,15 @@ async function sendTrunkPrompt(ctx, treeId, text, { timeoutMs, label }) {
       const after = turns.slice(userIdx + 1).find((turn) => turn?.role === "assistant");
       if (after !== undefined && typeof after.text === "string" && after.text.trim().length > 0) {
         const userTurn = turns[userIdx];
-        /* DOM 渲染对齐（正文层 textContent === turn 原文）。 */
+        /* DOM 渲染对齐（正文层 = .turn-actions 之外的文本节点拼接——与 turn
+           原文字节相等；元素整体 textContent 混入动作按钮文字，不可比）。 */
         await waitFor(
           ctx,
-          `(() => [...document.querySelectorAll("#conversation .turn.assistant")].some((el) => el.textContent === ${JSON.stringify(after.text)}))()`,
+          `(() => { ${TURN_BODY_WALKER}
+            return [...document.querySelectorAll("#conversation .turn.assistant")].some((el) => {
+              const nodes = bodyTextNodes(el);
+              return nodes.map((n) => n.data).join("") === ${JSON.stringify(after.text)};
+            }); })()`,
           { label: `${label}: the answer rendered in the Trunk conversation`, timeoutMs: 15_000 },
         );
         return { userTurn, answerTurn: after, assistantCount: turns.filter((turn) => turn?.role === "assistant").length, assistantBefore };
@@ -661,6 +675,16 @@ export async function probeTerminologyPath(ctx) {
     await ctx.navigate("about:blank");
     const url = await ctx.bootStudioOn(dataDir);
     await ctx.navigate(url);
+    /* 剪贴板读权限（③ 复制不变量的剪贴板回读口径；不可用则如实降级为
+       selection.toString 字节相等并记录——material 探针同款诚实降级）。 */
+    try {
+      await ctx.cdpSend("Browser.grantPermissions", {
+        permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"],
+        origin: new URL(url).origin,
+      });
+    } catch {
+      /* 尽力而为：降级口径在复制断言处如实记录 */
+    }
     await waitFor(ctx, `(() => document.querySelector("#tree-view, #empty-state, #new-tree") !== null)()`, {
       label: "studio shell on the terminology probe's clean data dir",
       timeoutMs: 30_000,
@@ -1062,14 +1086,16 @@ export async function probeTerminologyPath(ctx) {
       await ctx.screenshot("range-saved-card");
 
       /* ③ 焦点/滚动/草稿（推广首问草稿 → renderAll 离开回来 → 保留 + 焦点还原
-         + 主线滚动保留；renderAll 由真实 Trunk tab 点击触发——/switch + 全量
-         重渲，不经 resetTransientView，卡与草稿必须存活）。 */
+         + 主线滚动保留；renderAll 由 Trunk tab 的 DOM click 触发（/switch +
+         全量重渲是应用自身路径；DOM click 不移动焦点——复现「输入中恰有
+         异步刷新」的 W2/③ 焦点保持语义，ui-terminology 套件以 SSE 终态同款
+         断言），不经 resetTransientView，卡与草稿必须存活）。 */
       const rangeFirstQuestion = `请基于这条划线批注展开：这句话的主张是什么？（${TERM_MARKERS.rangeQ1}）`;
       await inputClickAt(ctx, "#term-first-question");
       await ctx.cdpSend("Input.insertText", { text: rangeFirstQuestion });
       const scrollBefore = await ctx.evalJs(`(() => document.getElementById("conversation").scrollTop)()`);
       const activeBefore = await ctx.evalJs(`(() => document.activeElement?.id ?? null)()`);
-      await inputClickAt(ctx, "#branch-tabs button:nth-child(1)"); /* Trunk tab → /switch + renderAll */
+      await domClick(ctx, "#branch-tabs button:nth-child(1)"); /* Trunk tab → /switch + renderAll（不夺焦点） */
       await sleep(600);
       const draftState = await ctx.evalJs(
         `(() => ({ value: document.getElementById("term-first-question")?.value ?? null, ` +
@@ -1101,15 +1127,30 @@ export async function probeTerminologyPath(ctx) {
       let droppedCount = 0;
       ({ dropped: droppedCount } = await withDroppedResponses(ctx, "*terminology/annotations/*/promote", async () => {
         await domClick(ctx, "#term-explain-card .term-promote");
-        await waitFor(
-          ctx,
-          `(() => { const card = document.getElementById("term-explain-card"); ` +
-            `if (card === null) return false; ` +
-            `const text = card.textContent ?? ""; ` +
-            `return text.includes("promotion conflict —") && text.includes("saved — already promoted to") ` +
-              `&& card.querySelector(".term-resume") !== null; })()`,
-          { label: "response-loss promote: honest conflict on the card + the refreshed annotation reveals the recorded promotion", timeoutMs: answerTimeoutMs },
-        );
+        try {
+          await waitFor(
+            ctx,
+            `(() => { const card = document.getElementById("term-explain-card"); ` +
+              `if (card === null) return false; ` +
+              `const text = card.textContent ?? ""; ` +
+              `return text.includes("promotion conflict —") && text.includes("saved — already promoted to") ` +
+                `&& card.querySelector(".term-resume") !== null; })()`,
+            { label: "response-loss promote: honest conflict on the card + the refreshed annotation reveals the recorded promotion", timeoutMs: answerTimeoutMs },
+          );
+        } catch (err) {
+          const snap = await ctx.evalJs(
+            `(() => ({ cardPresent: document.getElementById("term-explain-card") !== null, ` +
+              `cardText: (document.getElementById("term-explain-card")?.textContent ?? "").slice(0, 1200), ` +
+              `panelHidden: document.getElementById("branch-panel")?.hidden ?? null, ` +
+              `panelError: (document.getElementById("panel-error-banner")?.textContent ?? "").slice(0, 300), ` +
+              `mainError: (document.getElementById("error-banner")?.textContent ?? "").slice(0, 300), ` +
+              `branchTabs: [...document.querySelectorAll("#branch-tabs button")].map((b) => b.textContent), ` +
+              `inputValue: (document.getElementById("term-first-question")?.value ?? "").slice(0, 120), ` +
+              `busy: document.getElementById("send")?.disabled ?? null }))()`,
+          );
+          await ctx.sidecar("response-loss-debug", snap).catch(() => {});
+          throw new Error(`response-loss promote did not surface the honest conflict — snapshot sidecar response-loss-debug; original: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }));
       if (droppedCount !== 1) {
         throw new Error(`response-loss injection dropped ${String(droppedCount)} promote response(s) (expected exactly 1)`);
@@ -1204,15 +1245,20 @@ export async function probeTerminologyPath(ctx) {
             `(${String(wholeSelection?.selectedText?.length ?? 0)} vs ${String(answerText.length)} units) — ${JSON.stringify(wholeSelection?.error ?? null)}`,
         );
       }
-      /* 真实键盘复制（macOS Cmd+C）。 */
-      await pressKey(ctx, "c", "KeyC", 67, { modifiers: 4, text: "c" });
+      /* 平台复制：真实键盘加速键（Cmd+C / Ctrl+C）在 headless Chrome 的
+         CDP 合成管线下不触发复制命令（实测记录——与 beta 探针 Enter 需
+         text 载荷同族的合成键限制）；改用浏览器自身的 copy 命令
+         （document.execCommand("copy")——对真实平台选区执行的真实复制，
+         与菜单复制同一管线）。剪贴板回读字节相等即证明：批注覆盖的包裹
+         节点不污染复制源。 */
+      await ctx.evalJs(`(() => document.execCommand("copy"))()`);
       const clipboardRead = await ctx.evalJs(
         `(async () => { try { return { ok: true, text: await navigator.clipboard.readText() }; } ` +
           `catch (err) { return { ok: false, error: String(err && err.message ? err.message : err) }; } })()`,
       );
       let copyMode;
       if (clipboardRead.ok === true && clipboardRead.text === answerText) {
-        copyMode = "clipboard read-back byte-equal (Cmd+C)";
+        copyMode = "browser copy command (execCommand) + clipboard read-back byte-equal";
       } else if (clipboardRead.ok === true) {
         throw new Error(
           `copy invariance: clipboard content differs from the turn text (${String(clipboardRead.text.length)} vs ${String(answerText.length)} units)`,
@@ -1225,6 +1271,7 @@ export async function probeTerminologyPath(ctx) {
         mode: copyMode,
         answerLen: answerText.length,
         overlaysInPlace: 2,
+        keyboardAcceleratorNote: "synthetic Cmd+C / Ctrl+C via CDP Input.dispatchKeyEvent does not trigger the platform copy in headless Chrome (probed live: clipboard stayed empty) — the browser's own copy command (execCommand) is used instead, operating on the real platform selection",
       };
 
       /* 6b) 选择期间不重绘：武装选区跨 renderAll（Trunk tab 点击）——正文
@@ -1239,10 +1286,10 @@ export async function probeTerminologyPath(ctx) {
           const el = document.querySelector(${JSON.stringify(trunkTurnSelector(anchorTurnId))});
           const nodes = bodyTextNodes(el);
           window.__termProbeIdentity = { turnEl: el, firstBodyNode: nodes[0] ?? null, lastBodyNode: nodes[nodes.length - 1] ?? null };
-          return { turnId: el.dataset.turnId, bodyNodeCount: nodes.length, textContent: el.textContent }; })()`,
+          return { turnId: el.dataset.turnId, bodyNodeCount: nodes.length, bodyText: nodes.map((n) => n.data).join("") }; })()`,
       );
-      if (identityBefore.textContent !== answerText) {
-        throw new Error("selection stability setup: the turn body textContent diverged from the turn text");
+      if (identityBefore.bodyText !== answerText) {
+        throw new Error("selection stability setup: the turn body layer text diverged from the turn text");
       }
       const armedLabelBefore = await ctx.evalJs(`(() => document.querySelector("#conversation .selection-toolbar")?.getAttribute("aria-label") ?? null)()`);
       await inputClickAt(ctx, "#branch-tabs button:nth-child(1)"); /* Trunk tab → renderAll */
@@ -1286,13 +1333,20 @@ export async function probeTerminologyPath(ctx) {
       await sleep(200);
       const focusAfterEsc = await ctx.evalJs(
         `(() => ({ cardGone: document.getElementById("term-explain-card") === null, ` +
-          `active: document.activeElement === null ? null : { id: document.activeElement.id ?? null, cls: String(document.activeElement.className) } }))()`,
+          `activeId: document.activeElement === null ? null : document.activeElement.id || null, ` +
+          `activeCls: String(document.activeElement?.className ?? "") }))()`,
       );
       if (focusAfterEsc.cardGone !== true) throw new Error("Esc did not close the term explain card");
-      if (focusAfterEsc.active?.cls?.includes("term-explain") !== true) {
-        throw new Error(`Esc did not restore focus to the answer's explain entry — active=${JSON.stringify(focusAfterEsc.active)}`);
+      /* 无武装选区时解释入口是 disabled——真实浏览器不可聚焦（产品修复：
+         回退到该视图 composer；本探针发现的缺陷家族，先于修复时焦点无声
+         丢失到 body）。 */
+      if (focusAfterEsc.activeId !== "prompt-input") {
+        throw new Error(`Esc did not restore focus (disabled explain entry → Trunk composer fallback) — active=${JSON.stringify(focusAfterEsc)}`);
       }
-      record.frontendInvariants.escapeFocusRestore = { activeAfter: focusAfterEsc.active };
+      record.frontendInvariants.escapeFocusRestore = {
+        activeAfter: { id: focusAfterEsc.activeId },
+        note: "mark-opened card (no armed selection): the disabled explain entry cannot take focus in a real browser — the fixed product behavior falls back to the Trunk composer (pre-fix it was silently lost to body)",
+      };
     }
 
     /* ============ 7) ③ 宽 1600 / 窄 390 两档术语面可用 ============ */
@@ -1304,15 +1358,18 @@ export async function probeTerminologyPath(ctx) {
         const placed = await ctx.evalJs(turnSelectExpr(anchorTurnId, rangePick.start, rangePick.end));
         if (placed?.selectedText !== rangePick.text) throw new Error(`wide viewport: selection placement failed — ${JSON.stringify(placed)}`);
         await waitForArmedToolbar(ctx, "wide viewport", { expectMode: "span" });
-        await domClick(ctx, `${trunkTurnSelector(anchorTurnId)} .term-annotation-mark`);
-        await waitFor(ctx, `(() => document.getElementById("term-explain-card") !== null)()`, { label: "wide viewport: card open" });
-        await sleep(350); /* 进场动效落位 */
+        /* 工具条命中在开卡之前断言（解释卡打开即收束选区交互、工具条退场）。 */
         hits.wide = await assertHits(ctx, {
           toolbarExplain: "#conversation .selection-toolbar .toolbar-explain",
           toolbarBranch: "#conversation .selection-toolbar .toolbar-branch",
+        }, "wide viewport (1600×900) armed selection toolbar");
+        await domClick(ctx, `${trunkTurnSelector(anchorTurnId)} .term-annotation-mark`);
+        await waitFor(ctx, `(() => document.getElementById("term-explain-card") !== null)()`, { label: "wide viewport: card open" });
+        await sleep(350); /* 进场动效落位 */
+        hits.wideCard = await assertHits(ctx, {
           explainCard: "#term-explain-card",
           cardClose: "#term-explain-card .term-explain-close",
-        }, "wide viewport (1600×900) terminology surface");
+        }, "wide viewport (1600×900) term explain card");
         await pressKey(ctx, "Escape", "Escape", 27);
         await openDrawer(ctx);
         await sleep(250);
@@ -1330,20 +1387,22 @@ export async function probeTerminologyPath(ctx) {
         const placed = await ctx.evalJs(turnSelectExpr(anchorTurnId, rangePick.start, rangePick.end));
         if (placed?.selectedText !== rangePick.text) throw new Error(`narrow viewport: selection placement failed — ${JSON.stringify(placed)}`);
         await waitForArmedToolbar(ctx, "narrow viewport", { expectMode: "span" });
-        await domClick(ctx, `${trunkTurnSelector(anchorTurnId)} .term-annotation-mark`);
-        await waitFor(ctx, `(() => document.getElementById("term-explain-card") !== null)()`, { label: "narrow viewport: card open" });
-        await sleep(350);
+        hits.narrow = await assertHits(ctx, {
+          toolbarExplain: "#conversation .selection-toolbar .toolbar-explain",
+        }, "narrow viewport (390×844 mobile) armed selection toolbar");
         const overflow = await ctx.evalJs(
           `(() => ({ documentElement: document.documentElement.scrollWidth - document.documentElement.clientWidth }))()`,
         );
         if (overflow.documentElement > OVERFLOW_X_TOLERANCE_PX) {
           throw new Error(`narrow viewport: horizontal overflow ${String(overflow.documentElement)}px`);
         }
-        hits.narrow = await assertHits(ctx, {
-          toolbarExplain: "#conversation .selection-toolbar .toolbar-explain",
+        await domClick(ctx, `${trunkTurnSelector(anchorTurnId)} .term-annotation-mark`);
+        await waitFor(ctx, `(() => document.getElementById("term-explain-card") !== null)()`, { label: "narrow viewport: card open" });
+        await sleep(350);
+        hits.narrowCard = await assertHits(ctx, {
           explainCard: "#term-explain-card",
           cardClose: "#term-explain-card .term-explain-close",
-        }, "narrow viewport (390×844 mobile) terminology surface");
+        }, "narrow viewport (390×844 mobile) term explain card");
         await pressKey(ctx, "Escape", "Escape", 27);
         await openDrawer(ctx);
         await sleep(250);
@@ -1361,6 +1420,8 @@ export async function probeTerminologyPath(ctx) {
         narrowHorizontalOverflowPx: 0,
       };
       await ctx.screenshot("term-narrow-viewport");
+      /* 还原缺省视口（重启相位的就位断言按桌面布局度量）。 */
+      await setViewport(ctx, DEFAULT_VIEWPORT);
     }
 
     /* ============ 8) ② SIGTERM 重启 → 新进程 → 批注/支线历史可读 + 继续追问 ============ */
@@ -1368,14 +1429,32 @@ export async function probeTerminologyPath(ctx) {
     {
       await ctx.stopStudio();
       await ctx.navigate("about:blank");
-      const newUrl = await ctx.restartStudioSamePort();
+      /* 同数据目录新进程：探针专用数据目录与 runner 的 sc.dataDir 不同，
+         restartStudioSamePort 会错启 runner 目录——这里以 bootStudioOn 在
+         本探针目录上起新进程（新端口）。口径披露：术语探针的重启断言全部
+         是服务端持久事实（批注/分支/turn/账本），不依赖浏览器 localStorage
+         （同源存活仅影响挂起意图等浏览器侧缓存——术语路径无此依赖）。 */
+      const newUrl = await ctx.bootStudioOn(dataDir);
       await ctx.navigate(newUrl);
-      await waitFor(
-        ctx,
-        `(() => { const view = document.getElementById("tree-view"); ` +
-          `return view !== null && !view.hidden && document.querySelectorAll("#conversation .turn").length >= 4; })()`,
-        { label: "workbench reopened after the same-port restart (terminology probe)", timeoutMs: 30_000 },
-      );
+      try {
+        await waitFor(
+          ctx,
+          `(() => { const view = document.getElementById("tree-view"); ` +
+            `return view !== null && !view.hidden && document.querySelectorAll("#conversation .turn").length >= 4; })()`,
+          { label: "workbench reopened after the same-port restart (terminology probe)", timeoutMs: 30_000 },
+        );
+      } catch (err) {
+        const snap = await ctx.evalJs(
+          `(() => ({ treeViewHidden: document.getElementById("tree-view")?.hidden ?? null, ` +
+            `emptyState: !document.getElementById("empty-state")?.hidden, ` +
+            `turns: document.querySelectorAll("#conversation .turn").length, ` +
+            `treeRows: document.querySelectorAll("#tree-list button").length, ` +
+            `activeTree: document.querySelector("#tree-list button.active span")?.textContent ?? null, ` +
+            `errorBanner: (document.getElementById("error-banner")?.textContent ?? "").slice(0, 200), ` +
+            `bodySnippet: (document.body.textContent ?? "").slice(0, 200) }))()`,
+        ).catch(() => null);
+        throw new Error(`restart: the workbench did not reopen — snapshot: ${JSON.stringify(snap)}; original: ${err instanceof Error ? err.message : String(err)}`);
+      }
       /* Return 卡与批注覆盖跨重启可读。 */
       const bodyHasReturns = await ctx.evalJs(
         `(() => { const text = document.body.textContent ?? ""; ` +
