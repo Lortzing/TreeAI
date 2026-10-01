@@ -1851,19 +1851,24 @@ async function ensureSearchCorpus(ctx) {
       idempotencyKey: "browser-search-probe-return-1",
     }, "material-return");
 
-    /* 第二棵树 + md-02（跨树范围语料——导入探针的 md-01/06/11 都在第一棵树，
-     *  不能用来区分范围；md-02 只进第二棵树）。 */
+    /* 第二棵树 + 跨树专属语料：探针自产唯一短语材料（d4-read-and-select
+     * 把 B2 全分母（12 md + 12 PDF，含 md-02）铺进了场景树——md-02 已两树
+     * 皆有，不能再当跨树判别词；改为只进第二棵树的探针专属材料，其短语
+     * 全局唯一：当前树范围必须零命中、全部树范围必须命中）。 */
     let tree2Id = ctx.scenario.searchTree2Id ?? null;
     if (tree2Id === null) {
       const created = await searchProbeApi(ctx, "POST", "/api/trees", undefined, "create tree 2");
       tree2Id = created.body?.tree?.id ?? null;
       if (tree2Id === null) throw new Error("tree 2 creation returned no id");
-      const md02 = loadB1Fixture(ctx.ROOT, "md-02");
-      const res = await importMaterialViaHttp(ctx, tree2Id, md02.filename, md02.bytes);
-      if (res.status !== 201) throw new Error(`md-02 import into tree 2 HTTP ${String(res.status)}`);
-      await waitForVersionReady(ctx, tree2Id, res.body.material.id, res.body.version.id, "md-02(tree2)");
+      const tree2Marker = `TreeAI-搜索探针-跨树语料-c93e`;
+      const tree2Bytes = utf8BytesOf(
+        `# 跨树范围探针语料\n\n${tree2Marker}：这一段只存在于第二棵树——当前树范围搜索必须零命中，全部树范围必须命中本材料。\n`,
+      );
+      const res = await importMaterialViaHttp(ctx, tree2Id, "search-probe-tree2-corpus.md", tree2Bytes);
+      if (res.status !== 201) throw new Error(`tree-2 corpus import HTTP ${String(res.status)}: ${JSON.stringify(res.body)}`);
+      await waitForVersionReady(ctx, tree2Id, res.body.material.id, res.body.version.id, "search-probe-tree2-corpus");
       ctx.scenario.searchTree2Id = tree2Id;
-      ctx.scenario.searchTree2Phrase = md02.truth.canonicalText.slice(0, 12);
+      ctx.scenario.searchTree2Phrase = tree2Marker;
     }
     ctx.scenario.searchCorpus = true;
   }
@@ -1901,7 +1906,7 @@ async function runUiSearch(ctx, query, scope) {
 
 export async function probeSearchRecover(ctx) {
   const { treeId, tree2Id } = await ensureSearchCorpus(ctx);
-  ctx.noteFixturesUsed(["md-01", "md-02", "md-vpair-v1", "md-vpair-v2"]);
+  ctx.noteFixturesUsed(["md-01", "md-vpair-v1", "md-vpair-v2"]);
   const md01 = ctx.scenario.materials["md-01"];
   const problems = [];
 
@@ -1978,16 +1983,17 @@ export async function probeSearchRecover(ctx) {
     problems.push(`无结果查询不诚实（rows=${String(none.rows.length)}，status=${JSON.stringify(none.status)}）`);
   }
 
-  /* 6) 当前树/全部树范围：md-02 只在第二棵树——当前树零命中、全部树命中。 */
+  /* 6) 当前树/全部树范围：跨树语料只在第二棵树（探针自产唯一短语材料）——
+        当前树零命中、全部树命中。 */
   if (tree2Id !== null) {
-    const md02Phrase = ctx.scenario.searchTree2Phrase;
-    const inTree = await runUiSearch(ctx, md02Phrase, "tree");
+    const crossTreePhrase = ctx.scenario.searchTree2Phrase;
+    const inTree = await runUiSearch(ctx, crossTreePhrase, "tree");
     if (inTree.rows.length !== 0) {
-      problems.push(`当前树范围泄漏跨树命中（md-02 语料只在第二棵树：rows=${JSON.stringify(inTree.rows.slice(0, 3))}）`);
+      problems.push(`当前树范围泄漏跨树命中（跨树语料只在第二棵树：rows=${JSON.stringify(inTree.rows.slice(0, 3))}）`);
     }
-    const inAll = await runUiSearch(ctx, md02Phrase, "all");
+    const inAll = await runUiSearch(ctx, crossTreePhrase, "all");
     if (inAll.rows.length === 0) {
-      problems.push(`全部树范围未命中第二棵树的 md-02（query=${JSON.stringify(md02Phrase)}，status=${JSON.stringify(inAll.status)}）`);
+      problems.push(`全部树范围未命中第二棵树的跨树语料（query=${JSON.stringify(crossTreePhrase)}，status=${JSON.stringify(inAll.status)}）`);
     }
   }
 
@@ -2002,7 +2008,7 @@ export async function probeSearchRecover(ctx) {
   if (problems.length > 0) {
     throw new Error(`d4-search-recover browser-face problems — ${problems.join("; ")}`);
   }
-  return { detail: `5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 md-02` };
+  return { detail: `5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 探针自产跨树语料` };
 }
 
 /* ------------------------------------------------------------------ */
