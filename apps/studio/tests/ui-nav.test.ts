@@ -906,7 +906,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       if (m !== null && method === "GET") {
         const tree = findTree(decodeURIComponent(m[1]!));
         if (tree === undefined) return fail(404, "unknown-tree", `unknown tree '${m[1]!}'`);
-        const parent = tree.nodes.find((candidate) => candidate.id === decodeURIComponent(m[2]!));
+        /* 提升到 const 再进 find 回调：let m 的非空收窄不跨闭包（TS18047）。 */
+        const wantedBranchId = decodeURIComponent(m[2]!);
+        const parent = tree.nodes.find((candidate) => candidate.id === wantedBranchId);
         if (parent === undefined) return fail(404, "unknown-branch", `unknown branch '${m[2]!}'`);
         const key = childrenKey(tree.treeId, parent.id);
         const nth = (childrenFetchCounts.get(key) ?? 0) + 1;
