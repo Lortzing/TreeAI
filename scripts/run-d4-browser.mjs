@@ -415,7 +415,9 @@ async function navigate(url) {
 async function evalJs(expression, timeoutMs = CDP_SEND_TIMEOUT_MS) {
   const res = await chrome.cdp.send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true }, timeoutMs);
   if (res.exceptionDetails !== undefined) {
-    throw new Error(`page eval failed: ${truncate(sanitizeText(JSON.stringify(res.exceptionDetails)), 400)}`);
+    throw new Error(
+      `page eval failed: ${truncate(sanitizeText(JSON.stringify(res.exceptionDetails)), 400)} — expression: ${truncate(expression, 600)}`,
+    );
   }
   return res.result.value;
 }
