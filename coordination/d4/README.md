@@ -339,3 +339,16 @@ expand-state PUT）。合并复验：typecheck、全仓 **751/751**、verify:d4 
 剩余工程面：D4-2 PDF 阅读器增量 + 导入 UI（下一波）；浏览器证据扩展
 （B1 完整分母/PDF 选区/连续拖选/B5 恢复组合路径）；B3/B9 浏览器面与 real-Pi
 归最终候选 SHA。
+
+**2026-10-01 集成记录（续六）**：I（`wip/d4-2-pdf`，tip `ae5454d`）与 J
+（`wip/d4-browser-ev`，tip `83dd4b4`）已合并 main——PDF 阅读器增量 + 导入 UI
+（16 场景）、B1 全分母浏览器探针（24 ready 字节级 + 11 负例如实拒绝）+ 真实
+连续拖选 + B5 导出→恢复→浏览器找回组合路径（run:d4-browser v0.3.0）。合并
+暴露并当场修复三个真实缺陷：侧栏 flex 区块收缩致材料按钮被盖（CSS 修复 +
+探针命中复核重试）、openBranchPanel 的 /switch 失败阻断面板（降级为会话不可
+用注记）、mouseup 冲刷摘挂致连续拖选高亮消失（捕获条就地更新）。合并复验：
+typecheck、**767/767**、verify:d4 15-0-5、双 selftest、verify:d2 基线、
+**run:d4-browser 10-0-2**（拖选高亮存活为硬断言）。**D4-2/D4-3/D4-8 前后端
+工程面至此全齐**。在飞：K（wip/d4-browser-face：B6/B9 浏览器面 + B3 real-pi
+探针实现）。剩余：B3 真实 Pi 运行（最终候选 SHA）、owner 门禁（B8 目标机、
+Mac 签收、3–5 人试用）。
