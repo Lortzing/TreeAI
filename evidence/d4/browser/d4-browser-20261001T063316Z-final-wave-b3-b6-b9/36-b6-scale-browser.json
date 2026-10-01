@@ -1,0 +1,445 @@
+{
+  "check": "d4-b6-scale-browser",
+  "corpus": {
+    "setId": "b6-scale",
+    "seed": "d4-b6-2026-09-30",
+    "materials": 100,
+    "totalCanonicalUnits": 1000000,
+    "branchRows": 1010,
+    "turnFacts": 6000,
+    "annotations": 2500,
+    "returns": 1500,
+    "loadElapsedMs": 649
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin 25.6.0 arm64",
+    "cpu": "10× Apple M4",
+    "totalMemoryGiB": 16,
+    "viewport": "1280×900 (headless=new, CDP)",
+    "loadavgAtStart": [
+      1.89,
+      2.11,
+      2.14
+    ],
+    "honestyNote": "local-machine engineering evidence (never claimed cross-machine); parallel wave agents may be building on this machine — timed probes within 20% of a limit are rerun once with both runs recorded (verdict from the rerun)",
+    "generatorElapsedMs": 16518,
+    "loadavgAtEnd": [
+      2.06,
+      2.11,
+      2.14
+    ],
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "hardwareConcurrency": 10,
+      "deviceMemory": 16
+    }
+  },
+  "boot": {
+    "coldShellMs": 613,
+    "navigation": {
+      "domContentLoadedEventEndMs": 20.8,
+      "loadEventEndMs": 21.3
+    }
+  },
+  "materialOpen": {
+    "records": [
+      {
+        "index": 70,
+        "materialId": "b6-mat-070",
+        "kind": "pdf",
+        "ms": 25.4,
+        "firstWindow": {
+          "blockCount": 10,
+          "pdfFrames": 10
+        }
+      },
+      {
+        "index": 71,
+        "materialId": "b6-mat-071",
+        "kind": "pdf",
+        "ms": 17.9,
+        "firstWindow": {
+          "blockCount": 10,
+          "pdfFrames": 10
+        }
+      },
+      {
+        "index": 72,
+        "materialId": "b6-mat-072",
+        "kind": "pdf",
+        "ms": 10.5,
+        "firstWindow": {
+          "blockCount": 10,
+          "pdfFrames": 10
+        }
+      },
+      {
+        "index": 73,
+        "materialId": "b6-mat-073",
+        "kind": "pdf",
+        "ms": 9.7,
+        "firstWindow": {
+          "blockCount": 10,
+          "pdfFrames": 10
+        }
+      },
+      {
+        "index": 0,
+        "materialId": "b6-mat-000",
+        "kind": "markdown",
+        "ms": 28.8,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 1,
+        "materialId": "b6-mat-001",
+        "kind": "markdown",
+        "ms": 23.6,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 2,
+        "materialId": "b6-mat-002",
+        "kind": "markdown",
+        "ms": 26.3,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 3,
+        "materialId": "b6-mat-003",
+        "kind": "markdown",
+        "ms": 23,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 4,
+        "materialId": "b6-mat-004",
+        "kind": "markdown",
+        "ms": 23.8,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 5,
+        "materialId": "b6-mat-005",
+        "kind": "markdown",
+        "ms": 26.2,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 6,
+        "materialId": "b6-mat-006",
+        "kind": "markdown",
+        "ms": 26.1,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 7,
+        "materialId": "b6-mat-007",
+        "kind": "markdown",
+        "ms": 15,
+        "firstWindow": {
+          "blockCount": 50,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 10,
+        "materialId": "b6-mat-010",
+        "kind": "markdown",
+        "ms": 20.1,
+        "firstWindow": {
+          "blockCount": 18,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 20,
+        "materialId": "b6-mat-020",
+        "kind": "markdown",
+        "ms": 23.8,
+        "firstWindow": {
+          "blockCount": 21,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 30,
+        "materialId": "b6-mat-030",
+        "kind": "markdown",
+        "ms": 27.6,
+        "firstWindow": {
+          "blockCount": 18,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 40,
+        "materialId": "b6-mat-040",
+        "kind": "markdown",
+        "ms": 27.9,
+        "firstWindow": {
+          "blockCount": 17,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 50,
+        "materialId": "b6-mat-050",
+        "kind": "markdown",
+        "ms": 24.5,
+        "firstWindow": {
+          "blockCount": 20,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 60,
+        "materialId": "b6-mat-060",
+        "kind": "markdown",
+        "ms": 26.2,
+        "firstWindow": {
+          "blockCount": 18,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 15,
+        "materialId": "b6-mat-015",
+        "kind": "markdown",
+        "ms": 10.9,
+        "firstWindow": {
+          "blockCount": 20,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 25,
+        "materialId": "b6-mat-025",
+        "kind": "markdown",
+        "ms": 21.6,
+        "firstWindow": {
+          "blockCount": 17,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 35,
+        "materialId": "b6-mat-035",
+        "kind": "markdown",
+        "ms": 33.5,
+        "firstWindow": {
+          "blockCount": 19,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 45,
+        "materialId": "b6-mat-045",
+        "kind": "markdown",
+        "ms": 24.7,
+        "firstWindow": {
+          "blockCount": 19,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 55,
+        "materialId": "b6-mat-055",
+        "kind": "markdown",
+        "ms": 24.8,
+        "firstWindow": {
+          "blockCount": 17,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 65,
+        "materialId": "b6-mat-065",
+        "kind": "markdown",
+        "ms": 26,
+        "firstWindow": {
+          "blockCount": 19,
+          "pdfFrames": null
+        }
+      },
+      {
+        "index": 75,
+        "materialId": "b6-mat-075",
+        "kind": "pdf",
+        "ms": 24.9,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      },
+      {
+        "index": 80,
+        "materialId": "b6-mat-080",
+        "kind": "pdf",
+        "ms": 11.5,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      },
+      {
+        "index": 85,
+        "materialId": "b6-mat-085",
+        "kind": "pdf",
+        "ms": 9.8,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      },
+      {
+        "index": 90,
+        "materialId": "b6-mat-090",
+        "kind": "pdf",
+        "ms": 10.1,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      },
+      {
+        "index": 95,
+        "materialId": "b6-mat-095",
+        "kind": "pdf",
+        "ms": 11,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      },
+      {
+        "index": 99,
+        "materialId": "b6-mat-099",
+        "kind": "pdf",
+        "ms": 12.7,
+        "firstWindow": {
+          "blockCount": 5,
+          "pdfFrames": 5
+        }
+      }
+    ],
+    "stats": {
+      "count": 30,
+      "medianMs": 23.8,
+      "p95Ms": 28.8,
+      "maxMs": 33.5
+    },
+    "limitMs": 2000
+  },
+  "responsiveness": {
+    "longTasks": [],
+    "longTaskCount": 0,
+    "worstLongTaskMs": 0,
+    "stepLatency": {
+      "count": 76,
+      "medianMs": 1.3,
+      "p95Ms": 10.9,
+      "maxMs": 12.9
+    },
+    "keystrokeLatency": {
+      "count": 38,
+      "medianMs": 9.7,
+      "p95Ms": 20.3,
+      "maxMs": 21.1
+    },
+    "note": "step latency = scrollTop write → next animation frame (per paging step); keystroke-to-render = keydown → character landed in the search input → next frame (typed DURING the paging loop); the product runs search on explicit submit (no as-you-type path) — the measured input path is the keystroke echo of the search box under scroll load"
+  },
+  "searchRender": {
+    "queries": [
+      {
+        "text": "【针标B6-000】",
+        "ms": 226,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-002】",
+        "ms": 199,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-004】",
+        "ms": 202.5,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-006】",
+        "ms": 193.3,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-008】",
+        "ms": 193.6,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-010】",
+        "ms": 192.4,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-012】",
+        "ms": 198.6,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-014】",
+        "ms": 215.1,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-016】",
+        "ms": 204.7,
+        "hits": 1
+      },
+      {
+        "text": "【针标B6-018】",
+        "ms": 193.7,
+        "hits": 1
+      }
+    ],
+    "stats": {
+      "count": 10,
+      "medianMs": 198.6,
+      "p95Ms": 226,
+      "maxMs": 226
+    },
+    "note": "evidence only (no browser assert): click Search → status settled + rows rendered; the server-side search p95 ≤500ms verdict belongs to the offline b6-scale-performance row"
+  },
+  "cancelProbe": {
+    "importToTerminalMs": 615,
+    "terminalStatus": "“b6-import-sample.pdf” is ready — it is in the list below.Open in reader",
+    "reflexNote": "the Cancel button is clicked by an in-page MutationObserver the instant it renders (a machine-speed user reflex) — the 10MiB/100-page parse window is only a few hundred ms on this machine, and a CDP round-trip click missed it (first attempt recorded honestly: the parse reached ready first)",
+    "windowMissed": true,
+    "windowMissedFinding": "the cancel window is structurally closed on this corpus/machine: the studio server is single-threaded and the real parser runs the whole parse synchronously inside the task, so the cancel POST queues behind it and arrives after the terminal state (409) — even an in-page MutationObserver reflex click (fired the instant the Cancel button renders) loses the race. The responsive-cancel verdict belongs to the offline b6-scale-performance gated-parser measurement; the browser row records the honest attempt + this finding.",
+    "importToReadyMs": 615,
+    "importToReadyNote": "browser-observed import-to-ready of the 10 MiB/100-page frozen sample through the real import UI (file injection + the app's own upload/parse/status pipeline); the offline ≤30s verdict is owned by b6-scale-performance"
+  },
+  "pageErrorsExcluded": 1
+}

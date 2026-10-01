@@ -1,0 +1,148 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.4.0",
+  "runId": "d4-browser-20261001T063316-86183",
+  "mode": "selftest",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "counts": {
+    "pass": 14,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "3527387e7ca2e54de63e619dc0d7a4cec62c6f3e",
+  "gitDirty": false,
+  "generatedAt": "2026-10-01T06:35:35.087Z",
+  "git": {
+    "head": "3527387e7ca2e54de63e619dc0d7a4cec62c6f3e",
+    "dirty": false
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-02",
+      "md-03",
+      "md-04",
+      "md-05",
+      "md-06",
+      "md-07",
+      "md-08",
+      "md-09",
+      "md-10",
+      "md-11",
+      "md-12",
+      "md-vpair-v1",
+      "md-vpair-v2",
+      "neg-md-empty",
+      "neg-md-invalid-utf8",
+      "neg-md-nul-byte",
+      "neg-md-whitespace-only",
+      "neg-pdf-corrupt",
+      "neg-pdf-encrypted",
+      "neg-pdf-image-only",
+      "neg-pdf-zero-text",
+      "pdf-01",
+      "pdf-02",
+      "pdf-03",
+      "pdf-04",
+      "pdf-05",
+      "pdf-06",
+      "pdf-07",
+      "pdf-08",
+      "pdf-09",
+      "pdf-10",
+      "pdf-11",
+      "pdf-12"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:55748",
+      "durationMs": 488
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:55762/",
+      "durationMs": 771
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 639
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 804
+    },
+    {
+      "id": "d4-import-denominator",
+      "status": "PASS",
+      "detail": "24 ready fixtures (12 markdown + 12 text-layer PDF) imported via the real HTTP API into a UI-created tree, each byte-equal to the frozen canonicalText + block map via the paginated blocks API; 11 negatives honestly rejected (2 at the import gate with zero persistence: empty→400, >20MiB→413; 9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, reads refused 409 material-not-ready); the real sidebar lists all 33 entries with honest ready/failed status",
+      "durationMs": 1309
+    },
+    {
+      "id": "d4-read-and-select",
+      "status": "PASS",
+      "detail": "13/13 frozen B2 selections captured exactly in the real reader (emoji/ZWJ/flags/keycaps, repeat-word 2nd/4th/5th occurrence, cross-line, long-tail past lazy-load; 2 via real mouse gestures: click + Shift+click, and a continuous press→move×8→release drag — the bar stays frozen during the drag window); grapheme-split snapped outward; cross-block refused; resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: clipboard read-back byte-equal",
+      "durationMs": 2233
+    },
+    {
+      "id": "d4-branch-from-material",
+      "status": "PASS",
+      "detail": "armed md + pdf selections branched with the pre-submit material scope declaration (title/version/block/range/excerpt) visible; first questions landed (echo driver — NOT B3 evidence) with a real double-click producing exactly 1 dispatch (md) and a transport-layer dropped response retried honestly (pdf: same-key idempotent replay, exactly 1 user turn, replay note shown); 2 follow-up rounds each; cross-branch isolation asserted on server facts; SIGTERM restart → new process → history readable + continuation follow-up landed",
+      "durationMs": 6780
+    },
+    {
+      "id": "d4-return-from-material",
+      "status": "PASS",
+      "detail": "return-to-source from both branch panels (md block + pdf page block) opened the reader at the anchored version/block with the exact excerpt in view; Returns submitted via the real UI landed on the Trunk with the material source card (title/version/block + exact excerpt + View-material-source jump); the return-card jump reopens the source; SIGTERM restart → new process → Return cards and branch histories stay readable (echo driver — NOT B3 evidence)",
+      "durationMs": 8770
+    },
+    {
+      "id": "d4-restart-continue",
+      "status": "PASS",
+      "detail": "reading position saved at blk-52 via the reader's own save path (close-button flush) → studio SIGTERM → new process on the same data dir → reopened with the restore note and blk-52 loaded (59 blocks after forward paging; persisted row verified on the new process; visual scroll alignment asserted ≤2px: scrollTop 7207 vs block top 7208)",
+      "durationMs": 2683
+    },
+    {
+      "id": "d4-search-recover",
+      "status": "PASS",
+      "detail": "5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 md-02",
+      "durationMs": 2167
+    },
+    {
+      "id": "d4-export-restore-recover",
+      "status": "PASS",
+      "detail": "facts (material + material branch + echo first-question + annotation + return + trunk turn) exported via the D4-5 CLI (sessions excluded by default) → restored into an empty data dir → new studio process → real browser: restored md-01 byte-equal to the frozen truth (resolve-selection sourceHash re-verified), sidebar Search recovered trunk-turn/return/material facts with source jumps and showed the session-unavailable note + explicit entry on the side-branch hit rows; the D4-3 resume flow opened the session-less branch panel (alignCursor:false, no /switch replay) with the fail-closed composer and recovery note, and the explicit new exploration landed a fresh session (2 old turns + new pair readable, composer cleared)",
+      "durationMs": 4439
+    },
+    {
+      "id": "d4-nav-browser",
+      "status": "PASS",
+      "detail": "B9 dataset (100 trees / 10100 branch rows) loaded via the real loader into a dedicated data dir served by a real studio process; b9-big first open to usable 63.7ms ≤ 2000ms; 54 timed expand/switch ops (3 more-page ops pump-preempted, honestly recorded) (expand/collapse/select/tree-switch/more-page/search-reveal, deterministic truth-derived order) p95 40.2ms ≤ 300ms (median 20.1ms, max 107.2ms); virtualization: DOM rows ≤ 34 (windowed) across scroll offsets while 221 wide-tree rows are loaded (b9-big 5000 nodes vs 14 DOM rows); keyboard moves level-by-level with focus retained across re-windowing (Home/End large jumps + collapse/re-expand); expand state survived a real SIGTERM restart (byte-equal expand-state + UI restore); 11 spot-checks match the frozen structure truth (hit rows, full path chain, material source jump)",
+      "durationMs": 57128
+    },
+    {
+      "id": "d4-b6-scale-browser",
+      "status": "PASS",
+      "detail": "B6 corpus (100 materials / 1000000 units / 1010 branches) generated by the real CLI + loader into a dedicated data dir served by a real studio process; 30 existing-material opens via the real sidebar p95 28.8ms ≤ 2000ms (median 23.8ms; long PDFs readable with the first visible page rendered — visible-pages-first); paging the long PDF + long md showed no main-thread segment > 200ms (worst longtask 0.0ms over 0 tasks; step-to-frame p95 10.9ms); keystroke-to-render p95 while paging 20.3ms ≤ 200ms; the 10 MiB/100-page sample imported via the real UI: the cancel window was structurally missed (single-threaded server + synchronous parser — the cancel POST queues behind the parse; import-to-ready 615ms ≤ 30000ms browser-observed; finding recorded); search hit-list render recorded as evidence (10 frozen queries, p50 198.6ms / p95 226.0ms)",
+      "durationMs": 50195
+    }
+  ],
+  "pageErrors": []
+}

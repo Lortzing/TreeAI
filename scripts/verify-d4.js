@@ -33,10 +33,10 @@
  * is directly executable with node.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
+import { basename, dirname } from "node:path";
 
 import { EvidenceWriter } from "../tests/support/verifier/evidence.ts";
 import { verifyD4FixturesIntegrity } from "../tests/support/verifier/d4-probes.ts";
@@ -165,6 +165,96 @@ function notRunCheck(id, workPackage, reason) {
     exitCode: null,
     reason: `${reason} (owner: ${workPackage})`,
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Browser-face evidence audit (b6-browser-face / b9-nav-browser-face)  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Audit the committed run:d4-browser evidence (evidence/d4/browser/<runId>/):
+ * the newest run whose summary.json carries checkId PASS wins; its numbered
+ * sidecar (NN-<sidecarName>.json) is validated by the caller's rules and the
+ * recorded numbers are reported with the run's binding (runId / gitCommit /
+ * mode). Absent or failed evidence stays NOT_RUN (never a silent PASS).
+ * The browser measurement itself belongs to run:d4-browser (real Chrome +
+ * real studio processes); this audit verifies the recorded evidence is
+ * present, complete, and within the charter budgets.
+ */
+function auditBrowserEvidence(root, checkId, sidecarName, { validate, describe }) {
+  const browserDir = join(root, "evidence", "d4", "browser");
+  if (!existsSync(browserDir)) {
+    return {
+      status: "NOT_RUN",
+      exitCode: null,
+      reason: "no evidence/d4/browser yet — the run:d4-browser evidence run has not been recorded",
+    };
+  }
+  const runDirs = readdirSync(browserDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(browserDir, entry.name))
+    .filter((dir) => existsSync(join(dir, "summary.json")))
+    .sort()
+    .reverse(); /* run ids are UTC-timestamped — lexicographic = chronological */
+  for (const runDir of runDirs) {
+    let summary = null;
+    try {
+      summary = JSON.parse(readFileSync(join(runDir, "summary.json"), "utf8"));
+    } catch {
+      continue;
+    }
+    const check = (summary.checks ?? []).find((candidate) => candidate.id === checkId);
+    if (check === undefined) continue;
+    if (check.status !== "PASS") {
+      return {
+        status: "FAIL",
+        exitCode: 2,
+        error: {
+          message: `the newest recorded ${checkId} evidence run is not PASS (${String(check.status)}${
+            check.error !== undefined ? `: ${truncate(String(check.error.message ?? ""), 300)}` : ""
+          }) — re-run run:d4-browser and record the evidence`,
+        },
+        detail: `evidence run ${summary.runId ?? basename(runDir)} (mode ${String(summary.mode)})`,
+      };
+    }
+    const sidecarFile = readdirSync(runDir).find((name) => name.endsWith(`-${sidecarName}.json`));
+    if (sidecarFile === undefined) {
+      return {
+        status: "FAIL",
+        exitCode: 2,
+        error: { message: `the ${checkId} evidence run ${summary.runId ?? basename(runDir)} carries no ${sidecarName} sidecar` },
+      };
+    }
+    let sidecar = null;
+    try {
+      sidecar = JSON.parse(readFileSync(join(runDir, sidecarFile), "utf8"));
+    } catch (err) {
+      return { status: "FAIL", exitCode: 2, error: { message: `sidecar ${sidecarFile} is not readable JSON: ${String(err)}` } };
+    }
+    const problems = validate(sidecar);
+    if (problems.length > 0) {
+      return {
+        status: "FAIL",
+        exitCode: 2,
+        error: { message: `recorded ${checkId} evidence violates the charter budgets: ${problems.join("; ")}` },
+        detail: `evidence run ${summary.runId ?? basename(runDir)}`,
+      };
+    }
+    const binding = `evidence run ${summary.runId ?? basename(runDir)} (mode ${String(summary.mode)}, gitCommit ${
+      summary.gitCommit ?? "unknown"
+    }, recorded ${String(summary.generatedAt ?? "?")}); local-machine engineering evidence (environment in the sidecar; never claimed cross-machine); the final candidate-SHA regression re-runs run:d4-browser`;
+    return {
+      status: "PASS",
+      exitCode: 0,
+      detail: `${describe(sidecar)} — ${binding}`,
+      evidenceFiles: [join("evidence", "d4", "browser", basename(runDir), sidecarFile)],
+    };
+  }
+  return {
+    status: "NOT_RUN",
+    exitCode: null,
+    reason: `no recorded run:d4-browser evidence carries ${checkId} PASS yet — run scripts/run-d4-browser.mjs --mode selftest with --artifacts evidence/d4/browser/<runId> and commit it`,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -601,15 +691,70 @@ const CHECKS = [
   },
   {
     id: "b6-browser-face",
-    fn: notRunCheck(
-      "b6-browser-face",
-      "D4-6",
-      "B6 browser face pending the frontend wave: real-browser scrolling smoothness (no >200ms main-thread segments " +
-        "while paging the reader), keydown-to-render input latency for search-as-you-type and question input, search " +
-        "hit-list render latency, and cold app boot — the offline b6-scale-performance row records server-side " +
-        "timings (block-page fetches, tree-scoped searches, cancellation round trips) as necessary-but-not-sufficient " +
-        "evidence only; browser evidence belongs to run:d4-browser / the final candidate-SHA regression",
-    ),
+    // REAL executing check (final browser-evidence wave): audits the committed
+    // run:d4-browser evidence under evidence/d4/browser/ for the newest run whose
+    // summary carries d4-b6-scale-browser PASS, validating the recorded metrics
+    // against the charter B6 browser budgets (material-open p95 <=2s over 30 real
+    // sidebar opens incl. long PDFs readable with the first visible page; no
+    // >200ms main-thread segment while paging; keystroke-to-render p95 <=200ms
+    // while paging; the cancel attempt + its honest structural finding; search
+    // hit-list render recorded as evidence). The browser measurement itself runs
+    // via run:d4-browser (real Chrome + real studio processes on the B6 corpus);
+    // this row verifies the recorded evidence is present, complete and within
+    // budget, and discloses its binding (runId / gitCommit / mode / environment).
+    // Local-machine engineering evidence (environment in the sidecar) — never
+    // claimed cross-machine; the final candidate-SHA regression re-runs
+    // run:d4-browser. The server-side budgets (search p95, gated cancel) stay
+    // with b6-scale-performance — the two rows never substitute for each other.
+    fn: async () => {
+      const audit = auditBrowserEvidence(ROOT, "d4-b6-scale-browser", "b6-scale-browser", {
+        validate: (sidecar) => {
+          const problems = [];
+          const open = sidecar.materialOpen;
+          if (open === undefined || open.stats === undefined) problems.push("material-open metrics missing");
+          else {
+            if (open.stats.count !== 30) problems.push(`material-open count ${String(open.stats.count)} != 30`);
+            if (open.stats.p95Ms > 2000) problems.push(`material-open p95 ${String(open.stats.p95Ms)}ms > 2000ms`);
+          }
+          const r = sidecar.responsiveness;
+          if (r === undefined || r.stepLatency === undefined || r.keystrokeLatency === undefined) {
+            problems.push("responsiveness metrics missing");
+          } else {
+            if (r.worstLongTaskMs > 200) problems.push(`worst longtask ${String(r.worstLongTaskMs)}ms > 200ms`);
+            if (r.stepLatency.p95Ms > 200) problems.push(`scroll step-to-frame p95 ${String(r.stepLatency.p95Ms)}ms > 200ms`);
+            if (r.keystrokeLatency.count < 10) problems.push(`only ${String(r.keystrokeLatency.count)} keystrokes measured`);
+            if (r.keystrokeLatency.p95Ms > 200) problems.push(`keystroke-to-render p95 ${String(r.keystrokeLatency.p95Ms)}ms > 200ms`);
+          }
+          const cancel = sidecar.cancelProbe;
+          if (cancel === undefined) problems.push("cancel probe record missing");
+          else if (cancel.clickToCanceledMs === undefined && cancel.windowMissed !== true) {
+            problems.push("neither a measured cancel nor the honest window-missed finding is recorded");
+          } else if (cancel.clickToCanceledMs !== undefined && cancel.clickToCanceledMs > 500) {
+            problems.push(`cancel click→canceled ${String(cancel.clickToCanceledMs)}ms > 500ms (browser-observed)`);
+          }
+          if (sidecar.searchRender === undefined || (sidecar.searchRender.queries ?? []).length < 10) {
+            problems.push("search hit-list render evidence missing (<10 queries)");
+          }
+          return problems;
+        },
+        describe: (sidecar) => {
+          const open = sidecar.materialOpen.stats;
+          const r = sidecar.responsiveness;
+          const cancel = sidecar.cancelProbe;
+          return (
+            `30 real-sidebar material opens p95 ${String(open.p95Ms)}ms (median ${String(open.medianMs)}ms, long PDFs readable with the first ` +
+            `visible page); paging the long PDF + long md: worst longtask ${String(r.worstLongTaskMs)}ms over ${String(r.longTaskCount)} tasks, ` +
+            `step-to-frame p95 ${String(r.stepLatency.p95Ms)}ms; keystroke-to-render p95 ${String(r.keystrokeLatency.p95Ms)}ms while paging; ` +
+            `cancel: ${
+              cancel.clickToCanceledMs !== undefined
+                ? `click → canceled in ${String(cancel.clickToCanceledMs)}ms (browser-observed)`
+                : `window structurally missed (single-threaded server + synchronous parser — finding recorded; import-to-ready ${String(cancel.importToReadyMs)}ms ≤ 30s browser-observed)`
+            }; search hit-list render p50 ${String(sidecar.searchRender.stats.medianMs)}ms / p95 ${String(sidecar.searchRender.stats.p95Ms)}ms (evidence)`
+          );
+        },
+      });
+      return audit;
+    },
   },
   {
     id: "b7-beta-usability",
@@ -663,15 +808,68 @@ const CHECKS = [
   },
   {
     id: "b9-nav-browser-face",
-    fn: notRunCheck(
-      "b9-nav-browser-face",
-      "D4-8",
-      "B9 browser face pending the frontend wave: nav-p95 in a real browser (>=50 scripted expand/switch ops, p95 <= 300ms), " +
-        "virtualization (DOM node count grows with the viewport, not the full tree), keyboard navigation with focus surviving " +
-        "virtualization, and first-open of the 5000-node tree in a real browser — engine-side p95/first-open are recorded as " +
-        "evidence in b9-large-tree-nav but are NOT the browser verdict; evidence belongs to run:d4-browser / the final " +
-        "candidate-SHA regression",
-    ),
+    // REAL executing check (final browser-evidence wave): audits the committed
+    // run:d4-browser evidence under evidence/d4/browser/ for the newest run whose
+    // summary carries d4-nav-browser PASS, validating the recorded metrics against
+    // the charter B9 browser budgets (b9-big first open to usable <=2s; >=50 timed
+    // scripted expand/switch ops with p95 <=300ms; virtualized DOM row count bound
+    // against the loaded row total; keyboard level-by-level movement with focus
+    // retained across re-windowing; expand state surviving a real SIGTERM process
+    // restart; structure-truth spot checks). The browser measurement itself runs
+    // via run:d4-browser (real Chrome + a real studio process on the B9 dataset);
+    // this row verifies the recorded evidence is present, complete and within
+    // budget, and discloses its binding (runId / gitCommit / mode / environment).
+    // Local-machine engineering evidence (environment in the sidecar) — never
+    // claimed cross-machine; the final candidate-SHA regression re-runs
+    // run:d4-browser. The engine-side 100% locate/subtree verification stays with
+    // b9-large-tree-nav — the two rows never substitute for each other.
+    fn: async () => {
+      const audit = auditBrowserEvidence(ROOT, "d4-nav-browser", "nav-browser", {
+        validate: (sidecar) => {
+          const problems = [];
+          const timing = sidecar.timing;
+          if (timing === undefined) problems.push("nav timing metrics missing");
+          else {
+            if (timing.bigFirstOpenMs === undefined || timing.bigFirstOpenMs > 2000) {
+              problems.push(`b9-big first open ${String(timing.bigFirstOpenMs)}ms > 2000ms (or missing)`);
+            }
+            if (timing.timedOpCount === undefined || timing.timedOpCount < 50) {
+              problems.push(`timed op count ${String(timing.timedOpCount)} < 50`);
+            }
+            if (timing.p95Ms === undefined || timing.p95Ms > 300) {
+              problems.push(`nav op p95 ${String(timing.p95Ms)}ms > 300ms (or missing)`);
+            }
+          }
+          const v = sidecar.virtualization;
+          if (v === undefined || v.wideTotalRows === undefined || v.wideTotalRows < 200 || (v.samples ?? []).length < 4) {
+            problems.push("virtualization samples missing or the wide tree was not fully loaded (<200 rows)");
+          } else if (!(v.samples ?? []).every((sample) => sample.domRows <= v.domRowLimit)) {
+            problems.push("a virtualization sample exceeded the windowed DOM row limit");
+          }
+          if ((sidecar.keyboard?.steps ?? []).length < 8) problems.push("keyboard steps missing (<8)");
+          const restart = sidecar.restart;
+          if (restart === undefined || restart.before === undefined || restart.after === undefined || restart.selectedRestored === undefined) {
+            problems.push("expand-state restart record missing");
+          }
+          if ((sidecar.spotChecks ?? []).length < 8) problems.push(`structure-truth spot checks < 8 (${String((sidecar.spotChecks ?? []).length)})`);
+          return problems;
+        },
+        describe: (sidecar) => {
+          const timing = sidecar.timing;
+          const v = sidecar.virtualization;
+          return (
+            `b9-big first open to usable ${String(timing.bigFirstOpenMs)}ms; ${String(timing.timedOpCount)} timed expand/switch ops ` +
+            `p95 ${String(timing.p95Ms)}ms (median ${String(timing.medianMs)}ms, max ${String(timing.maxMs)}ms; ` +
+            `${String(timing.preemptedOps ?? 0)} more-page ops pump-preempted, honestly recorded); virtualization: DOM rows ≤ ` +
+            `${String(v.domRowLimit)} while ${String(v.wideTotalRows)} wide-tree rows are loaded; keyboard ` +
+            `${String(sidecar.keyboard.steps.length)} steps with focus retained; expand state byte-equal across a real ` +
+            `SIGTERM restart (selected ${String(sidecar.restart.selectedRestored)} restored); ${String(sidecar.spotChecks.length)} ` +
+            `structure-truth spot checks; ${String((sidecar.frontendBugs ?? []).length)} frontend findings recorded`
+          );
+        },
+      });
+      return audit;
+    },
   },
 ];
 

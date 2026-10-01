@@ -1,0 +1,52 @@
+{
+  "runId": "d4-offline-20261001T062648535Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-01T06:26:48.535Z",
+  "endedAt": "2026-10-01T06:26:48.690Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 2,
+    "fail": 2,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "id": "b6-browser-face",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: ReferenceError: readdirSync is not defined"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "b9-nav-browser-face",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: ReferenceError: readdirSync is not defined"
+      },
+      "durationMs": 0
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only b6-browser-face, b9-nav-browser-face executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "runId": "d4-offline-20261001T062648535Z",
+  "checks": [
+    {
+      "id": "b6-browser-face",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: ReferenceError: readdirSync is not defined"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "b9-nav-browser-face",
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "check crashed: ReferenceError: readdirSync is not defined"
+      },
+      "durationMs": 0
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

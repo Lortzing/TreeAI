@@ -50,7 +50,7 @@ const B2_SELECTIONS_FILE = ["tests", "fixtures", "d4", "b2-anchors", "markdown-s
 /** 本探针使用的 B1 冻结 fixture（确定性挑选，覆盖中文/emoji/长文懒加载）。 */
 const FIXTURE_IDS = ["md-01", "md-06", "md-11"];
 
-function loadB1Fixture(root, fixtureId) {
+export function loadB1Fixture(root, fixtureId) {
   const dir = join(root, ...B1_MARKDOWN_DIR);
   const bytes = readFileSync(join(dir, `${fixtureId}.md`));
   const truth = JSON.parse(readFileSync(join(dir, `${fixtureId}.expected.json`), "utf8"));
@@ -74,11 +74,11 @@ function sha256Text(text) {
 /* 小工具                                                               */
 /* ------------------------------------------------------------------ */
 
-function sleep(ms) {
+export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitFor(ctx, expression, { label, timeoutMs = 12_000, intervalMs = 150 } = {}) {
+export async function waitFor(ctx, expression, { label, timeoutMs = 12_000, intervalMs = 150 } = {}) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const value = await ctx.evalJs(expression);
@@ -94,7 +94,7 @@ async function waitFor(ctx, expression, { label, timeoutMs = 12_000, intervalMs 
     每次尝试前先把目标滚进视口，且以 elementFromPoint 复核命中——取坐标
     与落点之间可能隔着一次延后重渲（拖选解除的 0ms 冲刷会重建侧栏 DOM，
     实测把 md-11 的点击坐标作废），不命中则等一拍重试（有界）。 */
-async function inputClickAt(ctx, selector) {
+export async function inputClickAt(ctx, selector) {
   let lastState = null;
   for (let attempt = 0; ; attempt += 1) {
     lastState = await ctx.evalJs(
@@ -123,7 +123,7 @@ async function inputClickAt(ctx, selector) {
   }
 }
 
-function materialButtonSelector(materialId) {
+export function materialButtonSelector(materialId) {
   return `#material-list button[data-material-id=${JSON.stringify(materialId)}]`;
 }
 
@@ -155,7 +155,7 @@ const PAGE_HELPERS = `
  * 区间与 app.js 自身的映射数据同源）。选区经 window.getSelection() 成为
  * 平台活选区，阅读器经其自身的 selectionchange 监听武装捕获条。
  */
-function pageSelectCanonical(blockId, start, end) {
+export function pageSelectCanonical(blockId, start, end) {
   return `(() => { ${PAGE_HELPERS}
     const blockEl = findBlock(${JSON.stringify(blockId)});
     if (blockEl === null) return { error: "block ${blockId} is not loaded in the reader window" };
@@ -230,7 +230,7 @@ function pageClickPoints(blockId, start, end) {
 }
 
 /** 阅读器就位表达式（块数 + 尾部状态）。tail: "end" | "more" | null。 */
-function pageReaderLoadedExpr(expectedBlocks, tail) {
+export function pageReaderLoadedExpr(expectedBlocks, tail) {
   const tailCheck =
     tail === "end"
       ? `if (!text.includes("end of material")) return false;`
@@ -282,7 +282,7 @@ function pageReaderRestoredExpr(blockId, expectedBlocks) {
 }
 
 /** 捕获条读取（就地状态面——app.js 的武装/解除产物）。 */
-async function readCaptureBar(ctx) {
+export async function readCaptureBar(ctx) {
   return ctx.evalJs(`(() => {
     const bar = document.getElementById("mat-selection-bar");
     if (bar === null) return { error: "no #mat-selection-bar" };
@@ -301,7 +301,7 @@ async function readCaptureBar(ctx) {
   })()`);
 }
 
-async function waitForArmedBar(ctx, caseId, timeoutMs = 4000) {
+export async function waitForArmedBar(ctx, caseId, timeoutMs = 4000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const bar = await readCaptureBar(ctx);
@@ -314,14 +314,18 @@ async function waitForArmedBar(ctx, caseId, timeoutMs = 4000) {
   }
 }
 
-/** 页面 console/Log 错误纪律（探针自身的窗口）。 */
-function assertNoPageErrors(ctx, { exclude = () => false, label } = {}) {
+/** 页面 console/Log 错误纪律（**逐检查窗口**）：断言后清空缓冲——已断言/
+    已排除的错误不流入后续检查（每检查只对自身窗口负责；被注入的传输层
+    故障与旧端口重连在各探针的 exclude 中如实声明）。 */
+export function assertNoPageErrors(ctx, { exclude = () => false, label } = {}) {
   const errors = ctx.pageErrors();
   const unexpected = errors.filter((entry) => !exclude(entry));
+  const reported = errors.length;
+  ctx.clearPageErrors();
   if (unexpected.length > 0) {
     throw new Error(`page console/log errors (${label ?? "material probes"}): ${unexpected.map((e) => e.text).join(" | ")}`);
   }
-  return errors.length;
+  return reported;
 }
 
 /* ------------------------------------------------------------------ */
@@ -486,7 +490,7 @@ async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) 
 /* ------------------------------------------------------------------ */
 
 /** 分册登记读取（md-registry.json / pdf-registry.json；运行时读取，不内嵌）。 */
-function loadB1Registries(root) {
+export function loadB1Registries(root) {
   const out = [];
   for (const name of ["md-registry.json", "pdf-registry.json"]) {
     const registry = JSON.parse(readFileSync(join(root, ...B1_ROOT, name), "utf8"));
@@ -500,7 +504,7 @@ function b1FixtureBasename(file) {
 }
 
 /** 登记项 → 冻结 fixture（原始字节 + 真值；真值字段与登记 id 对账）。 */
-function loadB1RegistryFixture(root, entry, registryName) {
+export function loadB1RegistryFixture(root, entry, registryName) {
   const bytes = readFileSync(join(root, ...B1_ROOT, entry.file));
   const truth = JSON.parse(readFileSync(join(root, ...B1_ROOT, entry.expected), "utf8"));
   if (truth.fixtureId !== entry.fixtureId) {
@@ -638,7 +642,7 @@ function activeTreeIdInUiExpr() {
     `return name === null ? null : name.textContent; })()`;
 }
 
-async function switchTreeInUi(ctx, treeId) {
+export async function switchTreeInUi(ctx, treeId) {
   const active = await ctx.evalJs(activeTreeIdInUiExpr());
   if (active === treeId) return;
   const index = await ctx.evalJs(
@@ -659,12 +663,12 @@ async function switchTreeInUi(ctx, treeId) {
 /* 阅读器就位 / 无损渲染断言                                              */
 /* ------------------------------------------------------------------ */
 
-async function openMaterialInReader(ctx, material, { blocks, tail, timeoutMs = 20_000 }) {
+export async function openMaterialInReader(ctx, material, { blocks, tail, timeoutMs = 20_000 }) {
   await inputClickAt(ctx, materialButtonSelector(material.materialId));
   return waitFor(ctx, pageReaderLoadedExpr(blocks, tail), { label: `material reader for ${material.title} (${String(blocks)} blocks)`, timeoutMs });
 }
 
-async function readDomBlocks(ctx) {
+export async function readDomBlocks(ctx) {
   return ctx.evalJs(`(() => {
     const blocksEl = document.getElementById("mat-blocks");
     if (blocksEl === null) return [];
@@ -734,7 +738,7 @@ async function assertReaderChrome(ctx, material, truth) {
 /* 探针 1：d4-import-material                                            */
 /* ------------------------------------------------------------------ */
 
-async function importMaterialViaHttp(ctx, treeId, filename, bytes, timeoutMs = 15_000) {
+export async function importMaterialViaHttp(ctx, treeId, filename, bytes, timeoutMs = 15_000) {
   const port = ctx.studioPort();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -752,7 +756,7 @@ async function importMaterialViaHttp(ctx, treeId, filename, bytes, timeoutMs = 1
   }
 }
 
-async function waitForVersionReady(ctx, treeId, materialId, versionId, fixtureId) {
+export async function waitForVersionReady(ctx, treeId, materialId, versionId, fixtureId) {
   return waitForVersionStatus(ctx, treeId, materialId, versionId, fixtureId, "ready");
 }
 
@@ -1109,10 +1113,12 @@ export async function probeRestartContinue(ctx) {
   /* 6) 同数据目录启动全新 studio 进程（新端口）。 */
   const newUrl = await ctx.restartStudio();
   await ctx.navigate(newUrl);
+  /* 材料数按 API 实况（后续探针可在场景树追加材料——B3 探针的 pdf-01）。 */
+  const expectedMaterials = await countMaterialsViaApi(ctx, treeId);
   await waitFor(
     ctx,
     `(() => { const list = document.getElementById("material-list"); ` +
-      `return list !== null && list.querySelectorAll("button[data-material-id]").length === ${String(FIXTURE_IDS.length)} ? true : false; })()`,
+      `return list !== null && list.querySelectorAll("button[data-material-id]").length === ${String(expectedMaterials)} ? true : false; })()`,
     { label: "materials list after restart" },
   );
 
