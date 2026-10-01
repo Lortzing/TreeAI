@@ -1,0 +1,79 @@
+treeai-studio: listening http://127.0.0.1:57624
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-data-VSLB8h (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-data-VSLB8h/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:11:32.839Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:57624
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-data-VSLB8h (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-data-VSLB8h/journal.jsonl (69 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:11:38.985Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:57624
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-data-VSLB8h (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-data-VSLB8h/journal.jsonl (80 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:11:42.578Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:58050
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-data-VSLB8h (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-data-VSLB8h/journal.jsonl (80 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:11:47.564Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:58125
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-b5-restored-RXTrw6 (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-b5-restored-RXTrw6/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:11:52.509Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:58205
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-b9-browser-cG7XfJ (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-b9-browser-cG7XfJ/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:12:23.900Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:58566
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-b9-browser-cG7XfJ (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-b9-browser-cG7XfJ/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:12:48.873Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:58926
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-b6-browser-yPPGtA (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-b6-browser-yPPGtA/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T12:13:22.549Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:59337
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<tmp>/treeai-d4-beta-browser-3F8Fv3 (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-beta-browser-3F8Fv3/journal.jsonl (0 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)

@@ -441,3 +441,19 @@ verify:d2 **21-0-0-1** 基线不变。评测集 14 处预冻结修正、runner/�
 细节见 docs/d3/D3-status.md 波次表新行；echo/baseline 开发期证据随合并入仓
 （`evidence/terminology/eval/`）。真实模型跑批与两人标注为 owner 事项。在飞：
 C（d4-beta-usability）。
+
+**2026-10-01 集成记录（d4-beta-usability 已合并，本波收口）**：C
+（`wip/d4-beta-usability`，`4aee8a7`…`7c8c857`）已合并 main（`67e4786`）。
+B7 自动部分交付：run:d4-browser v0.5.0 `d4-beta-usability` 六场景 +
+verify:d4 b7 行翻证据审计（自动 PASS ≠ B7 全过，Mac 签收/试用 owner）；
+探针发现并修复三个真实前端缺陷（窄窗分支 tab 不收抽屉、阅读器无 tabindex
+不可键盘滚动、/switch 在途 Esc 被吞）。**主 SHA 复跑**：detached worktree
+`67e4786` 两次全量 **15-0-0**（第一次环境缺 build:deps 如实披露；证据
+`d4-browser-20261001T121116Z-beta-usability-main`，gitDirty false，含
+term-modes 波前端在场——UI 新增零破坏）。合并复验（串行）：typecheck、
+全仓 **791/791**、verify:d4 **19 PASS / 0 FAIL / 1 NOT_RUN**（唯一 NOT_RUN
+= b8 owner 目标机）、selftest 9 注入全检出、verify:d2 **21-0-0-1**。
+**本波终态**：B（term-modes）+ A（term-eval-runner）+ C（beta-usability）
+三支全部落 main；D4 自动可执行面至此全齐。剩余全部为 owner 门禁（B8
+Windows/Ubuntu 目标机、Mac 签收、3–5 人试用、术语真实跑批+两人标注）与
+最终候选 SHA 全量回归（含术语②③真实浏览器/真实 Pi 纵向路径——下一波）。

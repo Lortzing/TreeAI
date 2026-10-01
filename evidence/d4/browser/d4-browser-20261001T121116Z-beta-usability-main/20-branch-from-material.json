@@ -1,0 +1,44 @@
+{
+  "check": "d4-branch-from-material",
+  "mode": "selftest",
+  "modeNote": "echo driver (deterministic answers) — NOT B3 evidence; proves the probe/UI code path only",
+  "treeId": "tree_a8f79e9a-fa18-4b0d-a7ad-d0bbee0e5d1f",
+  "branches": {
+    "md": "branch_ec8bdf29-44e4-4797-8b01-6e78c1b864b5",
+    "pdf": "branch_a0571eb6-0452-4c6a-8816-00bf6a067156"
+  },
+  "markers": {
+    "mdQ1": "TreeAI-B3-探针-MD-首问-6f2c",
+    "mdF1": "TreeAI-B3-探针-MD-追问一-a03e",
+    "mdF2": "TreeAI-B3-探针-MD-追问二-b7d1",
+    "pdfQ1": "TreeAI-B3-探针-PDF-首问-9e54",
+    "pdfF1": "TreeAI-B3-探针-PDF-追问一-77c2",
+    "pdfF2": "TreeAI-B3-探针-PDF-追问二-31b8",
+    "restartF": "TreeAI-B3-探针-重启续走-5c8a",
+    "mdRet": "TreeAI-B3-探针-MD-RETURN-2d61",
+    "pdfRet": "TreeAI-B3-探针-PDF-RETURN-84f0"
+  },
+  "selections": {
+    "md": {
+      "blockId": "blk-7",
+      "start": 584,
+      "end": 608,
+      "excerpt": "naive 的递归求斐波那契数在第 n 层会分裂"
+    },
+    "pdf": {
+      "blockId": "page-2",
+      "start": 824,
+      "end": 848,
+      "excerpt": "写三遍阶乘，再写两遍目录遍历，最后写一次汉诺塔。"
+    }
+  },
+  "lines": [
+    "md branch branch_ec8bdf29-44e4-4797-8b01-6e78c1b864b5: double-clicked first-question submit (double-click-delivered) → exactly 1 user turn + assistant answer (echo driver (deterministic answers) — NOT B3 evidence; proves the probe/UI code path only)",
+    "md branch: 2 follow-up rounds landed (markers TreeAI-B3-探针-MD-追问一-a03e / TreeAI-B3-探针-MD-追问二-b7d1)",
+    "pdf branch branch_a0571eb6-0452-4c6a-8816-00bf6a067156: dropped dispatch response (1 response failed at the transport layer) → same-key retry → idempotent replay (exactly 1 user turn, replay note shown)",
+    "pdf branch: 2 follow-up rounds landed (markers TreeAI-B3-探针-PDF-追问一-77c2 / TreeAI-B3-探针-PDF-追问二-31b8)",
+    "cross-branch isolation: md 6 turns / pdf 6 turns, no marker leaks across (echo driver (deterministic answers) — NOT B3 evidence; proves the probe/UI code path only)",
+    "restart continuation: SIGTERM → new process (port 57624→57624) → history readable + a fresh follow-up landed"
+  ],
+  "pageErrorsExcluded": 1
+}
