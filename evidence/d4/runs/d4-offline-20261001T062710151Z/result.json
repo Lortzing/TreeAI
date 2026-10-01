@@ -1,0 +1,48 @@
+{
+  "runId": "d4-offline-20261001T062710151Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-01T06:27:10.151Z",
+  "endedAt": "2026-10-01T06:27:10.284Z",
+  "verdict": "INCOMPLETE",
+  "counts": {
+    "pass": 2,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 2
+  },
+  "exitCode": 3,
+  "results": [
+    {
+      "durationMs": 2,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "no recorded run:d4-browser evidence carries d4-b6-scale-browser PASS yet — run scripts/run-d4-browser.mjs --mode selftest with --artifacts evidence/d4/browser/<runId> and commit it",
+      "id": "b6-browser-face"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "no recorded run:d4-browser evidence carries d4-nav-browser PASS yet — run scripts/run-d4-browser.mjs --mode selftest with --artifacts evidence/d4/browser/<runId> and commit it",
+      "id": "b9-nav-browser-face"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only b6-browser-face, b9-nav-browser-face executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}

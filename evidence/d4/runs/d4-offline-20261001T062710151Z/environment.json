@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "d4-environment-1",
+  "generatedAt": "2026-10-01T06:27:10.282Z",
+  "mode": "offline",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "typeScript": "5.9.3",
+    "ci": false
+  },
+  "credentialPolicy": {
+    "policy": "offline",
+    "note": "verify:d4 runs with no credentials by design; real-Pi/browser evidence lives in run:d4-browser --mode real-pi"
+  },
+  "git": {
+    "commit": "f08024fc844d777894d4899168b63097bf2daa19",
+    "dirty": true
+  },
+  "verifier": {
+    "name": "verify-d4",
+    "version": "0.1.0"
+  }
+}

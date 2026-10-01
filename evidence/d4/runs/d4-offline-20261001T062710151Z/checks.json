@@ -1,0 +1,31 @@
+{
+  "runId": "d4-offline-20261001T062710151Z",
+  "checks": [
+    {
+      "durationMs": 2,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "no recorded run:d4-browser evidence carries d4-b6-scale-browser PASS yet — run scripts/run-d4-browser.mjs --mode selftest with --artifacts evidence/d4/browser/<runId> and commit it",
+      "id": "b6-browser-face"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "no recorded run:d4-browser evidence carries d4-nav-browser PASS yet — run scripts/run-d4-browser.mjs --mode selftest with --artifacts evidence/d4/browser/<runId> and commit it",
+      "id": "b9-nav-browser-face"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}
