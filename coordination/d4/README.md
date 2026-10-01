@@ -433,3 +433,11 @@ gitDirty false，**14 PASS / 0 FAIL / 0 NOT_RUN**，
 基线不变、verify:d2 **21-0-0-1** 基线不变。术语①阅读模式语义/门禁/四状态详见
 docs/d3/D3-status.md 波次表新行。在飞：A（term-eval-runner）、C
 （d4-beta-usability）。
+
+**2026-10-01 集成记录（term-eval-runner 已合并）**：A（`wip/term-eval-runner`，
+`cff891f`…`4e15b2a`）已合并 main（`9459990`）。合并复验（串行）：typecheck、
+全仓 **789/789**（+9 完整性测试）、verify:d4 **18-0-2** / selftest 全检出 /
+verify:d2 **21-0-0-1** 基线不变。评测集 14 处预冻结修正、runner/基线/标注表
+细节见 docs/d3/D3-status.md 波次表新行；echo/baseline 开发期证据随合并入仓
+（`evidence/terminology/eval/`）。真实模型跑批与两人标注为 owner 事项。在飞：
+C（d4-beta-usability）。
