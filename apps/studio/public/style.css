@@ -93,8 +93,15 @@ body {
 
 #new-tree { width: 100%; }
 
-.sidebar-section { display: flex; flex-direction: column; min-height: 0; }
+/* 侧栏区块不收缩到内容以下：flex 默认 shrink=1 会让区块被压扁、内容
+   （如材料清单的低位按钮）溢出并被后续区块盖住而不可点（Navigate 段
+   入列后实测触发）。空间不足时由 #sidebar 自身滚动兜底。 */
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; flex-shrink: 0; }
 #branch-section { flex: 1; overflow-y: auto; }
+/* 长清单（B1 分母 33 条材料、B9 多树）在区块内滚动——不把侧栏其余区块
+   挤出视口，scrollIntoView 可达、坐标点击可命中。 */
+#material-list { max-height: 38vh; overflow-y: auto; }
+#tree-list { max-height: 22vh; overflow-y: auto; }
 
 .sidebar-heading {
   margin: 6px 0 4px;
