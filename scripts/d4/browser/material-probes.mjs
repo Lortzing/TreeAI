@@ -464,12 +464,17 @@ async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) 
   }
   await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseReleased", x: points.to.x, y: points.to.y, button: "left", buttons: 0, clickCount: 1, modifiers: 0 });
   await sleep(300);
-  /* 释放后原生选区会被应用自身的 mouseup 冲刷路径清除（updateMatSelectionBar
-     拖拽窗口冻结置 materialPendingUpdate → flushPendingRerender →
-     renderMaterialReader 以 root.replaceChildren() 摘挂 #mat-blocks——
-     Chrome 对 detach 的选区静默销毁，无 selectionchange）。捕获条在冲刷
-     前已同步武装（armFromEvent 先 armMaterialSelection 再排队冲刷）——
-     断言产品契约面：捕获条载荷与冻结真值逐项全等。 */
+  /* 释放后原生选区必须仍在（owner 2026-09-30 P1 #3）：mouseup 冲刷曾以
+     renderMaterialReader 的 detach 清掉 Chrome 选区高亮（实测，无
+     selectionchange）；修复后捕获条的延后更新走就地 updateMatSelectionBar，
+     不再摘挂 #mat-blocks——高亮与捕获条载荷同时在场。 */
+  const afterRelease = await ctx.evalJs(`(() => { const s = window.getSelection(); return s === null ? null : s.toString(); })()`);
+  if (afterRelease !== expected.excerpt) {
+    throw new Error(
+      `${item.id} (real drag): the native selection was destroyed by the post-release flush ` +
+        `(got ${JSON.stringify(afterRelease)}, want the frozen excerpt — the highlight must survive the mouseup)`,
+    );
+  }
   const bar = await waitForArmedBar(ctx, `${item.id} (real drag)`, 4000);
   assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: `${item.id} (real continuous mouse drag)` });
   await resolveSelectionAndAssert(ctx, { treeId, material, expected, canonicalText: truth.canonicalText, caseId: item.id });

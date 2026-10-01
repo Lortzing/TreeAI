@@ -1713,13 +1713,16 @@ function disarmArmedSelection() {
 /** 冲刷拖拽窗口内被延后的整树重渲与阅读器 chrome 重渲（③ 选择期间不重
     绘的收尾；阅读器块追加是纯增量的，不经此路径）。 */
 function flushPendingRerender() {
-  if (!state.pendingRerender && !materialPendingUpdate) return;
+  if (!state.pendingRerender && !materialPendingUpdate && !materialBarPendingUpdate) return;
   const rerenderAll = state.pendingRerender;
   const rerenderMaterial = materialPendingUpdate;
+  const rerenderBar = materialBarPendingUpdate;
   state.pendingRerender = false;
   materialPendingUpdate = false;
+  materialBarPendingUpdate = false;
   if (rerenderAll) renderAll();
   if (rerenderMaterial && state.materialReader !== null) renderMaterialReader();
+  else if (rerenderBar && state.materialReader !== null) updateMatSelectionBar();
 }
 
 /** 解释卡重建后的焦点保持（③ 草稿/焦点纪律）：旧卡内聚焦的控件（首问
@@ -2700,6 +2703,7 @@ function resetTransientView() {
     state.materialReader = null;
     materialReaderEpoch += 1;
     materialPendingUpdate = false;
+    materialBarPendingUpdate = false;
     if (materialPositionTimer !== null) {
       window.clearTimeout(materialPositionTimer);
       materialPositionTimer = null;
@@ -2798,17 +2802,26 @@ async function openBranchPanel(branchId, opts = {}) {
   if (st === null || branchId === null || branchId === st.trunkBranchId) return;
   const wasOpen = state.panelBranchId !== null;
   const switching = state.panelBranchId !== branchId;
+  let switchFailed = false;
   if (opts.alignCursor !== false) {
-    /* 切换语义保留：打开支线面板 = 服务端游标对齐该分支（POST /switch）。 */
-    const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
-      branchId,
-    });
-    state.treeState = payload.state;
+    /* 切换语义保留：打开支线面板 = 服务端游标对齐该分支（POST /switch）。
+       对齐失败不阻断打开（恢复数据缺 session 的分支实测 502：面板内容是
+       产品事实照常可读——降级为既有会话不可用注记 + 换轨入口，此前整链
+       抛错只留一条错误横幅，合法的搜索跳转被挡，issue #8 浏览器证据波）。 */
+    try {
+      const payload = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/switch`, "POST", {
+        branchId,
+      });
+      state.treeState = payload.state;
+    } catch {
+      switchFailed = true;
+    }
   }
   if (switching) {
     state.panelBranchId = branchId;
     state.forcePanelSessionNote = false;
   }
+  if (switchFailed) state.forcePanelSessionNote = true;
   if (opts.trigger !== undefined) state.panelFocusReturn = opts.trigger;
   renderAll();
   if (!wasOpen) showPanel();
@@ -4204,6 +4217,10 @@ const MATERIAL_READER_ENTER_MS = 240; /* CSS 180ms + 收尾余量 */
 const MATERIAL_READER_EXIT_MS = 170;
 /** 拖拽窗口内被延后的阅读器 chrome 重渲（mouseup 后与整树重渲一起冲刷）。 */
 let materialPendingUpdate = false;
+/* 捕获条专属的延后更新（拖拽窗口冻结置位）：冲刷走就地 updateMatSelectionBar
+ * ——不整建 chrome（renderMaterialReader 的 detach 会丢 Chrome 的原生选区
+ * 高亮，连续拖选后高亮消失的实测根因；DOM 桩的选区跨 detach 存活，测不出）。 */
+let materialBarPendingUpdate = false;
 /** 阅读器关闭时的焦点还原引用。 @type {FocusReturnRefT|null} */
 let materialReaderFocusReturn = null;
 /** 材料列表按钮注册表（materialId → 按钮）：阅读器关闭的焦点还原目标。 */
@@ -5829,9 +5846,9 @@ function updateMatSelectionBar() {
     /* 拖拽窗口内捕获条内容冻结：全局 selectionchange 在拖选中持续触发，
        条从 ~54px 长到 ~169px 会把正文整体推下 ~115px（真实 Chrome 实测，
        DOM 桩测不出），连续拖选的释放点随位移带偏。与 renderMaterialReader
-       的「选择期间不重绘」同族——mouseup 冲刷经 renderMaterialReader 重放
-       本函数（触屏 selectionchange 无拖拽窗口，不受影响）。 */
-    materialPendingUpdate = true;
+       的「选择期间不重绘」同族——mouseup 冲刷就地重放本函数（触屏
+       selectionchange 无拖拽窗口，不受影响）。 */
+    materialBarPendingUpdate = true;
     return;
   }
   bar.replaceChildren();
@@ -6936,6 +6953,7 @@ function closeMaterialReader() {
   state.materialSelection = null;
   materialReaderEpoch += 1; /* 作废在途 detail/分页响应 */
   materialPendingUpdate = false;
+  materialBarPendingUpdate = false;
   if (materialPositionTimer !== null) {
     window.clearTimeout(materialPositionTimer);
     materialPositionTimer = null;
