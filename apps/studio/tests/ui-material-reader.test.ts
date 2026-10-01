@@ -72,9 +72,10 @@ const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", i
 
 interface FixtureBlock {
   blockId: string;
-  kind: "markdown-block";
+  kind: "markdown-block" | "pdf-page";
   start: number;
   end: number;
+  page?: number;
   text: string;
 }
 
@@ -89,6 +90,11 @@ interface FixtureExpected {
 
 function loadFixture(id: string): FixtureExpected {
   return JSON.parse(readFileSync(join(B1_ROOT, `markdown/${id}.expected.json`), "utf8")) as FixtureExpected;
+}
+
+/* PDF 冻结真值（B1 pdf/ 目录——PDF 阅读增量翻转断言的语料）。 */
+function loadPdfFixture(id: string): FixtureExpected {
+  return JSON.parse(readFileSync(join(B1_ROOT, `pdf/${id}.expected.json`), "utf8")) as FixtureExpected;
 }
 
 const MD01 = loadFixture("md-01"); /* 递归与分治：14 块，1179 units */
@@ -820,7 +826,9 @@ function buildStubMaterial(script: MaterialScript): StubMaterialEntry {
   const versions: StubMaterialVersion[] = script.versions.map((version, index) => {
     const fixture =
       version.fixture !== undefined
-        ? (loadFixture(version.fixture) as FixtureExpected)
+        ? version.parserKind === "pdf"
+          ? loadPdfFixture(version.fixture)
+          : loadFixture(version.fixture)
         : null;
     return {
       id: version.id,
@@ -836,15 +844,24 @@ function buildStubMaterial(script: MaterialScript): StubMaterialEntry {
     };
   });
   /* 块源取**最新 ready 版本**的 fixture（多 ready 版本各取各的——按
-     versionId 查找；此处按 id 映射）。 */
+     versionId 查找；此处按 id 映射；pdf 版本取 pdf/ 目录冻结真值）。 */
   const sources = new Map<string, FixtureExpected>();
   for (const version of script.versions) {
     if (version.fixture !== undefined) {
-      sources.set(version.id, loadFixture(version.fixture) as FixtureExpected);
+      sources.set(
+        version.id,
+        version.parserKind === "pdf" ? loadPdfFixture(version.fixture) : loadFixture(version.fixture),
+      );
     }
   }
   const firstSource = script.versions.find((v) => v.fixture !== undefined)?.fixture;
-  const primary = firstSource === undefined ? null : (loadFixture(firstSource) as FixtureExpected);
+  const firstKind = script.versions.find((v) => v.fixture !== undefined)?.parserKind ?? "markdown";
+  const primary =
+    firstSource === undefined
+      ? null
+      : firstKind === "pdf"
+        ? loadPdfFixture(firstSource)
+        : loadFixture(firstSource);
   return {
     material: { id: script.id, title: script.title, createdAt: ISO },
     versions,
@@ -1121,7 +1138,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       }
       return respond(200, {
         blocks: slice.map((block) => ({
-          block: { blockId: block.blockId, kind: block.kind, start: block.start, end: block.end },
+          block:
+            block.kind === "pdf-page"
+              ? { blockId: block.blockId, kind: block.kind, start: block.start, end: block.end, page: block.page }
+              : { blockId: block.blockId, kind: block.kind, start: block.start, end: block.end },
           text: block.text,
         })),
         nextAfterBlock: more && slice.length > 0 ? slice[slice.length - 1]!.blockId : null,
@@ -1370,7 +1390,7 @@ const PARSING_SCRIPT: MaterialScript = {
 const PDF_SCRIPT: MaterialScript = {
   id: "mat-pdf",
   title: "扫描队列设计.pdf",
-  versions: [{ id: "v-pdf-1", parserKind: "pdf", parseStatus: "ready", fixture: "md-01" }],
+  versions: [{ id: "v-pdf-1", parserKind: "pdf", parseStatus: "ready", fixture: "pdf-01" }],
 };
 /** 双 ready 版本（v1 = md-05 旧内容，v2 = md-01 新内容——改版场景）。 */
 const VERSIONED_SCRIPT: MaterialScript = {
@@ -1426,7 +1446,7 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
     "opening the material reader never aligns the conversation cursor",
   );
 
-  /* 空态（无材料）：如实指引（导入 UI 属后续增量——不提供假入口）。 */
+  /* 空态（无材料）：如实指引（导入入口就在列表上方——owner P1 已落地）。 */
   const emptyWorld = await createWorld({ materials: [] });
   const emptyList = emptyWorld.el("material-list");
   assert.match(
@@ -1434,7 +1454,13 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
     /no materials linked to this tree yet/,
     "an empty list shows the honest empty state with guidance",
   );
-  assert.match(emptyList.textContent!, /import UI lands with a later increment/);
+  assert.match(emptyList.textContent!, /import a \.md, \.markdown or \.pdf file with the import entry above/);
+  assert.ok(emptyWorld.byId("material-import") !== null, "the import entry exists (owner P1)");
+  assert.match(
+    emptyWorld.byId("material-import-input")!.getAttribute("accept") ?? "",
+    /^\.md,\.markdown,\.pdf$/,
+    "the file picker accepts exactly the D4-1 support set",
+  );
 
   /* 加载中（请求闸门挂起）：不伪装成空态。 */
   const heldWorld = await createWorld({ materials: [MD01_SCRIPT], holdSuffix: "/materials" });
@@ -1825,21 +1851,37 @@ test("a saved reading position on an older version reopens that version (charter
 /* 5. 诚实状态面（PDF / 非 ready / 失败 + 重试）                         */
 /* ------------------------------------------------------------------ */
 
-test("a PDF material opens to the explicit next-increment state — no blocks are fetched, no page is faked", async () => {
-  const world = await createWorld({ materials: [PDF_SCRIPT] });
-  await world.openMaterial("mat-pdf");
+test("a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment)", async () => {
+  const PDF01 = loadPdfFixture("pdf-01"); /* 冻结真值：2 页（page-1/page-2） */
+  const world = await createWorld({
+    materials: [
+      {
+        id: "mat-pdf01",
+        title: "递归学习笔记.pdf",
+        versions: [{ id: "v-pdf01-1", parserKind: "pdf", parseStatus: "ready", fixture: "pdf-01" }],
+      },
+    ],
+  });
+  await world.openMaterial("mat-pdf01");
+  /* 页框按冻结块图落位：两页、页头标识（Page 1 / Page 2）、文本层
+     textContent 与冻结页块文本字节相等（规范映射的事实源）。 */
+  const frames = world.matBlocks().querySelectorAll(".pdf-page-frame");
+  assert.equal(frames.length, 2, "both frozen pages render as page frames");
+  assert.equal(frames[0]!.querySelector(".pdf-page-head")!.textContent, "Page 1");
+  assert.equal(frames[1]!.querySelector(".pdf-page-head")!.textContent, "Page 2");
+  assert.equal(frames[0]!.dataset.blockId, "page-1");
+  assert.equal(frames[0]!.querySelector(".material-block")!.textContent, PDF01.blocks[0]!.text);
+  assert.equal(frames[1]!.querySelector(".material-block")!.textContent, PDF01.blocks[1]!.text);
+  assert.ok(
+    world.requestsOf("/versions/v-pdf01-1").length > 0,
+    "the PDF version's page blocks are fetched (real reading, not a placeholder state)",
+  );
   assert.match(
     world.el("material-reader").textContent!,
-    /PDF reader \(real pages with a selectable text layer\) lands with the next D4-2 increment/,
-    "the honest next-increment state is shown",
+    /PDF reading surface — each page below renders the parsed canonical text/,
+    "the honest PDF reading-surface note is shown (single-page selection discipline declared)",
   );
-  assert.match(world.el("material-reader").textContent!, /nothing is faked here/);
-  assert.equal(
-    world.requestsOf("/versions/v-pdf-1").length,
-    0,
-    "no block page is fetched for a PDF material (the markdown reader does not fake PDF reading)",
-  );
-  assert.equal(world.matBlocks().querySelectorAll(".material-block").length, 0, "no fake document body renders");
+  assert.equal(world.matBlocks().querySelectorAll(".material-block").length, 2, "exactly the two page text layers");
 });
 
 test("a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks", async () => {
