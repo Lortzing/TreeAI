@@ -330,3 +330,12 @@ main——B6 数据集（100 材料/100 万单元/1 万事实/1000 分支，确�
 基线不变。**D4-7 win-x64 CI 四连修闭环：run 36772866173 三平台全绿。**
 仍在飞：G（wip/d4-8-frontend）。剩余工程面：D4-2 PDF 阅读器增量（下一波，
 app.js 让位 G）、B3/B6/B9 浏览器面与 real-Pi（最终候选 SHA）。
+
+**2026-10-01 集成记录（续五）**：G 停滞后保全（`84bd702`），G2 续作完成——
+`wip/d4-8-frontend` tip `e8a4cc0` 已合并 main：13 个 ui-nav 场景绿（修复三个
+真实 app 缺陷：overview 作用域 ReferenceError、路径收拢步数、恢复读回误回写
+expand-state PUT）。合并复验：typecheck、全仓 **751/751**、verify:d4 15-0-5、
+双 selftest、verify:d2 基线、run:d4-browser 8-0-2。**D4-8 工程面前后端齐**。
+剩余工程面：D4-2 PDF 阅读器增量 + 导入 UI（下一波）；浏览器证据扩展
+（B1 完整分母/PDF 选区/连续拖选/B5 恢复组合路径）；B3/B9 浏览器面与 real-Pi
+归最终候选 SHA。
