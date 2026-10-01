@@ -94,10 +94,18 @@
         <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
              （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
              不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
-             已载含如实空态/失败 + 重试）；导入 UI 不在本分支范围（D4-1 的
-             HTTP 面已就绪，上传入口随后续增量补齐）。 -->
+             已载含如实空态/失败 + 重试）；导入入口（owner P1）：真实文件
+             选择器（.md/.markdown/.pdf——D4-1 支持面）经真实导入端点上传
+             （原始字节 + 百分号编码文件名头），pending/parsing/ready/
+             failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
+             在途解析可取消（parse-tasks cancel 端点）。 -->
         <section class="sidebar-section" id="materials-section" hidden>
           <h2 class="sidebar-heading">Materials</h2>
+          <div class="material-import-row">
+            <button id="material-import" type="button">⬆ Import file…</button>
+            <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
+          </div>
+          <p id="material-import-status" role="status" aria-live="polite"></p>
           <ul id="material-list" aria-label="Materials"></ul>
         </section>
         <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：

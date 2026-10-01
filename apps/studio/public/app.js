@@ -441,11 +441,13 @@ const state = {
    * D4-2 阅读器武装选区（charter §3.2 精确锚点的前端捕获面）：武装纪律
    * 同正文层（mouseup/双击/触屏 selectionchange；拖拽窗口内不重绘）。
    * 有效载荷 = D4-3 建枝的锚点载荷（excerpt 与块文本切片字节相等、边界字
-   * 素安全——snapped 表示边界被吸附到完整字素簇）；invalid 携带如实原因
-   * （cross-block：B2 纪律——markdown 选区必须含于单块）。
+   * 素安全——snapped 表示边界被吸附到完整字素簇）；PDF 页块的有效载荷额
+   * 外携带 page（页标识——捕获条如实展示）；invalid 携带如实原因
+   * （cross-block：B2 纪律——markdown 选区必须含于单块；cross-page：PDF
+   * 选区必须含于单页——绝不静默截断；unmappable：无法映射到规范偏移）。
    * @type {null|
-   *   {kind:"valid", materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string, snapped:boolean}|
-   *   {kind:"invalid", materialId:string, versionId:string, reason:"cross-block"|"unmappable"}}
+   *   {kind:"valid", materialId:string, versionId:string, blockId:string, start:number, end:number, excerpt:string, snapped:boolean, page?:number}|
+   *   {kind:"invalid", materialId:string, versionId:string, reason:"cross-block"|"cross-page"|"unmappable"}}
    */
   materialSelection: null,
   /**
@@ -2686,9 +2688,11 @@ function resetTransientView() {
   state.selectionDragActive = false;
   state.pendingRerender = false;
   /* D4-2：材料面随树切换复位（阅读位置已由调用方在切树前落库）。退出中
-     的块容器一并清空——绝不给下一次打开留下上一棵树的块元素。 */
+     的块容器一并清空——绝不给下一次打开留下上一棵树的块元素。导入状态
+     （含在途解析轮询）一并复位——导入事实属于发起它的树。 */
   state.materials = null;
   state.materialSelection = null;
+  resetMaterialImport();
   /* D4-3：建枝流程随树切换复位（挂起的 intentKey 仍在 localStorage——重进
      同一选区时按同键幂等续走，服务端对账兜底）。 */
   state.materialBranching = null;
@@ -4176,6 +4180,15 @@ const MATERIAL_LOAD_THRESHOLD_PX = 400;
     冲刷（charter §3.2「原文阅读与分支探索各自保留位置」——阅读位置走
     服务端 reading-position 行，与对话的 scrollPositions 互不覆盖）。 */
 const MATERIAL_POSITION_SAVE_DEBOUNCE_MS = 1500;
+/** PDF 分块读取页大小（页数——pdf 的块即页；小于 markdown 页：大 PDF 首屏
+    只取少量页，B6 的 2s 首屏目标依赖小步分页）。 */
+const PDF_PAGE_FETCH_LIMIT = 10;
+/** PDF 懒渲染提前量（px）：页框落在 [视口顶 - 该值, 视口底 + 该值] 才渲染
+    文本层；远页保持占位（charter §3.2：可见页先行渲染）。 */
+const PDF_PAGE_RENDER_OVERSCAN_PX = 1200;
+/** PDF 懒渲染的几何未知回落（滚动容器 clientHeight 为 0——脚本桩/未布局）：
+    只渲染前导若干页，绝不在几何不明时整册渲染。 */
+const PDF_LEADING_RENDER_PAGES = 6;
 
 /** 材料读模型世代号（P1 同族纪律：写 state.materials 前双验证——请求树 +
     世代号；切树后迟到的旧树响应整包丢弃，绝不把 A 树的材料写进 B 树）。 */
@@ -4230,8 +4243,8 @@ function renderMaterialsSection() {
   if (materials.materials.length === 0) {
     list.replaceChildren(
       mutedListItem(
-        "no materials linked to this tree yet — imported materials (D4-1) appear here; " +
-          "the import UI lands with a later increment",
+        "no materials linked to this tree yet — import a .md, .markdown or .pdf file with the import entry above; " +
+          "imported materials appear here",
       ),
     );
     return;
@@ -4316,6 +4329,398 @@ async function refreshMaterials() {
     state.materials = { ok: false, error: String(err && err.message ? err.message : err) };
   }
   renderMaterialsSection();
+}
+
+/* ------------------------------ D4-2 用户导入 UI（issue #8 owner P1） ------------------------------ */
+
+/**
+ * 导入状态（模块级——导入跨列表重渲持续；HTML 里的静态导入行/状态行由
+ * updateMaterialImportStatus 就地更新，renderMaterialsSection 只管列表）。
+ * @type {null|{
+ *   phase: "uploading"|"parsing"|"terminal"|"failed",
+ *   filename: string,
+ *   materialId: string|null,
+ *   versionId: string|null,
+ *   parseTaskId: string|null,
+ *   dedup: boolean,
+ *   inFlightStatus: "pending"|"parsing"|null,
+ *   terminalStatus: "ready"|"failed"|"canceled"|"unsupported"|"rejected"|null,
+ *   terminalError: string|null,
+ *   dedupVersionLabel: string|null,
+ *   error: string|null,
+ *   uploadTreeId: string|null
+ * }}
+ */
+let materialImport = null;
+/** 解析轮询 timer（pending/parsing 期间每 1.5s 查一次 detail——服务端无
+    推送，轮询是如实拿到终态的途径；终态/取消/失败即停）。 */
+let materialImportPollTimer = null;
+const MATERIAL_IMPORT_POLL_MS = 1500;
+
+/** 静态导入 UI 注册（真实文件选择器：input[type=file] 的 change 事件——
+    浏览器原生对话框；同一文件可重复导入——每次处理后清空 input.value）。 */
+function registerMaterialImportUi() {
+  const button = $("material-import");
+  const input = $("material-import-input");
+  button.addEventListener("click", () => {
+    input.click();
+  });
+  input.addEventListener("change", () => {
+    const file = input.files !== undefined && input.files !== null && input.files.length > 0 ? input.files[0] : null;
+    /* 选同一文件再次导入是合法路径（重导即服务端去重——如实呈现）；清空
+       value 让同名文件也能再次触发 change。 */
+    input.value = "";
+    if (file === null) return;
+    void importMaterialFile(file);
+  });
+}
+
+/** 导入入口（owner P1「真正的文件导入 UI」）：原始字节 + 文件名头——与
+    D4-1 HTTP 面和浏览器探针同一语义（x-treeai-filename 百分号编码 +
+    application/octet-stream + 原始字节 body）。中文/空格文件名经编码头
+    原样到达。上传中一次一条（重复点击如实拒绝，不排队伪装）。 */
+async function importMaterialFile(file) {
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  if (materialImport !== null && materialImport.phase === "uploading") {
+    materialImport = {
+      ...materialImport,
+      phase: "failed",
+      error: "an import is already in flight — wait for it to finish before importing another file",
+    };
+    updateMaterialImportStatus();
+    return;
+  }
+  const filename = typeof file.name === "string" ? file.name : "";
+  materialImport = {
+    phase: "uploading",
+    filename,
+    materialId: null,
+    versionId: null,
+    parseTaskId: null,
+    dedup: false,
+    inFlightStatus: null,
+    terminalStatus: null,
+    terminalError: null,
+    dedupVersionLabel: null,
+    error: null,
+    uploadTreeId: treeId,
+  };
+  updateMaterialImportStatus();
+  let bytes = null;
+  try {
+    bytes = typeof file.arrayBuffer === "function" ? await file.arrayBuffer() : null;
+  } catch (err) {
+    bytes = null;
+    materialImport = { ...materialImport, phase: "failed", error: `reading the file failed — ${String(err && err.message ? err.message : err)}` };
+  }
+  if (bytes === null) {
+    if (materialImport.phase !== "failed") {
+      materialImport = { ...materialImport, phase: "failed", error: "the file could not be read in this browser" };
+    }
+    updateMaterialImportStatus();
+    return;
+  }
+  try {
+    const payload = await importMaterialViaHttp(treeId, filename, bytes);
+    if (state.currentTreeId !== treeId || materialImport === null || materialImport.phase !== "uploading") {
+      return; /* 切树/状态被取代：迟到响应丢弃 */
+    }
+    if (payload.created !== true) {
+      /* 同字节去重（D4-1 服务端语义）：如实「没有新版本」——绝不动声色地
+         伪装成又一次成功导入。版本标签按列表事实换算（列表已刷新后查得）。 */
+      await refreshMaterials();
+      const label = materialImportDedupVersionLabel(payload);
+      materialImport = {
+        phase: "terminal",
+        filename,
+        materialId: payload.material !== undefined && payload.material !== null ? String(payload.material.id) : null,
+        versionId: payload.version !== undefined && payload.version !== null ? String(payload.version.id) : null,
+        parseTaskId: null,
+        dedup: true,
+        inFlightStatus: null,
+        terminalStatus: null,
+        terminalError: null,
+        dedupVersionLabel: label,
+        error: null,
+        uploadTreeId: treeId,
+      };
+      updateMaterialImportStatus();
+      return;
+    }
+    materialImport = {
+      phase: "parsing",
+      filename,
+      materialId: payload.material !== undefined && payload.material !== null ? String(payload.material.id) : null,
+      versionId: payload.version !== undefined && payload.version !== null ? String(payload.version.id) : null,
+      parseTaskId:
+        payload.parseTaskId !== undefined && payload.parseTaskId !== null ? String(payload.parseTaskId) : null,
+      dedup: false,
+      inFlightStatus:
+        payload.version !== undefined &&
+        payload.version !== null &&
+        (payload.version.parseStatus === "pending" || payload.version.parseStatus === "parsing")
+          ? payload.version.parseStatus
+          : null,
+      terminalStatus: null,
+      terminalError: null,
+      dedupVersionLabel: null,
+      error: null,
+      uploadTreeId: treeId,
+    };
+    updateMaterialImportStatus();
+    void refreshMaterials();
+    startMaterialImportPolling();
+  } catch (err) {
+    if (state.currentTreeId !== treeId) return;
+    materialImport = {
+      ...materialImport,
+      phase: "failed",
+      error: String(err && err.message ? err.message : err),
+    };
+    updateMaterialImportStatus();
+  }
+}
+
+/** 导入 HTTP（与 scripts/d4/browser/material-probes.mjs 的
+    importMaterialViaHttp 同一头/字节语义——浏览器 UI 与探针走同一面）。 */
+async function importMaterialViaHttp(treeId, filename, bytes) {
+  const response = await fetch(`/api/trees/${encodeURIComponent(treeId)}/materials`, {
+    method: "POST",
+    headers: { "x-treeai-filename": encodeURIComponent(filename), "content-type": "application/octet-stream" },
+    body: bytes,
+  });
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    /* non-JSON error body */
+  }
+  if (!response.ok) {
+    const message =
+      payload !== null && payload.error !== undefined
+        ? `${payload.error.code}: ${payload.error.message}`
+        : `HTTP ${String(response.status)}`;
+    const error = new Error(message);
+    if (payload !== null && payload.error !== undefined && typeof payload.error.code === "string") {
+      error.code = payload.error.code;
+    }
+    throw error;
+  }
+  return payload;
+}
+
+/** 去重消息的版本标签（v 序号——按导入响应的材料在当前列表中的版本链
+    换算；列表未含该材料（异常）→ 如实退回 versionId 原文）。 */
+function materialImportDedupVersionLabel(payload) {
+  const versionId = payload.version !== undefined && payload.version !== null ? String(payload.version.id) : null;
+  if (versionId === null) return null;
+  const materials = state.materials !== null && state.materials.ok ? state.materials.materials : [];
+  const entry = materials.find(
+    (candidate) =>
+      payload.material !== undefined &&
+      payload.material !== null &&
+      candidate.material.id === String(payload.material.id),
+  );
+  if (entry === undefined) return null;
+  const index = entry.versions.findIndex((candidate) => candidate.id === versionId);
+  return index < 0 ? null : `v${String(index + 1)}`;
+}
+
+/** 解析轮询（pending/parsing 的如实终态获取）。 */
+function startMaterialImportPolling() {
+  stopMaterialImportPolling();
+  materialImportPollTimer = window.setInterval(() => {
+    void pollMaterialImportStatus();
+  }, MATERIAL_IMPORT_POLL_MS);
+}
+
+function stopMaterialImportPolling() {
+  if (materialImportPollTimer !== null) {
+    window.clearInterval(materialImportPollTimer);
+    materialImportPollTimer = null;
+  }
+}
+
+/** 轮询/显式 Refresh 共用：拉 detail，按版本终态更新导入状态面。 */
+async function pollMaterialImportStatus() {
+  const current = materialImport;
+  if (current === null || current.phase !== "parsing") return;
+  const treeId = state.currentTreeId;
+  if (treeId === null || current.materialId === null || current.uploadTreeId !== treeId) {
+    stopMaterialImportPolling();
+    return;
+  }
+  try {
+    const detail = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(current.materialId)}`,
+    );
+    if (materialImport !== current || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
+    const version =
+      detail.versions.find((candidate) => candidate.id === current.versionId) ?? null;
+    if (version === null) return; /* 版本不在链（异常）：保持轮询，下轮再查 */
+    if (version.parseStatus === "pending" || version.parseStatus === "parsing") {
+      materialImport = { ...current, inFlightStatus: version.parseStatus, terminalStatus: null, terminalError: null };
+      updateMaterialImportStatus();
+      return;
+    }
+    /* 终态：ready/failed/canceled/unsupported/rejected——原因逐字呈现。 */
+    stopMaterialImportPolling();
+    materialImport = {
+      ...current,
+      phase: "terminal",
+      terminalStatus: version.parseStatus,
+      terminalError:
+        typeof version.parseError === "string" && version.parseError !== "" ? version.parseError : null,
+    };
+    updateMaterialImportStatus();
+    void refreshMaterials();
+  } catch (err) {
+    /* 轮询失败如实注记，保持轮询（解析事实未到，不伪装终态）。 */
+    materialImport = { ...current, error: `checking the parse status failed — ${String(err && err.message ? err.message : err)}` };
+    updateMaterialImportStatus();
+  }
+}
+
+/** 取消在途解析（POST parse-tasks/:taskId/cancel——服务端行级仲裁：先落
+    库者赢）。409（已终态）→ 立即查一次状态（终态如实呈现）。 */
+async function cancelMaterialImportParse() {
+  const current = materialImport;
+  if (current === null || current.phase !== "parsing" || current.parseTaskId === null) return;
+  const treeId = state.currentTreeId;
+  if (treeId === null || current.materialId === null) return;
+  try {
+    await api(
+      `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(current.materialId)}` +
+        `/parse-tasks/${encodeURIComponent(current.parseTaskId)}/cancel`,
+      "POST",
+    );
+  } catch (err) {
+    if (err !== null && typeof err === "object" && err.code === "parse-task-not-cancelable") {
+      /* 已终态（409）：立即刷新状态面——迟到点击如实落位。 */
+      await pollMaterialImportStatus();
+      return;
+    }
+    if (materialImport === current) {
+      materialImport = { ...current, error: `canceling the parse failed — ${String(err && err.message ? err.message : err)}` };
+      updateMaterialImportStatus();
+    }
+    return;
+  }
+  stopMaterialImportPolling();
+  if (materialImport === null || materialImport.phase !== "parsing") return;
+  materialImport = {
+    ...materialImport,
+    phase: "terminal",
+    terminalStatus: "canceled",
+    terminalError: null,
+  };
+  updateMaterialImportStatus();
+  void refreshMaterials();
+}
+
+/** 导入状态面（静态行 #material-import-status 就地更新；状态/原因/操作
+    全部如实——pending/parsing/ready/failed/rejected/canceled/去重/上传失败）。 */
+function updateMaterialImportStatus() {
+  const status = document.getElementById("material-import-status");
+  if (status === null) return;
+  status.replaceChildren();
+  const current = materialImport;
+  if (current === null) return;
+  const text = (content, extraClass = "") => {
+    const span = document.createElement("span");
+    if (extraClass !== "") span.className = extraClass;
+    span.textContent = content;
+    status.append(span);
+    return span;
+  };
+  const action = (label, title, onClick, className) => {
+    const button = document.createElement("button");
+    button.className = className;
+    button.textContent = label;
+    button.title = title;
+    button.addEventListener("click", onClick);
+    status.append(button);
+    return button;
+  };
+  if (current.phase === "uploading") {
+    text(`importing “${current.filename}”…`, "mat-import-note");
+    return;
+  }
+  if (current.phase === "parsing") {
+    const statusPart = current.inFlightStatus === null ? "" : ` (server status: ${current.inFlightStatus})`;
+    text(`“${current.filename}” imported — parsing${statusPart}…`, "mat-import-note");
+    if (current.error !== null) text(` (${current.error})`, "mat-import-error");
+    action(
+      "Cancel parse",
+      "Cancel the in-flight parse task (the version stays canceled; re-import the file to try again)",
+      () => void cancelMaterialImportParse(),
+      "mat-import-cancel",
+    );
+    action(
+      "Check now",
+      "Check the parse status immediately (also refreshes automatically)",
+      () => void pollMaterialImportStatus(),
+      "mat-import-refresh",
+    );
+    return;
+  }
+  if (current.phase === "failed") {
+    text(`importing “${current.filename}” failed — ${current.error ?? "unknown error"}`, "mat-import-error");
+    return;
+  }
+  /* terminal */
+  if (current.dedup) {
+    const label = current.dedupVersionLabel === null ? (current.versionId ?? "an existing version") : current.dedupVersionLabel;
+    text(
+      `“${current.filename}” was not imported again — these exact bytes are already ${label} of this material ` +
+        "(the server reused the existing version; no new version was created)",
+      "mat-import-note",
+    );
+    return;
+  }
+  if (current.terminalStatus === "ready") {
+    text(`“${current.filename}” is ready — it is in the list below.`, "mat-import-note");
+    if (current.materialId !== null) {
+      action(
+        "Open in reader",
+        "Open the imported material in the material reader",
+        () => {
+          closeSidebar();
+          void openMaterial(current.materialId, { trigger: { kind: "element", element: $("material-import") } });
+        },
+        "mat-import-open",
+      );
+    }
+    return;
+  }
+  if (current.terminalStatus === "canceled") {
+    text(
+      `the parse of “${current.filename}” was canceled — the version stays canceled (nothing is faked as parsed); ` +
+        "import the file again to retry",
+      "mat-import-error",
+    );
+    return;
+  }
+  if (current.terminalStatus !== null) {
+    /* failed / unsupported / rejected：原因逐字（服务端 parseError 原文）。 */
+    const reason = current.terminalError !== null ? ` — ${current.terminalError}` : "";
+    text(
+      `“${current.filename}” did not parse: ${current.terminalStatus}${reason}. ` +
+        "The original file is kept as imported; an older ready version (if any) stays readable.",
+      "mat-import-error",
+    );
+    return;
+  }
+  text(`import of “${current.filename}” finished.`, "mat-import-note");
+}
+
+/** 导入面复位（切树时调用：在途轮询停止、状态清空——不同树的导入事实
+    不跨树残留）。 */
+function resetMaterialImport() {
+  stopMaterialImportPolling();
+  materialImport = null;
+  updateMaterialImportStatus();
 }
 
 /** 打开材料阅读器。幂等：同一材料已在读（且非失败态）只聚焦；换材料先把
@@ -4421,9 +4826,9 @@ async function openMaterial(materialId, opts = {}) {
 
 /**
  * 首版选择（charter §1「隔天回来能找到原文」）：保存过阅读位置且该版本
- * 仍可读（ready + markdown）→ 恢复到该版本；否则最新版本（其状态——含
- * 失败/PDF——在阅读器内如实呈现，不因失败静默回落旧版：列表与版本链
- * 都标明旧 ready 版本可读，切换是显式动作）。
+ * 仍可读（ready——markdown 与 PDF 都支持位置恢复）→ 恢复到该版本；否则
+ * 最新版本（其状态——含失败——在阅读器内如实呈现，不因失败静默回落
+ * 旧版：列表与版本链都标明旧 ready 版本可读，切换是显式动作）。
  */
 function chooseMaterialVersion(detail) {
   const versions = detail.versions;
@@ -4431,21 +4836,33 @@ function chooseMaterialVersion(detail) {
   const position = detail.readingPosition;
   if (position !== null) {
     const saved = versions.find((version) => version.id === position.versionId) ?? null;
-    if (saved !== null && saved.parseStatus === "ready" && saved.parserKind === "markdown") {
+    if (saved !== null && saved.parseStatus === "ready") {
       return saved;
     }
   }
   return versions[versions.length - 1];
 }
 
-/** 首页加载（含位置恢复的跨页前补）：非 ready / PDF 版本不取块——状态面
-    如实呈现（409 material-not-ready 的竞态也经 catch 落入同一失败面）。 */
+/** 阅读器当前版本对象（版本链内按 versionId 查找；不在链 → null）。 */
+function materialReaderVersion(reader) {
+  return reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
+}
+
+/** 当前阅读版本是否 PDF（页块渲染/懒分页/单页选区纪律的判定源）。 */
+function materialReaderIsPdf(reader) {
+  const version = materialReaderVersion(reader);
+  return version !== null && version.parserKind === "pdf";
+}
+
+/** 首页加载（含位置恢复的跨页前补）：非 ready 版本不取块——状态面如实
+    呈现（409 material-not-ready 的竞态也经 catch 落入同一失败面）；ready
+    的 markdown 与 PDF 版本都取块（PDF 的块即页——页框按懒渲染纪律落位）。 */
 async function loadMaterialFirstPage(reader, opts) {
   const { epoch, treeId } = opts;
   const version = reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
   const isStale = () =>
     epoch !== materialReaderEpoch || state.materialReader !== reader || state.currentTreeId !== treeId;
-  if (version === null || version.parseStatus !== "ready" || version.parserKind !== "markdown") {
+  if (version === null || version.parseStatus !== "ready") {
     reader.firstPageState = "loaded";
     renderMaterialReader();
     return;
@@ -4501,39 +4918,49 @@ async function loadMaterialFirstPage(reader, opts) {
          detach 都会取消动画并丢 scrollTop（真实 Chrome 实测 183/7208）；
          即时落位同步生效，配合渲染保位跨重渲稳定。 */
       target.scrollIntoView({ block: "start", behavior: "auto" });
+      /* PDF：先按当前几何重估懒渲染窗口，再显式渲染跳转目标页（目标即
+         已可见；真实浏览器 scrollIntoView 后的 scroll 事件会自然重估，
+         脚本桩无事件——顺序保证目标页绝不被重估卸回占位）。 */
+      updatePdfPageRendering(reader);
+      renderPdfPageTextIn(target);
     }
   }
 }
 
-/** 分块读取请求（显式 limit=页大小；afterBlock 为下一页游标）。 */
+/** 分块读取请求（显式 limit=页大小；afterBlock 为下一页游标）。PDF 用
+    更小的页步（PDF_PAGE_FETCH_LIMIT——大 PDF 首屏只取少量页）。 */
 async function fetchMaterialPage(reader, treeId, afterBlock) {
+  const limit = materialReaderIsPdf(reader) ? PDF_PAGE_FETCH_LIMIT : MATERIAL_PAGE_LIMIT;
   let path =
     `/api/trees/${encodeURIComponent(treeId)}/materials/${encodeURIComponent(reader.materialId)}` +
-    `/versions/${encodeURIComponent(reader.versionId)}?limit=${String(MATERIAL_PAGE_LIMIT)}`;
+    `/versions/${encodeURIComponent(reader.versionId)}?limit=${String(limit)}`;
   if (afterBlock !== null) {
     path += `&afterBlock=${encodeURIComponent(afterBlock)}`;
   }
   return api(path);
 }
 
-/** 一页数据落地：窗口数据（reader.blocks）+ DOM 追加 + 顶部裁剪 + 尾部态。 */
+/** 一页数据落地：窗口数据（reader.blocks）+ DOM 追加 + 顶部裁剪 + 尾部态
+    + PDF 懒渲染窗口重估（可见页先行渲染）。 */
 function applyMaterialPage(reader, page) {
   for (const entry of page.blocks) reader.blocks.push(entry);
   reader.nextAfterBlock = page.nextAfterBlock;
   reader.textUnits = page.textUnits;
   appendMaterialBlockElements(reader);
   trimMaterialWindow(reader);
+  updatePdfPageRendering(reader);
   updateMatTail();
 }
 
 /** 追加缺失块元素（页序即 DOM 序；复用既有元素——懒加载/重渲不换走已读
-    块，选区期间的元素身份稳定）。 */
+    块，选区期间的元素身份稳定）。markdown 块与 PDF 页框都是 #mat-blocks
+    的直接子元素，以 data-block-id 判存在。 */
 function appendMaterialBlockElements(reader) {
   const blocksEl = document.getElementById("mat-blocks");
   if (blocksEl === null) return;
   const present = new Set();
   for (const child of blocksEl.children) {
-    if (isElementNode(child) && child.classList.contains("material-block")) {
+    if (isElementNode(child) && child.dataset.blockId !== undefined) {
       present.add(child.dataset.blockId);
     }
   }
@@ -4827,11 +5254,16 @@ function buildMaterialNotes(reader, version) {
         { danger: true },
       );
     }
-  } else if (version.parserKind !== "markdown") {
-    /* PDF：本分支只有 Markdown 阅读器——显式声明下一增量，不伪造页面。 */
+  } else if (version.parserKind === "pdf") {
+    /* PDF 阅读面（charter §3.2）：真实页（解析产出的页块结构）+ 可选中文
+       本层——每页是一个阅读面，选区经同一套规范偏移机制映射；单页纪律
+       如实声明（跨页拒绝，绝不静默截断）。不伪造视觉版式：呈现的是
+       d4-pdf-v1 规范文本（扫描/加密/损坏/超限材料的显式状态见上方
+       parseStatus 面）。 */
     appendNote(
-      "this is a PDF material — the PDF reader (real pages with a selectable text layer) lands with " +
-        "the next D4-2 increment. The parsed text is kept server-side; nothing is faked here.",
+      "PDF reading surface — each page below renders the parsed canonical text (d4-pdf-v1) as a selectable " +
+        "reading surface; select within one page (cross-page selections are refused, never silently truncated); " +
+        "page text renders as you scroll (visible pages first)",
     );
   }
   if (version.id !== latest.id) {
@@ -4926,15 +5358,21 @@ function createMaterialBlocksElement() {
     if (reader === null) return;
     scheduleMaterialPositionSave();
     maybeLoadMoreMaterialBlocks(blocksEl);
+    /* PDF 懒渲染窗口随滚动重估（可见页先行渲染，窗外页卸回占位）。 */
+    updatePdfPageRendering(reader);
   });
   return blocksEl;
 }
 
 /**
- * 块元素渲染：data-block-id / data-start / data-end 携带规范文本映射
- * （绝对 UTF-16 区间）；内容由 renderMarkdownInto 无损填充。
+ * 块元素渲染（markdown → 无损字面块；pdf-page → 页框）：markdown 块元素
+ * 携带 data-block-id / data-start / data-end（规范文本映射——绝对 UTF-16
+ * 区间），内容由 renderMarkdownInto 无损填充；PDF 页块渲染为页框
+ * （.pdf-page-frame：页头标识 + 文本层），文本层按懒渲染纪律按需填充
+ * （updatePdfPageRendering——可见页先行，远页占位）。
  */
 function renderMaterialBlockElement(entry, reader) {
+  if (entry.block.kind === "pdf-page") return createPdfPageFrame(entry);
   const div = document.createElement("div");
   div.className = "material-block";
   div.dataset.blockId = entry.block.blockId;
@@ -4942,6 +5380,148 @@ function renderMaterialBlockElement(entry, reader) {
   div.dataset.end = String(entry.block.end);
   reader.fenceOpen = renderMarkdownInto(div, entry.text, reader.fenceOpen);
   return div;
+}
+
+/**
+ * PDF 页框（charter §3.2「真实页 + 可选中文本层」）：块即页——页框是
+ * #mat-blocks 的定位单元（data-block-id / data-start / data-end /
+ * data-page；滚动定位/窗口裁剪/阅读位置都以页框为对象）。页头标识
+ * （「Page N」）在文本层**之外**——文本层 .material-block 的 textContent
+ * 与页块文本字节相等（选区偏移换算的事实源，绝不混入页头文字）。文本层
+ * 初始为占位（未渲染态），由 updatePdfPageRendering 按可见性填充。
+ */
+function createPdfPageFrame(entry) {
+  const frame = document.createElement("div");
+  frame.className = "pdf-page-frame";
+  frame.dataset.blockId = entry.block.blockId;
+  frame.dataset.start = String(entry.block.start);
+  frame.dataset.end = String(entry.block.end);
+  const page = typeof entry.block.page === "number" ? entry.block.page : null;
+  if (page !== null) frame.dataset.page = String(page);
+  const head = document.createElement("div");
+  head.className = "pdf-page-head";
+  head.textContent = page === null ? entry.block.blockId : `Page ${String(page)}`;
+  const textLayer = document.createElement("div");
+  textLayer.className = "material-block pdf-page-text";
+  textLayer.dataset.blockId = entry.block.blockId;
+  textLayer.dataset.start = String(entry.block.start);
+  textLayer.dataset.end = String(entry.block.end);
+  if (page !== null) textLayer.dataset.page = String(page);
+  textLayer.dataset.rendered = "false";
+  textLayer.append(pdfPagePendingPlaceholder(page));
+  frame.append(head, textLayer);
+  return frame;
+}
+
+/** 未渲染页的占位说明（远页不渲染文本——绝不含正文文字）。 */
+function pdfPagePendingPlaceholder(page) {
+  const pending = document.createElement("div");
+  pending.className = "pdf-page-pending";
+  pending.textContent =
+    page === null
+      ? "this page is off-screen — its text renders when scrolled into view"
+      : `page ${String(page)} is off-screen — its text renders when scrolled into view`;
+  return pending;
+}
+
+/**
+ * PDF 懒渲染（charter §3.2：可见页先行——大 PDF 首屏不整册渲染，B6 的
+ * 2s 目标依赖）：页框落在 [视口顶 - 提前量, 视口底 + 提前量] 即渲染文本
+ * 层；窗外页卸回占位（记住已渲染高度——min-height 占位保持滚动几何，
+ * 真实浏览器不因卸载跳滚动）。几何未知（clientHeight 为 0——脚本桩/
+ * 未布局）只渲染前导 PDF_LEADING_RENDER_PAGES 页。多趟推进（最多 8 趟）：
+ * 渲染改变前页高度后，后续页可能进入窗口——每趟至少渲染一页才继续。
+ */
+function updatePdfPageRendering(reader) {
+  if (reader === null || !materialReaderIsPdf(reader)) return;
+  const blocksEl = document.getElementById("mat-blocks");
+  if (blocksEl === null) return;
+  const frames = [];
+  for (const child of blocksEl.children) {
+    if (isElementNode(child) && child.classList.contains("pdf-page-frame")) frames.push(child);
+  }
+  if (frames.length === 0) return;
+  const clientHeight = typeof blocksEl.clientHeight === "number" ? blocksEl.clientHeight : 0;
+  const base = typeof blocksEl.offsetTop === "number" ? blocksEl.offsetTop : 0;
+  if (clientHeight <= 0) {
+    /* 几何未知：只渲染前导若干页（有界），其余卸回占位。 */
+    for (let i = 0; i < frames.length; i += 1) {
+      const entry = reader.blocks.find((candidate) => candidate.block.blockId === frames[i].dataset.blockId);
+      if (entry === undefined) continue;
+      if (i < PDF_LEADING_RENDER_PAGES) renderPdfPageText(frames[i], entry);
+      else unrenderPdfPageText(frames[i]);
+    }
+    return;
+  }
+  const from = blocksEl.scrollTop - PDF_PAGE_RENDER_OVERSCAN_PX;
+  const to = blocksEl.scrollTop + clientHeight + PDF_PAGE_RENDER_OVERSCAN_PX;
+  for (let pass = 0; pass < 8; pass += 1) {
+    let renderedThisPass = 0;
+    for (const frame of frames) {
+      const entry = reader.blocks.find((candidate) => candidate.block.blockId === frame.dataset.blockId);
+      if (entry === undefined) continue;
+      const top = (typeof frame.offsetTop === "number" ? frame.offsetTop : 0) - base;
+      const height = typeof frame.offsetHeight === "number" ? frame.offsetHeight : 0;
+      const near = top + height >= from && top <= to;
+      if (near) {
+        if (renderPdfPageText(frame, entry)) renderedThisPass += 1;
+      } else {
+        unrenderPdfPageText(frame);
+      }
+    }
+    if (renderedThisPass === 0) break;
+  }
+}
+
+/** 渲染页文本层（幂等；返回是否本次真正填充）。逐字无损：行以 \n 分隔
+    原样成文（pre-wrap），textContent 与页块文本字节相等。 */
+function renderPdfPageText(frame, entry) {
+  const textLayer = pdfPageTextLayer(frame);
+  if (textLayer === null) return false;
+  if (textLayer.dataset.rendered === "true") return false;
+  textLayer.replaceChildren();
+  const lines = entry.text.split("\n");
+  for (let i = 0; i < lines.length; i += 1) {
+    if (lines[i] !== "") {
+      const line = document.createElement("span");
+      line.className = "pdf-line";
+      line.textContent = lines[i];
+      textLayer.append(line);
+    }
+    if (i < lines.length - 1) textLayer.append(document.createTextNode("\n"));
+  }
+  textLayer.dataset.rendered = "true";
+  return true;
+}
+
+/** 页框内的文本层元素（.material-block——选区换算的定位元素）。 */
+function pdfPageTextLayer(frame) {
+  for (const child of frame.children) {
+    if (isElementNode(child) && child.classList.contains("material-block")) return child;
+  }
+  return null;
+}
+
+/** 定位元素直接渲染（阅读位置/搜索跳转的 scrollIntoView 目标可能是页框：
+    跳转目标即已可见——渲染其文本层）。 */
+function renderPdfPageTextIn(element) {
+  if (element === null || !isElementNode(element) || !element.classList.contains("pdf-page-frame")) return;
+  const reader = state.materialReader;
+  if (reader === null) return;
+  const entry = reader.blocks.find((candidate) => candidate.block.blockId === element.dataset.blockId);
+  if (entry !== undefined) renderPdfPageText(element, entry);
+}
+
+/** 卸载窗外页文本层（回占位）：记住渲染时高度（min-height 保滚动几何——
+    setAttribute("style") 兼容真实 DOM 与脚本桩）。 */
+function unrenderPdfPageText(frame) {
+  const textLayer = pdfPageTextLayer(frame);
+  if (textLayer === null || textLayer.dataset.rendered !== "true") return;
+  const height = typeof frame.offsetHeight === "number" ? frame.offsetHeight : 0;
+  const page = frame.dataset.page !== undefined ? Number(frame.dataset.page) : null;
+  if (height > 0) frame.setAttribute("style", `min-height: ${String(height)}px;`);
+  textLayer.replaceChildren(pdfPagePendingPlaceholder(page));
+  textLayer.dataset.rendered = "false";
 }
 
 /**
@@ -5166,9 +5746,11 @@ function materialBlockLocalStart(blockEl, range) {
  * 前缀长度换算 + 块文本切片校验（excerpt === 块文本切片——即
  * canonicalText.slice(start,end)，绝对偏移由 block.start 平移）。跨块 →
  * 如实 {invalid, cross-block}（B2 纪律：markdown 选区必须含于单块，不悄悄
- * 截断）；切片校验失败（理论不可达的渲染漂移）→ {invalid, unmappable}。
- * 返回 null = 无选区/选区不在阅读器正文内（不武装）。invalid 载荷同样
- * 携带 materialId/versionId（捕获条的归属判定对两态一致）。
+ * 截断）；PDF 跨页 → {invalid, cross-page}（charter §3.2：选区必须含于
+ * 单页——提示分段选择，绝不静默截断）；切片校验失败（理论不可达的渲染
+ * 漂移）→ {invalid, unmappable}。返回 null = 无选区/选区不在阅读器正文
+ * 内（不武装）。invalid 载荷同样携带 materialId/versionId（捕获条的归属
+ * 判定对两态一致）。PDF 页块的有效载荷额外携带 page（页标识）。
  */
 function materialSelectionFromRange(reader) {
   const selection = window.getSelection();
@@ -5177,6 +5759,7 @@ function materialSelectionFromRange(reader) {
   const startBlock = materialBlockOf(range.startContainer);
   const endBlock = materialBlockOf(range.endContainer);
   if (startBlock === null && endBlock === null) return null;
+  const isPdf = materialReaderIsPdf(reader);
   const invalid = (reason) => ({
     kind: "invalid",
     materialId: reader.materialId,
@@ -5184,7 +5767,7 @@ function materialSelectionFromRange(reader) {
     reason,
   });
   if (startBlock === null || endBlock === null) return invalid("unmappable");
-  if (startBlock !== endBlock) return invalid("cross-block");
+  if (startBlock !== endBlock) return invalid(isPdf ? "cross-page" : "cross-block");
   const blockId = startBlock.dataset.blockId;
   const entry = reader.blocks.find((candidate) => candidate.block.blockId === blockId);
   if (blockId === undefined || entry === undefined) return invalid("unmappable");
@@ -5198,7 +5781,7 @@ function materialSelectionFromRange(reader) {
   }
   const clamped = clampToGraphemeBoundaries(entry.text, localStart, localEnd);
   if (clamped === null) return invalid("unmappable");
-  return {
+  const valid = {
     kind: "valid",
     materialId: reader.materialId,
     versionId: reader.versionId,
@@ -5208,6 +5791,8 @@ function materialSelectionFromRange(reader) {
     excerpt: entry.text.slice(clamped.start, clamped.end),
     snapped: clamped.snapped,
   };
+  if (typeof entry.block.page === "number") valid.page = entry.block.page;
+  return valid;
 }
 
 /** 武装阅读器选区（mouseup/双击/触屏 selectionchange 共用；解除语义与
@@ -5268,7 +5853,11 @@ function updateMatSelectionBar() {
       selection.reason === "cross-block"
         ? "cross-block selection not anchorable — markdown selections must stay within a single block " +
           "(B2 anchoring discipline); no quote payload is produced, nothing is truncated silently"
-        : "the selection could not be mapped to canonical offsets — no quote payload is shown";
+        : selection.reason === "cross-page"
+          ? "cross-page selection not anchorable — PDF selections must stay within one page " +
+            "(select within a page; segmented selection across pages is the discipline — never a silent truncation); " +
+            "no quote payload is produced"
+          : "the selection could not be mapped to canonical offsets — no quote payload is shown";
     bar.append(note);
     return;
   }
@@ -5277,8 +5866,10 @@ function updateMatSelectionBar() {
   quote.textContent = selection.excerpt;
   const payload = document.createElement("span");
   payload.className = "mat-payload";
+  const pagePart =
+    typeof selection.page === "number" ? ` · page ${String(selection.page)}` : "";
   payload.textContent =
-    `material ${selection.materialId} · version ${selection.versionId} · block ${selection.blockId}` +
+    `material ${selection.materialId} · version ${selection.versionId} · block ${selection.blockId}${pagePart}` +
     ` · UTF-16 [${String(selection.start)}, ${String(selection.end)}) · ${String(selection.excerpt.length)} units`;
   bar.append(quote, payload);
   if (selection.snapped) {
@@ -6227,7 +6818,8 @@ function saveMaterialReadingPositionNow() {
 }
 
 /** 顶部可见块（几何法：首个底边越过滚动顶端的块；脚本桩高度为 0 → 回落
-    首个在场块，确定性）。 */
+    首个在场块，确定性）。markdown 块与 PDF 页框都是直接子元素（均携带
+    data-block-id——阅读位置对两种块型一致按块/页定位）。 */
 function currentMaterialTopBlockId() {
   const reader = state.materialReader;
   if (reader === null) return null;
@@ -6237,9 +6829,9 @@ function currentMaterialTopBlockId() {
   const scrollTop = blocksEl.scrollTop;
   let first = null;
   for (const child of blocksEl.children) {
-    if (!isElementNode(child) || !child.classList.contains("material-block")) continue;
+    if (!isElementNode(child) || child.dataset.blockId === undefined) continue;
     const blockId = child.dataset.blockId;
-    if (blockId !== undefined && first === null) first = blockId;
+    if (first === null) first = blockId;
     const top = (typeof child.offsetTop === "number" ? child.offsetTop : 0) - base;
     const height = typeof child.offsetHeight === "number" ? child.offsetHeight : 0;
     if (top + height > scrollTop + 1) return blockId ?? first;
@@ -6318,12 +6910,12 @@ async function refreshMaterialDetail() {
       return;
     }
     renderMaterialReader();
-    /* 刷新后当前版本变为 ready（解析完成）：补载正文。 */
+    /* 刷新后当前版本变为 ready（解析完成）：补载正文（markdown 块 / PDF
+       页框——两种 ready 块型都取块）。 */
     const version = current.versions.find((candidate) => candidate.id === current.versionId) ?? null;
     if (
       version !== null &&
       version.parseStatus === "ready" &&
-      version.parserKind === "markdown" &&
       current.blocks.length === 0 &&
       current.firstPageState === "loaded"
     ) {
@@ -6364,11 +6956,13 @@ function updateMatTail() {
   if (reader === null || tail === null) return;
   tail.replaceChildren();
   const version = reader.versions.find((candidate) => candidate.id === reader.versionId) ?? null;
-  if (version === null || version.parseStatus !== "ready" || version.parserKind !== "markdown") {
-    return; /* 非 ready/PDF：状态面在注记区，无正文尾部 */
+  if (version === null || version.parseStatus !== "ready") {
+    return; /* 非 ready：状态面在注记区，无正文尾部 */
   }
+  const isPdf = materialReaderIsPdf(reader);
+  const unitWord = isPdf ? "page(s)" : "block(s)";
   if (reader.firstPageState === "loading") {
-    tail.append(document.createTextNode("loading blocks…"));
+    tail.append(document.createTextNode(`loading ${isPdf ? "pages" : "blocks"}…`));
     return;
   }
   if (reader.firstPageState === "failed") {
@@ -6402,22 +6996,24 @@ function updateMatTail() {
     /* 键盘可达的显式加载入口（滚贴近底自动预取，按钮是等价显式动作）。 */
     const more = document.createElement("button");
     more.className = "mat-load-more";
-    more.textContent = "Load more blocks";
-    more.title = "Load the next page of blocks (also loads automatically near the bottom)";
+    more.textContent = isPdf ? "Load more pages" : "Load more blocks";
+    more.title = isPdf
+      ? "Load the next page of PDF pages (also loads automatically near the bottom)"
+      : "Load the next page of blocks (also loads automatically near the bottom)";
     more.addEventListener("click", () => void loadMoreMaterialBlocks());
     tail.append(more);
   } else {
-    tail.append(document.createTextNode("end of material"));
+    tail.append(document.createTextNode(isPdf ? "end of material (last page)" : "end of material"));
   }
   tail.append(
     document.createTextNode(
-      ` · ${String(reader.blocks.length)} block(s) in view · ${String(reader.textUnits)} text units total`,
+      ` · ${String(reader.blocks.length)} ${unitWord} in view · ${String(reader.textUnits)} text units total`,
     ),
   );
   if (reader.trimmedBlocks > 0) {
     tail.append(
       document.createTextNode(
-        ` · ${String(reader.trimmedBlocks)} earlier block(s) unloaded to keep the view light — ` +
+        ` · ${String(reader.trimmedBlocks)} earlier ${isPdf ? "page(s)" : "block(s)"} unloaded to keep the view light — ` +
           "close and reopen (or reselect the version) to read from the beginning",
       ),
     );
@@ -8328,6 +8924,11 @@ $("new-exploration").addEventListener("click", () => guard(() => startNewExplora
 $("panel-new-exploration").addEventListener("click", () => guard(() => startNewExploration("panel"), "panel"));
 $("abort-run").addEventListener("click", () => void abortActiveRun());
 $("source-drawer-toggle").addEventListener("click", () => void toggleDrawer());
+
+/* D4-2 用户导入 UI（issue #8 owner P1）：静态导入行（按钮 + 隐藏文件选择
+   input + 状态行），注册一次；状态行由 updateMaterialImportStatus 就地
+   更新（renderMaterialsSection 只管列表——两不重建对方）。 */
+registerMaterialImportUi();
 
 /* D4-4 搜索表单（静态元素，注册一次；重渲只同步开关态——输入值与焦点
    绝不被 renderAll 触碰）。Enter 执行搜索（单行输入的既有语义；主输入

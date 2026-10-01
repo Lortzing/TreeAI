@@ -156,6 +156,48 @@ body {
 #material-list li.muted { font-size: 12px; color: var(--muted); line-height: 1.5; }
 #material-list .drawer-retry { margin-top: 4px; }
 
+/* D4-2 用户导入行（owner P1）：Materials 段顶部的真实文件选择入口
+   （按钮触发隐藏 input[type=file]——浏览器原生对话框）。状态行如实承载
+   pending/parsing/ready/failed/rejected/canceled/去重各态（原因逐字、
+   常驻不自动消失）；在途解析的取消/复查按钮就近内联。 */
+.material-import-row { display: flex; margin: 0 0 6px; }
+#material-import {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+}
+#material-import:hover { background: var(--surface-dim); }
+#material-import-status {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  white-space: normal;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+#material-import-status:empty { display: none; margin: 0; }
+#material-import-status .mat-import-error { color: var(--danger); }
+#material-import-status .mat-import-cancel,
+#material-import-status .mat-import-refresh,
+#material-import-status .mat-import-open {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+#material-import-status .mat-import-cancel { border-color: var(--danger); color: var(--danger); }
+
 /* D4-4 搜索（issue #8 工作包 D4-4，charter §5）：侧栏第四段——跨已保存
    产品事实的检索面。表单（输入 + 范围开关 + 来源类型筛选 + 执行）是静态
    DOM（app.js 只同步开关态）；结果列表与材料列表同形态（全宽左对齐按钮
@@ -1505,6 +1547,31 @@ button.panel-close:hover { background: #dcebe0; }
   margin: 0 0 14px;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+/* D4-2 PDF 页框（charter §3.2「真实页 + 可选中文本层」）：页框是定位
+   单元（滚动定位/窗口裁剪/阅读位置都以页框为对象）；页头标识在文本层
+   之外（文本层 textContent 与页块文本字节相等——选区偏移换算的事实
+   源）。文本层懒渲染：远页占位（min-height 保滚动几何），可见页先行。 */
+.pdf-page-frame {
+  margin: 0 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-sizing: border-box;
+}
+.pdf-page-head {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 7px 14px 0;
+}
+.pdf-page-frame .pdf-page-text { margin: 0; padding: 9px 14px 13px; }
+.pdf-page-pending {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
 }
 /* 行内 markdown 样式（无损：语法字符全部保留在文本中，仅施加样式——
    canonicalText 与 textContent 字节相等，charter §3.2 “渲染必须保留到
