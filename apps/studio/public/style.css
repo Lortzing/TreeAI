@@ -898,6 +898,67 @@ details.return-excerpt .return-excerpt-full {
   font-family: var(--font-read);
   font-size: 14px;
 }
+
+/* 术语建议条（①阅读模式）：渲染在 assistant 答案之后、Return 卡之前。
+   建议**只展示**——chip 是预填解释请求的入口（显式确认才发）；无进场
+   动效（reduced-motion 无需特例——W2 动效纪律）。 */
+.term-suggest-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 6px;
+  font-family: var(--font-ui);
+}
+.term-suggest-chip {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 2px 10px;
+  border: 1px dashed var(--gold-line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-chip:hover:not(:disabled) { background: var(--gold-wash); border-style: solid; }
+.term-suggest-chip:disabled { opacity: 0.6; cursor: default; }
+.term-suggest-chip.armed {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+.term-suggest-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: var(--surface-dim);
+}
+.term-suggest-confirm button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-confirm button:hover { background: var(--gold-wash); border-color: var(--gold); }
+.term-suggest-retry {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-retry:hover:not(:disabled) { background: var(--surface-dim); }
 .term-explain-card .term-explain-head {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -1705,6 +1766,30 @@ button.panel-close:hover { background: #dcebe0; }
 }
 .term-cache-toggle:hover:not(:disabled) { background: var(--surface-dim); }
 
+/* 抽屉内阅读模式三选一（①阅读模式）：manual-only / minimal-hints /
+   assisted-reading——aria-pressed 呈现当前档；gate 未过的旁注由 app.js
+   以 .muted 行呈现（诚实披露，不伪装启用）。 */
+.term-mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+.term-mode-toggle {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-mode-toggle[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+.term-mode-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+
 /* ------------------------------ 窄窗侧栏开关（<720px） ------------------------------ */
 
 #sidebar-toggle {
@@ -1808,6 +1893,12 @@ button.panel-close:hover { background: #dcebe0; }
   .term-explain-card .term-explain-actions input,
   .term-explain-card .term-explain-actions button { width: 100%; }
   .turn .term-annotation-mark { text-underline-offset: 4px; }
+
+  /* ①阅读模式（触屏）：<720px 建议条确认面纵排、chip/重试加大触点。 */
+  .term-suggest-confirm { width: 100%; }
+  .term-suggest-confirm button { flex: 1 1 auto; padding: 8px 12px; font-size: 13px; }
+  .term-suggest-chip { padding: 6px 12px; font-size: 13px; }
+  .term-suggest-retry { padding: 6px 12px; font-size: 12.5px; }
 
   /* D4-2 材料阅读器（触屏）：<720px 阅读器全幅推栈（同支线面板）；选区
      捕获条动作纵排、按钮全宽加大触点；正文留白收窄。 */

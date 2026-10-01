@@ -29,6 +29,15 @@
  *     （term 必须与 source[start,end) 切片全等；偏移为 UTF-16 码元、
  *     界内有序）；去重（同 term 至多一条）、密度上限（默认 8/答案）、
  *     代码/URL 排除（候选区间与反引号围栏或 URL 形态重叠即剔除）。
+ *   - **阅读模式**（issue #7 术语①，2026-10-01）：每树 manual-only
+ *     （默认）| minimal-hints | assisted-reading（terminology_state kv
+ *     持久化，零新迁移）；触发范围 = 仅 assistant 回答完成（订阅
+ *     run-terminal succeeded——浏览/搜索/打开树零派发）；密度上限
+ *     每段/每回答（工程占位数值）；质量门禁 TERMINOLOGY_AUTO_QUALITY_GATE
+ *     = false（未过 → 零自动派发，readModel 如实暴露原因；true 仅测试
+ *     强开）；四状态 no-suggestions / partial / budget-paused /
+ *     source-invalid（+pending/ready/failed 如实终态）；建议**只展示**——
+ *     不自动建枝、不自动解释、不自动保存批注。
  *
  * ② TerminologyService（保存/推广）：
  *   - explain：瞬态任务（去重命中已保存批注时直接返回，零模型调用）；
@@ -104,6 +113,198 @@ export const EXTRACT_PROMPT_VERSION = 2;
 export const TERMINOLOGY_CACHE_FORMAT_VERSION = 2;
 /** 上下文指纹窗口：选区每侧纳入 contextHash 的字符数。 */
 const CONTEXT_HASH_CHARS = 256;
+
+/* ------------------------------------------------------------------ */
+/* 阅读模式（issue #7 术语①，2026-10-01）：触发范围 / 密度 / 质量门禁    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 每树阅读模式（issue #7 增量验收 2026-09-30：「term/range/auto 是任务
+ * 类型，不是『少量提示/辅助阅读/仅手动』阅读模式」）：
+ * - manual-only（默认）：仅手动——选区解释/批注/推广的既有交互照旧，
+ *   **零自动派发**；
+ * - minimal-hints：少量提示——assistant 回答完成后对该条 turn 文本自动
+ *   提取候选，密度上限每段 ≤3、每回答 ≤6；
+ * - assisted-reading：辅助阅读——同上，密度上限每段 ≤6、每回答 ≤12。
+ * 自动产出的建议**只展示**：不自动建枝、不自动解释、不自动保存批注
+ * （前端点击建议 = 预填该词的解释请求，用户显式确认才发）。
+ * 持久化：repository 的 terminology_state kv（键 `reading-mode:<treeId>`，
+ * JSON 文本）——复用既有设置机制，零新迁移。
+ */
+export type TerminologyReadingMode = "manual-only" | "minimal-hints" | "assisted-reading";
+
+export const TERMINOLOGY_READING_MODES: readonly TerminologyReadingMode[] = [
+  "manual-only",
+  "minimal-hints",
+  "assisted-reading",
+];
+
+export function isTerminologyReadingMode(value: unknown): value is TerminologyReadingMode {
+  return (
+    value === "manual-only" || value === "minimal-hints" || value === "assisted-reading"
+  );
+}
+
+/**
+ * 自动标注质量门禁（默认 **false**；issue #7 验收 2026-09-30「质量门禁
+ * 未过保持自动展示/自动请求关闭」「自动标注不得开启」）。false 时：阅读
+ * 模式可保存、可切换，但**零自动派发**（assistant 回答完成不触发 extract，
+ * 预算/记账零变动），readModel 如实暴露 `autoSuggestions.enabled=false` +
+ * 未生效原因（quality-gate-pending）。true 仅测试可强开
+ * （TerminologyServiceOptions.autoQualityGate）——即使强开，自动建议仍只
+ * 展示、**绝不自动保存批注**（自动保存是独立产品语义，与门禁分开）。
+ */
+export const TERMINOLOGY_AUTO_QUALITY_GATE = false;
+
+/** 单模式的密度上限。**v2 精确数值待负责人确认，当前为工程占位参数。** */
+export interface ReadingModeDensityLimits {
+  readonly perParagraph: number;
+  readonly perAnswer: number;
+}
+
+/**
+ * 各自动档的密度上限（每段/每回答的候选数）。**v2 精确数值待负责人确认，
+ * 当前为工程占位参数**（少量提示 3/6、辅助阅读 6/12——按任务书工程口径）。
+ */
+export const READING_MODE_DENSITY_LIMITS: Readonly<
+  Record<"minimal-hints" | "assisted-reading", ReadingModeDensityLimits>
+> = {
+  "minimal-hints": { perParagraph: 3, perAnswer: 6 },
+  "assisted-reading": { perParagraph: 6, perAnswer: 12 },
+};
+
+/** 术语建议（auto 档展示面）：候选词 + 区间（UTF-16 偏移，切片已验证全等）。 */
+export interface TerminologySuggestion {
+  readonly term: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * 某条 assistant 回答的建议集状态机（进程内瞬态——不是产品事实，重启即空）：
+ * - pending：提取在途；
+ * - ready：候选齐备、无截断；
+ * - no-suggestions：提取完成、零候选（四状态之一）；
+ * - partial：密度截断（四状态之一，hiddenCount 携带「还有 N 个候选未显示」）；
+ * - budget-paused：预算不足暂停（四状态之一，error 携带服务端零派发原因）；
+ * - source-invalid：来源失效（四状态之一——锚点答案缺失/漂移，投影时降级，
+ *   建议只作快照展示）；
+ * - failed：其余诚实失败（解析/上游/超限——error 携带 code/message）。
+ */
+export type TerminologySuggestionSetStatus =
+  | "pending"
+  | "ready"
+  | "no-suggestions"
+  | "partial"
+  | "budget-paused"
+  | "source-invalid"
+  | "failed";
+
+/** 存储形态的建议集（sourceHash 是提取时刻锚点答案全文的 SHA-256）。 */
+export interface TerminologySuggestionSet {
+  readonly treeId: TreeId;
+  readonly branchId: BranchId;
+  readonly anchorTurnId: TurnId;
+  readonly readingMode: TerminologyReadingMode;
+  readonly status: TerminologySuggestionSetStatus;
+  readonly suggestions: readonly TerminologySuggestion[];
+  /** partial：被密度上限截断的候选数。 */
+  readonly hiddenCount: number;
+  readonly sourceHash: string;
+  readonly createdAt: IsoTimestamp;
+  /** failed/budget-paused 的如实原因。 */
+  readonly error: { readonly code: string; readonly message: string } | null;
+}
+
+/** readModel 暴露的自动建议总状态（gate × 模式联合决定生效与否）。 */
+export interface TerminologyAutoSuggestionsState {
+  readonly enabled: boolean;
+  /** 未生效原因（quality-gate-pending | manual-only）；生效时 null。 */
+  readonly reason: "quality-gate-pending" | "manual-only" | null;
+  /** 该树的建议集（按产生序；投影时已做来源校验）。 */
+  readonly sets: readonly TerminologySuggestionSet[];
+}
+
+/**
+ * 「每段」的切分口径（**工程占位**：v2 的段落精确口径未在库内定位到文本，
+ * 按空行分段——连续空行（\n、空白、\n 序列）视为一段边界，单换行不分段，
+ * 与聊天答案的常见段落形态一致）。返回按序的段落区间。
+ */
+export function paragraphRangesOf(text: string): ReadonlyArray<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  /* 连续空行（\n、空白、\n 的任意重复）整体视为一个段边界。 */
+  const separator = /(?:\n[ \t]*)+\n/g;
+  let start = 0;
+  for (const match of text.matchAll(separator)) {
+    const at = match.index ?? 0;
+    if (at > start) ranges.push({ start, end: at });
+    start = at + match[0].length;
+  }
+  if (start < text.length) ranges.push({ start, end: text.length });
+  return ranges;
+}
+
+function paragraphIndexOf(
+  ranges: ReadonlyArray<{ start: number; end: number }>,
+  offset: number,
+): number {
+  for (let index = 0; index < ranges.length; index += 1) {
+    if (offset >= ranges[index]!.start && offset < ranges[index]!.end) return index;
+  }
+  return ranges.length === 0 ? 0 : ranges.length - 1;
+}
+
+/**
+ * 密度上限（每段/每回答）：按候选原序（模型优先序）保留——先到先得，
+ * 超出所在段上限或回答总上限的候选计入 hiddenCount（partial 状态的
+ * 「还有 N 个候选未显示」）。
+ */
+export function applySuggestionDensity(
+  sourceText: string,
+  candidates: readonly TerminologyCandidate[],
+  limits: ReadingModeDensityLimits,
+): { kept: TerminologyCandidate[]; hiddenCount: number } {
+  const ranges = paragraphRangesOf(sourceText);
+  const perParagraph = new Map<number, number>();
+  const kept: TerminologyCandidate[] = [];
+  let total = 0;
+  let hiddenCount = 0;
+  for (const candidate of candidates) {
+    const paragraph = paragraphIndexOf(ranges, candidate.start);
+    const count = perParagraph.get(paragraph) ?? 0;
+    if (total >= limits.perAnswer || count >= limits.perParagraph) {
+      hiddenCount += 1;
+      continue;
+    }
+    perParagraph.set(paragraph, count + 1);
+    total += 1;
+    kept.push(candidate);
+  }
+  return { kept, hiddenCount };
+}
+
+/**
+ * 建议集的读取投影（来源校验；服务端纯函数——readModel 与 HTTP 共用）：
+ * 锚点答案缺失 / 漂移（branch 不符或全文指纹失配）→ source-invalid（建议
+ * 只作快照展示，前端禁用点击解释——既有 overlay 失效快照降级同纪律）；
+ * 来源完好 → 维持存储状态。
+ */
+export function projectSuggestionSet(
+  set: TerminologySuggestionSet,
+  anchorTurn: { readonly branchId: BranchId; readonly text: string } | null,
+): TerminologySuggestionSet {
+  if (
+    anchorTurn === null ||
+    anchorTurn.branchId !== set.branchId ||
+    hashSourceText(anchorTurn.text) !== set.sourceHash
+  ) {
+    return { ...set, status: "source-invalid" };
+  }
+  return set;
+}
+
+/** 建议集存储上限（进程内瞬态面；超出按产生序淘汰最旧）。 */
+const MAX_SUGGESTION_SETS = 60;
 
 /* ------------------------------------------------------------------ */
 /* 执行器：任务与用量                                                    */
@@ -940,12 +1141,21 @@ export class TerminologyExecutor {
    * URL 排除）。任务面能力——**结果不落批注**（自动保存的质量门禁未过）。
    * 上下文纪律：extract 偏移锚定全文，原文超限零派发拒绝（不截断）；
    * 预算按「已用 + 保守预留」预检；已发请求的取消/超时按未知成本记账。
+   * maxTerms：向模型请求的候选上限（缺省 MAX_EXTRACT_TERMS=8；阅读模式
+   * 的自动档按各档「每回答」密度上限传入——少量提示 6 / 辅助阅读 12）。
    */
   async extract(input: {
     readonly treeId: TreeId | null;
     readonly sourceText: string;
     readonly sourceHash: string;
+    readonly maxTerms?: number;
   }): Promise<TerminologyTask> {
+    const maxTerms = input.maxTerms ?? MAX_EXTRACT_TERMS;
+    if (!Number.isInteger(maxTerms) || maxTerms < 1 || maxTerms > 64) {
+      throw new InvalidArgumentError(
+        `extract maxTerms must be an integer in [1, 64] (got '${String(input.maxTerms)}')`,
+      );
+    }
     const task: ExecutorTask = {
       id: this.#generateId(),
       kind: "extract",
@@ -974,7 +1184,7 @@ export class TerminologyExecutor {
         return;
       }
       task.state = { kind: "running" };
-      const promptText = buildExtractPrompt(input.sourceText, MAX_EXTRACT_TERMS);
+      const promptText = buildExtractPrompt(input.sourceText, maxTerms);
       /* 预算预留：输入实测 + 输出保守上界；不足零派发。 */
       const reservation: TerminologyUsageDelta = {
         requests: 1,
@@ -1025,7 +1235,7 @@ export class TerminologyExecutor {
           };
           return;
         }
-        const candidates = validateCandidates(input.sourceText, raw, MAX_EXTRACT_TERMS);
+        const candidates = validateCandidates(input.sourceText, raw, maxTerms);
         task.state = {
           kind: "succeeded",
           explanation: null,
@@ -1098,6 +1308,11 @@ export interface TerminologyServiceOptions {
   readonly executor: TerminologyExecutor;
   /** 主产品服务（推广复用其 Anchor/Branch/Origin/Run/prompt 机制）。 */
   readonly studio: TreeStudioService;
+  /**
+   * 自动建议质量门禁（缺省 TERMINOLOGY_AUTO_QUALITY_GATE = false）。
+   * **仅测试可强开**：宿主（index.ts）不传——生产恒为 false（零自动派发）。
+   */
+  readonly autoQualityGate?: boolean;
 }
 
 export interface ExplainOutcome {
@@ -1141,6 +1356,10 @@ export interface TerminologyReadModel {
   readonly tasks: readonly TerminologyTask[];
   readonly usage: TerminologyUsageReport;
   readonly cacheEnabled: boolean;
+  /** 每树阅读模式（issue #7 术语①；缺省 manual-only）。 */
+  readonly readingMode: TerminologyReadingMode;
+  /** 自动建议总状态（gate × 模式联合决定生效；建议集按产生序投影）。 */
+  readonly autoSuggestions: TerminologyAutoSuggestionsState;
 }
 
 /** 锚点答案全文的 SHA-256 指纹（十六进制；批注时刻的全文身份）。 */
@@ -1173,11 +1392,26 @@ export class TerminologyService {
   readonly studio: TreeStudioService;
   /** 推广操作锁：单用户语义（同一时刻至多一个推广在建枝/派发）。 */
   #promotionInFlight: boolean = false;
+  /** 自动标注质量门禁（缺省 TERMINOLOGY_AUTO_QUALITY_GATE = false）。 */
+  readonly #autoQualityGate: boolean;
+  /** 建议集存储（进程内瞬态；键 `${treeId}\0${anchorTurnId}`，按产生序）。 */
+  readonly #suggestionSets = new Map<string, TerminologySuggestionSet>();
+  /** studio 事件退订（进程生命期——与服务同寿，无 dispose 面）。 */
+  readonly #unsubscribeStudio: () => void;
 
   constructor(options: TerminologyServiceOptions) {
     this.repository = options.repository;
     this.executor = options.executor;
     this.studio = options.studio;
+    this.#autoQualityGate = options.autoQualityGate ?? TERMINOLOGY_AUTO_QUALITY_GATE;
+    /* 触发范围（issue #7 术语①阅读模式）：仅订阅 assistant 回答完成
+       （run-terminal succeeded）——浏览/搜索/打开树不产生该事件，零派发的
+       既有不变量由事件面结构性保证。处理器 fire-and-forget（绝不阻塞
+       prompt 收尾）；门禁未过时第一行即返回（零派发、零记账变动）。 */
+    this.#unsubscribeStudio = this.studio.subscribeStudioEvents((event) => {
+      if (event.type !== "run-terminal" || event.state !== "succeeded") return;
+      void this.#autoSuggestForRun(event.treeId, event.runId).catch(() => undefined);
+    });
   }
 
   readModel(treeId: TreeId): TerminologyReadModel {
@@ -1188,7 +1422,258 @@ export class TerminologyService {
       tasks: this.executor.listTasks().filter((task) => task.treeId === treeId),
       usage: this.executor.usage(),
       cacheEnabled: this.executor.cacheEnabled,
+      readingMode: this.#readingModeOf(treeId),
+      autoSuggestions: this.autoSuggestionsState(treeId),
     };
+  }
+
+  /* ------------------ 阅读模式（issue #7 术语①） ------------------ */
+
+  /** kv 键（每树一条；terminology_state 是全局键值表，树 id 入键）。 */
+  static readonly READING_MODE_KEY_PREFIX = "reading-mode:";
+
+  /** 读取阅读模式（未知树 → 404；kv 缺失/损坏 → 缺省 manual-only——
+      阅读模式是展示偏好，损坏降级为缺省即可（与用量 fail-closed 不同）。） */
+  getReadingMode(treeId: TreeId): TerminologyReadingMode {
+    this.repository.getTree(treeId); // EntityNotFoundError → 404
+    return this.#readingModeOf(treeId);
+  }
+
+  /** 保存阅读模式（枚举校验 → 400；未知树 → 404；kv JSON 文本落库）。 */
+  setReadingMode(treeId: TreeId, mode: TerminologyReadingMode): void {
+    if (!isTerminologyReadingMode(mode)) {
+      throw new InvalidArgumentError(
+        `reading mode must be one of 'manual-only' | 'minimal-hints' | 'assisted-reading' (got '${String(mode)}')`,
+      );
+    }
+    this.repository.getTree(treeId); // EntityNotFoundError → 404
+    this.repository.setTerminologyState(
+      `${TerminologyService.READING_MODE_KEY_PREFIX}${treeId}`,
+      JSON.stringify({ readingMode: mode } satisfies { readingMode: TerminologyReadingMode }),
+    );
+  }
+
+  #readingModeOf(treeId: TreeId): TerminologyReadingMode {
+    const raw = this.repository.getTerminologyState(
+      `${TerminologyService.READING_MODE_KEY_PREFIX}${treeId}`,
+    );
+    if (raw === null) return "manual-only";
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        isTerminologyReadingMode((parsed as { readingMode?: unknown }).readingMode)
+      ) {
+        return (parsed as { readingMode: TerminologyReadingMode }).readingMode;
+      }
+    } catch {
+      /* 损坏 kv：展示偏好降级为缺省（诚实口径见 getReadingMode 注释） */
+    }
+    return "manual-only";
+  }
+
+  /** 自动建议总状态（readModel / retry 响应共用；含来源投影）。 */
+  autoSuggestionsState(treeId: TreeId): TerminologyAutoSuggestionsState {
+    const mode = this.#readingModeOf(treeId);
+    let enabled = true;
+    let reason: TerminologyAutoSuggestionsState["reason"] = null;
+    if (!this.#autoQualityGate) {
+      enabled = false;
+      reason = "quality-gate-pending";
+    } else if (mode === "manual-only") {
+      enabled = false;
+      reason = "manual-only";
+    }
+    const sets: TerminologySuggestionSet[] = [];
+    for (const set of this.#suggestionSets.values()) {
+      if (set.treeId !== treeId) continue;
+      sets.push(this.#projectSet(set));
+    }
+    return { enabled, reason, sets };
+  }
+
+  /** 存储形态 → 读取投影（来源校验：锚点缺失/漂移 → source-invalid）。 */
+  #projectSet(set: TerminologySuggestionSet): TerminologySuggestionSet {
+    let anchorTurn: { branchId: BranchId; text: string } | null = null;
+    try {
+      const turn = this.repository.getTurn(set.anchorTurnId);
+      anchorTurn = { branchId: turn.branchId, text: turn.text };
+    } catch {
+      anchorTurn = null; /* 锚点答案缺失（EntityNotFoundError） */
+    }
+    return projectSuggestionSet(set, anchorTurn);
+  }
+
+  #storeSet(set: TerminologySuggestionSet): void {
+    const key = `${set.treeId}\0${set.anchorTurnId}`;
+    this.#suggestionSets.delete(key); /* 重置插入序（重试/更新置尾） */
+    this.#suggestionSets.set(key, set);
+    while (this.#suggestionSets.size > MAX_SUGGESTION_SETS) {
+      const oldest = this.#suggestionSets.keys().next();
+      if (oldest.done === true) break;
+      this.#suggestionSets.delete(oldest.value);
+    }
+  }
+
+  #setOf(treeId: TreeId, anchorTurnId: TurnId): TerminologySuggestionSet | null {
+    return this.#suggestionSets.get(`${treeId}\0${anchorTurnId}`) ?? null;
+  }
+
+  /**
+   * run-terminal succeeded → 定位该 run 的 assistant turn 并跑自动建议管线
+   * （fire-and-forget）。门禁未过 / 仅手动模式 / run 无 assistant turn
+   * （对账不到）→ 零派发直接返回。
+   */
+  async #autoSuggestForRun(treeId: TreeId, runId: RunId): Promise<void> {
+    if (!this.#autoQualityGate) return; /* 质量门禁未过：零自动派发 */
+    const mode = this.#readingModeOf(treeId);
+    if (mode === "manual-only") return;
+    let anchor: { branchId: BranchId; turnId: TurnId; text: string } | null = null;
+    try {
+      const run = this.repository.getRun(runId);
+      const episode = this.repository.getEpisode(run.episodeId);
+      const branch = this.repository.getBranch(episode.branchId);
+      if (branch.treeId !== treeId) return; /* 事件树与 run 归属不一致：如实不动 */
+      const turn = this.repository
+        .listTurns(branch.id)
+        .find((candidate) => candidate.runId === runId && candidate.role === "assistant");
+      if (turn === undefined) return; /* run 无 assistant turn（如纯派发失败） */
+      anchor = { branchId: branch.id, turnId: turn.id, text: turn.text };
+    } catch {
+      return; /* run/episode/branch 对账不到：零派发（不伪造触发） */
+    }
+    await this.#extractSuggestions(treeId, anchor.branchId, anchor.turnId, anchor.text, mode);
+  }
+
+  /**
+   * 自动建议管线（gate 已过、模式非 manual-only 的调用方保证）：pending
+   * 落位 → executor.extract（走既有预算预留/usage/取消路径，密度按模式
+   * 「每回答」上限请求）→ 按任务终态映射建议集状态。**只展示**：本方法
+   * 绝不写 annotations/branches/promotion——自动保存明确保持关闭。
+   */
+  async #extractSuggestions(
+    treeId: TreeId,
+    branchId: BranchId,
+    anchorTurnId: TurnId,
+    sourceText: string,
+    mode: TerminologyReadingMode,
+  ): Promise<void> {
+    if (mode === "manual-only") return; /* 调用方已保证；显式窄化兜底 */
+    const limits = READING_MODE_DENSITY_LIMITS[mode];
+    const sourceHash = hashSourceText(sourceText);
+    this.#storeSet({
+      treeId,
+      branchId,
+      anchorTurnId,
+      readingMode: mode,
+      status: "pending",
+      suggestions: [],
+      hiddenCount: 0,
+      sourceHash,
+      createdAt: new Date().toISOString(),
+      error: null,
+    });
+    const task = await this.executor.extract({
+      treeId,
+      sourceText,
+      sourceHash,
+      maxTerms: limits.perAnswer,
+    });
+    if (task.state.kind === "succeeded") {
+      const { kept, hiddenCount } = applySuggestionDensity(
+        sourceText,
+        task.state.candidates ?? [],
+        limits,
+      );
+      const status: TerminologySuggestionSetStatus =
+        kept.length === 0 ? "no-suggestions" : hiddenCount > 0 ? "partial" : "ready";
+      this.#storeSet({
+        treeId,
+        branchId,
+        anchorTurnId,
+        readingMode: mode,
+        status,
+        suggestions: kept,
+        hiddenCount,
+        sourceHash,
+        createdAt: new Date().toISOString(),
+        error: null,
+      });
+      return;
+    }
+    if (task.state.kind === "failed" && task.state.code === "budget-exceeded") {
+      this.#storeSet({
+        treeId,
+        branchId,
+        anchorTurnId,
+        readingMode: mode,
+        status: "budget-paused",
+        suggestions: [],
+        hiddenCount: 0,
+        sourceHash,
+        createdAt: new Date().toISOString(),
+        error: { code: task.state.code, message: task.state.message },
+      });
+      return;
+    }
+    /* 其余终态（failed 任何原因 / cancelled——含迟到丢弃）如实入 failed。 */
+    const error =
+      task.state.kind === "failed" || task.state.kind === "cancelled"
+        ? task.state.kind === "failed"
+          ? { code: task.state.code, message: task.state.message }
+          : { code: "cancelled", message: "the auto suggestion extraction was cancelled" }
+        : { code: "unknown", message: "the auto suggestion task ended without a result" };
+    this.#storeSet({
+      treeId,
+      branchId,
+      anchorTurnId,
+      readingMode: mode,
+      status: "failed",
+      suggestions: [],
+      hiddenCount: 0,
+      sourceHash,
+      createdAt: new Date().toISOString(),
+      error,
+    });
+  }
+
+  /**
+   * 建议集的显式重试（budget-paused/failed 的「可恢复入口」——用户显式
+   * 动作）：以锚点答案**当前**文本重跑管线（来源漂移后重试即以新文本为准，
+   * sourceHash 随之更新）。门禁未过 → 400（建议管线整体关闭，绝不旁路）；
+   * 仅手动模式 → 400；无既有建议集 → 404；pending 在途 → 400。
+   */
+  async retrySuggestions(treeId: TreeId, anchorTurnId: TurnId): Promise<TerminologyAutoSuggestionsState> {
+    if (!this.#autoQualityGate) {
+      throw new InvalidArgumentError(
+        "the auto-annotation quality gate has not passed — the suggestion pipeline stays off (zero auto dispatch)",
+      );
+    }
+    this.repository.getTree(treeId); // EntityNotFoundError → 404
+    const mode = this.#readingModeOf(treeId);
+    if (mode === "manual-only") {
+      throw new InvalidArgumentError(
+        "the reading mode for this tree is manual-only — automatic suggestions are off",
+      );
+    }
+    const existing = this.#setOf(treeId, anchorTurnId);
+    if (existing === null) {
+      throw new EntityNotFoundError("terminology suggestion set", anchorTurnId);
+    }
+    if (this.#projectSet(existing).status === "pending") {
+      throw new InvalidArgumentError(
+        "a suggestion extraction for this answer is already in flight — wait for it to settle first",
+      );
+    }
+    const turn = this.repository.getTurn(anchorTurnId); // EntityNotFoundError → 404
+    if (turn.branchId !== existing.branchId || turn.role !== "assistant") {
+      throw new InvalidArgumentError(
+        `anchor turn ${anchorTurnId} no longer matches the recorded suggestion anchor (schema integrity violation)`,
+      );
+    }
+    await this.#extractSuggestions(treeId, turn.branchId, turn.id, turn.text, mode);
+    return this.autoSuggestionsState(treeId);
   }
 
   /** 解释（瞬态任务）：去重命中已保存批注 → 零模型调用直接返回。 */
@@ -1624,6 +2109,11 @@ export class TerminologyService {
   /** 缓存偏好（执行器 + kv 持久化由宿主完成；此处只透传执行器）。 */
   setCachePreference(enabled: boolean): void {
     this.executor.setCacheEnabled(enabled);
+  }
+
+  /** 退订 studio 事件（进程收尾/测试清理；幂等——重复调用无副作用）。 */
+  dispose(): void {
+    this.#unsubscribeStudio();
   }
 
   /** 校验锚点三件套（tree/branch/assistant turn + 选区切片不变量）。 */
