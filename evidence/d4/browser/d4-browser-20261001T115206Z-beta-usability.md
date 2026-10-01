@@ -152,3 +152,24 @@ sidecar JSON 为准）。
 - 键盘驱动的原生 caret/选区在 headless Chrome 153 不可用（既有已知
   限制，非本波引入）；触屏长按选区合成同上（已披露处置）。
 - 本地机器工程证据（环境入 sidecar），不跨机器宣称。
+
+## 波次门禁复验（分支 tip `99bbf3f`）
+
+- `npm ci --no-audit --no-fund`：完成（Node 24.21.0 / npm 11.19.0）
+- `npm run typecheck`：PASS（7 个有源码 workspace）
+- `npm test`：**769/769，0 fail**（基线 767 + 本波 2 项新测试：
+  ui-material-reader #mat-blocks tabindex、ui-probe Esc busy 注入）
+- `npm run verify:d4`：**19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN**，exit 3
+  （NOT_RUN = b8 负责人目标机门禁；**b7-beta-usability 经证据审计翻
+  PASS**，detail 显式披露自动部分 ≠ B7 全过；证据
+  `evidence/d4/runs/d4-offline-20261001T120226116Z`）
+- `npm run verify:d4:selftest`：控制组 + **9 项**故障注入全部检出（含
+  本波新增 inject-stripped-b7-sidecar——b7 审计行不被吞绿；证据
+  `evidence/d4/selftest/d4-selftest-20261001T115759687Z`）
+- `npm run verify:d2`：**21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN**，exit 3
+  （NOT_RUN = D1 live 显式门控；证据
+  `evidence/d2/runs/d2-offline-20261001T115819550Z`）
+- `npm run run:d4-browser -- --mode selftest`：**15 PASS / 0 FAIL /
+  0 BLOCKED / 0 NOT_RUN**，exit 0（分支 tip 复跑；证据运行见上方
+  `26c5d5a` 记录）
+

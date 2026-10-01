@@ -1,0 +1,67 @@
+{
+  "runId": "d4-offline-20261001T115802710Z",
+  "schemaVersion": "d4-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-01T11:58:02.710Z",
+  "endedAt": "2026-10-01T11:58:02.846Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 5,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 23,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "b4 noResult q-neg-01: text actually present in the corpus"
+      },
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 28,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "clean boot per README (argv/entry/flags reconciled; honest empty state; tree created via the empty-state action); wide 1600px + narrow 390px (mobile) viewports usable with no horizontal overflow and hit-testable key controls; keyboard: 33 Tab steps to the reader text with visible focus outlines, Enter+Space activations, 3 layered Escape closes with focus restoration, reader arrows scroll; touch: 5 taps / 1 swipes / 1 in-gesture drag-select arming the capture bar via selectionchange (clipboard read-back byte-equal); reduced-motion honored with immediate arrival; draft/focus/panel-scroll/reader-position all preserved across the in-session round trip — AUTOMATED part of B7 only: the Mac sign-off and the 3–5 person trials remain the owner's D4-G3 human sequence, so this PASS is NOT B7 complete — evidence run d4-browser-20261001T115206-48042 (mode selftest, gitCommit 26c5d5ac49c0984fca8a04aa11d0ca9e1c7f7dfa, recorded 2026-10-01T11:54:40.760Z); local-machine engineering evidence (environment in the sidecar; never claimed cross-machine); the final candidate-SHA regression re-runs run:d4-browser",
+      "evidenceFiles": [
+        "evidence/d4/browser/d4-browser-20261001T115206Z-beta-usability/45-beta-usability.json"
+      ],
+      "id": "b7-beta-usability"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "scoped run (--only): only fixtures-integrity-d4, docs-integrity-d4, entrypoints-d4, b7-beta-usability executed",
+    "offline green is not final-gate green: B3/B7 real-Pi + manual evidence live in run:d4-browser and D4-G3",
+    "D2/D3 regression gates stay separate entry points (verify:d2, record:d3) per the charter §8 command list"
+  ]
+}
