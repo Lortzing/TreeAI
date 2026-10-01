@@ -1,0 +1,44 @@
+{
+  "check": "d4-return-from-material",
+  "mode": "selftest",
+  "modeNote": "echo driver — NOT B3 evidence; proves the probe/UI code path only",
+  "treeId": "tree_1a479219-c6c4-4702-a0c9-1dc71490f522",
+  "returns": [
+    {
+      "branch": "branch_0cb2993e-c35d-43c9-8d0c-74715016884d",
+      "blockId": "blk-7",
+      "marker": "TreeAI-B3-探针-MD-RETURN-2d61",
+      "fields": "material “md-01.md” · version matver_1f3a36f2-c112-4e3e-aa82-71fd213b3324 (markdown d4-md-v1) · block blk-7 · confirmed 2026/10/1 14:33:31"
+    },
+    {
+      "branch": "branch_d325d50b-7065-4694-a0e3-f579999d50d1",
+      "blockId": "page-2",
+      "marker": "TreeAI-B3-探针-PDF-RETURN-84f0",
+      "fields": "material “pdf-01.pdf” · version matver_032ba4ae-3892-4ff8-ab87-35464ba9ceee (pdf d4-pdf-v1) · block page-2 · page 2 · confirmed 2026/10/1 14:33:34"
+    }
+  ],
+  "markers": {
+    "mdQ1": "TreeAI-B3-探针-MD-首问-6f2c",
+    "mdF1": "TreeAI-B3-探针-MD-追问一-a03e",
+    "mdF2": "TreeAI-B3-探针-MD-追问二-b7d1",
+    "pdfQ1": "TreeAI-B3-探针-PDF-首问-9e54",
+    "pdfF1": "TreeAI-B3-探针-PDF-追问一-77c2",
+    "pdfF2": "TreeAI-B3-探针-PDF-追问二-31b8",
+    "restartF": "TreeAI-B3-探针-重启续走-5c8a",
+    "mdRet": "TreeAI-B3-探针-MD-RETURN-2d61",
+    "pdfRet": "TreeAI-B3-探针-PDF-RETURN-84f0"
+  },
+  "lines": [
+    "md: panel View source → reader at block blk-7 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "pdf: panel View source → reader at block page-2 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "return-card source jump reopens the reader at the anchored md block",
+    "post-Return restart: SIGTERM → new process (port 55762→55762) → both Return cards on the Trunk + branch history readable"
+  ],
+  "frontendBugs": [
+    {
+      "id": "branch-section-collapse",
+      "detail": "#branch-section (the sidebar's only flex:1 section, min-height:0) collapses to height 0 when the other sidebar sections (Forest/Navigate/Materials/Search, all flex-shrink:0) fill the viewport — every branch tab is clipped and unclickable (elementFromPoint at the tab center returns ASIDE#sidebar; measured section height 0px, #branch-tabs content 96px) — the 1b48ef0 fix capped tree-list/material-list but left this pressure valve with no floor; reported to the owner, not fixed in this wave (probe continues via DOM click so the panel paths stay exercised)"
+    }
+  ],
+  "pageErrorsExcluded": 0
+}
