@@ -649,10 +649,18 @@ function finish(code) {
   try {
     const git = gitInfo();
     const fixtures = fixturesBinding();
+    /* 结构化结论字段（issue #8 增量验收 2026-09-30 18:18 P1：runId/gitCommit/
+       mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
       version: "0.2.0",
+      runId: sc.runId,
       mode: MODE,
+      verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
+      exitCode: exit,
+      counts: { pass: counts.pass, fail: counts.fail, blocked: counts.blocked, notRun: counts.notRun },
+      gitCommit: git === null ? "unavailable (git rev-parse failed)" : git.head,
+      gitDirty: git === null ? null : git.dirty,
       generatedAt: new Date().toISOString(),
       ...(git !== null ? { git } : {}),
       ...(fixtures !== null ? { fixtures } : {}),
@@ -667,7 +675,7 @@ function finish(code) {
 /* 场景上下文与主流程                                                    */
 /* ------------------------------------------------------------------ */
 
-const sc = { dataDir: null, artifactsDir: null, studioUrl: null };
+const sc = { dataDir: null, artifactsDir: null, studioUrl: null, runId: `d4-browser-${new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "")}-${String(process.pid)}` };
 
 /** 材料探针的共享场景状态（探针间传递：树/导入产物；fixturesUsed 供
     summary 的冻结集绑定）。 */

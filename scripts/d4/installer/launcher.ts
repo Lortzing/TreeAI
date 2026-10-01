@@ -850,14 +850,20 @@ async function cmdUninstall(args: readonly string[]): Promise<number> {
       }
     };
     try {
+      /* 跳过仍在本执行链上的文件：node/（运行中的 node.exe 唯一被锁处）
+       * 与 cmd 正在逐行读取的入口 .bat（uninstall.bat 直呼或 treeai.bat
+       * 通用入口）/ 它们调用的 treeai.ps1——cmd.exe 增量读 .bat，删掉它
+       * 会出现 "The batch file cannot be found" 且退出码非 0（run
+       * 36768819745 实测）；这四项交由分离 PowerShell 收尾。 */
+      const keep = new Set(["node", "uninstall.bat", "treeai.bat", "treeai.ps1"]);
       const before = readdirSync(BUNDLE_ROOT);
       for (const entry of before) {
-        if (entry === "node") continue;
+        if (keep.has(entry)) continue;
         rmSync(join(BUNDLE_ROOT, entry), { recursive: true, force: true });
       }
       const left = readdirSync(BUNDLE_ROOT);
       logLineSelf(`launcher-stage removed ${String(before.length - left.length)}/${String(before.length)} top-level, left: ${left.join(",")}`);
-      out(`treeai-launcher: 安装目录内容已删除（node 运行时随进程退出由后台收尾）：${BUNDLE_ROOT}`);
+      out(`treeai-launcher: 安装目录内容已删除（node 运行时与入口脚本随进程退出由后台收尾）：${BUNDLE_ROOT}`);
     } catch (err) {
       logLineSelf(`launcher-stage failed: ${err instanceof Error ? err.message : String(err)}`);
     }

@@ -322,3 +322,11 @@ D4-2 PDF 阅读器增量、D4-8 前端、D4-6 性能/Beta 收口、B3/B8 真实 
 （owner）。win-x64 卸载三连败根因仍在查（分离 PowerShell 在 CI runner 上
 零执行——已改两段式：launcher 同步删 node/ 外全部 + -File 脚本收尾，待新
 CI 轮验证）。
+
+**2026-10-01 集成记录（续四）**：H（`wip/d4-6-perf`，tip `4c4b067`）已合并
+main——B6 数据集（100 材料/100 万单元/1 万事实/1000 分支，确定性双运行字节
+一致）+ 测量 harness + b6 真执行（search p95 204ms≤500ms 等，环境如实）。
+合并复验：typecheck、738-738、verify:d4 **15-0-5**、双 selftest、verify:d2
+基线不变。**D4-7 win-x64 CI 四连修闭环：run 36772866173 三平台全绿。**
+仍在飞：G（wip/d4-8-frontend）。剩余工程面：D4-2 PDF 阅读器增量（下一波，
+app.js 让位 G）、B3/B6/B9 浏览器面与 real-Pi（最终候选 SHA）。
