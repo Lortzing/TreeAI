@@ -707,7 +707,7 @@ export async function probeReturnFromMaterial(ctx) {
   const runReturnLoop = async (label, branchId, material, range, returnText, retMarker) => {
     /* 1) 面板打开（tab 点击）→ ⌖ View source → 阅读器打开于锚定版本+块。 */
     await openBranchPanelViaTab(ctx, branchId);
-    await inputClickAt(ctx, "#panel-view-source");
+    await domClick(ctx, "#panel-view-source");
     const jumped = await waitFor(
       ctx,
       `(() => { const reader = document.getElementById("material-reader"); ` +

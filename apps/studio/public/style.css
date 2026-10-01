@@ -93,13 +93,14 @@ body {
 
 #new-tree { width: 100%; }
 
-/* 侧栏区块不收缩到内容以下：flex 默认 shrink=1 会让区块被压扁、内容
-   （如材料清单的低位按钮）溢出并被后续区块盖住而不可点（Navigate 段
-   入列后实测触发）。空间不足时由 #sidebar 自身滚动兜底。 */
-.sidebar-section { display: flex; flex-direction: column; min-height: 0; flex-shrink: 0; }
-#branch-section { flex: 1; overflow-y: auto; }
-/* 长清单（B1 分母 33 条材料、B9 多树）在区块内滚动——不把侧栏其余区块
-   挤出视口，scrollIntoView 可达、坐标点击可命中。 */
+/* 侧栏五段（Forest/Branches/Materials/Search/Navigate）统一为自然高度 +
+   区块内滚动：区块一律不伸展不收缩（flex:0 0 auto），长清单（树/分支页签/
+   材料/导航树）各自带上限滚动容器；侧栏整体 #sidebar overflow-y:auto 兜底
+   滚动。此前 flex:1/flex:1.2 1 0 的「吸收剩余空间」模型在五段并存时把
+   basis-0 的 Branches/Navigate 压扁到 0 或让其内容溢出画到相邻区块下面
+   （浏览器探针 elementFromPoint 实测两处），一律废弃。 */
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; flex: 0 0 auto; }
+#branch-section { flex: 0 0 auto; max-height: 30vh; overflow-y: auto; }
 #material-list { max-height: 38vh; overflow-y: auto; }
 #tree-list { max-height: 22vh; overflow-y: auto; }
 
@@ -318,7 +319,7 @@ body {
    NAV_ROW_HEIGHT_PX 同值——改一处必须同步另一处）；长标题截断 + title
    全文；id 徽标即同名节点的身份；.nav-item.focused 是 roving tabindex 键
    盘焦点的可见态（窗口重划后焦点行必在 DOM）。 */
-#nav-section { flex: 1.2 1 0; min-height: 220px; }
+#nav-section { flex: 0 0 auto; }
 
 #nav-tree-search, #nav-node-search {
   width: 100%;
@@ -425,8 +426,8 @@ body {
 
 /* 有界滚动容器：虚拟化窗口的事实源（窗口外只留 spacer 高度占位）。 */
 #nav-tree-scroll {
-  flex: 1 1 0;
   min-height: 132px;
+  max-height: 34vh;
   overflow-y: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);

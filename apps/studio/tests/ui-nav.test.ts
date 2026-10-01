@@ -1940,7 +1940,7 @@ test("CSS lexicon: the nav surface's bounded scroll container, fixed row height,
   const base = baseCssLayer(STYLE_CSS);
   /* 有界滚动容器（虚拟化窗口的事实源）。 */
   assert.ok(/#nav-tree-scroll\s*\{[^{}]*overflow-y:\s*auto/.test(base), "the tree scroll container is the bounded overflow container");
-  assert.ok(/#nav-tree-scroll\s*\{[^{}]*flex:\s*1 1 0/.test(base), "the scroll container is height-bounded within the section");
+  assert.ok(/#nav-tree-scroll\s*\{[^{}]*max-height:\s*34vh/.test(base), "the scroll container is height-bounded (max-height cap — sidebar sections are natural-height since the five-section flex model change)");
   /* 固定行高（虚拟化常数——与 app.js NAV_ROW_HEIGHT_PX 同值）。 */
   assert.ok(/\.nav-item\s*\{[^{}]*height:\s*34px/.test(base), "rows have the fixed 34px height (the virtualization constant)");
   /* 键盘焦点行的可见态（roving tabindex 的焦点不消失的可见保证）。 */

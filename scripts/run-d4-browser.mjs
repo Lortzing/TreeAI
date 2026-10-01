@@ -92,9 +92,10 @@ import {
   probeImportDenominator,
   probeExportRestoreRecover,
 } from "./d4/browser/material-probes.mjs";
-import { probeBranchFromMaterial, probeReturnFromMaterial } from "./d4/browser/b3-probes.mjs";
-import { probeNavBrowser } from "./d4/browser/nav-probes.mjs";
-import { probeB6ScaleBrowser } from "./d4/browser/scale-probes.mjs";
+/* 终波探针（b3/nav/scale）按需动态加载：它们的模块图深达 apps/studio/src
+ * （nav→b9-dataset→markdown-parser）与 tests/support（scale→b6 dataset/
+ * loader）——静态导入会让 --help（entrypoints-d4 检查）在合成树/精简
+ * checkout 里因缺文件而失败。运行对应检查时才加载。 */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
@@ -891,13 +892,33 @@ async function main() {
     if (inScope("d4-import-material")) await runCheck("d4-import-material", () => probeImportMaterial(probeCtx));
     if (inScope("d4-import-denominator")) await runCheck("d4-import-denominator", () => probeImportDenominator(probeCtx));
     if (inScope("d4-read-and-select")) await runCheck("d4-read-and-select", () => probeReadAndSelect(probeCtx));
-    if (inScope("d4-branch-from-material")) await runCheck("d4-branch-from-material", () => probeBranchFromMaterial(probeCtx));
-    if (inScope("d4-return-from-material")) await runCheck("d4-return-from-material", () => probeReturnFromMaterial(probeCtx));
+    if (inScope("d4-branch-from-material")) {
+      await runCheck("d4-branch-from-material", async () => {
+        const { probeBranchFromMaterial: run } = await import("./d4/browser/b3-probes.mjs");
+        return run(probeCtx);
+      });
+    }
+    if (inScope("d4-return-from-material")) {
+      await runCheck("d4-return-from-material", async () => {
+        const { probeReturnFromMaterial: run } = await import("./d4/browser/b3-probes.mjs");
+        return run(probeCtx);
+      });
+    }
     if (inScope("d4-restart-continue")) await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
     if (inScope("d4-search-recover")) await runCheck("d4-search-recover", () => probeSearchRecover(probeCtx));
     if (inScope("d4-export-restore-recover")) await runCheck("d4-export-restore-recover", () => probeExportRestoreRecover(probeCtx));
-    if (inScope("d4-nav-browser")) await runCheck("d4-nav-browser", () => probeNavBrowser(probeCtx));
-    if (inScope("d4-b6-scale-browser")) await runCheck("d4-b6-scale-browser", () => probeB6ScaleBrowser(probeCtx));
+    if (inScope("d4-nav-browser")) {
+      await runCheck("d4-nav-browser", async () => {
+        const { probeNavBrowser: run } = await import("./d4/browser/nav-probes.mjs");
+        return run(probeCtx);
+      });
+    }
+    if (inScope("d4-b6-scale-browser")) {
+      await runCheck("d4-b6-scale-browser", async () => {
+        const { probeB6ScaleBrowser: run } = await import("./d4/browser/scale-probes.mjs");
+        return run(probeCtx);
+      });
+    }
 
     finish(0);
   } catch (err) {

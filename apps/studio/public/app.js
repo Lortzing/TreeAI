@@ -8980,9 +8980,17 @@ for (const kind of SEARCH_KIND_ORDER) {
 
 /* 面板收起动作的失败呈现在主线横幅（面板此刻已收起/未开）。 */
 $("panel-close").addEventListener("click", () => void guard(() => closePanel()));
-$("panel-view-source").addEventListener("click", () =>
-  void guard(() => (isMaterialBranchView(branchView(state.panelBranchId)) ? materialSourceJump(state.panelBranchId) : revealOrigin(state.panelBranchId)), "panel"),
-);
+$("panel-view-source").addEventListener("click", () => {
+  const view = branchView(state.panelBranchId);
+  /* 跳原文是导航动作：busy 锁（防重复提交）在途时不得静默丢弃用户点击
+     （实测：切枝的 /switch 在途时点击 View source 被丢弃，阅读器不开、
+     无任何反馈）。有界等待锁释放后执行。 */
+  void (async () => {
+    for (let i = 0; i < 50 && state.busy; i += 1) await new Promise((r) => window.setTimeout(r, 100));
+    if (state.busy) return;
+    await guard(() => (isMaterialBranchView(view) ? materialSourceJump(state.panelBranchId) : revealOrigin(state.panelBranchId)), "panel");
+  })();
+});
 
 /**
  * 材料 Branch 的「⌖ View source」（D4-3）：跳原文——阅读器打开来源材料
