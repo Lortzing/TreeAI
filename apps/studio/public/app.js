@@ -549,7 +549,10 @@ const state = {
    *     pathShowAll: boolean,
    *     search: {phase:"idle"|"loading"|"loaded"|"failed", error:string|null, query:string|null, hits:NavBranchSearchHitT[], nextCursor:string|null},
    *     persistError: string|null,
-   *     locateNote: string|null
+   *     locateNote: string|null,
+   *     lastCounts: {rendered:number, total:number}|null,
+   *     persistQueued: boolean,
+   *     persistRunning: boolean
    *   }
    * }}
    */
@@ -7299,6 +7302,11 @@ async function navLoadChildrenPage(session, parentId, mode) {
   if (mode === "first" && entry.ids.length > 0 && entry.state !== "failed") return Promise.resolve();
   if (mode === "next" && entry.nextCursor === null) return Promise.resolve();
   const requestCursor = mode === "next" ? entry.nextCursor : null;
+  if (mode === "first" && entry.ids.length > 0) {
+    /* 显式重试首页：旧子节点先出结构缓存（即将整页重建）。 */
+    for (const id of entry.ids) session.nodes.delete(id);
+    entry.ids = [];
+  }
   entry.state = "loading";
   entry.error = null;
   const promise = (async () => {
@@ -7661,19 +7669,22 @@ function renderNavTree() {
   treeEl.replaceChildren(...elements);
   spacerTop.setAttribute("style", `height: ${String(start * NAV_ROW_HEIGHT_PX)}px`);
   spacerBottom.setAttribute("style", `height: ${String(Math.max(0, rows.length - end) * NAV_ROW_HEIGHT_PX)}px`);
-  renderNavTreeStatusOnly(session, end - start, rows.length);
+  session.lastCounts = { rendered: end - start, total: rows.length };
+  renderNavTreeStatusOnly(session);
   navPumpLoads(session, rows, start, end);
   if (hadFocus) navRestoreTreeFocus(session);
 }
 
-/** 状态行（虚拟化口径的如实披露 + 持久化/定位注记）。 */
-function renderNavTreeStatusOnly(session, rendered = null, total = null) {
+/** 状态行（虚拟化口径的如实披露 + 持久化/定位注记；计数取最近一次渲染
+    的窗口口径——注记更新不抹掉计数）。 */
+function renderNavTreeStatusOnly(session) {
   const el = $("nav-tree-status");
   const overview = session.overview;
+  const counts = session.lastCounts;
   let text = "";
-  if (overview !== null && rendered !== null) {
+  if (overview !== null && counts !== null) {
     text =
-      `rendering ${String(rendered)}/${String(total)} visible rows (virtualized window) · ` +
+      `rendering ${String(counts.rendered)}/${String(counts.total)} visible rows (virtualized window) · ` +
       `${String(overview.nodeCount)} nodes · max depth ${String(overview.maxDepth)}`;
   }
   if (session.persistError !== null) text += ` · expand state not saved — ${session.persistError}`;
@@ -8058,6 +8069,12 @@ async function navRevealBranch(session, branchId, pathSteps) {
           continue;
         }
         if (entry.state === "failed") break; /* 该层加载失败——如实停下（Retry 行在场） */
+        if (entry.ids.length === 0) {
+          /* 该层从未加载（恢复早于窗口泵触发）：直接取首页。 */
+          await navLoadChildrenPage(session, parentId, "first");
+          guard += 1;
+          continue;
+        }
         if (entry.nextCursor === null) break; /* 翻尽未见——节点已不在当前事实 */
         await navLoadChildrenPage(session, parentId, "next");
         guard += 1;
