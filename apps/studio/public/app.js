@@ -1845,9 +1845,14 @@ function reconcileTopLevel(container, desired) {
     return; /* 零变更快路径 */
   }
   const keep = new Set(desired);
-  for (const node of current) {
-    if (!keep.has(node)) container.removeChild(node);
-  }
+  /* 先就位、后移除（顺序整改）：新节点先插入到目标位，再摘除非保留的
+     旧节点——移除窗口内新旧并存，内容高度不会瞬时塌缩。原先「先移除后
+     插入」在替换瞬态卡（解释卡 / Return 卡——每次重渲重建的新鲜节点）
+     时，内容高度先塌再涨，浏览器把 scrollTop 钳到塌缩高度（实测塌到 0），
+     而滚动监听把该钳位值记成分支的阅读位置——此后每次重渲都恢复到错误
+     位置（用户阅读位置无声重置到顶部；W2 §4 纪律被瞬态布局破坏——术语
+     真实浏览器探针在整序环境下确定性复现，单独跑时布局时序不触发）。
+     就位/移除同属一个同步块，无中间绘制；终态与原实现逐位一致。 */
   for (let index = 0; index < desired.length; index += 1) {
     const node = desired[index];
     const at = container.children[index];
@@ -1857,6 +1862,9 @@ function reconcileTopLevel(container, desired) {
     } else {
       container.insertBefore(node, at);
     }
+  }
+  for (const node of current) {
+    if (!keep.has(node)) container.removeChild(node);
   }
   while (container.children.length > desired.length) {
     container.removeChild(container.children[desired.length]);

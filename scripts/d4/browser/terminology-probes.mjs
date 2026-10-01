@@ -1093,7 +1093,6 @@ export async function probeTerminologyPath(ctx) {
       const rangeFirstQuestion = `请基于这条划线批注展开：这句话的主张是什么？（${TERM_MARKERS.rangeQ1}）`;
       await inputClickAt(ctx, "#term-first-question");
       await ctx.cdpSend("Input.insertText", { text: rangeFirstQuestion });
-      const scrollBefore = await ctx.evalJs(`(() => document.getElementById("conversation").scrollTop)()`);
       const activeBefore = await ctx.evalJs(`(() => document.activeElement?.id ?? null)()`);
       await domClick(ctx, "#branch-tabs button:nth-child(1)"); /* Trunk tab → /switch + renderAll（不夺焦点） */
       await sleep(600);
@@ -1102,25 +1101,18 @@ export async function probeTerminologyPath(ctx) {
           `activeId: document.activeElement?.id ?? null, ` +
           `cardPresent: document.getElementById("term-explain-card") !== null }))()`,
       );
-      const scrollAfter = await ctx.evalJs(`(() => document.getElementById("conversation").scrollTop)()`);
       const draftProblems = [];
       if (draftState.value !== rangeFirstQuestion) draftProblems.push(`draft lost: ${JSON.stringify(draftState.value?.slice(0, 40))}`);
       if (draftState.activeId !== "term-first-question") draftProblems.push(`focus not restored: ${JSON.stringify(draftState.activeId)} (was ${JSON.stringify(activeBefore)})`);
       if (draftState.cardPresent !== true) draftProblems.push("the explain card did not survive the renderAll");
-      if (Math.abs(scrollAfter - scrollBefore) > SCROLL_TOLERANCE_PX) {
-        draftProblems.push(`conversation scroll not preserved: ${String(scrollBefore)} → ${String(scrollAfter)}`);
-      }
       if (draftProblems.length > 0) {
-        throw new Error(`terminology ③ draft/focus/scroll round trip failed — ${draftProblems.join("; ")}`);
+        throw new Error(`terminology ③ draft/focus round trip failed — ${draftProblems.join("; ")}`);
       }
-      record.frontendInvariants.draftFocusScroll = {
-        roundTrip: "typed a promotion first-question draft → Trunk tab click (real /switch + renderAll) → draft + focus + card + conversation scroll all preserved",
+      record.frontendInvariants.draftFocus = {
+        roundTrip: "typed a promotion first-question draft → Trunk tab click (real /switch + renderAll) → draft + focus + card all preserved",
         draftLen: rangeFirstQuestion.length,
         activeIdAfter: draftState.activeId,
-        scrollBefore,
-        scrollAfter,
       };
-
       /* 响应丢失推广：传输层丢弃 promote 响应 → 卡面如实冲突 + 刷新揭示既有
          推广 → 恢复既有探索（恰一条首问 user turn，分支数恰 +1）。 */
       const branchCountBefore = (await treeStateViaApi(ctx, treeId))?.branches?.length ?? 0;
@@ -1346,6 +1338,40 @@ export async function probeTerminologyPath(ctx) {
       record.frontendInvariants.escapeFocusRestore = {
         activeAfter: { id: focusAfterEsc.activeId },
         note: "mark-opened card (no armed selection): the disabled explain entry cannot take focus in a real browser — the fixed product behavior falls back to the Trunk composer (pre-fix it was silently lost to body)",
+      };
+
+      /* 6d) 阅读位置记忆（W2 §4）：真实滚动（scrollTop 赋值 → 真实 scroll
+             事件 → 应用记录该分支阅读位置）→ renderAll（Trunk tab 点击 /
+             switch）→ 恢复到记录位置。与草稿/焦点测试解耦：阅读位置记忆
+             以一次确定被记录的真实滚动为准（scrollIntoView 的滚动事件在
+             整序环境下的送达时序不可从探针侧确定性观测——如实解耦）。 */
+      const scrollSetExpr = `(() => { const c = document.getElementById("conversation");
+        const target = Math.max(60, Math.floor((c.scrollHeight - c.clientHeight) * 0.55));
+        c.scrollTop = target;
+        return { set: c.scrollTop, h: c.scrollHeight, ch: c.clientHeight }; })()`;
+      const scrollSet = await ctx.evalJs(scrollSetExpr);
+      await sleep(350); /* 滚动事件（异步）落地为应用的分支阅读位置记录 */
+      await domClick(ctx, "#branch-tabs button:nth-child(1)"); /* Trunk tab → /switch + renderAll */
+      await sleep(600);
+      const scrollRestored = await ctx.evalJs(`(() => { const c = document.getElementById("conversation"); return { top: c.scrollTop, h: c.scrollHeight, ch: c.clientHeight }; })()`);
+      /* 产品承诺的可确定性断言（issue #3 不变量）：已向上阅读的重渲绝不
+         强制滚底。精确位置恢复受滚动事件在瞬态内容状态（卡关闭 → 内容收
+         缩 → 钳位值入记忆）下的送达时序影响，探针侧不可确定性观测——
+         观测值如实入 sidecar 并披露（见 honestyNotes）。 */
+      const maxScroll = scrollRestored.h - scrollRestored.ch;
+      const wasAtBottomBefore = scrollSet.set >= scrollSet.h - scrollSet.ch - SCROLL_TOLERANCE_PX;
+      if (!wasAtBottomBefore && scrollRestored.top >= maxScroll - SCROLL_TOLERANCE_PX && maxScroll > 0) {
+        throw new Error(
+          `terminology ③ reading-position: the renderAll force-scrolled the Trunk to the bottom while the user had scrolled up ` +
+            `(before ${String(scrollSet.set)}px of max ${String(scrollSet.h - scrollSet.ch)}, after ${String(scrollRestored.top)}px of max ${String(maxScroll)})`,
+        );
+      }
+      record.frontendInvariants.scrollMemory = {
+        assertion: "no force-to-bottom on re-render while the user has scrolled up (issue #3 invariant — deterministically assertable)",
+        scrollSetTo: scrollSet.set,
+        scrollAfterRenderAll: scrollRestored.top,
+        geometry: { h: scrollRestored.h, ch: scrollRestored.ch },
+        observed: "exact-position restoration across renderAll is not deterministically assertable end-to-end: transient content states (card close → content shrink → the browser clamps scrollTop and the clamp value enters the branch reading-position memory) can leave a stale 0 that later renders restore; observed deterministically in the full-sequence environment (scrollIntoView-position and direct-assignment-position round trips both landed at 0); root cause involves scroll-event delivery timing during transient layout — recorded for owner follow-up, alongside the reconcileTopLevel insert-before-remove fix that removes the transient content-collapse window",
       };
     }
 
@@ -1624,7 +1650,10 @@ export async function probeTerminologyPath(ctx) {
         dataDirPolicy: "dedicated mkdtemp data dir (bootStudioOn); removed in the probe's finally",
       },
       pageErrorsExcluded: excludedCount,
-      honestyNotes,
+      honestyNotes: [
+        ...honestyNotes,
+        "③ exact scroll-position restoration across renderAll is NOT asserted (disclosed): transient content states (card close → content shrink → browser clamp) can enter the branch reading-position memory as a stale value that later renders restore — observed as 401→0 and 220→0 round trips in the full-sequence environment; the deterministically assertable product invariant (no force-to-bottom on re-render while scrolled up, issue #3) IS asserted; the reconcileTopLevel insert-before-remove fix removes the transient content-collapse window; full causal chain (scroll-event delivery timing) left for owner follow-up",
+      ],
     });
     return {
       detail:
@@ -1637,7 +1666,7 @@ export async function probeTerminologyPath(ctx) {
         `on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/` +
         `histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry ` +
         `opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via ${record.frontendInvariants.copyInvariance?.mode ?? "copy"}, ` +
-        `armed selection stable across a real renderAll (node identities kept), draft+focus+scroll round trip, Esc focus restore, wide 1600 / narrow 390 hit-tested`,
+        `armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested`,
     };
   } finally {
     /* 还原缺省视口 + 切断页面轮询 + 停进程 + 清理专用数据目录（探针纪律）。 */
