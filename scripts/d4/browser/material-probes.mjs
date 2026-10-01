@@ -15,8 +15,11 @@
  *   - tests/fixtures/d4/b1-import/md-registry.json / pdf-registry.json
  *     （全分母登记：24 ready + 8 文件负例；3 个超限负例按 manifest 配方
  *     确定性生成——生成器与 tests/support/verifier/d4-b1-import.ts 同源）；
- *   - tests/fixtures/d4/b2-anchors/markdown-selections.json（选区语义：
- *     blockId / 绝对 UTF-16 区间 / 摘录）。
+ *   - tests/fixtures/d4/b2-anchors/markdown-selections.json /
+ *     pdf-selections.json（选区语义：blockId / 绝对 UTF-16 区间 / 摘录；
+ *     B2 浏览器面在真实阅读器里铺满两份冻结分母——45 markdown + 30 PDF）；
+ *   - tests/fixtures/d4/b2-anchors/invalid-selections.json（冻结负例；
+ *     cross-page 条目是浏览器面跨页拒绝镜像的事实源）；
  *
  * 探针纪律：
  *   - 页面内的操作全部是真实 DOM/输入事件（CDP Input.dispatchMouseEvent
@@ -46,6 +49,8 @@ import { join } from "node:path";
 const B1_MARKDOWN_DIR = ["tests", "fixtures", "d4", "b1-import", "markdown"];
 const B1_ROOT = ["tests", "fixtures", "d4", "b1-import"];
 const B2_SELECTIONS_FILE = ["tests", "fixtures", "d4", "b2-anchors", "markdown-selections.json"];
+const B2_PDF_SELECTIONS_FILE = ["tests", "fixtures", "d4", "b2-anchors", "pdf-selections.json"];
+const B2_INVALID_SELECTIONS_FILE = ["tests", "fixtures", "d4", "b2-anchors", "invalid-selections.json"];
 
 /** 本探针使用的 B1 冻结 fixture（确定性挑选，覆盖中文/emoji/长文懒加载）。 */
 const FIXTURE_IDS = ["md-01", "md-06", "md-11"];
@@ -64,6 +69,19 @@ function loadB2Selections(root) {
   const raw = JSON.parse(readFileSync(join(root, ...B2_SELECTIONS_FILE), "utf8"));
   const byId = new Map(raw.items.map((item) => [item.id, item]));
   return byId;
+}
+
+/** B2 冻结 PDF 选区（pdf-selections.json；运行时读取，绝不内嵌副本）。 */
+function loadB2PdfSelections(root) {
+  const raw = JSON.parse(readFileSync(join(root, ...B2_PDF_SELECTIONS_FILE), "utf8"));
+  const byId = new Map(raw.items.map((item) => [item.id, item]));
+  return byId;
+}
+
+/** B2 冻结负例选区（invalid-selections.json；跨页拒绝镜像的事实源）。 */
+function loadB2InvalidSelections(root) {
+  const raw = JSON.parse(readFileSync(join(root, ...B2_INVALID_SELECTIONS_FILE), "utf8"));
+  return raw.items;
 }
 
 function sha256Text(text) {
@@ -133,7 +151,19 @@ const PAGE_HELPERS = `
     const blocksEl = document.getElementById("mat-blocks");
     if (blocksEl === null) return null;
     for (const child of blocksEl.children) {
-      if (child.dataset !== undefined && child.dataset.blockId === id) return child;
+      if (child.dataset !== undefined && child.dataset.blockId === id) {
+        /* PDF 页框（.pdf-page-frame 携带同款 data-block-id/start/end，但页头
+           「Page N」不在文本层内——frame.textContent 混入页头文字，偏移换算
+           会整体平移）：定位元素取页框内的文本层 .pdf-page-text（其
+           textContent 与页块文本字节相等，dataset 同源）。markdown 块不受
+           影响（直接子元素即文本层本身）。 */
+        if (child.classList !== undefined && child.classList.contains("pdf-page-frame")) {
+          for (const inner of child.children) {
+            if (inner.classList !== undefined && inner.classList.contains("pdf-page-text")) return inner;
+          }
+        }
+        return child;
+      }
     }
     return null;
   };
@@ -203,14 +233,18 @@ function pageSelectCrossBlock(blockA, localStartA, blockB, localEndB) {
     首字符盒左内缘（caret 落在 from 边界）与末字符盒右内缘（扩展到 to
     边界）。两次命中判定都发生在各自 mousedown 时刻——捕获条随后长高
     造成的布局位移不影响已定选区（连续 press/release 间的布局位移会把
-    拖选释放点带偏，实测如此；两击手势天然免疫）。 */
+    拖选释放点带偏，实测如此；两击手势天然免疫）。
+    目标行先滚进 #mat-blocks 可见带再量落点：块级 scrollIntoView(center)
+    对高于滚动视口的块会把目标行滚进裁剪区（getClientRects 不受裁剪——
+    落点会命中阅读器 chrome；PDF 页文本层实测 1180px vs 435px 视口），
+    故按目标行矩形对齐视口中心后重量。 */
 function pageClickPoints(blockId, start, end) {
   return `(() => { ${PAGE_HELPERS}
     const blockEl = findBlock(${JSON.stringify(blockId)});
     if (blockEl === null) return { error: "block ${blockId} is not loaded" };
     const blockStart = Number(blockEl.dataset.start);
-    blockEl.scrollIntoView({ block: "center" });
-    const pointFor = (localFrom, localTo, fromLeft) => {
+    const blocksEl = document.getElementById("mat-blocks");
+    const rectOf = (localFrom, localTo) => {
       const a = toAnchor(blockEl, localFrom);
       const b = toAnchor(blockEl, localTo);
       if (a === null || b === null) return null;
@@ -218,7 +252,18 @@ function pageClickPoints(blockId, start, end) {
       range.setStart(a.node, a.offset);
       range.setEnd(b.node, b.offset);
       const rects = range.getClientRects();
-      const rect = rects.length > 0 ? rects[rects.length - 1] : range.getBoundingClientRect();
+      return rects.length > 0 ? rects[rects.length - 1] : range.getBoundingClientRect();
+    };
+    if (blocksEl !== null) {
+      const lead = rectOf(${Number(start)} - blockStart, ${Number(start)} - blockStart + 1);
+      if (lead !== null) {
+        const band = blocksEl.getBoundingClientRect();
+        blocksEl.scrollTop = blocksEl.scrollTop + (lead.top + lead.height / 2 - (band.top + blocksEl.clientHeight / 2));
+      }
+    }
+    const pointFor = (localFrom, localTo, fromLeft) => {
+      const rect = rectOf(localFrom, localTo);
+      if (rect === null) return null;
       const inset = Math.min(1, rect.width / 2);
       return { x: fromLeft ? rect.left + inset : rect.right - inset, y: rect.top + rect.height / 2 };
     };
@@ -332,9 +377,11 @@ export function assertNoPageErrors(ctx, { exclude = () => false, label } = {}) {
 /* 逐选区断言（捕获载荷 === 冻结真值；服务端 resolve-selection 复核）      */
 /* ------------------------------------------------------------------ */
 
-function assertBarPayload(bar, { materialId, versionId, expected, caseId, expectSnap = false }) {
+function assertBarPayload(bar, { materialId, versionId, expected, caseId, expectSnap = false, page }) {
+  /* PDF 有效载荷额外携带页标识（app.js updateMatSelectionBar 的 pagePart）。 */
+  const pagePart = typeof page === "number" ? ` · page ${String(page)}` : "";
   const expectedPayload =
-    `material ${materialId} · version ${versionId} · block ${expected.blockId}` +
+    `material ${materialId} · version ${versionId} · block ${expected.blockId}${pagePart}` +
     ` · UTF-16 [${String(expected.start)}, ${String(expected.end)}) · ${String(expected.excerpt.length)} units`;
   const problems = [];
   if (bar.quote !== expected.excerpt) problems.push(`quote mismatch (got ${JSON.stringify(bar.quote)}, want ${JSON.stringify(expected.excerpt)})`);
@@ -386,8 +433,10 @@ async function resolveSelectionAndAssert(ctx, { treeId, material, expected, cano
   return true;
 }
 
-/** 规范偏移 → 真实 DOM 选区 → 阅读器自身武装 → 捕获载荷 === 冻结真值。 */
-async function captureFrozenSelection(ctx, { treeId, material, item, truth }) {
+/** 规范偏移 → 真实 DOM 选区 → 阅读器自身武装 → 捕获载荷 === 冻结真值。
+    （PDF：page 传入时载荷断言含页标识——页文本层携带同款区间属性，
+    findBlock 已解析到文本层，本函数对 md/pdf 同构。） */
+async function captureFrozenSelection(ctx, { treeId, material, item, truth, page }) {
   const expected = item.expected;
   if (item.fixture !== material.fixtureId) {
     throw new Error(`${item.id}: frozen selection targets fixture ${item.fixture}, but the open material is ${material.fixtureId}`);
@@ -403,9 +452,22 @@ async function captureFrozenSelection(ctx, { treeId, material, item, truth }) {
     );
   }
   const bar = await waitForArmedBar(ctx, item.id);
-  assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: item.id });
+  assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: item.id, page });
   await resolveSelectionAndAssert(ctx, { treeId, material, expected, canonicalText: truth.canonicalText, caseId: item.id });
-  return { id: item.id, category: item.category, blockId: expected.blockId, start: expected.start, end: expected.end };
+  return { id: item.id, category: item.category, blockId: expected.blockId, start: expected.start, end: expected.end, ...(typeof page === "number" ? { page } : {}) };
+}
+
+/** 阅读器进场动画落定（panel-in：translateX(24px)→0，180ms）。手势落点
+    以 getClientRects 度量——动画进行中的 transform 会把度量坐标整体平移
+    （实测 md-sel-01 首开即量，caret 落后一字）。动画是产品的真实行为；
+    探针等它播完再量（有界等待）。 */
+async function waitForReaderEnterSettled(ctx) {
+  await waitFor(
+    ctx,
+    `(() => { const reader = document.getElementById("material-reader"); ` +
+      `return reader === null || !reader.classList.contains("enter"); })()`,
+    { label: "material reader enter animation settled", timeoutMs: 3000 },
+  );
 }
 
 /** 真实鼠标两击选区（CDP Input：click 置 caret → Shift+click 扩展到 to
@@ -413,6 +475,7 @@ async function captureFrozenSelection(ctx, { treeId, material, item, truth }) {
     的 selectionchange/mouseup 路径武装捕获条。 */
 async function mouseSelectFrozenSelection(ctx, { treeId, material, item, truth }) {
   const expected = item.expected;
+  await waitForReaderEnterSettled(ctx);
   const points = await ctx.evalJs(pageClickPoints(expected.blockId, expected.start, expected.end));
   if (points === null || points.error !== undefined) {
     throw new Error(`${item.id}: mouse-selection anchors not resolvable — ${JSON.stringify(points)}`);
@@ -443,8 +506,9 @@ async function mouseSelectFrozenSelection(ctx, { treeId, material, item, truth }
  * 武装（armFromEvent → armMaterialSelection），捕获载荷与冻结真值逐项全等。
  * mouseMoved 携带 button:"left"（按压中的拖动语义，Puppeteer 同款管线）。
  */
-async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) {
+async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth, page }) {
   const expected = item.expected;
+  await waitForReaderEnterSettled(ctx);
   const points = await ctx.evalJs(pageClickPoints(expected.blockId, expected.start, expected.end));
   if (points === null || points.error !== undefined) {
     throw new Error(`${item.id}: drag-selection anchors not resolvable — ${JSON.stringify(points)}`);
@@ -461,9 +525,18 @@ async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) 
   /* 拖拽窗口内先核原生选区（真实手势确实跨文本扩展到了冻结区间）。 */
   const duringDrag = await ctx.evalJs(`(() => { const s = window.getSelection(); return s === null ? null : s.toString(); })()`);
   if (duringDrag !== expected.excerpt) {
+    /* 诚实诊断：落点命中了什么（定位布局位移/滚出视口类缺陷）。 */
+    const hit = await ctx
+      .evalJs(
+        `(() => { const probe = (x, y) => { const el = document.elementFromPoint(x, y); ` +
+          `return el === null ? null : { tag: el.tagName, cls: el.className, text: (el.textContent ?? "").slice(0, 40) }; }; ` +
+          `return { from: probe(${String(points.from.x)}, ${String(points.from.y)}), to: probe(${String(points.to.x)}, ${String(points.to.y)}) }; })()`,
+      )
+      .catch(() => null);
     throw new Error(
       `${item.id} (real drag): the native selection during the drag does not reproduce the frozen excerpt ` +
-        `(got ${JSON.stringify(duringDrag)}, want ${JSON.stringify(expected.excerpt)})`,
+        `(got ${JSON.stringify(duringDrag)}, want ${JSON.stringify(expected.excerpt)}); ` +
+        `points=${JSON.stringify(points)}; hit=${JSON.stringify(hit)}`,
     );
   }
   await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseReleased", x: points.to.x, y: points.to.y, button: "left", buttons: 0, clickCount: 1, modifiers: 0 });
@@ -480,9 +553,9 @@ async function mouseDragFrozenSelection(ctx, { treeId, material, item, truth }) 
     );
   }
   const bar = await waitForArmedBar(ctx, `${item.id} (real drag)`, 4000);
-  assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: `${item.id} (real continuous mouse drag)` });
+  assertBarPayload(bar, { materialId: material.materialId, versionId: material.versionId, expected, caseId: `${item.id} (real continuous mouse drag)`, page });
   await resolveSelectionAndAssert(ctx, { treeId, material, expected, canonicalText: truth.canonicalText, caseId: item.id });
-  return { id: item.id, category: `${item.category}+real-mouse-drag`, blockId: expected.blockId, start: expected.start, end: expected.end };
+  return { id: item.id, category: `${item.category}+real-mouse-drag`, blockId: expected.blockId, start: expected.start, end: expected.end, ...(typeof page === "number" ? { page } : {}) };
 }
 
 /* ------------------------------------------------------------------ */
@@ -735,6 +808,224 @@ async function assertReaderChrome(ctx, material, truth) {
 }
 
 /* ------------------------------------------------------------------ */
+/* PDF 阅读面（charter §3.2：页框 + 懒渲染文本层 + 单页选区纪律）          */
+/* ------------------------------------------------------------------ */
+
+/* app.js 的 PDF 分页步长（fetchMaterialPage 的 PDF_PAGE_FETCH_LIMIT）——
+   探针镜像该常量以计算各阶段期望页数；漂移会让就位等待如实超时。 */
+const PDF_FETCH_PAGE_STEP = 10;
+
+/* app.js 的 markdown 分块步长（fetchMaterialPage 的 MATERIAL_PAGE_LIMIT）。 */
+const MATERIAL_FETCH_BLOCK_STEP = 50;
+
+/** PDF 阅读器就位表达式（页框数 + 尾部「N page(s) in view」+ 末页/更多态）。 */
+export function pdfReaderLoadedExpr(pages, tail) {
+  const tailCheck =
+    tail === "end"
+      ? `if (!text.includes("end of material (last page)")) return false;`
+      : tail === "more"
+        ? `if (tail.querySelector(".mat-load-more") === null) return false;`
+        : "";
+  return `(() => {
+    const reader = document.getElementById("material-reader");
+    if (reader === null || reader.hidden) return false;
+    const frames = document.querySelectorAll("#mat-blocks .pdf-page-frame").length;
+    if (frames !== ${Number(pages)}) return false;
+    const tail = document.getElementById("mat-tail");
+    if (tail === null) return false;
+    const text = tail.textContent;
+    if (!text.includes(${JSON.stringify(`${String(pages)} page(s) in view`)})) return false;
+    ${tailCheck}
+    return { frames: frames, tail: text };
+  })()`;
+}
+
+/** PDF 页框/文本层选择器（Node 侧拼装；blockId 来自冻结真值，纯 ASCII）。 */
+function pdfFrameSelector(blockId) {
+  return `#mat-blocks .pdf-page-frame[data-block-id=${JSON.stringify(blockId)}]`;
+}
+
+function pdfLayerSelector(blockId) {
+  return `#mat-blocks .pdf-page-text[data-block-id=${JSON.stringify(blockId)}]`;
+}
+
+/** 页文本层渲染就位：页框滚入视口（应用自身的滚动监听驱动
+    updatePdfPageRendering 的懒渲染）→ data-rendered === "true" + 无占位 +
+    非空文本。**迭代滚入**（有界）：从未渲染过的页是 ~68px 占位——内容
+    因此偏短，一次 scrollIntoView 会被钳制在短内容的最大滚动位；按序
+    渲染的级联又会把目标页推到渲染窗外（实测 pdf-08 page-10：一次滚动
+    后 4-6 页渲染、7-10 仍是占位）。真实用户会继续滚动直到看见目标页
+    ——探针同款：滚→等渲染落定→未渲染再滚（页每次落位更深），有界
+    次数内不达即如实失败（附几何诊断）。 */
+async function ensurePdfPageRendered(ctx, blockId, label) {
+  const MAX_ATTEMPTS = 14;
+  let lastState = null;
+  for (let attempt = 0; ; attempt += 1) {
+    const state = await ctx.evalJs(
+      `(() => { const frame = document.querySelector(${JSON.stringify(pdfFrameSelector(blockId))}); ` +
+        `if (frame === null) return { error: "page frame ${blockId} is not loaded in the reader window" }; ` +
+        `const layer = frame.querySelector(".pdf-page-text"); ` +
+        `if (layer !== null && layer.dataset.rendered !== "true") frame.scrollIntoView({ block: "center" }); ` +
+        `return { rendered: layer === null ? null : layer.dataset.rendered }; })()`,
+    );
+    if (state === null || state.error !== undefined) {
+      throw new Error(`${label}: ${JSON.stringify(state)}`);
+    }
+    lastState = state;
+    if (state.rendered === "true") {
+      await waitFor(
+        ctx,
+        `(() => { const layer = document.querySelector(${JSON.stringify(pdfLayerSelector(blockId))}); ` +
+          `if (layer === null) return false; ` +
+          `if (layer.dataset.rendered !== "true") return false; ` +
+          `if (layer.querySelector(".pdf-page-pending") !== null) return false; ` +
+          `return layer.textContent.length > 0; })()`,
+        { label: `pdf page text layer ${blockId} rendered (${label})`, timeoutMs: 10_000 },
+      );
+      return true;
+    }
+    if (attempt >= MAX_ATTEMPTS - 1) break;
+    await sleep(250);
+  }
+  const geom = await ctx
+    .evalJs(
+      `(() => { const blocks = document.getElementById("mat-blocks"); ` +
+        `if (blocks === null) return { blocks: null }; ` +
+        `const frames = [...blocks.querySelectorAll(".pdf-page-frame")].map((f) => ` +
+        `{ return { id: f.dataset.blockId, top: f.offsetTop, h: f.offsetHeight, rendered: f.querySelector(".pdf-page-text")?.dataset.rendered ?? null }; }); ` +
+        `return { scrollTop: blocks.scrollTop, scrollH: blocks.scrollHeight, clientH: blocks.clientHeight, ` +
+        `offsetTop: blocks.offsetTop, frames }; })()`,
+    )
+    .catch(() => null);
+  throw new Error(
+    `${label}: pdf page ${blockId} never rendered within ${String(MAX_ATTEMPTS)} scroll-settle attempts ` +
+      `(last state ${JSON.stringify(lastState)}); geometry=${JSON.stringify(geom)}`,
+  );
+}
+
+/** 已渲染页文本层的逐字无损断言：textContent/dataset 与冻结页块字节相等。 */
+async function assertPdfPageLayerLossless(ctx, truth, blockId, label) {
+  const frozen = truth.blocks.find((block) => block.blockId === blockId);
+  if (frozen === undefined) {
+    throw new Error(`${label}: page block ${blockId} is not in the frozen truth`);
+  }
+  const layer = await ctx.evalJs(
+    `(() => { const el = document.querySelector(${JSON.stringify(pdfLayerSelector(blockId))}); ` +
+      `return el === null ? null : { text: el.textContent, rendered: el.dataset.rendered, ` +
+      `start: el.dataset.start, end: el.dataset.end, page: el.dataset.page }; })()`,
+  );
+  if (layer === null || layer.rendered !== "true") {
+    throw new Error(`${label}: page ${blockId} text layer is not rendered — ${JSON.stringify(layer)}`);
+  }
+  if (layer.text !== frozen.text) {
+    throw new Error(
+      `${label}: page ${blockId} text layer is not byte-equal to the frozen truth block text ` +
+        `(${String(layer.text.length)} vs ${String(frozen.text.length)} UTF-16 units)`,
+    );
+  }
+  if (Number(layer.start) !== frozen.start || Number(layer.end) !== frozen.end) {
+    throw new Error(
+      `${label}: page ${blockId} layer range [${String(layer.start)}, ${String(layer.end)}) ≠ frozen [${String(frozen.start)}, ${String(frozen.end)})`,
+    );
+  }
+  if (typeof frozen.page === "number" && Number(layer.page) !== frozen.page) {
+    throw new Error(`${label}: page ${blockId} layer page ${String(layer.page)} ≠ frozen ${String(frozen.page)}`);
+  }
+  return true;
+}
+
+/** PDF 阅读器 chrome：版本标签 / 解析器种类与版本（d4-pdf-v1）/ 版本链 /
+    单页选区纪律注记（markdown 版 assertReaderChrome 的 pdf 面——meta 串
+    不同：`pdf · d4-pdf-v1`，绝无 markdown 字样）。 */
+async function assertPdfReaderChrome(ctx, material, truth) {
+  const info = await ctx.evalJs(`(() => {
+    const reader = document.getElementById("material-reader");
+    const label = reader === null ? null : reader.querySelector(".mat-version-label");
+    const meta = reader === null ? null : reader.querySelector(".mat-meta");
+    const chips = reader === null ? [] : Array.from(reader.querySelectorAll(".mat-version-chip"));
+    const note = reader === null ? null : reader.querySelector(".mat-note");
+    return {
+      label: label === null ? null : label.textContent,
+      meta: meta === null ? null : meta.textContent,
+      chips: chips.map((chip) => ({ text: chip.textContent, active: chip.classList.contains("active") })),
+      note: note === null ? null : note.textContent,
+    };
+  })()`);
+  const problems = [];
+  if (info.label !== "v1 (current)") problems.push(`version label ${JSON.stringify(info.label)} ≠ "v1 (current)"`);
+  if (info.meta === null || !info.meta.includes(`pdf · ${truth.normalizer}`)) {
+    problems.push(`meta does not state the pdf parser kind/version: ${JSON.stringify(info.meta)}`);
+  }
+  if (info.meta === null || !info.meta.includes(`${String(material.textUnits)} text units`)) {
+    problems.push(`meta textUnits mismatch: ${JSON.stringify(info.meta)}`);
+  }
+  if (info.chips.length !== 1 || info.chips[0].text !== "v1 · pdf" || info.chips[0].active !== true) {
+    problems.push(`version strip mismatch: ${JSON.stringify(info.chips)}`);
+  }
+  if (info.note === null || !info.note.includes("PDF reading surface") || !info.note.includes("select within one page")) {
+    problems.push(`the pdf reading-surface / single-page discipline note is absent: ${JSON.stringify(info.note)}`);
+  }
+  if (problems.length > 0) {
+    throw new Error(`pdf reader chrome for ${material.title} — ${problems.join("; ")}`);
+  }
+  return true;
+}
+
+/** 跨页真实 DOM 选区（B2 纪律镜像：PDF 选区必须含于单页——期望捕获条呈
+    不可锚定）。两页文本层都必须已渲染；本表达式不再滚动（页框已被
+    ensurePdfPageRendered 滚入渲染窗口，再滚动会把另一页推出懒渲染窗口）。 */
+function pageSelectCrossPagePdf(blockA, localStartA, blockB, localEndB) {
+  const layerOf = (id) => `document.querySelector(${JSON.stringify(pdfLayerSelector(id))})`;
+  return `(() => {
+    const elA = ${layerOf(blockA)};
+    const elB = ${layerOf(blockB)};
+    if (elA === null || elB === null) return { error: "pdf page text layer absent" };
+    if (elA.dataset.rendered !== "true" || elB.dataset.rendered !== "true") return { error: "pdf page text layer not rendered" };
+    const anchorIn = (el, local) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let pos = 0;
+      for (;;) {
+        const node = walker.nextNode();
+        if (node === null) return null;
+        const len = node.data.length;
+        if (local <= pos + len) return { node, offset: local - pos };
+        pos += len;
+      }
+    };
+    const a = anchorIn(elA, ${Number(localStartA)});
+    const b = anchorIn(elB, ${Number(localEndB)});
+    if (a === null || b === null) return { error: "offsets did not map onto text nodes" };
+    const range = document.createRange();
+    range.setStart(a.node, a.offset);
+    range.setEnd(b.node, b.offset);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return { selectedText: selection.toString() };
+  })()`;
+}
+
+/** PDF 冻结选区捕获（页感知包装）：目标页先滚入渲染窗口（懒渲染纪律）→
+    已渲染文本层与冻结页块逐字无损 → captureFrozenSelection 的同构路径
+    （文本层携带同款 data-block-id/start/end，findBlock 已解析到文本层）。 */
+async function capturePdfFrozenSelection(ctx, { treeId, material, item, truth }) {
+  const expected = item.expected;
+  if (item.fixture !== material.fixtureId) {
+    throw new Error(`${item.id}: frozen selection targets fixture ${item.fixture}, but the open material is ${material.fixtureId}`);
+  }
+  const block = truth.blocks.find((candidate) => candidate.blockId === expected.blockId);
+  if (block === undefined) {
+    throw new Error(`${item.id}: block ${expected.blockId} is not in the frozen pdf truth`);
+  }
+  if (typeof block.page !== "number") {
+    throw new Error(`${item.id}: frozen pdf block ${expected.blockId} carries no page number`);
+  }
+  await ensurePdfPageRendered(ctx, expected.blockId, item.id);
+  await assertPdfPageLayerLossless(ctx, truth, expected.blockId, item.id);
+  return captureFrozenSelection(ctx, { treeId, material, item, truth, page: block.page });
+}
+
+/* ------------------------------------------------------------------ */
 /* 探针 1：d4-import-material                                            */
 /* ------------------------------------------------------------------ */
 
@@ -877,157 +1168,404 @@ export async function probeReadAndSelect(ctx) {
   }
   const treeId = ctx.scenario.treeId;
   const selections = loadB2Selections(ctx.ROOT);
-  const fixtureOf = (id) => loadB1Fixture(ctx.ROOT, id);
+  const pdfSelections = loadB2PdfSelections(ctx.ROOT);
+  const invalidCrossPageItems = loadB2InvalidSelections(ctx.ROOT).filter((item) => item.category === "cross-page");
+  const registries = loadB1Registries(ctx.ROOT);
+  const mdRegistry = registries.find((registry) => registry.kind === "markdown") ?? null;
+  const pdfRegistry = registries.find((registry) => registry.kind === "pdf") ?? null;
+  if (mdRegistry === null || pdfRegistry === null) {
+    throw new Error("B1 registries incomplete: need both md-registry.json and pdf-registry.json");
+  }
+  ctx.noteFixturesUsed([
+    ...mdRegistry.fixtures.map((entry) => entry.fixtureId),
+    ...pdfRegistry.fixtures.map((entry) => entry.fixtureId),
+  ]);
+
+  /* ---- 全分母就位（issue #8 B2 验收：冻结选区分母必须铺满，绝不静默缩分母）：
+          导入探针只铺 md-01/06/11——这里按需补齐其余 markdown 与全部 PDF
+          fixture（与 B3 探针同款按需导入纪律；后续探针按 API 实况容忍追加）。 ---- */
+  const fixtureTruth = new Map();
+  let importedAny = false;
+  for (const { name, kind, fixtures } of [
+    { name: "md-registry.json", kind: "markdown", fixtures: mdRegistry.fixtures },
+    { name: "pdf-registry.json", kind: "pdf", fixtures: pdfRegistry.fixtures },
+  ]) {
+    for (const entry of fixtures) {
+      const fixture = loadB1RegistryFixture(ctx.ROOT, entry, name);
+      fixtureTruth.set(fixture.fixtureId, fixture.truth);
+      if (materials[fixture.fixtureId] !== undefined) continue;
+      const res = await importMaterialViaHttp(ctx, treeId, fixture.filename, fixture.bytes, 30_000);
+      if (res.status !== 201 || res.body?.created !== true) {
+        throw new Error(`${fixture.fixtureId}: import did not 201/create (HTTP ${String(res.status)}): ${JSON.stringify(res.body)}`);
+      }
+      const ready = await waitForVersionReady(ctx, treeId, res.body.material.id, res.body.version.id, fixture.fixtureId);
+      if (ready.parserKind !== kind) {
+        throw new Error(`${fixture.fixtureId}: parserKind ${String(ready.parserKind)} ≠ ${kind}`);
+      }
+      if (ready.parserVersion !== fixture.truth.normalizer) {
+        throw new Error(`${fixture.fixtureId}: parserVersion ${String(ready.parserVersion)} ≠ frozen ${String(fixture.truth.normalizer)}`);
+      }
+      if (ready.textUnits !== fixture.expectedUnits) {
+        throw new Error(`${fixture.fixtureId}: server textUnits ${String(ready.textUnits)} ≠ frozen ${String(fixture.expectedUnits)}`);
+      }
+      materials[fixture.fixtureId] = {
+        fixtureId: fixture.fixtureId,
+        materialId: res.body.material.id,
+        versionId: res.body.version.id,
+        title: res.body.material.title,
+        textUnits: ready.textUnits,
+      };
+      importedAny = true;
+    }
+  }
+  ctx.scenario.materials = materials;
+  if (importedAny) {
+    /* API 导入后真实导航刷新（应用自身重拉材料列表——与导入/B3 探针同款纪律）。 */
+    await ctx.navigate(ctx.studioUrl());
+    await waitFor(
+      ctx,
+      `(() => document.querySelector("#tree-list button.active") !== null)()`,
+      { label: "active tree row after reload", timeoutMs: 15_000 },
+    );
+    await switchTreeInUi(ctx, treeId);
+    const expectedCount = await countMaterialsViaApi(ctx, treeId);
+    await waitFor(
+      ctx,
+      `(() => { const list = document.getElementById("material-list"); ` +
+        `return list !== null && list.querySelectorAll("button[data-material-id]").length === ${String(expectedCount)}; })()`,
+      { label: `sidebar lists all ${String(expectedCount)} scenario materials after reload`, timeoutMs: 20_000 },
+    );
+  }
+
+  const fixtureOf = (id) => fixtureTruth.get(id);
   const pick = (id, fixtureId) => {
     const item = selections.get(id);
     if (item === undefined) throw new Error(`frozen selection ${id} missing from markdown-selections.json`);
     if (item.fixture !== fixtureId) throw new Error(`frozen selection ${id} targets fixture ${item.fixture}, expected ${fixtureId}`);
     return item;
   };
+  const pickPdf = (id, fixtureId) => {
+    const item = pdfSelections.get(id);
+    if (item === undefined) throw new Error(`frozen pdf selection ${id} missing from pdf-selections.json`);
+    if (item.fixture !== fixtureId) throw new Error(`frozen pdf selection ${id} targets fixture ${item.fixture}, expected ${fixtureId}`);
+    return item;
+  };
   const cases = [];
-
-  /* ---- md-06（emoji/字素簇家族；16 块单页） ---- */
-  const md06 = fixtureOf("md-06");
-  await openMaterialInReader(ctx, materials["md-06"], { blocks: md06.truth.blocks.length, tail: "end" });
-  await assertReaderChrome(ctx, materials["md-06"], md06.truth);
-  await assertBlocksLossless(ctx, md06.truth, { expectedCount: md06.truth.blocks.length, label: "md-06" });
-  await ctx.screenshot("reader-md06");
-
-  for (const id of ["md-sel-29", "md-sel-30", "md-sel-31", "md-sel-32", "md-sel-33"]) {
-    cases.push(await captureFrozenSelection(ctx, { treeId, material: materials["md-06"], item: pick(id, "md-06"), truth: md06.truth }));
-  }
-
-  /* 字素安全吸附（浏览器面专属，B2 inv 类别的前端镜像）：故意把选区边界
-     放进 👨‍💻 字素簇内部（代理对之间起、簇内止）——捕获条必须向外吸附到
-     整簇 [833, 838)，与冻结真值 md-sel-30 全等并携带吸附注记。 */
-  {
-    const item = pick("md-sel-30", "md-06");
-    const placed = await ctx.evalJs(pageSelectCanonical(item.expected.blockId, item.expected.start + 1, item.expected.end - 1));
-    if (placed === null || placed.error !== undefined) {
-      throw new Error(`grapheme-split case could not be placed — ${JSON.stringify(placed)}`);
-    }
-    const bar = await waitForArmedBar(ctx, "grapheme-split (md-sel-30 truth)");
-    assertBarPayload(bar, {
-      materialId: materials["md-06"].materialId,
-      versionId: materials["md-06"].versionId,
-      expected: item.expected,
-      caseId: "grapheme-split (md-sel-30 truth)",
-      expectSnap: true,
-    });
-    cases.push({ id: "grapheme-split→md-sel-30", category: "emoji-split-snap", blockId: item.expected.blockId, start: item.expected.start, end: item.expected.end });
-  }
-  await ctx.screenshot("selection-md06-emoji");
-
-  /* ---- md-01（真实鼠标两击选区 + 真实连续拖选 + 重复词第 5 次出现 + 跨行；14 块单页） ---- */
-  const md01 = fixtureOf("md-01");
-  await openMaterialInReader(ctx, materials["md-01"], { blocks: md01.truth.blocks.length, tail: "end" });
-  await assertBlocksLossless(ctx, md01.truth, { expectedCount: md01.truth.blocks.length, label: "md-01" });
-  cases.push(await mouseSelectFrozenSelection(ctx, { treeId, material: materials["md-01"], item: pick("md-sel-01", "md-01"), truth: md01.truth }));
-  /* 真实连续拖选（owner P1 #3）：mousedown 置锚「分」左缘 → mouseMoved×8
-     跨文本推进 → mouseup 落「术」右缘——拖拽窗口内捕获条冻结（main 修复），
-     释放点不被布局位移带偏；md-sel-02 为此前未覆盖的冻结选区（新增覆盖）。 */
-  cases.push(await mouseDragFrozenSelection(ctx, { treeId, material: materials["md-01"], item: pick("md-sel-02", "md-01"), truth: md01.truth }));
-  cases.push(await captureFrozenSelection(ctx, { treeId, material: materials["md-01"], item: pick("md-sel-19", "md-01"), truth: md01.truth }));
-  cases.push(await captureFrozenSelection(ctx, { treeId, material: materials["md-01"], item: pick("md-sel-22", "md-01"), truth: md01.truth }));
-  await ctx.screenshot("selection-md01-crossline");
-
-  /* 跨块纪律（B2：markdown 选区必须含于单块）：blk-1 尾部 → blk-2 开头
-     的真实 DOM 选区 → 捕获条如实呈不可锚定，绝不给出载荷。 */
-  {
-    const placed = await ctx.evalJs(pageSelectCrossBlock("blk-1", 140, "blk-2", 5));
-    if (placed === null || placed.error !== undefined) {
-      throw new Error(`cross-block case could not be placed — ${JSON.stringify(placed)}`);
-    }
-    const bar = await waitForArmedBar(ctx, "cross-block discipline");
-    if (bar.invalidNote === null || !bar.invalidNote.includes("cross-block")) {
-      throw new Error(`cross-block selection was not refused: ${JSON.stringify(bar)}`);
-    }
-    if (bar.payload !== null || bar.quote !== null) {
-      throw new Error(`cross-block selection produced a payload (must not): ${JSON.stringify(bar)}`);
-    }
-    cases.push({ id: "cross-block-refused", category: "cross-block", blockId: null, start: null, end: null });
-  }
-
-  /* ---- md-11（59 块 > 50/页：懒加载第二页 + 长尾 + 重复词第 4 次出现） ---- */
-  const md11 = fixtureOf("md-11");
-  await openMaterialInReader(ctx, materials["md-11"], { blocks: 50, tail: "more" });
-  await assertBlocksLossless(ctx, md11.truth, { expectedCount: 50, label: "md-11 page 1" });
-  /* 真实滚动到底 → 应用自身的滚动监听触发第二页预取。 */
-  await ctx.evalJs(`(() => { const el = document.getElementById("mat-blocks"); if (el === null) return false; el.scrollTop = el.scrollHeight; return true; })()`);
-  await waitFor(ctx, pageReaderLoadedExpr(md11.truth.blocks.length, "end"), { label: "md-11 lazy-loaded second page (59 blocks)", timeoutMs: 15_000 });
-  await assertBlocksLossless(ctx, md11.truth, { expectedCount: md11.truth.blocks.length, label: "md-11 all blocks" });
-  await ctx.screenshot("reader-md11-lazyloaded");
-
-  for (const id of ["md-sel-21", "md-sel-41", "md-sel-40"]) {
-    cases.push(await captureFrozenSelection(ctx, { treeId, material: materials["md-11"], item: pick(id, "md-11"), truth: md11.truth }));
-  }
-
-  /* 复制不变（charter §3.2「复制摘录」）：点击阅读器自身的复制按钮 →
-     剪贴板内容 === canonicalText 切片（冻结摘录）。 */
+  const mdCaptured = new Set();
+  const pdfCaptured = new Set();
+  const crossPageRefused = [];
   let copyMode;
-  {
-    const item = pick("md-sel-40", "md-11");
-    const expected = item.expected;
-    /* DOM click 事件（应用自身的 click 监听路径）。不用 CDP 输入点击的原因：
-       输入点击的 press/release 分两次 CDP 命令送达，press 引发的浏览器
-       选区清除会让应用 0ms 延迟解除的捕获条重渲抢在 release 之前（真实
-       用户点击不经 CDP 分段——应用的焦点守卫按连续输入保证成立）。 */
-    await ctx.evalJs(
-      `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); ` +
-        `if (btn === null) return false; btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return true; })()`,
-    );
+
+  /* 数据驱动捕获（绝不硬编码 id 清单）：冻结集中指向该 fixture 的每个
+     markdown 选区逐个经规范偏移 → 真实 DOM 选区 → 捕获载荷全等。 */
+  const captureAllMarkdown = async (fixtureId) => {
+    for (const item of selections.values()) {
+      if (item.fixture !== fixtureId) continue;
+      cases.push(await captureFrozenSelection(ctx, { treeId, material: materials[fixtureId], item, truth: fixtureOf(fixtureId) }));
+      mdCaptured.add(item.id);
+    }
+  };
+
+  /* ---- markdown 全分母（登记册序 md-01..md-12；冻结 45 选区） ---- */
+  for (const entry of mdRegistry.fixtures) {
+    const fixtureId = entry.fixtureId;
+    const truth = fixtureOf(fixtureId);
+    const material = materials[fixtureId];
+    if (truth === undefined || material === undefined) {
+      throw new Error(`markdown denominator incomplete: ${fixtureId} has no frozen truth or imported material`);
+    }
+
+    if (fixtureId === "md-01") {
+      /* ---- md-01（真实鼠标两击选区 + 真实连续拖选 + 重复词第 5 次出现 + 跨行；14 块单页） ---- */
+      await openMaterialInReader(ctx, material, { blocks: truth.blocks.length, tail: "end" });
+      await assertBlocksLossless(ctx, truth, { expectedCount: truth.blocks.length, label: "md-01" });
+      cases.push(await mouseSelectFrozenSelection(ctx, { treeId, material, item: pick("md-sel-01", "md-01"), truth }));
+      mdCaptured.add("md-sel-01");
+      /* 真实连续拖选（owner P1 #3）：mousedown 置锚「分」左缘 → mouseMoved×8
+         跨文本推进 → mouseup 落「术」右缘——拖拽窗口内捕获条冻结（main 修复），
+         释放点不被布局位移带偏；md-sel-02 为此前未覆盖的冻结选区（新增覆盖）。 */
+      cases.push(await mouseDragFrozenSelection(ctx, { treeId, material, item: pick("md-sel-02", "md-01"), truth }));
+      mdCaptured.add("md-sel-02");
+      /* 该 fixture 的全部冻结选区（md-sel-01/02 双覆盖——手势之外再走规范路径）。 */
+      await captureAllMarkdown("md-01");
+      await ctx.screenshot("selection-md01-crossline");
+
+      /* 跨块纪律（B2：markdown 选区必须含于单块）：blk-1 尾部 → blk-2 开头
+         的真实 DOM 选区 → 捕获条如实呈不可锚定，绝不给出载荷。 */
+      {
+        const placed = await ctx.evalJs(pageSelectCrossBlock("blk-1", 140, "blk-2", 5));
+        if (placed === null || placed.error !== undefined) {
+          throw new Error(`cross-block case could not be placed — ${JSON.stringify(placed)}`);
+        }
+        const bar = await waitForArmedBar(ctx, "cross-block discipline");
+        if (bar.invalidNote === null || !bar.invalidNote.includes("cross-block")) {
+          throw new Error(`cross-block selection was not refused: ${JSON.stringify(bar)}`);
+        }
+        if (bar.payload !== null || bar.quote !== null) {
+          throw new Error(`cross-block selection produced a payload (must not): ${JSON.stringify(bar)}`);
+        }
+        cases.push({ id: "cross-block-refused", category: "cross-block", blockId: null, start: null, end: null });
+      }
+      continue;
+    }
+
+    if (fixtureId === "md-06") {
+      /* ---- md-06（emoji/字素簇家族；16 块单页） ---- */
+      await openMaterialInReader(ctx, material, { blocks: truth.blocks.length, tail: "end" });
+      await assertReaderChrome(ctx, material, truth);
+      await assertBlocksLossless(ctx, truth, { expectedCount: truth.blocks.length, label: "md-06" });
+      await ctx.screenshot("reader-md06");
+
+      await captureAllMarkdown("md-06");
+
+      /* 字素安全吸附（浏览器面专属，B2 inv 类别的前端镜像）：故意把选区边界
+         放进 👨‍💻 字素簇内部（代理对之间起、簇内止）——捕获条必须向外吸附到
+         整簇 [833, 838)，与冻结真值 md-sel-30 全等并携带吸附注记。 */
+      {
+        const item = pick("md-sel-30", "md-06");
+        const placed = await ctx.evalJs(pageSelectCanonical(item.expected.blockId, item.expected.start + 1, item.expected.end - 1));
+        if (placed === null || placed.error !== undefined) {
+          throw new Error(`grapheme-split case could not be placed — ${JSON.stringify(placed)}`);
+        }
+        const bar = await waitForArmedBar(ctx, "grapheme-split (md-sel-30 truth)");
+        assertBarPayload(bar, {
+          materialId: material.materialId,
+          versionId: material.versionId,
+          expected: item.expected,
+          caseId: "grapheme-split (md-sel-30 truth)",
+          expectSnap: true,
+        });
+        cases.push({ id: "grapheme-split→md-sel-30", category: "emoji-split-snap", blockId: item.expected.blockId, start: item.expected.start, end: item.expected.end });
+      }
+      await ctx.screenshot("selection-md06-emoji");
+      continue;
+    }
+
+    if (fixtureId === "md-11") {
+      /* ---- md-11（59 块 > 50/页：懒加载第二页 + 长尾 + 重复词第 4 次出现） ---- */
+      const firstPage = Math.min(truth.blocks.length, MATERIAL_FETCH_BLOCK_STEP);
+      await openMaterialInReader(ctx, material, { blocks: firstPage, tail: "more" });
+      await assertBlocksLossless(ctx, truth, { expectedCount: firstPage, label: "md-11 page 1" });
+      /* 真实滚动到底 → 应用自身的滚动监听触发第二页预取。 */
+      await ctx.evalJs(`(() => { const el = document.getElementById("mat-blocks"); if (el === null) return false; el.scrollTop = el.scrollHeight; return true; })()`);
+      await waitFor(ctx, pageReaderLoadedExpr(truth.blocks.length, "end"), { label: "md-11 lazy-loaded second page (59 blocks)", timeoutMs: 15_000 });
+      await assertBlocksLossless(ctx, truth, { expectedCount: truth.blocks.length, label: "md-11 all blocks" });
+      await ctx.screenshot("reader-md11-lazyloaded");
+
+      await captureAllMarkdown("md-11");
+
+      /* 复制不变（charter §3.2「复制摘录」）：md-sel-40 重新武装（captureAll
+         之后捕获条停在最后一条——复制流程需要 40 在场；双覆盖合规）。 */
+      {
+        const item = pick("md-sel-40", "md-11");
+        const expected = item.expected;
+        cases.push(await captureFrozenSelection(ctx, { treeId, material, item, truth }));
+        /* DOM click 事件（应用自身的 click 监听路径）。不用 CDP 输入点击的原因：
+           输入点击的 press/release 分两次 CDP 命令送达，press 引发的浏览器
+           选区清除会让应用 0ms 延迟解除的捕获条重渲抢在 release 之前（真实
+           用户点击不经 CDP 分段——应用的焦点守卫按连续输入保证成立）。 */
+        await ctx.evalJs(
+          `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); ` +
+            `if (btn === null) return false; btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return true; })()`,
+        );
+        await waitFor(
+          ctx,
+          `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); return btn !== null && btn.textContent === "Copied ✓"; })()`,
+          { label: "copy-quote confirmation (Copied ✓)", timeoutMs: 4000 },
+        );
+        try {
+          await ctx.cdpSend("Browser.grantPermissions", { origin: ctx.studioOrigin(), permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"] });
+        } catch {
+          /* 授权不可用 → 下方降级路径如实报告 */
+        }
+        const read = await ctx.evalJs(
+          `(async () => { try { return { ok: true, text: await navigator.clipboard.readText() }; } ` +
+            `catch (err) { return { ok: false, error: String(err && err.message ? err.message : err) }; } })()`,
+        );
+        if (read.ok === true) {
+          if (read.text !== expected.excerpt) {
+            throw new Error(
+              `copy quote: clipboard content differs from the canonical excerpt ` +
+                `(${String(read.text.length)} vs ${String(expected.excerpt.length)} UTF-16 units)`,
+            );
+          }
+          copyMode = "clipboard read-back byte-equal";
+        } else {
+          /* 诚实降级：复制确认态（Copied ✓）已验证 + 摘录与冻结 canonicalText
+             切片字节相等（复制的就是该切片）。 */
+          if (truth.canonicalText.slice(expected.start, expected.end) !== expected.excerpt) {
+            throw new Error("frozen excerpt is not the canonicalText slice (fixture inconsistency)");
+          }
+          copyMode = `copy-confirmed (clipboard read-back unavailable: ${String(read.error)})`;
+        }
+      }
+      await ctx.screenshot("selection-md11-longtail");
+      /* 收尾：md-11 滚回顶部再离开。后续材料打开时 openMaterial 的换材料
+         冲刷会把当前顶可见块落库为 blk-0（首块）——d4-restart-continue 重开
+         md-11 时位置恢复落在第一页内（50 块 + more），其就位等待确定性成立；
+         若留在大滚动位（长尾块 blk-5x），恢复路径会向前补页到 59 块，与其
+         首页就位断言赛跑（此前全量跑侥幸通过的那类竞态——这里消除它）。 */
+      await ctx.evalJs(`(() => { const el = document.getElementById("mat-blocks"); if (el === null) return false; el.scrollTop = 0; return true; })()`);
+      continue;
+    }
+
+    /* ---- 通用 markdown 流（其余 fixture：开卷 → 逐块无损 → 全部冻结选区） ---- */
+    const firstPage = Math.min(truth.blocks.length, MATERIAL_FETCH_BLOCK_STEP);
+    await openMaterialInReader(ctx, material, { blocks: firstPage, tail: firstPage < truth.blocks.length ? "more" : "end" });
+    if (firstPage < truth.blocks.length) {
+      await ctx.evalJs(`(() => { const el = document.getElementById("mat-blocks"); if (el === null) return false; el.scrollTop = el.scrollHeight; return true; })()`);
+      await waitFor(ctx, pageReaderLoadedExpr(truth.blocks.length, "end"), { label: `${fixtureId} lazy-loaded remainder (${String(truth.blocks.length)} blocks)`, timeoutMs: 15_000 });
+    }
+    await assertBlocksLossless(ctx, truth, { expectedCount: truth.blocks.length, label: fixtureId });
+    await captureAllMarkdown(fixtureId);
+  }
+
+  /* ---- PDF 全分母（登记册序 pdf-01..pdf-12；冻结 30 选区 + 单页纪律镜像） ---- */
+  const pdfFixtureIds = new Set(pdfRegistry.fixtures.map((pdfEntry) => pdfEntry.fixtureId));
+  for (const inv of invalidCrossPageItems) {
+    if (!pdfFixtureIds.has(inv.input.fixture)) {
+      throw new Error(`${String(inv.id)}: cross-page negative targets ${String(inv.input.fixture)}, which is not in the pdf registry`);
+    }
+  }
+  const openPdfMaterialInReader = async (fixtureId) => {
+    const truth = fixtureOf(fixtureId);
+    const material = materials[fixtureId];
+    const pages = truth.blocks.length;
+    await inputClickAt(ctx, materialButtonSelector(material.materialId));
+    const firstBatch = Math.min(pages, PDF_FETCH_PAGE_STEP);
     await waitFor(
       ctx,
-      `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); return btn !== null && btn.textContent === "Copied ✓"; })()`,
-      { label: "copy-quote confirmation (Copied ✓)", timeoutMs: 4000 },
+      pdfReaderLoadedExpr(firstBatch, pages > firstBatch ? "more" : "end"),
+      { label: `${fixtureId} reader (${String(firstBatch)} page(s))`, timeoutMs: 20_000 },
     );
-    try {
-      await ctx.cdpSend("Browser.grantPermissions", { origin: ctx.studioOrigin(), permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"] });
-    } catch {
-      /* 授权不可用 → 下方降级路径如实报告 */
+    /* >10 页长文：真实滚动到底 → 应用自身的滚动监听逐批预取（10 页/批）。 */
+    for (let loaded = firstBatch; loaded < pages; loaded += PDF_FETCH_PAGE_STEP) {
+      await ctx.evalJs(`(() => { const el = document.getElementById("mat-blocks"); if (el === null) return false; el.scrollTop = el.scrollHeight; return true; })()`);
+      const target = Math.min(loaded + PDF_FETCH_PAGE_STEP, pages);
+      await waitFor(
+        ctx,
+        pdfReaderLoadedExpr(target, target >= pages ? "end" : "more"),
+        { label: `${fixtureId} lazy-loaded pages up to ${String(target)}`, timeoutMs: 15_000 },
+      );
     }
-    const read = await ctx.evalJs(
-      `(async () => { try { return { ok: true, text: await navigator.clipboard.readText() }; } ` +
-        `catch (err) { return { ok: false, error: String(err && err.message ? err.message : err) }; } })()`,
-    );
-    if (read.ok === true) {
-      if (read.text !== expected.excerpt) {
+  };
+
+  for (const entry of pdfRegistry.fixtures) {
+    const fixtureId = entry.fixtureId;
+    const truth = fixtureOf(fixtureId);
+    const material = materials[fixtureId];
+    if (truth === undefined || material === undefined) {
+      throw new Error(`pdf denominator incomplete: ${fixtureId} has no frozen truth or imported material`);
+    }
+    await openPdfMaterialInReader(fixtureId);
+    await assertPdfReaderChrome(ctx, material, truth);
+    if (fixtureId === "pdf-01") await ctx.screenshot("reader-pdf01");
+    if (fixtureId === "pdf-06") await ctx.screenshot("reader-pdf06-twocolumn");
+
+    /* 本 fixture 的全部冻结选区（每项目标页先滚入懒渲染窗口并逐字对照冻结页块）。 */
+    for (const item of pdfSelections.values()) {
+      if (item.fixture !== fixtureId) continue;
+      cases.push(await capturePdfFrozenSelection(ctx, { treeId, material, item, truth }));
+      pdfCaptured.add(item.id);
+      if (fixtureId === "pdf-01" && item.id === "pdf-sel-01") await ctx.screenshot("selection-pdf01-armed");
+    }
+
+    if (fixtureId === "pdf-01") {
+      /* 真实连续拖选（与 markdown 面同款 owner P1 #3 纪律的 PDF 镜像）：
+         pdf-sel-01（page-1 文本层上「递归」）——mousedown 置锚 → mouseMoved×8
+         跨文本推进 → mouseup 收选；页文本层与 markdown 块共用同一套武装路径。 */
+      {
+        const item = pickPdf("pdf-sel-01", "pdf-01");
+        const block = truth.blocks.find((candidate) => candidate.blockId === item.expected.blockId);
+        if (block === undefined || typeof block.page !== "number") {
+          throw new Error(`pdf-sel-01: page block ${String(item.expected.blockId)} missing from the frozen truth`);
+        }
+        await ensurePdfPageRendered(ctx, item.expected.blockId, "pdf-sel-01 (real drag)");
+        cases.push(await mouseDragFrozenSelection(ctx, { treeId, material, item, truth, page: block.page }));
+      }
+    }
+
+    /* 跨页纪律镜像（B2 冻结负例 inv-08/inv-09；charter §3.2：PDF 选区必须
+       含于单页）：两页文本层都已渲染后放置跨页真实 DOM 选区 → 捕获条如实呈
+       不可锚定，绝不给出载荷，也绝不静默截断。 */
+    for (const inv of invalidCrossPageItems.filter((candidate) => candidate.input.fixture === fixtureId)) {
+      const startBlock = truth.blocks.find((block) => block.start <= inv.input.start && inv.input.start < block.end) ?? null;
+      const endBlock = truth.blocks.find((block) => block.start < inv.input.end && inv.input.end <= block.end) ?? null;
+      if (startBlock === null || endBlock === null || startBlock.blockId === endBlock.blockId) {
         throw new Error(
-          `copy quote: clipboard content differs from the canonical excerpt ` +
-            `(${String(read.text.length)} vs ${String(expected.excerpt.length)} UTF-16 units)`,
+          `${String(inv.id)}: frozen cross-page input [${String(inv.input.start)}, ${String(inv.input.end)}) does not span two distinct page blocks of ${fixtureId}`,
         );
       }
-      copyMode = "clipboard read-back byte-equal";
-    } else {
-      /* 诚实降级：复制确认态（Copied ✓）已验证 + 摘录与冻结 canonicalText
-         切片字节相等（复制的就是该切片）。 */
-      if (md11.truth.canonicalText.slice(expected.start, expected.end) !== expected.excerpt) {
-        throw new Error("frozen excerpt is not the canonicalText slice (fixture inconsistency)");
+      await ensurePdfPageRendered(ctx, startBlock.blockId, String(inv.id));
+      await ensurePdfPageRendered(ctx, endBlock.blockId, String(inv.id));
+      const placed = await ctx.evalJs(
+        pageSelectCrossPagePdf(startBlock.blockId, inv.input.start - startBlock.start, endBlock.blockId, inv.input.end - endBlock.start),
+      );
+      if (placed === null || placed.error !== undefined) {
+        throw new Error(`${String(inv.id)}: cross-page selection could not be placed — ${JSON.stringify(placed)}`);
       }
-      copyMode = `copy-confirmed (clipboard read-back unavailable: ${String(read.error)})`;
+      const bar = await waitForArmedBar(ctx, `${String(inv.id)} (cross-page discipline)`);
+      if (bar.invalidNote === null || !bar.invalidNote.includes("cross-page")) {
+        throw new Error(`${String(inv.id)}: cross-page selection was not refused: ${JSON.stringify(bar)}`);
+      }
+      if (bar.payload !== null || bar.quote !== null) {
+        throw new Error(`${String(inv.id)}: cross-page selection produced a payload (must not): ${JSON.stringify(bar)}`);
+      }
+      cases.push({ id: `${String(inv.id)}-cross-page-refused`, category: "cross-page", blockId: null, start: null, end: null });
+      crossPageRefused.push({ id: String(inv.id), fixture: fixtureId, from: startBlock.blockId, to: endBlock.blockId, range: [inv.input.start, inv.input.end] });
+      if (fixtureId === "pdf-01") await ctx.screenshot("selection-pdf01-crosspage-refused");
     }
+
+    if (fixtureId === "pdf-11") await ctx.screenshot("selection-pdf11-longtail");
+  }
+  if (crossPageRefused.length !== invalidCrossPageItems.length) {
+    throw new Error(
+      `cross-page negatives not fully mirrored: ${String(crossPageRefused.length)} of ${String(invalidCrossPageItems.length)} executed`,
+    );
   }
 
-  cases.push(await captureFrozenSelection(ctx, { treeId, material: materials["md-11"], item: pick("md-sel-42", "md-11"), truth: md11.truth }));
-  await ctx.screenshot("selection-md11-longtail");
+  /* ---- 分母完整性（冻结分母绝不静默缩水；差一即失败） ---- */
+  const mdTotal = selections.size;
+  const pdfTotal = pdfSelections.size;
+  const mdMissing = [...selections.keys()].filter((id) => !mdCaptured.has(id));
+  const pdfMissing = [...pdfSelections.keys()].filter((id) => !pdfCaptured.has(id));
+  if (mdMissing.length > 0 || pdfMissing.length > 0) {
+    throw new Error(
+      `frozen B2 selection denominator not fully captured — markdown missing: ${mdMissing.join(", ") || "(none)"}; pdf missing: ${pdfMissing.join(", ") || "(none)"}`,
+    );
+  }
 
   const pageErrors = assertNoPageErrors(ctx, { label: "d4-read-and-select" });
+  const mdCategories = [...new Set([...selections.values()].map((item) => item.category))].sort();
+  const pdfCategories = [...new Set([...pdfSelections.values()].map((item) => item.category))].sort();
   await ctx.sidecar("read-select-cases", {
     check: "d4-read-and-select",
     cases,
-    frozenSelectionsExact: cases.filter((entry) => entry.id.startsWith("md-sel")).length,
+    frozenSelectionsExact: cases.filter((entry) => entry.id.startsWith("md-sel") || entry.id.startsWith("pdf-sel")).length,
+    markdownFrozenExact: mdCaptured.size,
+    pdfFrozenExact: pdfCaptured.size,
+    markdownDenominator: mdTotal,
+    pdfDenominator: pdfTotal,
+    markdownCapturedIds: [...mdCaptured].sort(),
+    pdfCapturedIds: [...pdfCaptured].sort(),
+    markdownCategories: mdCategories,
+    pdfCategories: pdfCategories,
     snapCase: "grapheme-split snapped outward to md-sel-30 truth",
     crossBlock: "refused (no payload)",
+    crossPage: `refused (no payload) — frozen ${invalidCrossPageItems.map((inv) => String(inv.id)).join(", ")} mirrored in the real pdf reader`,
+    crossPageRefused,
+    pdfMouseGesture: "pdf-sel-01 via a real continuous drag (press → move×8 → release) on the page-1 text layer",
     copyQuote: copyMode,
     pageErrors,
   });
-  const frozenCount = cases.filter((entry) => entry.id.startsWith("md-sel")).length;
   return {
     detail:
-      `${String(frozenCount)}/${String(frozenCount)} frozen B2 selections captured exactly in the real reader ` +
-      `(emoji/ZWJ/flags/keycaps, repeat-word 2nd/4th/5th occurrence, cross-line, long-tail past lazy-load; ` +
-      `2 via real mouse gestures: click + Shift+click, and a continuous press→move×8→release drag — the bar ` +
-      `stays frozen during the drag window); grapheme-split snapped outward; cross-block refused; ` +
+      `${String(mdCaptured.size)}/${String(mdTotal)} markdown + ${String(pdfCaptured.size)}/${String(pdfTotal)} frozen B2 selections captured exactly in the real reader ` +
+      `(markdown ${mdCategories.join("/")} across md-01..md-12 incl. emoji/ZWJ, repeat-word occurrences, cross-line and long-tail past lazy-load; ` +
+      `pdf ${pdfCategories.join("/")} across pdf-01..pdf-12 with each targeted page's text layer byte-equal to the frozen truth before capture ` +
+      `and multipage pdf-11 fully paged in; 3 real mouse gestures: md click + Shift+click (md-sel-01), md continuous drag (md-sel-02), ` +
+      `pdf continuous drag (pdf-sel-01 on a page text layer)); grapheme-split snapped outward; cross-block refused; ` +
+      `cross-page refused on pdf (frozen ${invalidCrossPageItems.map((inv) => String(inv.id)).join("/")} — no payload, never silently truncated); ` +
       `resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: ${copyMode}`,
   };
 }
@@ -1313,19 +1851,24 @@ async function ensureSearchCorpus(ctx) {
       idempotencyKey: "browser-search-probe-return-1",
     }, "material-return");
 
-    /* 第二棵树 + md-02（跨树范围语料——导入探针的 md-01/06/11 都在第一棵树，
-     *  不能用来区分范围；md-02 只进第二棵树）。 */
+    /* 第二棵树 + 跨树专属语料：探针自产唯一短语材料（d4-read-and-select
+     * 把 B2 全分母（12 md + 12 PDF，含 md-02）铺进了场景树——md-02 已两树
+     * 皆有，不能再当跨树判别词；改为只进第二棵树的探针专属材料，其短语
+     * 全局唯一：当前树范围必须零命中、全部树范围必须命中）。 */
     let tree2Id = ctx.scenario.searchTree2Id ?? null;
     if (tree2Id === null) {
       const created = await searchProbeApi(ctx, "POST", "/api/trees", undefined, "create tree 2");
       tree2Id = created.body?.tree?.id ?? null;
       if (tree2Id === null) throw new Error("tree 2 creation returned no id");
-      const md02 = loadB1Fixture(ctx.ROOT, "md-02");
-      const res = await importMaterialViaHttp(ctx, tree2Id, md02.filename, md02.bytes);
-      if (res.status !== 201) throw new Error(`md-02 import into tree 2 HTTP ${String(res.status)}`);
-      await waitForVersionReady(ctx, tree2Id, res.body.material.id, res.body.version.id, "md-02(tree2)");
+      const tree2Marker = `TreeAI-搜索探针-跨树语料-c93e`;
+      const tree2Bytes = utf8BytesOf(
+        `# 跨树范围探针语料\n\n${tree2Marker}：这一段只存在于第二棵树——当前树范围搜索必须零命中，全部树范围必须命中本材料。\n`,
+      );
+      const res = await importMaterialViaHttp(ctx, tree2Id, "search-probe-tree2-corpus.md", tree2Bytes);
+      if (res.status !== 201) throw new Error(`tree-2 corpus import HTTP ${String(res.status)}: ${JSON.stringify(res.body)}`);
+      await waitForVersionReady(ctx, tree2Id, res.body.material.id, res.body.version.id, "search-probe-tree2-corpus");
       ctx.scenario.searchTree2Id = tree2Id;
-      ctx.scenario.searchTree2Phrase = md02.truth.canonicalText.slice(0, 12);
+      ctx.scenario.searchTree2Phrase = tree2Marker;
     }
     ctx.scenario.searchCorpus = true;
   }
@@ -1363,7 +1906,7 @@ async function runUiSearch(ctx, query, scope) {
 
 export async function probeSearchRecover(ctx) {
   const { treeId, tree2Id } = await ensureSearchCorpus(ctx);
-  ctx.noteFixturesUsed(["md-01", "md-02", "md-vpair-v1", "md-vpair-v2"]);
+  ctx.noteFixturesUsed(["md-01", "md-vpair-v1", "md-vpair-v2"]);
   const md01 = ctx.scenario.materials["md-01"];
   const problems = [];
 
@@ -1440,16 +1983,17 @@ export async function probeSearchRecover(ctx) {
     problems.push(`无结果查询不诚实（rows=${String(none.rows.length)}，status=${JSON.stringify(none.status)}）`);
   }
 
-  /* 6) 当前树/全部树范围：md-02 只在第二棵树——当前树零命中、全部树命中。 */
+  /* 6) 当前树/全部树范围：跨树语料只在第二棵树（探针自产唯一短语材料）——
+        当前树零命中、全部树命中。 */
   if (tree2Id !== null) {
-    const md02Phrase = ctx.scenario.searchTree2Phrase;
-    const inTree = await runUiSearch(ctx, md02Phrase, "tree");
+    const crossTreePhrase = ctx.scenario.searchTree2Phrase;
+    const inTree = await runUiSearch(ctx, crossTreePhrase, "tree");
     if (inTree.rows.length !== 0) {
-      problems.push(`当前树范围泄漏跨树命中（md-02 语料只在第二棵树：rows=${JSON.stringify(inTree.rows.slice(0, 3))}）`);
+      problems.push(`当前树范围泄漏跨树命中（跨树语料只在第二棵树：rows=${JSON.stringify(inTree.rows.slice(0, 3))}）`);
     }
-    const inAll = await runUiSearch(ctx, md02Phrase, "all");
+    const inAll = await runUiSearch(ctx, crossTreePhrase, "all");
     if (inAll.rows.length === 0) {
-      problems.push(`全部树范围未命中第二棵树的 md-02（query=${JSON.stringify(md02Phrase)}，status=${JSON.stringify(inAll.status)}）`);
+      problems.push(`全部树范围未命中第二棵树的跨树语料（query=${JSON.stringify(crossTreePhrase)}，status=${JSON.stringify(inAll.status)}）`);
     }
   }
 
@@ -1464,7 +2008,7 @@ export async function probeSearchRecover(ctx) {
   if (problems.length > 0) {
     throw new Error(`d4-search-recover browser-face problems — ${problems.join("; ")}`);
   }
-  return { detail: `5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 md-02` };
+  return { detail: `5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 探针自产跨树语料` };
 }
 
 /* ------------------------------------------------------------------ */
