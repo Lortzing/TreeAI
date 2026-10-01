@@ -2052,6 +2052,14 @@ export async function probeExportRestoreRecover(ctx) {
       `(() => { const btn = document.querySelector("#mat-branch-flow .mat-branch-resume"); ` +
         `if (btn === null) return false; btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return true; })()`,
     );
+    /* 阅读器是支线列的覆盖层（z-index 高于面板）且退出有 170ms 动画——
+       必须等它完全 hidden 后才能与面板交互（真实用户节奏；否则输入点击
+       落在仍可见的阅读器上）。 */
+    await waitFor(
+      ctx,
+      `(() => { const r = document.getElementById("material-reader"); return r !== null && r.hidden === true; })()`,
+      { label: "material reader exit animation settled (overlay gone)", timeoutMs: 5_000 },
+    );
     await waitFor(
       ctx,
       `(() => { const panel = document.getElementById("branch-panel"); ` +
