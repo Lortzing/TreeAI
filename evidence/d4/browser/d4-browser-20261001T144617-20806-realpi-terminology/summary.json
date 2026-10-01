@@ -1,0 +1,57 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261001T144617-20806",
+  "mode": "real-pi",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "scoped": [
+    "terminology-path"
+  ],
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "450b9d725f4b50fcdc7e09cb5df8b2da98a11c48",
+  "gitDirty": false,
+  "generatedAt": "2026-10-01T14:47:05.483Z",
+  "git": {
+    "head": "450b9d725f4b50fcdc7e09cb5df8b2da98a11c48",
+    "dirty": false
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:55314",
+      "durationMs": 497
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:55343/",
+      "durationMs": 774
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 650
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 1
+    },
+    {
+      "id": "terminology-path",
+      "status": "PASS",
+      "detail": "reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (real Pi, non-empty and containing the source word), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested",
+      "durationMs": 46166
+    }
+  ],
+  "pageErrors": []
+}

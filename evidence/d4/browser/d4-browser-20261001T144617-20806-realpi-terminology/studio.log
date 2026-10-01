@@ -1,0 +1,31 @@
+treeai-studio: listening http://127.0.0.1:55343
+treeai-studio: driver=pi model=deepseek/deepseek-flash
+treeai-studio: data=<tmp>/treeai-d4-data-RzTWyP (schema v10)
+treeai-studio: journal=<tmp>/treeai-d4-data-RzTWyP/journal.jsonl (0 events loaded)
+treeai-studio: pi agent-dir=~/Projects/TreeAI/.pi-d2-live (controlled; ~/.pi is not used)
+treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+treeai-studio: terminology executor isolated (model=deepseek/deepseek-flash, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T14:46:19.837Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:55390
+treeai-studio: driver=pi model=deepseek/deepseek-flash
+treeai-studio: data=<tmp>/treeai-term-browser-KaV1SQ (schema v10)
+treeai-studio: journal=<tmp>/treeai-term-browser-KaV1SQ/journal.jsonl (0 events loaded)
+treeai-studio: pi agent-dir=~/Projects/TreeAI/.pi-d2-live (controlled; ~/.pi is not used)
+treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+treeai-studio: terminology executor isolated (model=deepseek/deepseek-flash, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+
+=== studio restart 2026-10-01T14:46:55.979Z (data dir unchanged) ===
+treeai-studio: listening http://127.0.0.1:55872
+treeai-studio: driver=pi model=deepseek/deepseek-flash
+treeai-studio: data=<tmp>/treeai-term-browser-KaV1SQ (schema v10)
+treeai-studio: journal=<tmp>/treeai-term-browser-KaV1SQ/journal.jsonl (2667 events loaded)
+treeai-studio: pi agent-dir=~/Projects/TreeAI/.pi-d2-live (controlled; ~/.pi is not used)
+treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+treeai-studio: terminology executor isolated (model=deepseek/deepseek-flash, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)

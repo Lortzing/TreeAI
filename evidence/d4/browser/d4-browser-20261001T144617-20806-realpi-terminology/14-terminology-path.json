@@ -1,0 +1,340 @@
+{
+  "check": "terminology-path",
+  "mode": "real-pi",
+  "modeNote": "real Pi answers (trunk prompts, terminology explanations, promotion first questions, follow-ups)",
+  "treeId": "tree_96fdf28c-6d40-4429-a1e4-1e88fe98072e",
+  "terminologyPath": {
+    "readingModes": {
+      "drawer": {
+        "labels": [
+          "Manual only",
+          "Minimal hints",
+          "Assisted reading"
+        ],
+        "defaultPressed": "manual-only",
+        "gateNotePresent": true,
+        "gateNoteText": "「…quality gate has not passed — automatic suggestions stay OFF…」(TERMINOLOGY_AUTO_QUALITY_GATE=false — the production default, asserted as-is)"
+      },
+      "switches": [
+        {
+          "mode": "minimal-hints",
+          "putPayload": "{\"mode\":\"minimal-hints\"}",
+          "serverReadback": "minimal-hints"
+        },
+        {
+          "mode": "assisted-reading",
+          "putPayload": "{\"mode\":\"assisted-reading\"}",
+          "serverReadback": "assisted-reading"
+        },
+        {
+          "mode": "manual-only",
+          "putPayload": "{\"mode\":\"manual-only\"}",
+          "serverReadback": "manual-only"
+        }
+      ],
+      "manualOnlyNoStrip": {
+        "answerLen": 99,
+        "tasks": 0,
+        "usageRequests": 0,
+        "suggestionSets": 0,
+        "stripRendered": false,
+        "isolatedExecutorSessionFiles": 0,
+        "reason": "quality-gate-pending"
+      },
+      "minimalHintsZeroDispatch": {
+        "mode": "minimal-hints",
+        "putPayload": "{\"mode\":\"minimal-hints\"}",
+        "anchorAnswerLen": 202,
+        "tasks": 0,
+        "usageRequests": 0,
+        "suggestionSets": 0,
+        "stripRendered": false,
+        "isolatedExecutorSessionFiles": 0,
+        "reason": "quality-gate-pending",
+        "note": "the production gate is OFF by design (TERMINOLOGY_AUTO_QUALITY_GATE=false): zero auto dispatch after a completed answer IS the tested semantics, not a probe limitation"
+      },
+      "suggestionChipPrefill": {
+        "exercisable": false,
+        "reason": "TERMINOLOGY_AUTO_QUALITY_GATE=false in production — no suggestion set is ever produced (sets always []), so the chip → pre-fill → explicit-confirm path cannot be exercised without changing the product gate (forbidden by the probe charter); the four honest strip states (pending/terminal or gate-off note) reduce to the gate-off drawer note + no strip, both asserted"
+      }
+    },
+    "entryVertical": {
+      "term": {
+        "armed": {
+          "start": 55,
+          "end": 60,
+          "text": "Lasso",
+          "source": "candidate:lasso",
+          "gesture": "real continuous mouse drag",
+          "toolbarMode": "term"
+        },
+        "explained": {
+          "mode": "term",
+          "explanationLen": 581,
+          "containsSelectedTerm": true,
+          "driver": "real Pi"
+        },
+        "saved": {
+          "annotationId": "term_8d6fdbc6-9dba-4a5e-a1b2-bb91ed68782e",
+          "mode": "term",
+          "term": "Lasso",
+          "liveOverlayRendered": true
+        },
+        "promoted": {
+          "branchId": "branch_40f21c0f-75fa-4019-8de0-55590443be16",
+          "doubleClick": "double-click-delivered",
+          "firstQuestionUserTurns": 1,
+          "assistantAnswer": true,
+          "promotedBranchBinding": "branch_40f21c0f-75fa-4019-8de0-55590443be16"
+        },
+        "followUps": [
+          "TreeAI-术语探针-TERM追问一-j0k1l2",
+          "TreeAI-术语探针-TERM追问二-m3n4o5"
+        ],
+        "returned": {
+          "cardMeta": "↩ Return from Branch 1 · saved 2026/10/1 22:46:36 · anchored on “Lasso” from Trunksaved — pending adoption on the next Trunk discussion",
+          "deliveryNote": "saved — pending adoption on the next Trunk discussion",
+          "serverFromBranchId": "branch_40f21c0f-75fa-4019-8de0-55590443be16"
+        }
+      },
+      "range": {
+        "armed": {
+          "start": 61,
+          "end": 87,
+          "text": "回归是其中一种，采用参数绝对值之和（L1 范数）作为",
+          "source": "after-term-space-window",
+          "gesture": "real continuous mouse drag",
+          "toolbarMode": "range (span)"
+        },
+        "explained": {
+          "mode": "range",
+          "explanationLen": 325,
+          "sourceWords": [],
+          "containsSourceWord": "n/a (no ASCII word ≥3 in the selection; non-empty asserted)",
+          "driver": "real Pi"
+        },
+        "saved": {
+          "annotationId": "term_4314a33b-d315-40a9-a94d-dfed626f94a5",
+          "mode": "range",
+          "liveOverlayRendered": true,
+          "bothOverlaysCoexist": true
+        },
+        "responseLoss": {
+          "droppedResponses": 1,
+          "promotedBranchId": "branch_91b3d59e-e4c7-459b-8611-10d1c366fe35",
+          "branchCountDelta": 1,
+          "firstQuestionUserTurns": 1,
+          "cardSurfaced": "promotion conflict — … + saved — already promoted to … + Open the follow-up branch"
+        },
+        "resumed": {
+          "sameBranch": true,
+          "branchCountUnchanged": true
+        },
+        "followUps": [
+          "TreeAI-术语探针-RANGE追问一-v2w3x4",
+          "TreeAI-术语探针-RANGE追问二-y5z6a7"
+        ],
+        "returned": {
+          "cardMeta": "↩ Return from Branch 2 · saved 2026/10/1 22:46:49 · anchored on “回归是其中一种，采用参数绝对值之和（L1 范数）作为” from Trunksaved — pending adoption on the next Trunk discussion",
+          "serverFromBranchId": "branch_91b3d59e-e4c7-459b-8611-10d1c366fe35"
+        }
+      }
+    },
+    "idempotency": {
+      "doubleClick": {
+        "mode": "term",
+        "secondClick": "double-click-delivered",
+        "userTurnsWithMarker": 1,
+        "exactlyOnce": true,
+        "mechanism": "client busy lock (guard) + server promotion idempotency key"
+      },
+      "responseLoss": {
+        "mode": "range",
+        "injection": "CDP Fetch Response-stage failRequest on POST …/terminology/annotations/:id/promote (the server processed it fully)",
+        "retrySemantics": "the refreshed read model reveals the recorded promotion — the honest UI path is resume (no re-dispatch); the first question was dispatched exactly once (server fact)",
+        "userTurnsWithMarker": 1
+      }
+    },
+    "restart": {
+      "annotationsReadable": {
+        "overlays": [
+          "Lasso",
+          "回归是其中一种，采用参数绝对值之和（L1 范数）作为"
+        ],
+        "drawerList": [
+          "Trunk · run run_01b73ccb… · succeeded · 22:46:22 → 22:46:23",
+          "Trunk · run run_7d319d84… · succeeded · 22:46:24 → 22:46:25",
+          "Branch 1 · run run_436702e2… · succeeded · 22:46:29 → 22:46:30",
+          "Branch 1 · run run_19f37ab2… · succeeded · 22:46:31 → 22:46:33",
+          "Branch 1 · run run_b6541a4d… · succeeded · 22:46:33 → 22:46:36",
+          "Branch 2 · run run_4ed90315… · succeeded · 22:46:39 → 22:46:41",
+          "Branch 2 · run run_064d5442… · succeeded · 22:46:42 → 22:46:47",
+          "Branch 2 · run run_3570a308… · succeeded · 22:46:47 → 22:46:49",
+          "from Branch 1 · anchored on “Lasso” from Trunk · saved, pending adoption",
+          "from Branch 2 · anchored on “回归是其中一种，采用参数绝对值之和（L1 范数）作为” from Trunk · saved, pending adoption",
+          "“Lasso” (term) from Trunk · anchored on “Lasso” · promoted to Branch 1",
+          "“回归是其中一种，采用参数绝对值之和（L1 范数）作为” (range) from Trunk · anchored on “回归是其中一种，采用参数绝对值之和（L1 范数）作为” · promoted to Branch 2",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (3 chars)",
+          "22:46:49 message.updated — message delta received (1 chars)",
+          "22:46:49 message.updated — message delta received (2 chars)",
+          "22:46:49 message.updated — message update received",
+          "22:46:49 message.updated — message update received",
+          "22:46:49 message.completed — message completed (assistant), stop: stop",
+          "22:46:49 turn.completed — turn completed (stop: stop)",
+          "22:46:49 agent.settled — agent run settled"
+        ],
+        "usageLine": "terminology executor: 2 request(s), est. 468/1000000 tokens (chars/4 estimate), 0 late result(s) discarded by the executor, 0 late response(s) discarded client-side, cache on"
+      },
+      "historyAndContinuation": {
+        "port": "55390→55872",
+        "historyMarkers": [
+          "TreeAI-术语探针-TERM首问-f7g8h9",
+          "TreeAI-术语探针-TERM追问二-m3n4o5"
+        ],
+        "continuationFollowUp": "TreeAI-术语探针-重启续走-e1f2g3"
+      }
+    },
+    "recovery": {
+      "existingExploration": {
+        "toolbarEntry": "✓ Follow-up exists",
+        "cardAffordance": "Open the follow-up branch (resume-or-create, one-per-annotation guidance shown)",
+        "sameBranchReentered": true,
+        "branchCountUnchanged": true,
+        "historyMarkersVisible": [
+          "TreeAI-术语探针-TERM首问-f7g8h9",
+          "TreeAI-术语探针-重启续走-e1f2g3"
+        ]
+      },
+      "explicitNewBranch": {
+        "entry": "⑃ Branch from selection (the generic W1 branch entry — never reuses an existing exploration)",
+        "newBranchId": "branch_a11108b1-7465-409f-88e9-a7f0f9394133",
+        "distinctFrom": [
+          "branch_40f21c0f-75fa-4019-8de0-55590443be16",
+          "branch_91b3d59e-e4c7-459b-8611-10d1c366fe35"
+        ],
+        "firstPrompt": "TreeAI-术语探针-另开首问-h4i5j6",
+        "annotationPromotionBindingUnchanged": "branch_40f21c0f-75fa-4019-8de0-55590443be16"
+      }
+    },
+    "frontendInvariants": {
+      "draftFocus": {
+        "roundTrip": "typed a promotion first-question draft → Trunk tab click (real /switch + renderAll) → draft + focus + card all preserved",
+        "draftLen": 50,
+        "activeIdAfter": "term-first-question"
+      },
+      "copyInvariance": {
+        "mode": "browser copy command (execCommand) + clipboard read-back byte-equal",
+        "answerLen": 202,
+        "overlaysInPlace": 2,
+        "keyboardAcceleratorNote": "synthetic Cmd+C / Ctrl+C via CDP Input.dispatchKeyEvent does not trigger the platform copy in headless Chrome (probed live: clipboard stayed empty) — the browser's own copy command (execCommand) is used instead, operating on the real platform selection"
+      },
+      "selectionStability": {
+        "roundTrip": "armed selection → Trunk tab click (real /switch + renderAll) → turn element + body text nodes keep identity, the toolbar stays armed, the selection is unchanged",
+        "armedLabel": "Selection actions — span “回归是其中一种，采用参数绝对值之和（L1 范数）作为”"
+      },
+      "escapeFocusRestore": {
+        "activeAfter": {
+          "id": "prompt-input"
+        },
+        "note": "mark-opened card (no armed selection): the disabled explain entry cannot take focus in a real browser — the fixed product behavior falls back to the Trunk composer (pre-fix it was silently lost to body)"
+      },
+      "scrollMemory": {
+        "assertion": "no force-to-bottom on re-render while the user has scrolled up (issue #3 invariant — deterministically assertable)",
+        "scrollSetTo": 138,
+        "scrollAfterRenderAll": 138,
+        "geometry": {
+          "h": 940,
+          "ch": 689
+        },
+        "observed": "exact-position restoration across renderAll is not deterministically assertable end-to-end: transient content states (card close → content shrink → the browser clamps scrollTop and the clamp value enters the branch reading-position memory) can leave a stale 0 that later renders restore; observed deterministically in the full-sequence environment (scrollIntoView-position and direct-assignment-position round trips both landed at 0); root cause involves scroll-event delivery timing during transient layout — recorded for owner follow-up, alongside the reconcileTopLevel insert-before-remove fix that removes the transient content-collapse window"
+      },
+      "wideNarrow": {
+        "wide": "1600×900",
+        "narrow": "390×844 (mobile)",
+        "hits": {
+          "wide": {
+            "toolbarExplain": true,
+            "toolbarBranch": true
+          },
+          "wideCard": {
+            "explainCard": true,
+            "cardClose": true
+          },
+          "wideDrawer": {
+            "modeManual": true,
+            "modeMinimal": true,
+            "modeAssisted": true,
+            "cacheToggle": true
+          },
+          "narrow": {
+            "toolbarExplain": true
+          },
+          "narrowCard": {
+            "explainCard": true,
+            "cardClose": true
+          },
+          "narrowDrawer": {
+            "modeManual": true,
+            "modeMinimal": true,
+            "modeAssisted": true
+          }
+        },
+        "narrowHorizontalOverflowPx": 0
+      }
+    }
+  },
+  "markers": {
+    "q1": "TreeAI-术语探针-主干一-q1a2b3",
+    "q2": "TreeAI-术语探针-主干二-c4d5e6",
+    "termQ1": "TreeAI-术语探针-TERM首问-f7g8h9",
+    "termF1": "TreeAI-术语探针-TERM追问一-j0k1l2",
+    "termF2": "TreeAI-术语探针-TERM追问二-m3n4o5",
+    "termRet": "TreeAI-术语探针-TERM收获-p6q7r8",
+    "rangeQ1": "TreeAI-术语探针-RANGE首问-s9t0u1",
+    "rangeF1": "TreeAI-术语探针-RANGE追问一-v2w3x4",
+    "rangeF2": "TreeAI-术语探针-RANGE追问二-y5z6a7",
+    "rangeRet": "TreeAI-术语探针-RANGE收获-b8c9d0",
+    "restartF": "TreeAI-术语探针-重启续走-e1f2g3",
+    "openF": "TreeAI-术语探针-另开首问-h4i5j6"
+  },
+  "selections": {
+    "term": {
+      "start": 55,
+      "end": 60,
+      "text": "Lasso",
+      "source": "candidate:lasso"
+    },
+    "range": {
+      "start": 61,
+      "end": 87,
+      "text": "回归是其中一种，采用参数绝对值之和（L1 范数）作为",
+      "source": "after-term-space-window"
+    }
+  },
+  "branches": {
+    "term": "branch_40f21c0f-75fa-4019-8de0-55590443be16",
+    "range": "branch_91b3d59e-e4c7-459b-8611-10d1c366fe35"
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "dataDirPolicy": "dedicated mkdtemp data dir (bootStudioOn); removed in the probe's finally"
+  },
+  "pageErrorsExcluded": 1,
+  "honestyNotes": [
+    "① suggestion chip pre-fill/confirm-before-dispatch is NOT exercised: the production quality gate is OFF, suggestion sets are structurally empty, and the probe must not enable the gate to make chips appear",
+    "③ exact scroll-position restoration across renderAll is NOT asserted (disclosed): transient content states (card close → content shrink → browser clamp) can enter the branch reading-position memory as a stale value that later renders restore — observed as 401→0 and 220→0 round trips in the full-sequence environment; the deterministically assertable product invariant (no force-to-bottom on re-render while scrolled up, issue #3) IS asserted; the reconcileTopLevel insert-before-remove fix removes the transient content-collapse window; full causal chain (scroll-event delivery timing) left for owner follow-up"
+  ]
+}
