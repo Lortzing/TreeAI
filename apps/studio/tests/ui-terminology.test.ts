@@ -213,6 +213,27 @@ interface StubTermTask {
   state: { kind: string } & Record<string, unknown>;
 }
 
+/** 建议集桩形状（①阅读模式：服务端 TerminologySuggestionSet 的 HTTP 投影）。 */
+interface StubTermSuggestionSet {
+  treeId: string;
+  branchId: string;
+  anchorTurnId: string;
+  readingMode: string;
+  status: "pending" | "ready" | "no-suggestions" | "partial" | "budget-paused" | "source-invalid" | "failed";
+  suggestions: Array<{ term: string; start: number; end: number }>;
+  hiddenCount: number;
+  sourceHash: string;
+  createdAt: string;
+  error: { code: string; message: string } | null;
+}
+
+/** 自动建议总状态桩形状（readModel.autoSuggestions）。 */
+interface StubTermAutoSuggestions {
+  enabled: boolean;
+  reason: "quality-gate-pending" | "manual-only" | null;
+  sets: StubTermSuggestionSet[];
+}
+
 interface TurnExtra {
   runId?: string | null;
   piEntryId?: string | null;
@@ -386,6 +407,14 @@ interface Backend {
   termAnnotations: StubTermAnnotation[];
   termTasks: StubTermTask[];
   cacheEnabled: boolean;
+  /** ①阅读模式：当前树模式（PUT settings/reading-mode 就地更新）。 */
+  readingMode: string;
+  /** ①阅读模式：readModel.autoSuggestions（null = 服务端未携带——前端容错缺省）。 */
+  autoSuggestions: StubTermAutoSuggestions | null;
+  /** PUT settings/reading-mode 的脚本化失败。 */
+  modePutFail: boolean;
+  /** POST suggestions/:id/retry 时把该锚点集翻为 partial（可恢复入口成功路径）。 */
+  suggestionRetryRecovers: boolean;
 }
 
 /* ------------------------------ unknown 收窄辅助（不使用 any） ------------------------------ */
@@ -964,6 +993,12 @@ interface WorldOptions {
   promoteScript?: PromoteScript;
   prefsFail?: boolean;
   terminologyGetFail?: boolean;
+  /** ①阅读模式：预置当前树模式（boot 的 GET /terminology 即返回）。 */
+  readingMode?: string;
+  /** ①阅读模式：预置 readModel.autoSuggestions（null = 不携带该字段）。 */
+  autoSuggestions?: StubTermAutoSuggestions | null;
+  /** PUT settings/reading-mode 的脚本化失败。 */
+  modePutFail?: boolean;
   /** 预置已推广批注的支线分支视图（resume-or-create 场景）。 */
   promotedBranchView?: Branch;
   /** 覆写 a2 的正文（emoji/增补平面 astral 码位等锚定场景——turn id 与结构不变）。 */
@@ -1045,6 +1080,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     termAnnotations: options.termAnnotations === undefined ? [] : [...options.termAnnotations],
     termTasks: options.termTasks ?? [],
     cacheEnabled: true,
+    readingMode: options.readingMode ?? "manual-only",
+    autoSuggestions: options.autoSuggestions ?? null,
+    modePutFail: options.modePutFail === true,
+    suggestionRetryRecovers: false,
   };
   if (options.promotedBranchView !== undefined) {
     backend.treeState.branches.push(makeBranchView(options.promotedBranchView, null, "available", []));
@@ -1206,7 +1245,51 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
           budgetTokens: 1_000_000,
         },
         cacheEnabled: backend.cacheEnabled,
+        /* ①阅读模式：mode 与 autoSuggestions（null 时省略——前端容错缺省，
+           与旧服务端载荷兼容）。 */
+        readingMode: backend.readingMode,
+        ...(backend.autoSuggestions === null ? {} : { autoSuggestions: backend.autoSuggestions }),
       });
+    }
+    m = /^\/api\/trees\/([^/]+)\/terminology\/settings\/reading-mode$/.exec(p);
+    if (m !== null && (method === "GET" || method === "PUT")) {
+      if (method === "GET") {
+        return respond(200, { readingMode: backend.readingMode });
+      }
+      const record = asRecord(body);
+      const mode = record === null ? null : record.mode;
+      if (mode !== "manual-only" && mode !== "minimal-hints" && mode !== "assisted-reading") {
+        return respond(400, { error: { code: "invalid-argument", message: "request field 'mode' must be one of 'manual-only' | 'minimal-hints' | 'assisted-reading'" } });
+      }
+      if (backend.modePutFail) {
+        return respond(500, { error: { code: "internal", message: "scripted reading-mode failure" } });
+      }
+      backend.readingMode = mode;
+      return respond(200, { readingMode: mode });
+    }
+    {
+      const suggestMatch = /^\/api\/trees\/([^/]+)\/terminology\/suggestions\/([^/]+)\/retry$/.exec(p);
+      if (suggestMatch !== null && method === "POST") {
+        const anchorTurnId = decodeURIComponent(suggestMatch[2]!);
+        const set = (backend.autoSuggestions?.sets ?? []).find((entry) => entry.anchorTurnId === anchorTurnId);
+        if (set === undefined) {
+          return respond(404, { error: { code: "not-found", message: `no suggestion set for ${anchorTurnId}` } });
+        }
+        if (backend.suggestionRetryRecovers) {
+          /* 模拟服务端重跑提取（真实恢复路径：候选 + partial 截断注记）。 */
+          set.status = "partial";
+          set.suggestions = [
+            { term: "Lasso", start: 0, end: 5 },
+            { term: "regularization", start: 6, end: 20 },
+          ];
+          set.hiddenCount = 1;
+          set.error = null;
+        }
+        return respond(200, {
+          autoSuggestions:
+            backend.autoSuggestions ?? { enabled: true, reason: null, sets: [set] },
+        });
+      }
     }
     m = /^\/api\/trees\/([^/]+)\/terminology\/explain$/.exec(p);
     if (m !== null && method === "POST") {
@@ -2602,3 +2685,288 @@ test("P1 save-path guard: an annotation saved while its card was closed lands in
   const validLi = drawerAnnotationLi(world.el("source-drawer"), A2_TERM);
   assert.ok(!validLi.textContent.includes("source changed"), "the freshly saved annotation is intact");
 });
+
+/* ================= ①阅读模式（issue #7 术语①，2026-10-01） ================= */
+
+/** 建议集桩工厂（锚点 a2——A2_TEXT；P0 同族：sourceHash 按当前锚文本计）。 */
+function suggestionSet(overrides: Partial<StubTermSuggestionSet> = {}): StubTermSuggestionSet {
+  return {
+    treeId: TREE,
+    branchId: "trunk-1",
+    anchorTurnId: "a2",
+    readingMode: "minimal-hints",
+    status: "partial",
+    suggestions: [
+      { term: "Lasso", start: 0, end: 5 },
+      { term: "regularization", start: 6, end: 20 },
+    ],
+    hiddenCount: 3,
+    sourceHash: sha256Of(A2_TEXT),
+    createdAt: ISO,
+    error: null,
+    ...overrides,
+  };
+}
+
+test("reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure", async () => {
+  const world = await createWorld({
+    readingMode: "manual-only",
+    autoSuggestions: { enabled: false, reason: "quality-gate-pending", sets: [] },
+  });
+  world.el("source-drawer-toggle").click();
+  await settle();
+  const drawer = world.el("source-drawer");
+  const modeButtons = drawer.querySelectorAll(".term-mode-toggle");
+  assert.equal(modeButtons.length, 3, "exactly three reading-mode options");
+  assert.deepEqual(
+    modeButtons.map((b) => b.getAttribute("aria-pressed")),
+    ["true", "false", "false"],
+    "manual-only is pressed by default",
+  );
+  assert.deepEqual(
+    modeButtons.map((b) => b.textContent),
+    ["Manual only", "Minimal hints", "Assisted reading"],
+  );
+  /* gate 未过旁注（诚实披露：模式可保存切换，但自动建议保持关闭）。 */
+  assert.ok(
+    drawer.textContent.includes("the auto-annotation quality gate has not passed"),
+    "the gate-pending note is shown while suggestions are off",
+  );
+  assert.ok(
+    drawer.textContent.includes("automatic suggestions stay OFF; only manual explaining is in effect"),
+    "the note states manual-only effect honestly",
+  );
+
+  /* 切换 minimal-hints：PUT 载荷精确 + 按下态更新。 */
+  modeButtons[1]!.click();
+  await settle();
+  const put = world.lastRequest("/terminology/settings/reading-mode");
+  assert.ok(put !== null && put.method === "PUT", "the mode switch PUTs settings/reading-mode");
+  assert.deepEqual(asRecord(put!.body), { mode: "minimal-hints" }, "the PUT body is exact");
+  const afterButtons = world.el("source-drawer").querySelectorAll(".term-mode-toggle");
+  assert.deepEqual(
+    afterButtons.map((b) => b.getAttribute("aria-pressed")),
+    ["false", "true", "false"],
+    "minimal-hints is now pressed",
+  );
+
+  /* 失败态：如实 + 可重试。 */
+  world.backend.modePutFail = true;
+  afterButtons[2]!.click();
+  await settle();
+  const failedDrawer = world.el("source-drawer");
+  assert.ok(
+    failedDrawer.textContent.includes("reading mode failed — internal: scripted reading-mode failure"),
+    "the mode failure is honest",
+  );
+
+  /* 仅手动模式的未生效原因（gate 开 + manual-only）；切到 minimal-hints
+     后生效态就地同步（旁注消失）。 */
+  const manualWorld = await createWorld({
+    readingMode: "manual-only",
+    autoSuggestions: { enabled: false, reason: "manual-only", sets: [] },
+  });
+  manualWorld.el("source-drawer-toggle").click();
+  await settle();
+  assert.ok(
+    manualWorld.el("source-drawer").textContent.includes("reading mode is manual-only"),
+    "manual-only surfaces its own reason (no gate mention)",
+  );
+  manualWorld.el("source-drawer").querySelectorAll(".term-mode-toggle")[1]!.click();
+  await settle();
+  const switchedDrawer = manualWorld.el("source-drawer");
+  assert.ok(
+    !switchedDrawer.textContent.includes("reading mode is manual-only"),
+    "switching away from manual-only clears the stale reason in place",
+  );
+  assert.ok(
+    !switchedDrawer.textContent.includes("the auto-annotation quality gate has not passed"),
+    "no gate note is fabricated for a gate-open tree",
+  );
+});
+
+test("suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips", async () => {
+  const world = await createWorld({
+    readingMode: "minimal-hints",
+    autoSuggestions: {
+      enabled: true,
+      reason: null,
+      sets: [
+        suggestionSet({
+          anchorTurnId: "a1",
+          sourceHash: sha256Of(A1_TEXT),
+          status: "no-suggestions",
+          suggestions: [],
+          hiddenCount: 0,
+        }),
+        suggestionSet(),
+      ],
+    },
+  });
+  await settle();
+  /* a1（第一答）：no-suggestions 如实空态。 */
+  const a1Strip = stripAfterTurn(world, "a1");
+  assert.ok(a1Strip.textContent.includes("no term suggestions for this answer"), "no-suggestions is honest");
+  /* a2（第二答）：partial——chips + 「还有 N 个候选未显示」。 */
+  const a2Strip = stripAfterTurn(world, "a2");
+  const chips = a2Strip.querySelectorAll(".term-suggest-chip");
+  assert.deepEqual(
+    chips.map((chip) => chip.textContent),
+    ["Lasso", "regularization"],
+  );
+  assert.ok(
+    a2Strip.textContent.includes("+ 3 more candidates not shown (density cap)"),
+    "the partial state carries the hidden count",
+  );
+  /* 正文层不受建议条影响：a2 的正文仍与原文字节一致。 */
+  assert.equal(contentRegionText(world.turnElement("conversation", "a2")), A2_TEXT);
+
+  /* budget-paused：暂停注记 + 可恢复入口（Retry 按钮 → POST retry → 恢复）。 */
+  world.backend.autoSuggestions = {
+    enabled: true,
+    reason: null,
+    sets: [
+      suggestionSet({
+        status: "budget-paused",
+        suggestions: [],
+        hiddenCount: 0,
+        error: { code: "budget-exceeded", message: "zero dispatch" },
+      }),
+    ],
+  };
+  world.liveSse().emit("run-terminal", { runId: "run-x" });
+  await settle();
+  const pausedStrip = stripAfterTurn(world, "a2");
+  assert.ok(pausedStrip.textContent.includes("auto suggestions paused"), "budget-paused names the pause");
+  assert.ok(
+    pausedStrip.textContent.includes("raise the terminology budget"),
+    "the recovery note explains how to resume",
+  );
+  const retry = pausedStrip.querySelector(".term-suggest-retry");
+  assert.ok(retry !== null, "the recovery entry is a visible button");
+  world.backend.suggestionRetryRecovers = true;
+  retry.click();
+  await settle();
+  const retryPost = world.lastRequest("/terminology/suggestions/a2/retry");
+  assert.ok(retryPost !== null && retryPost.method === "POST", "the retry posts to the suggestion endpoint");
+  const recoveredStrip = stripAfterTurn(world, "a2");
+  assert.equal(recoveredStrip.querySelectorAll(".term-suggest-chip").length, 2, "the recovered set renders its chips");
+
+  /* source-invalid：快照展示 + 点击解释禁用（既有 overlay 失效降级同纪律）。 */
+  world.backend.autoSuggestions = {
+    enabled: true,
+    reason: null,
+    sets: [suggestionSet({ status: "source-invalid" })],
+  };
+  world.liveSse().emit("run-terminal", { runId: "run-y" });
+  await settle();
+  const invalidStrip = stripAfterTurn(world, "a2");
+  const invalidChips = invalidStrip.querySelectorAll(".term-suggest-chip");
+  assert.equal(invalidChips.length, 2, "the snapshot chips stay readable");
+  assert.ok(invalidChips.every((chip) => chip.disabled), "snapshot chips are not clickable");
+  assert.ok(
+    invalidStrip.textContent.includes("the answer text changed after these suggestions were extracted"),
+    "the source-invalid note explains the snapshot",
+  );
+});
+
+test("suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus", async () => {
+  const world = await createWorld({
+    readingMode: "minimal-hints",
+    autoSuggestions: { enabled: true, reason: null, sets: [suggestionSet()] },
+  });
+  await settle();
+  const strip = stripAfterTurn(world, "a2");
+  const chip = strip.querySelectorAll(".term-suggest-chip")[0]!;
+  assert.equal(chip.textContent, "Lasso");
+
+  /* 点击 chip = 预填（不发送）：确认条出现，explain POST 零。 */
+  chip.click();
+  await settle();
+  const armedStrip = stripAfterTurn(world, "a2");
+  const confirmBar = armedStrip.querySelector(".term-suggest-confirm");
+  assert.ok(confirmBar !== null, "the confirm bar appears");
+  assert.ok(confirmBar.textContent.includes("Explain “Lasso”?"), "the pre-filled term is named");
+  assert.equal(world.requestsOf("/terminology/explain").length, 0, "no explain request is sent yet");
+  const armedChip = armedStrip.querySelectorAll(".term-suggest-chip")[0]!;
+  assert.equal(armedChip.getAttribute("aria-pressed"), "true", "the armed chip is marked");
+
+  /* Esc：解除预填（仍零请求），焦点还原到该词的 chip。 */
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  await settle();
+  const dismissedStrip = stripAfterTurn(world, "a2");
+  assert.equal(dismissedStrip.querySelector(".term-suggest-confirm"), null, "the confirm bar is gone");
+  assert.equal(world.requestsOf("/terminology/explain").length, 0, "still no explain request after Esc");
+  assert.equal(
+    world.document.activeElement !== null && world.document.activeElement.textContent,
+    "Lasso",
+    "focus returns to the chip (keyboard position preserved)",
+  );
+
+  /* 再预填 → 显式确认（“⌖ Explain”）→ explain POST 载荷精确（建议区间）。 */
+  dismissedStrip.querySelectorAll(".term-suggest-chip")[0]!.click();
+  await settle();
+  const confirmGo = stripAfterTurn(world, "a2").querySelector(".term-suggest-go");
+  assert.ok(confirmGo !== null, "the explicit confirm button is present");
+  confirmGo.click();
+  await settle();
+  const explainPost = world.lastRequest("/terminology/explain");
+  assert.ok(explainPost !== null && explainPost.method === "POST", "the confirmed chip sends the explain request");
+  assert.deepEqual(
+    asRecord(explainPost!.body),
+    {
+      branchId: "trunk-1",
+      anchorTurnId: "a2",
+      selection: { start: 0, end: 5, text: "Lasso" },
+      mode: "term",
+    },
+    "the explain payload uses the suggestion's exact span",
+  );
+  assert.ok(world.byId("term-explain-card") !== null, "the explain card opens for the confirmed request");
+});
+
+test("answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path", async () => {
+  const world = await createWorld({
+    readingMode: "minimal-hints",
+    autoSuggestions: {
+      enabled: true,
+      reason: null,
+      sets: [suggestionSet({ status: "pending", suggestions: [], hiddenCount: 0 })],
+    },
+  });
+  await settle();
+  const pendingStrip = stripAfterTurn(world, "a2");
+  assert.ok(
+    pendingStrip.textContent.includes("suggesting terms for this answer (isolated executor)…"),
+    "the pending state is honest while the extraction is in flight",
+  );
+  /* 回答完成（SSE run-terminal）：读模型刷新后终态落位。 */
+  world.backend.autoSuggestions = { enabled: true, reason: null, sets: [suggestionSet()] };
+  world.liveSse().emit("run-terminal", { runId: "run-z" });
+  await settle();
+  const doneStrip = stripAfterTurn(world, "a2");
+  assert.equal(
+    doneStrip.querySelectorAll(".term-suggest-chip").length,
+    2,
+    "the terminal set renders its chips after the run-terminal refresh",
+  );
+  assert.ok(
+    doneStrip.textContent.includes("+ 3 more candidates not shown (density cap)"),
+    "the partial note lands with the chips",
+  );
+});
+
+/** 该 turn 的建议条（渲染在该 turn 元素之后的兄弟节点——按位定位，不取
+    容器首条）。 */
+function stripAfterTurn(world: World, turnId: string): StubElement {
+  const turn = world.turnElement("conversation", turnId);
+  const siblings = turn.parentElement === null ? [] : turn.parentElement.children;
+  const at = siblings.indexOf(turn);
+  assert.ok(at >= 0, `the turn element is in the container (${turnId})`);
+  for (let index = at + 1; index < siblings.length; index += 1) {
+    const node = siblings[index];
+    if (node instanceof StubElement && node.classList.contains("term-suggest-strip")) return node;
+    if (node instanceof StubElement && node.classList.contains("turn")) break; /* 下一 turn 前无条 */
+  }
+  assert.fail(`the suggestion strip renders for ${turnId}`);
+}

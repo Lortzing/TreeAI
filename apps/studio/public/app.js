@@ -53,6 +53,16 @@
  *  - 模式/工具条：选区工具条按服务端模式呈现（点词 term/划线 range），
  *    含建支线（通用入口，绝不复用已有探索）与批注/推广捷径；执行器
  *    模式/用量/缓存偏好面在来源抽屉（Terminology 节）；
+ *  - 阅读模式三选一（issue #7 术语①，2026-10-01）：每树 manual-only
+ *    （默认）/ minimal-hints / assisted-reading——抽屉 Terminology 节的
+ *    模式选择器（PUT settings/reading-mode；gate 未过旁注如实：自动建议
+ *    保持关闭，仅手动生效）；回答完成后（SSE run-terminal / prompt 收尾
+ *    双入口刷新读模型）在答案区渲染建议条——pending/ready/partial（「还
+ *    有 N 个候选未显示」）/no-suggestions/budget-paused（可恢复入口：
+ *    Retry + 提示提高预算）/failed/source-invalid（快照展示）各状态如实；
+ *    建议**只展示**：点击 chip 预填该词的解释请求，「⌖ Explain」显式确认
+ *    才发（Esc/Dismiss 解除，焦点还原）；pending 建议集由有界轮询跟随
+ *    （1s×90，切树即停）；绝不自动解释/自动保存批注；
  *  - 解释卡完整状态：in-flight / 成功（含缓存命中注记）/ 失败（诚实错
  *    误 + 重试）/ 取消（含迟到丢弃注记）/ 保存幂等命中（显示既有批注）/
  *    推广成功（同键重放如实）/ 推广冲突（409 如实 + 恢复既有探索的去
@@ -382,6 +392,13 @@ const state = {
    * }|null}
    */
   termExplain: null,
+  /**
+   * 已武装的术语建议（issue #7 ①阅读模式）：建议 chip 点击后预填的解释
+   * 请求——**用户显式确认（“⌖ Explain”按钮）才发**；Esc/Dismiss 解除。
+   * 键 = 建议 chip 的（分支, 锚点 turn, 候选区间）。
+   * @type {{branchId:string, turnId:string, anchorTurnId:string, start:number, end:number, term:string}|null}
+   */
+  termSuggest: null,
   /** 术语读模型（解释卡保存/推广后、抽屉打开时与开树时刷新；批注区间
       高亮与工具条「已有批注」判定的数据面）。 */
   terminology: null,
@@ -609,6 +626,18 @@ let termCardEnterPending = false;
 /** 抽屉内缓存偏好切换的在途/失败态（PUT preferences；失败如实 + 重试）。 */
 let termPrefsPending = false;
 let termPrefsError = null;
+/** 抽屉内阅读模式切换的在途/失败态（PUT settings/reading-mode；issue #7 ①）。 */
+let termModePending = false;
+let termModeError = null;
+/**
+ * 术语建议在途跟随（issue #7 ①阅读模式）：回答完成后的读模型刷新若见
+ * pending 建议集，则有界轮询至终态（1s 间隔、至多 90 次；切树/无 pending
+ * 即停）。进程内瞬态跟随——不是产品事实；建议提取走隔离执行器串行链，
+ * 回答完成的 POST /prompt 响应可能先于提取终态到达（诚实呈现 pending）。
+ */
+let termSuggestFollowActive = false;
+const TERM_SUGGEST_FOLLOW_MAX_POLLS = 90;
+const TERM_SUGGEST_FOLLOW_INTERVAL_MS = 1000;
 
 const $ = (id) => document.getElementById(id);
 
@@ -1886,6 +1915,10 @@ function renderTurnsInto(container, view, branchId, stick) {
     }
     desired.push(ensureTurnElement(container, turn, branchId));
     if (turn.role === "assistant") {
+      /* 术语建议条（①阅读模式）：渲染在该条答案之后、其 Return 卡之前
+         ——建议附着在回答区，正文层（textContent 字节不变）不受影响。 */
+      const suggestStrip = termSuggestionStrip(branchId, turn);
+      if (suggestStrip !== null) desired.push(suggestStrip);
       for (const returnTurn of anchoredReturns.get(turn.id) ?? []) {
         desired.push(
           returnCard(returnTurn, returnTurn.targetAnchor, returnAttemptsFor(view, returnTurn.id), "anchored"),
@@ -2426,7 +2459,10 @@ function connectEvents(treeId) {
     state.streaming = null;
     /* /state 是权威读模型：终态后整树刷新（prompt 响应也会刷新，幂等）。
        接收新 turn 的视图贴底；另一视图恢复其阅读位置。P1 同族规则（issue
-       #7 增量验收）：刷新期间切树 → 迟到的旧树 state 不写共享树态。 */
+       #7 增量验收）：刷新期间切树 → 迟到的旧树 state 不写共享树态。
+       ①阅读模式：回答完成后同步刷新术语读模型（自动建议集 pending→终态
+       的入口——写入点守卫同 refreshTerminology；仍在途则由有界跟随轮询
+       收口）。 */
     void (async () => {
       const treeId = state.currentTreeId;
       if (treeId === null) return;
@@ -2438,6 +2474,8 @@ function connectEvents(treeId) {
       } catch {
         /* 刷新失败不打断；sendPrompt 的收尾刷新会重试 */
       }
+      await refreshTerminology();
+      if (state.currentTreeId === treeId) renderAll();
       await refreshDiagnostics().catch(() => {});
     })();
   });
@@ -2686,6 +2724,7 @@ function resetTransientView() {
   state.forceSessionBanner = false;
   state.forcePanelSessionNote = false;
   state.termExplain = null;
+  state.termSuggest = null;
   state.terminology = null;
   state.armedSelection = null;
   state.selectionDragActive = false;
@@ -2986,6 +3025,9 @@ async function sendPrompt(viewKind) {
     input.value = "";
     if (isPanel) state.forcePanelSessionNote = false;
     else state.forceSessionBanner = false;
+    /* ①阅读模式：回答完成后刷新术语读模型（SSE run-terminal 同路径幂等；
+       写入点守卫在 refreshTerminology 内——切树迟到响应整包丢弃）。 */
+    await refreshTerminology();
   } catch (err) {
     if (err !== null && typeof err === "object" && err.code === "user-abort") {
       /* 用户主动中止：run 已收敛为 aborted（无新 turn）。保留输入文本供改写重发，
@@ -3605,6 +3647,55 @@ function renderDrawer() {
       prefsError.textContent = `cache preference failed — ${termPrefsError}`;
       drawer.append(prefsError);
     }
+    /* 阅读模式三选一（①阅读模式）：manual-only（默认）/ minimal-hints /
+       assisted-reading。模式可保存可切换；gate 未过（或仅手动）时旁注如实
+       说明自动建议未生效——绝不伪装启用。切换 = PUT settings/reading-mode
+       （在途禁用明示；失败如实 + 重试）。 */
+    const modeRow = document.createElement("div");
+    modeRow.className = "term-mode-row";
+    modeRow.setAttribute("role", "group");
+    modeRow.setAttribute("aria-label", "Terminology reading mode");
+    const currentMode = terminology.readingMode ?? "manual-only";
+    const MODE_LABELS = {
+      "manual-only": "Manual only",
+      "minimal-hints": "Minimal hints",
+      "assisted-reading": "Assisted reading",
+    };
+    for (const mode of ["manual-only", "minimal-hints", "assisted-reading"]) {
+      const modeButton = document.createElement("button");
+      modeButton.className = "term-mode-toggle";
+      modeButton.textContent = MODE_LABELS[mode];
+      modeButton.title =
+        mode === "manual-only"
+          ? "No automatic suggestions — you explain selections yourself (default)"
+          : mode === "minimal-hints"
+            ? "A few suggested terms per completed answer (density-capped, display-only)"
+            : "More suggested terms per completed answer (density-capped, display-only)";
+      modeButton.setAttribute("aria-pressed", String(currentMode === mode));
+      modeButton.disabled = termModePending;
+      modeButton.addEventListener("click", () => void guard(() => setTerminologyReadingMode(mode)));
+      modeRow.append(modeButton);
+    }
+    drawer.append(modeRow);
+    if (termModePending) {
+      drawer.append(mutedLine("saving reading mode…"));
+    }
+    const autoState = terminology.autoSuggestions ?? null;
+    if (autoState !== null && autoState.enabled !== true) {
+      drawer.append(
+        mutedLine(
+          autoState.reason === "manual-only"
+            ? "reading mode is manual-only — suggestions appear only when you explain a selection yourself"
+            : "the auto-annotation quality gate has not passed — automatic suggestions stay OFF; only manual explaining is in effect",
+        ),
+      );
+    }
+    if (termModeError !== null) {
+      const modeError = document.createElement("p");
+      modeError.className = "muted";
+      modeError.textContent = `reading mode failed — ${termModeError}`;
+      drawer.append(modeError);
+    }
   }
 
   /* journal 尾部（保守摘要；最新在后）。三态（W2 §2.7 / issue #3 P1）：
@@ -3704,6 +3795,7 @@ async function refreshTerminology() {
     const payload = await api(`/api/trees/${encodeURIComponent(treeId)}/terminology`);
     if (epoch !== terminologyEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
     state.terminology = { ok: true, ...payload };
+    followPendingTermSuggestions(); /* ①阅读模式：pending 建议集的有界跟随 */
   } catch {
     if (epoch !== terminologyEpoch || state.currentTreeId !== treeId) return; /* 迟到丢弃 */
     state.terminology = { ok: false };
@@ -3986,6 +4078,291 @@ async function setTerminologyCachePreference(enabled) {
     termPrefsPending = false;
     if (state.drawerOpen) renderDrawer();
   }
+}
+
+/**
+ * 抽屉内的阅读模式切换（issue #7 ①阅读模式）：PUT settings/reading-mode。
+ * 在途禁用明示；失败如实呈现 + 重试；成功后读模型同步（模式字段就地更新
+ * ——P1 同族：请求树守卫 + 世代号作废并发旧响应）。gate 未过时模式仍可
+ * 保存切换（旁注如实说明自动建议保持关闭——绝不伪装启用）。
+ */
+async function setTerminologyReadingMode(mode) {
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  termModePending = true;
+  termModeError = null;
+  renderDrawer();
+  try {
+    const payload = await api(
+      `/api/trees/${encodeURIComponent(treeId)}/terminology/settings/reading-mode`,
+      "PUT",
+      { mode },
+    );
+    terminologyEpoch += 1;
+    if (state.currentTreeId === treeId && state.terminology !== null && state.terminology.ok) {
+      /* 就地同步：readingMode + autoSuggestions 生效态（gate × 模式）。
+         gate 未过（quality-gate-pending）不因模式切换改变；gate 开时模式
+         决定生效与否（manual-only ↔ 其余两档）——服务端是权威面，下一次
+         读模型刷新自然对齐（P1 同族：世代号作废并发旧响应）。 */
+      const auto = state.terminology.autoSuggestions ?? null;
+      const nextAuto =
+        auto === null
+          ? null
+          : auto.reason === "quality-gate-pending"
+            ? auto
+            : payload.readingMode === "manual-only"
+              ? { ...auto, enabled: false, reason: "manual-only" }
+              : { ...auto, enabled: true, reason: null };
+      state.terminology = {
+        ...state.terminology,
+        readingMode: payload.readingMode,
+        ...(nextAuto === null ? {} : { autoSuggestions: nextAuto }),
+      };
+    }
+  } catch (err) {
+    termModeError = String(err && err.message ? err.message : err);
+  } finally {
+    termModePending = false;
+    if (state.drawerOpen) renderDrawer();
+  }
+}
+
+/**
+ * 建议集的显式重试（budget-paused/failed 的「可恢复入口」——用户显式动
+ * 作）：POST suggestions/:anchorTurnId/retry → 读模型刷新重渲。失败由
+ * guard 呈现横幅（按钮态如实回到原状，绝不伪装成功）。
+ */
+async function retryTermSuggestions(anchorTurnId) {
+  const treeId = state.currentTreeId;
+  if (treeId === null) return;
+  await api(
+    `/api/trees/${encodeURIComponent(treeId)}/terminology/suggestions/${encodeURIComponent(anchorTurnId)}/retry`,
+    "POST",
+  );
+  await refreshTerminology();
+  renderAll();
+}
+
+/** 当前树读模型里是否存在 pending 建议集（跟随轮询的继续条件）。 */
+function treeHasPendingSuggestionSets() {
+  const terminology = state.terminology;
+  if (terminology === null || !terminology.ok) return false;
+  const auto = terminology.autoSuggestions;
+  if (auto === null || typeof auto !== "object" || !Array.isArray(auto.sets)) return false;
+  return auto.sets.some((set) => set.status === "pending");
+}
+
+/**
+ * pending 建议集的有界跟随轮询（refreshTerminology 成功写入后调用——所有
+ * 刷新入口（回答完成/开树/保存/推广/重试/抽屉重试）自动继承）：仍在途则
+ * 1s 后再刷，至多 90 次；切树/终态即停。回答完成的 POST 响应可能先于隔离
+ * 执行器的提取终态（串行链 + 真实模型耗时），诚实呈现 pending 而非空态。
+ */
+function followPendingTermSuggestions() {
+  if (termSuggestFollowActive) return;
+  const treeId = state.currentTreeId;
+  if (treeId === null || !treeHasPendingSuggestionSets()) return;
+  termSuggestFollowActive = true;
+  let polls = 0;
+  const tick = () => {
+    if (
+      state.currentTreeId !== treeId ||
+      polls >= TERM_SUGGEST_FOLLOW_MAX_POLLS ||
+      !treeHasPendingSuggestionSets()
+    ) {
+      termSuggestFollowActive = false;
+      return;
+    }
+    polls += 1;
+    void refreshTerminology().then(() => {
+      if (state.currentTreeId !== treeId) {
+        termSuggestFollowActive = false;
+        return;
+      }
+      renderAll();
+      if (
+        polls >= TERM_SUGGEST_FOLLOW_MAX_POLLS ||
+        !treeHasPendingSuggestionSets()
+      ) {
+        termSuggestFollowActive = false;
+        return;
+      }
+      window.setTimeout(tick, TERM_SUGGEST_FOLLOW_INTERVAL_MS);
+    });
+  };
+  window.setTimeout(tick, TERM_SUGGEST_FOLLOW_INTERVAL_MS);
+}
+
+/** 建议 chip 的重定位聚焦（Esc 解除武装后还原键盘位置——按词文本匹配）。 */
+function focusTermSuggestionChip(term) {
+  for (const chip of document.querySelectorAll(".term-suggest-chip")) {
+    if (chip.textContent === term) {
+      chip.focus();
+      return;
+    }
+  }
+}
+
+/**
+ * 解除武装的建议预填（Esc / Dismiss 共用）：清 state.termSuggest、重渲、
+ * 焦点还原到该词的 chip（键盘位置不丢）。
+ */
+function disarmTermSuggestion() {
+  const armed = state.termSuggest;
+  if (armed === null) return;
+  state.termSuggest = null;
+  renderAll();
+  focusTermSuggestionChip(armed.term);
+}
+
+/**
+ * assistant 回答区的建议条（issue #7 ①阅读模式，渲染在该条答案 turn 元素
+ * 之后）：按建议集状态如实呈现——pending（提取在途）/ ready / partial
+ * （密度截断：「还有 N 个候选未显示」）/ no-suggestions / budget-paused
+ * （预算不足暂停 + 可恢复入口）/ failed（诚实错误 + 重试）/ source-invalid
+ * （来源失效——快照展示，点击解释禁用，既有 overlay 失效降级同纪律）。
+ * 建议**只展示**：点击 chip = 预填该词的解释请求，用户显式确认（“⌖
+ * Explain”）才发——不自动解释、不自动保存。chip 为原生 button（键盘可
+ * 达）；无进场动效（reduced-motion 无需特例）。
+ */
+function termSuggestionStrip(branchId, turn) {
+  const terminology = state.terminology;
+  if (terminology === null || !terminology.ok) return null;
+  const auto = terminology.autoSuggestions;
+  if (auto === null || typeof auto !== "object" || !Array.isArray(auto.sets)) return null;
+  const set = auto.sets.find((entry) => entry.anchorTurnId === turn.id && entry.branchId === branchId);
+  if (set === undefined) return null;
+  const div = document.createElement("div");
+  div.className = "term-suggest-strip";
+  div.setAttribute("role", "group");
+  div.setAttribute("aria-label", "Term suggestions for this answer");
+
+  if (set.status === "pending") {
+    div.append(mutedLine("suggesting terms for this answer (isolated executor)…"));
+    return div;
+  }
+  if (set.status === "no-suggestions") {
+    div.append(mutedLine("no term suggestions for this answer"));
+    return div;
+  }
+  if (set.status === "budget-paused") {
+    div.append(
+      mutedLine(
+        "auto suggestions paused — the terminology budget for this process is exhausted (zero dispatch)",
+      ),
+    );
+    div.append(termSuggestRetryButton(set));
+    div.append(
+      mutedLine(
+        "raise the terminology budget (restart with --terminology-budget) and retry, or select a term and explain it manually",
+      ),
+    );
+    return div;
+  }
+  if (set.status === "failed") {
+    const error = set.error;
+    div.append(
+      mutedLine(
+        `term suggestions failed${error !== null && error.code !== null ? ` (${error.code})` : ""} — ${
+          error !== null && error.message !== null ? error.message : "the extraction did not complete"
+        }`,
+      ),
+    );
+    div.append(termSuggestRetryButton(set));
+    return div;
+  }
+
+  /* ready / partial / source-invalid：候选快照逐 chip 呈现。 */
+  const snapshotOnly = set.status === "source-invalid";
+  const armed = state.termSuggest;
+  for (const suggestion of set.suggestions) {
+    const chip = document.createElement("button");
+    chip.className = "term-suggest-chip";
+    chip.textContent = suggestion.term;
+    if (snapshotOnly) {
+      chip.disabled = true;
+      chip.title = "snapshot only — the answer text changed after these suggestions; click-to-explain is disabled";
+    } else {
+      chip.title = "Pre-fill an explain request for this term — you confirm before it is sent";
+      if (
+        armed !== null &&
+        armed.branchId === branchId &&
+        armed.turnId === turn.id &&
+        armed.start === suggestion.start &&
+        armed.end === suggestion.end
+      ) {
+        chip.classList.add("armed");
+        chip.setAttribute("aria-pressed", "true");
+      }
+      chip.addEventListener("click", () => {
+        state.termSuggest = {
+          branchId,
+          turnId: turn.id,
+          anchorTurnId: set.anchorTurnId,
+          start: suggestion.start,
+          end: suggestion.end,
+          term: suggestion.term,
+        };
+        renderAll();
+      });
+    }
+    div.append(chip);
+  }
+  if (snapshotOnly) {
+    div.append(
+      mutedLine("the answer text changed after these suggestions were extracted — snapshot only"),
+    );
+    return div;
+  }
+  if (set.status === "partial") {
+    div.append(
+      mutedLine(`+ ${String(set.hiddenCount)} more candidate${set.hiddenCount === 1 ? "" : "s"} not shown (density cap)`),
+    );
+  }
+  /* 预填的确认条（仅武装中的建议渲染）：显式确认才发解释请求。 */
+  if (armed !== null && armed.branchId === branchId && armed.turnId === turn.id) {
+    const bar = document.createElement("span");
+    bar.className = "term-suggest-confirm";
+    const label = document.createElement("span");
+    label.className = "muted";
+    label.textContent = `Explain “${armed.term}”?`;
+    const go = document.createElement("button");
+    go.className = "term-suggest-go";
+    go.textContent = "⌖ Explain";
+    go.title = "Send the explain request for this suggested term (your explicit confirmation)";
+    go.addEventListener("click", () => {
+      const current = state.termSuggest;
+      if (current === null) return;
+      state.termSuggest = null;
+      guard(
+        () =>
+          explainSelection(branchId, turn, {
+            start: current.start,
+            end: current.end,
+            text: current.term,
+          }),
+        branchId === trunkBranchId() ? "main" : "panel",
+      );
+    });
+    const dismiss = document.createElement("button");
+    dismiss.className = "term-suggest-dismiss";
+    dismiss.textContent = "Dismiss";
+    dismiss.title = "Cancel the pre-filled explain request (nothing is sent)";
+    dismiss.addEventListener("click", disarmTermSuggestion);
+    bar.append(label, go, dismiss);
+    div.append(bar);
+  }
+  return div;
+}
+
+/** 建议条的重试按钮（budget-paused/failed 的可恢复入口——显式用户动作）。 */
+function termSuggestRetryButton(set) {
+  const retry = document.createElement("button");
+  retry.className = "term-suggest-retry";
+  retry.textContent = "Retry suggestions";
+  retry.title = "Re-run the suggestion extraction for this answer (your explicit action)";
+  retry.addEventListener("click", () => guard(() => retryTermSuggestions(set.anchorTurnId), "panel"));
+  return retry;
 }
 
 /** 解释卡的关闭按钮（工具函数：Close 文案 + 关闭语义）。 */
@@ -9040,6 +9417,13 @@ document.addEventListener("keydown", (event) => {
   const termCard = state.termExplain;
   const termCardInPanel =
     termCard !== null && state.panelBranchId !== null && termCard.branchId === state.panelBranchId;
+  if (state.termSuggest !== null) {
+    /* ①阅读模式：预填的建议解释是最内层的瞬态确认面——先于解释卡/面板
+       解除（未发任何请求）；焦点还原到该词的 chip（键盘位置不丢）。 */
+    event.preventDefault();
+    disarmTermSuggestion();
+    return;
+  }
   if (termCardInPanel) {
     event.preventDefault();
     closeTermExplain();

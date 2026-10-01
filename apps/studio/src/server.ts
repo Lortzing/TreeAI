@@ -801,6 +801,37 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           sendJson(res, 200, { cacheEnabled: term.executor.cacheEnabled });
           return;
         }
+        /* 阅读模式（issue #7 术语①）：GET/PUT settings/reading-mode。
+           枚举校验 → 400；未知树 → 404。模式可保存、可切换——质量门禁
+           未过时零自动派发由 TerminologyService 保证（readModel 如实暴露
+           autoSuggestions.enabled=false + 原因），路由层不伪装启用。 */
+        if (rest === "settings/reading-mode" && method === "GET") {
+          sendJson(res, 200, { readingMode: term.getReadingMode(treeId) });
+          return;
+        }
+        if (rest === "settings/reading-mode" && method === "PUT") {
+          const body = await readJsonBody(req);
+          const mode = body["mode"];
+          if (mode !== "manual-only" && mode !== "minimal-hints" && mode !== "assisted-reading") {
+            throw new InvalidArgumentError(
+              "request field 'mode' must be one of 'manual-only' | 'minimal-hints' | 'assisted-reading'",
+            );
+          }
+          term.setReadingMode(treeId, mode);
+          sendJson(res, 200, { readingMode: mode });
+          return;
+        }
+        /* 建议集显式重试（budget-paused/failed 的「可恢复入口」——用户
+           显式动作；gate 未过 → 400 建议管线整体关闭，绝不旁路）。 */
+        const suggestRetryMatch = /^suggestions\/([^/]+)\/retry$/.exec(rest);
+        if (suggestRetryMatch !== null && method === "POST") {
+          const state = await term.retrySuggestions(
+            treeId,
+            decodeURIComponent(suggestRetryMatch[1]!) as TurnId,
+          );
+          sendJson(res, 200, { autoSuggestions: state });
+          return;
+        }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
         return;
       }
