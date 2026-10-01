@@ -683,6 +683,8 @@ export async function probeNavBrowser(ctx) {
 
   try {
     /* —— 1) 专用数据目录上启动真实 Studio 进程 + 冷页面 —— */
+    /* 先切空白页：切断上一探针页面对其进程的轮询（bootStudioOn 会停掉它）。 */
+    await ctx.navigate("about:blank");
     const url = await ctx.bootStudioOn(dataDir);
     const bootT0 = Date.now();
     await ctx.navigate(url);
@@ -1205,6 +1207,11 @@ export async function probeNavBrowser(ctx) {
         `${String(spotChecks.length)} spot-checks match the frozen structure truth (hit rows, full path chain, material source jump)`,
     };
   } finally {
+    try {
+      await ctx.navigate("about:blank"); /* 先切断页面到进程的轮询，再停进程 */
+    } catch {
+      /* 尽力而为 */
+    }
     try {
       await ctx.stopStudio();
     } catch {

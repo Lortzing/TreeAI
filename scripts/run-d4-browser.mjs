@@ -821,6 +821,9 @@ const probeCtx = {
   bootStudioOn,
   runStudioCli,
   pageErrors: () => chrome.pageErrors.slice(),
+  clearPageErrors: () => {
+    chrome.pageErrors.length = 0;
+  },
   scenario,
   noteFixturesUsed: (ids) => {
     /* 并集（探针各自登记使用面；summary 的冻结集绑定如实汇总）。 */

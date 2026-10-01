@@ -140,6 +140,8 @@ export async function probeB6ScaleBrowser(ctx) {
     environment.generatorElapsedMs = Date.now() - genStarted;
 
     /* —— 1) 专用数据目录上启动真实 Studio 进程 + 冷页面 —— */
+    /* 先切空白页：切断上一探针页面对其进程的轮询（bootStudioOn 会停掉它）。 */
+    await ctx.navigate("about:blank");
     const url = await ctx.bootStudioOn(dataDir);
     const navT0 = Date.now();
     await ctx.navigate(url);
@@ -437,6 +439,11 @@ export async function probeB6ScaleBrowser(ctx) {
         `search hit-list render recorded as evidence (${String(searchRender.queries.length)} frozen queries, p50 ${fmt(searchRender.stats.medianMs)}ms / p95 ${fmt(searchRender.stats.p95Ms)}ms)`,
     };
   } finally {
+    try {
+      await ctx.navigate("about:blank"); /* 先切断页面到进程的轮询，再停进程 */
+    } catch {
+      /* 尽力而为 */
+    }
     try {
       await ctx.stopStudio();
     } catch {

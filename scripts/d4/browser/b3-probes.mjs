@@ -658,7 +658,10 @@ export async function probeBranchFromMaterial(ctx) {
     markers: B3_MARKERS,
   };
   const excludedCount = assertNoPageErrors(ctx, {
-    exclude: (entry) => entry.text.includes(`http://127.0.0.1:${String(oldPort)}`),
+    exclude: (entry) =>
+      entry.text.includes(`http://127.0.0.1:${String(oldPort)}`) ||
+      /* 本探针注入的传输层响应丢弃（Fetch.failRequest）——预期的副产物。 */
+      (entry.text.includes("material-first-question") && entry.text.includes("ERR_CONNECTION_RESET")),
     label: "d4-branch-from-material",
   });
   await ctx.sidecar("branch-from-material", {

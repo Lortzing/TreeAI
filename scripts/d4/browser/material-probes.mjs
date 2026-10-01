@@ -314,14 +314,18 @@ export async function waitForArmedBar(ctx, caseId, timeoutMs = 4000) {
   }
 }
 
-/** 页面 console/Log 错误纪律（探针自身的窗口）。 */
+/** 页面 console/Log 错误纪律（**逐检查窗口**）：断言后清空缓冲——已断言/
+    已排除的错误不流入后续检查（每检查只对自身窗口负责；被注入的传输层
+    故障与旧端口重连在各探针的 exclude 中如实声明）。 */
 export function assertNoPageErrors(ctx, { exclude = () => false, label } = {}) {
   const errors = ctx.pageErrors();
   const unexpected = errors.filter((entry) => !exclude(entry));
+  const reported = errors.length;
+  ctx.clearPageErrors();
   if (unexpected.length > 0) {
     throw new Error(`page console/log errors (${label ?? "material probes"}): ${unexpected.map((e) => e.text).join(" | ")}`);
   }
-  return errors.length;
+  return reported;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1109,10 +1113,12 @@ export async function probeRestartContinue(ctx) {
   /* 6) 同数据目录启动全新 studio 进程（新端口）。 */
   const newUrl = await ctx.restartStudio();
   await ctx.navigate(newUrl);
+  /* 材料数按 API 实况（后续探针可在场景树追加材料——B3 探针的 pdf-01）。 */
+  const expectedMaterials = await countMaterialsViaApi(ctx, treeId);
   await waitFor(
     ctx,
     `(() => { const list = document.getElementById("material-list"); ` +
-      `return list !== null && list.querySelectorAll("button[data-material-id]").length === ${String(FIXTURE_IDS.length)} ? true : false; })()`,
+      `return list !== null && list.querySelectorAll("button[data-material-id]").length === ${String(expectedMaterials)} ? true : false; })()`,
     { label: "materials list after restart" },
   );
 
