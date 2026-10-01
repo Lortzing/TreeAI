@@ -1,0 +1,160 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261001T142535-15614",
+  "mode": "selftest",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "counts": {
+    "pass": 16,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "872be3ecd34e23581fd40fdd3d2e0f787497dc33",
+  "gitDirty": false,
+  "generatedAt": "2026-10-01T14:29:30.400Z",
+  "git": {
+    "head": "872be3ecd34e23581fd40fdd3d2e0f787497dc33",
+    "dirty": false
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-02",
+      "md-03",
+      "md-04",
+      "md-05",
+      "md-06",
+      "md-07",
+      "md-08",
+      "md-09",
+      "md-10",
+      "md-11",
+      "md-12",
+      "md-vpair-v1",
+      "md-vpair-v2",
+      "neg-md-empty",
+      "neg-md-invalid-utf8",
+      "neg-md-nul-byte",
+      "neg-md-whitespace-only",
+      "neg-pdf-corrupt",
+      "neg-pdf-encrypted",
+      "neg-pdf-image-only",
+      "neg-pdf-zero-text",
+      "pdf-01",
+      "pdf-02",
+      "pdf-03",
+      "pdf-04",
+      "pdf-05",
+      "pdf-06",
+      "pdf-07",
+      "pdf-08",
+      "pdf-09",
+      "pdf-10",
+      "pdf-11",
+      "pdf-12"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:55027",
+      "durationMs": 526
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:55051/",
+      "durationMs": 469
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 635
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 834
+    },
+    {
+      "id": "d4-import-denominator",
+      "status": "PASS",
+      "detail": "24 ready fixtures (12 markdown + 12 text-layer PDF) imported via the real HTTP API into a UI-created tree, each byte-equal to the frozen canonicalText + block map via the paginated blocks API; 11 negatives honestly rejected (2 at the import gate with zero persistence: empty→400, >20MiB→413; 9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, reads refused 409 material-not-ready); the real sidebar lists all 33 entries with honest ready/failed status",
+      "durationMs": 1342
+    },
+    {
+      "id": "d4-read-and-select",
+      "status": "PASS",
+      "detail": "45/45 markdown + 30/30 frozen B2 selections captured exactly in the real reader (markdown code/combining/cross-line/emoji/en/links/long-tail/repeat-word-2nd/unicode/zh across md-01..md-12 incl. emoji/ZWJ, repeat-word occurrences, cross-line and long-tail past lazy-load; pdf code/cross-line/en/fonts/footer/header/long-tail/multipage/repeat-word-2nd/two-column-left/two-column-right/unicode/zh across pdf-01..pdf-12 with each targeted page's text layer byte-equal to the frozen truth before capture and multipage pdf-11 fully paged in; 3 real mouse gestures: md click + Shift+click (md-sel-01), md continuous drag (md-sel-02), pdf continuous drag (pdf-sel-01 on a page text layer)); grapheme-split snapped outward; cross-block refused; cross-page refused on pdf (frozen inv-08/inv-09 — no payload, never silently truncated); resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: clipboard read-back byte-equal",
+      "durationMs": 9263
+    },
+    {
+      "id": "d4-branch-from-material",
+      "status": "PASS",
+      "detail": "armed md + pdf selections branched with the pre-submit material scope declaration (title/version/block/range/excerpt) visible; first questions landed (echo driver — NOT B3 evidence) with a real double-click producing exactly 1 dispatch (md) and a transport-layer dropped response retried honestly (pdf: same-key idempotent replay, exactly 1 user turn, replay note shown); 2 follow-up rounds each; cross-branch isolation asserted on server facts; SIGTERM restart → new process → history readable + continuation follow-up landed",
+      "durationMs": 5260
+    },
+    {
+      "id": "d4-return-from-material",
+      "status": "PASS",
+      "detail": "return-to-source from both branch panels (md block + pdf page block) opened the reader at the anchored version/block with the exact excerpt in view; Returns submitted via the real UI landed on the Trunk with the material source card (title/version/block + exact excerpt + View-material-source jump); the return-card jump reopens the source; SIGTERM restart → new process → Return cards and branch histories stay readable (echo driver — NOT B3 evidence)",
+      "durationMs": 6079
+    },
+    {
+      "id": "d4-restart-continue",
+      "status": "PASS",
+      "detail": "reading position saved at blk-52 via the reader's own save path (close-button flush) → studio SIGTERM → new process on the same data dir → reopened with the restore note and blk-52 loaded (59 blocks after forward paging; persisted row verified on the new process; visual scroll alignment asserted ≤2px: scrollTop 7207 vs block top 7208)",
+      "durationMs": 2816
+    },
+    {
+      "id": "d4-search-recover",
+      "status": "PASS",
+      "detail": "5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 探针自产跨树语料",
+      "durationMs": 2167
+    },
+    {
+      "id": "d4-export-restore-recover",
+      "status": "PASS",
+      "detail": "facts (material + material branch + echo first-question + annotation + return + trunk turn) exported via the D4-5 CLI (sessions excluded by default) → restored into an empty data dir → new studio process → real browser: restored md-01 byte-equal to the frozen truth (resolve-selection sourceHash re-verified), sidebar Search recovered trunk-turn/return/material facts with source jumps and showed the session-unavailable note + explicit entry on the side-branch hit rows; the D4-3 resume flow opened the session-less branch panel (alignCursor:false, no /switch replay) with the fail-closed composer and recovery note, and the explicit new exploration landed a fresh session (2 old turns + new pair readable, composer cleared)",
+      "durationMs": 4774
+    },
+    {
+      "id": "d4-nav-browser",
+      "status": "PASS",
+      "detail": "B9 dataset (100 trees / 10100 branch rows) loaded via the real loader into a dedicated data dir served by a real studio process; b9-big first open to usable 69.6ms ≤ 2000ms; 55 timed expand/switch ops (2 more-page ops pump-preempted, honestly recorded) (expand/collapse/select/tree-switch/more-page/search-reveal, deterministic truth-derived order) p95 45.8ms ≤ 300ms (median 22.4ms, max 119.3ms); virtualization: DOM rows ≤ 39 (windowed) across scroll offsets while 221 wide-tree rows are loaded (b9-big 5000 nodes vs 19 DOM rows); keyboard moves level-by-level with focus retained across re-windowing (Home/End large jumps + collapse/re-expand); expand state survived a real SIGTERM restart (byte-equal expand-state + UI restore); 11 spot-checks match the frozen structure truth (hit rows, full path chain, material source jump)",
+      "durationMs": 40919
+    },
+    {
+      "id": "d4-b6-scale-browser",
+      "status": "PASS",
+      "detail": "B6 corpus (100 materials / 1000000 units / 1010 branches) generated by the real CLI + loader into a dedicated data dir served by a real studio process; 30 existing-material opens via the real sidebar p95 31.2ms ≤ 2000ms (median 22.6ms; long PDFs readable with the first visible page rendered — visible-pages-first); paging the long PDF + long md showed no main-thread segment > 200ms (worst longtask 0.0ms over 0 tasks; step-to-frame p95 12.8ms); keystroke-to-render p95 while paging 17.7ms ≤ 200ms; the 10 MiB/100-page sample imported via the real UI: the cancel window was structurally missed (single-threaded server + synchronous parser — the cancel POST queues behind the parse; import-to-ready 620ms ≤ 30000ms browser-observed; finding recorded); search hit-list render recorded as evidence (10 frozen queries, p50 197.3ms / p95 231.6ms)",
+      "durationMs": 50330
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "PASS",
+      "detail": "README-documented start path booted a clean temp data dir (argv/entry/flags reconciled with README + package.json; honest empty state: no trees/materials, create-tree flow used for real); wide 1600px + narrow 390px (mobile) viewports: sidebar/reader/branch panel usable, no horizontal overflow, capture bar reachable, key controls hit-testable; keyboard: Tab traversal reached new-tree/import/search/reader-text in 33 steps with visible focus outlines, Enter+Space activations, Escape layering with focus restoration, reader arrows scroll; touch: 5 taps + 1 swipes + 1 in-gesture drag-select (drawer open, reader open, swipe scrolled 405px, pdf text-layer selection armed via selectionchange with zero mouse events, copy tap verified clipboard read-back byte-equal); reduced-motion: matchMedia honored, View-source jump + stick-to-bottom landed immediately (no in-transit frames); draft round trip: draft preserved + focus restored to #panel-view-source + panel scroll kept + reader reopened at the saved block (in-session); echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior — automated part only, the Mac sign-off and 3–5 person trials remain the owner's D4-G3 human sequence",
+      "durationMs": 29309
+    },
+    {
+      "id": "terminology-path",
+      "status": "PASS",
+      "detail": "reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (echo — NOT real-Pi evidence), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested",
+      "durationMs": 80210
+    }
+  ],
+  "pageErrors": []
+}

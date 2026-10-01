@@ -1,0 +1,31 @@
+{
+  "check": "d4-restart-continue",
+  "treeId": "tree_8508870f-4259-4426-9ddd-b9f5807220e1",
+  "material": "md-11.md",
+  "savedPosition": {
+    "versionId": "matver_7e08cb31-98c0-431b-a5a4-611d26cc6bdc",
+    "blockId": "blk-52",
+    "focusStart": null,
+    "updatedAt": "2026-10-01T14:26:00.277Z"
+  },
+  "persistedAcrossRestart": {
+    "versionId": "matver_7e08cb31-98c0-431b-a5a4-611d26cc6bdc",
+    "blockId": "blk-52"
+  },
+  "restart": {
+    "oldPort": 55051,
+    "newPort": 55514,
+    "dataDirKept": true
+  },
+  "restored": {
+    "blockId": "blk-52",
+    "blocks": 59,
+    "note": true,
+    "scroll": {
+      "scrollTop": 7207,
+      "blockTop": 7208,
+      "diffPx": 1
+    }
+  },
+  "pageErrorsExcluded": 0
+}
