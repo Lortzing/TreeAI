@@ -7245,7 +7245,8 @@ async function openNavTree(treeId, opts = {}) {
     return;
   }
   renderNavSurfaceChrome();
-  const childrenLoad = navLoadChildrenPage(session, overview.trunkBranchId, "first");
+  /* overview 常量只存在于上方 try 块作用域——这里取 session.overview（已 loaded）。 */
+  const childrenLoad = navLoadChildrenPage(session, session.overview.trunkBranchId, "first");
   let expandPayload = null;
   try {
     expandPayload = await api(`/api/nav/trees/${encodeURIComponent(treeId)}/expand-state`);

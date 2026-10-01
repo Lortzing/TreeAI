@@ -16,8 +16,9 @@
  * 大树语料（脚本确定性生成，对齐 b9 语义的结构面）：nav-big 236 节点
  * （220 宽子枝 + 12 层中链 + 3 个同名「方案A」节点分布在不同父枝），
  * nav-deep 61 节点（60 层深链），nav-empty 仅主干（标题 null），nav-other
- * 工作台树（turn 来源枝 + material 来源枝），fill-01..fill-41 凑 45 棵
- * （森林列表 20/页 → 3 页）。
+ * 工作台树（turn 来源枝 + material 来源枝），凑数树 41 棵（fill-01..fill-36
+ * + fill-40..fill-44）凑 45 棵（森林列表 20/页 → 3 页；fill-40..44 提供
+ * id 子串 "fill-4" 的 5 命中面）。
  *
  * 覆盖（D4-8 前端增量的逐项锁定）：
  *  1. 森林/树查找：分页森林列表（More 翻页按游标）+ 标题/标识搜索 +
@@ -632,10 +633,11 @@ function buildDataset(): NavTreeScript[] {
   /* nav-empty：仅主干、无标题（诚实空态语料）。 */
   const empty: NavTreeScript = { treeId: "nav-empty", title: null, trunkBranchId: "empty-trunk", nodes: [node("empty-trunk", null, null)] };
 
-  /* 凑数树（森林列表分页语料）。 */
+  /* 凑数树（森林列表分页语料）。最后 5 棵编号 40..44：id 含子串 "fill-4"，
+     供「按 id 搜 fill-4 → fill-40..fill-44」的标识命中面语料（标题不含该子串）。 */
   const fillers: NavTreeScript[] = [];
   for (let i = 1; i <= FILLER_TREES; i += 1) {
-    const n = String(i).padStart(2, "0");
+    const n = i <= FILLER_TREES - 5 ? String(i).padStart(2, "0") : String(i + 3);
     fillers.push({ treeId: `fill-${n}`, title: `Filler tree ${n}`, trunkBranchId: `fill-trunk-${n}`, nodes: [node(`fill-trunk-${n}`, null, `Filler tree ${n}`)] });
   }
   return [other, big, deep, empty, ...fillers];
