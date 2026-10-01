@@ -21,7 +21,7 @@
 
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -38,6 +38,11 @@ const ONLY_ARGS = [
   "--only", "fixtures-integrity-d4",
   "--only", "docs-integrity-d4",
   "--only", "entrypoints-d4",
+  /* b7-beta-usability 证据审计行（B7 自动部分波次起纳入）：纯 fs 审计
+     （node_modules-free）——控制场景要求合成树携带 evidence/d4/browser
+     的干净副本（buildSyntheticTree 已拷贝），注入场景篡改最新
+     d4-beta-usability PASS 运行的 sidecar 验证审计不吞错。 */
+  "--only", "b7-beta-usability",
 ];
 
 function buildSyntheticTree(dest) {
@@ -49,6 +54,9 @@ function buildSyntheticTree(dest) {
   /* run-d4-browser 的探针实现模块（B1/B2 浏览器面波次起拆分到 scripts/d4/browser/）；
      合成树不复制则 --help 的 import 在合成树里失败，control 场景误报。 */
   cpSync(join(ROOT, "scripts", "d4", "browser"), join(dest, "scripts", "d4", "browser"), { recursive: true, force: true });
+  /* 浏览器证据（b7-beta-usability 审计行的合成树输入；控制场景在干净副本
+     上 PASS，注入场景在其上篡改）。 */
+  cpSync(join(ROOT, "evidence", "d4", "browser"), join(dest, "evidence", "d4", "browser"), { recursive: true, force: true });
   cpSync(join(ROOT, "tests"), join(dest, "tests"), { recursive: true });
   cpSync(join(ROOT, "docs", "d4"), join(dest, "docs", "d4"), { recursive: true });
   cpSync(
@@ -188,6 +196,41 @@ const SCENARIOS = [
     },
     expectCheck: "entrypoints-d4",
     expectNeedle: "verify:d4",
+  },
+  {
+    /* B7 审计行（B7 自动部分波次）：最新 d4-beta-usability PASS 运行的
+       sidecar 被剥去 keyboard 块 —— 审计必须 FAIL（不被吞绿）。 */
+    id: "inject-stripped-b7-sidecar",
+    inject: (root) => {
+      const browserDir = join(root, "evidence", "d4", "browser");
+      const runDirs = readdirSync(browserDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(browserDir, entry.name))
+        .filter((dir) => existsSync(join(dir, "summary.json")))
+        .sort()
+        .reverse();
+      let tampered = false;
+      for (const runDir of runDirs) {
+        let summary = null;
+        try {
+          summary = JSON.parse(readFileSync(join(runDir, "summary.json"), "utf8"));
+        } catch {
+          continue;
+        }
+        const check = (summary.checks ?? []).find((candidate) => candidate.id === "d4-beta-usability");
+        if (check === undefined || check.status !== "PASS") continue;
+        const sidecarFile = readdirSync(runDir).find((name) => name.endsWith("-beta-usability.json"));
+        if (sidecarFile === undefined) throw new Error(`injection: run ${basename(runDir)} carries no beta-usability sidecar`);
+        readModifyWrite(join(runDir, sidecarFile), (doc) => {
+          delete doc.betaUsability.keyboard;
+        });
+        tampered = true;
+        break;
+      }
+      if (!tampered) throw new Error("injection: no recorded d4-beta-usability PASS run found in the synthetic tree");
+    },
+    expectCheck: "b7-beta-usability",
+    expectNeedle: "keyboard section missing",
   },
 ];
 
