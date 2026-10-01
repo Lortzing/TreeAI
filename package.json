@@ -21,6 +21,7 @@
     "verify:d2": "node scripts/verify-d2.js",
     "record:d3": "node scripts/record-d3-evidence.mjs",
     "run:d3-real-pi": "node scripts/run-d3-real-pi.mjs",
+    "run:term-eval": "node scripts/run-terminology-eval.mjs",
     "verify:d2:live": "node scripts/verify-d2-live.js",
     "verify:d2:selftest": "node scripts/verify-d2-selftest.js",
     "verify:d4": "node scripts/verify-d4.js",
