@@ -1,0 +1,19 @@
+b6 scale/performance check
+environment: node v24.21.0; darwin 25.6.0 arm64; cpu 10× Apple M4; total memory 16.0 GiB; loadavg at start 3.38/2.19/1.89 — NOTE: parallel D4 wave agents may be building on this machine during this run; loadavg is recorded per probe and any timed probe within 20% of its limit (or over it) is rerun once with BOTH runs recorded
+generator CLI run A (with --load-check): exit 0 in 16597ms
+generator CLI run B (fresh process): exit 0 in 15820ms
+generator determinism: 103/103 artifacts byte-identical across two CLI runs (+ in-process engine reproduces the truth exactly); totals: 100 materials / 1000000 units / 1000 non-trunk branches / 10000 saved facts
+load: 100 ready versions (1000000 units exactly) + 1010 branch rows / 10 trees + 6000 qa turns + 2500 annotations + 1500 returns into a real persistence DB in 669ms (real parsers + repository APIs, deterministic clock; sqlite integrity ok)
+search cold pass (first-ever queries; doubles as warmup): 50 frozen queries through POST /api/search (per-request rebuild) — p50 194.6ms / p95 212.6ms / max 221.7ms (loadavg 2.94/2.21/1.91 → 2.72/2.19/1.91)
+search warm pass (verdict): 50 frozen queries through POST /api/search (per-request rebuild) — p50 193.8ms / p95 203.0ms / max 210.7ms (loadavg 2.72/2.19/1.91 → 2.98/2.25/1.93)
+search-p95: PASS — warm p95 203.0ms ≤ 500ms (cold p95 212.6ms; every query hit its frozen material at the exact needle offset)
+material-open-p95: PASS — 30 cold opens of existing materials (detail + first visible blocks page; 4 long PDFs + 8 long md + 18 shorts) p50 0.5ms / p95 1.5ms / max 3.1ms ≤ 2000ms; hot re-opens p50 0.5ms / p95 1.4ms (cold/hot reported separately); resume-opens deep inside the long PDFs (60% afterBlock): p50 0.6ms / max 0.6ms (evidence)
+scroll (server-side): 32 consecutive block-page fetches through the long md (limit 5) + long pdf (default limit) — p50 0.5ms / p95 0.6ms / max 0.7ms ≤ 200ms (round-trip budget of the scroll path; browser smoothness stays NOT_RUN)
+input (server-side evidence): 20 tree-scoped short searches (POST /api/trees/b6-t01/search, as-you-type shape) — p50 20.4ms / p95 22.0ms / max 22.9ms (no offline assert: the charter's freeze criterion is a browser main-thread metric — see NOT_RUN)
+import-10mib-100p: PASS — 10.32 MiB / 100-page sample (sha256 dfd283426279213e…) imported through POST /api/trees/:id/materials to parse-ready in 0.49s ≤ 30s (upload + parse, real import pipeline; first-blocks read back: 1 block(s), textUnits 999999)
+cancel: gated import in parsing state → POST …/parse-tasks/:id/cancel answered 200 (state canceled) in 0.5ms ≤ 200ms (import request itself took 1.4ms; gated markdown parser holds the task open)
+cancel: late parse result structurally discarded after cancel (task lateResultDiscarded=true, version stays canceled; second cancel answered 409 in 0.3ms)
+NOT_RUN: scrolling (browser face): real-browser scroll smoothness with no >200ms main-thread segments while paging the reader — frontend wave / run:d4-browser; server-side block-page fetch timings recorded here as evidence only
+NOT_RUN: input (browser face): keydown-to-render latency for search-as-you-type and question input — frontend wave; server-side tree-scoped search timings recorded here as evidence only
+NOT_RUN: search hit-list rendering (browser face): render latency of the result list in a real browser — frontend wave; the server-side p95 measured here is the data path only
+NOT_RUN: cold app boot (browser face): first application open in a real browser — frontend wave / final candidate-SHA regression
