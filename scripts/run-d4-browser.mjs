@@ -59,6 +59,19 @@
  *     自身保存/恢复路径回到关闭位置）。selftest=echo 驱动（机制证据）；
  *     real-pi=真实 Pi 回答。Mac 签收与 3–5 人试用属负责人 D4-G3 人工
  *     序列——本检查 PASS 不构成 B7 全过。
+ * v0.6.0（issue #7 术语半边，下一步 2）：
+ *   - terminology-path（terminology-probes.mjs；**无 d4- 前缀——issue #7
+ *     术语工作、非 D4 工作包，verify:d4 不审计本行**）：术语①②③的真实
+ *     浏览器 + 真实 Pi 纵向路径——阅读模式三选一真实切换（PUT 载荷传输层
+ *     观测 + 服务端回读）、gate 未过如实旁注、manual-only/minimal-hints
+ *     回答后零自动派发（服务端任务/usage/建议集零 + 隔离执行器 sessions
+ *     零文件）；term/range 两模式真实拖选武装 → 解释卡 → 保存批注 →
+ *     推广建枝（双击恰一次派发 / 响应丢失 → 刷新揭示既有推广 → 恢复，
+ *     恰一条首问）→ ≥2 轮追问 → Return（术语来源卡：摘录/保存时间/
+ *     来源分支）→ SIGTERM 重启 → 历史/批注可读 + 续走 → 已有探索恢复 +
+ *     显式另开；③前端不变量（选择期间不重绘/复制不变/宽 1600 窄 390/
+ *     焦点-滚动-草稿回程）。专用临时数据目录，selftest=echo / real-pi=
+ *     真实 Pi（echo 如实标注不是真实 Pi 证据）。
  * 未落地项保持 NOT_RUN + 原因（owner 写明）——绝不静默省略，也不把
  * NOT_RUN 计为通过。
  *
@@ -659,6 +672,10 @@ const CHECK_DEFS = [
   { id: "d4-nav-browser", modes: ["selftest", "real-pi"] },
   { id: "d4-b6-scale-browser", modes: ["selftest", "real-pi"] },
   { id: "d4-beta-usability", modes: ["selftest", "real-pi"] },
+  /* issue #7 术语半边（下一步 2）：真实浏览器 + 真实 Pi 纵向路径。无 d4-
+     前缀（术语工作、非 D4 工作包）——verify:d4 保持既有行结构，本行由
+     术语侧独立追踪。专用临时数据目录（bootStudioOn），不依赖共享场景。 */
+  { id: "terminology-path", modes: ["selftest", "real-pi"] },
 ];
 
 const results = [];
@@ -794,7 +811,7 @@ function finish(code) {
        mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
-      version: "0.5.0",
+      version: "0.6.0",
       runId: sc.runId,
       mode: MODE,
       verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
@@ -862,7 +879,7 @@ async function main() {
   sc.dataDir = CLI.dataDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-data-"));
   sc.artifactsDir = CLI.artifactsDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-browser-artifacts-"));
   mkdirSync(sc.artifactsDir, { recursive: true });
-  console.log(`run-d4-browser 0.5.0 — mode ${MODE}`);
+  console.log(`run-d4-browser 0.6.0 — mode ${MODE}`);
   console.log(`data: ${sanitizeText(sc.dataDir)}${CLI.keepData ? " (kept)" : ""}`);
   console.log(`artifacts: ${sanitizeText(sc.artifactsDir)}`);
 
@@ -941,6 +958,12 @@ async function main() {
     if (inScope("d4-beta-usability")) {
       await runCheck("d4-beta-usability", async () => {
         const { probeBetaUsability: run } = await import("./d4/browser/beta-usability-probes.mjs");
+        return run(probeCtx);
+      });
+    }
+    if (inScope("terminology-path")) {
+      await runCheck("terminology-path", async () => {
+        const { probeTerminologyPath: run } = await import("./d4/browser/terminology-probes.mjs");
         return run(probeCtx);
       });
     }
