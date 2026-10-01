@@ -1,0 +1,141 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.3.0",
+  "runId": "d4-browser-20261001T034521-13248",
+  "mode": "selftest",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "counts": {
+    "pass": 10,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 2
+  },
+  "gitCommit": "af517de0d40cbeacfe26e1923ebf13de077f47c3",
+  "gitDirty": false,
+  "generatedAt": "2026-10-01T03:45:36.779Z",
+  "git": {
+    "head": "af517de0d40cbeacfe26e1923ebf13de077f47c3",
+    "dirty": false
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-02",
+      "md-03",
+      "md-04",
+      "md-05",
+      "md-06",
+      "md-07",
+      "md-08",
+      "md-09",
+      "md-10",
+      "md-11",
+      "md-12",
+      "md-vpair-v1",
+      "md-vpair-v2",
+      "neg-md-empty",
+      "neg-md-invalid-utf8",
+      "neg-md-nul-byte",
+      "neg-md-whitespace-only",
+      "neg-pdf-corrupt",
+      "neg-pdf-encrypted",
+      "neg-pdf-image-only",
+      "neg-pdf-zero-text",
+      "pdf-01",
+      "pdf-02",
+      "pdf-03",
+      "pdf-04",
+      "pdf-05",
+      "pdf-06",
+      "pdf-07",
+      "pdf-08",
+      "pdf-09",
+      "pdf-10",
+      "pdf-11",
+      "pdf-12"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:62627",
+      "durationMs": 546
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:62645/",
+      "durationMs": 773
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 644
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 1
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 804
+    },
+    {
+      "id": "d4-import-denominator",
+      "status": "PASS",
+      "detail": "24 ready fixtures (12 markdown + 12 text-layer PDF) imported via the real HTTP API into a UI-created tree, each byte-equal to the frozen canonicalText + block map via the paginated blocks API; 11 negatives honestly rejected (2 at the import gate with zero persistence: empty→400, >20MiB→413; 9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, reads refused 409 material-not-ready); the real sidebar lists all 33 entries with honest ready/failed status",
+      "durationMs": 1326
+    },
+    {
+      "id": "d4-read-and-select",
+      "status": "PASS",
+      "detail": "13/13 frozen B2 selections captured exactly in the real reader (emoji/ZWJ/flags/keycaps, repeat-word 2nd/4th/5th occurrence, cross-line, long-tail past lazy-load; 2 via real mouse gestures: click + Shift+click, and a continuous press→move×8→release drag — the bar stays frozen during the drag window); grapheme-split snapped outward; cross-block refused; resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: clipboard read-back byte-equal",
+      "durationMs": 2196
+    },
+    {
+      "id": "d4-branch-from-material",
+      "status": "NOT_RUN",
+      "reason": "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）",
+      "modeGated": true
+    },
+    {
+      "id": "d4-return-from-material",
+      "status": "NOT_RUN",
+      "reason": "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）",
+      "modeGated": true
+    },
+    {
+      "id": "d4-restart-continue",
+      "status": "PASS",
+      "detail": "reading position saved at blk-52 via the reader's own save path (close-button flush) → studio SIGTERM → new process on the same data dir → reopened with the restore note and blk-52 loaded (59 blocks after forward paging; persisted row verified on the new process; visual scroll alignment asserted ≤2px: scrollTop 7207 vs block top 7208)",
+      "durationMs": 2501
+    },
+    {
+      "id": "d4-search-recover",
+      "status": "PASS",
+      "detail": "5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 md-02",
+      "durationMs": 2219
+    },
+    {
+      "id": "d4-export-restore-recover",
+      "status": "PASS",
+      "detail": "facts (material + material branch + echo first-question + annotation + return + trunk turn) exported via the D4-5 CLI (sessions excluded by default) → restored into an empty data dir → new studio process → real browser: restored md-01 byte-equal to the frozen truth (resolve-selection sourceHash re-verified), sidebar Search recovered trunk-turn/return/material facts with source jumps and showed the session-unavailable note + explicit entry on the side-branch hit rows; the D4-3 resume flow opened the session-less branch panel (alignCursor:false, no /switch replay) with the fail-closed composer and recovery note, and the explicit new exploration landed a fresh session (2 old turns + new pair readable, composer cleared)",
+      "durationMs": 4163
+    }
+  ],
+  "pageErrors": [
+    {
+      "source": "log",
+      "text": "Failed to load resource: the server responded with a status of 502 (Bad Gateway) (http://127.0.0.1:62755/api/trees/tree_b88f749e-180c-41e2-b21a-a8672549bd80/diagnostics)"
+    }
+  ]
+}

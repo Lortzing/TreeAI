@@ -1,0 +1,115 @@
+{
+  "check": "d4-read-and-select",
+  "cases": [
+    {
+      "id": "md-sel-29",
+      "category": "emoji",
+      "blockId": "blk-7",
+      "start": 368,
+      "end": 370
+    },
+    {
+      "id": "md-sel-30",
+      "category": "emoji",
+      "blockId": "blk-12",
+      "start": 833,
+      "end": 838
+    },
+    {
+      "id": "md-sel-31",
+      "category": "emoji",
+      "blockId": "blk-8",
+      "start": 476,
+      "end": 480
+    },
+    {
+      "id": "md-sel-32",
+      "category": "emoji",
+      "blockId": "blk-5",
+      "start": 293,
+      "end": 304
+    },
+    {
+      "id": "md-sel-33",
+      "category": "unicode",
+      "blockId": "blk-12",
+      "start": 728,
+      "end": 737
+    },
+    {
+      "id": "grapheme-split→md-sel-30",
+      "category": "emoji-split-snap",
+      "blockId": "blk-12",
+      "start": 833,
+      "end": 838
+    },
+    {
+      "id": "md-sel-01",
+      "category": "zh+real-mouse-shift-click",
+      "blockId": "blk-0",
+      "start": 2,
+      "end": 11
+    },
+    {
+      "id": "md-sel-02",
+      "category": "zh+real-mouse-drag",
+      "blockId": "blk-6",
+      "start": 448,
+      "end": 457
+    },
+    {
+      "id": "md-sel-19",
+      "category": "repeat-word-2nd",
+      "blockId": "blk-1",
+      "start": 116,
+      "end": 118
+    },
+    {
+      "id": "md-sel-22",
+      "category": "cross-line",
+      "blockId": "blk-12",
+      "start": 1015,
+      "end": 1036
+    },
+    {
+      "id": "cross-block-refused",
+      "category": "cross-block",
+      "blockId": null,
+      "start": null,
+      "end": null
+    },
+    {
+      "id": "md-sel-21",
+      "category": "repeat-word-2nd",
+      "blockId": "blk-49",
+      "start": 4707,
+      "end": 4709
+    },
+    {
+      "id": "md-sel-41",
+      "category": "long-tail",
+      "blockId": "blk-56",
+      "start": 5399,
+      "end": 5409
+    },
+    {
+      "id": "md-sel-40",
+      "category": "long-tail",
+      "blockId": "blk-58",
+      "start": 5683,
+      "end": 5698
+    },
+    {
+      "id": "md-sel-42",
+      "category": "long-tail",
+      "blockId": "blk-58",
+      "start": 5724,
+      "end": 5727
+    }
+  ],
+  "frozenSelectionsExact": 13,
+  "snapCase": "grapheme-split snapped outward to md-sel-30 truth",
+  "crossBlock": "refused (no payload)",
+  "copyQuote": "clipboard read-back byte-equal",
+  "pageErrors": 0
+}
