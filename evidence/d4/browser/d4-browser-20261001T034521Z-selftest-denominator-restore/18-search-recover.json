@@ -1,0 +1,18 @@
+{
+  "check": "d4-search-recover",
+  "treeId": "tree_b88f749e-180c-41e2-b21a-a8672549bd80",
+  "tree2Id": "tree_45d4f463-57dc-47fe-857e-f895d0425d2e",
+  "markers": {
+    "question": "TreeAI-搜索探针-QUESTION-7f3a",
+    "annotation": "TreeAI-搜索探针-批注-c41d",
+    "ret": "TreeAI-搜索探针-RETURN-90b2"
+  },
+  "problems": [],
+  "corpus": {
+    "md01": {
+      "materialId": "material_7bec7c0b-6cc9-493e-aeb4-fb89a0160d63",
+      "versionId": "matver_3bf8cb40-64d8-404f-8475-aff5ff8af651"
+    },
+    "vpairMaterialId": "material_a103060a-faaf-46dd-b237-99390abde1e8"
+  }
+}

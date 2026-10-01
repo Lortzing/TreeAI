@@ -10,13 +10,23 @@
  *   - d4-import-material：B1 冻结 fixture 经真实 HTTP API 导入（D4-1 契约
  *     面；导入 UI 属后续增量）→ 真实 UI 侧栏 Materials 列表逐条 ready +
  *     种类/版本标签；
+ *   - d4-import-denominator：B1 全分母（owner 2026-09-30 增量验收）——
+ *     12 markdown + 12 文字层 PDF 全部经真实导入 API 到达 ready 且与冻结
+ *     canonicalText/块图逐字节全等（分页块读取面）；8 文件负例 + 3 超限
+ *     负例（manifest 配方确定性生成）如实拒绝（门拒绝零持久化 / 终态
+ *     failed 携冻结原因码，读取 409）；真实侧栏逐条呈现对账；
  *   - d4-read-and-select：真实 UI 打开阅读器 → 分块懒加载 → 真实 DOM 选区
- *     （selectionchange/mouseup 武装路径 + 一次真实鼠标拖选）→ 捕获载荷
+ *     （selectionchange/mouseup 武装路径 + 真实鼠标拖选 + 真实连续拖选
+ *     press→move×N→release）→ 捕获载荷
  *     与 B2 冻结真值逐项全等（blockId/UTF-16 区间/摘录；含字素吸附、
  *     跨块拒绝、重复词第 N 次出现）→ resolve-selection 服务端复核（含
  *     sourceHash === SHA-256(冻结 canonicalText)）→ 复制摘录不变；
  *   - d4-restart-continue：阅读位置经阅读器自身保存路径落库 → 停止
- *     studio 进程 → 同数据目录新进程 → 重开恢复到原块。
+ *     studio 进程 → 同数据目录新进程 → 重开恢复到原块；
+ *   - d4-export-restore-recover（B5）：D4-5 CLI 导出（缺省不含 session）
+ *     → 恢复到全新空数据目录 → 恢复目录上全新 studio 进程 → 真实浏览器
+ *     阅读恢复材料 / 侧栏 Search 找回复原事实（来源跳转）/ session 未存
+ *     活分支的显式新探索换轨。
  * 未落地项保持 NOT_RUN + 原因（owner 写明）——绝不静默省略，也不把
  * NOT_RUN 计为通过。
  *
@@ -57,7 +67,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
-import { probeImportMaterial, probeReadAndSelect, probeRestartContinue, probeSearchRecover } from "./d4/browser/material-probes.mjs";
+import {
+  probeImportMaterial,
+  probeReadAndSelect,
+  probeRestartContinue,
+  probeSearchRecover,
+  probeImportDenominator,
+  probeExportRestoreRecover,
+} from "./d4/browser/material-probes.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
@@ -489,12 +506,47 @@ async function stopStudioProcess(timeoutMs = 8000) {
 
 /** 同数据目录启动全新 studio 进程（新端口；数据目录原样保留）。 */
 async function restartStudio(dataDir) {
+  return bootStudioOn(dataDir);
+}
+
+/** 在指定数据目录上启动全新 studio 进程（先停当前进程；B5 恢复探针在
+    恢复目录上开新进程用——sc.dataDir 语义保持指向原始数据目录）。 */
+async function bootStudioOn(dataDir) {
   await stopStudioProcess();
   studio.port = await freePort();
   await startStudio(dataDir, { appendLog: true });
   booted = true;
   sc.studioUrl = `http://127.0.0.1:${String(studio.port)}/`;
   return sc.studioUrl;
+}
+
+/** D4-5 CLI 子进程（export 子命令 / --import-package；不启动服务器，
+    完成即退）。stdout/stderr 如实入 artifacts（studio-cli.log）。 */
+function runStudioCli(args, timeoutMs = 120_000) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [STUDIO_ENTRY, ...args], {
+      cwd: ROOT,
+      env: { ...process.env },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      stderr += `\n(treeai harness: studio CLI timed out after ${String(timeoutMs)}ms)`;
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => { stdout += chunk.toString("utf8"); });
+    child.stderr.on("data", (chunk) => { stderr += chunk.toString("utf8"); });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve({ code: null, stdout, stderr: `${stderr}${String(err.message)}` });
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      appendArtifact("studio-cli.log", `\n=== studio CLI ${args.join(" ")} → exit ${String(code)} ===\n${sanitizeText(stdout)}${stderr === "" ? "" : `\n[stderr]\n${sanitizeText(stderr)}`}\n`);
+      resolve({ code, stdout: sanitizeText(stdout), stderr: sanitizeText(stderr) });
+    });
+  });
 }
 
 async function api(method, path, body, timeoutMs = GET_TIMEOUT_MS) {
@@ -526,11 +578,13 @@ const CHECK_DEFS = [
   /* D4 用户路径：B1/B2 浏览器面已落地（v0.2.0，scripts/d4/browser/）；
      其余检查在对应工作包落地前 NOT_RUN（原因写明归属），落地后翻成真实检查。 */
   { id: "d4-import-material", modes: ["selftest", "real-pi"] },
+  { id: "d4-import-denominator", modes: ["selftest", "real-pi"] },
   { id: "d4-read-and-select", modes: ["selftest", "real-pi"] },
   { id: "d4-branch-from-material", modes: ["real-pi"], notRun: { selftest: "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料建枝/首问未实现（owner: D4-3）" } },
   { id: "d4-return-from-material", modes: ["real-pi"], notRun: { selftest: "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料 Return 未实现（owner: D4-3）" } },
   { id: "d4-restart-continue", modes: ["selftest", "real-pi"] },
   { id: "d4-search-recover", modes: ["selftest", "real-pi"] },
+  { id: "d4-export-restore-recover", modes: ["selftest", "real-pi"] },
 ];
 
 const results = [];
@@ -653,7 +707,7 @@ function finish(code) {
        mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
-      version: "0.2.0",
+      version: "0.3.0",
       runId: sc.runId,
       mode: MODE,
       verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
@@ -691,16 +745,22 @@ const probeCtx = {
   screenshot,
   sidecar,
   cdpSend: (method, params, timeoutMs) => chrome.cdp.send(method, params, timeoutMs),
+  cdpOn: (method, fn) => chrome.cdp.on(method, fn),
   studioPort: () => studio.port,
   studioOrigin: () => `http://127.0.0.1:${String(studio.port)}`,
   studioUrl: () => sc.studioUrl,
+  studioDataDir: () => sc.dataDir,
   api,
   stopStudio: () => stopStudioProcess(),
   restartStudio: () => restartStudio(sc.dataDir),
+  bootStudioOn,
+  runStudioCli,
   pageErrors: () => chrome.pageErrors.slice(),
   scenario,
   noteFixturesUsed: (ids) => {
-    scenario.fixturesUsed = ids;
+    /* 并集（探针各自登记使用面；summary 的冻结集绑定如实汇总）。 */
+    const merged = new Set([...(scenario.fixturesUsed ?? []), ...ids]);
+    scenario.fixturesUsed = [...merged].sort();
   },
 };
 
@@ -708,7 +768,7 @@ async function main() {
   sc.dataDir = CLI.dataDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-data-"));
   sc.artifactsDir = CLI.artifactsDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-browser-artifacts-"));
   mkdirSync(sc.artifactsDir, { recursive: true });
-  console.log(`run-d4-browser 0.2.0 — mode ${MODE}`);
+  console.log(`run-d4-browser 0.3.0 — mode ${MODE}`);
   console.log(`data: ${sanitizeText(sc.dataDir)}${CLI.keepData ? " (kept)" : ""}`);
   console.log(`artifacts: ${sanitizeText(sc.artifactsDir)}`);
 
@@ -749,11 +809,13 @@ async function main() {
        真实 studio 进程上的真实 DOM 检查（echo 驱动，selftest 声明照旧）。
        未落地项保持 NOT_RUN + 原因（owner 写明）。 */
     await runCheck("d4-import-material", () => probeImportMaterial(probeCtx));
+    await runCheck("d4-import-denominator", () => probeImportDenominator(probeCtx));
     await runCheck("d4-read-and-select", () => probeReadAndSelect(probeCtx));
     await runCheck("d4-branch-from-material", null);
     await runCheck("d4-return-from-material", null);
     await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
     await runCheck("d4-search-recover", () => probeSearchRecover(probeCtx));
+    await runCheck("d4-export-restore-recover", () => probeExportRestoreRecover(probeCtx));
 
     finish(0);
   } catch (err) {
