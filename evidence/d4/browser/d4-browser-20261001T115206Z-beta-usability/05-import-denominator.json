@@ -1,0 +1,307 @@
+{
+  "check": "d4-import-denominator",
+  "treeId": "tree_994b8928-34cc-4011-afd9-ed08ad1d7b39",
+  "readyFixtures": [
+    {
+      "fixtureId": "md-01",
+      "kind": "markdown",
+      "materialId": "material_4fdeca97-c576-48c8-be15-eb293bca763d",
+      "versionId": "matver_048d2fbd-7a84-427d-806a-3d8586e4c00f",
+      "textUnits": 1179,
+      "blocks": 14
+    },
+    {
+      "fixtureId": "md-02",
+      "kind": "markdown",
+      "materialId": "material_a19853b9-ca9d-42c5-bb47-ede7a1024189",
+      "versionId": "matver_599daab0-0512-44c6-a111-37f34e0da1e5",
+      "textUnits": 3443,
+      "blocks": 17
+    },
+    {
+      "fixtureId": "md-03",
+      "kind": "markdown",
+      "materialId": "material_4574a7bc-cb82-4c08-945a-3868bb00b935",
+      "versionId": "matver_5441c37f-594d-4468-89b2-ba424ebabc00",
+      "textUnits": 2482,
+      "blocks": 20
+    },
+    {
+      "fixtureId": "md-04",
+      "kind": "markdown",
+      "materialId": "material_6d646084-1454-44a4-8e66-73c418b7b520",
+      "versionId": "matver_1c2d92e5-678f-4929-bfae-725038ea8464",
+      "textUnits": 1667,
+      "blocks": 22
+    },
+    {
+      "fixtureId": "md-05",
+      "kind": "markdown",
+      "materialId": "material_538c78c8-a272-42d0-bf17-c14ae58fa11b",
+      "versionId": "matver_27912d5d-ca0d-459f-8156-ccf202cfd4ff",
+      "textUnits": 1390,
+      "blocks": 17
+    },
+    {
+      "fixtureId": "md-06",
+      "kind": "markdown",
+      "materialId": "material_7c2d7b9a-8262-49c9-86ff-492007e6b584",
+      "versionId": "matver_9a258e0a-9c51-4048-83ae-dc4c60522ad4",
+      "textUnits": 1032,
+      "blocks": 16
+    },
+    {
+      "fixtureId": "md-07",
+      "kind": "markdown",
+      "materialId": "material_89ad0d04-559a-489c-a014-09df50ad5e3d",
+      "versionId": "matver_b083e526-d7ec-4bcd-8873-e93e38a17ece",
+      "textUnits": 1385,
+      "blocks": 16
+    },
+    {
+      "fixtureId": "md-08",
+      "kind": "markdown",
+      "materialId": "material_22bd7124-1078-4fb2-bf82-277bc68a491b",
+      "versionId": "matver_f0284b5d-99c0-49dc-94d3-5d314e9e8cca",
+      "textUnits": 1729,
+      "blocks": 25
+    },
+    {
+      "fixtureId": "md-09",
+      "kind": "markdown",
+      "materialId": "material_193475a4-c357-4122-ac78-338ce34efe31",
+      "versionId": "matver_585e5b18-5caf-4758-8bad-736b0b546c01",
+      "textUnits": 1703,
+      "blocks": 18
+    },
+    {
+      "fixtureId": "md-10",
+      "kind": "markdown",
+      "materialId": "material_abb73c5b-a9dc-48be-a1e6-dd3bbe544178",
+      "versionId": "matver_ab5323cc-341f-4283-886b-11ad3f27bb49",
+      "textUnits": 8760,
+      "blocks": 42
+    },
+    {
+      "fixtureId": "md-11",
+      "kind": "markdown",
+      "materialId": "material_6a762dfc-50a1-4b5f-b80f-7c2462fe4652",
+      "versionId": "matver_d793837d-a30a-483f-8541-502e9a3b3d3b",
+      "textUnits": 5729,
+      "blocks": 59
+    },
+    {
+      "fixtureId": "md-12",
+      "kind": "markdown",
+      "materialId": "material_9b7fee05-bcbd-46ed-8794-f10b193ed5a3",
+      "versionId": "matver_4e3bd005-70e8-4071-9391-a1bbee0f27df",
+      "textUnits": 624,
+      "blocks": 9
+    },
+    {
+      "fixtureId": "pdf-01",
+      "kind": "pdf",
+      "materialId": "material_0be70066-4d28-4244-8e97-68987f5dbf3a",
+      "versionId": "matver_bb75233b-8b87-477e-b475-597b44397304",
+      "textUnits": 1109,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-02",
+      "kind": "pdf",
+      "materialId": "material_d5b3edfb-af48-48d8-b2b6-466f7edbbc98",
+      "versionId": "matver_d0746bd7-024e-48a2-9b59-bf5d70d96b72",
+      "textUnits": 3270,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-03",
+      "kind": "pdf",
+      "materialId": "material_58cab96a-371d-4704-8b9e-74e714a45518",
+      "versionId": "matver_3aa7bf12-c93b-4abe-9038-8f0ce38f898e",
+      "textUnits": 1864,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-04",
+      "kind": "pdf",
+      "materialId": "material_d6ee9a75-1d57-49e4-b496-45fb960c0206",
+      "versionId": "matver_57db21d4-89fd-4f26-a506-38743b2d61d0",
+      "textUnits": 1528,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-05",
+      "kind": "pdf",
+      "materialId": "material_2ae2cc9e-afaa-4ca8-a141-a6798d81bfd3",
+      "versionId": "matver_e546268a-48cc-4403-9e22-000a2df93e5c",
+      "textUnits": 1277,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-06",
+      "kind": "pdf",
+      "materialId": "material_ada1d88b-dfe9-4e70-8390-f192d7dc23f5",
+      "versionId": "matver_77e2df5a-a9e1-48dc-8160-b646deb9678b",
+      "textUnits": 1815,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-07",
+      "kind": "pdf",
+      "materialId": "material_dbbf98e9-77ca-4332-a178-5ed30d4153e4",
+      "versionId": "matver_c10ca29c-c946-467e-ba96-382f02e47525",
+      "textUnits": 2643,
+      "blocks": 4
+    },
+    {
+      "fixtureId": "pdf-08",
+      "kind": "pdf",
+      "materialId": "material_0f72b9b1-dad4-4365-bcca-2cb1ce9947b1",
+      "versionId": "matver_c8a07f0d-3856-4522-85fc-f0bb006375b3",
+      "textUnits": 9239,
+      "blocks": 10
+    },
+    {
+      "fixtureId": "pdf-09",
+      "kind": "pdf",
+      "materialId": "material_fe118c8b-9a8f-4ac7-8f48-da798820819d",
+      "versionId": "matver_481e1509-07ac-45d2-aed9-bb89513c8676",
+      "textUnits": 1019,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-10",
+      "kind": "pdf",
+      "materialId": "material_6a05b88f-ceef-4355-8909-b4505675a6bf",
+      "versionId": "matver_43e678a5-3ed9-48eb-a108-980ab70444a6",
+      "textUnits": 1487,
+      "blocks": 2
+    },
+    {
+      "fixtureId": "pdf-11",
+      "kind": "pdf",
+      "materialId": "material_d51e2b29-e5b0-4c86-a05f-e5740308e693",
+      "versionId": "matver_b1cc69d5-d1a0-49d8-8351-63371c3cdf46",
+      "textUnits": 3775,
+      "blocks": 30
+    },
+    {
+      "fixtureId": "pdf-12",
+      "kind": "pdf",
+      "materialId": "material_1a8af390-84a6-4420-a3f6-40fbae7ef524",
+      "versionId": "matver_fd5957e6-f5e4-44a4-bf4b-35710146bf87",
+      "textUnits": 958,
+      "blocks": 2
+    }
+  ],
+  "negatives": [
+    {
+      "fixtureId": "neg-md-empty",
+      "verdict": "gate-rejected",
+      "http": 400,
+      "code": "invalid-argument",
+      "reason": "empty",
+      "persisted": false
+    },
+    {
+      "fixtureId": "neg-md-invalid-utf8",
+      "verdict": "failed-version",
+      "reason": "invalid-utf8",
+      "parseError": "invalid-utf8: material is not well-formed UTF-8",
+      "materialId": "material_06b013a9-7f89-4bfc-8386-15ece9ebc8a9",
+      "versionId": "matver_a448c528-5b20-4f9f-b1ad-452e01d9c305",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-md-nul-byte",
+      "verdict": "failed-version",
+      "reason": "nul-byte",
+      "parseError": "nul-byte: material contains an embedded U+0000 NUL byte",
+      "materialId": "material_5b7ac5ba-11ca-4fdc-97dc-b038c42e17da",
+      "versionId": "matver_061dbaed-288d-4219-b131-0d8f6c22c3f8",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-md-whitespace-only",
+      "verdict": "failed-version",
+      "reason": "whitespace-only",
+      "parseError": "whitespace-only: material contains only whitespace (no meaningful content)",
+      "materialId": "material_78a4d6f7-0269-4676-afbf-e394ae9f66c0",
+      "versionId": "matver_03d72330-df81-4aa7-b5bb-16955f4ecc89",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-pdf-encrypted",
+      "verdict": "failed-version",
+      "reason": "encrypted",
+      "parseError": "encrypted: trailer carries /Encrypt — encrypted PDFs are rejected by text-layer import (no decryption is attempted)",
+      "materialId": "material_966543b0-f2e8-407c-b5e9-4f5e17f968d4",
+      "versionId": "matver_725b37fd-5b8d-4546-aac9-aef5c10ec560",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-pdf-corrupt",
+      "verdict": "failed-version",
+      "reason": "corrupt",
+      "parseError": "corrupt: no startxref/%%EOF at end of file (truncated or corrupt)",
+      "materialId": "material_5b3ec8cb-3516-43b7-be2b-d6dd05f6e6be",
+      "versionId": "matver_8068ecd9-3333-400d-bdae-db39d139adba",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-pdf-image-only",
+      "verdict": "failed-version",
+      "reason": "no-text-layer",
+      "parseError": "no-text-layer: the document has no extractable text layer (zero text-showing operations across all pages; scanned/image-only or empty-conten",
+      "materialId": "material_f3062f0f-c49f-4895-aaff-55db80b2e03b",
+      "versionId": "matver_c37702a0-f7f4-4a5e-acf5-d659e9853c44",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "neg-pdf-zero-text",
+      "verdict": "failed-version",
+      "reason": "no-text-layer",
+      "parseError": "no-text-layer: the document has no extractable text layer (zero text-showing operations across all pages; scanned/image-only or empty-conten",
+      "materialId": "material_050f592c-9c44-4630-aeaf-601edcc8a2a1",
+      "versionId": "matver_866a5846-a100-47df-b1ff-8e72a9239140",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "oversize-md-20mib",
+      "verdict": "gate-rejected",
+      "http": 413,
+      "code": "material-too-large",
+      "reason": "material-too-large",
+      "persisted": false
+    },
+    {
+      "fixtureId": "oversize-pdf-200pages",
+      "verdict": "failed-version",
+      "reason": "pages-exceeded",
+      "parseError": "pages-exceeded: the document has 201 pages, exceeding the 200-page text-PDF limit (rejected before extracting text; charter D4 §5)",
+      "materialId": "material_d16dd132-64b7-404b-a5e3-14ffe885106f",
+      "versionId": "matver_96331cc3-f3e0-4542-86df-2458f84b20b1",
+      "textUnits": 0
+    },
+    {
+      "fixtureId": "oversize-md-1m-units",
+      "verdict": "failed-version",
+      "reason": "text-units-exceeded",
+      "parseError": "text-units-exceeded: the canonical text is 1000001 UTF-16 units, exceeding the 1000000-unit limit (rejected before persistence; charter D4 §",
+      "materialId": "material_4f90e2cf-0baa-40b7-a02c-ac7457c691c5",
+      "versionId": "matver_310d545b-b66e-4d35-8d4c-021762e91614",
+      "textUnits": 0
+    }
+  ],
+  "counts": {
+    "ready": 24,
+    "fileNegatives": 8,
+    "oversizeGenerated": 3,
+    "sidebarTotal": 33,
+    "sidebarReady": 24,
+    "sidebarFailed": 9
+  },
+  "truthAssertion": "every ready version byte-equal to the frozen canonicalText + block map via the paginated blocks API; every rejection carries the frozen reason code",
+  "pageErrors": 0
+}
