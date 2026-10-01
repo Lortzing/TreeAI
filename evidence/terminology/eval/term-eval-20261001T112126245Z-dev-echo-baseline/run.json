@@ -1,0 +1,8711 @@
+{
+  "runId": "term-eval-20261001T112126245Z-dev-echo-baseline",
+  "runnerVersion": 1,
+  "mode": "echo",
+  "set": "dev",
+  "provider": "baseline",
+  "model": "baseline/baseline",
+  "observe": false,
+  "git": {
+    "sha": "c282b2f6c5a408bdc03192f2d3efdda7a6a9f261",
+    "dirty": true,
+    "branch": "wip/term-eval-runner"
+  },
+  "node": "v24.21.0",
+  "startedAt": "2026-10-01T11:21:24.637Z",
+  "finishedAt": "2026-10-01T11:21:26.245Z",
+  "setHash": "23c6fd6a522a66ecb101a25453298be814cbf6b32229ca72b76d259d25f6e0dd",
+  "configHash": "fdddef16ad9916eea899ff3a6e8fc401f15902478aa66bab1f1ff60209d38fb4",
+  "promptVersions": {
+    "explain": 2,
+    "extract": 2
+  },
+  "options": {
+    "limit": null,
+    "retries": 0,
+    "cacheEnabled": false,
+    "budgetTokens": 5000000,
+    "allowObserve": false
+  },
+  "executed": true,
+  "itemsRan": {
+    "explain": 74,
+    "extract": 106,
+    "limited": false
+  },
+  "metrics": {
+    "explain": {
+      "ran": 0,
+      "succeeded": 0,
+      "failed": 0,
+      "sourceMatchOk": 0,
+      "sourceMatchRate": null,
+      "emptyOutputs": 0,
+      "latencyMs": {
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "advisoryP95TargetMs": 5000,
+      "usage": {
+        "requests": 0,
+        "promptChars": 0,
+        "completionChars": 0,
+        "estimatedTokensCharsOver4": 0
+      },
+      "notApplicableReason": "provider does not explain (baseline)"
+    },
+    "extract": {
+      "ran": 106,
+      "succeeded": 106,
+      "failed": 0,
+      "positives": 55,
+      "fullNegatives": 51,
+      "expectedTotal": 149,
+      "expectedFound": 43,
+      "recall": 0.28859060402684567,
+      "precision": 0.05070754716981132,
+      "markedTotal": 848,
+      "negativeTermsTotal": 318,
+      "negativeTermsHit": 44,
+      "mislabelRate": 0.13836477987421383,
+      "fullNegativeItemsWithMarks": 51,
+      "fullNegativeItemMislabelRate": 1,
+      "extraTerms": 761,
+      "emptyOutputsOnPositives": 0,
+      "latencyMs": {
+        "p50": 6,
+        "p95": 16,
+        "max": 194
+      },
+      "advisoryP95TargetMs": 8000,
+      "usage": {
+        "requests": 106,
+        "promptChars": 114322,
+        "completionChars": 32607,
+        "estimatedTokensCharsOver4": 36733
+      }
+    },
+    "totalRetries": 0,
+    "pending": {
+      "usefulness": {
+        "gate": ">=90%",
+        "status": "PENDING",
+        "sheet": "annotation-sheet.csv"
+      },
+      "keyObstacleCoverage": {
+        "gate": ">=80%",
+        "status": "PENDING",
+        "sheet": "annotation-sheet.csv"
+      }
+    }
+  },
+  "usage": {
+    "explain": {
+      "requests": 0,
+      "promptChars": 0,
+      "completionChars": 0,
+      "estimatedTokensCharsOver4": 0
+    },
+    "extract": {
+      "requests": 106,
+      "promptChars": 114322,
+      "completionChars": 32607,
+      "estimatedTokensCharsOver4": 36733
+    }
+  },
+  "gates": [
+    {
+      "name": "pipeline-integrity",
+      "binding": true,
+      "status": "PASS",
+      "detail": "explain: 74/74 clean terminal states (74 not applicable, 0 unexpected); extract: 106/106 clean terminal states (0 unexpected) — mode echo, provider baseline"
+    },
+    {
+      "name": "explain-source-match",
+      "binding": false,
+      "status": "NOT_RUN",
+      "detail": "provider does not explain (baseline)"
+    },
+    {
+      "name": "extract-negative-mislabel",
+      "binding": false,
+      "status": "FAIL",
+      "detail": "negativeTerms mislabel (term level) = 44/318 = 13.8% (gate ≤10%); separately: full-negative item level 51/51 = 100.0%, unlisted extra marks 761"
+    },
+    {
+      "name": "usefulness",
+      "binding": false,
+      "status": "PENDING",
+      "detail": "有用率 (≥90%) needs two-person annotation of annotation-sheet.csv (rater1/rater2 + arbitration); never asserted mechanically"
+    },
+    {
+      "name": "key-obstacle-coverage",
+      "binding": false,
+      "status": "PENDING",
+      "detail": "关键理解障碍覆盖率 (≥80%) needs two-person annotation (key_obstacle columns + arbitrated useful explanations); never asserted mechanically"
+    }
+  ],
+  "checks": [
+    {
+      "name": "set-integrity",
+      "status": "PASS",
+      "detail": "dev 180 + frozen 180; group ids and source texts never straddle; zh 259/360; negatives 103/360 = 28.6%; six categories in both; every explain term resolves by occurrence with slice equality; extract term lists verified against sources"
+    },
+    {
+      "name": "echo-selftest",
+      "status": "PASS",
+      "detail": "17/17 synthetic checks pass (metric math, gate flip, frozen lock, secret scan, baseline determinism)"
+    }
+  ],
+  "selftest": [
+    {
+      "name": "selftest:extract-metrics",
+      "status": "PASS",
+      "detail": "recall 1/4, precision 1/4, mislabel 2/3, extras 1 (got 1/4, 1/4, 2/3, 1)"
+    },
+    {
+      "name": "selftest:explain-metrics",
+      "status": "PASS",
+      "detail": "source match 1/2 = 50% (gate must FAIL below 100%)"
+    },
+    {
+      "name": "selftest:gate-flip",
+      "status": "PASS",
+      "detail": "binding quality gates flip to FAIL on synthetic violations (50% source match; 66.7% mislabel)"
+    },
+    {
+      "name": "selftest:baseline-nonbinding",
+      "status": "PASS",
+      "detail": "baseline provider quality gates are reported-only (weak baseline is expected, not a runner defect)"
+    },
+    {
+      "name": "selftest:nth-occurrence",
+      "status": "PASS",
+      "detail": "3rd occurrence resolves at 22 with slice equality"
+    },
+    {
+      "name": "selftest:frozen-lock",
+      "status": "PASS",
+      "detail": "echo runs, observe-only real runs and dev runs never lock the frozen verdict"
+    },
+    {
+      "name": "selftest:frozen-lock-2",
+      "status": "PASS",
+      "detail": "an executed real frozen run with matching set hash locks the verdict"
+    },
+    {
+      "name": "selftest:secret-scan",
+      "status": "PASS",
+      "detail": "secret values are detected in serialized reports"
+    },
+    {
+      "name": "baseline:determinism-zh",
+      "status": "PASS",
+      "detail": "same input twice -> 8 candidates, byte-equal JSON"
+    },
+    {
+      "name": "baseline:determinism-en",
+      "status": "PASS",
+      "detail": "same input twice -> 8 candidates, byte-equal JSON"
+    },
+    {
+      "name": "baseline:mechanical-zh",
+      "status": "PASS",
+      "detail": "slice equality + dedup + density cap hold"
+    },
+    {
+      "name": "baseline:mechanical-en",
+      "status": "PASS",
+      "detail": "slice equality + dedup + density cap hold"
+    },
+    {
+      "name": "baseline:known-answer-zh",
+      "status": "PASS",
+      "detail": "repeated technical n-gram 梯度下降 ranks above glued boundary junk (top: 梯度下降, 配衰减计划, 一步的幅度)"
+    },
+    {
+      "name": "baseline:known-answer-en",
+      "status": "PASS",
+      "detail": "repeated en bigram phrase is among the candidates (top: repetition system, spaced repetition, beats rereading., spacing effect)"
+    },
+    {
+      "name": "baseline:code-exclusion",
+      "status": "PASS",
+      "detail": "backtick-fenced code is never a candidate"
+    },
+    {
+      "name": "baseline:url-exclusion",
+      "status": "PASS",
+      "detail": "URL text is never a candidate"
+    },
+    {
+      "name": "baseline:determinism-set-item",
+      "status": "PASS",
+      "detail": "same set-style input twice -> byte-equal output"
+    }
+  ],
+  "explainRows": [
+    {
+      "id": "dev-e-001",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-002",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-003",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-004",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-005",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-006",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-007",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-008",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-009",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-010",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-011",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-012",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-013",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-014",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-015",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-016",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-017",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-018",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-019",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-020",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-021",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-022",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-023",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-024",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-025",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-026",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-027",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-028",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-029",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-030",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-031",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-032",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-033",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-034",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-035",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-036",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-037",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-038",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-039",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-040",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-041",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-042",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-043",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-044",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-045",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-046",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-047",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-048",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-049",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-050",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-051",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-052",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-053",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-054",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-055",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-056",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-057",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-058",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-059",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-060",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-061",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-062",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-063",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-064",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-065",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-066",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-067",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-068",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-069",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-070",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-071",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-072",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-073",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    },
+    {
+      "id": "dev-e-074",
+      "kind": "explain",
+      "status": "notApplicable",
+      "latencyMs": null,
+      "attempts": 0,
+      "retries": 0,
+      "usage": null,
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 0
+      },
+      "sourceMatch": null,
+      "explanation": null,
+      "failure": null,
+      "notApplicableReason": "baseline provider does not explain (extraction-only reference)"
+    }
+  ],
+  "extractRows": [
+    {
+      "id": "dev-x-001",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 13,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 958,
+        "completionChars": 283
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "交叉验证",
+        "F1 分数"
+      ],
+      "negativeTerms": [
+        "准确率",
+        "数据",
+        "类别"
+      ],
+      "candidates": [
+        {
+          "term": "交叉验证",
+          "start": 13,
+          "end": 17
+        },
+        {
+          "term": "几折轮流",
+          "start": 22,
+          "end": 26
+        },
+        {
+          "term": "数据切",
+          "start": 18,
+          "end": 21
+        },
+        {
+          "term": "验证集",
+          "start": 27,
+          "end": 30
+        },
+        {
+          "term": "更稳",
+          "start": 33,
+          "end": 35
+        },
+        {
+          "term": "评估分类器",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "一条数字",
+          "start": 8,
+          "end": 12
+        },
+        {
+          "term": "结果更稳",
+          "start": 31,
+          "end": 35
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-002",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 967,
+        "completionChars": 293
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 315
+      },
+      "expectedTerms": [
+        "Xavier 初始化",
+        "Batch Norm"
+      ],
+      "negativeTerms": [
+        "网络",
+        "输出",
+        "分布"
+      ],
+      "candidates": [
+        {
+          "term": "初始化",
+          "start": 9,
+          "end": 12
+        },
+        {
+          "term": "Batch Norm",
+          "start": 41,
+          "end": 51
+        },
+        {
+          "term": "Xavier",
+          "start": 21,
+          "end": 27
+        },
+        {
+          "term": "明显加快收敛",
+          "start": 67,
+          "end": 73
+        },
+        {
+          "term": "让深层网络训",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "不可少",
+          "start": 17,
+          "end": 20
+        },
+        {
+          "term": "归一化",
+          "start": 13,
+          "end": 16
+        },
+        {
+          "term": "两者",
+          "start": 63,
+          "end": 65
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-003",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 10,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 976,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 317
+      },
+      "expectedTerms": [
+        "随机森林",
+        "bagging",
+        "梯度提升树",
+        "早停"
+      ],
+      "negativeTerms": [
+        "平均",
+        "结果",
+        "容易"
+      ],
+      "candidates": [
+        {
+          "term": "bagging",
+          "start": 21,
+          "end": 28
+        },
+        {
+          "term": "更容易过拟合",
+          "start": 68,
+          "end": 74
+        },
+        {
+          "term": "多棵树的结",
+          "start": 31,
+          "end": 36
+        },
+        {
+          "term": "容易",
+          "start": 5,
+          "end": 7
+        },
+        {
+          "term": "配合早停",
+          "start": 78,
+          "end": 82
+        },
+        {
+          "term": "随机森林",
+          "start": 15,
+          "end": 19
+        },
+        {
+          "term": "棵的错",
+          "start": 60,
+          "end": 63
+        },
+        {
+          "term": "纠前面",
+          "start": 56,
+          "end": 59
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-004",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 10,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 956,
+        "completionChars": 303
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 315
+      },
+      "expectedTerms": [
+        "自注意力",
+        "位置编码",
+        "残差连接"
+      ],
+      "negativeTerms": [
+        "序列",
+        "信息",
+        "训练"
+      ],
+      "candidates": [
+        {
+          "term": "Transformer",
+          "start": 0,
+          "end": 11
+        },
+        {
+          "term": "循环结构",
+          "start": 15,
+          "end": 19
+        },
+        {
+          "term": "抛弃",
+          "start": 12,
+          "end": 14
+        },
+        {
+          "term": "处理整段序列",
+          "start": 27,
+          "end": 33
+        },
+        {
+          "term": "靠自注意力并",
+          "start": 20,
+          "end": 26
+        },
+        {
+          "term": "弃了循环结构",
+          "start": 13,
+          "end": 19
+        },
+        {
+          "term": "抛弃了循环结",
+          "start": 12,
+          "end": 18
+        },
+        {
+          "term": "力并行处理整",
+          "start": 24,
+          "end": 30
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-005",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 19,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 960,
+        "completionChars": 282
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "微调",
+        "LoRA",
+        "低秩矩阵"
+      ],
+      "negativeTerms": [
+        "模型",
+        "训练",
+        "做法"
+      ],
+      "candidates": [
+        {
+          "term": "预训练模型比",
+          "start": 4,
+          "end": 10
+        },
+        {
+          "term": "底层冻住",
+          "start": 20,
+          "end": 24
+        },
+        {
+          "term": "零开始省",
+          "start": 11,
+          "end": 15
+        },
+        {
+          "term": "LoRA",
+          "start": 40,
+          "end": 44
+        },
+        {
+          "term": "微调一",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "显存占",
+          "start": 57,
+          "end": 60
+        },
+        {
+          "term": "小一",
+          "start": 61,
+          "end": 63
+        },
+        {
+          "term": "进阶",
+          "start": 34,
+          "end": 36
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-006",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 10,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 963,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "量化",
+        "蒸馏"
+      ],
+      "negativeTerms": [
+        "延迟",
+        "部署",
+        "输出"
+      ],
+      "candidates": [
+        {
+          "term": "位浮点压到",
+          "start": 25,
+          "end": 30
+        },
+        {
+          "term": "速度快一截",
+          "start": 45,
+          "end": 50
+        },
+        {
+          "term": "推理部署",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "考虑延迟",
+          "start": 7,
+          "end": 11
+        },
+        {
+          "term": "位整数",
+          "start": 33,
+          "end": 36
+        },
+        {
+          "term": "吞吐",
+          "start": 12,
+          "end": 14
+        },
+        {
+          "term": "权重",
+          "start": 18,
+          "end": 20
+        },
+        {
+          "term": "量化",
+          "start": 15,
+          "end": 17
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-007",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 949,
+        "completionChars": 287
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [
+        "LSTM",
+        "门控",
+        "梯度消失"
+      ],
+      "negativeTerms": [
+        "序列",
+        "老办法",
+        "循环"
+      ],
+      "candidates": [
+        {
+          "term": "门控决定记什",
+          "start": 20,
+          "end": 26
+        },
+        {
+          "term": "注意力好训",
+          "start": 50,
+          "end": 55
+        },
+        {
+          "term": "LSTM",
+          "start": 14,
+          "end": 18
+        },
+        {
+          "term": "循环网络",
+          "start": 9,
+          "end": 13
+        },
+        {
+          "term": "梯度消失",
+          "start": 35,
+          "end": 39
+        },
+        {
+          "term": "忘什",
+          "start": 28,
+          "end": 30
+        },
+        {
+          "term": "缓解",
+          "start": 32,
+          "end": 34
+        },
+        {
+          "term": "处理序列的老",
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-008",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 970,
+        "completionChars": 291
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 316
+      },
+      "expectedTerms": [
+        "RSS",
+        "VSZ",
+        "swap"
+      ],
+      "negativeTerms": [
+        "进程",
+        "内存",
+        "信号"
+      ],
+      "candidates": [
+        {
+          "term": "申请到的虚拟",
+          "start": 35,
+          "end": 41
+        },
+        {
+          "term": "先分清口径",
+          "start": 9,
+          "end": 14
+        },
+        {
+          "term": "址空间总量",
+          "start": 42,
+          "end": 47
+        },
+        {
+          "term": "最早的信号",
+          "start": 71,
+          "end": 76
+        },
+        {
+          "term": "swap",
+          "start": 61,
+          "end": 65
+        },
+        {
+          "term": "频繁换页",
+          "start": 48,
+          "end": 52
+        },
+        {
+          "term": "RSS",
+          "start": 15,
+          "end": 18
+        },
+        {
+          "term": "VSZ",
+          "start": 30,
+          "end": 33
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-009",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 958,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "系统调用",
+        "用户态",
+        "文件描述符"
+      ],
+      "negativeTerms": [
+        "入口",
+        "编号",
+        "复用"
+      ],
+      "candidates": [
+        {
+          "term": "编号",
+          "start": 42,
+          "end": 44
+        },
+        {
+          "term": "之后的读写",
+          "start": 33,
+          "end": 38
+        },
+        {
+          "term": "文件描述符",
+          "start": 27,
+          "end": 32
+        },
+        {
+          "term": "关闭后编号",
+          "start": 47,
+          "end": 52
+        },
+        {
+          "term": "open",
+          "start": 18,
+          "end": 22
+        },
+        {
+          "term": "编号操作",
+          "start": 42,
+          "end": 46
+        },
+        {
+          "term": "式入口",
+          "start": 14,
+          "end": 17
+        },
+        {
+          "term": "系统调",
+          "start": 0,
+          "end": 3
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-010",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 15,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 961,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [
+        "递归查询",
+        "权威服务器",
+        "TTL"
+      ],
+      "negativeTerms": [
+        "缓存",
+        "解析",
+        "记录"
+      ],
+      "candidates": [
+        {
+          "term": "留一份缓存",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "term": "缓存未命中",
+          "start": 18,
+          "end": 23
+        },
+        {
+          "term": "走递归查询",
+          "start": 10,
+          "end": 15
+        },
+        {
+          "term": "决定记录",
+          "start": 58,
+          "end": 62
+        },
+        {
+          "term": "解析",
+          "start": 7,
+          "end": 9
+        },
+        {
+          "term": "TTL",
+          "start": 54,
+          "end": 57
+        },
+        {
+          "term": "存多久",
+          "start": 64,
+          "end": 67
+        },
+        {
+          "term": "解析器",
+          "start": 25,
+          "end": 28
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-011",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 951,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [
+        "中间证书",
+        "根证书",
+        "信任链"
+      ],
+      "negativeTerms": [
+        "浏览器",
+        "服务器",
+        "客户端"
+      ],
+      "candidates": [
+        {
+          "term": "证书",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "服务器",
+          "start": 29,
+          "end": 32
+        },
+        {
+          "term": "浏览器",
+          "start": 19,
+          "end": 22
+        },
+        {
+          "term": "多半",
+          "start": 9,
+          "end": 11
+        },
+        {
+          "term": "中间证书一并",
+          "start": 34,
+          "end": 40
+        },
+        {
+          "term": "书链校验失败",
+          "start": 1,
+          "end": 7
+        },
+        {
+          "term": "否则客户端拼",
+          "start": 43,
+          "end": 49
+        },
+        {
+          "term": "完整的信任链",
+          "start": 51,
+          "end": 57
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-012",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 951,
+        "completionChars": 287
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [
+        "B+ 树",
+        "覆盖索引",
+        "回表"
+      ],
+      "negativeTerms": [
+        "加速",
+        "维护",
+        "扫描"
+      ],
+      "candidates": [
+        {
+          "term": "索引",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "多维护一棵树",
+          "start": 38,
+          "end": 44
+        },
+        {
+          "term": "让查询不回表",
+          "start": 51,
+          "end": 57
+        },
+        {
+          "term": "覆盖索引则",
+          "start": 45,
+          "end": 50
+        },
+        {
+          "term": "加速点查",
+          "start": 16,
+          "end": 20
+        },
+        {
+          "term": "范围扫描",
+          "start": 21,
+          "end": 25
+        },
+        {
+          "term": "越多越好",
+          "start": 4,
+          "end": 8
+        },
+        {
+          "term": "树索引",
+          "start": 12,
+          "end": 15
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-013",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 955,
+        "completionChars": 278
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [
+        "MVCC",
+        "快照"
+      ],
+      "negativeTerms": [
+        "阻塞",
+        "保留",
+        "标记"
+      ],
+      "candidates": [
+        {
+          "term": "版本",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "term": "MVCC",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "保留多",
+          "start": 17,
+          "end": 20
+        },
+        {
+          "term": "撤销",
+          "start": 52,
+          "end": 54
+        },
+        {
+          "term": "标记",
+          "start": 59,
+          "end": 61
+        },
+        {
+          "term": "行同",
+          "start": 14,
+          "end": 16
+        },
+        {
+          "term": "见的",
+          "start": 37,
+          "end": 39
+        },
+        {
+          "term": "写的一边另存",
+          "start": 42,
+          "end": 48
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-014",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 956,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [
+        "Online DDL",
+        "元数据"
+      ],
+      "negativeTerms": [
+        "灾难",
+        "变更",
+        "并发"
+      ],
+      "candidates": [
+        {
+          "term": "重建整张表",
+          "start": 17,
+          "end": 22
+        },
+        {
+          "term": "大表加列",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "旧版本里",
+          "start": 5,
+          "end": 9
+        },
+        {
+          "term": "灾难",
+          "start": 10,
+          "end": 12
+        },
+        {
+          "term": "Online DDL",
+          "start": 23,
+          "end": 33
+        },
+        {
+          "term": "要重建整张表",
+          "start": 16,
+          "end": 22
+        },
+        {
+          "term": "因为",
+          "start": 13,
+          "end": 15
+        },
+        {
+          "term": "列在旧版本里",
+          "start": 3,
+          "end": 9
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-015",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 955,
+        "completionChars": 287
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "分库分表",
+        "数据冗余",
+        "分布式事务"
+      ],
+      "negativeTerms": [
+        "应用层",
+        "引入",
+        "利弊"
+      ],
+      "candidates": [
+        {
+          "term": "分库分表之后",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "join",
+          "start": 12,
+          "end": 16
+        },
+        {
+          "term": "各有利弊",
+          "start": 57,
+          "end": 61
+        },
+        {
+          "term": "基本没法",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "广播宽表",
+          "start": 40,
+          "end": 44
+        },
+        {
+          "term": "数据冗余",
+          "start": 35,
+          "end": 39
+        },
+        {
+          "term": "跨节点的",
+          "start": 7,
+          "end": 11
+        },
+        {
+          "term": "层归并",
+          "start": 28,
+          "end": 31
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-016",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 965,
+        "completionChars": 287
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [
+        "CRISPR",
+        "向导 RNA",
+        "Cas9",
+        "基因编辑"
+      ],
+      "negativeTerms": [
+        "系统",
+        "修复",
+        "思路"
+      ],
+      "candidates": [
+        {
+          "term": "CRISPR",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "蛋白负责剪开",
+          "start": 28,
+          "end": 34
+        },
+        {
+          "term": "顺便改几",
+          "start": 51,
+          "end": 55
+        },
+        {
+          "term": "Cas9",
+          "start": 23,
+          "end": 27
+        },
+        {
+          "term": "负责带路",
+          "start": 18,
+          "end": 22
+        },
+        {
+          "term": "DNA",
+          "start": 35,
+          "end": 38
+        },
+        {
+          "term": "RNA",
+          "start": 14,
+          "end": 17
+        },
+        {
+          "term": "系统里",
+          "start": 7,
+          "end": 10
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-017",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 10,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 948,
+        "completionChars": 280
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 307
+      },
+      "expectedTerms": [
+        "疏水氨基酸",
+        "α 螺旋",
+        "β 折叠"
+      ],
+      "negativeTerms": [
+        "核心",
+        "结构",
+        "决定"
+      ],
+      "candidates": [
+        {
+          "term": "一条干面条",
+          "start": 5,
+          "end": 10
+        },
+        {
+          "term": "疏水氨基酸",
+          "start": 11,
+          "end": 16
+        },
+        {
+          "term": "推进核心",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "蛋白质不",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "折叠",
+          "start": 37,
+          "end": 39
+        },
+        {
+          "term": "氢键",
+          "start": 22,
+          "end": 24
+        },
+        {
+          "term": "螺旋",
+          "start": 31,
+          "end": 33
+        },
+        {
+          "term": "链拗",
+          "start": 25,
+          "end": 27
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-018",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 950,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [
+        "PCR",
+        "退火",
+        "引物"
+      ],
+      "negativeTerms": [
+        "复制",
+        "温度",
+        "循环"
+      ],
+      "candidates": [
+        {
+          "term": "试管里复制",
+          "start": 7,
+          "end": 12
+        },
+        {
+          "term": "中温延伸",
+          "start": 32,
+          "end": 36
+        },
+        {
+          "term": "高温解链",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "DNA",
+          "start": 13,
+          "end": 16
+        },
+        {
+          "term": "PCR",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "十亿份",
+          "start": 53,
+          "end": 56
+        },
+        {
+          "term": "一份",
+          "start": 48,
+          "end": 50
+        },
+        {
+          "term": "低温退火让引",
+          "start": 22,
+          "end": 28
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-019",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 948,
+        "completionChars": 288
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [
+        "凋亡",
+        "坏死",
+        "凋亡小体"
+      ],
+      "negativeTerms": [
+        "程序",
+        "邻居",
+        "炎症"
+      ],
+      "candidates": [
+        {
+          "term": "内容物漏一",
+          "start": 43,
+          "end": 48
+        },
+        {
+          "term": "程序性死亡",
+          "start": 5,
+          "end": 10
+        },
+        {
+          "term": "凋亡小体",
+          "start": 24,
+          "end": 28
+        },
+        {
+          "term": "前者安静",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "坏死不同",
+          "start": 12,
+          "end": 16
+        },
+        {
+          "term": "引发炎症",
+          "start": 50,
+          "end": 54
+        },
+        {
+          "term": "细胞凋亡",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "邻居吞掉",
+          "start": 30,
+          "end": 34
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-020",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1108,
+        "completionChars": 385
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 374
+      },
+      "expectedTerms": [
+        "TLS",
+        "ephemeral",
+        "HKDF"
+      ],
+      "negativeTerms": [
+        "verifies",
+        "signature",
+        "session"
+      ],
+      "candidates": [
+        {
+          "term": "certificate already",
+          "start": 49,
+          "end": 68
+        },
+        {
+          "term": "handshakes finish",
+          "start": 11,
+          "end": 28
+        },
+        {
+          "term": "ephemeral public",
+          "start": 80,
+          "end": 96
+        },
+        {
+          "term": "already carries",
+          "start": 61,
+          "end": 76
+        },
+        {
+          "term": "client verifies",
+          "start": 106,
+          "end": 121
+        },
+        {
+          "term": "quickly because",
+          "start": 29,
+          "end": 44
+        },
+        {
+          "term": "TLS handshakes",
+          "start": 7,
+          "end": 21
+        },
+        {
+          "term": "derive session",
+          "start": 168,
+          "end": 182
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-021",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1088,
+        "completionChars": 362
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 363
+      },
+      "expectedTerms": [
+        "root CAs",
+        "intermediate",
+        "OCSP",
+        "CRLs"
+      ],
+      "negativeTerms": [
+        "signs",
+        "leaf",
+        "status"
+      ],
+      "candidates": [
+        {
+          "term": "intermediate",
+          "start": 83,
+          "end": 95
+        },
+        {
+          "term": "signs",
+          "start": 96,
+          "end": 101
+        },
+        {
+          "term": "Certificates chain",
+          "start": 0,
+          "end": 18
+        },
+        {
+          "term": "intermediate signs",
+          "start": 83,
+          "end": 101
+        },
+        {
+          "term": "revocation status",
+          "start": 149,
+          "end": 166
+        },
+        {
+          "term": "root",
+          "start": 38,
+          "end": 42
+        },
+        {
+          "term": "operating system",
+          "start": 62,
+          "end": 78
+        },
+        {
+          "term": "root signs",
+          "start": 116,
+          "end": 126
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-022",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1070,
+        "completionChars": 390
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 365
+      },
+      "expectedTerms": [
+        "Zero-knowledge proofs",
+        "prover",
+        "verifier",
+        "soundness error"
+      ],
+      "negativeTerms": [
+        "secret",
+        "value",
+        "repetition"
+      ],
+      "candidates": [
+        {
+          "term": "Zero-knowledge proofs",
+          "start": 0,
+          "end": 21
+        },
+        {
+          "term": "random challenges",
+          "start": 111,
+          "end": 128
+        },
+        {
+          "term": "repetition drives",
+          "start": 134,
+          "end": 151
+        },
+        {
+          "term": "proofs convince",
+          "start": 15,
+          "end": 30
+        },
+        {
+          "term": "soundness error",
+          "start": 156,
+          "end": 171
+        },
+        {
+          "term": "answers random",
+          "start": 103,
+          "end": 117
+        },
+        {
+          "term": "prover commits",
+          "start": 76,
+          "end": 90
+        },
+        {
+          "term": "error down.",
+          "start": 166,
+          "end": 177
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-023",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1095,
+        "completionChars": 373
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 367
+      },
+      "expectedTerms": [
+        "Paxos",
+        "Raft",
+        "replicated log",
+        "Byzantine agreement"
+      ],
+      "negativeTerms": [
+        "voting",
+        "nodes",
+        "log"
+      ],
+      "candidates": [
+        {
+          "term": "Byzantine agreement",
+          "start": 107,
+          "end": 126
+        },
+        {
+          "term": "replicas because",
+          "start": 157,
+          "end": 173
+        },
+        {
+          "term": "agreement needs",
+          "start": 117,
+          "end": 132
+        },
+        {
+          "term": "needs roughly",
+          "start": 127,
+          "end": 140
+        },
+        {
+          "term": "roughly three",
+          "start": 133,
+          "end": 146
+        },
+        {
+          "term": "three times",
+          "start": 141,
+          "end": 152
+        },
+        {
+          "term": "replicated",
+          "start": 53,
+          "end": 63
+        },
+        {
+          "term": "Consensus",
+          "start": 0,
+          "end": 9
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-024",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1093,
+        "completionChars": 393
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 372
+      },
+      "expectedTerms": [
+        "trace context",
+        "spans",
+        "waterfall"
+      ],
+      "negativeTerms": [
+        "request",
+        "hop",
+        "identifiers"
+      ],
+      "candidates": [
+        {
+          "term": "Distributed tracing",
+          "start": 0,
+          "end": 19
+        },
+        {
+          "term": "resulting waterfall",
+          "start": 142,
+          "end": 161
+        },
+        {
+          "term": "milliseconds went.",
+          "start": 182,
+          "end": 200
+        },
+        {
+          "term": "request together",
+          "start": 31,
+          "end": 47
+        },
+        {
+          "term": "tracing stitches",
+          "start": 12,
+          "end": 28
+        },
+        {
+          "term": "waterfall shows",
+          "start": 152,
+          "end": 167
+        },
+        {
+          "term": "trace context",
+          "start": 53,
+          "end": 66
+        },
+        {
+          "term": "under parents",
+          "start": 119,
+          "end": 132
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-025",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1080,
+        "completionChars": 369
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 363
+      },
+      "expectedTerms": [
+        "Sharding",
+        "consistent hashing",
+        "virtual nodes"
+      ],
+      "negativeTerms": [
+        "spread",
+        "smooth",
+        "machines"
+      ],
+      "candidates": [
+        {
+          "term": "consistent hashing",
+          "start": 86,
+          "end": 104
+        },
+        {
+          "term": "Sharding splits",
+          "start": 0,
+          "end": 15
+        },
+        {
+          "term": "keyspace across",
+          "start": 18,
+          "end": 33
+        },
+        {
+          "term": "machines come",
+          "start": 166,
+          "end": 179
+        },
+        {
+          "term": "virtual nodes",
+          "start": 128,
+          "end": 141
+        },
+        {
+          "term": "shards still",
+          "start": 45,
+          "end": 57
+        },
+        {
+          "term": "across nodes",
+          "start": 27,
+          "end": 39
+        },
+        {
+          "term": "still ruin",
+          "start": 52,
+          "end": 62
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-026",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1064,
+        "completionChars": 362
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 357
+      },
+      "expectedTerms": [
+        "Lexing",
+        "parsing",
+        "syntax tree",
+        "name resolution"
+      ],
+      "negativeTerms": [
+        "characters",
+        "tokens",
+        "declarations"
+      ],
+      "candidates": [
+        {
+          "term": "tokens",
+          "start": 29,
+          "end": 35
+        },
+        {
+          "term": "turns",
+          "start": 7,
+          "end": 12
+        },
+        {
+          "term": "bind identifiers",
+          "start": 112,
+          "end": 128
+        },
+        {
+          "term": "turns characters",
+          "start": 7,
+          "end": 23
+        },
+        {
+          "term": "name resolution",
+          "start": 96,
+          "end": 111
+        },
+        {
+          "term": "resolution bind",
+          "start": 101,
+          "end": 116
+        },
+        {
+          "term": "checking runs.",
+          "start": 157,
+          "end": 171
+        },
+        {
+          "term": "parsing turns",
+          "start": 37,
+          "end": 50
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-027",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1085,
+        "completionChars": 395
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 370
+      },
+      "expectedTerms": [
+        "Tail calls",
+        "stack frame",
+        "tail-call optimization"
+      ],
+      "negativeTerms": [
+        "result",
+        "memory",
+        "recursion"
+      ],
+      "candidates": [
+        {
+          "term": "tail-call optimization.",
+          "start": 169,
+          "end": 192
+        },
+        {
+          "term": "returned directly",
+          "start": 80,
+          "end": 97
+        },
+        {
+          "term": "called tail-call",
+          "start": 162,
+          "end": 178
+        },
+        {
+          "term": "callee's result",
+          "start": 61,
+          "end": 76
+        },
+        {
+          "term": "recursion costs",
+          "start": 107,
+          "end": 122
+        },
+        {
+          "term": "compiler reuse",
+          "start": 17,
+          "end": 31
+        },
+        {
+          "term": "deep recursion",
+          "start": 102,
+          "end": 116
+        },
+        {
+          "term": "transformation",
+          "start": 144,
+          "end": 158
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-028",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 955,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "货币政策",
+        "降准"
+      ],
+      "negativeTerms": [
+        "央行",
+        "新闻",
+        "经济"
+      ],
+      "candidates": [
+        {
+          "term": "新闻里一半的",
+          "start": 47,
+          "end": 53
+        },
+        {
+          "term": "济靠货币政策",
+          "start": 5,
+          "end": 11
+        },
+        {
+          "term": "鼓励放贷",
+          "start": 35,
+          "end": 39
+        },
+        {
+          "term": "央行调节",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "抑制通胀",
+          "start": 20,
+          "end": 24
+        },
+        {
+          "term": "济条目",
+          "start": 54,
+          "end": 57
+        },
+        {
+          "term": "读通",
+          "start": 59,
+          "end": 61
+        },
+        {
+          "term": "释放银行资金",
+          "start": 28,
+          "end": 34
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-029",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 960,
+        "completionChars": 293
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 314
+      },
+      "expectedTerms": [
+        "资产配置",
+        "再平衡"
+      ],
+      "negativeTerms": [
+        "比例",
+        "预测",
+        "普通人"
+      ],
+      "candidates": [
+        {
+          "term": "纪律代替预测",
+          "start": 60,
+          "end": 66
+        },
+        {
+          "term": "涨多的卖点",
+          "start": 47,
+          "end": 52
+        },
+        {
+          "term": "跌多的买点",
+          "start": 53,
+          "end": 58
+        },
+        {
+          "term": "普通人来",
+          "start": 1,
+          "end": 5
+        },
+        {
+          "term": "股票更重",
+          "start": 16,
+          "end": 20
+        },
+        {
+          "term": "定期",
+          "start": 35,
+          "end": 37
+        },
+        {
+          "term": "平衡回目标比",
+          "start": 38,
+          "end": 44
+        },
+        {
+          "term": "现金按比例分",
+          "start": 27,
+          "end": 33
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-001",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 958,
+        "completionChars": 295
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 314
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "官网",
+        "登录",
+        "明细"
+      ],
+      "candidates": [
+        {
+          "term": "密码可以",
+          "start": 53,
+          "end": 57
+        },
+        {
+          "term": "人脸识",
+          "start": 58,
+          "end": 61
+        },
+        {
+          "term": "重置",
+          "start": 62,
+          "end": 64
+        },
+        {
+          "term": "人脸识别重置",
+          "start": 58,
+          "end": 64
+        },
+        {
+          "term": "忘了密码可以",
+          "start": 51,
+          "end": 57
+        },
+        {
+          "term": "人社局的官网",
+          "start": 15,
+          "end": 21
+        },
+        {
+          "term": "身份证号登录",
+          "start": 27,
+          "end": 33
+        },
+        {
+          "term": "点缴费明细",
+          "start": 34,
+          "end": 39
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-002",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 962,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "外卖",
+        "记账",
+        "旅游"
+      ],
+      "candidates": [
+        {
+          "term": "记账软件叫什",
+          "start": 59,
+          "end": 65
+        },
+        {
+          "term": "省下一千多",
+          "start": 31,
+          "end": 36
+        },
+        {
+          "term": "上次推荐的",
+          "start": 52,
+          "end": 57
+        },
+        {
+          "term": "年底应该",
+          "start": 37,
+          "end": 41
+        },
+        {
+          "term": "个月",
+          "start": 2,
+          "end": 4
+        },
+        {
+          "term": "外卖点",
+          "start": 9,
+          "end": 12
+        },
+        {
+          "term": "月光",
+          "start": 5,
+          "end": 7
+        },
+        {
+          "term": "真的",
+          "start": 15,
+          "end": 17
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-003",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 10,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 956,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "理财",
+        "利率",
+        "结论"
+      ],
+      "candidates": [
+        {
+          "term": "人的结论",
+          "start": 16,
+          "end": 20
+        },
+        {
+          "term": "直接套",
+          "start": 12,
+          "end": 15
+        },
+        {
+          "term": "关于",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "房贷",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "无风险的收益",
+          "start": 39,
+          "end": 45
+        },
+        {
+          "term": "的理财收益跑",
+          "start": 22,
+          "end": 28
+        },
+        {
+          "term": "益跑不赢利率",
+          "start": 26,
+          "end": 32
+        },
+        {
+          "term": "等于无风险的",
+          "start": 37,
+          "end": 43
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-004",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 943,
+        "completionChars": 291
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "年终奖",
+        "生活费",
+        "应急"
+      ],
+      "candidates": [
+        {
+          "term": "拿到年终奖先",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "剩下的",
+          "start": 23,
+          "end": 26
+        },
+        {
+          "term": "留出三",
+          "start": 11,
+          "end": 14
+        },
+        {
+          "term": "清楚",
+          "start": 27,
+          "end": 29
+        },
+        {
+          "term": "月的生活费应",
+          "start": 15,
+          "end": 21
+        },
+        {
+          "term": "的生活费应急",
+          "start": 16,
+          "end": 22
+        },
+        {
+          "term": "剩下的想清楚",
+          "start": 23,
+          "end": 29
+        },
+        {
+          "term": "清楚用途",
+          "start": 27,
+          "end": 31
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-030",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 3,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 935,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 307
+      },
+      "expectedTerms": [
+        "血沫",
+        "煨"
+      ],
+      "negativeTerms": [
+        "冷水",
+        "套路",
+        "料酒"
+      ],
+      "candidates": [
+        {
+          "term": "加姜片",
+          "start": 17,
+          "end": 20
+        },
+        {
+          "term": "料酒",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "term": "下锅焯出血沫",
+          "start": 10,
+          "end": 16
+        },
+        {
+          "term": "冷水下锅焯出",
+          "start": 8,
+          "end": 14
+        },
+        {
+          "term": "炖肉去腥的套",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "肉去腥的套路",
+          "start": 1,
+          "end": 7
+        },
+        {
+          "term": "加姜片和料酒",
+          "start": 17,
+          "end": 23
+        },
+        {
+          "term": "大火滚",
+          "start": 29,
+          "end": 32
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-031",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 9,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 952,
+        "completionChars": 298
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [
+        "面筋",
+        "二发"
+      ],
+      "negativeTerms": [
+        "面包",
+        "松软",
+        "判断"
+      ],
+      "candidates": [
+        {
+          "term": "揉出膜才撑",
+          "start": 15,
+          "end": 20
+        },
+        {
+          "term": "面筋有关",
+          "start": 10,
+          "end": 14
+        },
+        {
+          "term": "二发到位才够",
+          "start": 30,
+          "end": 36
+        },
+        {
+          "term": "住发酵产生的",
+          "start": 21,
+          "end": 27
+        },
+        {
+          "term": "到位才够松软",
+          "start": 32,
+          "end": 38
+        },
+        {
+          "term": "包的两道门槛",
+          "start": 2,
+          "end": 8
+        },
+        {
+          "term": "酵产生的气孔",
+          "start": 23,
+          "end": 29
+        },
+        {
+          "term": "面包的两道门",
+          "start": 1,
+          "end": 7
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-005",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 4,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 947,
+        "completionChars": 283
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "清淡",
+        "冰箱",
+        "米饭"
+      ],
+      "candidates": [
+        {
+          "term": "米饭提前泡上",
+          "start": 40,
+          "end": 46
+        },
+        {
+          "term": "下锅",
+          "start": 51,
+          "end": 53
+        },
+        {
+          "term": "回来",
+          "start": 47,
+          "end": 49
+        },
+        {
+          "term": "吃点清淡的",
+          "start": 3,
+          "end": 8
+        },
+        {
+          "term": "番茄蛋花汤",
+          "start": 12,
+          "end": 17
+        },
+        {
+          "term": "今晚",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "有半棵白菜",
+          "start": 23,
+          "end": 28
+        },
+        {
+          "term": "回来就",
+          "start": 47,
+          "end": 50
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-006",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 947,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "秘诀",
+        "调料",
+        "中途"
+      ],
+      "candidates": [
+        {
+          "term": "不放任何奇怪",
+          "start": 39,
+          "end": 45
+        },
+        {
+          "term": "何奇怪的调料",
+          "start": 42,
+          "end": 48
+        },
+        {
+          "term": "中途不揭盖",
+          "start": 32,
+          "end": 37
+        },
+        {
+          "term": "姜和葱",
+          "start": 50,
+          "end": 53
+        },
+        {
+          "term": "小火两三",
+          "start": 24,
+          "end": 28
+        },
+        {
+          "term": "秘诀大概",
+          "start": 16,
+          "end": 20
+        },
+        {
+          "term": "就姜",
+          "start": 49,
+          "end": 51
+        },
+        {
+          "term": "的好喝",
+          "start": 12,
+          "end": 15
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-007",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 948,
+        "completionChars": 287
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "外卖",
+        "习惯",
+        "同事"
+      ],
+      "candidates": [
+        {
+          "term": "头天晚上备好",
+          "start": 22,
+          "end": 28
+        },
+        {
+          "term": "开始自己带饭",
+          "start": 6,
+          "end": 12
+        },
+        {
+          "term": "一荤一素一",
+          "start": 13,
+          "end": 18
+        },
+        {
+          "term": "外卖吃腻",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "早上拎",
+          "start": 29,
+          "end": 32
+        },
+        {
+          "term": "饭盒",
+          "start": 19,
+          "end": 21
+        },
+        {
+          "term": "外卖吃腻了",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "早上拎了",
+          "start": 29,
+          "end": 33
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-008",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 3,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 957,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "原因",
+        "时间",
+        "蒸"
+      ],
+      "candidates": [
+        {
+          "term": "下原因",
+          "start": 19,
+          "end": 22
+        },
+        {
+          "term": "多练",
+          "start": 61,
+          "end": 63
+        },
+        {
+          "term": "大概",
+          "start": 23,
+          "end": 25
+        },
+        {
+          "term": "蒸的",
+          "start": 26,
+          "end": 28
+        },
+        {
+          "term": "第一次蒸鱼",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "鱼肉",
+          "start": 10,
+          "end": 12
+        },
+        {
+          "term": "大概是蒸的",
+          "start": 23,
+          "end": 28
+        },
+        {
+          "term": "查了下原因",
+          "start": 17,
+          "end": 22
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-032",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 949,
+        "completionChars": 291
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [
+        "布鲁斯",
+        "推弦",
+        "五声音阶",
+        "重拍"
+      ],
+      "negativeTerms": [
+        "独奏",
+        "释放",
+        "味道"
+      ],
+      "candidates": [
+        {
+          "term": "乐句憋",
+          "start": 41,
+          "end": 44
+        },
+        {
+          "term": "不放",
+          "start": 45,
+          "end": 47
+        },
+        {
+          "term": "回重拍才释放",
+          "start": 49,
+          "end": 55
+        },
+        {
+          "term": "落回重拍才释",
+          "start": 48,
+          "end": 54
+        },
+        {
+          "term": "乐句憋着不放",
+          "start": 41,
+          "end": 47
+        },
+        {
+          "term": "五声音阶怎",
+          "start": 29,
+          "end": 34
+        },
+        {
+          "term": "音符",
+          "start": 15,
+          "end": 17
+        },
+        {
+          "term": "兴独奏之前先",
+          "start": 1,
+          "end": 7
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-033",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 946,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [
+        "混音",
+        "侧链压缩",
+        "母带"
+      ],
+      "negativeTerms": [
+        "位置",
+        "自动",
+        "统一"
+      ],
+      "candidates": [
+        {
+          "term": "响度",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "统一整体响度",
+          "start": 46,
+          "end": 52
+        },
+        {
+          "term": "军鼓抢位置",
+          "start": 14,
+          "end": 19
+        },
+        {
+          "term": "侧链压缩",
+          "start": 22,
+          "end": 26
+        },
+        {
+          "term": "人声",
+          "start": 11,
+          "end": 13
+        },
+        {
+          "term": "混音的",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "顾响度",
+          "start": 7,
+          "end": 10
+        },
+        {
+          "term": "声自动让半分",
+          "start": 31,
+          "end": 37
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-009",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 960,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "耳机",
+        "通勤",
+        "录音"
+      ],
+      "candidates": [
+        {
+          "term": "一分钱一分货",
+          "start": 7,
+          "end": 13
+        },
+        {
+          "term": "东西真",
+          "start": 3,
+          "end": 6
+        },
+        {
+          "term": "耳机",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "到几百块之后",
+          "start": 18,
+          "end": 24
+        },
+        {
+          "term": "靠录音吃饭",
+          "start": 42,
+          "end": 47
+        },
+        {
+          "term": "除非",
+          "start": 39,
+          "end": 41
+        },
+        {
+          "term": "耳机这东西真",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "通勤路上听",
+          "start": 48,
+          "end": 53
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-010",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 3,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 950,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "阵容",
+        "排队",
+        "前排"
+      ],
+      "candidates": [
+        {
+          "term": "真的好",
+          "start": 21,
+          "end": 24
+        },
+        {
+          "term": "排队",
+          "start": 31,
+          "end": 33
+        },
+        {
+          "term": "阵容",
+          "start": 18,
+          "end": 20
+        },
+        {
+          "term": "早点去占前排",
+          "start": 50,
+          "end": 56
+        },
+        {
+          "term": "明年",
+          "start": 42,
+          "end": 44
+        },
+        {
+          "term": "阵容是真的好",
+          "start": 18,
+          "end": 24
+        },
+        {
+          "term": "排队太久",
+          "start": 31,
+          "end": 35
+        },
+        {
+          "term": "人太多",
+          "start": 27,
+          "end": 30
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-011",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 947,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "行程",
+        "基地",
+        "公园"
+      ],
+      "candidates": [
+        {
+          "term": "一天",
+          "start": 9,
+          "end": 11
+        },
+        {
+          "term": "市区吃吃逛逛",
+          "start": 12,
+          "end": 18
+        },
+        {
+          "term": "玩三天够",
+          "start": 3,
+          "end": 7
+        },
+        {
+          "term": "江堰",
+          "start": 27,
+          "end": 29
+        },
+        {
+          "term": "人民公园喝茶",
+          "start": 34,
+          "end": 40
+        },
+        {
+          "term": "天熊猫基",
+          "start": 20,
+          "end": 24
+        },
+        {
+          "term": "一天熊",
+          "start": 19,
+          "end": 22
+        },
+        {
+          "term": "一天留",
+          "start": 30,
+          "end": 33
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-012",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 952,
+        "completionChars": 292
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "技巧",
+        "价格",
+        "早班机"
+      ],
+      "candidates": [
+        {
+          "term": "早班机省钱",
+          "start": 39,
+          "end": 44
+        },
+        {
+          "term": "自己怎",
+          "start": 52,
+          "end": 55
+        },
+        {
+          "term": "起大早",
+          "start": 46,
+          "end": 49
+        },
+        {
+          "term": "取舍",
+          "start": 56,
+          "end": 58
+        },
+        {
+          "term": "早班机省钱但",
+          "start": 39,
+          "end": 45
+        },
+        {
+          "term": "自己怎么取舍",
+          "start": 52,
+          "end": 58
+        },
+        {
+          "term": "拖到最后一周",
+          "start": 32,
+          "end": 38
+        },
+        {
+          "term": "你自己怎",
+          "start": 51,
+          "end": 55
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-013",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 954,
+        "completionChars": 291
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "星级",
+        "地铁",
+        "差评"
+      ],
+      "candidates": [
+        {
+          "term": "铁站附近",
+          "start": 14,
+          "end": 18
+        },
+        {
+          "term": "省下大",
+          "start": 22,
+          "end": 25
+        },
+        {
+          "term": "通勤",
+          "start": 26,
+          "end": 28
+        },
+        {
+          "term": "位置比星级重",
+          "start": 3,
+          "end": 9
+        },
+        {
+          "term": "酒店的位置比",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "省下大把通勤",
+          "start": 22,
+          "end": 28
+        },
+        {
+          "term": "楼下总有小店",
+          "start": 38,
+          "end": 44
+        },
+        {
+          "term": "地铁站附近",
+          "start": 13,
+          "end": 18
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-014",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 951,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "预期",
+        "重点",
+        "打卡"
+      ],
+      "candidates": [
+        {
+          "term": "多打卡几",
+          "start": 46,
+          "end": 50
+        },
+        {
+          "term": "景点重",
+          "start": 51,
+          "end": 54
+        },
+        {
+          "term": "们玩",
+          "start": 38,
+          "end": 40
+        },
+        {
+          "term": "开心",
+          "start": 41,
+          "end": 43
+        },
+        {
+          "term": "比你多打卡几",
+          "start": 44,
+          "end": 50
+        },
+        {
+          "term": "中午必须休息",
+          "start": 21,
+          "end": 27
+        },
+        {
+          "term": "们玩得开心",
+          "start": 38,
+          "end": 43
+        },
+        {
+          "term": "景点重要多",
+          "start": 51,
+          "end": 56
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-015",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 962,
+        "completionChars": 288
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "房间",
+        "观光",
+        "小费"
+      ],
+      "candidates": [
+        {
+          "term": "第一次坐邮轮",
+          "start": 2,
+          "end": 8
+        },
+        {
+          "term": "注意什",
+          "start": 9,
+          "end": 12
+        },
+        {
+          "term": "尴尬",
+          "start": 66,
+          "end": 68
+        },
+        {
+          "term": "政策先问清楚",
+          "start": 57,
+          "end": 63
+        },
+        {
+          "term": "船上给不给小",
+          "start": 49,
+          "end": 55
+        },
+        {
+          "term": "注意什么",
+          "start": 9,
+          "end": 13
+        },
+        {
+          "term": "岸上观光",
+          "start": 35,
+          "end": 39
+        },
+        {
+          "term": "购物点多",
+          "start": 44,
+          "end": 48
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-016",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 954,
+        "completionChars": 294
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "睡袋",
+        "垫子",
+        "露营"
+      ],
+      "candidates": [
+        {
+          "term": "吃的带现",
+          "start": 34,
+          "end": 38
+        },
+        {
+          "term": "指望现场",
+          "start": 42,
+          "end": 46
+        },
+        {
+          "term": "第一次去",
+          "start": 49,
+          "end": 53
+        },
+        {
+          "term": "野的",
+          "start": 56,
+          "end": 58
+        },
+        {
+          "term": "吃的带现成的",
+          "start": 34,
+          "end": 40
+        },
+        {
+          "term": "指望现场做饭",
+          "start": 42,
+          "end": 48
+        },
+        {
+          "term": "不停吸走热量",
+          "start": 15,
+          "end": 21
+        },
+        {
+          "term": "别指望现场",
+          "start": 41,
+          "end": 46
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-017",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 952,
+        "completionChars": 291
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "办法",
+        "年假",
+        "体验"
+      ],
+      "candidates": [
+        {
+          "term": "最省钱的办法",
+          "start": 8,
+          "end": 14
+        },
+        {
+          "term": "便宜一半",
+          "start": 18,
+          "end": 22
+        },
+        {
+          "term": "体验完全不同",
+          "start": 36,
+          "end": 42
+        },
+        {
+          "term": "酒店",
+          "start": 15,
+          "end": 17
+        },
+        {
+          "term": "小长假",
+          "start": 32,
+          "end": 35
+        },
+        {
+          "term": "开节假日出行",
+          "start": 1,
+          "end": 7
+        },
+        {
+          "term": "避开节假日出",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "天年假拼出一",
+          "start": 25,
+          "end": 31
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-018",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 948,
+        "completionChars": 283
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "角度",
+        "日出",
+        "小巷"
+      ],
+      "candidates": [
+        {
+          "term": "排队排出来的",
+          "start": 9,
+          "end": 15
+        },
+        {
+          "term": "日出日落",
+          "start": 19,
+          "end": 23
+        },
+        {
+          "term": "拍照好",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "的角度",
+          "start": 4,
+          "end": 7
+        },
+        {
+          "term": "半小",
+          "start": 24,
+          "end": 26
+        },
+        {
+          "term": "往小巷子里钻",
+          "start": 32,
+          "end": 38
+        },
+        {
+          "term": "是日出日落",
+          "start": 18,
+          "end": 23
+        },
+        {
+          "term": "的角度都",
+          "start": 4,
+          "end": 8
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-019",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 954,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "倍速",
+        "耐心",
+        "内容"
+      ],
+      "candidates": [
+        {
+          "term": "习惯的问题",
+          "start": 55,
+          "end": 60
+        },
+        {
+          "term": "内容的问题",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "term": "是习惯的问题",
+          "start": 54,
+          "end": 60
+        },
+        {
+          "term": "人的耐心练没",
+          "start": 10,
+          "end": 16
+        },
+        {
+          "term": "这不",
+          "start": 45,
+          "end": 47
+        },
+        {
+          "term": "越来越觉",
+          "start": 1,
+          "end": 5
+        },
+        {
+          "term": "视频",
+          "start": 7,
+          "end": 9
+        },
+        {
+          "term": "开倍速",
+          "start": 28,
+          "end": 31
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-020",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 958,
+        "completionChars": 283
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "原则",
+        "站队",
+        "传话"
+      ],
+      "candidates": [
+        {
+          "term": "站队",
+          "start": 9,
+          "end": 11
+        },
+        {
+          "term": "剩下的交给",
+          "start": 44,
+          "end": 49
+        },
+        {
+          "term": "躲不掉的",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "的人最后",
+          "start": 55,
+          "end": 59
+        },
+        {
+          "term": "活干漂亮",
+          "start": 39,
+          "end": 43
+        },
+        {
+          "term": "站队哪",
+          "start": 9,
+          "end": 12
+        },
+        {
+          "term": "不传话",
+          "start": 30,
+          "end": 33
+        },
+        {
+          "term": "不站队",
+          "start": 34,
+          "end": 37
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-021",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 4,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 945,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "焦虑",
+        "教程",
+        "收藏夹"
+      ],
+      "candidates": [
+        {
+          "term": "收藏夹里躺",
+          "start": 15,
+          "end": 20
+        },
+        {
+          "term": "完第一",
+          "start": 34,
+          "end": 37
+        },
+        {
+          "term": "一百",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "term": "今天",
+          "start": 29,
+          "end": 31
+        },
+        {
+          "term": "教程",
+          "start": 24,
+          "end": 26
+        },
+        {
+          "term": "先动起来",
+          "start": 45,
+          "end": 49
+        },
+        {
+          "term": "一百个教程",
+          "start": 21,
+          "end": 26
+        },
+        {
+          "term": "不如今天",
+          "start": 27,
+          "end": 31
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-022",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 964,
+        "completionChars": 278
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "需求",
+        "建议",
+        "深夜"
+      ],
+      "candidates": [
+        {
+          "term": "深夜刷手机",
+          "start": 21,
+          "end": 26
+        },
+        {
+          "term": "健康建议",
+          "start": 48,
+          "end": 52
+        },
+        {
+          "term": "早睡早起",
+          "start": 3,
+          "end": 7
+        },
+        {
+          "term": "没回答人",
+          "start": 59,
+          "end": 63
+        },
+        {
+          "term": "伪需求",
+          "start": 8,
+          "end": 11
+        },
+        {
+          "term": "两小",
+          "start": 27,
+          "end": 29
+        },
+        {
+          "term": "有人",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "舍不",
+          "start": 66,
+          "end": 68
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-023",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 959,
+        "completionChars": 296
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 314
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "便利店",
+        "安全感",
+        "加班"
+      ],
+      "candidates": [
+        {
+          "term": "加班到十一点",
+          "start": 15,
+          "end": 21
+        },
+        {
+          "term": "热包子",
+          "start": 35,
+          "end": 38
+        },
+        {
+          "term": "好像",
+          "start": 39,
+          "end": 41
+        },
+        {
+          "term": "深夜的安全感",
+          "start": 8,
+          "end": 14
+        },
+        {
+          "term": "一声欢迎光临",
+          "start": 26,
+          "end": 32
+        },
+        {
+          "term": "推门听见一声",
+          "start": 22,
+          "end": 28
+        },
+        {
+          "term": "小小的避风港",
+          "start": 59,
+          "end": 65
+        },
+        {
+          "term": "买个热包子",
+          "start": 33,
+          "end": 38
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-024",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 957,
+        "completionChars": 276
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 309
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "沙发",
+        "治愈",
+        "托人"
+      ],
+      "candidates": [
+        {
+          "term": "回家",
+          "start": 61,
+          "end": 63
+        },
+        {
+          "term": "明白",
+          "start": 53,
+          "end": 55
+        },
+        {
+          "term": "出远门一周",
+          "start": 18,
+          "end": 23
+        },
+        {
+          "term": "托人上门喂",
+          "start": 24,
+          "end": 29
+        },
+        {
+          "term": "养猫之前",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "沙发",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "清楚",
+          "start": 5,
+          "end": 7
+        },
+        {
+          "term": "花盆",
+          "start": 13,
+          "end": 15
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-025",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 4,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 959,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "工具",
+        "读书",
+        "消化"
+      ],
+      "candidates": [
+        {
+          "term": "不同意",
+          "start": 1,
+          "end": 4
+        },
+        {
+          "term": "不同意读书无",
+          "start": 1,
+          "end": 7
+        },
+        {
+          "term": "钥匙",
+          "start": 21,
+          "end": 23
+        },
+        {
+          "term": "不消化",
+          "start": 52,
+          "end": 55
+        },
+        {
+          "term": "不同意把读书",
+          "start": 11,
+          "end": 17
+        },
+        {
+          "term": "万能钥匙",
+          "start": 19,
+          "end": 23
+        },
+        {
+          "term": "也不同意",
+          "start": 10,
+          "end": 14
+        },
+        {
+          "term": "读书说",
+          "start": 15,
+          "end": 18
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-026",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 957,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 312
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "躺平",
+        "工资",
+        "代价"
+      ],
+      "candidates": [
+        {
+          "term": "年轻人回去不",
+          "start": 37,
+          "end": 43
+        },
+        {
+          "term": "换一种活法",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "term": "自己担",
+          "start": 60,
+          "end": 63
+        },
+        {
+          "term": "代价",
+          "start": 54,
+          "end": 56
+        },
+        {
+          "term": "收益",
+          "start": 57,
+          "end": 59
+        },
+        {
+          "term": "躺平",
+          "start": 44,
+          "end": 46
+        },
+        {
+          "term": "收益都自己担",
+          "start": 57,
+          "end": 63
+        },
+        {
+          "term": "是换一种活法",
+          "start": 47,
+          "end": 53
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-027",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1065,
+        "completionChars": 342
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 352
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "parking",
+        "ticket",
+        "station"
+      ],
+      "candidates": [
+        {
+          "term": "ten-minute walk",
+          "start": 140,
+          "end": 155
+        },
+        {
+          "term": "parking alone",
+          "start": 52,
+          "end": 65
+        },
+        {
+          "term": "train instead",
+          "start": 22,
+          "end": 35
+        },
+        {
+          "term": "alone costs",
+          "start": 60,
+          "end": 71
+        },
+        {
+          "term": "office.",
+          "start": 165,
+          "end": 172
+        },
+        {
+          "term": "station",
+          "start": 127,
+          "end": 134
+        },
+        {
+          "term": "driving",
+          "start": 39,
+          "end": 46
+        },
+        {
+          "term": "ticket",
+          "start": 86,
+          "end": 92
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-028",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1069,
+        "completionChars": 338
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 352
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "lunch",
+        "team",
+        "drink"
+      ],
+      "candidates": [
+        {
+          "term": "Wednesdays now.",
+          "start": 80,
+          "end": 95
+        },
+        {
+          "term": "week because",
+          "start": 38,
+          "end": 50
+        },
+        {
+          "term": "lunch moved",
+          "start": 9,
+          "end": 20
+        },
+        {
+          "term": "usual place",
+          "start": 55,
+          "end": 66
+        },
+        {
+          "term": "team lunch",
+          "start": 4,
+          "end": 14
+        },
+        {
+          "term": "Thursday",
+          "start": 24,
+          "end": 32
+        },
+        {
+          "term": "later.",
+          "start": 131,
+          "end": 137
+        },
+        {
+          "term": "people",
+          "start": 112,
+          "end": 118
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-029",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1078,
+        "completionChars": 350
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 357
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "keyboard",
+        "keys",
+        "quieter"
+      ],
+      "candidates": [
+        {
+          "term": "probably should.",
+          "start": 128,
+          "end": 144
+        },
+        {
+          "term": "genuinely nice",
+          "start": 163,
+          "end": 177
+        },
+        {
+          "term": "nice though.",
+          "start": 173,
+          "end": 185
+        },
+        {
+          "term": "wrist rest",
+          "start": 149,
+          "end": 159
+        },
+        {
+          "term": "keys feel",
+          "start": 42,
+          "end": 51
+        },
+        {
+          "term": "keyboard",
+          "start": 13,
+          "end": 21
+        },
+        {
+          "term": "matters",
+          "start": 101,
+          "end": 108
+        },
+        {
+          "term": "quieter",
+          "start": 25,
+          "end": 32
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-030",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1078,
+        "completionChars": 360
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 360
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "apartment",
+        "light",
+        "summer"
+      ],
+      "candidates": [
+        {
+          "term": "blackout curtains",
+          "start": 122,
+          "end": 139
+        },
+        {
+          "term": "afternoon light",
+          "start": 25,
+          "end": 40
+        },
+        {
+          "term": "great afternoon",
+          "start": 19,
+          "end": 34
+        },
+        {
+          "term": "apartment gets",
+          "start": 4,
+          "end": 18
+        },
+        {
+          "term": "whole reason",
+          "start": 56,
+          "end": 68
+        },
+        {
+          "term": "living room",
+          "start": 147,
+          "end": 158
+        },
+        {
+          "term": "gets great",
+          "start": 14,
+          "end": 24
+        },
+        {
+          "term": "summer",
+          "start": 83,
+          "end": 89
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-031",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1078,
+        "completionChars": 351
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 358
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "meeting",
+        "snack",
+        "slides"
+      ],
+      "candidates": [
+        {
+          "term": "formal complaint.",
+          "start": 168,
+          "end": 185
+        },
+        {
+          "term": "start bringing",
+          "start": 45,
+          "end": 59
+        },
+        {
+          "term": "stomach filed",
+          "start": 152,
+          "end": 165
+        },
+        {
+          "term": "meeting runs",
+          "start": 7,
+          "end": 19
+        },
+        {
+          "term": "long again",
+          "start": 20,
+          "end": 30
+        },
+        {
+          "term": "Last time",
+          "start": 69,
+          "end": 78
+        },
+        {
+          "term": "runs long",
+          "start": 15,
+          "end": 24
+        },
+        {
+          "term": "through",
+          "start": 86,
+          "end": 93
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-032",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1075,
+        "completionChars": 344
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 355
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "neighbor",
+        "plants",
+        "instructions"
+      ],
+      "candidates": [
+        {
+          "term": "instructions exactly",
+          "start": 130,
+          "end": 150
+        },
+        {
+          "term": "instructions.",
+          "start": 169,
+          "end": 182
+        },
+        {
+          "term": "Came back",
+          "start": 58,
+          "end": 67
+        },
+        {
+          "term": "survivor.",
+          "start": 87,
+          "end": 96
+        },
+        {
+          "term": "followed",
+          "start": 117,
+          "end": 125
+        },
+        {
+          "term": "neighbor",
+          "start": 9,
+          "end": 17
+        },
+        {
+          "term": "defense",
+          "start": 104,
+          "end": 111
+        },
+        {
+          "term": "plants",
+          "start": 31,
+          "end": 37
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-033",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1065,
+        "completionChars": 361
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 357
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "snow",
+        "city",
+        "photo"
+      ],
+      "candidates": [
+        {
+          "term": "myself included.",
+          "start": 63,
+          "end": 79
+        },
+        {
+          "term": "twenty minutes",
+          "start": 85,
+          "end": 99
+        },
+        {
+          "term": "minutes early",
+          "start": 92,
+          "end": 105
+        },
+        {
+          "term": "still arrived",
+          "start": 107,
+          "end": 120
+        },
+        {
+          "term": "arrived late",
+          "start": 113,
+          "end": 125
+        },
+        {
+          "term": "Left twenty",
+          "start": 80,
+          "end": 91
+        },
+        {
+          "term": "city forgot",
+          "start": 37,
+          "end": 48
+        },
+        {
+          "term": "First snow",
+          "start": 0,
+          "end": 10
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-034",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1073,
+        "completionChars": 374
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 362
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "trick",
+        "stews",
+        "week"
+      ],
+      "candidates": [
+        {
+          "term": "stopped",
+          "start": 132,
+          "end": 139
+        },
+        {
+          "term": "almost everything",
+          "start": 99,
+          "end": 116
+        },
+        {
+          "term": "everything else.",
+          "start": 106,
+          "end": 122
+        },
+        {
+          "term": "stopped rushing.",
+          "start": 164,
+          "end": 180
+        },
+        {
+          "term": "forgives almost",
+          "start": 90,
+          "end": 105
+        },
+        {
+          "term": "stews stopped",
+          "start": 126,
+          "end": 139
+        },
+        {
+          "term": "slow cooking",
+          "start": 15,
+          "end": 27
+        },
+        {
+          "term": "every stage",
+          "start": 71,
+          "end": 82
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-034",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 942,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [
+        "嫁接",
+        "接穗",
+        "砧木"
+      ],
+      "negativeTerms": [
+        "果树",
+        "苹果",
+        "繁殖"
+      ],
+      "candidates": [
+        {
+          "term": "后代不走样",
+          "start": 43,
+          "end": 48
+        },
+        {
+          "term": "嫁接",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "繁殖",
+          "start": 40,
+          "end": 42
+        },
+        {
+          "term": "品质好的接穗",
+          "start": 14,
+          "end": 20
+        },
+        {
+          "term": "性强的砧木上",
+          "start": 24,
+          "end": 30
+        },
+        {
+          "term": "树育种的常规",
+          "start": 4,
+          "end": 10
+        },
+        {
+          "term": "种的常规操作",
+          "start": 6,
+          "end": 12
+        },
+        {
+          "term": "么繁殖",
+          "start": 39,
+          "end": 42
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-035",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 16,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 950,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [
+        "基带芯片",
+        "调制解调器",
+        "封装"
+      ],
+      "negativeTerms": [
+        "发布会",
+        "苹果",
+        "高通"
+      ],
+      "candidates": [
+        {
+          "term": "自研基带芯片",
+          "start": 8,
+          "end": 14
+        },
+        {
+          "term": "进同一块封装",
+          "start": 38,
+          "end": 44
+        },
+        {
+          "term": "有改进空间",
+          "start": 51,
+          "end": 56
+        },
+        {
+          "term": "调制解调器",
+          "start": 25,
+          "end": 30
+        },
+        {
+          "term": "处理器集",
+          "start": 33,
+          "end": 37
+        },
+        {
+          "term": "最重磅的",
+          "start": 3,
+          "end": 7
+        },
+        {
+          "term": "高通之后",
+          "start": 17,
+          "end": 21
+        },
+        {
+          "term": "信号",
+          "start": 48,
+          "end": 50
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-036",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1051,
+        "completionChars": 367
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 355
+      },
+      "expectedTerms": [
+        "floodplain",
+        "aquifer",
+        "oxbow lakes",
+        "undercut"
+      ],
+      "negativeTerms": [
+        "river",
+        "bank",
+        "gravel"
+      ],
+      "candidates": [
+        {
+          "term": "healthy floodplain",
+          "start": 2,
+          "end": 20
+        },
+        {
+          "term": "floodplain lets",
+          "start": 10,
+          "end": 25
+        },
+        {
+          "term": "across gravel",
+          "start": 42,
+          "end": 55
+        },
+        {
+          "term": "leaving oxbow",
+          "start": 117,
+          "end": 130
+        },
+        {
+          "term": "braid across",
+          "start": 36,
+          "end": 48
+        },
+        {
+          "term": "lakes behind",
+          "start": 131,
+          "end": 143
+        },
+        {
+          "term": "gravel bars",
+          "start": 49,
+          "end": 60
+        },
+        {
+          "term": "oxbow lakes",
+          "start": 125,
+          "end": 136
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-037",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1055,
+        "completionChars": 371
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 357
+      },
+      "expectedTerms": [
+        "Stress tests",
+        "leverage ratio",
+        "tier 1 capital"
+      ],
+      "negativeTerms": [
+        "downturn",
+        "weights",
+        "assets"
+      ],
+      "candidates": [
+        {
+          "term": "weights entirely",
+          "start": 93,
+          "end": 109
+        },
+        {
+          "term": "assets against",
+          "start": 132,
+          "end": 146
+        },
+        {
+          "term": "leverage ratio",
+          "start": 65,
+          "end": 79
+        },
+        {
+          "term": "capital against",
+          "start": 33,
+          "end": 48
+        },
+        {
+          "term": "ratio ignores",
+          "start": 74,
+          "end": 87
+        },
+        {
+          "term": "against tier",
+          "start": 139,
+          "end": 151
+        },
+        {
+          "term": "ignores risk",
+          "start": 80,
+          "end": 92
+        },
+        {
+          "term": "risk weights",
+          "start": 88,
+          "end": 100
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-038",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 969,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 314
+      },
+      "expectedTerms": [
+        "变基",
+        "rebase",
+        "merge",
+        "合并提交"
+      ],
+      "negativeTerms": [
+        "历史",
+        "基点",
+        "代价"
+      ],
+      "candidates": [
+        {
+          "term": "rebase",
+          "start": 16,
+          "end": 22
+        },
+        {
+          "term": "的提交摘下来",
+          "start": 25,
+          "end": 31
+        },
+        {
+          "term": "历史变线性",
+          "start": 41,
+          "end": 46
+        },
+        {
+          "term": "分叉",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "合并",
+          "start": 3,
+          "end": 5
+        },
+        {
+          "term": "merge",
+          "start": 54,
+          "end": 59
+        },
+        {
+          "term": "变基",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "保留分叉",
+          "start": 60,
+          "end": 64
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-039",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 11,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 943,
+        "completionChars": 283
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 307
+      },
+      "expectedTerms": [
+        "供应链",
+        "成本加成",
+        "品牌授权费"
+      ],
+      "negativeTerms": [
+        "总部",
+        "分支",
+        "加盟"
+      ],
+      "candidates": [
+        {
+          "term": "加盟",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "一套供应链",
+          "start": 13,
+          "end": 18
+        },
+        {
+          "term": "加盟商共",
+          "start": 8,
+          "end": 12
+        },
+        {
+          "term": "结算价差",
+          "start": 20,
+          "end": 24
+        },
+        {
+          "term": "直营按",
+          "start": 28,
+          "end": 31
+        },
+        {
+          "term": "两档",
+          "start": 25,
+          "end": 27
+        },
+        {
+          "term": "本加",
+          "start": 32,
+          "end": 34
+        },
+        {
+          "term": "付一道品牌授",
+          "start": 41,
+          "end": 47
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-035",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 950,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "歧义",
+        "语境",
+        "新闻"
+      ],
+      "candidates": [
+        {
+          "term": "手机的公司",
+          "start": 29,
+          "end": 34
+        },
+        {
+          "term": "科技新闻里",
+          "start": 18,
+          "end": 23
+        },
+        {
+          "term": "词有歧义",
+          "start": 4,
+          "end": 8
+        },
+        {
+          "term": "园里",
+          "start": 10,
+          "end": 12
+        },
+        {
+          "term": "错段落的意思",
+          "start": 50,
+          "end": 56
+        },
+        {
+          "term": "个词有歧义",
+          "start": 3,
+          "end": 8
+        },
+        {
+          "term": "园里说的",
+          "start": 10,
+          "end": 14
+        },
+        {
+          "term": "先分清语境",
+          "start": 39,
+          "end": 44
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-040",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 948,
+        "completionChars": 295
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "限流"
+      ],
+      "negativeTerms": [
+        "断路器",
+        "阈值",
+        "链路"
+      ],
+      "candidates": [
+        {
+          "term": "断路器",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "动断开的组件",
+          "start": 13,
+          "end": 19
+        },
+        {
+          "term": "自动断开的组",
+          "start": 12,
+          "end": 18
+        },
+        {
+          "term": "误率超过阈值",
+          "start": 5,
+          "end": 11
+        },
+        {
+          "term": "路上并没有启",
+          "start": 24,
+          "end": 30
+        },
+        {
+          "term": "链路上并没有",
+          "start": 23,
+          "end": 29
+        },
+        {
+          "term": "错误率超过阈",
+          "start": 4,
+          "end": 10
+        },
+        {
+          "term": "放行十",
+          "start": 48,
+          "end": 51
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-041",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 945,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [
+        "采样温度"
+      ],
+      "negativeTerms": [
+        "词元化",
+        "文本",
+        "单位"
+      ],
+      "candidates": [
+        {
+          "term": "值越低越确定",
+          "start": 45,
+          "end": 51
+        },
+        {
+          "term": "上节课讲过",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "值越",
+          "start": 36,
+          "end": 38
+        },
+        {
+          "term": "文本切",
+          "start": 12,
+          "end": 15
+        },
+        {
+          "term": "词元化",
+          "start": 6,
+          "end": 9
+        },
+        {
+          "term": "模型",
+          "start": 16,
+          "end": 18
+        },
+        {
+          "term": "处理的最小单",
+          "start": 19,
+          "end": 25
+        },
+        {
+          "term": "理的最小单位",
+          "start": 20,
+          "end": 26
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-036",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 945,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "并发",
+        "并行",
+        "锁"
+      ],
+      "candidates": [
+        {
+          "term": "后面所有的锁",
+          "start": 37,
+          "end": 43
+        },
+        {
+          "term": "好理解",
+          "start": 47,
+          "end": 50
+        },
+        {
+          "term": "竞态",
+          "start": 44,
+          "end": 46
+        },
+        {
+          "term": "记住",
+          "start": 30,
+          "end": 32
+        },
+        {
+          "term": "竞态都好理解",
+          "start": 44,
+          "end": 50
+        },
+        {
+          "term": "好理解了",
+          "start": 47,
+          "end": 51
+        },
+        {
+          "term": "记住这",
+          "start": 30,
+          "end": 33
+        },
+        {
+          "term": "个区",
+          "start": 33,
+          "end": 35
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-037",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 946,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 307
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "缓存",
+        "失效",
+        "术语表"
+      ],
+      "candidates": [
+        {
+          "term": "数据放",
+          "start": 13,
+          "end": 16
+        },
+        {
+          "term": "更近的",
+          "start": 17,
+          "end": 20
+        },
+        {
+          "term": "可信",
+          "start": 30,
+          "end": 32
+        },
+        {
+          "term": "失效",
+          "start": 23,
+          "end": 25
+        },
+        {
+          "term": "缓存",
+          "start": 8,
+          "end": 10
+        },
+        {
+          "term": "术语表先摆出",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "语表先摆出来",
+          "start": 1,
+          "end": 7
+        },
+        {
+          "term": "更近的地方",
+          "start": 17,
+          "end": 22
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-038",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 12,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 954,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 310
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "单调栈",
+        "滑动窗口",
+        "模板"
+      ],
+      "candidates": [
+        {
+          "term": "两道题",
+          "start": 49,
+          "end": 52
+        },
+        {
+          "term": "今天",
+          "start": 46,
+          "end": 48
+        },
+        {
+          "term": "模板",
+          "start": 58,
+          "end": 60
+        },
+        {
+          "term": "今天这两道题",
+          "start": 46,
+          "end": 52
+        },
+        {
+          "term": "两个模板",
+          "start": 56,
+          "end": 60
+        },
+        {
+          "term": "两道题都",
+          "start": 49,
+          "end": 53
+        },
+        {
+          "term": "滑动窗口",
+          "start": 28,
+          "end": 32
+        },
+        {
+          "term": "套这两",
+          "start": 54,
+          "end": 57
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-039",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 947,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 308
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "消息队列",
+        "快递柜",
+        "发件人"
+      ],
+      "candidates": [
+        {
+          "term": "发件人放进去",
+          "start": 20,
+          "end": 26
+        },
+        {
+          "term": "收件人有空",
+          "start": 29,
+          "end": 34
+        },
+        {
+          "term": "像快递柜",
+          "start": 15,
+          "end": 19
+        },
+        {
+          "term": "消息队列",
+          "start": 10,
+          "end": 14
+        },
+        {
+          "term": "重复一遍",
+          "start": 1,
+          "end": 5
+        },
+        {
+          "term": "比喻",
+          "start": 7,
+          "end": 9
+        },
+        {
+          "term": "再重复一遍",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "重复一遍这",
+          "start": 1,
+          "end": 6
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-042",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1086,
+        "completionChars": 350
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 359
+      },
+      "expectedTerms": [
+        "optimizer",
+        "predicate"
+      ],
+      "negativeTerms": [
+        "covering index",
+        "query",
+        "column"
+      ],
+      "candidates": [
+        {
+          "term": "optimizer still",
+          "start": 97,
+          "end": 112
+        },
+        {
+          "term": "covering index",
+          "start": 20,
+          "end": 34
+        },
+        {
+          "term": "leading column",
+          "start": 149,
+          "end": 163
+        },
+        {
+          "term": "still refuses",
+          "start": 107,
+          "end": 120
+        },
+        {
+          "term": "predicate.",
+          "start": 183,
+          "end": 193
+        },
+        {
+          "term": "touching",
+          "start": 73,
+          "end": 81
+        },
+        {
+          "term": "Chapter",
+          "start": 0,
+          "end": 7
+        },
+        {
+          "term": "answers",
+          "start": 47,
+          "end": 54
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-040",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1085,
+        "completionChars": 366
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 363
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "mutex",
+        "semaphore",
+        "spinlock"
+      ],
+      "candidates": [
+        {
+          "term": "spinlock busy-waits",
+          "start": 109,
+          "end": 128
+        },
+        {
+          "term": "busy-waits instead",
+          "start": 118,
+          "end": 136
+        },
+        {
+          "term": "counter allowing",
+          "start": 75,
+          "end": 91
+        },
+        {
+          "term": "Everything",
+          "start": 150,
+          "end": 160
+        },
+        {
+          "term": "first one.",
+          "start": 182,
+          "end": 192
+        },
+        {
+          "term": "semaphore",
+          "start": 60,
+          "end": 69
+        },
+        {
+          "term": "sleeping.",
+          "start": 140,
+          "end": 149
+        },
+        {
+          "term": "glossary",
+          "start": 13,
+          "end": 21
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-041",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1099,
+        "completionChars": 367
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 367
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "refactoring",
+        "regression",
+        "tutorial"
+      ],
+      "candidates": [
+        {
+          "term": "behavior",
+          "start": 95,
+          "end": 103
+        },
+        {
+          "term": "changing",
+          "start": 54,
+          "end": 62
+        },
+        {
+          "term": "means",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "term": "changing behavior",
+          "start": 86,
+          "end": 103
+        },
+        {
+          "term": "refactoring means",
+          "start": 36,
+          "end": 53
+        },
+        {
+          "term": "tutorial assumes",
+          "start": 178,
+          "end": 194
+        },
+        {
+          "term": "regression means",
+          "start": 111,
+          "end": 127
+        },
+        {
+          "term": "losing behavior",
+          "start": 128,
+          "end": 143
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-043",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 8,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 979,
+        "completionChars": 279
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 315
+      },
+      "expectedTerms": [
+        "连接池"
+      ],
+      "negativeTerms": [
+        "Promise.all",
+        "代价",
+        "内存"
+      ],
+      "candidates": [
+        {
+          "term": "并发全压上去",
+          "start": 38,
+          "end": 44
+        },
+        {
+          "term": "挂起的查询",
+          "start": 59,
+          "end": 64
+        },
+        {
+          "term": "没有代价",
+          "start": 4,
+          "end": 8
+        },
+        {
+          "term": "连接",
+          "start": 48,
+          "end": 50
+        },
+        {
+          "term": "异步不",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "term": "内存",
+          "start": 81,
+          "end": 83
+        },
+        {
+          "term": "排队",
+          "start": 75,
+          "end": 77
+        },
+        {
+          "term": "池大",
+          "start": 78,
+          "end": 80
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-044",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 3,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1017,
+        "completionChars": 302
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 330
+      },
+      "expectedTerms": [
+        "跨站脚本",
+        "CSRF 令牌",
+        "服务端会话"
+      ],
+      "negativeTerms": [
+        "localStorage",
+        "cookie",
+        "配置"
+      ],
+      "candidates": [
+        {
+          "term": "cookie",
+          "start": 39,
+          "end": 45
+        },
+        {
+          "term": "localStorage",
+          "start": 6,
+          "end": 18
+        },
+        {
+          "term": "跨站脚本一跑",
+          "start": 19,
+          "end": 25
+        },
+        {
+          "term": "脚本不可读",
+          "start": 48,
+          "end": 53
+        },
+        {
+          "term": "CSRF",
+          "start": 58,
+          "end": 62
+        },
+        {
+          "term": "令牌校验",
+          "start": 63,
+          "end": 67
+        },
+        {
+          "term": "底线配置",
+          "start": 119,
+          "end": 123
+        },
+        {
+          "term": "服务端",
+          "start": 31,
+          "end": 34
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-045",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 976,
+        "completionChars": 290
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 317
+      },
+      "expectedTerms": [
+        "令牌桶"
+      ],
+      "negativeTerms": [
+        "bucket.take",
+        "中间件",
+        "恒定"
+      ],
+      "candidates": [
+        {
+          "term": "核心逻辑",
+          "start": 78,
+          "end": 82
+        },
+        {
+          "term": "令牌",
+          "start": 11,
+          "end": 13
+        },
+        {
+          "term": "一行",
+          "start": 74,
+          "end": 76
+        },
+        {
+          "term": "中间件的写法",
+          "start": 2,
+          "end": 8
+        },
+        {
+          "term": "以恒定速率往",
+          "start": 18,
+          "end": 24
+        },
+        {
+          "term": "到令牌才放行",
+          "start": 33,
+          "end": 39
+        },
+        {
+          "term": "限流中间件的",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "请求拿到令",
+          "start": 30,
+          "end": 35
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-046",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 990,
+        "completionChars": 293
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 321
+      },
+      "expectedTerms": [
+        "优雅停机",
+        "宽限期"
+      ],
+      "negativeTerms": [
+        "server.close",
+        "存量",
+        "编排"
+      ],
+      "candidates": [
+        {
+          "term": "处理两件事",
+          "start": 5,
+          "end": 10
+        },
+        {
+          "term": "优雅停机",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "前一半",
+          "start": 71,
+          "end": 74
+        },
+        {
+          "term": "有限的",
+          "start": 93,
+          "end": 96
+        },
+        {
+          "term": "先停止接收新",
+          "start": 11,
+          "end": 17
+        },
+        {
+          "term": "存量请求清零",
+          "start": 22,
+          "end": 28
+        },
+        {
+          "term": "止接收新连接",
+          "start": 13,
+          "end": 19
+        },
+        {
+          "term": "等存量请求清",
+          "start": 21,
+          "end": 27
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-042",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 963,
+        "completionChars": 289
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "imprort",
+        "import",
+        "编辑器"
+      ],
+      "candidates": [
+        {
+          "term": "编辑器没标红",
+          "start": 29,
+          "end": 35
+        },
+        {
+          "term": "文件没保存",
+          "start": 38,
+          "end": 43
+        },
+        {
+          "term": "半天原来",
+          "start": 2,
+          "end": 6
+        },
+        {
+          "term": "拼写错误",
+          "start": 8,
+          "end": 12
+        },
+        {
+          "term": "试了半天原来",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "个拼写错误",
+          "start": 7,
+          "end": 12
+        },
+        {
+          "term": "半天原来是",
+          "start": 2,
+          "end": 7
+        },
+        {
+          "term": "白折腾一小",
+          "start": 63,
+          "end": 68
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-043",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 4,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 971,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 314
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "console.log",
+        "hello",
+        "兴奋"
+      ],
+      "candidates": [
+        {
+          "term": "感觉电脑真的",
+          "start": 46,
+          "end": 52
+        },
+        {
+          "term": "跑出来的",
+          "start": 38,
+          "end": 42
+        },
+        {
+          "term": "几十万行",
+          "start": 62,
+          "end": 66
+        },
+        {
+          "term": "后来写",
+          "start": 58,
+          "end": 61
+        },
+        {
+          "term": "种兴奋",
+          "start": 73,
+          "end": 76
+        },
+        {
+          "term": "一刻",
+          "start": 43,
+          "end": 45
+        },
+        {
+          "term": "少有",
+          "start": 70,
+          "end": 72
+        },
+        {
+          "term": "写下第一行代",
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-044",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 955,
+        "completionChars": 295
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        ".env",
+        "配置",
+        "办法"
+      ],
+      "candidates": [
+        {
+          "term": "定位出来",
+          "start": 46,
+          "end": 50
+        },
+        {
+          "term": "坏项",
+          "start": 40,
+          "end": 42
+        },
+        {
+          "term": "一项一项往回",
+          "start": 32,
+          "end": 38
+        },
+        {
+          "term": "制一份空白的",
+          "start": 25,
+          "end": 31
+        },
+        {
+          "term": "复制一份空白",
+          "start": 24,
+          "end": 30
+        },
+        {
+          "term": "项一项往回加",
+          "start": 33,
+          "end": 39
+        },
+        {
+          "term": "土办法",
+          "start": 51,
+          "end": 54
+        },
+        {
+          "term": "能定位出来",
+          "start": 45,
+          "end": 50
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-047",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 7,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 961,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 311
+      },
+      "expectedTerms": [
+        "偏态",
+        "标准化"
+      ],
+      "negativeTerms": [
+        "df.describe",
+        "策略",
+        "摸底"
+      ],
+      "candidates": [
+        {
+          "term": "数据清洗",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "一锅端",
+          "start": 5,
+          "end": 8
+        },
+        {
+          "term": "先用",
+          "start": 9,
+          "end": 11
+        },
+        {
+          "term": "偏态严重的",
+          "start": 41,
+          "end": 46
+        },
+        {
+          "term": "喂给模型",
+          "start": 63,
+          "end": 67
+        },
+        {
+          "term": "数据清洗别一",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "term": "清洗别一锅端",
+          "start": 2,
+          "end": 8
+        },
+        {
+          "term": "中位数",
+          "start": 47,
+          "end": 50
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-048",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 981,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 317
+      },
+      "expectedTerms": [
+        "虚拟环境",
+        "依赖清单"
+      ],
+      "negativeTerms": [
+        "venv",
+        "pip freeze",
+        "全局"
+      ],
+      "candidates": [
+        {
+          "term": "隔离的第一步",
+          "start": 5,
+          "end": 11
+        },
+        {
+          "term": "激活之后装",
+          "start": 39,
+          "end": 44
+        },
+        {
+          "term": "手写版本号",
+          "start": 82,
+          "end": 87
+        },
+        {
+          "term": "依赖清单",
+          "start": 57,
+          "end": 61
+        },
+        {
+          "term": "虚拟环境",
+          "start": 0,
+          "end": 4
+        },
+        {
+          "term": "多包",
+          "start": 45,
+          "end": 47
+        },
+        {
+          "term": "建一",
+          "start": 35,
+          "end": 37
+        },
+        {
+          "term": "千万",
+          "start": 79,
+          "end": 81
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-049",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 6,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1000,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 322
+      },
+      "expectedTerms": [
+        "类型注解",
+        "静态检查",
+        "协议类型"
+      ],
+      "negativeTerms": [
+        "transfer",
+        "Account",
+        "签名"
+      ],
+      "candidates": [
+        {
+          "term": "类型",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "配合协议类型",
+          "start": 85,
+          "end": 91
+        },
+        {
+          "term": "类型注解不",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "签名一写",
+          "start": 64,
+          "end": 68
+        },
+        {
+          "term": "静态检查",
+          "start": 69,
+          "end": 73
+        },
+        {
+          "term": "摆设",
+          "start": 6,
+          "end": 8
+        },
+        {
+          "term": "大类低级错误",
+          "start": 78,
+          "end": 84
+        },
+        {
+          "term": "抓出一大类低",
+          "start": 75,
+          "end": 81
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-045",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 980,
+        "completionChars": 284
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 316
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "print",
+        "data",
+        "问题"
+      ],
+      "candidates": [
+        {
+          "term": "一眼到底读",
+          "start": 31,
+          "end": 36
+        },
+        {
+          "term": "脚本跑不动",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "term": "的奇怪问题",
+          "start": 71,
+          "end": 76
+        },
+        {
+          "term": "加点打印",
+          "start": 6,
+          "end": 10
+        },
+        {
+          "term": "两条打印",
+          "start": 77,
+          "end": 81
+        },
+        {
+          "term": "多少行",
+          "start": 37,
+          "end": 40
+        },
+        {
+          "term": "类型",
+          "start": 66,
+          "end": 68
+        },
+        {
+          "term": "出来",
+          "start": 84,
+          "end": 86
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-046",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 968,
+        "completionChars": 282
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 313
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "input",
+        "样例",
+        "参与奖"
+      ],
+      "candidates": [
+        {
+          "term": "紧张到手抖",
+          "start": 14,
+          "end": 19
+        },
+        {
+          "term": "样例简单",
+          "start": 22,
+          "end": 26
+        },
+        {
+          "term": "第一",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "term": "打印结",
+          "start": 49,
+          "end": 52
+        },
+        {
+          "term": "第一题",
+          "start": 10,
+          "end": 13
+        },
+        {
+          "term": "读入",
+          "start": 46,
+          "end": 48
+        },
+        {
+          "term": "参加编程比赛",
+          "start": 3,
+          "end": 9
+        },
+        {
+          "term": "第一次参加编",
+          "start": 0,
+          "end": 6
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-050",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1118,
+        "completionChars": 373
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 373
+      },
+      "expectedTerms": [
+        "cursor pagination"
+      ],
+      "negativeTerms": [
+        "OFFSET 100000",
+        "Pagination",
+        "database"
+      ],
+      "candidates": [
+        {
+          "term": "Pagination beyond",
+          "start": 0,
+          "end": 17
+        },
+        {
+          "term": "cursor pagination",
+          "start": 141,
+          "end": 158
+        },
+        {
+          "term": "hundred thousand",
+          "start": 99,
+          "end": 115
+        },
+        {
+          "term": "database walk",
+          "start": 71,
+          "end": 84
+        },
+        {
+          "term": "thousand rows",
+          "start": 107,
+          "end": 120
+        },
+        {
+          "term": "teams switch",
+          "start": 125,
+          "end": 137
+        },
+        {
+          "term": "pages goes",
+          "start": 24,
+          "end": 34
+        },
+        {
+          "term": "stays flat",
+          "start": 188,
+          "end": 198
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-051",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1124,
+        "completionChars": 368
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 373
+      },
+      "expectedTerms": [
+        "Upserts",
+        "partial unique index",
+        "soft-deleted"
+      ],
+      "negativeTerms": [
+        "ON CONFLICT",
+        "INSERT",
+        "sync"
+      ],
+      "candidates": [
+        {
+          "term": "keeps soft-deleted",
+          "start": 192,
+          "end": 210
+        },
+        {
+          "term": "soft-deleted rows",
+          "start": 198,
+          "end": 215
+        },
+        {
+          "term": "partial unique",
+          "start": 116,
+          "end": 130
+        },
+        {
+          "term": "unique index",
+          "start": 124,
+          "end": 136
+        },
+        {
+          "term": "Upserts keep",
+          "start": 0,
+          "end": 12
+        },
+        {
+          "term": "jobs simple",
+          "start": 18,
+          "end": 29
+        },
+        {
+          "term": "colliding.",
+          "start": 221,
+          "end": 231
+        },
+        {
+          "term": "keep sync",
+          "start": 8,
+          "end": 17
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-052",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1114,
+        "completionChars": 358
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 368
+      },
+      "expectedTerms": [
+        "replicas",
+        "lag",
+        "primary"
+      ],
+      "negativeTerms": [
+        "SELECT",
+        "fan out",
+        "timeout"
+      ],
+      "candidates": [
+        {
+          "term": "replica delays",
+          "start": 134,
+          "end": 148
+        },
+        {
+          "term": "replicas",
+          "start": 5,
+          "end": 13
+        },
+        {
+          "term": "Read replicas",
+          "start": 0,
+          "end": 13
+        },
+        {
+          "term": "reader behind",
+          "start": 155,
+          "end": 168
+        },
+        {
+          "term": "delays every",
+          "start": 142,
+          "end": 154
+        },
+        {
+          "term": "every reader",
+          "start": 149,
+          "end": 161
+        },
+        {
+          "term": "scale until",
+          "start": 22,
+          "end": 33
+        },
+        {
+          "term": "slow query",
+          "start": 116,
+          "end": 126
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-047",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 1,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1118,
+        "completionChars": 354
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 368
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "SELECT",
+        "orders_",
+        "ticket"
+      ],
+      "candidates": [
+        {
+          "term": "embarrassingly simple",
+          "start": 12,
+          "end": 33
+        },
+        {
+          "term": "everything worked",
+          "start": 174,
+          "end": 191
+        },
+        {
+          "term": "stray comma",
+          "start": 76,
+          "end": 87
+        },
+        {
+          "term": "went home.",
+          "start": 215,
+          "end": 225
+        },
+        {
+          "term": "Renamed",
+          "start": 157,
+          "end": 164
+        },
+        {
+          "term": "renamed",
+          "start": 134,
+          "end": 141
+        },
+        {
+          "term": "closed",
+          "start": 193,
+          "end": 199
+        },
+        {
+          "term": "hurry.",
+          "start": 150,
+          "end": 156
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-048",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 2,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 1080,
+        "completionChars": 357
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 360
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "SELECT",
+        "students",
+        "tutor"
+      ],
+      "candidates": [
+        {
+          "term": "tables together",
+          "start": 138,
+          "end": 153
+        },
+        {
+          "term": "party trick.",
+          "start": 175,
+          "end": 187
+        },
+        {
+          "term": "join tables",
+          "start": 133,
+          "end": 144
+        },
+        {
+          "term": "sounds like",
+          "start": 161,
+          "end": 172
+        },
+        {
+          "term": "tutor says",
+          "start": 109,
+          "end": 119
+        },
+        {
+          "term": "next week",
+          "start": 120,
+          "end": 129
+        },
+        {
+          "term": "says next",
+          "start": 115,
+          "end": 124
+        },
+        {
+          "term": "databases",
+          "start": 15,
+          "end": 24
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-053",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 160,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2419,
+        "completionChars": 285
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 676
+      },
+      "expectedTerms": [
+        "检索增强生成",
+        "向量数据库",
+        "重排序"
+      ],
+      "negativeTerms": [
+        "文档",
+        "部门",
+        "阶段"
+      ],
+      "candidates": [
+        {
+          "term": "问答助手",
+          "start": 18,
+          "end": 22
+        },
+        {
+          "term": "没人",
+          "start": 204,
+          "end": 206
+        },
+        {
+          "term": "第二",
+          "start": 212,
+          "end": 214
+        },
+        {
+          "term": "信任",
+          "start": 883,
+          "end": 885
+        },
+        {
+          "term": "克制",
+          "start": 981,
+          "end": 983
+        },
+        {
+          "term": "检索",
+          "start": 428,
+          "end": 430
+        },
+        {
+          "term": "法务",
+          "start": 85,
+          "end": 87
+        },
+        {
+          "term": "行政",
+          "start": 82,
+          "end": 84
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-049",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 136,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2394,
+        "completionChars": 281
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 669
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "火候",
+        "外卖",
+        "菜谱"
+      ],
+      "candidates": [
+        {
+          "term": "以前",
+          "start": 409,
+          "end": 411
+        },
+        {
+          "term": "后来",
+          "start": 682,
+          "end": 684
+        },
+        {
+          "term": "自己",
+          "start": 14,
+          "end": 16
+        },
+        {
+          "term": "菜谱",
+          "start": 92,
+          "end": 94
+        },
+        {
+          "term": "一次",
+          "start": 48,
+          "end": 50
+        },
+        {
+          "term": "一天",
+          "start": 1153,
+          "end": 1155
+        },
+        {
+          "term": "一年",
+          "start": 4,
+          "end": 6
+        },
+        {
+          "term": "出现",
+          "start": 924,
+          "end": 926
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-054",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 194,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2409,
+        "completionChars": 286
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 674
+      },
+      "expectedTerms": [
+        "粟特人",
+        "过所"
+      ],
+      "negativeTerms": [
+        "商队",
+        "驼铃",
+        "绿洲"
+      ],
+      "candidates": [
+        {
+          "term": "风险",
+          "start": 257,
+          "end": 259
+        },
+        {
+          "term": "货物",
+          "start": 194,
+          "end": 196
+        },
+        {
+          "term": "留下",
+          "start": 247,
+          "end": 249
+        },
+        {
+          "term": "硬通货",
+          "start": 925,
+          "end": 928
+        },
+        {
+          "term": "商人",
+          "start": 83,
+          "end": 85
+        },
+        {
+          "term": "敦煌",
+          "start": 116,
+          "end": 118
+        },
+        {
+          "term": "商队",
+          "start": 29,
+          "end": 31
+        },
+        {
+          "term": "雪山",
+          "start": 284,
+          "end": 286
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-050",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 135,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2403,
+        "completionChars": 302
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 677
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "渡口",
+        "货栈",
+        "县志"
+      ],
+      "candidates": [
+        {
+          "term": "老周",
+          "start": 4,
+          "end": 6
+        },
+        {
+          "term": "两边",
+          "start": 212,
+          "end": 214
+        },
+        {
+          "term": "材料",
+          "start": 20,
+          "end": 22
+        },
+        {
+          "term": "的账目",
+          "start": 41,
+          "end": 44
+        },
+        {
+          "term": "哪年发过洪水",
+          "start": 1415,
+          "end": 1421
+        },
+        {
+          "term": "篇幅最长的竟",
+          "start": 1389,
+          "end": 1395
+        },
+        {
+          "term": "两家船户争一",
+          "start": 109,
+          "end": 115
+        },
+        {
+          "term": "乡里凑的粮食",
+          "start": 761,
+          "end": 767
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-x-055",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 5,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2984,
+        "completionChars": 360
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 836
+      },
+      "expectedTerms": [
+        "Bulk fermentation",
+        "Autolyse"
+      ],
+      "negativeTerms": [
+        "dough",
+        "flour",
+        "loaf"
+      ],
+      "candidates": [
+        {
+          "term": "flour",
+          "start": 328,
+          "end": 333
+        },
+        {
+          "term": "dough",
+          "start": 1238,
+          "end": 1243
+        },
+        {
+          "term": "temperature",
+          "start": 683,
+          "end": 694
+        },
+        {
+          "term": "difference",
+          "start": 287,
+          "end": 297
+        },
+        {
+          "term": "water",
+          "start": 378,
+          "end": 383
+        },
+        {
+          "term": "combining ingredients",
+          "start": 1038,
+          "end": 1059
+        },
+        {
+          "term": "noticeably smoother.",
+          "start": 2008,
+          "end": 2028
+        },
+        {
+          "term": "recipe",
+          "start": 39,
+          "end": 45
+        }
+      ],
+      "failure": null
+    },
+    {
+      "id": "dev-n-051",
+      "kind": "extract",
+      "status": "succeeded",
+      "latencyMs": 4,
+      "attempts": 1,
+      "retries": 0,
+      "usage": {
+        "requests": 1,
+        "promptChars": 2644,
+        "completionChars": 364
+      },
+      "tokens": {
+        "realUsage": "UNKNOWN",
+        "estimatedCharsOver4": 752
+      },
+      "expectedTerms": [],
+      "negativeTerms": [
+        "apartments",
+        "kitchen",
+        "movers"
+      ],
+      "candidates": [
+        {
+          "term": "alarm clock",
+          "start": 400,
+          "end": 411
+        },
+        {
+          "term": "labeling",
+          "start": 912,
+          "end": 920
+        },
+        {
+          "term": "apartments",
+          "start": 9,
+          "end": 19
+        },
+        {
+          "term": "made peace",
+          "start": 322,
+          "end": 332
+        },
+        {
+          "term": "friend",
+          "start": 602,
+          "end": 608
+        },
+        {
+          "term": "including weekends",
+          "start": 457,
+          "end": 475
+        },
+        {
+          "term": "essentials surfaced.",
+          "start": 1259,
+          "end": 1279
+        },
+        {
+          "term": "scheduled",
+          "start": 855,
+          "end": 864
+        }
+      ],
+      "failure": null
+    }
+  ],
+  "note": "echo mode with the zero-dependency baseline — offline reference floor for the baseline/strong-model comparison; quality gates are reported, not binding"
+}
