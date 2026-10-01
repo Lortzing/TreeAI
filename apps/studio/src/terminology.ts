@@ -1394,7 +1394,7 @@ export class TerminologyService {
   #promotionInFlight: boolean = false;
   /** 自动标注质量门禁（缺省 TERMINOLOGY_AUTO_QUALITY_GATE = false）。 */
   readonly #autoQualityGate: boolean;
-  /** 建议集存储（进程内瞬态；键 `${treeId} ${anchorTurnId}`，按产生序）。 */
+  /** 建议集存储（进程内瞬态；键 `${treeId}\0${anchorTurnId}`，按产生序）。 */
   readonly #suggestionSets = new Map<string, TerminologySuggestionSet>();
   /** studio 事件退订（进程生命期——与服务同寿，无 dispose 面）。 */
   readonly #unsubscribeStudio: () => void;
@@ -1506,7 +1506,7 @@ export class TerminologyService {
   }
 
   #storeSet(set: TerminologySuggestionSet): void {
-    const key = `${set.treeId} ${set.anchorTurnId}`;
+    const key = `${set.treeId}\0${set.anchorTurnId}`;
     this.#suggestionSets.delete(key); /* 重置插入序（重试/更新置尾） */
     this.#suggestionSets.set(key, set);
     while (this.#suggestionSets.size > MAX_SUGGESTION_SETS) {
@@ -1517,7 +1517,7 @@ export class TerminologyService {
   }
 
   #setOf(treeId: TreeId, anchorTurnId: TurnId): TerminologySuggestionSet | null {
-    return this.#suggestionSets.get(`${treeId} ${anchorTurnId}`) ?? null;
+    return this.#suggestionSets.get(`${treeId}\0${anchorTurnId}`) ?? null;
   }
 
   /**
