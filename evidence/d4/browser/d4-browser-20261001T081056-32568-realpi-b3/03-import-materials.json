@@ -1,0 +1,29 @@
+{
+  "check": "d4-import-material",
+  "treeId": "tree_32f48dda-29ee-41ea-b318-3a036d4e68f3",
+  "fixtures": {
+    "md-01": {
+      "materialId": "material_51b1c813-fc3e-4e19-a551-f823a88091e5",
+      "versionId": "matver_78b4d5cc-3e85-4472-b494-e53e58ba011b",
+      "title": "md-01.md",
+      "textUnits": 1179,
+      "parseStatus": "ready"
+    },
+    "md-06": {
+      "materialId": "material_4cd5350d-7b9d-4d62-8989-20537bdbd56e",
+      "versionId": "matver_417a3f7a-9615-4f4b-9913-1fc500365b2e",
+      "title": "md-06.md",
+      "textUnits": 1032,
+      "parseStatus": "ready"
+    },
+    "md-11": {
+      "materialId": "material_fe9af333-ff73-4c80-ac51-054536fcd3a1",
+      "versionId": "matver_0b789d3f-aa57-4543-9b2b-ee396329953e",
+      "title": "md-11.md",
+      "textUnits": 5729,
+      "parseStatus": "ready"
+    }
+  },
+  "sidebarAssertion": "markdown · v1 · ready for each entry",
+  "pageErrors": 0
+}

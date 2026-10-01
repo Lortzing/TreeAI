@@ -1,0 +1,43 @@
+{
+  "check": "d4-branch-from-material",
+  "mode": "real-pi",
+  "modeNote": "real Pi answers",
+  "treeId": "tree_c5fdf100-86e3-4ca1-94ce-5b36a22bde89",
+  "branches": {
+    "md": "branch_4f4c1017-7989-4d42-a614-e498831d3e3b",
+    "pdf": "branch_c51b8194-4f82-42e1-b14e-42a0235e2af6"
+  },
+  "markers": {
+    "mdQ1": "TreeAI-B3-探针-MD-首问-6f2c",
+    "mdF1": "TreeAI-B3-探针-MD-追问一-a03e",
+    "mdF2": "TreeAI-B3-探针-MD-追问二-b7d1",
+    "pdfQ1": "TreeAI-B3-探针-PDF-首问-9e54",
+    "pdfF1": "TreeAI-B3-探针-PDF-追问一-77c2",
+    "pdfF2": "TreeAI-B3-探针-PDF-追问二-31b8",
+    "restartF": "TreeAI-B3-探针-重启续走-5c8a",
+    "mdRet": "TreeAI-B3-探针-MD-RETURN-2d61",
+    "pdfRet": "TreeAI-B3-探针-PDF-RETURN-84f0"
+  },
+  "selections": {
+    "md": {
+      "blockId": "blk-7",
+      "start": 584,
+      "end": 608,
+      "excerpt": "naive 的递归求斐波那契数在第 n 层会分裂"
+    },
+    "pdf": {
+      "blockId": "page-2",
+      "start": 824,
+      "end": 848,
+      "excerpt": "写三遍阶乘，再写两遍目录遍历，最后写一次汉诺塔。"
+    }
+  },
+  "lines": [
+    "md branch branch_4f4c1017-7989-4d42-a614-e498831d3e3b: double-clicked first-question submit (double-click-delivered) → exactly 1 user turn + assistant answer (real Pi answers)",
+    "md branch: 2 follow-up rounds landed (markers TreeAI-B3-探针-MD-追问一-a03e / TreeAI-B3-探针-MD-追问二-b7d1)",
+    "pdf branch branch_c51b8194-4f82-42e1-b14e-42a0235e2af6: dropped dispatch response (1 response failed at the transport layer) → same-key retry → idempotent replay (exactly 1 user turn, replay note shown)",
+    "cross-branch isolation: md 6 turns / pdf 6 turns, no marker leaks across (real Pi answers)",
+    "restart continuation: SIGTERM → new process (port 49671→49671) → history readable + a fresh follow-up landed"
+  ],
+  "pageErrorsExcluded": 1
+}

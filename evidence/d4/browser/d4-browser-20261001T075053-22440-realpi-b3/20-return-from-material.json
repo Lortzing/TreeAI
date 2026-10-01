@@ -1,0 +1,39 @@
+{
+  "check": "d4-return-from-material",
+  "mode": "real-pi",
+  "modeNote": "real Pi answers",
+  "treeId": "tree_c5fdf100-86e3-4ca1-94ce-5b36a22bde89",
+  "returns": [
+    {
+      "branch": "branch_4f4c1017-7989-4d42-a614-e498831d3e3b",
+      "blockId": "blk-7",
+      "marker": "TreeAI-B3-探针-MD-RETURN-2d61",
+      "fields": "material “md-01.md” · version matver_a005cd18-d91b-45a6-a4da-24c4a4025e5d (markdown d4-md-v1) · block blk-7 · confirmed 2026/10/1 15:51:53"
+    },
+    {
+      "branch": "branch_c51b8194-4f82-42e1-b14e-42a0235e2af6",
+      "blockId": "page-2",
+      "marker": "TreeAI-B3-探针-PDF-RETURN-84f0",
+      "fields": "material “pdf-01.pdf” · version matver_1462d863-0a89-4c5c-9a7e-6e704e725b8f (pdf d4-pdf-v1) · block page-2 · page 2 · confirmed 2026/10/1 15:51:55"
+    }
+  ],
+  "markers": {
+    "mdQ1": "TreeAI-B3-探针-MD-首问-6f2c",
+    "mdF1": "TreeAI-B3-探针-MD-追问一-a03e",
+    "mdF2": "TreeAI-B3-探针-MD-追问二-b7d1",
+    "pdfQ1": "TreeAI-B3-探针-PDF-首问-9e54",
+    "pdfF1": "TreeAI-B3-探针-PDF-追问一-77c2",
+    "pdfF2": "TreeAI-B3-探针-PDF-追问二-31b8",
+    "restartF": "TreeAI-B3-探针-重启续走-5c8a",
+    "mdRet": "TreeAI-B3-探针-MD-RETURN-2d61",
+    "pdfRet": "TreeAI-B3-探针-PDF-RETURN-84f0"
+  },
+  "lines": [
+    "md: panel View source → reader at block blk-7 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "pdf: panel View source → reader at block page-2 with the exact excerpt in view; Return submitted → Trunk card carries the material source fields + exact excerpt + View-material-source jump",
+    "return-card source jump reopens the reader at the anchored md block",
+    "post-Return restart: SIGTERM → new process (port 49671→49671) → both Return cards on the Trunk + branch history readable"
+  ],
+  "frontendBugs": [],
+  "pageErrorsExcluded": 0
+}

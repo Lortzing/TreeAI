@@ -605,6 +605,7 @@ export async function probeBranchFromMaterial(ctx) {
   /* ---- 4) pdf 分支：≥2 轮追问 ---- */
   await panelFollowUp(ctx, B3_MARKERS.pdfF1, `第一轮追问：这一页与前页的论证关系是什么？（${B3_MARKERS.pdfF1}）`, answerTimeoutMs);
   await panelFollowUp(ctx, B3_MARKERS.pdfF2, `第二轮追问：如果只保留一个关键句，是哪句？（${B3_MARKERS.pdfF2}）`, answerTimeoutMs);
+  lines.push(`pdf branch: 2 follow-up rounds landed (markers ${B3_MARKERS.pdfF1} / ${B3_MARKERS.pdfF2})`);
   await ctx.screenshot("b3-pdf-branch-panel");
 
   /* ---- 5) 跨枝隔离：回答不串枝（服务器事实 + 面板在场断言） ---- */

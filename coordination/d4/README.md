@@ -352,3 +352,19 @@ typecheck、**767/767**、verify:d4 15-0-5、双 selftest、verify:d2 基线、
 工程面至此全齐**。在飞：K（wip/d4-browser-face：B6/B9 浏览器面 + B3 real-pi
 探针实现）。剩余：B3 真实 Pi 运行（最终候选 SHA）、owner 门禁（B8 目标机、
 Mac 签收、3–5 人试用）。
+
+**2026-10-01 集成记录（终）**：K（`wip/d4-browser-face`，tip `db198f5`）已合并
+main。本会话随即修复其报告的三个真实前端缺陷（五段侧栏 flex 模型重建 /
+View source 导航被 busy 锁静默丢弃 → 有界等待 / run:d4-browser 终波探针
+懒加载），并以 **run:d4-browser --mode real-pi**（deepseek/deepseek-flash，
+凭据按既定协议注入）产出 **B3 真实 Pi 浏览器证据：14 PASS / 0 FAIL /
+0 NOT_RUN**（`evidence/d4/browser/d4-browser-20261001T081056-32568-realpi-b3`，
+main `c169745`）。b3-real-exploration 行转为 mode-门控证据审计（echo 运行
+永不满足该行）。
+
+**终态（本会话结束时）**：typecheck、全仓 **767/767**、verify:d4 **18 PASS /
+0 FAIL / 2 NOT_RUN**（b7/b8 属 owner 人工门）、verify:d4:selftest、
+verify:d2 21-0-0-1、run:d4-browser selftest **14-0-0** + real-pi **14-0-0**、
+三平台安装器 CI 绿。**D4-0～D4-8 全部工程面（前后端 + 浏览器面 + 真实 Pi
+证据）在 main 交付。** 剩余全部为负责人门禁：B8 目标机干净安装实测、
+Mac 体验签收、3–5 人独立试用、B7 收口（按负责人顺序）。

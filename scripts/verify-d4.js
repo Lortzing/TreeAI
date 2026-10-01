@@ -576,11 +576,102 @@ const CHECKS = [
   },
   {
     id: "b3-real-exploration",
-    fn: notRunCheck(
-      "b3-real-exploration",
-      "D4-3",
-      "the backend loop is delivered and executed offline (b3-material-exploration, echo runtime); the REAL-Pi browser evidence for charter B3 (≥1 markdown + ≥1 pdf branch, ≥2 follow-up rounds each, cross-branch isolation, return closed loop, double-click/response-loss/restart) is produced by run:d4-browser --mode real-pi at the final candidate SHA — not offline",
-    ),
+    // Evidence audit (delivered 2026-10-01): the recorded run:d4-browser
+    // --mode real-pi run under evidence/d4/browser. mode is verified — an
+    // echo/selftest run NEVER satisfies this row. Charter B3 items validated
+    // against the recorded sidecars: md + pdf branches, ≥2 follow-up rounds
+    // each, cross-branch isolation, restart continuation, double-click and
+    // transport-layer response-loss idempotency, return-to-source exact
+    // excerpts, Return material source cards + return-card jump, post-return
+    // restart readability. This row audits evidence; producing it requires
+    // credentials (TREEAI_STUDIO_API_KEY) outside this offline verifier.
+    fn: async () => {
+      const browserDir = join(ROOT, "evidence", "d4", "browser");
+      if (!existsSync(browserDir)) {
+        return { status: "NOT_RUN", exitCode: null, reason: "no evidence/d4/browser yet — the real-pi run has not been recorded" };
+      }
+      const runDirs = readdirSync(browserDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(browserDir, entry.name))
+        .filter((dir) => existsSync(join(dir, "summary.json")))
+        .sort()
+        .reverse();
+      for (const runDir of runDirs) {
+        let summary = null;
+        try {
+          summary = JSON.parse(readFileSync(join(runDir, "summary.json"), "utf8"));
+        } catch {
+          continue;
+        }
+        if (summary.mode !== "real-pi") continue; /* echo runs never satisfy this row */
+        const branchCheck = (summary.checks ?? []).find((c) => c.id === "d4-branch-from-material");
+        const returnCheck = (summary.checks ?? []).find((c) => c.id === "d4-return-from-material");
+        if (branchCheck === undefined || returnCheck === undefined) continue;
+        if (branchCheck.status !== "PASS" || returnCheck.status !== "PASS") {
+          return {
+            status: "FAIL",
+            exitCode: 2,
+            error: { message: `the newest real-pi evidence run is not PASS on the B3 checks (${branchCheck.status}/${returnCheck.status}) — re-run and record` },
+            detail: `evidence run ${String(summary.runId ?? "")} mode ${String(summary.mode)}`,
+          };
+        }
+        const problems = [];
+        let branchSidecar = null;
+        let returnSidecar = null;
+        try {
+          const branchFile = readdirSync(runDir).find((name) => name.endsWith("-branch-from-material.json"));
+          const returnFile = readdirSync(runDir).find((name) => name.endsWith("-return-from-material.json"));
+          if (branchFile === undefined || returnFile === undefined) {
+            return { status: "FAIL", exitCode: 2, error: { message: `real-pi run ${String(summary.runId ?? "")} lacks the B3 sidecars` } };
+          }
+          branchSidecar = JSON.parse(readFileSync(join(runDir, branchFile), "utf8"));
+          returnSidecar = JSON.parse(readFileSync(join(runDir, returnFile), "utf8"));
+        } catch (err) {
+          return { status: "FAIL", exitCode: 2, error: { message: `B3 sidecar not readable: ${String(err)}` } };
+        }
+        if (branchSidecar.mode !== "real-pi" || returnSidecar.mode !== "real-pi") problems.push("sidecar mode is not real-pi");
+        if (branchSidecar.branches?.md === undefined || branchSidecar.branches?.pdf === undefined) {
+          problems.push("branches: md and pdf both required");
+        }
+        if (branchSidecar.selections?.md?.excerpt === undefined || branchSidecar.selections?.pdf?.excerpt === undefined) {
+          problems.push("selections with excerpts for md and pdf both required");
+        }
+        const lines = (branchSidecar.lines ?? []).join("\n");
+        if (!lines.includes("double-click")) problems.push("double-click idempotency not recorded");
+        if (!lines.includes("idempotent replay")) problems.push("response-loss idempotent-retry not recorded");
+        const followUps = (branchSidecar.lines ?? []).filter((l) => l.includes("follow-up rounds landed")).length;
+        if (followUps < 2) problems.push(`follow-up rounds recorded for ${String(followUps)} branch(es), need md + pdf (2)`);
+        if (!lines.includes("cross-branch isolation")) problems.push("cross-branch isolation not recorded");
+        if (!lines.includes("restart continuation")) problems.push("restart continuation not recorded");
+        const retLines = (returnSidecar.lines ?? []).join("\n");
+        if (!retLines.includes("exact excerpt in view")) problems.push("return-to-source exact excerpt not recorded");
+        if (!retLines.includes("material source fields")) problems.push("Return material source card fields not recorded");
+        if (!retLines.includes("source jump reopens the reader")) problems.push("return-card source jump not recorded");
+        if (!retLines.includes("restart")) problems.push("post-return restart readability not recorded");
+        if ((returnSidecar.returns ?? []).length < 2) problems.push("returns for md and pdf both required");
+        if (problems.length > 0) {
+          return {
+            status: "FAIL",
+            exitCode: 2,
+            error: { message: `recorded real-pi B3 evidence is incomplete: ${problems.join("; ")}` },
+            detail: `evidence run ${String(summary.runId ?? "")} mode ${String(summary.mode)}`,
+          };
+        }
+        return {
+          status: "PASS",
+          exitCode: 0,
+          detail:
+            `real-pi run ${String(summary.runId ?? "")} (mode ${String(summary.mode)}, gitCommit ${String(summary.gitCommit ?? "?").slice(0, 12)}): ` +
+            "md+pdf branches with real first questions, double-click + response-loss idempotency, 2 follow-up rounds each, " +
+            "cross-branch isolation, restart continuation, return-to-source exact excerpts, Return source cards + jump, post-return restart",
+        };
+      }
+      return {
+        status: "NOT_RUN",
+        exitCode: null,
+        reason: "no recorded run:d4-browser --mode real-pi evidence run yet (this row audits recorded evidence; producing it needs TREEAI_STUDIO_API_KEY)",
+      };
+    },
   },
   {
     id: "b4-cross-material-find",
