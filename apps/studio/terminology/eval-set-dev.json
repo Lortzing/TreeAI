@@ -1,7 +1,7 @@
 {
   "version": 1,
   "split": "dev",
-  "authoredAt": "2026-09-30",
+  "authoredAt": "2026-10-01",
   "purpose": "Terminology evaluation development set (v2 spec 8.1: 180 of the 360 collected items; 180 dev + 180 frozen, split by source-document group to prevent leakage — a group id never straddles dev and frozen). This is the TUNE-ONLY set: prompt/param/baseline iterations run here; the frozen twin is one-shot. Schema extends quality-set.json with group (leakage-prevention document grouping), category (the six v2 coverage classes: technical-concept, general-explanation, homonym-polysemy, already-defined, code-mixed, long-answer) and lang (zh|en). Offsets are NOT stored: the runner resolves each term mechanically and verifies slice equality; extract items with empty expectedTerms are full negatives (nothing worth marking) and their negativeTerms must never be marked.",
   "items": [
     {"id": "dev-e-001", "kind": "explain", "lang": "zh", "category": "technical-concept", "group": "g-ml-intro-d", "source": "训练时靠梯度下降更新参数：每一步都沿损失下降最快的方向挪一小步，反复迭代直到损失不再明显改善。学习率决定每一步的幅度，设太大容易震荡发散。", "term": "梯度下降", "occurrence": 1, "expectation": "term", "mode": "term"},
@@ -113,7 +113,7 @@
     {"id": "dev-e-040", "kind": "explain", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-fruit-d", "source": "做苹果派要选偏酸的品种，烤完才不塌；果肉切开氧化变褐的问题，挤一点柠檬汁就能缓解，糖再少放一成。", "term": "苹果", "occurrence": 1, "expectation": "term", "mode": "term"},
     {"id": "dev-x-034", "kind": "extract", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-fruit-d", "source": "嫁接是果树育种的常规操作：把品质好的接穗接到抗病性强的砧木上，苹果、梨、桃都这么繁殖，后代不走样。", "expectedTerms": ["嫁接", "接穗", "砧木"], "negativeTerms": ["果树", "苹果", "繁殖"]},
     {"id": "dev-e-041", "kind": "explain", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-tech-d", "source": "苹果把新款处理器的自研内核又增加了两个，能效比继续拉开差距；产业链的消息说，明年连基带也要换成自家产的。", "term": "苹果", "occurrence": 1, "expectation": "term", "mode": "term"},
-    {"id": "dev-e-042", "kind": "explain", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-tech-d", "source": "为了省主板空间，苹果开始把调制解调器也塞进同一颗芯片，外挂方案彻底退出产品线；信号表现的争议还在继续。", "term": "外挂方案彻底退出产品线", "occurrence": 1, "expectation": "term", "mode": "range"},
+    {"id": "dev-e-042", "kind": "explain", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-tech-d", "source": "为了省主板空间，苹果开始把调制解调器也塞进同一颗芯片，外挂方案彻底退出产品线；信号表现的争议还在继续。", "term": "外挂方案彻底退出产品线", "occurrence": 1, "expectation": "not-a-term", "mode": "range"},
     {"id": "dev-x-035", "kind": "extract", "lang": "zh", "category": "homonym-polysemy", "group": "g-hom-apple-tech-d", "source": "发布会最重磅的是自研基带芯片：告别高通之后，苹果把调制解调器和应用处理器集成进同一块封装，功耗和信号都有改进空间。", "expectedTerms": ["基带芯片", "调制解调器", "封装"], "negativeTerms": ["发布会", "苹果", "高通"]},
     {"id": "dev-e-043", "kind": "explain", "lang": "en", "category": "homonym-polysemy", "group": "g-hom-bank-river-d", "source": "The river had been dropping for weeks, and by August you could walk dry-shod across the gravel bank to the far channel; the herons were not amused.", "term": "bank", "occurrence": 1, "expectation": "term", "mode": "term"},
     {"id": "dev-e-044", "kind": "explain", "lang": "en", "category": "homonym-polysemy", "group": "g-hom-bank-river-d", "source": "Erosion works fastest on the outer bank of a meander, where the current is quickest; the inner bank grows a gentle point bar of deposited gravel instead.", "term": "bank", "occurrence": 1, "expectation": "term", "mode": "term"},
