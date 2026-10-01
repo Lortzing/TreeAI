@@ -52,6 +52,45 @@
           <h2 class="sidebar-heading">Branches</h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
+        <!-- D4-8 大规模树导航面（issue #8 工作包 D4-8，charter §5）：侧栏第
+             三段——树查找（分页森林列表 + 标题/标识搜索）+ 层级树视图（按需
+             分页加载子节点、折叠展开、展开状态服务端持久化、完整父路径、
+             定位当前分支、跳回来源）。只读产品事实（/api/nav/*），绝不渲染
+             run/session 可用性；DOM 有界（可视窗口渲染——见 app.js D4-8 段
+             的虚拟化纪律）。静态骨架由 app.js 注册一次；动态列表（查找结果/
+             树行/路径）由 D4-8 渲染函数独占管理，renderAll 不重建。 -->
+        <section class="sidebar-section" id="nav-section" aria-label="Navigate trees">
+          <h2 class="sidebar-heading">Navigate</h2>
+          <input id="nav-tree-search" type="search" placeholder="Find a tree…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
+          <div class="nav-find-row">
+            <button type="button" id="nav-tree-find">Find</button>
+            <span id="nav-tree-find-note" class="muted" role="status"></span>
+          </div>
+          <ul id="nav-tree-results" aria-label="Tree finder results"></ul>
+          <div id="nav-surface" hidden>
+            <p id="nav-tree-title"></p>
+            <p id="nav-tree-meta" class="muted"></p>
+            <div id="nav-tree-actions">
+              <button type="button" id="nav-locate-current" class="source-button">⌖ Locate current branch</button>
+              <button type="button" id="nav-source-selected" class="source-button">⌖ Source of selected</button>
+              <button type="button" id="nav-close-tree" class="panel-close">Close</button>
+            </div>
+            <input id="nav-node-search" type="search" placeholder="Find a branch in this tree…" aria-label="Find a branch by title or id in the open tree" />
+            <div class="nav-find-row">
+              <button type="button" id="nav-node-find">Find</button>
+              <span id="nav-node-note" class="muted" role="status"></span>
+            </div>
+            <ul id="nav-node-results" aria-label="Branch search results (each hit carries its full path)"></ul>
+            <p id="nav-path-heading" class="muted"></p>
+            <div id="nav-path" aria-label="Full path of the selected branch"></div>
+            <div id="nav-tree-scroll" tabindex="-1">
+              <div id="nav-tree-spacer-top" aria-hidden="true"></div>
+              <ul id="nav-tree" role="tree" aria-label="Branch hierarchy — children load on demand"></ul>
+              <div id="nav-tree-spacer-bottom" aria-hidden="true"></div>
+            </div>
+            <p id="nav-tree-status" class="muted" role="status"></p>
+          </div>
+        </section>
         <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
              （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
              不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
