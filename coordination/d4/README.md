@@ -425,3 +425,11 @@ gitDirty false，**14 PASS / 0 FAIL / 0 NOT_RUN**，
 - 集成纪律：三支均不改 docs/d3/D3-status.md、docs/d4/D4-status.md、
   coordination/（集成会话统一收口）；各自全量门禁绿后由集成会话按
   A（term-eval-runner）→ B（term-modes）→ C（d4-beta-usability）顺序合并。
+
+**2026-10-01 集成记录（term-modes 已合并）**：B（`wip/term-modes`，`b3f2fa5` +
+集成复核修正 `ac29d3e`——3 个原始 NUL 字节复合键分隔符改 `\0` 转义，字符串值
+不变）已合并 main（`cba9ee8`）。合并复验（串行）：typecheck、全仓 **780/780**
+（+13：terminology-reading-modes 9 + ui-terminology 4）、verify:d4 **18-0-2**
+基线不变、verify:d2 **21-0-0-1** 基线不变。术语①阅读模式语义/门禁/四状态详见
+docs/d3/D3-status.md 波次表新行。在飞：A（term-eval-runner）、C
+（d4-beta-usability）。
