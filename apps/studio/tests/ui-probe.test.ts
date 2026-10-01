@@ -447,6 +447,8 @@ interface Backend {
   journalEvents: JournalEvent[];
   requests: RecordedRequest[];
   switchCount: number;
+  /** /switch 请求闸门（非 null 时挂起响应——busy 锁在途窗口的受控测试）。 */
+  switchGate: Promise<void> | null;
   returnMode: "ok" | "lose-response" | "fail";
   /** /return 保存后的回程导航结果脚本（signed v3 §3.5：保存与导航分离）。 */
   returnNavigation: "ok" | "fail";
@@ -1096,6 +1098,8 @@ interface World {
   setConfirmResult(value: boolean): void;
   /** window.confirm 收到的消息序列（断言确认文案如实告知换轨后果）。 */
   readonly confirmCalls: readonly string[];
+  /** 挂起下一个（及后续）POST /switch 的响应；返回放行函数（busy 锁在途窗口的受控测试）。 */
+  holdSwitch(): () => void;
 }
 
 interface WorldOptions {
@@ -1208,6 +1212,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     journalEvents: JOURNAL_EVENTS,
     requests: [],
     switchCount: 0,
+    switchGate: null,
     returnMode: options.returnMode ?? "ok",
     returnNavigation: options.returnNavigation ?? "ok",
     returnDelay: false,
@@ -1258,6 +1263,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     }
     m = /^\/api\/trees\/([^/]+)\/switch$/.exec(p);
     if (m !== null && method === "POST") {
+      if (backend.switchGate !== null) await backend.switchGate;
       backend.switchCount += 1;
       const branchId = asRecord(body)?.branchId;
       const target = typeof branchId === "string" ? branchId : "";
@@ -1622,6 +1628,14 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       confirmResult = value;
     },
     confirmCalls,
+    holdSwitch: () => {
+      let release: (() => void) | null = null;
+      backend.switchGate = new Promise<void>((resolve) => { release = resolve; });
+      return () => {
+        if (release !== null) release();
+        backend.switchGate = null;
+      };
+    },
   };
 }
 
@@ -2639,11 +2653,22 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
   assert.ok(!body.classList.contains("sidebar-open"), "selecting a tree auto-closes the sidebar drawer");
   assert.equal(toggle.getAttribute("aria-expanded"), "false");
 
-  /* Esc 分层（W2 逐屏键盘焦点行）：来源抽屉 → 支线面板 → 侧栏抽屉。 */
+  /* 选分支同样收起（B7 beta 可用性探针发现：分支 tab 是唯一不收抽屉的
+     抽屉内选择——抽屉盖住刚打开的支线面板；与树行/材料按钮/搜索命中
+     同一纪律收起）。 */
   toggle.click();
   world.tabButton("branch-1")!.click();
   await settle();
+  assert.ok(
+    !body.classList.contains("sidebar-open"),
+    "selecting a branch tab auto-closes the sidebar drawer (same discipline as tree/material/search selects)",
+  );
+  assert.equal(world.el("branch-panel").hidden, false, "the branch panel opened under the dismissed drawer");
+
+  /* Esc 分层（W2 逐屏键盘焦点行）：来源抽屉 → 支线面板 → 侧栏抽屉。 */
   world.el("source-drawer-toggle").click();
+  await settle();
+  toggle.click();
   await settle();
   assert.ok(
     body.classList.contains("sidebar-open") &&
@@ -2669,6 +2694,39 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
 /* ------------------------------------------------------------------ */
 /* 12. prefers-reduced-motion：CSS 全局降级 + JS 滚动定位即时化           */
 /* ------------------------------------------------------------------ */
+
+test("Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs", async () => {
+  /* B7 beta 可用性探针发现：切枝的 /switch 在途（guard busy）时按 Esc，
+     旧实现的 void guard(() => closePanel()) 被 busy 锁直接吞掉——面板收
+     不起、无任何反馈（同 View source 曾有的缺陷家族）。修复：有界等待
+     锁释放后执行（与 View source 的既有修法一致）。 */
+  const world = await createWorld({ twoBranches: true });
+  world.tabButton("branch-1")!.click();
+  await settle();
+  assert.equal(world.el("branch-panel").hidden, false, "the branch panel is open");
+
+  /* 在途 /switch：再次点击同一分支 tab（switching=false 但 /switch 照发，
+     对齐游标）→ 闸门挂起 → busy 锁在途。 */
+  const release = world.holdSwitch();
+  world.tabButton("branch-1")!.click();
+  await settle();
+  /* Esc 在 busy 窗口内按下——不再被吞：等待中的关闭（面板此刻仍在）。 */
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  await settle();
+  assert.equal(
+    world.el("branch-panel").hidden,
+    false,
+    "while the switch is held the panel stays open (the Esc is waiting on the busy lock, not lost)",
+  );
+
+  /* 放行：/switch 落地 → busy 解除 → 等待中的 Esc 关闭执行。 */
+  release();
+  await settle();
+  await sleep(300); /* 有界等待的 100ms 轮询 + 面板退场动画 */
+  assert.equal(world.el("branch-panel").hidden, true, "the held Esc closes the panel once the busy lock clears");
+  const switches = world.requestsOf("/switch");
+  assert.ok(switches.length >= 2, "the tab re-click posted its /switch (the busy window was real)");
+});
 
 test("prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce", async () => {
   /* 词法断言：@media (prefers-reduced-motion: reduce) 的全局即时化块。 */
