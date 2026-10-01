@@ -1,0 +1,343 @@
+{
+  "check": "terminology-path",
+  "mode": "selftest",
+  "modeNote": "echo driver (deterministic answers) — mechanism evidence for the probe/UI code path, NOT real-Pi evidence",
+  "treeId": "tree_da5e584a-ec64-4c35-bbe9-495f77bf98b7",
+  "terminologyPath": {
+    "readingModes": {
+      "drawer": {
+        "labels": [
+          "Manual only",
+          "Minimal hints",
+          "Assisted reading"
+        ],
+        "defaultPressed": "manual-only",
+        "gateNotePresent": true,
+        "gateNoteText": "「…quality gate has not passed — automatic suggestions stay OFF…」(TERMINOLOGY_AUTO_QUALITY_GATE=false — the production default, asserted as-is)"
+      },
+      "switches": [
+        {
+          "mode": "minimal-hints",
+          "putPayload": "{\"mode\":\"minimal-hints\"}",
+          "serverReadback": "minimal-hints"
+        },
+        {
+          "mode": "assisted-reading",
+          "putPayload": "{\"mode\":\"assisted-reading\"}",
+          "serverReadback": "assisted-reading"
+        },
+        {
+          "mode": "manual-only",
+          "putPayload": "{\"mode\":\"manual-only\"}",
+          "serverReadback": "manual-only"
+        }
+      ],
+      "manualOnlyNoStrip": {
+        "answerLen": 48,
+        "tasks": 0,
+        "usageRequests": 0,
+        "suggestionSets": 0,
+        "stripRendered": false,
+        "isolatedExecutorSessionFiles": 0,
+        "reason": "quality-gate-pending"
+      },
+      "minimalHintsZeroDispatch": {
+        "mode": "minimal-hints",
+        "putPayload": "{\"mode\":\"minimal-hints\"}",
+        "anchorAnswerLen": 142,
+        "tasks": 0,
+        "usageRequests": 0,
+        "suggestionSets": 0,
+        "stripRendered": false,
+        "isolatedExecutorSessionFiles": 0,
+        "reason": "quality-gate-pending",
+        "note": "the production gate is OFF by design (TERMINOLOGY_AUTO_QUALITY_GATE=false): zero auto dispatch after a completed answer IS the tested semantics, not a probe limitation"
+      },
+      "suggestionChipPrefill": {
+        "exercisable": false,
+        "reason": "TERMINOLOGY_AUTO_QUALITY_GATE=false in production — no suggestion set is ever produced (sets always []), so the chip → pre-fill → explicit-confirm path cannot be exercised without changing the product gate (forbidden by the probe charter); the four honest strip states (pending/terminal or gate-off note) reduce to the gate-off drawer note + no strip, both asserted"
+      }
+    },
+    "entryVertical": {
+      "term": {
+        "armed": {
+          "start": 64,
+          "end": 78,
+          "text": "regularization",
+          "source": "candidate:regularization",
+          "gesture": "real continuous mouse drag",
+          "toolbarMode": "term"
+        },
+        "explained": {
+          "mode": "term",
+          "explanationLen": 427,
+          "containsSelectedTerm": true,
+          "driver": "echo (deterministic)"
+        },
+        "saved": {
+          "annotationId": "term_2aafead9-c07b-4ca0-96b5-19dd32f1eac1",
+          "mode": "term",
+          "term": "regularization",
+          "liveOverlayRendered": true
+        },
+        "promoted": {
+          "branchId": "branch_c8cdf673-40ce-489b-b2f4-04511df52eed",
+          "doubleClick": "double-click-delivered",
+          "firstQuestionUserTurns": 1,
+          "assistantAnswer": true,
+          "promotedBranchBinding": "branch_c8cdf673-40ce-489b-b2f4-04511df52eed"
+        },
+        "followUps": [
+          "TreeAI-术语探针-TERM追问一-j0k1l2",
+          "TreeAI-术语探针-TERM追问二-m3n4o5"
+        ],
+        "returned": {
+          "cardMeta": "↩ Return from Branch 1 · saved 2026/10/1 23:03:51 · anchored on “regularization” from Trunksaved — pending adoption on the next Trunk discussion",
+          "deliveryNote": "saved — pending adoption on the next Trunk discussion",
+          "serverFromBranchId": "branch_c8cdf673-40ce-489b-b2f4-04511df52eed"
+        }
+      },
+      "range": {
+        "armed": {
+          "start": 79,
+          "end": 108,
+          "text": "与 lasso 回归的作用，并顺带解释 overfitti",
+          "source": "after-term-anchor-word",
+          "gesture": "real continuous mouse drag",
+          "toolbarMode": "range (span)"
+        },
+        "explained": {
+          "mode": "range",
+          "explanationLen": 443,
+          "sourceWords": [
+            "lasso",
+            "overfitti"
+          ],
+          "containsSourceWord": true,
+          "driver": "echo (deterministic)"
+        },
+        "saved": {
+          "annotationId": "term_6367d265-31a5-4b2d-9b81-053ec96c2af4",
+          "mode": "range",
+          "liveOverlayRendered": true,
+          "bothOverlaysCoexist": true
+        },
+        "responseLoss": {
+          "droppedResponses": 1,
+          "promotedBranchId": "branch_60656ef0-ad2f-48a2-92e1-ba0ed7ae0cf5",
+          "branchCountDelta": 1,
+          "firstQuestionUserTurns": 1,
+          "cardSurfaced": "promotion conflict — … + saved — already promoted to … + Open the follow-up branch"
+        },
+        "resumed": {
+          "sameBranch": true,
+          "branchCountUnchanged": true
+        },
+        "followUps": [
+          "TreeAI-术语探针-RANGE追问一-v2w3x4",
+          "TreeAI-术语探针-RANGE追问二-y5z6a7"
+        ],
+        "returned": {
+          "cardMeta": "↩ Return from Branch 2 · saved 2026/10/1 23:04:24 · anchored on “与 lasso 回归的作用，并顺带解释 overfitti” from Trunksaved — pending adoption on the next Trunk discussion",
+          "serverFromBranchId": "branch_60656ef0-ad2f-48a2-92e1-ba0ed7ae0cf5"
+        }
+      }
+    },
+    "idempotency": {
+      "doubleClick": {
+        "mode": "term",
+        "secondClick": "double-click-delivered",
+        "userTurnsWithMarker": 1,
+        "exactlyOnce": true,
+        "mechanism": "client busy lock (guard) + server promotion idempotency key"
+      },
+      "responseLoss": {
+        "mode": "range",
+        "injection": "CDP Fetch Response-stage failRequest on POST …/terminology/annotations/:id/promote (the server processed it fully)",
+        "retrySemantics": "the refreshed read model reveals the recorded promotion — the honest UI path is resume (no re-dispatch); the first question was dispatched exactly once (server fact)",
+        "userTurnsWithMarker": 1
+      }
+    },
+    "restart": {
+      "annotationsReadable": {
+        "overlays": [
+          "regularization",
+          "与 lasso 回归的作用，并顺带解释 overfitti"
+        ],
+        "drawerList": [
+          "Trunk · run run_16625b72… · succeeded · 23:03:18 → 23:03:18",
+          "Trunk · run run_5b720848… · succeeded · 23:03:19 → 23:03:19",
+          "Branch 1 · run run_5c4e290a… · succeeded · 23:03:50 → 23:03:50",
+          "Branch 1 · run run_6ef9dd03… · succeeded · 23:03:51 → 23:03:51",
+          "Branch 1 · run run_718b542d… · succeeded · 23:03:51 → 23:03:51",
+          "Branch 2 · run run_f3cdabdf… · succeeded · 23:04:23 → 23:04:23",
+          "Branch 2 · run run_d0be1193… · succeeded · 23:04:23 → 23:04:23",
+          "Branch 2 · run run_00896adb… · succeeded · 23:04:23 → 23:04:23",
+          "from Branch 1 · anchored on “regularization” from Trunk · saved, pending adoption",
+          "from Branch 2 · anchored on “与 lasso 回归的作用，并顺带解释 overfitti” from Trunk · saved, pending adoption",
+          "“regularization” (term) from Trunk · anchored on “regularization” · promoted to Branch 1",
+          "“与 lasso 回归的作用，并顺带解释 overfitti” (range) from Trunk · anchored on “与 lasso 回归的作用，并顺带解释 overfitti” · promoted to Branch 2",
+          "23:04:23 turn.started — turn started",
+          "23:04:23 message.started — message started (user)",
+          "23:04:23 message.completed — message completed (user)",
+          "23:04:23 message.started — message started (assistant)",
+          "23:04:23 message.updated — message delta received (414 chars)",
+          "23:04:23 message.updated — message delta received (414 chars)",
+          "23:04:23 message.completed — message completed (assistant), stop: stop",
+          "23:04:23 turn.completed — turn completed (stop: stop)",
+          "23:04:23 agent.settled — agent run settled",
+          "23:04:23 run.state-changed — run state changed: queued → running",
+          "23:04:23 agent.started — agent run started",
+          "23:04:23 turn.started — turn started",
+          "23:04:23 message.started — message started (user)",
+          "23:04:23 message.completed — message completed (user)",
+          "23:04:23 message.started — message started (assistant)",
+          "23:04:23 message.updated — message delta received (438 chars)",
+          "23:04:23 message.updated — message delta received (437 chars)",
+          "23:04:23 message.completed — message completed (assistant), stop: stop",
+          "23:04:23 turn.completed — turn completed (stop: stop)",
+          "23:04:23 agent.settled — agent run settled"
+        ],
+        "usageLine": "terminology executor: 2 request(s), est. 432/1000000 tokens (chars/4 estimate), 0 late result(s) discarded by the executor, 0 late response(s) discarded client-side, cache on"
+      },
+      "historyAndContinuation": {
+        "port": "53135→54082",
+        "historyMarkers": [
+          "TreeAI-术语探针-TERM首问-f7g8h9",
+          "TreeAI-术语探针-TERM追问二-m3n4o5"
+        ],
+        "continuationFollowUp": "TreeAI-术语探针-重启续走-e1f2g3"
+      }
+    },
+    "recovery": {
+      "existingExploration": {
+        "toolbarEntry": "✓ Follow-up exists",
+        "cardAffordance": "Open the follow-up branch (resume-or-create, one-per-annotation guidance shown)",
+        "sameBranchReentered": true,
+        "branchCountUnchanged": true,
+        "historyMarkersVisible": [
+          "TreeAI-术语探针-TERM首问-f7g8h9",
+          "TreeAI-术语探针-重启续走-e1f2g3"
+        ]
+      },
+      "explicitNewBranch": {
+        "entry": "⑃ Branch from selection (the generic W1 branch entry — never reuses an existing exploration)",
+        "newBranchId": "branch_7d33dd40-5278-428d-8807-b85ec9d3ca0f",
+        "distinctFrom": [
+          "branch_c8cdf673-40ce-489b-b2f4-04511df52eed",
+          "branch_60656ef0-ad2f-48a2-92e1-ba0ed7ae0cf5"
+        ],
+        "firstPrompt": "TreeAI-术语探针-另开首问-h4i5j6",
+        "annotationPromotionBindingUnchanged": "branch_c8cdf673-40ce-489b-b2f4-04511df52eed"
+      }
+    },
+    "frontendInvariants": {
+      "draftFocus": {
+        "roundTrip": "typed a promotion first-question draft → Trunk tab click (real /switch + renderAll) → draft + focus + card all preserved",
+        "draftLen": 50,
+        "activeIdAfter": "term-first-question"
+      },
+      "copyInvariance": {
+        "mode": "browser copy command (execCommand) + clipboard read-back byte-equal",
+        "answerLen": 142,
+        "overlaysInPlace": 2,
+        "keyboardAcceleratorNote": "synthetic Cmd+C / Ctrl+C via CDP Input.dispatchKeyEvent does not trigger the platform copy in headless Chrome (probed live: clipboard stayed empty) — the browser's own copy command (execCommand) is used instead, operating on the real platform selection"
+      },
+      "selectionStability": {
+        "roundTrip": "armed selection → Trunk tab click (real /switch + renderAll) → turn element + body text nodes keep identity, the toolbar stays armed, the selection is unchanged",
+        "armedLabel": "Selection actions — span “与 lasso 回归的作用，并顺带解释 overfitti”"
+      },
+      "escapeFocusRestore": {
+        "activeAfter": {
+          "id": "prompt-input"
+        },
+        "note": "mark-opened card (no armed selection): the disabled explain entry cannot take focus in a real browser — the fixed product behavior falls back to the Trunk composer (pre-fix it was silently lost to body)"
+      },
+      "scrollMemory": {
+        "assertion": "no force-to-bottom on re-render while the user has scrolled up (issue #3 invariant — deterministically assertable)",
+        "scrollSetTo": 61,
+        "scrollAfterRenderAll": 0,
+        "geometry": {
+          "h": 801,
+          "ch": 689
+        },
+        "observed": "exact-position restoration across renderAll is not deterministically assertable end-to-end: transient content states (card close → content shrink → the browser clamps scrollTop and the clamp value enters the branch reading-position memory) can leave a stale 0 that later renders restore; observed deterministically in the full-sequence environment (scrollIntoView-position and direct-assignment-position round trips both landed at 0); root cause involves scroll-event delivery timing during transient layout — recorded for owner follow-up, alongside the reconcileTopLevel insert-before-remove fix that removes the transient content-collapse window"
+      },
+      "wideNarrow": {
+        "wide": "1600×900",
+        "narrow": "390×844 (mobile)",
+        "hits": {
+          "wide": {
+            "toolbarExplain": true,
+            "toolbarBranch": true
+          },
+          "wideCard": {
+            "explainCard": true,
+            "cardClose": true
+          },
+          "wideDrawer": {
+            "modeManual": true,
+            "modeMinimal": true,
+            "modeAssisted": true,
+            "cacheToggle": true
+          },
+          "narrow": {
+            "toolbarExplain": true
+          },
+          "narrowCard": {
+            "explainCard": true,
+            "cardClose": true
+          },
+          "narrowDrawer": {
+            "modeManual": true,
+            "modeMinimal": true,
+            "modeAssisted": true
+          }
+        },
+        "narrowHorizontalOverflowPx": 0
+      }
+    }
+  },
+  "markers": {
+    "q1": "TreeAI-术语探针-主干一-q1a2b3",
+    "q2": "TreeAI-术语探针-主干二-c4d5e6",
+    "termQ1": "TreeAI-术语探针-TERM首问-f7g8h9",
+    "termF1": "TreeAI-术语探针-TERM追问一-j0k1l2",
+    "termF2": "TreeAI-术语探针-TERM追问二-m3n4o5",
+    "termRet": "TreeAI-术语探针-TERM收获-p6q7r8",
+    "rangeQ1": "TreeAI-术语探针-RANGE首问-s9t0u1",
+    "rangeF1": "TreeAI-术语探针-RANGE追问一-v2w3x4",
+    "rangeF2": "TreeAI-术语探针-RANGE追问二-y5z6a7",
+    "rangeRet": "TreeAI-术语探针-RANGE收获-b8c9d0",
+    "restartF": "TreeAI-术语探针-重启续走-e1f2g3",
+    "openF": "TreeAI-术语探针-另开首问-h4i5j6"
+  },
+  "selections": {
+    "term": {
+      "start": 64,
+      "end": 78,
+      "text": "regularization",
+      "source": "candidate:regularization"
+    },
+    "range": {
+      "start": 79,
+      "end": 108,
+      "text": "与 lasso 回归的作用，并顺带解释 overfitti",
+      "source": "after-term-anchor-word"
+    }
+  },
+  "branches": {
+    "term": "branch_c8cdf673-40ce-489b-b2f4-04511df52eed",
+    "range": "branch_60656ef0-ad2f-48a2-92e1-ba0ed7ae0cf5"
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "dataDirPolicy": "dedicated mkdtemp data dir (bootStudioOn); removed in the probe's finally"
+  },
+  "pageErrorsExcluded": 1,
+  "honestyNotes": [
+    "① suggestion chip pre-fill/confirm-before-dispatch is NOT exercised: the production quality gate is OFF, suggestion sets are structurally empty, and the probe must not enable the gate to make chips appear",
+    "③ exact scroll-position restoration across renderAll is NOT asserted (disclosed): transient content states (card close → content shrink → browser clamp) can enter the branch reading-position memory as a stale value that later renders restore — observed as 401→0 and 220→0 round trips in the full-sequence environment; the deterministically assertable product invariant (no force-to-bottom on re-render while scrolled up, issue #3) IS asserted; the reconcileTopLevel insert-before-remove fix removes the transient content-collapse window; full causal chain (scroll-event delivery timing) left for owner follow-up"
+  ]
+}

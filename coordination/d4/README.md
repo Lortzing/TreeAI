@@ -474,3 +474,23 @@ Windows/Ubuntu 目标机、Mac 签收、3–5 人试用、术语真实跑批+两
   （新）、evidence/、（若发现真缺陷）最小产品修复独立提交。**不改**
   verify:d4 行结构（术语独立追踪，verify:d4 保持 19-0-1）、docs/d4/、
   coordination/。
+
+**2026-10-01 集成记录（term-browser-path 已合并，本波收口）**：术语纵向波
+（`wip/term-browser-path`，`f4a3f13`…`d031698`——首提交为恢复机制的在飞
+快照保全，信息误标已澄清）已合并 main（`23ee8f6`）。run:d4-browser
+v0.6.0 `terminology-path`（无 d4- 前缀，issue #7 术语工作不计 D4 进度）：
+①②③全场景 + 四项真实前端焦点/竞态缺陷修复。证据三份：echo 全量 16-0-0
+（`872be3e`）、**真实 Pi 5-0-0**（`450b9d7`，deepseek 13 次调用）、主 SHA
+复跑 16-0-0（`d4-browser-20261001T150039Z-terminology-path-main`）。
+合并复验（串行）：typecheck、全仓 **792/792**、verify:d4 **19-0-1**、
+verify:d2 **21-0-0-1** 基线不变。
+
+**本会话（treeai-loop 2026-10-01）终态**：四波全部落 main 并推送——
+术语①阅读模式（`cba9ee8`）、术语①评测基建（`9459990`）、B7 自动部分
+（`67e4786`）、术语①②③真实浏览器+真实 Pi 纵向（`23ee8f6`）。主线：
+typecheck、**792/792**、verify:d4 **19 PASS / 0 FAIL / 1 NOT_RUN**（唯一
+NOT_RUN = b8 负责人 Windows/Ubuntu 目标机）、verify:d4:selftest 全检出、
+verify:d2 21-0-0-1、run:d4-browser selftest **16-0-0**、real-pi 术语半边
+5-0-0。**issue #7/#8 中可自主执行的工程项至此全部交付。** 剩余全部为
+负责人门禁：B8 目标机干净安装、术语真实模型跑批+两人标注（有用率/覆盖率
+门禁）、Mac 体验签收、3–5 人独立试用、最终候选 SHA 全量回归（owner 择时）。

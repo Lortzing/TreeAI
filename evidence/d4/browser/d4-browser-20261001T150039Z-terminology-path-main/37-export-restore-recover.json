@@ -1,0 +1,49 @@
+{
+  "check": "d4-export-restore-recover",
+  "treeId": "tree_8f9dde63-f9c9-4ecf-9ed9-7630d54fc5ef",
+  "branchId": "branch_69b5677d-08fa-48a7-a003-8d0922ae5440",
+  "markers": {
+    "question": "TreeAI-B5-恢复探针-首问-3e77",
+    "annotation": "TreeAI-B5-恢复探针-批注-8c14",
+    "ret": "TreeAI-B5-恢复探针-RETURN-52a9",
+    "trunkTurn": "TreeAI-B5-恢复探针-主线-e5a1",
+    "newExploration": "TreeAI-B5-恢复探针-新探索-d40f"
+  },
+  "facts": {
+    "material": "md-01.md",
+    "savedBranchTurns": 2,
+    "restoredBranchTurns": 2,
+    "turnsAfterNewExploration": 4
+  },
+  "export": {
+    "cli": "apps/studio export --out",
+    "packageDir": "<tmp>",
+    "sessionsExcluded": true
+  },
+  "restore": {
+    "cli": "--import-package",
+    "dataDir": "<tmp>"
+  },
+  "restart": {
+    "oldPort": 51340,
+    "newPort": 51412,
+    "restoredDataDir": "<tmp>"
+  },
+  "injectedFaults": [
+    "original data dir sessions/ renamed aside after export (same-machine stand-in for the charter §5 default: the package carries no sessions, so on any other machine the referenced file does not exist); renamed back at probe end"
+  ],
+  "searchRecovery": {
+    "jumpsExercised": [
+      "trunk turn → main conversation",
+      "return → trunk Return card",
+      "material → restored reader at the hit"
+    ],
+    "sideBranchHitRows": "carry the session-unavailable note + explicit new-exploration entry (rows not clicked: the search-hit panel-open path replays POST /switch, which the real server rejects 502 session-corrupt for a missing session file — reported to the owner, not fixed in this wave)"
+  },
+  "sessionPath": {
+    "before": "available",
+    "afterRestore": "unavailable",
+    "afterNewExploration": "available"
+  },
+  "pageErrorsExcluded": 3
+}

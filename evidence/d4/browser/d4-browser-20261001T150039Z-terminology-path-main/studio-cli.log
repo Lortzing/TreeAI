@@ -1,0 +1,14 @@
+
+=== studio CLI export --out <tmp>/treeai-d4-b5-pkg-xEBpbC --data <tmp>/treeai-d4-data-6Gmnag → exit 0 ===
+treeai-studio export: package written to <tmp>/treeai-d4-b5-pkg-xEBpbC
+treeai-studio export: format treeai-export-1 (manifest schema v1, product schema v10)
+treeai-studio export: facts — forests=1, trees=3, branches=7, episodes=14, runs=10, session_references=10, turns=24, branch_origins=0, tree_active_navigation=1, return_adoption_attempts=4, terminology_annotations=2, terminology_promotion_dispatches=0, terminology_state=0, materials=59, material_versions=60, tree_material_links=59, material_branch_origins=4, tree_material_reading_state=24, material_first_questions=4, blobs=36
+treeai-studio export: sessions excluded by default (sensitive raw transcripts; pass --include-sessions to embed them)
+
+
+=== studio CLI --import-package <tmp>/treeai-d4-b5-pkg-xEBpbC --data <tmp>/treeai-d4-b5-restored-KIXytc → exit 0 ===
+treeai-studio restore: package validated and restored into <tmp>/treeai-d4-b5-restored-KIXytc
+treeai-studio restore: format treeai-export-1 (product schema v10, exported 2026-10-01T15:01:10.420Z)
+treeai-studio restore: 286 fact rows, 36 material blobs
+treeai-studio restore: no Pi sessions in the package — old Pi context is NOT continuable by design; materials/origins/returns stay readable and exploration restarts explicitly (charter D4 §1 path 6)
+

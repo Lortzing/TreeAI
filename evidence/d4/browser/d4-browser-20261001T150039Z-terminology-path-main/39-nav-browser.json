@@ -1,0 +1,1048 @@
+{
+  "check": "d4-nav-browser",
+  "dataset": {
+    "setId": "b9-nav",
+    "seed": "d4-b9-2026-09-30",
+    "trees": 100,
+    "branchRows": 10100,
+    "loadElapsedMs": 1426
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin 25.6.0 arm64",
+    "cpu": "10× Apple M4",
+    "totalMemoryGiB": 16,
+    "viewport": "1280×900 (headless=new, CDP)",
+    "loadavgAtStart": [
+      4.09,
+      3.63,
+      3.11
+    ],
+    "honestyNote": "local-machine engineering evidence (p95/first-open recorded with the environment above; never claimed cross-machine); parallel wave agents may be building on this machine — the p95 probe reruns once if it lands within 20% of the limit, both runs recorded",
+    "loadavgAtEnd": [
+      3.29,
+      3.47,
+      3.07
+    ],
+    "browser": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "hardwareConcurrency": 10,
+      "deviceMemory": 16
+    }
+  },
+  "frontendBugs": [
+    {
+      "id": "nav-section-overflow-under-materials",
+      "detail": "#nav-section (flex: 1.2 1 0 + min-height: 220px) overflows its box whenever its content (finder + tree surface, min-content ~500px) exceeds the allocated height — the overflowing tree scroller is painted UNDER the following #materials-section (elementFromPoint at a nav row's toggle returns a material list button). Reproduced at 1280x900 / x1400 / x2000 / x2200 viewports (taller viewports grow forest's 22vh cap and the branch-tabs list, so the nav section never reaches its content height): with a workbench tree that has materials open (the normal state), the nav tree is unclickable at any common window size. Same family as 1b48ef0 (which capped only tree-list/material-list); the sibling #branch-section collapses to height 0 in the same state (branch tabs unclickable — evidenced by the b3 probes). Reported to the owner, not fixed in this wave.",
+      "measuredAt": {
+        "viewport": "1280x900",
+        "sidebarHeight": 842,
+        "sidebarScrollHeight": 1477,
+        "navSectionHeight": 260,
+        "branchSectionHeight": 270
+      }
+    }
+  ],
+  "timing": {
+    "coldShellMs": 814,
+    "measurementViewport": "1280x900",
+    "rowInteractionNote": "row/toggle/more/hit clicks are DOM-dispatched (the sidebar layout bug below covers the tree scroller at every tested viewport); the settle measurement covers the app's full work (fetch + render), input-pipeline hit-testing (~1-5ms) excluded",
+    "bigFirstOpenMs": 69.09999990463257,
+    "opCount": 57,
+    "timedOpCount": 55,
+    "preemptedOps": 2,
+    "p95Ms": 48.7,
+    "medianMs": 24.8,
+    "maxMs": 119.5,
+    "rerun": false
+  },
+  "limits": {
+    "p95Ms": 300,
+    "bigFirstOpenMs": 2000,
+    "virtualizedDomRowLimit": 39
+  },
+  "opPlan": [
+    "treeOpen:b9-big:",
+    "expand:b9-big:b9-big-trunk",
+    "expand:b9-big:b9-big-n0001",
+    "select:b9-big:b9-big-n0001",
+    "expand:b9-big:b9-big-n0002",
+    "select:b9-big:b9-big-n0002",
+    "expand:b9-big:b9-big-n0003",
+    "select:b9-big:b9-big-n0003",
+    "expand:b9-big:b9-big-n0004",
+    "select:b9-big:b9-big-n0004",
+    "expand:b9-big:b9-big-n0005",
+    "select:b9-big:b9-big-n0005",
+    "expand:b9-big:b9-big-n0006",
+    "select:b9-big:b9-big-n0006",
+    "expand:b9-big:b9-big-n0007",
+    "select:b9-big:b9-big-n0007",
+    "expand:b9-big:b9-big-n0008",
+    "select:b9-big:b9-big-n0008",
+    "collapse:b9-big:b9-big-n0001",
+    "expand:b9-big:b9-big-n0001",
+    "collapse:b9-big:b9-big-n0002",
+    "expand:b9-big:b9-big-n0002",
+    "collapse:b9-big:b9-big-n0003",
+    "expand:b9-big:b9-big-n0003",
+    "collapse:b9-big:b9-big-n0004",
+    "expand:b9-big:b9-big-n0004",
+    "collapse:b9-big:b9-big-n0005",
+    "expand:b9-big:b9-big-n0005",
+    "select:b9-big:b9-big-trunk",
+    "treeOpen:b9-deep:",
+    "expand:b9-deep:b9-deep-trunk",
+    "select:b9-deep:b9-deep-c001",
+    "treeOpen:b9-wide:",
+    "expand:b9-wide:b9-wide-trunk",
+    "select:b9-wide:b9-wide-w001",
+    "select:b9-wide:b9-wide-w009",
+    "select:b9-wide:b9-wide-w021",
+    "select:b9-wide:b9-wide-w038",
+    "select:b9-wide:b9-wide-w050",
+    "more:b9-wide:220",
+    "select:b9-wide:b9-wide-w053",
+    "select:b9-wide:b9-wide-w076",
+    "select:b9-wide:b9-wide-w100",
+    "more:b9-wide:220",
+    "select:b9-wide:b9-wide-w150",
+    "collapse:b9-wide:b9-wide-trunk",
+    "expand:b9-wide:b9-wide-trunk",
+    "treeOpen:b9-deep:",
+    "search:b9-deep:b9-deep-c050",
+    "reveal:b9-deep:b9-deep-c050",
+    "search:b9-deep:b9-deep-c100",
+    "reveal:b9-deep:b9-deep-c100",
+    "select:b9-deep:b9-deep-c010",
+    "select:b9-deep:b9-deep-c001",
+    "select:b9-deep:b9-deep-c075",
+    "select:b9-deep:b9-deep-c100",
+    "select:b9-deep:b9-deep-trunk"
+  ],
+  "opRecords": [
+    {
+      "op": "treeOpen:b9-big:",
+      "ms": 0,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-trunk",
+      "ms": 7.6,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0001",
+      "ms": 26.9,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0001",
+      "ms": 32.6,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0002",
+      "ms": 27.5,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0002",
+      "ms": 10.7,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0003",
+      "ms": 33.1,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0003",
+      "ms": 31.2,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0004",
+      "ms": 37.3,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0004",
+      "ms": 41.3,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0005",
+      "ms": 23.8,
+      "loadavg": [
+        4,
+        3.61,
+        3.11
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0005",
+      "ms": 28.7,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0006",
+      "ms": 37.4,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0006",
+      "ms": 28.9,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0007",
+      "ms": 42.4,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0007",
+      "ms": 41.9,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0008",
+      "ms": 13.1,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-n0008",
+      "ms": 16.3,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "collapse:b9-big:b9-big-n0001",
+      "ms": 4,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0001",
+      "ms": 6.9,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "collapse:b9-big:b9-big-n0002",
+      "ms": 6.7,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0002",
+      "ms": 18,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "collapse:b9-big:b9-big-n0003",
+      "ms": 4.2,
+      "loadavg": [
+        3.84,
+        3.59,
+        3.1
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0003",
+      "ms": 7.8,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "collapse:b9-big:b9-big-n0004",
+      "ms": 15.9,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0004",
+      "ms": 7.1,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "collapse:b9-big:b9-big-n0005",
+      "ms": 8.2,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "expand:b9-big:b9-big-n0005",
+      "ms": 7.2,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-big:b9-big-trunk",
+      "ms": 26.6,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "treeOpen:b9-deep:",
+      "ms": 29,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "expand:b9-deep:b9-deep-trunk",
+      "ms": 6,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-c001",
+      "ms": 24.8,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "treeOpen:b9-wide:",
+      "ms": 22.8,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "expand:b9-wide:b9-wide-trunk",
+      "ms": 2,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w001",
+      "ms": 25.8,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w009",
+      "ms": 36.3,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w021",
+      "ms": 48.7,
+      "loadavg": [
+        3.7,
+        3.56,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w038",
+      "ms": 26.3,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w050",
+      "ms": 41.4,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "more:b9-wide:",
+      "ms": null,
+      "note": "skipped (already satisfied / pump-preempted) — idempotent rerun semantics",
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w053",
+      "ms": 15.9,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w076",
+      "ms": 17.3,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w100",
+      "ms": 34.3,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "more:b9-wide:",
+      "ms": null,
+      "note": "skipped (already satisfied / pump-preempted) — idempotent rerun semantics",
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "select:b9-wide:b9-wide-w150",
+      "ms": 29.8,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "collapse:b9-wide:b9-wide-trunk",
+      "ms": 9.5,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "expand:b9-wide:b9-wide-trunk",
+      "ms": 6.3,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "treeOpen:b9-deep:",
+      "ms": 22.3,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "search:b9-deep:b9-deep-c050",
+      "ms": 12.8,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "reveal:b9-deep:b9-deep-c050",
+      "ms": 119.5,
+      "loadavg": [
+        3.56,
+        3.54,
+        3.09
+      ]
+    },
+    {
+      "op": "search:b9-deep:b9-deep-c100",
+      "ms": 22.7,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "reveal:b9-deep:b9-deep-c100",
+      "ms": 102.5,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-c010",
+      "ms": 32.8,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-c001",
+      "ms": 30.9,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-c075",
+      "ms": 16.5,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-c100",
+      "ms": 26.3,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    },
+    {
+      "op": "select:b9-deep:b9-deep-trunk",
+      "ms": 33.5,
+      "loadavg": [
+        3.43,
+        3.51,
+        3.08
+      ]
+    }
+  ],
+  "virtualization": {
+    "samples": [
+      {
+        "scrollTopPx": 0,
+        "domRows": 19,
+        "first": "b9-wide-trunk",
+        "status": "rendering 19/221 visible rows (virtualized window) · 265 nodes · max depth 2"
+      },
+      {
+        "scrollTopPx": 1020,
+        "domRows": 29,
+        "first": "b9-wide-w020",
+        "status": "rendering 29/221 visible rows (virtualized window) · 265 nodes · max depth 2"
+      },
+      {
+        "scrollTopPx": 2720,
+        "domRows": 29,
+        "first": "b9-wide-w070",
+        "status": "rendering 29/221 visible rows (virtualized window) · 265 nodes · max depth 2"
+      },
+      {
+        "scrollTopPx": 4760,
+        "domRows": 29,
+        "first": "b9-wide-w130",
+        "status": "rendering 29/221 visible rows (virtualized window) · 265 nodes · max depth 2"
+      },
+      {
+        "scrollTopPx": 6800,
+        "domRows": 29,
+        "first": "b9-wide-w190",
+        "status": "rendering 29/221 visible rows (virtualized window) · 265 nodes · max depth 2"
+      }
+    ],
+    "bigRendered": {
+      "domRows": 19,
+      "rendered": 19,
+      "total": 31
+    },
+    "wideTotalRows": 221,
+    "domRowLimit": 39
+  },
+  "keyboard": {
+    "steps": [
+      {
+        "step": "Home (first row; large re-windowing jump)",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-trunk",
+        "focused": true
+      },
+      {
+        "step": "ArrowRight descends into the first child",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-c001",
+        "focused": true
+      },
+      {
+        "step": "ArrowDown level walk",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-c002",
+        "focused": true
+      },
+      {
+        "step": "ArrowDown ×3 more",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-c005",
+        "focused": true
+      },
+      {
+        "step": "End (last row; large re-windowing jump)",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-s01",
+        "focused": true
+      },
+      {
+        "step": "Home again (large re-windowing jump)",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-trunk",
+        "focused": true
+      },
+      {
+        "step": "ArrowLeft collapses the expanded trunk (focus retained)",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-trunk",
+        "focused": true
+      },
+      {
+        "step": "ArrowRight re-expands the trunk (focus retained across re-windowing)",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-trunk",
+        "focused": true
+      },
+      {
+        "step": "ArrowRight descends again after re-expansion",
+        "tag": "LI",
+        "id": "",
+        "branchId": "b9-deep-c001",
+        "focused": true
+      }
+    ],
+    "endRowId": "b9-deep-s01"
+  },
+  "restart": {
+    "before": {
+      "treeId": "b9-deep",
+      "expandedBranchIds": [
+        "b9-deep-c001",
+        "b9-deep-c002",
+        "b9-deep-c003",
+        "b9-deep-c004",
+        "b9-deep-c005",
+        "b9-deep-c006",
+        "b9-deep-c007",
+        "b9-deep-c008",
+        "b9-deep-c009",
+        "b9-deep-c010",
+        "b9-deep-c011",
+        "b9-deep-c012",
+        "b9-deep-c013",
+        "b9-deep-c014",
+        "b9-deep-c015",
+        "b9-deep-c016",
+        "b9-deep-c017",
+        "b9-deep-c018",
+        "b9-deep-c019",
+        "b9-deep-c020",
+        "b9-deep-c021",
+        "b9-deep-c022",
+        "b9-deep-c023",
+        "b9-deep-c024",
+        "b9-deep-c025",
+        "b9-deep-c026",
+        "b9-deep-c027",
+        "b9-deep-c028",
+        "b9-deep-c029",
+        "b9-deep-c030",
+        "b9-deep-c031",
+        "b9-deep-c032",
+        "b9-deep-c033",
+        "b9-deep-c034",
+        "b9-deep-c035",
+        "b9-deep-c036",
+        "b9-deep-c037",
+        "b9-deep-c038",
+        "b9-deep-c039",
+        "b9-deep-c040",
+        "b9-deep-c041",
+        "b9-deep-c042",
+        "b9-deep-c043",
+        "b9-deep-c044",
+        "b9-deep-c045",
+        "b9-deep-c046",
+        "b9-deep-c047",
+        "b9-deep-c048",
+        "b9-deep-c049",
+        "b9-deep-c050",
+        "b9-deep-c051",
+        "b9-deep-c052",
+        "b9-deep-c053",
+        "b9-deep-c054",
+        "b9-deep-c055",
+        "b9-deep-c056",
+        "b9-deep-c057",
+        "b9-deep-c058",
+        "b9-deep-c059",
+        "b9-deep-c060",
+        "b9-deep-c061",
+        "b9-deep-c062",
+        "b9-deep-c063",
+        "b9-deep-c064",
+        "b9-deep-c065",
+        "b9-deep-c066",
+        "b9-deep-c067",
+        "b9-deep-c068",
+        "b9-deep-c069",
+        "b9-deep-c070",
+        "b9-deep-c071",
+        "b9-deep-c072",
+        "b9-deep-c073",
+        "b9-deep-c074",
+        "b9-deep-c075",
+        "b9-deep-c076",
+        "b9-deep-c077",
+        "b9-deep-c078",
+        "b9-deep-c079",
+        "b9-deep-c080",
+        "b9-deep-c081",
+        "b9-deep-c082",
+        "b9-deep-c083",
+        "b9-deep-c084",
+        "b9-deep-c085",
+        "b9-deep-c086",
+        "b9-deep-c087",
+        "b9-deep-c088",
+        "b9-deep-c089",
+        "b9-deep-c090",
+        "b9-deep-c091",
+        "b9-deep-c092",
+        "b9-deep-c093",
+        "b9-deep-c094",
+        "b9-deep-c095",
+        "b9-deep-c096",
+        "b9-deep-c097",
+        "b9-deep-c098",
+        "b9-deep-c099",
+        "b9-deep-trunk"
+      ],
+      "selectedBranchId": "b9-deep-c020",
+      "updatedAt": "2026-10-01T15:01:47.437Z"
+    },
+    "after": {
+      "treeId": "b9-deep",
+      "expandedBranchIds": [
+        "b9-deep-c001",
+        "b9-deep-c002",
+        "b9-deep-c003",
+        "b9-deep-c004",
+        "b9-deep-c005",
+        "b9-deep-c006",
+        "b9-deep-c007",
+        "b9-deep-c008",
+        "b9-deep-c009",
+        "b9-deep-c010",
+        "b9-deep-c011",
+        "b9-deep-c012",
+        "b9-deep-c013",
+        "b9-deep-c014",
+        "b9-deep-c015",
+        "b9-deep-c016",
+        "b9-deep-c017",
+        "b9-deep-c018",
+        "b9-deep-c019",
+        "b9-deep-c020",
+        "b9-deep-c021",
+        "b9-deep-c022",
+        "b9-deep-c023",
+        "b9-deep-c024",
+        "b9-deep-c025",
+        "b9-deep-c026",
+        "b9-deep-c027",
+        "b9-deep-c028",
+        "b9-deep-c029",
+        "b9-deep-c030",
+        "b9-deep-c031",
+        "b9-deep-c032",
+        "b9-deep-c033",
+        "b9-deep-c034",
+        "b9-deep-c035",
+        "b9-deep-c036",
+        "b9-deep-c037",
+        "b9-deep-c038",
+        "b9-deep-c039",
+        "b9-deep-c040",
+        "b9-deep-c041",
+        "b9-deep-c042",
+        "b9-deep-c043",
+        "b9-deep-c044",
+        "b9-deep-c045",
+        "b9-deep-c046",
+        "b9-deep-c047",
+        "b9-deep-c048",
+        "b9-deep-c049",
+        "b9-deep-c050",
+        "b9-deep-c051",
+        "b9-deep-c052",
+        "b9-deep-c053",
+        "b9-deep-c054",
+        "b9-deep-c055",
+        "b9-deep-c056",
+        "b9-deep-c057",
+        "b9-deep-c058",
+        "b9-deep-c059",
+        "b9-deep-c060",
+        "b9-deep-c061",
+        "b9-deep-c062",
+        "b9-deep-c063",
+        "b9-deep-c064",
+        "b9-deep-c065",
+        "b9-deep-c066",
+        "b9-deep-c067",
+        "b9-deep-c068",
+        "b9-deep-c069",
+        "b9-deep-c070",
+        "b9-deep-c071",
+        "b9-deep-c072",
+        "b9-deep-c073",
+        "b9-deep-c074",
+        "b9-deep-c075",
+        "b9-deep-c076",
+        "b9-deep-c077",
+        "b9-deep-c078",
+        "b9-deep-c079",
+        "b9-deep-c080",
+        "b9-deep-c081",
+        "b9-deep-c082",
+        "b9-deep-c083",
+        "b9-deep-c084",
+        "b9-deep-c085",
+        "b9-deep-c086",
+        "b9-deep-c087",
+        "b9-deep-c088",
+        "b9-deep-c089",
+        "b9-deep-c090",
+        "b9-deep-c091",
+        "b9-deep-c092",
+        "b9-deep-c093",
+        "b9-deep-c094",
+        "b9-deep-c095",
+        "b9-deep-c096",
+        "b9-deep-c097",
+        "b9-deep-c098",
+        "b9-deep-c099",
+        "b9-deep-trunk"
+      ],
+      "selectedBranchId": "b9-deep-c020",
+      "updatedAt": "2026-10-01T15:01:47.437Z"
+    },
+    "oldPort": 51488,
+    "newPort": 51881,
+    "selectedRestored": "b9-deep-c020",
+    "expandedCount": 100
+  },
+  "spotChecks": [
+    {
+      "treeId": "b9-big",
+      "branchId": "b9-big-n0001",
+      "depth": 1,
+      "originKind": "none",
+      "pathLevels": 2
+    },
+    {
+      "treeId": "b9-big",
+      "branchId": "b9-big-n0015",
+      "depth": 3,
+      "originKind": "none",
+      "pathLevels": 4
+    },
+    {
+      "treeId": "b9-big",
+      "branchId": "b9-big-n0011",
+      "depth": 2,
+      "originKind": "material",
+      "pathLevels": 3
+    },
+    {
+      "treeId": "b9-deep",
+      "branchId": "b9-deep-c050",
+      "depth": 50,
+      "originKind": "turn",
+      "pathLevels": 51
+    },
+    {
+      "treeId": "b9-wide",
+      "branchId": "b9-wide-w220",
+      "depth": 1,
+      "originKind": "none",
+      "pathLevels": 2
+    },
+    {
+      "treeId": "b9-samename",
+      "branchId": "b9-samename-trunk",
+      "depth": 0,
+      "originKind": "none",
+      "pathLevels": 1
+    },
+    {
+      "treeId": "b9-samename",
+      "branchId": "b9-samename-decoy-4",
+      "depth": 2,
+      "originKind": "none",
+      "pathLevels": 3
+    },
+    {
+      "treeId": "b9-longtitle",
+      "branchId": "b9-longtitle-spine-01",
+      "depth": 1,
+      "originKind": "none",
+      "pathLevels": 2
+    },
+    {
+      "treeId": "b9-empty",
+      "branchId": "b9-empty-trunk",
+      "depth": 0,
+      "originKind": "none",
+      "pathLevels": 1
+    },
+    {
+      "treeId": "b9-deep",
+      "branchId": "b9-deep-c050",
+      "pathRowLevels": 51
+    },
+    {
+      "treeId": "b9-tree-59",
+      "branchId": "b9-tree-59-n002",
+      "sourceJump": {
+        "blockId": "blk-3",
+        "excerptVisible": true
+      }
+    }
+  ],
+  "pageErrorsExcluded": 0
+}
