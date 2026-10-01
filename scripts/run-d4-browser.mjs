@@ -27,6 +27,23 @@
  *     → 恢复到全新空数据目录 → 恢复目录上全新 studio 进程 → 真实浏览器
  *     阅读恢复材料 / 侧栏 Search 找回复原事实（来源跳转）/ session 未存
  *     活分支的显式新探索换轨。
+ * v0.4.0（最终波浏览器证据）：
+ *   - d4-branch-from-material / d4-return-from-material（B3 用户路径，
+ *     b3-probes.mjs）：real-pi 执行完整 charter 路径（md+pdf 武装选区 →
+ *     建枝 → 提交前材料范围声明 → 真实 Pi 首问（双击不重复派发 / 响应
+ *     丢失同键重试诚实——CDP Fetch 域 Response 阶段丢弃，服务端已落地）
+ *     → ≥2 轮追问 → 跨枝隔离 → 重启续走 → 回原文（精确摘录+定位）→
+ *     Return 携材料来源卡）；selftest 为同一 UI 流程的 echo 冒烟（机制
+ *     可达性证明，detail/sidecar 如实标注「不是 B3 证据」）；
+ *   - d4-nav-browser（B9 浏览器面，nav-probes.mjs）：B9 数据集真实生成/
+ *     装载入专用目录 → 真实浏览器度量（b9-big 初开 ≤2s、≥50 次脚本化
+ *     展开/切换 p95 ≤300ms、虚拟化 DOM 有界、键盘逐层+焦点跨窗口保持、
+ *     展开状态跨真实进程重启、结构真值抽样对照）；
+ *   - d4-b6-scale-browser（B6 浏览器面，scale-probes.mjs）：B6 规模特产
+ *     真实生成/装载 → 真实浏览器度量（30 次现有材料打开至可读 p95 ≤2s、
+ *     翻页无 >200ms 主线程段（longtask+步延迟）、翻阅中键入
+ *     keystroke-to-render、10MiB 样例真实导入 UI 取消、搜索命中渲染证据）。
+ *     本地机器工程证据（环境/并发如实入 sidecar），不跨机器宣称。
  * 未落地项保持 NOT_RUN + 原因（owner 写明）——绝不静默省略，也不把
  * NOT_RUN 计为通过。
  *
@@ -75,6 +92,9 @@ import {
   probeImportDenominator,
   probeExportRestoreRecover,
 } from "./d4/browser/material-probes.mjs";
+import { probeBranchFromMaterial, probeReturnFromMaterial } from "./d4/browser/b3-probes.mjs";
+import { probeNavBrowser } from "./d4/browser/nav-probes.mjs";
+import { probeB6ScaleBrowser } from "./d4/browser/scale-probes.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
@@ -114,6 +134,8 @@ const USAGE = [
   "  --provider <id>             受控 provider（仅 real-pi）",
   "  --model <id>                受控 model（仅 real-pi）",
   "  --agent-dir <dir>           受控 agent 注册表目录（仅 real-pi；常用 .pi-d2-live）",
+  "  --only <id>                 只运行指定检查（可重复；boot 检查恒随行——",
+  "                              其余检查不列出；summary 记录范围，绝不冒充全量）",
   "  --help                      打印本说明",
   "",
   "凭据: real-pi 需要 TREEAI_STUDIO_API_KEY 环境变量（只检查变量名，值由",
@@ -143,6 +165,7 @@ function parseCli(argv) {
     provider: null,
     model: null,
     agentDir: null,
+    only: [],
   };
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
@@ -157,6 +180,7 @@ function parseCli(argv) {
     else if (flag === "--provider") raw.provider = value;
     else if (flag === "--model") raw.model = value;
     else if (flag === "--agent-dir") raw.agentDir = value;
+    else if (flag === "--only") raw.only.push(value);
     else throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
   }
   if (!MODES.includes(raw.mode)) throw new Error(`${USAGE}\n(--mode must be one of ${MODES.join(", ")})`);
@@ -509,12 +533,34 @@ async function restartStudio(dataDir) {
   return bootStudioOn(dataDir);
 }
 
-/** 在指定数据目录上启动全新 studio 进程（先停当前进程；B5 恢复探针在
-    恢复目录上开新进程用——sc.dataDir 语义保持指向原始数据目录）。 */
+/** 同数据目录启动全新 studio 进程（新端口；B5 恢复探针在恢复目录上开新进程用——
+    sc.dataDir 语义保持指向原始数据目录）。 */
 async function bootStudioOn(dataDir) {
   await stopStudioProcess();
   studio.port = await freePort();
   await startStudio(dataDir, { appendLog: true });
+  booted = true;
+  sc.studioUrl = `http://127.0.0.1:${String(studio.port)}/`;
+  return sc.studioUrl;
+}
+
+/** 同端口优雅重启（B3 探针用）：SIGTERM 停止后在同一端口起新进程——浏览器
+    localStorage 按源（host:port）隔离，挂起意图/来源缓存等浏览器侧状态只在
+    同源下存活（真实产品的服务重启即同端口）。端口短暂占用（TIME_WAIT 窗口）
+    时重试一次。 */
+async function restartStudioSamePort() {
+  const port = studio.port;
+  await stopStudioProcess();
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      studio.port = port;
+      await startStudio(sc.dataDir, { appendLog: true });
+      break;
+    } catch (err) {
+      if (attempt >= 2) throw err;
+      await sleep(600);
+    }
+  }
   booted = true;
   sc.studioUrl = `http://127.0.0.1:${String(studio.port)}/`;
   return sc.studioUrl;
@@ -576,19 +622,33 @@ const CHECK_DEFS = [
   { id: "page-load", modes: ["selftest", "real-pi"] },
   { id: "console-clean", modes: ["selftest", "real-pi"] },
   /* D4 用户路径：B1/B2 浏览器面已落地（v0.2.0，scripts/d4/browser/）；
-     其余检查在对应工作包落地前 NOT_RUN（原因写明归属），落地后翻成真实检查。 */
+     B3 材料 Branch/Return 用户路径探针已实现（v0.4.0，b3-probes.mjs）：
+     real-pi 执行完整 charter 路径（真实 Pi 首问/追问/隔离/回原文/Return/
+     双击幂等/响应丢失重试/重启续走）；selftest 以 echo 驱动同一 UI 流程
+     （机制冒烟，如实标注「不是 B3 证据」）。
+     B9 大规模树导航与 B6 规模性能的浏览器面（v0.4.0，nav-probes.mjs /
+     scale-probes.mjs）：专用数据目录（真实生成器/装载器）+ 真实浏览器度量。 */
   { id: "d4-import-material", modes: ["selftest", "real-pi"] },
   { id: "d4-import-denominator", modes: ["selftest", "real-pi"] },
   { id: "d4-read-and-select", modes: ["selftest", "real-pi"] },
-  { id: "d4-branch-from-material", modes: ["real-pi"], notRun: { selftest: "材料建枝检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料建枝/首问未实现（owner: D4-3）" } },
-  { id: "d4-return-from-material", modes: ["real-pi"], notRun: { selftest: "材料 Return 检查属 real-pi 用户路径（owner: D4-3 后端波次进行中）", "real-pi": "材料 Return 未实现（owner: D4-3）" } },
+  { id: "d4-branch-from-material", modes: ["selftest", "real-pi"] },
+  { id: "d4-return-from-material", modes: ["selftest", "real-pi"] },
   { id: "d4-restart-continue", modes: ["selftest", "real-pi"] },
   { id: "d4-search-recover", modes: ["selftest", "real-pi"] },
   { id: "d4-export-restore-recover", modes: ["selftest", "real-pi"] },
+  { id: "d4-nav-browser", modes: ["selftest", "real-pi"] },
+  { id: "d4-b6-scale-browser", modes: ["selftest", "real-pi"] },
 ];
 
 const results = [];
 const byId = new Map(CHECK_DEFS.map((def) => [def.id, def]));
+
+/* --only 范围门（verify-d4 --only 同款纪律）：boot 检查恒随行（其余检查
+   的级联前提）；范围如实入 summary（scoped 标注），绝不冒充全量。 */
+const BOOT_ALWAYS_IDS = ["chrome-boot", "studio-boot", "page-load"];
+const SELECTED_CHECK_IDS = CLI.only.length === 0
+  ? CHECK_DEFS.map((def) => def.id)
+  : CHECK_DEFS.filter((def) => CLI.only.includes(def.id) || BOOT_ALWAYS_IDS.includes(def.id)).map((def) => def.id);
 
 function report(entry) {
   results.push(entry);
@@ -707,11 +767,12 @@ function finish(code) {
        mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
     writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
       script: "run-d4-browser.mjs",
-      version: "0.3.0",
+      version: "0.4.0",
       runId: sc.runId,
       mode: MODE,
       verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
       exitCode: exit,
+      ...(CLI.only.length > 0 ? { scoped: CLI.only } : {}),
       counts: { pass: counts.pass, fail: counts.fail, blocked: counts.blocked, notRun: counts.notRun },
       gitCommit: git === null ? "unavailable (git rev-parse failed)" : git.head,
       gitDirty: git === null ? null : git.dirty,
@@ -750,9 +811,11 @@ const probeCtx = {
   studioOrigin: () => `http://127.0.0.1:${String(studio.port)}`,
   studioUrl: () => sc.studioUrl,
   studioDataDir: () => sc.dataDir,
+  promptTimeoutMs: () => CLI.promptTimeoutMs,
   api,
   stopStudio: () => stopStudioProcess(),
   restartStudio: () => restartStudio(sc.dataDir),
+  restartStudioSamePort,
   bootStudioOn,
   runStudioCli,
   pageErrors: () => chrome.pageErrors.slice(),
@@ -768,7 +831,7 @@ async function main() {
   sc.dataDir = CLI.dataDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-data-"));
   sc.artifactsDir = CLI.artifactsDir ?? mkdtempSync(join(tmpdir(), "treeai-d4-browser-artifacts-"));
   mkdirSync(sc.artifactsDir, { recursive: true });
-  console.log(`run-d4-browser 0.3.0 — mode ${MODE}`);
+  console.log(`run-d4-browser 0.4.0 — mode ${MODE}`);
   console.log(`data: ${sanitizeText(sc.dataDir)}${CLI.keepData ? " (kept)" : ""}`);
   console.log(`artifacts: ${sanitizeText(sc.artifactsDir)}`);
 
@@ -805,17 +868,25 @@ async function main() {
       return { detail: "no console/log errors on the studio shell" };
     });
 
+    const inScope = (id) => SELECTED_CHECK_IDS.includes(id);
+    if (CLI.only.length > 0) console.log(`scoped to: ${CLI.only.join(", ")} (boot checks always run)`);
+
     /* D4 材料路径检查（B1/B2 浏览器面，v0.2.0 落地）：真实 Chrome +
        真实 studio 进程上的真实 DOM 检查（echo 驱动，selftest 声明照旧）。
-       未落地项保持 NOT_RUN + 原因（owner 写明）。 */
-    await runCheck("d4-import-material", () => probeImportMaterial(probeCtx));
-    await runCheck("d4-import-denominator", () => probeImportDenominator(probeCtx));
-    await runCheck("d4-read-and-select", () => probeReadAndSelect(probeCtx));
-    await runCheck("d4-branch-from-material", null);
-    await runCheck("d4-return-from-material", null);
-    await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
-    await runCheck("d4-search-recover", () => probeSearchRecover(probeCtx));
-    await runCheck("d4-export-restore-recover", () => probeExportRestoreRecover(probeCtx));
+       B3 材料 Branch/Return（v0.4.0）：real-pi 全路径 / selftest echo 冒烟
+       （detail/sidecar 如实标注「不是 B3 证据」）。
+       B9 导航面 + B6 规模面（v0.4.0）：专用数据目录（真实生成器/装载器）
+       上的真实浏览器度量（本地机器工程证据，环境入 sidecar）。 */
+    if (inScope("d4-import-material")) await runCheck("d4-import-material", () => probeImportMaterial(probeCtx));
+    if (inScope("d4-import-denominator")) await runCheck("d4-import-denominator", () => probeImportDenominator(probeCtx));
+    if (inScope("d4-read-and-select")) await runCheck("d4-read-and-select", () => probeReadAndSelect(probeCtx));
+    if (inScope("d4-branch-from-material")) await runCheck("d4-branch-from-material", () => probeBranchFromMaterial(probeCtx));
+    if (inScope("d4-return-from-material")) await runCheck("d4-return-from-material", () => probeReturnFromMaterial(probeCtx));
+    if (inScope("d4-restart-continue")) await runCheck("d4-restart-continue", () => probeRestartContinue(probeCtx));
+    if (inScope("d4-search-recover")) await runCheck("d4-search-recover", () => probeSearchRecover(probeCtx));
+    if (inScope("d4-export-restore-recover")) await runCheck("d4-export-restore-recover", () => probeExportRestoreRecover(probeCtx));
+    if (inScope("d4-nav-browser")) await runCheck("d4-nav-browser", () => probeNavBrowser(probeCtx));
+    if (inScope("d4-b6-scale-browser")) await runCheck("d4-b6-scale-browser", () => probeB6ScaleBrowser(probeCtx));
 
     finish(0);
   } catch (err) {
