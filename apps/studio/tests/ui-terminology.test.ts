@@ -568,6 +568,18 @@ class StubElement {
     if (index >= 0) {
       this.children.splice(index, 1);
       node.parentElement = null;
+      /* 真实浏览器语义（焦点纪律回归的关键面）：聚焦元素（或其任意祖先）
+         被移出文档 → 立即失焦（activeElement 回落 body——桩以 null 表达）。
+         此前桩不 blur，preserveTermCardFocus「移除后读取」的时序缺陷只在
+         真实浏览器显形（术语真实浏览器探针发现）；补齐后既有断言即真回
+         归守卫。 */
+      const doc = this.ownerDocument;
+      if (doc !== null && doc.activeElement !== null) {
+        const removedContainsFocus =
+          doc.activeElement === node ||
+          (node instanceof StubElement && node.contains(doc.activeElement));
+        if (removedContainsFocus) doc.activeElement = null;
+      }
     }
     return node;
   }
@@ -640,6 +652,11 @@ class StubElement {
   }
 
   focus(): void {
+    /* 真实浏览器语义：disabled 控件不可聚焦（focus() 静默无操作）——此前
+       桩可聚焦 disabled 按钮，closeTermExplain 的焦点还原缺陷（无武装
+       选区时解释入口 disabled，焦点无声丢失）在桩内测不出（术语真实
+       浏览器探针发现）。 */
+    if (this.disabled) return;
     if (this.ownerDocument !== null) this.ownerDocument.activeElement = this;
   }
 
@@ -1744,7 +1761,10 @@ test("toolbar modes: single-word selections arm term mode, spans arm range mode 
   assert.equal(world.byId("term-explain-card"), null, "Esc closes the card");
   const explainEntry = world.turnElement("conversation", "a2").querySelector(".term-explain");
   assert.ok(explainEntry !== null);
-  assert.equal(world.document.activeElement, explainEntry, "Esc returns focus to that answer's explain entry");
+  assert.equal(explainEntry.disabled, true,
+    "explainSelection disarms the selection, so the explain entry is disabled when the card closes (the premise of the composer fallback)");
+  assert.equal(world.document.activeElement, world.el("prompt-input"),
+    "Esc falls back to the Trunk composer (a disabled explain entry cannot take focus in a real browser)");
 
   /* 跨词选区 → range 模式。 */
   const spanStart = A2_TEXT.indexOf("regularization shrinks");
@@ -1790,11 +1810,39 @@ test("Esc layering with the term card: a card inside the open panel closes befor
   assert.equal(world.el("branch-panel").hidden, false, "the panel itself stays open");
   const ba1Entry = world.turnElement("panel-conversation", "ba1").querySelector(".term-explain");
   assert.ok(ba1Entry !== null);
-  assert.equal(world.document.activeElement, ba1Entry, "focus returns to the panel answer's explain entry");
+  assert.equal(ba1Entry.disabled, true,
+    "explainSelection disarms the selection, so the panel answer's explain entry is disabled when the card closes");
+  assert.equal(world.document.activeElement, world.el("panel-prompt-input"),
+    "Esc falls back to the panel composer (a disabled explain entry cannot take focus in a real browser)");
   world.document.dispatchEvent("keydown", { key: "Escape" });
   await settle();
   await new Promise((resolve) => setTimeout(resolve, 220));
   assert.equal(world.el("branch-panel").hidden, true, "the next Esc closes the panel");
+});
+
+test("Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost", async () => {
+  /* 真实浏览器面发现的回归（closeTermExplain 焦点还原）：从已存批注的正文
+   * 标记打开卡（零请求路径）时没有武装选区——解释入口是 disabled 按钮，
+   * 真实浏览器 focus() 静默无操作（原 turn 元素回退也无 tabindex），
+   * 焦点无声丢失。修复：回退到该视图 composer（W2「常驻主焦点」）。 */
+  const world = await createWorld({
+    termAnnotations: [termAnnotation({ promotedBranchId: "branch-1", promotionKey: "key-1" })],
+  });
+  await settle();
+  const a2 = world.turnElement("conversation", "a2");
+  const mark = a2.querySelector(".term-annotation-mark");
+  assert.ok(mark !== null, "the saved annotation renders its live mark");
+  assert.equal(world.turnElement("conversation", "a2").querySelector(".term-explain")!.disabled, true,
+    "the explain entry is disabled with no armed selection (the premise of this regression)");
+  mark.click();
+  await settle();
+  const card = world.byId("term-explain-card");
+  assert.ok(card !== null, "the mark click opens the saved annotation card");
+  assert.ok(card.querySelector(".term-resume") !== null, "the promoted annotation card carries the resume affordance");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.byId("term-explain-card"), null, "Esc closes the card");
+  assert.equal(world.document.activeElement, world.el("prompt-input"),
+    "focus falls back to the Trunk composer (the disabled explain entry cannot take focus in a real browser)");
 });
 
 /* ------------------------------------------------------------------ */
@@ -2120,6 +2168,7 @@ test("promotion response loss resolves to the recorded promotion: the card refre
   const input = saved.querySelector("#term-first-question")!;
   input.value = "First question whose response will be lost.";
   input.dispatchEvent("input", {});
+  const requestsBefore = world.backend.requests.length;
   saved.querySelector(".term-promote")!.click();
   await settle();
   const afterLoss = world.byId("term-explain-card");
@@ -2127,6 +2176,22 @@ test("promotion response loss resolves to the recorded promotion: the card refre
   assert.ok(afterLoss.textContent.includes("promotion conflict —"), "the failure is surfaced on the card");
   assert.ok(afterLoss.textContent.includes("saved — already promoted to"), "the refreshed annotation reveals the recorded promotion");
   assert.ok(afterLoss.querySelector(".term-resume") !== null, "the resume affordance is offered");
+  /* 对账读取的机制锁定（P1 同族竞态修复的足迹）：失败后的卡面批注来自一次
+     直接的读模型 GET（submitReturn 响应丢失同款纪律）——推广 POST 之后至少
+     有两次 GET /terminology（常规刷新 + 对账直读）。真实浏览器里推广自身
+     触发的 SSE run-terminal 读模型刷新会与本路径的世代号竞争，直读是
+     「恢复既有探索」去向在任意交错下都成立的前提（浏览器面探针复现）。 */
+  const promoteIndex = world.backend.requests.findIndex(
+    (r, i) => i >= requestsBefore && r.method === "POST" && r.path.endsWith("/promote"),
+  );
+  assert.ok(promoteIndex >= 0, "the promote POST was recorded");
+  const readsAfterPromote = world.backend.requests
+    .slice(promoteIndex + 1)
+    .filter((r) => r.method === "GET" && /\/terminology$/.test(r.path));
+  assert.ok(
+    readsAfterPromote.length >= 2,
+    `the failed promote reconciles with a direct read-model read (expected >=2 GET /terminology after the POST, got ${String(readsAfterPromote.length)})`,
+  );
   afterLoss.querySelector(".term-resume")!.click();
   await settle();
   assert.equal(world.el("branch-panel").hidden, false, "resuming opens the promoted branch");

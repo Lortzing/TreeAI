@@ -1758,14 +1758,23 @@ function flushPendingRerender() {
   else if (rerenderBar && state.materialReader !== null) updateMatSelectionBar();
 }
 
+/** 解释卡聚焦目标的读取（③ 草稿/焦点纪律）：必须在调和移除旧卡**之前**
+    读取——真实浏览器里聚焦控件随祖先移除即失焦（activeElement 回落
+    body），移除后读取永不命中（DOM 桩无「移除即失焦」语义，原实现只在
+    桩内成立；术语真实浏览器探针发现并修复）。 */
+function termCardFocusTargetId() {
+  const active = document.activeElement;
+  if (active === null || !isElementNode(active)) return null;
+  if (active.id !== "term-explain-card" && active.id !== "term-first-question") return null;
+  return active.id;
+}
+
 /** 解释卡重建后的焦点保持（③ 草稿/焦点纪律）：旧卡内聚焦的控件（首问
     输入 / 卡本身）在同 id 新卡上恢复焦点——重渲不丢打字焦点。 */
-function preserveTermCardFocus() {
-  const active = document.activeElement;
-  if (active === null || !isElementNode(active)) return;
-  if (active.id !== "term-explain-card" && active.id !== "term-first-question") return;
-  const fresh = document.getElementById(active.id);
-  if (fresh !== null && fresh !== active) fresh.focus();
+function preserveTermCardFocus(targetId) {
+  if (targetId === null) return;
+  const fresh = document.getElementById(targetId);
+  if (fresh !== null && document.activeElement !== fresh) fresh.focus();
 }
 
 /** 流式占位（M5 静态指示——caret 不闪烁；id/类名词法锁定）。 */
@@ -1947,8 +1956,11 @@ function renderTurnsInto(container, view, branchId, stick) {
     desired.push(streamingPlaceholder(streaming.text));
   }
 
+  /* ③ 草稿/焦点纪律：聚焦目标先于调和移除读取（真实浏览器里旧卡移除即
+     失焦），重建后在同 id 新节点上恢复。 */
+  const termFocusTargetId = termCardFocusTargetId();
   reconcileTopLevel(container, desired);
-  preserveTermCardFocus();
+  preserveTermCardFocus(termFocusTargetId);
 
   const saved = state.scrollPositions.get(scrollKey(branchId));
   if ((stick && wasAtBottom) || saved === undefined) {
@@ -2645,6 +2657,22 @@ function focusIntoPanel() {
   $("panel-close").focus(); /* 持久禁用（session 不可用）时的兜底 */
 }
 
+/** composer 焦点还原（真实浏览器语义；focusIntoPanel 同款纪律的提取）：
+    busy 锁下的 composer 是 disabled——真实浏览器对 disabled 控件 focus()
+    静默无操作（DOM 桩可聚焦 disabled 控件，此前测不出；术语真实浏览器波
+    发现），延后一拍到锁释放后重试（guard 的 finally 是微任务，先于 timer
+    执行）；仍禁用则如实放弃（不伪装聚焦）。 */
+function focusComposerWhenSelectable(el) {
+  if (el === null || el === undefined) return;
+  if (el.disabled !== true) {
+    el.focus();
+    return;
+  }
+  window.setTimeout(() => {
+    if (el.disabled !== true) el.focus();
+  }, 0);
+}
+
 /** 揭示到位：滚动到锚点 turn 并把焦点移过去（W2 §2.6）。 */
 function revealAnchorTurn(turnId) {
   const el = turnElements.get(turnId);
@@ -2908,7 +2936,7 @@ async function closePanel(opts = {}) {
   /* 焦点还原（W2 §2.3）：显式指定（如 Trunk tab / 主线输入框）优先；
      默认回触发元素；无引用 → 主线输入框（常驻主焦点）。 */
   if (opts.focus === "main-input") {
-    $("prompt-input").focus();
+    focusComposerWhenSelectable($("prompt-input"));
   } else if (opts.focus !== "none") {
     restoreFocusRef(opts.focus === undefined ? state.panelFocusReturn : opts.focus);
   }
@@ -3056,7 +3084,7 @@ async function sendPrompt(viewKind) {
   renderAll({ stick: branchId });
   if (promptError === null) {
     await refreshDiagnostics();
-    input.focus();
+    focusComposerWhenSelectable(input);
   } else {
     await refreshDiagnostics().catch(() => {});
     throw promptError;
@@ -3121,7 +3149,7 @@ async function startNewExploration(viewKind) {
   if (trunk !== null) state.dismissedSessionBannerTrunks.delete(trunk);
   renderAll({ stick: branchId });
   await refreshDiagnostics();
-  input.focus();
+  focusComposerWhenSelectable(input);
 }
 
 /** Abort the active run. Bypasses the busy guard on purpose: the whole point
@@ -3989,13 +4017,31 @@ async function promoteTermAnnotation() {
     }
   } catch (err) {
     /* 冲突/失败：如实呈现在卡面（完整失败状态），读模型刷新后给出恢复
-       既有探索的明确去向；原始错误仍由 guard 呈现横幅。 */
+       既有探索的明确去向；原始错误仍由 guard 呈现横幅。
+       P1 同族竞态（真实浏览器面发现；DOM 桩无 SSE 并发测不出）：推广自身
+       派发的首问完成会触发 SSE run-terminal 的读模型刷新，与本路径的
+       refreshTerminology 竞争世代号——本路径的写入被作废时，卡面会锁定
+       陈旧批注（「恢复既有探索」去向永不出现）。对账补一次直接读
+       （submitReturn 响应丢失同款纪律）：以该响应为准更新卡面批注；
+       共享读模型仍由常规刷新收敛。 */
     await refreshTerminology().catch(() => {});
+    let reconciled = null;
+    try {
+      reconciled = await api(`/api/trees/${encodeURIComponent(state.currentTreeId)}/terminology`);
+    } catch {
+      /* 对账读取失败：卡面按现有读模型如实呈现（下方 find 走 state.terminology） */
+    }
     const current = state.termExplain;
     if (current !== null && current.token === card.token) {
+      const model =
+        reconciled !== null
+          ? reconciled
+          : state.terminology !== null && state.terminology.ok
+            ? state.terminology
+            : null;
       const freshAnnotation =
-        state.terminology !== null && state.terminology.ok
-          ? (state.terminology.annotations.find((a) => a.id === card.annotation.id) ?? current.annotation)
+        model !== null
+          ? (model.annotations.find((a) => a.id === card.annotation.id) ?? current.annotation)
           : current.annotation;
       state.termExplain = {
         ...current,
@@ -4043,15 +4089,21 @@ function openSavedAnnotationCard(annotation, branchId, turn, opts = {}) {
   }
 }
 
-/** 关闭解释卡：焦点还原到该答案的解释入口（无则还原到 turn 元素——
-    W2 键盘焦点纪律，与 closeDrawer 同模式）。 */
+/** 关闭解释卡：焦点还原到该答案的解释入口；解释入口不可聚焦（无武装
+    选区时是 disabled 按钮——真实浏览器 disabled 控件 focus() 静默无操作，
+    DOM 桩可聚焦测不出；turn 元素本身无 tabindex）时还原到该视图的
+    composer（W2「常驻主焦点」回退，与 closePanel 同款）。 */
 function closeTermExplain() {
   const card = state.termExplain;
   state.termExplain = null;
   renderAll();
   if (card === null) return;
-  const target = termExplainButtons.get(card.turnId) ?? turnElements.get(card.turnId);
-  if (target !== undefined) target.focus();
+  const target = termExplainButtons.get(card.turnId);
+  if (target !== undefined && target.disabled !== true) {
+    target.focus();
+    return;
+  }
+  focusComposerWhenSelectable(card.branchId === trunkBranchId() ? $("prompt-input") : $("panel-prompt-input"));
 }
 
 /**
