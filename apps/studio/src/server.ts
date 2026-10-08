@@ -136,7 +136,7 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { sendError } from "./http/errors.ts";
-import { sendJson, sendNoContent, sendPdfBytes } from "./http/responses.ts";
+import { sendJson, sendNoContent, sendPdfBytes, type ApiErrorBody } from "./http/responses.ts";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { BranchId, MaterialId, MaterialVersionId, RunId, TerminologyMode, TreeId, TurnId } from "@treeai/contracts";

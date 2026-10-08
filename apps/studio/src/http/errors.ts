@@ -5,11 +5,7 @@ import { TerminologyPromotionConflictError } from "../terminology.ts";
 import { MaterialNotReadyError, MaterialTooLargeError, MaterialUnsupportedError, ParseTaskNotCancelableError } from "../materials/import-service.ts";
 import { MaterialBranchConflictError, MaterialFirstQuestionConflictError } from "../materials/branching.ts";
 import { NavEngineError } from "../nav/nav-engine.ts";
-import { sendJson } from "./responses.ts";
-
-interface ApiErrorBody {
-  readonly error: { readonly code: string; readonly message: string };
-}
+import { sendJson, type ApiErrorBody } from "./responses.ts";
 
 export function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof EntityNotFoundError) {
