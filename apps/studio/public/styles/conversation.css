@@ -1,0 +1,156 @@
+/* ------------------------------ 阅读区 ------------------------------ */
+
+/* 中央 Trunk 阅读列 + 支线局部侧板。 */
+#reading-area { position: relative; flex: 1; min-height: 0; display: flex; }
+
+#main-pane { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--canvas); }
+
+/* 对话容器：暖灰画布上的阅读列（左锚定，留出右侧支线面板空间）。 */
+#conversation, #panel-conversation {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px clamp(20px, 5vw, 88px);
+}
+#panel-conversation { padding: 18px 16px; }
+
+/* Turns：user = 深绿浅底的提问块（UI 字体）；assistant = 白色阅读卡
+   （衬线长文）；return = 暖金卡片。 */
+.turn {
+  width: 100%;
+  max-width: 68ch;
+  padding: 10px 16px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.turn.user {
+  max-width: 54ch;
+  background: var(--green-wash);
+  color: var(--green-deep);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.turn.assistant {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(35, 40, 31, 0.04);
+  font-family: var(--font-read);
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--ink);
+}
+#panel-conversation .turn { max-width: none; }
+#panel-conversation .turn.assistant { font-size: 15px; }
+
+.turn.return {
+  max-width: none;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
+  border-left: 3px solid var(--gold);
+  font-family: var(--font-read);
+  font-size: 15px;
+  line-height: 1.65;
+}
+/* M3：Return 卡插入（高度展开 + 淡入，≤200ms；仅新插入的卡播放）。 */
+.turn.return.insert { animation: return-insert var(--motion-card) ease-out; }
+@keyframes return-insert {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+.turn .meta { display: block; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-bottom: 5px; line-height: 1.5; }
+/* M4：confirmed → delivered 徽标切换（~100ms 颜色/文案过渡；仅状态
+   变化时播放 badge-change，reduced-motion 即时）。 */
+.turn .meta .delivery { color: var(--gold-deep); transition: color var(--motion-state) ease-out; }
+.turn .meta .delivery.delivered { color: var(--green-deep); }
+.turn .meta .delivery.badge-change { animation: badge-change var(--motion-state) ease-out; }
+@keyframes badge-change {
+  from { color: var(--gold-deep); background: #f3e6c4; }
+  to { color: var(--green-deep); background: transparent; }
+}
+/* delivered 卡的 deliveredRunId 反查入口（可 Tab 触达；点击打开来源
+   抽屉）：安静下划线按钮，不与卡的暖金面争抢。 */
+button.delivery-link {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 6px;
+  margin-left: 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--green);
+  cursor: pointer;
+  text-decoration: underline;
+}
+button.delivery-link:hover { background: var(--green-wash); }
+
+/* P1 降级 Return 卡的摘录（issue #7）：短摘录随 meta 的引用式呈现；
+   长摘录折叠（<details>，原生键盘可达；summary 为前缀切片 + 省略号，
+   展开是落库快照原文）。 */
+.turn.return .return-excerpt {
+  display: block;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 4px;
+}
+details.return-excerpt { margin: 4px 0 6px; }
+details.return-excerpt > summary {
+  cursor: pointer;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  list-style-position: inside;
+}
+details.return-excerpt[open] > summary { color: var(--gold-deep); }
+details.return-excerpt .return-excerpt-full {
+  display: block;
+  font-family: var(--font-read);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* “从这建支线”：安静虚线（诚实操作，不抢阅读）。 */
+.turn .branch-here {
+  display: inline-block;
+  margin-top: 10px;
+  margin-right: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px dashed var(--green);
+  border-radius: 6px;
+  background: none;
+  color: var(--green);
+  cursor: pointer;
+}
+.turn .branch-here:hover { background: var(--green-wash); }
+.turn .selection-hint { display: none; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+/* 术语解释入口（issue #7 C ③）：与建支线同排的安静按钮；无选区禁用。 */
+.turn .term-explain {
+  display: inline-block;
+  margin-top: 10px;
+  margin-right: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px dashed var(--gold);
+  border-radius: 6px;
+  background: none;
+  color: var(--gold-deep);
+  cursor: pointer;
+}
+.turn .term-explain:hover:not(:disabled) { background: var(--gold-wash); }
+.turn .term-explain:disabled { opacity: 0.55; cursor: default; }
+

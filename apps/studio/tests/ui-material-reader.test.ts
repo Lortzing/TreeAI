@@ -60,12 +60,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readStudioCss } from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
+const STYLE_CSS = readStudioCss(PUBLIC_DIR);
 
 /* 冻结 fixture（B1 真值——阅读器正文与选区断言的唯一事实源）。 */
 const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", import.meta.url));

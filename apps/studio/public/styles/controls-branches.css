@@ -1,0 +1,193 @@
+/* ------------------------------ 输入区 ------------------------------ */
+
+#error-banner, #panel-error-banner {
+  margin: 0;
+  padding: 8px 20px;
+  background: var(--danger-wash);
+  border-top: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+#composer, #panel-composer, #return-panel {
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 12px 20px 14px;
+}
+#composer, #panel-composer { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+textarea:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+textarea::placeholder { color: var(--muted); }
+
+.composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* Return 草稿面（面板内）：暖金主线。 */
+#return-panel { border-top: 2px solid var(--gold-line); background: #fdfaf2; }
+#return-panel h2 { font-size: 13.5px; margin: 0 0 2px; color: var(--gold-deep); }
+#return-panel .muted { margin: 0 0 8px; font-size: 11.5px; }
+
+/* ------------------------------ 按钮 ------------------------------ */
+
+button { font-family: var(--font-ui); }
+
+button.primary, button.accent {
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+}
+button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); }
+button.accent { background: var(--gold); border-color: var(--gold); }
+button.accent:hover:not(:disabled) { background: var(--gold-deep); border-color: var(--gold-deep); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button.danger {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--danger);
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+button.danger:hover:not(:disabled) { background: var(--danger-wash); }
+
+/* ------------------------------ 支线局部面板（W2 §2.3，M1/M2） ------------------------------ */
+
+/* 可见性契约：hidden 属性控制显隐，.enter/.exit 播放一次滑入/滑出
+   （app.js 驱动、测试按此断言）——基态即完整可见，不做
+   opacity/visibility 预隐藏。 */
+#branch-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
+  z-index: 10;
+}
+
+#panel-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+#panel-heading { outline: none; margin: 0 0 10px; }
+#panel-heading:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 4px; }
+#panel-title { margin: 0; font-size: 15px; font-weight: 650; color: var(--green-deep); }
+#panel-anchor-context {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#panel-anchor-context .sel { font-style: italic; color: var(--ink-soft); }
+#panel-anchor-context .origin-status { font-size: 11px; }
+#panel-anchor-context .origin-status.available { color: var(--green); }
+#panel-anchor-context .origin-status.changed,
+#panel-anchor-context .origin-status.unavailable { color: var(--danger); }
+
+/* 固定来源 / 回程（W2 §1：常驻、不随滚动消失）。 */
+#panel-fixed-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+#panel-fixed-actions button {
+  flex: 1 1 auto;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button.source-button {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+button.source-button:hover:not(:disabled) { background: var(--surface-dim); }
+button.panel-close {
+  border: 1px solid var(--green);
+  background: var(--green-wash);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+button.panel-close:hover { background: #dcebe0; }
+
+/* A4 面板内 session 提示。 */
+#panel-session-note {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  color: var(--gold-deep);
+}
+
+#panel-error-banner { border-top: none; border-bottom: 1px solid var(--danger); }
+
+/* ------------------------------ 支线概念列（≥1180px 并置） ------------------------------ */
+
+/* 支线概念列：<1180px 面板回落为阅读区右侧覆盖层（列不生成盒，面板的
+   定位基准退回 #reading-area，行为与改版前一致）；≥1180px 列常驻并与
+   主线并置（源设计 §二），面板打开恰好覆盖列——主干阅读宽度不随面板
+   开合变化。 */
+#branch-column { display: contents; }
+#branch-empty { display: none; }
+@media (min-width: 1180px) {
+  #branch-column {
+    display: flex;
+    position: relative;            /* 面板的定位基准 → 列本身 */
+    width: min(440px, 34vw);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+  }
+  #branch-panel { width: 100%; }   /* 与列同宽，恰好覆盖 */
+  #branch-empty {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+  /* 面板打开时列空态不透出（enter 渐入期间亦然）。 */
+  #branch-column:has(#branch-panel:not([hidden])) #branch-empty { visibility: hidden; }
+  /* 列空态：安静的指引面（装饰字符 + 标题 + 说明）。 */
+  .branch-empty-orn { font-size: 20px; color: var(--line-strong); }
+  .branch-empty-orn::before { content: "⑂"; }
+  .branch-empty-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+  #branch-empty .muted { margin: 0; font-size: 12.5px; line-height: 1.55; max-width: 30ch; }
+  /* D4-2 阅读器同列占满（与 #branch-panel 同宽恰好覆盖）；阅读器在场时
+     列空态同样不透出。 */
+  #material-reader { width: 100%; }
+  #branch-column:has(#material-reader:not([hidden])) #branch-empty { visibility: hidden; }
+}
+

@@ -162,6 +162,9 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/app.js": { file: "app.js", type: "text/javascript; charset=utf-8" },
   "/style.css": { file: "style.css", type: "text/css; charset=utf-8" },
 };
+
+/** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
+const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","reduced-motion.css"]);
 const PDFJS_ROOT = new URL("../../../node_modules/pdfjs-dist/", import.meta.url);
 
 export interface StudioServerOptions {
@@ -431,7 +434,11 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   const sseResponses = new Set<ServerResponse>();
 
   async function serveStatic(res: ServerResponse, pathname: string): Promise<boolean> {
-    const entry = STATIC_FILES[pathname];
+    const cssMatch = /^\/styles\/([a-z-]+\.css)$/.exec(pathname);
+    const entry = STATIC_FILES[pathname] ??
+      (cssMatch !== null && CSS_MODULE_FILES.has(cssMatch[1]!)
+        ? { file: `styles/${cssMatch[1]}`, type: "text/css; charset=utf-8" }
+        : undefined);
     let source: string | URL | null = entry === undefined ? null : join(staticDir, entry.file);
     let type = entry?.type ?? null;
     if (source === null) {
