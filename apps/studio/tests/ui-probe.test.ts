@@ -1,7 +1,7 @@
 /**
  * Studio 前端脚本化 DOM E2E 套件（issue #4 P1「证据工程化」+ issue #5 P1 补全）。
  *
- * 方法：以 data: URL 加载仓库真实 public/app.js 为 ES module（URL fragment
+ * 方法：以 file: URL 加载仓库真实 public/app.js 为 ES module（URL query
  * 随机化绕过 ES 模块缓存——fragment 不进入模块源码，每个场景得到一份全新
  * 实例），运行在「按真实 public/index.html 词法解析出的完整 DOM 桩 + 脚本
  * 化 echo 后端」之上：fetch / EventSource / localStorage / 计时器 / matchMedia
@@ -93,7 +93,6 @@ import { createHash } from "node:crypto";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
-const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
 const STYLE_CSS = readStudioCss(PUBLIC_DIR);
 
@@ -1129,7 +1128,7 @@ let appLoadCounter = 0;
 
 /**
  * 构建一套全新场景环境：真实 index.html 解析出的 DOM 桩 + 脚本化后端 +
- * 全局桩注入 + 全新 app.js 模块实例（fragment 随机化绕过模块缓存），
+ * 全局桩注入 + 全新 app.js 模块实例（query 随机化绕过模块缓存），
  * 等待引导（自动打开第一棵树）完成。场景之间完全隔离（DOM、后端、
  * localStorage、SSE 注册表、模块级前端状态各自独立）。
  */
@@ -1579,10 +1578,10 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.EventSource = StubEventSource;
   globals.fetch = fetchStub;
 
-  /* data: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
+  /* file: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
      模块缓存：每个场景加载一份全新 app.js 实例，模块级状态互不渗透。 */
   appLoadCounter += 1;
-  await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(APP_JS)}#load=${appLoadCounter}`);
+  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
   await settle(25);
 
   return {
