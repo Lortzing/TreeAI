@@ -10,6 +10,7 @@ Start with the [README](../README.md). Each link below names a different authori
 | Which tests and acceptance gates exist? | [Testing](development/testing.md) |
 | What is the currently verified candidate? | [Acceptance status](acceptance/status.md) |
 | What are the product decisions? | [Product authority map](product/index.md) |
+| Implementation background for Studio UI and HTTP? | [UI notes](architecture/studio-ui-implementation-notes.md), [HTTP notes](architecture/http-implementation-notes.md) |
 | What is the D4 contract? | [D4 contracts](d4/D4-contracts.md) and [D4 project](d4/D4-project-v1.md) |
 | Why does Pi have this boundary? | [ADR-002](adr/ADR-002-pi-modification-governance.md) |
 | How are material sources represented? | [ADR-003](adr/ADR-003-d4-material-sources-versions-run-origins.md) and [ADR-004](adr/ADR-004-d4-material-branching-and-first-question.md) |
