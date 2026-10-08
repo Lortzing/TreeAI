@@ -88,6 +88,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mountStudioApp } from "./support/app-harness.ts";
 import { readStudioCss } from "./support/styles.ts";
 import { createHash } from "node:crypto";
 
@@ -1124,7 +1125,7 @@ interface WorldOptions {
   reducedMotion?: boolean;
 }
 
-let appLoadCounter = 0;
+
 
 /**
  * 构建一套全新场景环境：真实 index.html 解析出的 DOM 桩 + 脚本化后端 +
@@ -1580,8 +1581,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 
   /* file: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
      模块缓存：每个场景加载一份全新 app.js 实例，模块级状态互不渗透。 */
-  appLoadCounter += 1;
-  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
+  await mountStudioApp();
   await settle(25);
 
   return {

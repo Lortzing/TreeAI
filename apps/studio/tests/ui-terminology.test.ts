@@ -64,6 +64,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mountStudioApp } from "./support/app-harness.ts";
 import { readStudioCss } from "./support/styles.ts";
 import { createHash } from "node:crypto";
 
@@ -1027,7 +1028,7 @@ interface WorldOptions {
   holdSuffix?: string;
 }
 
-let appLoadCounter = 0;
+
 
 async function createWorld(options: WorldOptions = {}): Promise<World> {
   const documentStub = new StubDocument();
@@ -1523,8 +1524,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.EventSource = StubEventSource;
   globals.fetch = fetchStub;
 
-  appLoadCounter += 1;
-  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
+  await mountStudioApp();
   await settle(25);
 
   return {

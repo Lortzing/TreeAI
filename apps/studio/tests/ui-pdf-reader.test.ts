@@ -53,6 +53,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mountStudioApp } from "./support/app-harness.ts";
 import { readStudioCss } from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
@@ -926,7 +927,7 @@ function buildStubMaterial(
   };
 }
 
-let appLoadCounter = 0;
+
 
 async function createWorld(options: WorldOptions = {}): Promise<World> {
   const documentStub = new StubDocument();
@@ -1372,8 +1373,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     writable: true,
   });
 
-  appLoadCounter += 1;
-  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
+  await mountStudioApp();
   await settle(25);
 
   const world: World = {
