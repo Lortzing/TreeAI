@@ -28,3 +28,19 @@ jobs:
       - name: Studio test suite (diagnostic output)
         if: always()
         run: npm test --workspace @treeai/studio
+      - name: D4 offline verifier (report blocked honestly)
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          node scripts/verify-d4.js
+          code=$?
+          echo "D4 offline verifier exit: $code (3 means NOT_RUN/BLOCKED, not PASS)"
+          if [ "$code" -eq 1 ] || [ "$code" -eq 2 ]; then exit "$code"; fi
+          exit 0
+      - name: D4 verifier failure-injection selftest
+        if: always()
+        run: node scripts/verify-d4-selftest.js
+      - name: Frozen PDF registry regression
+        if: always()
+        run: node --test scripts/d4/pdf/content.test.mjs
