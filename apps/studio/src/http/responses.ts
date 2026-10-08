@@ -1,5 +1,9 @@
 import type { ServerResponse } from "node:http";
 
+export interface ApiErrorBody {
+  readonly error: { readonly code: string; readonly message: string };
+}
+
 export function sendJson(res: ServerResponse, status: number, body: unknown): void {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
