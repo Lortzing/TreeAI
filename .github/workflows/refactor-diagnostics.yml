@@ -38,6 +38,13 @@ jobs:
           echo "D4 offline verifier exit: $code (3 means NOT_RUN/BLOCKED, not PASS)"
           if [ "$code" -eq 1 ] || [ "$code" -eq 2 ]; then exit "$code"; fi
           exit 0
+      - name: D4 performance failure diagnostic (no metric override)
+        if: always()
+        shell: bash
+        run: |
+          echo "Inspecting latest B6 verifier log (no pass/fail override)"
+          file=$(find evidence/d4/runs -type f -name '*b6-scale-performance*' 2>/dev/null | sort | tail -n 1)
+          if [ -n "$file" ]; then sed -n '1,120p' "$file"; else echo "No B6 log found"; fi
       - name: D4 verifier failure-injection selftest
         if: always()
         run: node scripts/verify-d4-selftest.js
