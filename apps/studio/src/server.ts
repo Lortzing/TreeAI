@@ -135,47 +135,19 @@
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { sendError } from "./http/errors.ts";
+import { sendJson, sendNoContent, sendPdfBytes, type ApiErrorBody } from "./http/responses.ts";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type {
-  BranchId,
-  MaterialId,
-  MaterialVersionId,
-  RunId,
-  TerminologyMode,
-  TreeId,
-  TurnId,
-} from "@treeai/contracts";
-import {
-  ConstraintViolationError,
-  EntityNotFoundError,
-  InvalidArgumentError,
-  PersistenceError,
-} from "@treeai/persistence";
+import type { BranchId, MaterialId, MaterialVersionId, RunId, TerminologyMode, TreeId, TurnId } from "@treeai/contracts";
+import { ConstraintViolationError, EntityNotFoundError, InvalidArgumentError, PersistenceError } from "@treeai/persistence";
 import { RunNotActiveError, NewExplorationConflictError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
-import {
-  TerminologyPromotionConflictError,
-  type TerminologyService,
-} from "./terminology.ts";
-import {
-  MaterialImportService,
-  MaterialNotReadyError,
-  MaterialTooLargeError,
-  MaterialUnsupportedError,
-  ParseTaskNotCancelableError,
-} from "./materials/import-service.ts";
+import { type TerminologyService } from "./terminology.ts";
+import { MaterialImportService, MaterialTooLargeError } from "./materials/import-service.ts";
 import { MaterialRangeResolver, type ResolveSelectionInput } from "./materials/range-resolver.ts";
-import {
-  MaterialBranchConflictError,
-  MaterialBranchingService,
-  MaterialFirstQuestionConflictError,
-} from "./materials/branching.ts";
+import { MaterialBranchingService } from "./materials/branching.ts";
 import type { SearchDocumentKind } from "./search/search-engine.ts";
-import {
-  SEARCH_DOCUMENT_KINDS,
-  SearchService,
-  toContractSearchHit,
-} from "./search/search-service.ts";
+import { SEARCH_DOCUMENT_KINDS, SearchService, toContractSearchHit } from "./search/search-service.ts";
 import { NavEngineError, type NavSearchMode } from "./nav/nav-engine.ts";
 import { NavService } from "./nav/nav-service.ts";
 
@@ -223,126 +195,6 @@ export interface StudioServer {
   readonly server: Server;
   listen(port: number): Promise<number>;
   close(): Promise<void>;
-}
-
-interface ApiErrorBody {
-  readonly error: { readonly code: string; readonly message: string };
-}
-
-function sendJson(res: ServerResponse, status: number, body: unknown): void {
-  const payload = JSON.stringify(body);
-  res.writeHead(status, {
-    "content-type": "application/json; charset=utf-8",
-    "content-length": Buffer.byteLength(payload),
-    "cache-control": "no-store",
-  });
-  res.end(payload);
-}
-
-function sendError(res: ServerResponse, err: unknown): void {
-  if (err instanceof EntityNotFoundError) {
-    sendJson(res, 404, { error: { code: "not-found", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof InvalidArgumentError || err instanceof ConstraintViolationError) {
-    sendJson(res, 400, { error: { code: "invalid-argument", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof RunNotActiveError) {
-    // abort 目标不是该树当前在途 run（已终态/无在途/另有在途）——操作冲突。
-    sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof ReturnConflictError) {
-    // 同幂等键已绑定不同内容的 Return——重试语义冲突（既有 Return 不变）。
-    sendJson(res, 409, { error: { code: "return-conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof NewExplorationConflictError) {
-    // 「以保存内容开始新的探索」的前置条件不满足（session 仍可用 / 无历史
-    // session）——与分支当前状态冲突，零写入。
-    sendJson(res, 409, { error: { code: "new-exploration-conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof TerminologyPromotionConflictError) {
-    // 术语推广冲突（同批注异键 / 并发竞争判负）——既有推广不变。
-    sendJson(res, 409, { error: { code: "terminology-promotion-conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof MaterialUnsupportedError) {
-    // 不支持的材料（未知扩展名 / 解析器未装配，如 D4-1 集成前的 pdf）。
-    sendJson(res, 415, { error: { code: "material-unsupported", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof MaterialTooLargeError) {
-    // 超过单文件上限（charter §5：解析前拒绝）。
-    sendJson(res, 413, { error: { code: "material-too-large", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof MaterialNotReadyError) {
-    // 非 ready 版本的读取/建枝前置（不支持/失败/取消绝不伪装空成功文档）。
-    sendJson(res, 409, { error: { code: "material-not-ready", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof ParseTaskNotCancelableError) {
-    // 取消目标已终态（ready/failed/canceled）——操作冲突。
-    sendJson(res, 409, { error: { code: "parse-task-not-cancelable", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof MaterialBranchConflictError) {
-    // 材料建枝意图冲突（同树同 intent_key 已绑定不同选区）——既有建枝不变。
-    sendJson(res, 409, { error: { code: "material-branch-conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof MaterialFirstQuestionConflictError) {
-    // 材料首问内容冲突（首问已用不同内容落库）——改问走普通续聊。
-    sendJson(res, 409, { error: { code: "material-first-question-conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof NavEngineError) {
-    // 大规模树导航（issue #8 D4-8）：稳定原因码 → 状态码。必须在下方
-    // TreeAIError 鸭子类型分支之前（NavEngineError 也携带字符串 code）。
-    if (err.code === "unknown-tree" || err.code === "unknown-branch") {
-      sendJson(res, 404, { error: { code: "not-found", message: err.message } } satisfies ApiErrorBody);
-      return;
-    }
-    if (err.code === "stale-cursor") {
-      // 索引版本已变（invalidate 后旧游标）——客户端须从首页重开分页。
-      sendJson(res, 409, { error: { code: "stale-cursor", message: err.message } } satisfies ApiErrorBody);
-      return;
-    }
-    if (err.code === "data-integrity") {
-      sendJson(res, 500, { error: { code: "data-integrity", message: err.message } } satisfies ApiErrorBody);
-      return;
-    }
-    // invalid-argument / invalid-cursor：调用方输入错误。
-    sendJson(res, 400, { error: { code: err.code, message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err instanceof TypeError) {
-    // 调用方契约违规（如并发 prompt）——单用户本地工具下按操作冲突呈现。
-    sendJson(res, 409, { error: { code: "conflict", message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  if (err !== null && typeof err === "object" && "code" in err && "message" in err) {
-    const candidate = err as { code: unknown; message: unknown };
-    if (typeof candidate.code === "string" && typeof candidate.message === "string") {
-      if (candidate.code === "user-abort") {
-        // 用户/宿主主动中止，不是上游失败：按操作冲突呈现（run 已收敛 aborted）。
-        sendJson(res, 409, { error: { code: "user-abort", message: candidate.message } } satisfies ApiErrorBody);
-        return;
-      }
-      // TreeAIError（运行期失败：auth/upstream/session-corrupt/…）
-      sendJson(res, 502, { error: { code: candidate.code, message: candidate.message } } satisfies ApiErrorBody);
-      return;
-    }
-  }
-  if (err instanceof PersistenceError) {
-    sendJson(res, 500, { error: { code: err.code, message: err.message } } satisfies ApiErrorBody);
-    return;
-  }
-  const message = err instanceof Error ? err.message : "internal error";
-  sendJson(res, 500, { error: { code: "internal", message } } satisfies ApiErrorBody);
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
@@ -502,58 +354,6 @@ function parseSearchQuery(body: Record<string, unknown>): {
 }
 
 /** 204 No Content（无 body；阅读位置 PUT 的成功响应）。 */
-function sendNoContent(res: ServerResponse): void {
-  res.writeHead(204, { "cache-control": "no-store" });
-  res.end();
-}
-
-function sendPdfBytes(res: ServerResponse, bytes: Uint8Array, rangeHeader: string | undefined): void {
-  const total = bytes.byteLength;
-  let start = 0;
-  let end = total - 1;
-  let partial = false;
-  if (rangeHeader !== undefined) {
-    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
-    if (match === null || (match[1] === "" && match[2] === "")) {
-      res.writeHead(416, { "content-range": `bytes */${String(total)}`, "cache-control": "no-store" });
-      res.end();
-      return;
-    }
-    if (match[1] !== "") {
-      start = Number(match[1]);
-      end = match[2] === "" ? total - 1 : Number(match[2]);
-    } else {
-      const suffix = Number(match[2]);
-      start = Math.max(0, total - suffix);
-      end = total - 1;
-    }
-    if (
-      !Number.isSafeInteger(start) ||
-      !Number.isSafeInteger(end) ||
-      start < 0 ||
-      end < start ||
-      start >= total
-    ) {
-      res.writeHead(416, { "content-range": `bytes */${String(total)}`, "cache-control": "no-store" });
-      res.end();
-      return;
-    }
-    end = Math.min(end, total - 1);
-    partial = true;
-  }
-  const body = Buffer.from(bytes.subarray(start, end + 1));
-  const headers: Record<string, string | number> = {
-    "content-type": "application/pdf",
-    "content-length": body.byteLength,
-    "accept-ranges": "bytes",
-    "content-disposition": "inline",
-    "cache-control": "no-store",
-  };
-  if (partial) headers["content-range"] = `bytes ${String(start)}-${String(end)}/${String(total)}`;
-  res.writeHead(partial ? 206 : 200, headers);
-  res.end(body);
-}
-
 /**
  * 导航查询参数 → 数值（issue #8 D4-8）：非数字/非整数交由引擎层校验
  * （NavEngineError invalid-argument → 400，原因码稳定）。
