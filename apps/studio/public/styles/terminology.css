@@ -1,0 +1,201 @@
+/* ------------------------------ 术语③正文/操作分层与选区面 ------------------------------ */
+
+/* 动作层（③）：turn 尾部的 .turn-actions 承载入口按钮/选择提示/武装选区
+   工具条——正文区（turn 前导文本节点 + 统一区间覆盖）与动作层分离，动
+   作层重建/武装切换不触碰正文（textContent 与复制行为不变）。 */
+.turn .turn-actions { display: block; }
+
+/* 统一标注区间（③）：已保存术语批注的常驻下划线（点划金线；点击重开
+   批注卡）。与来源揭示高亮共用同一覆盖机制（绝对 UTF-16 偏移计算，包
+   裹不改写文本）。 */
+.turn .term-annotation-mark {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.turn .term-annotation-mark:hover { background: var(--gold-wash); }
+
+/* 选区工具条（③ 模式/工具条）：武装选区出现在动作层内；键盘可达（原生
+   button，Tab 顺序即 DOM 顺序）。 */
+.selection-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 3px 6px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: var(--surface-dim);
+}
+.selection-toolbar button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.selection-toolbar button:hover { background: var(--gold-wash); border-color: var(--gold); }
+
+/* 术语解释卡（瞬态任务面 + 保存/推广动作；渲染在对应答案之后）。 */
+.term-explain-card {
+  margin: 6px 0 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--gold-line);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  font-family: var(--font-read);
+  font-size: 14px;
+}
+
+/* 术语建议条（①阅读模式）：渲染在 assistant 答案之后、Return 卡之前。
+   建议**只展示**——chip 是预填解释请求的入口（显式确认才发）；无进场
+   动效（reduced-motion 无需特例——W2 动效纪律）。 */
+.term-suggest-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 6px;
+  font-family: var(--font-ui);
+}
+.term-suggest-chip {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 2px 10px;
+  border: 1px dashed var(--gold-line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-chip:hover:not(:disabled) { background: var(--gold-wash); border-style: solid; }
+.term-suggest-chip:disabled { opacity: 0.6; cursor: default; }
+.term-suggest-chip.armed {
+  border-style: solid;
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+.term-suggest-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border: 1px solid var(--gold-line);
+  border-radius: 8px;
+  background: var(--surface-dim);
+}
+.term-suggest-confirm button {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-confirm button:hover { background: var(--gold-wash); border-color: var(--gold); }
+.term-suggest-retry {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-suggest-retry:hover:not(:disabled) { background: var(--surface-dim); }
+.term-explain-card .term-explain-head {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+.term-explain-card .term-explain-body {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.term-explain-card .term-explain-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.term-explain-card .term-explain-actions input {
+  flex: 1 1 200px;
+  min-width: 160px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.term-explain-card .term-explain-close,
+.term-explain-card .term-explain-retry {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-explain-card .term-explain-close:hover,
+.term-explain-card .term-explain-retry:hover { background: var(--wash); }
+/* 解释卡进场（③）：只在新卡打开的那一次渲染播放（.enter 由 app.js 置一
+   次即止，重建不重播）；reduced-motion 下即时化（文件末尾全局降级块 +
+   显式规则）。 */
+.term-explain-card.enter { animation: term-card-in var(--motion-card) ease-out; }
+@keyframes term-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 推广冲突面（③：同批注异键 409 如实呈现）与「恢复既有探索」入口。 */
+.term-explain-card .term-explain-conflict {
+  margin: 6px 0 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--danger);
+}
+.term-explain-card .term-resume,
+.term-explain-card .term-explain-actions .term-resume {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  background: var(--green-wash);
+  color: var(--green-deep);
+  cursor: pointer;
+}
+.term-explain-card .term-resume:hover { background: #dcebe0; }
+.turn.has-selection .selection-hint { display: inline; }
+
+/* P1 流式占位 turn（M5）：静态指示——caret 不闪烁，无循环动画。 */
+.turn.streaming-turn { border-style: dashed; color: var(--ink-soft); }
+.streaming-caret { color: var(--muted); }
+
+/* 锚点高亮（M6）：一次脉冲后保持静态；reduced-motion 下直接静态。 */
+.source-highlight { background: var(--highlight); color: inherit; padding: 1px 0; border-radius: 2px; box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.35); }
+.source-highlight.pulse { animation: anchor-pulse 0.9s ease-out 1; }
+@keyframes anchor-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.35); }
+  40% { box-shadow: 0 0 0 7px rgba(243, 211, 106, 0.55); }
+}
+
+/* 揭示后聚焦的锚点 turn（tabindex=-1）：绿描边静默标识。 */
+.turn.anchor-focus { border-color: var(--green); }
+
