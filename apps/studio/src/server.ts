@@ -27,6 +27,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/index.html": { file: "index.html", type: "text/html; charset=utf-8" },
   "/app.js": { file: "app.js", type: "text/javascript; charset=utf-8" },
   "/style.css": { file: "style.css", type: "text/css; charset=utf-8" },
+  "/shared/source/sha256.js": { file: "shared/source/sha256.js", type: "text/javascript; charset=utf-8" },
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
