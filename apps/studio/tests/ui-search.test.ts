@@ -60,6 +60,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mountStudioApp } from "./support/app-harness.ts";
 import { readStudioCss } from "./support/styles.ts";
 
 /* 真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
@@ -943,7 +944,7 @@ interface World {
   turnElementById(containerId: string, turnId: string): StubElement;
 }
 
-let appLoadCounter = 0;
+
 
 /** 标准材料：v1 = md-05（旧版本），v2 = md-01（当前版本）。 */
 function makeVersionedMaterial(): StubMaterialEntry {
@@ -1267,8 +1268,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     writable: true,
   });
 
-  appLoadCounter += 1;
-  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
+  await mountStudioApp();
   await settle(25);
 
   const world: World = {
