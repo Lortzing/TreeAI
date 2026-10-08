@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "typecheck": "node scripts/typecheck.js",
-    "test": "npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && npm test --workspace @treeai/studio && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts",
+    "test": "npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && npm test --workspace @treeai/studio && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts && node --test scripts/d4/pdf/content.test.mjs",
     "test:integration": "npm test --workspace @treeai/runtime-smoke && node --test tests/integration/*.test.ts",
     "verify:d2": "node scripts/verify-d2.js",
     "record:d3": "node scripts/record-d3-evidence.mjs",
