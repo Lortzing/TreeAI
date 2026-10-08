@@ -310,9 +310,8 @@ async function main(): Promise<void> {
   const terminology = new TerminologyService({ repository, executor: terminologyExecutor, studio: service });
 
   /* 材料导入（issue #8 D4-1）：同一产品库上的材料仓储 + 导入服务。解析器
-     注册表缺省只装 markdown（d4-md-v1）；pdf 槽位随 D4-1 集成在
-     import-service 的默认注册表一行装配——装配前 .pdf 导入 415 如实拒绝
-     （绝无伪成功）。上限为冻结缺省（20 MiB / 1,000,000 UTF-16 units）。 */
+     注册表缺省装配 markdown（d4-md-v1）与 PDF（d4-pdf-v1）；原始 PDF 文件
+     由受 Tree/Material/Version 作用域校验的本地路由提供给阅读器。 */
   const materialRepository = MaterialRepository.open({ path: join(options.dataDir, "treeai.db") });
   const materials = new MaterialImportService({ repository: materialRepository });
 
@@ -362,7 +361,7 @@ async function main(): Promise<void> {
       `budget=${String(options.terminologyBudgetTokens)} est tokens, thinking=off)`,
   );
   banner.push(
-    "treeai-studio: materials import ready (markdown d4-md-v1; pdf pending D4-1 integration)",
+    "treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)",
   );
   banner.push(
     "treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)",

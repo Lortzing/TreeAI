@@ -36,6 +36,7 @@
  */
 
 import { createHash, randomUUID } from "node:crypto";
+import { Worker } from "node:worker_threads";
 import type {
   IsoTimestamp,
   Material,
@@ -124,6 +125,86 @@ export interface MaterialParseContext {
   readonly maxPages: number;
 }
 
+export interface MaterialParseExecution {
+  readonly promise: Promise<MaterialParserOutcome>;
+  cancel(): void;
+}
+
+export interface MaterialParseExecutor {
+  start(
+    parser: MaterialParser,
+    bytes: Uint8Array,
+    context: MaterialParseContext,
+  ): MaterialParseExecution;
+}
+
+class InlineMaterialParseExecutor implements MaterialParseExecutor {
+  start(parser: MaterialParser, bytes: Uint8Array, context: MaterialParseContext): MaterialParseExecution {
+    return {
+      promise: Promise.resolve().then(() => parser.parse(bytes, context)),
+      cancel(): void {
+        // Injected parsers are a test seam; task cancellation still protects the durable row.
+      },
+    };
+  }
+}
+
+class WorkerMaterialParseExecutor implements MaterialParseExecutor {
+  start(parser: MaterialParser, bytes: Uint8Array, context: MaterialParseContext): MaterialParseExecution {
+    const workerBytes = bytes.slice();
+    const worker = new Worker(new URL("./parse-worker.ts", import.meta.url), {
+      workerData: {
+        parserKind: parser.kind,
+        bytes: workerBytes,
+        maxPages: context.maxPages,
+      },
+    });
+    let settled = false;
+    let terminationTimer: NodeJS.Timeout | null = null;
+    let resolvePromise: (outcome: MaterialParserOutcome) => void = () => undefined;
+    let rejectPromise: (error: unknown) => void = () => undefined;
+    const promise = new Promise<MaterialParserOutcome>((resolve, reject) => {
+      resolvePromise = resolve;
+      rejectPromise = reject;
+    });
+    const finish = (callback: () => void): void => {
+      if (settled) return;
+      settled = true;
+      if (terminationTimer !== null) clearTimeout(terminationTimer);
+      terminationTimer = null;
+      callback();
+    };
+    worker.once("message", (message: unknown) => {
+      if (
+        message === null ||
+        typeof message !== "object" ||
+        (message as { type?: unknown }).type !== "result"
+      ) {
+        finish(() => rejectPromise(new Error("material parse worker returned an invalid message")));
+        return;
+      }
+      const outcome = (message as { outcome?: unknown }).outcome;
+      finish(() => resolvePromise(outcome as MaterialParserOutcome));
+    });
+    worker.once("error", (error: Error) => finish(() => rejectPromise(error)));
+    worker.once("exit", (code: number) => {
+      if (code !== 0) {
+        finish(() => rejectPromise(new Error(`material parse worker exited with code ${String(code)}`)));
+      }
+    });
+    return {
+      promise,
+      cancel(): void {
+        if (settled) return;
+        worker.postMessage({ type: "cancel" });
+        terminationTimer = setTimeout(() => {
+          void worker.terminate();
+        }, 100);
+      },
+    };
+  }
+}
+
 /** d4-md-v1 解析器装配（同步纯函数 → MaterialParser 缝）。 */
 export const D4_MD_V1_PARSER: MaterialParser = {
   kind: "markdown",
@@ -164,6 +245,7 @@ export const D4_PDF_V1_PARSER: MaterialParser = {
           start: block.start,
           end: block.end,
           page: block.page,
+          ...(block.geometry === null ? {} : { geometry: block.geometry }),
         })),
       });
     }
@@ -346,6 +428,8 @@ export interface MaterialImportServiceOptions {
   readonly limits?: Partial<MaterialImportLimits>;
   readonly now?: () => IsoTimestamp;
   readonly generateTaskId?: () => string;
+  /** Optional executor injection for deterministic parser seam tests. */
+  readonly parseExecutor?: MaterialParseExecutor;
 }
 
 /** 进程内解析任务簿记（瞬态；持久事实在 material_versions 行）。 */
@@ -372,6 +456,14 @@ export class MaterialImportService {
   #lateResultsDiscarded = 0;
   readonly #now: () => IsoTimestamp;
   readonly #generateTaskId: () => string;
+  readonly #parseExecutor: MaterialParseExecutor;
+  readonly #parseQueue: Array<{
+    readonly task: ParseTaskRecord;
+    bytes: Uint8Array | null;
+    readonly parser: MaterialParser;
+  }> = [];
+  #activeTaskId: string | null = null;
+  readonly #activeExecutions = new Map<string, MaterialParseExecution>();
 
   constructor(options: MaterialImportServiceOptions) {
     this.repository = options.repository;
@@ -395,6 +487,9 @@ export class MaterialImportService {
     this.#now = options.now ?? ((): IsoTimestamp => new Date().toISOString());
     this.#generateTaskId =
       options.generateTaskId ?? ((): string => `mat-task-${randomUUID().slice(0, 8)}`);
+    this.#parseExecutor =
+      options.parseExecutor ??
+      (options.parsers === undefined ? new WorkerMaterialParseExecutor() : new InlineMaterialParseExecutor());
     // 宿主中断恢复（I6 同纪律）：上次进程遗留的 pending/parsing 版本收敛为
     // failed——解析任务是进程内状态，重启后不可续；如实失败优于永远悬置。
     this.repository.failNonTerminalParseVersions(
@@ -565,6 +660,26 @@ export class MaterialImportService {
     };
   }
 
+  /** Read an authorized original material file for the PDF renderer. */
+  readVersionFile(
+    treeId: TreeId,
+    materialId: MaterialId,
+    versionId: MaterialVersionId,
+  ): { readonly version: MaterialVersion; readonly bytes: Uint8Array } {
+    this.#assertTree(treeId);
+    this.#findTreeMaterial(treeId, materialId);
+    const blob = this.repository.getVersionBlob(versionId);
+    if (blob.version.materialId !== materialId) {
+      throw new InvalidArgumentError(
+        `material version ${versionId} belongs to material ${blob.version.materialId}, not ${materialId}`,
+      );
+    }
+    if (blob.version.parserKind !== "pdf") {
+      throw new MaterialUnsupportedError("the original file route is only available for PDF material versions");
+    }
+    return blob;
+  }
+
   /* ------------------------------ 解析任务 ------------------------------ */
 
   /**
@@ -615,6 +730,11 @@ export class MaterialImportService {
     }
     task.state = "canceled";
     task.parseError = null;
+    const execution = this.#activeExecutions.get(task.taskId);
+    execution?.cancel();
+    for (const queued of this.#parseQueue) {
+      if (queued.task.taskId === task.taskId) queued.bytes = null;
+    }
     return this.#taskView(task);
   }
 
@@ -783,8 +903,25 @@ export class MaterialImportService {
     };
     this.#tasks.set(task.taskId, task);
     this.#taskOrder.push(task.taskId);
-    void this.#runParseTask(task, bytes, parser).catch(() => undefined);
+    this.#parseQueue.push({ task, bytes, parser });
+    void this.#drainParseQueue();
     return task.taskId;
+  }
+
+  async #drainParseQueue(): Promise<void> {
+    if (this.#activeTaskId !== null) return;
+    const next = this.#parseQueue.shift();
+    if (next === undefined) return;
+    if (next.task.state === "canceled" || next.bytes === null) {
+      void this.#drainParseQueue();
+      return;
+    }
+    this.#activeTaskId = next.task.taskId;
+    void this.#runParseTask(next.task, next.bytes, next.parser).finally(() => {
+      this.#activeExecutions.delete(next.task.taskId);
+      this.#activeTaskId = null;
+      void this.#drainParseQueue();
+    });
   }
 
   /**
@@ -809,8 +946,10 @@ export class MaterialImportService {
         return;
       }
       task.state = "parsing";
-      // 页数上限随上下文交给解析器（pdf 在解释内容流前执行；md 忽略）。
-      let outcome = await parser.parse(bytes, { maxPages: this.limits.maxPages });
+      // The default executor isolates built-in CPU parsing from the Studio event loop.
+      const execution = this.#parseExecutor.start(parser, bytes, { maxPages: this.limits.maxPages });
+      this.#activeExecutions.set(task.taskId, execution);
+      let outcome = await execution.promise;
       // 取消可能发生在解析在途期间（cancelParseTask 同步改写 task.state；
       // 经方法读取避免控制流窄化掩盖该交错）。
       if (this.#isCanceled(task)) {
@@ -858,6 +997,10 @@ export class MaterialImportService {
       task.state = "failed";
       task.parseError = parseError;
     } catch (error) {
+      if (this.#isCanceled(task)) {
+        this.#recordLateDiscard(task);
+        return;
+      }
       // 意外错误（仓储/驱动/解析器异常）：如实落 failed；连仓储都不可写时
       // 只在任务面留下失败（绝不伪就绪）。
       const parseError = `parse-internal: ${error instanceof Error ? error.message : String(error)}`;

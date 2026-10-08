@@ -481,16 +481,16 @@ test("gate ON (test-forced): only an assistant answer completion triggers exactl
     const set = await awaitSuggestionSet(studio.terminology, treeId, second.assistantTurn.id, (entry) =>
       entry.status !== "pending",
     );
-    /* 密度截断：minimal 3/段、6/回答——首段 6 候选（回答上限）→ 3 kept / 3 hidden。 */
+    /* v2 minimal 1/段、3/回答：首段候选按序只保留 1 个，其余诚实截断。 */
     assert.equal(set.status, "partial");
-    assert.equal(set.suggestions.length, 3);
-    assert.equal(set.hiddenCount, 3);
+    assert.equal(set.suggestions.length, 1);
+    assert.equal(set.hiddenCount, 2);
     assert.equal(set.readingMode, "minimal-hints");
     assert.equal(set.suggestions[0]!.term, "Alpha");
     assert.equal(ANSWER.slice(set.suggestions[0]!.start, set.suggestions[0]!.end), "Alpha");
     assert.equal(studio.termRuntime.prompts.length, 1, "exactly one extract dispatch");
     assert.equal(
-      studio.termRuntime.prompts[0]!.includes("up to 6 specialized terms"),
+      studio.termRuntime.prompts[0]!.includes("up to 3 specialized terms"),
       true,
       "the extract prompt is sized by the minimal per-answer cap",
     );
@@ -542,7 +542,7 @@ test("gate ON (test-forced): only an assistant answer completion triggers exactl
   }
 });
 
-test("gate ON + assisted reading: the per-paragraph 6 / per-answer 12 caps keep the full two-paragraph candidate list (ready, no truncation)", async () => {
+test("gate ON + assisted reading: v2 per-paragraph 2 / per-answer 6 caps are enforced honestly", async () => {
   const dir = makeTempDataDir();
   try {
     const studio = makeModesStudio(dir, { gate: true });
@@ -556,11 +556,11 @@ test("gate ON + assisted reading: the per-paragraph 6 / per-answer 12 caps keep 
       second.assistantTurn.id,
       (entry) => entry.status !== "pending",
     );
-    assert.equal(set.status, "ready", "12 candidates across 2 paragraphs fit the assisted caps");
-    assert.equal(set.suggestions.length, 12);
-    assert.equal(set.hiddenCount, 0);
+    assert.equal(set.status, "partial", "v2 caps keep at most two candidates per paragraph and six overall");
+    assert.equal(set.suggestions.length, 2);
+    assert.equal(set.hiddenCount, 4);
     assert.equal(
-      studio.termRuntime.prompts[0]!.includes("up to 12 specialized terms"),
+      studio.termRuntime.prompts[0]!.includes("up to 6 specialized terms"),
       true,
       "the extract prompt is sized by the assisted per-answer cap",
     );

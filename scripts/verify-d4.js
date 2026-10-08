@@ -455,7 +455,11 @@ const CHECKS = [
     fn: commandCheck(
       "unit-tests-d4",
       process.execPath,
-      ["--test", join("tests", "unit", "d4-fixtures-integrity.test.ts")],
+      [
+        "--test",
+        join("tests", "unit", "d4-fixtures-integrity.test.ts"),
+        join("tests", "unit", "d4-7-installer.test.ts"),
+      ],
       { timeoutMs: 600_000 },
     ),
   },

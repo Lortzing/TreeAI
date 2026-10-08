@@ -160,6 +160,9 @@ export interface LauncherConfig {
   readonly driver: LauncherDriver;
   readonly provider?: string;
   readonly model?: string;
+  readonly agentDir?: string;
+  readonly piTools?: readonly string[];
+  readonly policyReadRoots?: readonly string[];
   readonly terminologyProvider?: string;
   readonly terminologyModel?: string;
   readonly terminologyBudgetTokens?: number;
@@ -191,12 +194,46 @@ export function parseLauncherConfig(text: string): { config: LauncherConfig | nu
     return { config: null, problems: ["config.json 顶层必须是 JSON 对象。"] };
   }
   const record = raw as Record<string, unknown>;
+  const problems: string[] = [];
+  const rawDriver = record["driver"];
+  const driver = rawDriver === undefined ? "echo" : rawDriver;
+  if (driver !== "echo" && driver !== "pi") {
+    problems.push(
+      `driver 必须是 'echo' 或 'pi'（当前 ${String(driver)}）。修复方法：编辑 config.json 将 driver 改为 'echo' 或 'pi'。`,
+    );
+  }
+  const readOptionalString = (key: string): string | undefined => {
+    const value = record[key];
+    if (value === undefined) return undefined;
+    if (typeof value !== "string") {
+      problems.push(`${key} 必须是字符串（当前类型 ${typeof value}）。`);
+      return undefined;
+    }
+    return value;
+  };
+  const readOptionalStringArray = (key: string): readonly string[] | undefined => {
+    const value = record[key];
+    if (value === undefined) return undefined;
+    if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+      problems.push(`${key} 必须是字符串数组。`);
+      return undefined;
+    }
+    return value as readonly string[];
+  };
+  const provider = readOptionalString("provider");
+  const model = readOptionalString("model");
+  const agentDir = readOptionalString("agentDir");
+  const piTools = readOptionalStringArray("piTools");
+  const policyReadRoots = readOptionalStringArray("policyReadRoots");
   const config: LauncherConfig = {
     schemaVersion: typeof record["schemaVersion"] === "number" ? record["schemaVersion"] : CONFIG_SCHEMA_VERSION,
     port: typeof record["port"] === "number" ? record["port"] : DEFAULT_PORT,
-    driver: record["driver"] === "pi" ? "pi" : "echo",
-    ...(typeof record["provider"] === "string" ? { provider: record["provider"] } : {}),
-    ...(typeof record["model"] === "string" ? { model: record["model"] } : {}),
+    driver: driver === "pi" ? "pi" : "echo",
+    ...(provider === undefined ? {} : { provider }),
+    ...(model === undefined ? {} : { model }),
+    ...(agentDir === undefined ? {} : { agentDir }),
+    ...(piTools === undefined ? {} : { piTools }),
+    ...(policyReadRoots === undefined ? {} : { policyReadRoots }),
     ...(typeof record["terminologyProvider"] === "string"
       ? { terminologyProvider: record["terminologyProvider"] }
       : {}),
@@ -206,7 +243,7 @@ export function parseLauncherConfig(text: string): { config: LauncherConfig | nu
       : {}),
     ...(record["noBrowser"] === true ? { noBrowser: true } : {}),
   };
-  return { config, problems: [] };
+  return problems.length === 0 ? { config, problems } : { config: null, problems };
 }
 
 /**
@@ -244,9 +281,30 @@ export function validateLauncherConfig(config: LauncherConfig): string[] {
       (!Number.isInteger(config.terminologyBudgetTokens) || config.terminologyBudgetTokens <= 0)) {
       problems.push("terminologyBudgetTokens 必须是正整数（或不写使用默认 1000000）。");
     }
-  } else if (config.provider !== undefined || config.model !== undefined) {
+    if (config.agentDir !== undefined && config.agentDir.trim() === "") {
+      problems.push("driver=pi 时 agentDir 不能是空字符串。");
+    }
+    if (config.piTools !== undefined &&
+      (config.piTools.length === 0 || config.piTools.some((tool) => tool.trim() === ""))) {
+      problems.push("driver=pi 时 piTools 必须是非空工具名数组。");
+    }
+    if (config.policyReadRoots !== undefined) {
+      if (config.piTools === undefined) {
+        problems.push("policyReadRoots 需要同时配置 piTools；读取根只约束已启用的工具。");
+      }
+      if (config.policyReadRoots.length === 0 || config.policyReadRoots.some((root) => root.trim() === "")) {
+        problems.push("policyReadRoots 必须是非空目录路径数组。");
+      }
+    }
+  } else if (
+    config.provider !== undefined ||
+    config.model !== undefined ||
+    config.agentDir !== undefined ||
+    config.piTools !== undefined ||
+    config.policyReadRoots !== undefined
+  ) {
     problems.push(
-      "driver=echo 时不需要 provider/model（echo 是离线回声驱动）。" +
+      "driver=echo 时不需要 provider/model/agentDir/piTools/policyReadRoots（echo 是离线回声驱动）。" +
         '想用真实模型：把 "driver" 改为 "pi" 并补齐 provider/model。',
     );
   }
@@ -271,6 +329,11 @@ export function buildServerArgs(
     if (typeof config.terminologyBudgetTokens === "number") {
       args.push("--terminology-budget", String(config.terminologyBudgetTokens));
     }
+    if (typeof config.agentDir === "string" && config.agentDir.trim() !== "") {
+      args.push("--agent-dir", config.agentDir);
+    }
+    if (config.piTools !== undefined) args.push("--pi-tools", config.piTools.join(","));
+    if (config.policyReadRoots !== undefined) args.push("--policy-read-roots", config.policyReadRoots.join(","));
   }
   return args;
 }
@@ -299,13 +362,51 @@ export const BROWSER_ENV = "TREEAI_BROWSER";
  * （按空格拆分为命令+参数，末尾追加 URL；测试用它替换成记录器脚本）；
  * 否则用平台缺省（darwin: open / win32: cmd start / 其他: xdg-open）。
  */
+function splitBrowserCommand(value: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | null = null;
+  let escaped = false;
+  for (const char of value.trim()) {
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (quote !== null) {
+      if (char === quote) quote = null;
+      else current += char;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (/\s/.test(char)) {
+      if (current !== "") {
+        parts.push(current);
+        current = "";
+      }
+      continue;
+    }
+    current += char;
+  }
+  if (escaped) current += "\\";
+  if (current !== "") parts.push(current);
+  return parts;
+}
+
 export function browserCommandFor(
   platform: NodeJS.Platform,
   env: Readonly<Record<string, string | undefined>>,
 ): { command: string; args: readonly string[] } | null {
   const override = env[BROWSER_ENV] ?? env["BROWSER"];
   if (typeof override === "string" && override.trim() !== "") {
-    const parts = override.trim().split(/\s+/);
+    const parts = splitBrowserCommand(override);
     const command = parts[0];
     if (command === undefined || command === "") return null;
     return { command, args: parts.slice(1) };
@@ -437,6 +538,10 @@ export const BUNDLE_LAYOUT = {
   workspacePackages: ["contracts", "event-journal", "persistence", "runtime-pi", "tool-policy"] as const,
   eventJournalDistEntry: join("app", "packages", "event-journal", "dist", "src", "index.js"),
   piSdkPackageJson: join("app", "node_modules", "@earendil-works", "pi-coding-agent", "package.json"),
+  pdfjsMain: join("app", "node_modules", "pdfjs-dist", "build", "pdf.mjs"),
+  pdfjsWorker: join("app", "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
+  pdfjsCmaps: join("app", "node_modules", "pdfjs-dist", "cmaps"),
+  pdfjsStandardFonts: join("app", "node_modules", "pdfjs-dist", "standard_fonts"),
   launcherEntry: join("launcher", "launcher.ts"),
   launcherCore: join("launcher", "core.ts"),
   readme: "README.md",
@@ -478,6 +583,10 @@ export function validateBundleLayout(bundleRoot: string, platform: TargetPlatfor
   mustExist(BUNDLE_LAYOUT.studioPackageJson, "studio package.json");
   mustExist(BUNDLE_LAYOUT.eventJournalDistEntry, "event-journal 预编译产物");
   mustExist(BUNDLE_LAYOUT.piSdkPackageJson, "Pi SDK npm 包");
+  mustExist(BUNDLE_LAYOUT.pdfjsMain, "本地 PDF.js display 模块");
+  mustExist(BUNDLE_LAYOUT.pdfjsWorker, "本地 PDF.js worker");
+  mustExist(BUNDLE_LAYOUT.pdfjsCmaps, "PDF.js CMap 资源");
+  mustExist(BUNDLE_LAYOUT.pdfjsStandardFonts, "PDF.js 标准字体资源");
   mustExist(BUNDLE_LAYOUT.readme, "README");
   mustExist(MANIFEST_FILE_NAME, "版本清单 VERSION.json");
   for (const pkg of BUNDLE_LAYOUT.workspacePackages) {

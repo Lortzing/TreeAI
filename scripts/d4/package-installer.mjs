@@ -350,6 +350,11 @@ copyDirFiltered(
   join(REPO_ROOT, "node_modules", "@earendil-works"),
   join(stageDir, "app", "node_modules", "@earendil-works"),
   (entry) => entry.name !== ".bin", /* 顶层只有 pi-coding-agent；.bin 不需要 */
+);
+copyDirFiltered(
+  join(REPO_ROOT, "node_modules", "pdfjs-dist"),
+  join(stageDir, "app", "node_modules", "pdfjs-dist"),
+  (entry) => entry.name !== "types" && entry.name !== "web",
 );/* @esbuild 裁剪在完整复制后做（平台包都在嵌套 node_modules/@esbuild 下；
      ESBUILD_PLATFORM_PACKAGE 是带作用域的全名，目录内只比较平台段）。 */
 const esbuildScopeDir = join(

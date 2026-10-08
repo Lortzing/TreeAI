@@ -59,6 +59,7 @@ export {
   type MaterialRepositoryOptions,
   type MaterialSelectionContext,
   type MaterialVersionContent,
+  type MaterialVersionBlob,
   type TreeMaterialLink,
   type UpdateVersionParseResultInput,
   type UpsertReadingPositionInput,

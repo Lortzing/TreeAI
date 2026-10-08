@@ -4643,6 +4643,7 @@ const PDF_PAGE_RENDER_OVERSCAN_PX = 1200;
 /** PDF 懒渲染的几何未知回落（滚动容器 clientHeight 为 0——脚本桩/未布局）：
     只渲染前导若干页，绝不在几何不明时整册渲染。 */
 const PDF_LEADING_RENDER_PAGES = 6;
+let pdfjsModulePromise = null;
 
 /** 材料读模型世代号（P1 同族纪律：写 state.materials 前双验证——请求树 +
     世代号；切树后迟到的旧树响应整包丢弃，绝不把 A 树的材料写进 B 树）。 */
@@ -5212,6 +5213,7 @@ async function openMaterial(materialId, opts = {}) {
   state.materialSelection = null;
   state.materialReader = {
     materialId,
+    treeId,
     material: { id: materialId, title: "", createdAt: "" },
     versions: [],
     versionId: "",
@@ -5221,6 +5223,10 @@ async function openMaterial(materialId, opts = {}) {
     textUnits: 0,
     firstPageState: "loading",
     firstPageError: null,
+    pdfDocument: null,
+    pdfLoading: null,
+    pdfError: null,
+    pdfRenderTasks: new Map(),
     appendState: "idle",
     appendError: null,
     fenceOpen: false,
@@ -5713,15 +5719,13 @@ function buildMaterialNotes(reader, version) {
       );
     }
   } else if (version.parserKind === "pdf") {
-    /* PDF 阅读面（charter §3.2）：真实页（解析产出的页块结构）+ 可选中文
-       本层——每页是一个阅读面，选区经同一套规范偏移机制映射；单页纪律
-       如实声明（跨页拒绝，绝不静默截断）。不伪造视觉版式：呈现的是
-       d4-pdf-v1 规范文本（扫描/加密/损坏/超限材料的显式状态见上方
-       parseStatus 面）。 */
+    /* PDF 阅读面（charter §3.2）：原始 PDF 页面由本地 PDF.js display/worker
+       绘制，TreeAI 保留 canonical UTF-16 文字层和确定性行几何；原始页面失败时
+       使用浏览器本地 PDF fallback，绝不把失败伪装成空文档。 */
     appendNote(
-      "PDF reading surface — each page below renders the parsed canonical text (d4-pdf-v1) as a selectable " +
-        "reading surface; select within one page (cross-page selections are refused, never silently truncated); " +
-        "page text renders as you scroll (visible pages first)",
+      "PDF reading surface — the original page is rendered locally with PDF.js and a selectable canonical " +
+        "text layer; select within one page (cross-page selections are refused, never silently truncated); " +
+        "visible pages render first as you scroll",
     );
   }
   if (version.id !== latest.id) {
@@ -5864,6 +5868,10 @@ function createPdfPageFrame(entry) {
   const head = document.createElement("div");
   head.className = "pdf-page-head";
   head.textContent = page === null ? entry.block.blockId : `Page ${String(page)}`;
+  const canvas = document.createElement("canvas");
+  canvas.className = "pdf-page-canvas";
+  canvas.setAttribute("aria-label", page === null ? "PDF page" : `PDF page ${String(page)}`);
+  canvas.dataset.rendered = "false";
   const textLayer = document.createElement("div");
   textLayer.className = "material-block pdf-page-text";
   textLayer.dataset.blockId = entry.block.blockId;
@@ -5872,9 +5880,124 @@ function createPdfPageFrame(entry) {
   if (page !== null) textLayer.dataset.page = String(page);
   textLayer.dataset.rendered = "false";
   textLayer.append(pdfPagePendingPlaceholder(page));
-  frame.append(head, textLayer);
+  frame.append(head, canvas, textLayer);
   return frame;
 }
+
+function pdfPageCanvas(frame) {
+  for (const child of frame.children) {
+    if (isElementNode(child) && child.classList.contains("pdf-page-canvas")) return child;
+  }
+  return null;
+}
+
+async function ensurePdfDocument(reader) {
+  if (reader.pdfDocument !== null) return reader.pdfDocument;
+  if (reader.pdfLoading !== null) return reader.pdfLoading;
+  const url =
+    `/api/trees/${encodeURIComponent(reader.treeId)}/materials/${encodeURIComponent(reader.materialId)}` +
+    `/versions/${encodeURIComponent(reader.versionId)}/file`;
+  reader.pdfLoading = (async () => {
+    const pdfjs = await import("/vendor/pdfjs/pdf.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.mjs";
+    const loadingTask = pdfjs.getDocument({
+      url,
+      cMapUrl: "/vendor/pdfjs/cmaps/",
+      cMapPacked: true,
+      standardFontDataUrl: "/vendor/pdfjs/standard_fonts/",
+    });
+    const documentProxy = await loadingTask.promise;
+    if (state.materialReader === reader) reader.pdfDocument = documentProxy;
+    return documentProxy;
+  })();
+  try {
+    return await reader.pdfLoading;
+  } catch (error) {
+    reader.pdfError = String(error && error.message ? error.message : error);
+    throw error;
+  } finally {
+    reader.pdfLoading = null;
+  }
+}
+
+async function renderPdfOriginalPage(frame, entry, reader) {
+  const pageNumber = typeof entry.block.page === "number" ? entry.block.page : null;
+  const canvas = pdfPageCanvas(frame);
+  if (pageNumber === null || canvas === null || canvas.dataset.rendered === "true") return;
+  if (reader.pdfRenderTasks.has(frame)) return;
+  try {
+    const documentProxy = await ensurePdfDocument(reader);
+    if (state.materialReader !== reader) return;
+    const page = await documentProxy.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1.25 });
+    const context = canvas.getContext("2d");
+    if (context === null) throw new Error("PDF canvas 2D context is unavailable");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    canvas.style.aspectRatio = `${String(viewport.width)} / ${String(viewport.height)}`;
+    const renderTask = page.render({ canvasContext: context, viewport });
+    reader.pdfRenderTasks.set(frame, renderTask);
+    let timeoutId = null;
+    try {
+      await Promise.race([
+        renderTask.promise,
+        new Promise((_, reject) => {
+          timeoutId = window.setTimeout(() => reject(new Error("PDF page rendering timed out")), 8000);
+        }),
+      ]);
+    } finally {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    }
+    canvas.dataset.rendered = "true";
+    layoutPdfGeometryTextLayer(frame, entry);
+  } catch (error) {
+    reader.pdfError = String(error && error.message ? error.message : error);
+    const task = reader.pdfRenderTasks.get(frame);
+    task?.cancel?.();
+    showNativePdfFallback(frame, reader);
+  } finally {
+    reader.pdfRenderTasks.delete(frame);
+  }
+}
+
+function showNativePdfFallback(frame, reader) {
+  const canvas = pdfPageCanvas(frame);
+  if (canvas !== null) canvas.hidden = true;
+  const textLayer = pdfPageTextLayer(frame);
+  if (textLayer !== null) textLayer.hidden = true;
+  let fallback = null;
+  for (const child of frame.children) {
+    if (isElementNode(child) && child.classList.contains("pdf-native-fallback")) fallback = child;
+  }
+  if (fallback !== null) return;
+  fallback = document.createElement("iframe");
+  fallback.className = "pdf-native-fallback";
+  fallback.title = "Native PDF page fallback";
+  fallback.src =
+    `/api/trees/${encodeURIComponent(reader.treeId)}/materials/${encodeURIComponent(reader.materialId)}` +
+    `/versions/${encodeURIComponent(reader.versionId)}/file#page=${frame.dataset.page ?? "1"}`;
+  frame.append(fallback);
+}
+
+
+function layoutPdfGeometryTextLayer(frame, entry) {
+  const textLayer = pdfPageTextLayer(frame);
+  const geometry = entry.block.geometry;
+  if (textLayer === null || geometry === undefined || geometry === null) return;
+  textLayer.style.width = "100%";
+  textLayer.style.height = "100%";
+  for (const child of textLayer.children) {
+    if (!isElementNode(child) || !child.classList.contains("pdf-line")) continue;
+    const start = Number(child.dataset.start ?? "-1");
+    const line = geometry.lines.find((candidate) => candidate.start === start);
+    if (line === undefined) continue;
+    const fontSize = line.fontSize ?? 12;
+    child.style.left = `${String((line.x / geometry.pageWidth) * 100)}%`;
+    child.style.top = `${String(((geometry.pageHeight - line.y - fontSize) / geometry.pageHeight) * 100)}%`;
+    child.style.fontSize = `${String(fontSize)}px`;
+  }
+}
+
 
 /** 未渲染页的占位说明（远页不渲染文本——绝不含正文文字）。 */
 function pdfPagePendingPlaceholder(page) {
@@ -5887,14 +6010,44 @@ function pdfPagePendingPlaceholder(page) {
   return pending;
 }
 
-/**
- * PDF 懒渲染（charter §3.2：可见页先行——大 PDF 首屏不整册渲染，B6 的
- * 2s 目标依赖）：页框落在 [视口顶 - 提前量, 视口底 + 提前量] 即渲染文本
- * 层；窗外页卸回占位（记住已渲染高度——min-height 占位保持滚动几何，
- * 真实浏览器不因卸载跳滚动）。几何未知（clientHeight 为 0——脚本桩/
- * 未布局）只渲染前导 PDF_LEADING_RENDER_PAGES 页。多趟推进（最多 8 趟）：
- * 渲染改变前页高度后，后续页可能进入窗口——每趟至少渲染一页才继续。
- */
+/** 渲染页文本层（幂等；返回是否本次真正填充）。canonical offsets are retained
+    on every line; geometry is only a visual projection and never an anchor source. */
+function renderPdfPageText(frame, entry) {
+  const textLayer = pdfPageTextLayer(frame);
+  if (textLayer === null) return false;
+  if (textLayer.dataset.rendered === "true") return false;
+  textLayer.replaceChildren();
+  const geometry = entry.block.geometry;
+  if (geometry !== undefined && geometry !== null && geometry.lines.length > 0) {
+    textLayer.classList.add("pdf-geometry-text");
+    for (const line of geometry.lines) {
+      const span = document.createElement("span");
+      span.className = "pdf-line";
+      span.dataset.start = String(line.start);
+      span.dataset.end = String(line.end);
+      span.textContent = entry.text.slice(line.start, line.end);
+      textLayer.append(span);
+      if (line.end < entry.text.length) textLayer.append(document.createTextNode("\n"));
+    }
+  } else {
+    const lines = entry.text.split("\n");
+    for (let i = 0; i < lines.length; i += 1) {
+      if (lines[i] !== "") {
+        const line = document.createElement("span");
+        line.className = "pdf-line";
+        line.textContent = lines[i];
+        textLayer.append(line);
+      }
+      if (i < lines.length - 1) textLayer.append(document.createTextNode("\n"));
+    }
+  }
+  textLayer.dataset.rendered = "true";
+  const reader = state.materialReader;
+  if (reader !== null) void renderPdfOriginalPage(frame, entry, reader);
+  return true;
+}
+
+/** PDF 懒渲染：只把可见页及 overscan 页交给原始页面渲染与文字层。 */
 function updatePdfPageRendering(reader) {
   if (reader === null || !materialReaderIsPdf(reader)) return;
   const blocksEl = document.getElementById("mat-blocks");
@@ -5936,27 +6089,6 @@ function updatePdfPageRendering(reader) {
   }
 }
 
-/** 渲染页文本层（幂等；返回是否本次真正填充）。逐字无损：行以 \n 分隔
-    原样成文（pre-wrap），textContent 与页块文本字节相等。 */
-function renderPdfPageText(frame, entry) {
-  const textLayer = pdfPageTextLayer(frame);
-  if (textLayer === null) return false;
-  if (textLayer.dataset.rendered === "true") return false;
-  textLayer.replaceChildren();
-  const lines = entry.text.split("\n");
-  for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i] !== "") {
-      const line = document.createElement("span");
-      line.className = "pdf-line";
-      line.textContent = lines[i];
-      textLayer.append(line);
-    }
-    if (i < lines.length - 1) textLayer.append(document.createTextNode("\n"));
-  }
-  textLayer.dataset.rendered = "true";
-  return true;
-}
-
 /** 页框内的文本层元素（.material-block——选区换算的定位元素）。 */
 function pdfPageTextLayer(frame) {
   for (const child of frame.children) {
@@ -5980,11 +6112,21 @@ function renderPdfPageTextIn(element) {
 function unrenderPdfPageText(frame) {
   const textLayer = pdfPageTextLayer(frame);
   if (textLayer === null || textLayer.dataset.rendered !== "true") return;
+  const reader = state.materialReader;
+  reader?.pdfRenderTasks.get(frame)?.cancel?.();
+  reader?.pdfRenderTasks.delete(frame);
   const height = typeof frame.offsetHeight === "number" ? frame.offsetHeight : 0;
   const page = frame.dataset.page !== undefined ? Number(frame.dataset.page) : null;
   if (height > 0) frame.setAttribute("style", `min-height: ${String(height)}px;`);
   textLayer.replaceChildren(pdfPagePendingPlaceholder(page));
+  textLayer.classList.remove("pdf-geometry-text");
   textLayer.dataset.rendered = "false";
+  const canvas = pdfPageCanvas(frame);
+  if (canvas !== null && canvas.dataset.rendered === "true") {
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.dataset.rendered = "false";
+  }
 }
 
 /**
@@ -7394,6 +7536,10 @@ async function refreshMaterialDetail() {
     必须清空——退出中再次打开另一份材料时，绝不能移用上一份的块元素。 */
 function closeMaterialReader() {
   if (state.materialReader === null) return;
+  const closingReader = state.materialReader;
+  for (const task of closingReader.pdfRenderTasks.values()) task.cancel?.();
+  closingReader.pdfRenderTasks.clear();
+  void closingReader.pdfDocument?.destroy?.();
   saveMaterialReadingPositionNow();
   state.materialReader = null;
   state.materialSelection = null;
@@ -7548,7 +7694,15 @@ function effectiveSearchScope() {
 /** 命中行稳定标识：契约 SearchHit 未携带事实 id（HTTP 裁剪面剥离 refId），
     以契约字段组合作行键（引擎每文档恰一条命中，start/end 参与消歧）。 */
 function searchHitKey(hit) {
-  return `${hit.kind}:${hit.treeId}:${hit.createdAt}:${String(hit.start)}-${String(hit.end)}`;
+  const target = hit.target;
+  if (target === null || typeof target !== "object") return `unaddressable:${hit.kind}:${hit.treeId}`;
+  if (target.kind === "material") {
+    return `${target.kind}:${target.treeId}:${target.materialId}:${target.versionId}:${target.blockId ?? ""}`;
+  }
+  if (target.kind === "annotation") {
+    return `${target.kind}:${target.treeId}:${target.annotationId}`;
+  }
+  return `${target.kind}:${target.treeId}:${target.branchId}:${target.turnId}`;
 }
 
 /**
@@ -7791,77 +7945,49 @@ function searchHitSessionNote(hit, key) {
   return wrap;
 }
 
-/* ---------------- 命中 → 事实的客户端定位（契约无事实 id 的如实边界） ---------------- */
+/* ---------------- 命中 → 事实的客户端定位（稳定 target 身份） ---------------- */
 
-/**
- * 服务端 headOf 镜像（search-service.ts 的展示标题算法：trim + 24 码元 +
- * 省略号）。契约 SearchHit 被服务端剥离了事实 id（refId）——本面以
- * kind + createdAt + 标题头（同算法重建）+ 摘录切片反查已加载树态定位
- * 事实；全部命中即唯一性证据（碰撞需同一毫秒同角色同文本头），查不到则
- * 如实说明，绝不跳到近似位置。
- */
-function searchHeadOf(text) {
-  const trimmed = text.trim();
-  return trimmed.length > 24 ? `${trimmed.slice(0, 24)}…` : trimmed;
-}
-
-/** 服务端命中标题的镜像重建（提问/回答/Return 前缀 + headOf）。 */
-function searchTurnTitle(turn) {
-  if (turn.role === "return") return `Return：${searchHeadOf(turn.text)}`;
-  return `${turn.role === "user" ? "提问" : "回答"}：${searchHeadOf(turn.text)}`;
-}
-
-/** 摘录去头尾截断省略号——剩余应是正文连续切片（定位校验用；「…」只出现
-    在截断处，中间内容是 body 的原样子串）。 */
-function searchHitExcerptCore(excerpt) {
-  let core = excerpt;
-  if (core.startsWith("…")) core = core.slice(1);
-  if (core.endsWith("…")) core = core.slice(0, -1);
-  return core;
-}
-
-/** 对话/Return 命中 → 已加载树态中的 turn（读模型顺序：主线在前、分支按
-    序、turn 按序——首个全匹配胜出，确定性）。 */
+/** 对话/Return 命中 → 已加载树态中的 turn（由服务端 target 精确指向）。 */
 function locateTurnHit(hit) {
   const st = state.treeState;
-  if (st === null || hit.treeId !== state.currentTreeId) return null;
-  const expectedRole =
-    hit.kind === "return"
-      ? "return"
-      : hit.title.startsWith("提问：")
-        ? "user"
-        : hit.title.startsWith("回答：")
-          ? "assistant"
-          : null;
-  if (expectedRole === null) return null;
-  const excerptCore = searchHitExcerptCore(hit.excerpt);
-  for (const view of st.branches) {
-    for (const turn of view.turns) {
-      if (turn.role !== expectedRole) continue;
-      if (turn.createdAt !== hit.createdAt) continue;
-      if (searchTurnTitle(turn) !== hit.title) continue;
-      if (excerptCore !== "" && !turn.text.includes(excerptCore)) continue;
-      return { view, turn };
-    }
+  const target = hit.target;
+  if (
+    st === null ||
+    hit.treeId !== state.currentTreeId ||
+    target === null ||
+    typeof target !== "object" ||
+    (target.kind !== "turn" && target.kind !== "return") ||
+    target.treeId !== hit.treeId
+  ) {
+    return null;
   }
-  return null;
+  const located = findTurnById(target.turnId);
+  if (located === null || located.view.branch.id !== target.branchId) return null;
+  if (target.kind === "return" && located.turn.role !== "return") return null;
+  if (target.kind === "turn" && located.turn.role === "return") return null;
+  return located;
 }
 
-/** 批注命中 → 已加载术语读模型中的批注（产品批注无 note 字段——索引正文
-    = explanation+term，与服务端装配同口径）。 */
+/** 批注命中 → 已保存术语批注（由服务端 target 精确指向）。 */
 function locateAnnotationHit(hit) {
   const terminology = state.terminology;
-  if (state.treeState === null || hit.treeId !== state.currentTreeId) return null;
-  if (terminology === null || !terminology.ok) return null;
-  const excerptCore = searchHitExcerptCore(hit.excerpt);
-  for (const annotation of terminology.annotations) {
-    if (annotation.createdAt !== hit.createdAt) continue;
-    if (`批注：${annotation.term}` !== hit.title) continue;
-    const body = `${annotation.explanation}${annotation.term}`;
-    if (excerptCore !== "" && !body.includes(excerptCore)) continue;
-    return { annotation };
+  const target = hit.target;
+  if (
+    state.treeState === null ||
+    hit.treeId !== state.currentTreeId ||
+    terminology === null ||
+    !terminology.ok ||
+    target === null ||
+    typeof target !== "object" ||
+    target.kind !== "annotation" ||
+    target.treeId !== hit.treeId
+  ) {
+    return null;
   }
-  return null;
+  const annotation = terminology.annotations.find(
+    (candidate) => candidate.id === target.annotationId,
+  );
+  return annotation === undefined ? null : { annotation };
 }
 
 /** 树态中按 id 找 turn（含其分支视图）。 */
@@ -7891,15 +8017,23 @@ async function jumpToSearchHit(hit) {
     await openTree(hit.treeId);
   }
   if (hit.kind === "material") {
-    if (typeof hit.materialId !== "string" || hit.materialId === "") {
-      state.search.note = "malformed material hit (no material id) — cannot jump";
+    const target = hit.target;
+    if (
+      target === null ||
+      typeof target !== "object" ||
+      target.kind !== "material" ||
+      target.treeId !== hit.treeId ||
+      typeof target.materialId !== "string" ||
+      target.materialId === ""
+    ) {
+      state.search.note = "malformed material hit (no stable material target) — cannot jump";
       renderSearchSection();
       return;
     }
-    await openMaterial(hit.materialId, {
+    await openMaterial(target.materialId, {
       trigger,
-      versionId: hit.versionId,
-      focusBlockId: typeof hit.blockId === "string" && hit.blockId !== "" ? hit.blockId : null,
+      versionId: target.versionId,
+      focusBlockId: target.blockId,
     });
     return;
   }

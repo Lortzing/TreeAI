@@ -65,6 +65,33 @@
 /** 搜索文档类型（对齐契约 §3 的 kinds 词汇；facts.json 的 material-fragment 归入 material）。 */
 export type SearchDocumentKind = "material" | "annotation" | "return" | "turn";
 
+/** Stable product-fact identity carried across the HTTP boundary. */
+export type SearchTarget =
+  | {
+      readonly kind: "material";
+      readonly treeId: string;
+      readonly materialId: string;
+      readonly versionId: string;
+      readonly blockId: string | null;
+    }
+  | {
+      readonly kind: "annotation";
+      readonly treeId: string;
+      readonly annotationId: string;
+    }
+  | {
+      readonly kind: "return";
+      readonly treeId: string;
+      readonly branchId: string;
+      readonly turnId: string;
+    }
+  | {
+      readonly kind: "turn";
+      readonly treeId: string;
+      readonly branchId: string;
+      readonly turnId: string;
+    };
+
 /** 材料块引用：把命中位置映射回版本块（blockId 与 MaterialBlock 同源）。 */
 export interface SearchDocumentBlock {
   readonly blockId: string;
@@ -77,6 +104,8 @@ export interface SearchDocumentBlock {
 interface SearchDocumentBase {
   /** 被索引产品事实的稳定标识（建议 `${treeId}:${kind}:${事实行 id}` 或材料版本 id）；批内唯一。 */
   readonly refId: string;
+  /** Product identity for HTTP consumers; test-only documents may omit it. */
+  readonly target?: SearchTarget;
   readonly kind: SearchDocumentKind;
   readonly treeId: string;
   readonly treeTitle: string;
@@ -126,6 +155,7 @@ export type SearchMatchType = "phrase" | "segments";
 export interface SearchHit {
   readonly kind: SearchDocumentKind;
   readonly refId: string;
+  readonly target: SearchTarget | null;
   readonly treeId: string;
   readonly treeTitle: string;
   readonly materialId: string | null;
@@ -605,9 +635,17 @@ export class LocalSearchEngine {
         }
       }
     }
+    const target = doc.target;
+    const targetWithBlock =
+      target === undefined
+        ? null
+        : target.kind === "material"
+          ? { ...target, blockId }
+          : target;
     return {
       kind: doc.kind,
       refId: doc.refId,
+      target: targetWithBlock,
       treeId: doc.treeId,
       treeTitle: doc.treeTitle,
       materialId: isMaterial ? doc.materialId : null,

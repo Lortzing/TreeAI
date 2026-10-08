@@ -187,6 +187,13 @@ test("scoped search returns contract-shaped material hits positioned in the cano
     assert.equal(hit.materialId, material.material.id);
     assert.equal(hit.materialTitle, "搜索材料.md");
     assert.equal(hit.versionId, material.version.id);
+    assert.deepEqual(hit.target, {
+      kind: "material",
+      treeId: tree.id,
+      materialId: material.material.id,
+      versionId: material.version.id,
+      blockId: "blk-0",
+    });
     assert.equal(hit.versionLabel, "v1");
     assert.equal(hit.oldVersion, false);
     assert.equal(hit.blockId, "blk-0");
@@ -222,7 +229,7 @@ test("annotation hits omit the material-only fields; absent queries return an ho
       trunkBranch.id,
       "词法作用域在定义点绑定环境，组合体随定义点固定。",
     );
-    studio.instance.repository.createTerminologyAnnotation({
+    const annotation = studio.instance.repository.createTerminologyAnnotation({
       treeId: tree.id,
       branchId: trunkBranch.id,
       anchorTurnId: answer.id,
@@ -240,6 +247,11 @@ test("annotation hits omit the material-only fields; absent queries return an ho
     assert.equal(outcome.body.hits.length, 2);
     const annotationHit = outcome.body.hits[0];
     assert.equal(annotationHit.kind, "annotation");
+    assert.deepEqual(annotationHit.target, {
+      kind: "annotation",
+      treeId: tree.id,
+      annotationId: annotation.id,
+    });
     assert.ok(annotationHit.excerpt.includes("定义点绑定环境"));
     assert.equal(annotationHit.oldVersion, false);
     assert.ok(typeof annotationHit.start === "number" && typeof annotationHit.end === "number");

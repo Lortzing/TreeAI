@@ -92,18 +92,24 @@ import type { BranchCreation, PromptOutcome, TreeStudioService } from "./service
  */
 export const EXPLAIN_SOURCE_LIMIT_CHARS = 24_000;
 /** explain 窗口模式：选区每侧保留的上下文字符数。 */
-export const EXPLAIN_CONTEXT_CONTEXT_CHARS = 8_000;
+export const EXPLAIN_CONTEXT_CONTEXT_CHARS = 2_000;
 /** 单次解释的选区上限（超过 → 零派发，selection-too-large）。 */
 export const MAX_EXPLAIN_SELECTION_CHARS = 8_000;
 /**
  * extract 提示词内嵌原文的上限：extract 的候选偏移必须锚定全文，
  * 截断会破坏偏移纪律——超限零派发拒绝（source-too-large），不做窗口。
  */
-export const EXTRACT_SOURCE_LIMIT_CHARS = 24_000;
+export const EXTRACT_SOURCE_LIMIT_CHARS = 7_000;
+
+/** Output upper bound reserved for v2 requests (800 tokens × chars/4 estimate). */
+export const TERMINOLOGY_V2_INPUT_TOKEN_LIMIT = 2_000;
+export const TERMINOLOGY_V2_OUTPUT_TOKEN_LIMIT = 800;
+export const TERMINOLOGY_V2_MAX_CANDIDATES = 6;
+export const TERMINOLOGY_LIMITS_VERSION = 2;
 
 /** 输出上限的保守估算（字符）：派发前预算预留的 completion 上界。 */
-export const MAX_EXPLAIN_COMPLETION_CHARS = 4_000;
-export const MAX_EXTRACT_COMPLETION_CHARS = 12_000;
+export const MAX_EXPLAIN_COMPLETION_CHARS = TERMINOLOGY_V2_OUTPUT_TOKEN_LIMIT * 4;
+export const MAX_EXTRACT_COMPLETION_CHARS = TERMINOLOGY_V2_OUTPUT_TOKEN_LIMIT * 4;
 
 /** explain 提示词版本（buildExplainPrompt 变化时 bump——缓存键成分）。 */
 export const EXPLAIN_PROMPT_VERSION = 2;
@@ -169,8 +175,8 @@ export interface ReadingModeDensityLimits {
 export const READING_MODE_DENSITY_LIMITS: Readonly<
   Record<"minimal-hints" | "assisted-reading", ReadingModeDensityLimits>
 > = {
-  "minimal-hints": { perParagraph: 3, perAnswer: 6 },
-  "assisted-reading": { perParagraph: 6, perAnswer: 12 },
+  "minimal-hints": { perParagraph: 1, perAnswer: 3 },
+  "assisted-reading": { perParagraph: 2, perAnswer: 6 },
 };
 
 /** 术语建议（auto 档展示面）：候选词 + 区间（UTF-16 偏移，切片已验证全等）。 */
@@ -482,6 +488,21 @@ function estimateTokens(usage: TerminologyUsageDelta): number {
   return Math.ceil((usage.promptChars + usage.completionChars) / 4);
 }
 
+function estimatePromptTokens(prompt: string): number {
+  return Math.ceil(prompt.length / 4);
+}
+
+function promptBudgetFailure(prompt: string): { readonly code: string; readonly message: string } | null {
+  const estimated = estimatePromptTokens(prompt);
+  if (estimated <= TERMINOLOGY_V2_INPUT_TOKEN_LIMIT) return null;
+  return {
+    code: "input-token-budget-exceeded",
+    message:
+      `the terminology prompt is estimated at ${String(estimated)} input tokens, exceeding the ` +
+      `${String(TERMINOLOGY_V2_INPUT_TOKEN_LIMIT)}-token v2 input limit; zero dispatch (chars/4 estimate, provider tokenizer not verified)`,
+  };
+}
+
 function addUsage(a: TerminologyUsageDelta, b: TerminologyUsageDelta): TerminologyUsageDelta {
   return {
     requests: a.requests + b.requests,
@@ -691,7 +712,7 @@ interface ExecutorTask {
   cancelRequested: boolean;
 }
 
-const MAX_EXTRACT_TERMS = 8;
+const MAX_EXTRACT_TERMS = TERMINOLOGY_V2_MAX_CANDIDATES;
 const RECENT_TASKS_LIMIT = 50;
 
 /**
@@ -1052,6 +1073,11 @@ export class TerminologyExecutor {
         return;
       }
       const promptText = buildExplainPrompt(prepared.passage, prepared.selection, prepared.truncationNote);
+      const promptFailure = promptBudgetFailure(promptText);
+      if (promptFailure !== null) {
+        task.state = { kind: "failed", code: promptFailure.code, message: promptFailure.message };
+        return;
+      }
       /* 预算预留：输入实测 + 输出保守上界；不足零派发。 */
       const reservation: TerminologyUsageDelta = {
         requests: 1,
@@ -1151,9 +1177,9 @@ export class TerminologyExecutor {
     readonly maxTerms?: number;
   }): Promise<TerminologyTask> {
     const maxTerms = input.maxTerms ?? MAX_EXTRACT_TERMS;
-    if (!Number.isInteger(maxTerms) || maxTerms < 1 || maxTerms > 64) {
+    if (!Number.isInteger(maxTerms) || maxTerms < 1 || maxTerms > TERMINOLOGY_V2_MAX_CANDIDATES) {
       throw new InvalidArgumentError(
-        `extract maxTerms must be an integer in [1, 64] (got '${String(input.maxTerms)}')`,
+        `extract maxTerms must be an integer in [1, ${String(TERMINOLOGY_V2_MAX_CANDIDATES)}] (got '${String(input.maxTerms)}')`,
       );
     }
     const task: ExecutorTask = {
@@ -1185,6 +1211,11 @@ export class TerminologyExecutor {
       }
       task.state = { kind: "running" };
       const promptText = buildExtractPrompt(input.sourceText, maxTerms);
+      const promptFailure = promptBudgetFailure(promptText);
+      if (promptFailure !== null) {
+        task.state = { kind: "failed", code: promptFailure.code, message: promptFailure.message };
+        return;
+      }
       /* 预算预留：输入实测 + 输出保守上界；不足零派发。 */
       const reservation: TerminologyUsageDelta = {
         requests: 1,
@@ -1356,6 +1387,14 @@ export interface TerminologyReadModel {
   readonly tasks: readonly TerminologyTask[];
   readonly usage: TerminologyUsageReport;
   readonly cacheEnabled: boolean;
+  readonly limits: {
+    readonly version: number;
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    readonly maxCandidates: number;
+    readonly density: Readonly<typeof READING_MODE_DENSITY_LIMITS>;
+    readonly tokenEstimate: "chars/4-unverified";
+  };
   /** 每树阅读模式（issue #7 术语①；缺省 manual-only）。 */
   readonly readingMode: TerminologyReadingMode;
   /** 自动建议总状态（gate × 模式联合决定生效；建议集按产生序投影）。 */
@@ -1422,6 +1461,14 @@ export class TerminologyService {
       tasks: this.executor.listTasks().filter((task) => task.treeId === treeId),
       usage: this.executor.usage(),
       cacheEnabled: this.executor.cacheEnabled,
+      limits: {
+        version: TERMINOLOGY_LIMITS_VERSION,
+        inputTokens: TERMINOLOGY_V2_INPUT_TOKEN_LIMIT,
+        outputTokens: TERMINOLOGY_V2_OUTPUT_TOKEN_LIMIT,
+        maxCandidates: TERMINOLOGY_V2_MAX_CANDIDATES,
+        density: READING_MODE_DENSITY_LIMITS,
+        tokenEstimate: "chars/4-unverified",
+      },
       readingMode: this.#readingModeOf(treeId),
       autoSuggestions: this.autoSuggestionsState(treeId),
     };

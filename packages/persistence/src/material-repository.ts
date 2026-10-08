@@ -179,6 +179,11 @@ export interface MaterialVersionContent {
   readonly blocks: readonly MaterialBlock[];
 }
 
+export interface MaterialVersionBlob {
+  readonly version: MaterialVersion;
+  readonly bytes: Uint8Array;
+}
+
 export interface TreeMaterialLink {
   readonly treeId: TreeId;
   readonly materialId: MaterialId;
@@ -894,6 +899,25 @@ export class MaterialRepository {
       canonicalText: row.canonical_text,
       blocks: decodeBlockMap(row.version_id, row.block_map_json),
     };
+  }
+
+  /** Read the immutable original bytes referenced by a material version. */
+  getVersionBlob(versionId: MaterialVersionId): MaterialVersionBlob {
+    this.#assertOpen();
+    assertNonEmptyString(versionId, "material version id");
+    const row = this.#db!
+      .prepare(
+        `SELECT v.${MATERIAL_VERSION_COLUMNS.replaceAll(", ", ", v.")}, b.bytes AS blob_bytes
+         FROM material_versions v
+         JOIN material_blobs b ON b.content_hash = v.content_hash
+         WHERE v.version_id = ?`,
+      )
+      .get(versionId) as (MaterialVersionRow & { blob_bytes: Uint8Array }) | undefined;
+    if (row === undefined) throw new EntityNotFoundError("material version", versionId);
+    if (!(row.blob_bytes instanceof Uint8Array)) {
+      throw new DatabaseCorruptError(`material version ${versionId} has no readable original blob`);
+    }
+    return { version: rowToMaterialVersion(row), bytes: new Uint8Array(row.blob_bytes) };
   }
 
   /**

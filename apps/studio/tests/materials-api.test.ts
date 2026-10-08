@@ -601,13 +601,26 @@ test("pdf import over HTTP: fixture upload 201, ready version, page-block pagina
     assert.equal(full.status, 200);
     assert.equal(full.body.nextAfterBlock, null);
     assert.deepEqual(
-      full.body.blocks.map((b: any) => b.block),
+      full.body.blocks.map((b: any) => {
+        const { geometry: _geometry, ...block } = b.block;
+        return block;
+      }),
       expected.blocks.map((b) => ({ blockId: b.blockId, kind: "pdf-page", start: b.start, end: b.end, page: b.page })),
     );
+    assert.ok(full.body.blocks.every((b: any) => b.block.geometry?.lines?.length > 0));
     assert.deepEqual(
       full.body.blocks.map((b: any) => b.text),
       expected.blocks.map((b) => b.text),
     );
+
+    const fileResponse = await fetch(studio.url(`${versionPath}/file`));
+    assert.equal(fileResponse.status, 200);
+    assert.equal(fileResponse.headers.get("content-type"), "application/pdf");
+    assert.equal(Buffer.compare(Buffer.from(await fileResponse.arrayBuffer()), Buffer.from(b1Bytes("pdf/pdf-01.pdf"))), 0);
+    const rangeResponse = await fetch(studio.url(`${versionPath}/file`), { headers: { range: "bytes=0-7" } });
+    assert.equal(rangeResponse.status, 206);
+    assert.equal(rangeResponse.headers.get("content-range"), "bytes 0-7/" + String(b1Bytes("pdf/pdf-01.pdf").byteLength));
+    assert.equal((await rangeResponse.arrayBuffer()).byteLength, 8);
 
     const page1 = await call(`${studio.url(versionPath)}?limit=1`, "GET");
     assert.deepEqual(page1.body.blocks.map((b: any) => b.block.blockId), ["page-1"]);

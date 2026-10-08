@@ -1896,7 +1896,7 @@ test("a PDF material opens to the real page reading surface — pages render wit
   );
   assert.match(
     world.el("material-reader").textContent!,
-    /PDF reading surface — each page below renders the parsed canonical text/,
+    /PDF reading surface — the original page is rendered locally with PDF\.js/,
     "the honest PDF reading-surface note is shown (single-page selection discipline declared)",
   );
   assert.equal(world.matBlocks().querySelectorAll(".material-block").length, 2, "exactly the two page text layers");

@@ -303,7 +303,10 @@ test("pdf import (default wiring): pdf-01 reaches ready with page blocks matchin
     const full = studio.materials.readVersionBlocks(tree.id, result.material.id, result.version.id, {});
     assert.equal(full.nextAfterBlock, null);
     assert.deepEqual(
-      full.blocks.map((entry) => entry.block),
+      full.blocks.map((entry) => {
+        const { geometry: _geometry, ...block } = entry.block;
+        return block;
+      }),
       PDF_01.blocks.map((block) => ({
         blockId: block.blockId,
         kind: "pdf-page",
@@ -312,6 +315,14 @@ test("pdf import (default wiring): pdf-01 reaches ready with page blocks matchin
         page: block.page,
       })),
       "the stored block map (incl. page) matches the frozen truth",
+    );
+    assert.ok(
+      full.blocks.every(
+        (entry) =>
+          entry.block.geometry !== undefined &&
+          entry.block.geometry.lines.every((line) => line.end >= line.start),
+      ),
+      "PDF blocks carry deterministic canonical line geometry",
     );
     assert.deepEqual(
       full.blocks.map((entry) => entry.text),

@@ -47,7 +47,7 @@
 import type { TreeId } from "@treeai/contracts";
 import type { MaterialRepository, TreeRepository } from "@treeai/persistence";
 import { LocalSearchEngine } from "./search-engine.ts";
-import type { SearchDocument, SearchDocumentKind, SearchHit } from "./search-engine.ts";
+import type { SearchDocument, SearchDocumentKind, SearchHit, SearchTarget } from "./search-engine.ts";
 
 /* ------------------------------------------------------------------ */
 /* 快照形状（buildSearchDocuments 的纯输入；HTTP 层与 verify:d4 共用）    */
@@ -89,6 +89,7 @@ export interface SearchSnapshotMaterialVersion {
 export interface SearchSnapshotAnnotation {
   readonly id: string;
   readonly treeId: string;
+  readonly branchId: string;
   readonly title: string;
   readonly term: string;
   readonly explanation: string;
@@ -101,6 +102,7 @@ export interface SearchSnapshotAnnotation {
 export interface SearchSnapshotReturn {
   readonly id: string;
   readonly treeId: string;
+  readonly branchId: string;
   readonly title: string;
   readonly text: string;
   readonly createdAt: string;
@@ -110,6 +112,7 @@ export interface SearchSnapshotReturn {
 export interface SearchSnapshotTurn {
   readonly id: string;
   readonly treeId: string;
+  readonly branchId: string;
   readonly title: string;
   readonly text: string;
   readonly createdAt: string;
@@ -162,6 +165,13 @@ export function buildSearchDocuments(snapshot: SearchSnapshot): SearchDocument[]
     if (version.canonicalText.length === 0) continue;
     documents.push({
       refId: searchDocumentRefId(version.treeId, "material", version.versionId),
+      target: {
+        kind: "material",
+        treeId: version.treeId,
+        materialId: version.materialId,
+        versionId: version.versionId,
+        blockId: null,
+      },
       kind: "material",
       treeId: version.treeId,
       treeTitle: treeTitleOf(version.treeId),
@@ -187,6 +197,11 @@ export function buildSearchDocuments(snapshot: SearchSnapshot): SearchDocument[]
     if (body.length === 0) continue;
     documents.push({
       refId: searchDocumentRefId(annotation.treeId, "annotation", annotation.id),
+      target: {
+        kind: "annotation",
+        treeId: annotation.treeId,
+        annotationId: annotation.id,
+      },
       kind: "annotation",
       treeId: annotation.treeId,
       treeTitle: treeTitleOf(annotation.treeId),
@@ -200,6 +215,12 @@ export function buildSearchDocuments(snapshot: SearchSnapshot): SearchDocument[]
     if (item.text.length === 0) continue;
     documents.push({
       refId: searchDocumentRefId(item.treeId, "return", item.id),
+      target: {
+        kind: "return",
+        treeId: item.treeId,
+        branchId: item.branchId,
+        turnId: item.id,
+      },
       kind: "return",
       treeId: item.treeId,
       treeTitle: treeTitleOf(item.treeId),
@@ -213,6 +234,12 @@ export function buildSearchDocuments(snapshot: SearchSnapshot): SearchDocument[]
     if (turn.text.length === 0) continue;
     documents.push({
       refId: searchDocumentRefId(turn.treeId, "turn", turn.id),
+      target: {
+        kind: "turn",
+        treeId: turn.treeId,
+        branchId: turn.branchId,
+        turnId: turn.id,
+      },
       kind: "turn",
       treeId: turn.treeId,
       treeTitle: treeTitleOf(turn.treeId),
@@ -304,6 +331,7 @@ export class SearchService {
         annotations.push({
           id: annotation.id,
           treeId: tree.id,
+          branchId: annotation.branchId,
           title: `批注：${annotation.term}`,
           term: annotation.term,
           explanation: annotation.explanation,
@@ -320,6 +348,7 @@ export class SearchService {
             returns.push({
               id: turn.id,
               treeId: tree.id,
+              branchId: branch.id,
               title: `Return：${headOf(turn.text)}`,
               text: turn.text,
               createdAt: turn.createdAt,
@@ -328,6 +357,7 @@ export class SearchService {
             turns.push({
               id: turn.id,
               treeId: tree.id,
+              branchId: branch.id,
               title: `${turn.role === "user" ? "提问" : "回答"}：${headOf(turn.text)}`,
               text: turn.text,
               createdAt: turn.createdAt,
@@ -375,6 +405,7 @@ export class SearchService {
  */
 export interface ContractSearchHit {
   readonly kind: SearchDocumentKind;
+  readonly target: SearchTarget;
   readonly treeId: string;
   readonly treeTitle: string;
   readonly materialId?: string;
@@ -392,8 +423,12 @@ export interface ContractSearchHit {
 
 /** 引擎命中 → 契约 SearchHit（null 字段省略 + 附加字段剥离）。 */
 export function toContractSearchHit(hit: SearchHit): ContractSearchHit {
+  if (hit.target === null) {
+    throw new Error(`search hit ${hit.refId} has no stable product target`);
+  }
   return {
     kind: hit.kind,
+    target: hit.target,
     treeId: hit.treeId,
     treeTitle: hit.treeTitle,
     ...(hit.materialId === null ? {} : { materialId: hit.materialId }),

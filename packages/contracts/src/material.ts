@@ -53,6 +53,20 @@ export type MaterialParseStatus =
 /** 解析器种类（parserVersion 如 "d4-md-v1" / "d4-pdf-v1"）。 */
 export type MaterialParserKind = "markdown" | "pdf";
 
+export interface MaterialTextLineGeometry {
+  readonly start: number;
+  readonly end: number;
+  readonly x: number;
+  readonly y: number;
+  readonly fontSize: number | null;
+}
+
+export interface MaterialPageGeometry {
+  readonly pageWidth: number;
+  readonly pageHeight: number;
+  readonly lines: readonly MaterialTextLineGeometry[];
+}
+
 /**
  * canonicalText 的有序块（对 canonicalText 的连续覆盖：首块 start=0、
  * 末块 end=canonicalText.length、blocks[i].end === blocks[i+1].start）。
@@ -66,6 +80,8 @@ export interface MaterialBlock {
   readonly end: number;
   /** pdf-page 专有，1-based 页码。 */
   readonly page?: number;
+  /** pdf-page 专有；canonical UTF-16 offsets remain the source of truth. */
+  readonly geometry?: MaterialPageGeometry;
 }
 
 /** 材料：身份与标题（D4-contracts §1）。 */

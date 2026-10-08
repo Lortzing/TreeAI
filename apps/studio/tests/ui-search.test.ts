@@ -394,14 +394,15 @@ function snapshotForTree(treeIds: string[], materials: StubMaterialEntry[]): Sea
   const annotations: Array<{
     id: string;
     treeId: string;
+    branchId: string;
     title: string;
     term: string;
     explanation: string;
     note?: string | null;
     createdAt: string;
   }> = [];
-  const returns: Array<{ id: string; treeId: string; title: string; text: string; createdAt: string }> = [];
-  const turns: Array<{ id: string; treeId: string; title: string; text: string; createdAt: string }> = [];
+  const returns: Array<{ id: string; treeId: string; branchId: string; title: string; text: string; createdAt: string }> = [];
+  const turns: Array<{ id: string; treeId: string; branchId: string; title: string; text: string; createdAt: string }> = [];
 
   const allStates = new Map<string, TreeState>([
     [TREE_ONE, treeOneState()],
@@ -435,6 +436,7 @@ function snapshotForTree(treeIds: string[], materials: StubMaterialEntry[]): Sea
       annotations.push({
         id: ANNOTATION_ONE.id,
         treeId,
+        branchId: ANNOTATION_ONE.branchId,
         title: `批注：${ANNOTATION_ONE.term}`,
         term: ANNOTATION_ONE.term,
         explanation: ANNOTATION_ONE.explanation,
@@ -448,6 +450,7 @@ function snapshotForTree(treeIds: string[], materials: StubMaterialEntry[]): Sea
           returns.push({
             id: turn.id,
             treeId,
+            branchId: view.branch.id,
             title: `Return：${headOf(turn.text)}`,
             text: turn.text,
             createdAt: turn.createdAt,
@@ -456,6 +459,7 @@ function snapshotForTree(treeIds: string[], materials: StubMaterialEntry[]): Sea
           turns.push({
             id: turn.id,
             treeId,
+            branchId: view.branch.id,
             title: `${turn.role === "user" ? "提问" : "回答"}：${headOf(turn.text)}`,
             text: turn.text,
             createdAt: turn.createdAt,

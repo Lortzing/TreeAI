@@ -356,8 +356,11 @@ test("resolve-selection rejection surface: 400 with the frozen reason codes, 409
     assert.equal(revised.status, 201);
     const version2: string = revised.body.version.id;
     await until(
-      async () => (await call(studio.url(materialPath(treeId, plain.materialId)), "GET")).body.versions.length === 2,
-      "the second version to appear",
+      async () =>
+        (await call(studio.url(materialPath(treeId, plain.materialId)), "GET")).body.versions.some(
+          (version: { id: string; parseStatus: string }) => version.id === version2 && version.parseStatus === "ready",
+        ),
+      "the second version to become ready",
     );
     const stalePath = `${materialPath(treeId, plain.materialId)}/versions/${encodeURIComponent(version2)}/resolve-selection`;
     const stale = await call(studio.url(stalePath), "POST", {

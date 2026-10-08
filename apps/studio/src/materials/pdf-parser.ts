@@ -57,6 +57,7 @@
  */
 
 import { inflateSync } from "node:zlib";
+import type { MaterialPageGeometry } from "@treeai/contracts";
 
 export const PDF_PARSER_KIND = "pdf" as const;
 export const PDF_PARSER_VERSION = "d4-pdf-v1" as const;
@@ -78,6 +79,7 @@ export interface PdfBlock {
   readonly end: number;
   /** 1-based 真实页码（空页跳过不占号）。 */
   readonly page: number;
+  readonly geometry: MaterialPageGeometry | null;
   readonly text: string;
 }
 
@@ -961,6 +963,7 @@ export interface PageTextLine {
   readonly y: number;
   readonly order: number;
   readonly text: string;
+  readonly fontSize: number | null;
 }
 
 function interpretContent(
@@ -973,6 +976,7 @@ function interpretContent(
   let lm: readonly number[] = [1, 0, 0, 1, 0, 0];
   let leading = 0;
   let fontFactory: (() => FontSpec) | null = null;
+  let fontSize: number | null = null;
   const operands: ContentToken[] = [];
   const decode = (bytes: Uint8Array): string => {
     if (fontFactory === null) throw new PdfCorruptError("Tj without a current font");
@@ -999,7 +1003,7 @@ function interpretContent(
   };
   const emit = (text: string): void => {
     // 空串也是一条行：生成器用 () Tj 表示空代码行，真值如实带空行。
-    lines.push({ x: tm[4]!, y: tm[5]!, order: order++, text });
+    lines.push({ x: tm[4]!, y: tm[5]!, order: order++, text, fontSize });
   };
   const translateLm = (tx: number, ty: number): void => {
     lm = [lm[0]!, lm[1]!, lm[2]!, lm[3]!, lm[4]! + tx, lm[5]! + ty];
@@ -1025,6 +1029,8 @@ function interpretContent(
         /* 惰性：Tf 只登记当前字体的物化闭包（名字缺失亦然）——只有
            真正显示非空文字时才解析/校验，未显示的 Tf 不影响页面。 */
         const factory = fonts.get(nameTok.v);
+        const sizeTok = operands[operands.length - 1];
+        fontSize = sizeTok !== undefined && typeof sizeTok.v === "number" ? Math.abs(sizeTok.v) : null;
         if (factory !== undefined) {
           fontFactory = factory;
         } else {
@@ -1184,6 +1190,21 @@ function collectPageNodes(
   }
 }
 
+function pageBoxGeometry(
+  parser: PdfObjectParser,
+  page: PageNode,
+): { readonly pageWidth: number; readonly pageHeight: number } | null {
+  const raw = page.dict.get("MediaBox");
+  if (raw === undefined) return null;
+  const box = parser.resolve(raw);
+  if (!Array.isArray(box) || box.length !== 4 || !box.every((value) => typeof value === "number")) return null;
+  const [x0, y0, x1, y1] = box as [number, number, number, number];
+  const pageWidth = Math.abs(x1 - x0);
+  const pageHeight = Math.abs(y1 - y0);
+  if (!(pageWidth > 0) || !(pageHeight > 0)) return null;
+  return { pageWidth, pageHeight };
+}
+
 function extractPdfDocument(bytes: Uint8Array, maxPages: number): PdfParseResult {
   const parser = new PdfObjectParser(bytes);
   if (parser.trailer.get("Encrypt") !== undefined) {
@@ -1226,7 +1247,11 @@ function extractPdfDocument(bytes: Uint8Array, maxPages: number): PdfParseResult
   }
 
   let totalLines = 0;
-  const pages: { readonly text: string; readonly lineCount: number }[] = [];
+  const pages: {
+    readonly text: string;
+    readonly lineCount: number;
+    readonly geometry: MaterialPageGeometry | null;
+  }[] = [];
   for (const page of pageNodes) {
     // /Resources：页自有优先，缺省继承最近祖先（中间 /Pages 节点）。
     const ownResourcesRaw = page.dict.get("Resources");
@@ -1264,7 +1289,27 @@ function extractPdfDocument(bytes: Uint8Array, maxPages: number): PdfParseResult
     const lines = interpretContent(tokens, fonts);
     totalLines += lines.length;
     const ordered = orderPageLines(lines);
-    pages.push({ text: ordered.map((l) => l.text).join("\n"), lineCount: ordered.length });
+    const pageBox = pageBoxGeometry(parser, page);
+    let lineStart = 0;
+    const geometry =
+      pageBox === null
+        ? null
+        : {
+            ...pageBox,
+            lines: ordered.map((line) => {
+              const lineEnd = lineStart + line.text.length;
+              const value = {
+                start: lineStart,
+                end: lineEnd,
+                x: line.x,
+                y: line.y,
+                fontSize: line.fontSize,
+              };
+              lineStart = lineEnd + 1;
+              return value;
+            }),
+          } satisfies MaterialPageGeometry;
+    pages.push({ text: ordered.map((l) => l.text).join("\n"), lineCount: ordered.length, geometry });
   }
 
   if (totalLines === 0) {
@@ -1293,6 +1338,7 @@ function extractPdfDocument(bytes: Uint8Array, maxPages: number): PdfParseResult
       start: canonicalText.length,
       end: canonicalText.length + pageText.length,
       page: i + 1,
+      geometry: pages[i]!.geometry,
       text: pageText,
     });
     canonicalText += pageText;

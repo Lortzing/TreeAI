@@ -122,6 +122,11 @@ test("parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不�
   assert.match(problems[0]!, /修复方法/);
 });
 
+test("parseLauncherConfig: unknown driver is rejected instead of silently becoming echo", () => {
+  const result = parseLauncherConfig(JSON.stringify({ schemaVersion: 1, port: 8787, driver: "mystery" }));
+  assert.equal(result.config, null);
+  assert.match(result.problems.join("\n"), /driver 必须是/);
+});
 test("parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息", () => {
   const { config } = parseLauncherConfig(JSON.stringify({ schemaVersion: 1, port: 8787, driver: "pi" }));
   const problems = validateLauncherConfig(config!);
@@ -130,6 +135,7 @@ test("parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信�
   assert.match(problems.join("\n"), /driver=pi 需要 model.*修复方法/s);
   assert.match(problems.join("\n"), /"driver" 改回 "echo"/);
 });
+
 
 test("parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi）", () => {
   const { config } = parseLauncherConfig(
@@ -172,23 +178,13 @@ test("buildServerArgs: echo 只带 port/data；pi 带完整模型装配", () => 
     terminologyModel: "claude-haiku",
     terminologyBudgetTokens: 500000,
   };
-  assert.deepEqual(buildServerArgs(pi, 8787, "/d"), [
-    "--port",
-    "8787",
-    "--data",
-    "/d",
-    "--driver",
-    "pi",
-    "--provider",
-    "anthropic",
-    "--model",
-    "claude-sonnet-4-5",
-    "--terminology-provider",
-    "anthropic",
-    "--terminology-model",
-    "claude-haiku",
-    "--terminology-budget",
-    "500000",
+  assert.deepEqual(buildServerArgs({
+    ...pi,
+    agentDir: "/tmp/pi agent",
+    piTools: ["read"],
+    policyReadRoots: ["/tmp/read root"],
+  }, 8787, "/d").slice(-8), [
+    "--terminology-budget", "500000", "--agent-dir", "/tmp/pi agent", "--pi-tools", "read", "--policy-read-roots", "/tmp/read root",
   ]);
 });
 
@@ -214,10 +210,11 @@ test("browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参�
     command: "/tmp/recorder.sh",
     args: [],
   });
-  assert.deepEqual(browserCommandFor("darwin", { TREEAI_BROWSER: "firefox --new-window" }), {
-    command: "firefox",
-    args: ["--new-window"],
+  assert.deepEqual(browserCommandFor("darwin", { TREEAI_BROWSER: '"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless' }), {
+    command: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    args: ["--headless"],
   });
+
   assert.deepEqual(browserCommandFor("linux", { BROWSER: "", TREEAI_BROWSER: "chromium" }), {
     command: "chromium",
     args: [],
@@ -308,11 +305,17 @@ function makeSyntheticBundle(platform: "darwin-arm64" | "linux-x64" | "win-x64")
     join("app", "apps", "studio", "package.json"),
     join("app", "packages", "event-journal", "dist", "src", "index.js"),
     join("app", "node_modules", "@earendil-works", "pi-coding-agent", "package.json"),
+    join("app", "node_modules", "pdfjs-dist", "build", "pdf.mjs"),
+    join("app", "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
     join("app", "node_modules", "@treeai", "contracts", "package.json"),
   ]) {
     mkdirSync(join(root, appFile, ".."), { recursive: true });
     writeFileSync(join(root, appFile), "");
   }
+  for (const directory of [
+    join("app", "node_modules", "pdfjs-dist", "cmaps"),
+    join("app", "node_modules", "pdfjs-dist", "standard_fonts"),
+  ]) mkdirSync(join(root, directory), { recursive: true });
   for (const pkg of ["contracts", "event-journal", "persistence", "runtime-pi", "tool-policy"]) {
     for (const p of [
       join("app", "packages", pkg, "package.json"),

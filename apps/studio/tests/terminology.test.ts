@@ -1096,10 +1096,10 @@ test("terminology context discipline: explain windows oversized passages honestl
     assert.equal(termRuntime.prompts.length, 1);
     const sent = termRuntime.prompts[0]!;
     assert.ok(sent.includes("[Passage truncated:"), "the prompt honestly marks the truncation");
-    assert.ok(!sent.includes("A".repeat(8_000)), "the A-run is cut at the 8k window edge");
-    assert.ok(!sent.includes("B".repeat(8_000)), "the B-run is cut at the 8k window edge");
+    assert.ok(!sent.includes("A".repeat(2_000)), "the A-run is cut at the v2 2k window edge");
+    assert.ok(!sent.includes("B".repeat(2_000)), "the B-run is cut at the v2 2k window edge");
     assert.ok(sent.length < longAnswer.length, "the prompt stays bounded");
-    const windowStart = termAt - 8_000;
+    const windowStart = termAt - 2_000;
     const expectedRemapped = `(character offsets ${String(termAt - windowStart)}..${String(termAt - windowStart + "signal".length)} in the passage)`;
     assert.ok(sent.includes(expectedRemapped), `offsets are remapped into the window: ${expectedRemapped}`);
 

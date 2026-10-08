@@ -183,7 +183,20 @@ test("all registry ready fixtures extract to their frozen truth byte-exactly (12
     assert.equal(expected.normalizer, "d4-pdf-v1", `${label}: expected normalizer`);
     const result = parseOk(fixtureBytes(fixture.file), label);
     assert.equal(result.canonicalText, expected.canonicalText, `${label}: canonicalText byte-exact`);
-    assert.deepEqual(result.blocks, expected.blocks, `${label}: blocks deep-equal (incl. page + text)`);
+    assert.deepEqual(
+      result.blocks.map(({ geometry: _geometry, ...block }) => block),
+      expected.blocks,
+      `${label}: blocks deep-equal (incl. page + text)`,
+    );
+    assert.ok(
+      result.blocks.every(
+        (block) =>
+          block.geometry !== undefined &&
+          block.geometry !== null &&
+          block.geometry.lines.length > 0,
+      ),
+      `${label}: each text page carries geometry mapped to canonical offsets`,
+    );
     assert.equal(result.pages, expected.pages, `${label}: page count`);
     assert.equal(result.pages, fixture.pages, `${label}: registry page count agrees`);
     assert.equal(result.textUnits, expected.canonicalText.length, `${label}: textUnits`);

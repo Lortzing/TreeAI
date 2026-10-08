@@ -190,6 +190,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/app.js": { file: "app.js", type: "text/javascript; charset=utf-8" },
   "/style.css": { file: "style.css", type: "text/css; charset=utf-8" },
 };
+const PDFJS_ROOT = new URL("../../../node_modules/pdfjs-dist/", import.meta.url);
 
 export interface StudioServerOptions {
   readonly service: TreeStudioService;
@@ -506,6 +507,53 @@ function sendNoContent(res: ServerResponse): void {
   res.end();
 }
 
+function sendPdfBytes(res: ServerResponse, bytes: Uint8Array, rangeHeader: string | undefined): void {
+  const total = bytes.byteLength;
+  let start = 0;
+  let end = total - 1;
+  let partial = false;
+  if (rangeHeader !== undefined) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
+    if (match === null || (match[1] === "" && match[2] === "")) {
+      res.writeHead(416, { "content-range": `bytes */${String(total)}`, "cache-control": "no-store" });
+      res.end();
+      return;
+    }
+    if (match[1] !== "") {
+      start = Number(match[1]);
+      end = match[2] === "" ? total - 1 : Number(match[2]);
+    } else {
+      const suffix = Number(match[2]);
+      start = Math.max(0, total - suffix);
+      end = total - 1;
+    }
+    if (
+      !Number.isSafeInteger(start) ||
+      !Number.isSafeInteger(end) ||
+      start < 0 ||
+      end < start ||
+      start >= total
+    ) {
+      res.writeHead(416, { "content-range": `bytes */${String(total)}`, "cache-control": "no-store" });
+      res.end();
+      return;
+    }
+    end = Math.min(end, total - 1);
+    partial = true;
+  }
+  const body = Buffer.from(bytes.subarray(start, end + 1));
+  const headers: Record<string, string | number> = {
+    "content-type": "application/pdf",
+    "content-length": body.byteLength,
+    "accept-ranges": "bytes",
+    "content-disposition": "inline",
+    "cache-control": "no-store",
+  };
+  if (partial) headers["content-range"] = `bytes ${String(start)}-${String(end)}/${String(total)}`;
+  res.writeHead(partial ? 206 : 200, headers);
+  res.end(body);
+}
+
 /**
  * 导航查询参数 → 数值（issue #8 D4-8）：非数字/非整数交由引擎层校验
  * （NavEngineError invalid-argument → 400，原因码稳定）。
@@ -584,18 +632,35 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
 
   async function serveStatic(res: ServerResponse, pathname: string): Promise<boolean> {
     const entry = STATIC_FILES[pathname];
-    if (entry === undefined) return false;
+    let source: string | URL | null = entry === undefined ? null : join(staticDir, entry.file);
+    let type = entry?.type ?? null;
+    if (source === null) {
+      const moduleMatch = /^\/vendor\/pdfjs\/(pdf(?:\.worker)?\.mjs)$/.exec(pathname);
+      const cmapMatch = /^\/vendor\/pdfjs\/cmaps\/([A-Za-z0-9_-]+\.bcmap)$/.exec(pathname);
+      const fontMatch = /^\/vendor\/pdfjs\/standard_fonts\/([A-Za-z0-9_-]+\.(?:pfb|ttf))$/.exec(pathname);
+      if (moduleMatch !== null) {
+        source = new URL(`build/${moduleMatch[1]}`, PDFJS_ROOT);
+        type = "text/javascript; charset=utf-8";
+      } else if (cmapMatch !== null) {
+        source = new URL(`cmaps/${cmapMatch[1]}`, PDFJS_ROOT);
+        type = "application/octet-stream";
+      } else if (fontMatch !== null) {
+        source = new URL(`standard_fonts/${fontMatch[1]}`, PDFJS_ROOT);
+        type = "application/octet-stream";
+      }
+    }
+    if (source === null || type === null) return false;
     try {
-      const content = await readFile(join(staticDir, entry.file));
+      const content = await readFile(source);
       res.writeHead(200, {
-        "content-type": entry.type,
+        "content-type": type,
         "content-length": content.length,
         "cache-control": "no-store",
       });
       res.end(content);
       return true;
     } catch {
-      sendJson(res, 500, { error: { code: "internal", message: `static file missing: ${entry.file}` } });
+      sendJson(res, 500, { error: { code: "internal", message: `static file missing: ${pathname}` } });
       return true;
     }
   }
@@ -913,6 +978,27 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
           return;
         }
         sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+        return;
+      }
+
+      const materialVersionFileMatch =
+        /^\/api\/trees\/([^/]+)\/materials\/([^/]+)\/versions\/([^/]+)\/file$/.exec(pathname);
+      if (materialVersionFileMatch !== null) {
+        if (materials === null) {
+          sendJson(res, 503, {
+            error: { code: "materials-not-wired", message: "the material import service is not wired in this process" },
+          });
+          return;
+        }
+        if (method !== "GET") {
+          sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
+          return;
+        }
+        const treeId = asTreeId(materialVersionFileMatch[1]!);
+        const materialId = decodeURIComponent(materialVersionFileMatch[2]!) as MaterialId;
+        const versionId = decodeURIComponent(materialVersionFileMatch[3]!) as MaterialVersionId;
+        const file = materials.readVersionFile(treeId, materialId, versionId);
+        sendPdfBytes(res, file.bytes, req.headers.range);
         return;
       }
 

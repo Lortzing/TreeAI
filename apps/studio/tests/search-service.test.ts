@@ -603,6 +603,7 @@ test("buildSearchDocuments is pure: identical snapshots assemble identically, em
       {
         id: "anno-1",
         treeId: "t1",
+        branchId: "branch-1",
         title: "批注：术语",
         term: "术语",
         explanation: "解释在前。",
@@ -610,8 +611,8 @@ test("buildSearchDocuments is pure: identical snapshots assemble identically, em
         createdAt: "2026-09-21T10:00:00.000Z",
       },
     ],
-    returns: [{ id: "ret-1", treeId: "t1", title: "Return：x", text: "Return 正文。", createdAt: "2026-09-21T11:00:00.000Z" }],
-    turns: [{ id: "turn-1", treeId: "t1", title: "提问：x", text: "Turn 正文。", createdAt: "2026-09-21T12:00:00.000Z" }],
+    returns: [{ id: "ret-1", treeId: "t1", branchId: "branch-1", title: "Return：x", text: "Return 正文。", createdAt: "2026-09-21T11:00:00.000Z" }],
+    turns: [{ id: "turn-1", treeId: "t1", branchId: "branch-1", title: "提问：x", text: "Turn 正文。", createdAt: "2026-09-21T12:00:00.000Z" }],
   };
 
   const documents = buildSearchDocuments(snapshot);
@@ -634,7 +635,7 @@ test("buildSearchDocuments is pure: identical snapshots assemble identically, em
     () =>
       buildSearchDocuments({
         ...snapshot,
-        turns: [{ id: "orphan", treeId: "t-unknown", title: "x", text: "y", createdAt: "2026-09-21T13:00:00.000Z" }],
+        turns: [{ id: "orphan", treeId: "t-unknown", branchId: "branch-unknown", title: "x", text: "y", createdAt: "2026-09-21T13:00:00.000Z" }],
       }),
     /unknown or untitled tree/,
   );
