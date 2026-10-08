@@ -4,8 +4,8 @@
  * 失败状态、响应式/键盘/触屏/reduced-motion/回程草稿焦点）。
  *
  * 方法与 ui-probe / ui-regressions 套件一致（issue #4 P1「证据工程化」的
- * 脚本化 DOM E2E）：以 data: URL 加载仓库真实 public/app.js 为 ES module
- * （URL fragment 随机化绕过 ES 模块缓存——每个场景一份全新实例），运行
+ * 脚本化 DOM E2E）：以 file: URL 加载仓库真实 public/app.js 为 ES module
+ * （URL query 随机化绕过 ES 模块缓存——每个场景一份全新实例），运行
  * 在「按真实 public/index.html 词法解析出的完整 DOM 桩 + 脚本化后端」之
  * 上：fetch / EventSource / localStorage / 计时器 / matchMedia /
  * getSelection 全部为内存桩。后端按场景脚本化（/terminology/* 的 explain
@@ -64,14 +64,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readStudioCss } from "./support/styles.ts";
 import { createHash } from "node:crypto";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
-const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const STYLE_CSS = readStudioCss(PUBLIC_DIR);
+const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
 
 /** 服务端 hashSourceText 同口径（src/terminology.ts）：锚点答案全文的
  *  SHA-256（hex）。P0 联合校验后，批注桩必须携带真实指纹——保存路径的
@@ -1525,7 +1523,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.fetch = fetchStub;
 
   appLoadCounter += 1;
-  await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(APP_JS)}#load=${appLoadCounter}`);
+  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
   await settle(25);
 
   return {

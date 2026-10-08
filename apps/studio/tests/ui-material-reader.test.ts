@@ -4,8 +4,8 @@
  * §3 已落地的材料 HTTP 面）。
  *
  * 方法与 ui-probe / ui-regressions / ui-terminology 套件一致（issue #4 P1
- * 「证据工程化」的脚本化 DOM E2E）：以 data: URL 加载仓库真实
- * public/app.js 为 ES module（URL fragment 随机化绕过 ES 模块缓存——每个
+ * 「证据工程化」的脚本化 DOM E2E）：以 file: URL 加载仓库真实
+ * public/app.js 为 ES module（URL query 随机化绕过 ES 模块缓存——每个
  * 场景一份全新实例），运行在「按真实 public/index.html 词法解析出的完整
  * DOM 桩 + 脚本化后端」之上：fetch / EventSource / localStorage / 计时器 /
  * matchMedia / getSelection / navigator.clipboard 全部为内存桩。后端按
@@ -60,13 +60,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readStudioCss } from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
-const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const STYLE_CSS = readStudioCss(PUBLIC_DIR);
+const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
 
 /* 冻结 fixture（B1 真值——阅读器正文与选区断言的唯一事实源）。 */
 const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", import.meta.url));
@@ -1239,7 +1237,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   });
 
   appLoadCounter += 1;
-  await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(APP_JS)}#load=${appLoadCounter}`);
+  await import(new URL(`../public/app.js?load=${appLoadCounter}`, import.meta.url).href);
   await settle(25);
 
   const world: World = {
