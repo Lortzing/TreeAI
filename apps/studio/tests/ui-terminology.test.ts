@@ -64,12 +64,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readStudioCss } from "./support/styles.ts";
 import { createHash } from "node:crypto";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
+const STYLE_CSS = readStudioCss(PUBLIC_DIR);
 
 /** 服务端 hashSourceText 同口径（src/terminology.ts）：锚点答案全文的
  *  SHA-256（hex）。P0 联合校验后，批注桩必须携带真实指纹——保存路径的
