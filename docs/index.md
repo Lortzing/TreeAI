@@ -15,5 +15,6 @@ Start with the [README](../README.md). Each link below names a different authori
 | Why does Pi have this boundary? | [ADR-002](adr/ADR-002-pi-modification-governance.md) |
 | How are material sources represented? | [ADR-003](adr/ADR-003-d4-material-sources-versions-run-origins.md) and [ADR-004](adr/ADR-004-d4-material-branching-and-first-question.md) |
 | Earlier decisions/results? | [D2](d2/D2-verification.md), [D3](d3/D3-status.md), [D4](d4/D4-status.md) |
+| D3 historical engineering ledger | [Original append-only record](archive/d3/D3-status-history.md) |
 
 `evidence/` and `d1-spikes/` are read on demand. Do not treat an old run as proof for a newer SHA.
