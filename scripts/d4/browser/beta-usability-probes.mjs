@@ -828,7 +828,21 @@ export async function probeBetaUsability(ctx) {
           `touch: the in-gesture selection on the pdf text layer did not hold — placed ${JSON.stringify(drag.placed.selectedText)}, at touchEnd ${JSON.stringify(drag.stillSelected)}, want ${JSON.stringify(pdfRange.excerpt)}`,
         );
       }
-      const bar = await waitForArmedBar(ctx, "touch pdf-01 selection", 6000);
+      let bar;
+      try {
+        bar = await waitForArmedBar(ctx, "touch pdf-01 selection", 6000);
+      } catch (error) {
+        const diagnostic = await ctx.evalJs(`(() => {
+          const s = window.getSelection(), r = s && s.rangeCount ? s.getRangeAt(0) : null;
+          const frame = document.querySelector("#mat-blocks .pdf-page-frame");
+          return { selectionText: s?.toString() ?? null, rangeText: r?.toString() ?? null,
+            collapsed: r?.collapsed ?? null, anchor: r?.startContainer?.parentElement?.className ?? null,
+            focus: r?.endContainer?.parentElement?.className ?? null,
+            readerOpen: !document.getElementById("material-reader")?.hidden,
+            pdfFrames: document.querySelectorAll("#mat-blocks .pdf-page-frame").length };
+        })()`);
+        throw new Error(`touch pdf-01 selection: ${String(error)}; native diagnostic ${JSON.stringify(diagnostic)}`);
+      }
       if (bar.payload === null) {
         throw new Error(`touch: the capture bar did not arm with a payload — ${JSON.stringify(bar)}`);
       }
