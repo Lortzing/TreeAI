@@ -29,12 +29,16 @@ jobs:
             exit 1
           fi
       - name: Real Chrome boot, materials, and Beta usability (offline Echo)
+        env:
+          TREEAI_TEST_CHROME_NO_SANDBOX: "1"
         shell: bash
         run: |
           node scripts/run-d4-browser.mjs --mode selftest \
             --only d4-read-and-select \
             --only d4-beta-usability
       - name: Real Chrome terminology and search navigation (offline Echo)
+        env:
+          TREEAI_TEST_CHROME_NO_SANDBOX: "1"
         shell: bash
         run: |
           node scripts/run-d4-browser.mjs --mode selftest \
