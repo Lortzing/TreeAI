@@ -2,6 +2,8 @@ name: refactor-browser-smoke
 
 on:
   pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -35,7 +37,9 @@ jobs:
           TREEAI_TEST_CHROME_NO_SANDBOX: "1"
         shell: bash
         run: |
+          chrome_bin="$(command -v google-chrome || command -v chromium)"
           node scripts/run-d4-browser.mjs --mode selftest \
+            --chrome-executable "$chrome_bin" \
             --only d4-import-material \
             --only d4-read-and-select \
             --only d4-beta-usability
@@ -44,7 +48,9 @@ jobs:
           TREEAI_TEST_CHROME_NO_SANDBOX: "1"
         shell: bash
         run: |
+          chrome_bin="$(command -v google-chrome || command -v chromium)"
           node scripts/run-d4-browser.mjs --mode selftest \
+            --chrome-executable "$chrome_bin" \
             --only d4-import-material \
             --only terminology-path \
             --only d4-search-recover

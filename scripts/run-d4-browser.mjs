@@ -362,7 +362,7 @@ async function startChrome() {
   const args = [
     "--headless=new",
     // Explicit CI-only escape hatch. Never disable Chrome sandbox by default.
-    ...(process.env["TREEAI_TEST_CHROME_NO_SANDBOX"] === "1" ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
+    ...(process.env["TREEAI_TEST_CHROME_NO_SANDBOX"] === "1" ? ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"] : []),
     "--remote-debugging-port=0",
     `--user-data-dir=${chrome.profileDir}`,
     "--no-first-run",
@@ -383,7 +383,7 @@ async function startChrome() {
 
   const wsUrl = await new Promise((resolve, reject) => {
     let buffer = "";
-    const timer = setTimeout(() => reject(new Error("chrome boot timeout: no DevTools listening line in 20s")), 20_000);
+    const timer = setTimeout(() => reject(new Error(`chrome boot timeout: no DevTools listening line in 45s; stderr: ${sanitizeText(chromeStderrTail)}`)), 45_000);
     chrome.child.stderr.on("data", (chunk) => {
       buffer += String(chunk);
       const match = /DevTools listening on (ws:\/\/\S+)/.exec(buffer);
