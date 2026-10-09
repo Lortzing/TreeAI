@@ -5,6 +5,7 @@
  * individual controllers are extracted in later R1 feature slices.
  */
 import { createSourceHasher } from "../shared/source/sha256.js";
+import { createReturnExcerptElement, returnFallbackReason, returnAttemptsFor, formatProductTime } from "../features/return/presentation.js";
 import { createSelectionOffsetsWithin } from "../shared/source/selection.js";
 import { createIsAtBottom } from "../shared/reading-position/scroll.js";
 import { isElementNode, findReusableTurnElement } from "./dom.js";
@@ -745,49 +746,16 @@ function sessionRecoveryControls(surface) {
 const selectionOffsetsWithin = createSelectionOffsetsWithin(window);
 
 /** 长摘录折叠阈值（P1 降级卡）：超过即以 <details> 折叠（原生键盘可达）。 */
-const RETURN_EXCERPT_COLLAPSE_THRESHOLD = 120;
+
 
 /** 摘录元素（P1）：完整文本始终在卡片内（短摘录内联引用，长摘录折叠——
     <summary> 携带前缀切片 + 省略号，展开后是落库快照原文）。 */
-function returnExcerptElement(text) {
-  if (text.length <= RETURN_EXCERPT_COLLAPSE_THRESHOLD) return null;
-  const details = document.createElement("details");
-  details.className = "return-excerpt collapsible";
-  const summary = document.createElement("summary");
-  summary.textContent = `“${text.slice(0, 100)}…”`;
-  const full = document.createElement("span");
-  full.className = "return-excerpt-full";
-  full.textContent = `“${text}”`;
-  details.append(summary, full);
-  return details;
-}
-
 /**
  * 回退放置的来源判定（P1：区分「来源位于其他 Branch / 已变化 / 缺失」）：
  * 以 targetAnchor 快照在树状态里反查锚点 turn——查不到 → missing；查到但
  * role/切片不再匹配快照 → changed；查到且仍匹配 → 该锚点在其他分支
  * （elsewhere，携带其所在分支）。树状态缺失（极端）按 missing。
  */
-function returnFallbackReason(turn) {
-  const st = state.treeState;
-  const anchor = turn.targetAnchor;
-  if (st === null || anchor === null) return { kind: "missing", anchor: null };
-  let anchorTurn = null;
-  for (const view of st.branches) {
-    const found = view.turns.find((t) => t.id === anchor.anchorTurnId);
-    if (found !== undefined) {
-      anchorTurn = found;
-      break;
-    }
-  }
-  if (anchorTurn === null) return { kind: "missing", anchor };
-  const stillHolds =
-    anchorTurn.role === "assistant" &&
-    anchorTurn.text.slice(anchor.selection.start, anchor.selection.end) === anchor.selection.text;
-  if (!stillHolds) return { kind: "changed", anchor };
-  return { kind: "elsewhere", anchor, anchorBranchId: anchorTurn.branchId };
-}
-
 /**
  * Return 卡片（W2 §2.4 + M3/M4 + signed v3 §3.2 + issue #7 P1）：
  * - placement "anchored"：锚点答案在当前视图内 → 紧随其后渲染，meta 携带
@@ -810,18 +778,8 @@ const deliveredChangedAt = new Map(); /* `${treeId}:${turnId}` → epoch ms */
 
 /** 该 Return 的采用尝试记录（signed v3 §3.2：save ≠ 尝试 ≠ 首次成功采用）。
     视图字段缺失（旧快照）时按空列表处理——卡片降级回“已保存”语义。 */
-function returnAttemptsFor(view, turnId) {
-  return (view.returnAttempts ?? []).filter((attempt) => attempt.turnId === turnId);
-}
-
 /** 时间戳的产品事实格式化（P1：确认/采用时间都取产品 turn/run 字段）。 */
-function formatProductTime(iso) {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
+const returnExcerptElement = createReturnExcerptElement(document);
 
 function returnCard(turn, anchor, attempts, placement) {
   const treeKey = `${state.currentTreeId}:${turn.id}`;
@@ -857,7 +815,7 @@ function returnCard(turn, anchor, attempts, placement) {
       : ` · anchored on a long selection from ${branchLabel(anchor.sourceBranchId)}`;
     excerptElement = returnExcerptElement(anchor.selection.text);
   } else if (anchor !== null) {
-    const reason = returnFallbackReason(turn);
+    const reason = returnFallbackReason(state.treeState, turn);
     const inline = shortExcerpt ? ` (anchored on “${anchor.selection.text}”)` : "";
     if (reason.kind === "elsewhere") {
       anchorNote = ` · source on ${branchLabel(reason.anchor.sourceBranchId)}${inline}`;
