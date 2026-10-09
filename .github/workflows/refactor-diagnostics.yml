@@ -28,8 +28,16 @@ jobs:
       - name: Studio test suite (diagnostic output)
         if: always()
         run: npm test --workspace @treeai/studio
+      - name: Install deterministic TrueType CJK test font (Linux B6)
+        if: always()
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-wqy-zenhei
+          test -r /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
       - name: D4 offline verifier (report blocked honestly)
         if: always()
+        env:
+          TREEAI_B6_FONT_PATH: /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
         shell: bash
         run: |
           set +e

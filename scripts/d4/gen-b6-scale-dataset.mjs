@@ -84,7 +84,9 @@ const FIXTURES_D4_DIR = join(REPO_ROOT, "tests", "fixtures", "d4");
 
 const FONT_SOURCES = {
   songti: {
-    path: "/System/Library/Fonts/Supplemental/Songti.ttc",
+    // Stable macOS historical source by default; Linux CI can supply a real
+    // TrueType CJK font path without changing the frozen B6 dataset recipe.
+    path: process.env["TREEAI_B6_FONT_PATH"] || "/System/Library/Fonts/Supplemental/Songti.ttc",
     ttcIndex: 0,
     family: "SongtiSC",
     tag: "SO",
@@ -133,6 +135,7 @@ if (args.includes("--help") || args.includes("-h")) {
       "  --load-check it additionally loads the dataset into a REAL persistence",
       "  database in a fresh temp dir via the repository APIs, verifies row",
       "  counts, then removes the temp dir.",
+      "  Set TREEAI_B6_FONT_PATH for a TrueType CJK .ttc/.ttf on non-macOS hosts.",
       "  Exit codes: 0 pass, 1 tool error, 2 verification failure.",
       "",
     ].join("\n"),
@@ -237,6 +240,9 @@ function buildOutputSet({ verify }) {
     log(`  invariants: 0 problems (100 materials / 1,000,000 units / 10 trees / 1,000 non-trunk branches / 10,000 saved facts)\n`);
   }
 
+  if (!existsSync(FONT_SOURCES.songti.path)) {
+    fail(`B6 font missing: ${FONT_SOURCES.songti.path}. On Linux install fonts-wqy-zenhei and set TREEAI_B6_FONT_PATH to its TrueType .ttc; the frozen B6 truth is not changed.`, 1);
+  }
   const songti = SfntFont.load(FONT_SOURCES.songti.path, FONT_SOURCES.songti.ttcIndex);
   const subsetCache = new Map();
   const files = new Map();
