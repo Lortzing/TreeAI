@@ -17,6 +17,8 @@ jobs:
           node-version: "24.21.0"
           cache: npm
       - run: npm ci
+      - name: Build Studio internal event-journal dependency
+        run: npm run build:deps --workspace @treeai/studio
       - name: Require real headless Chrome/Chromium
         shell: bash
         run: |
