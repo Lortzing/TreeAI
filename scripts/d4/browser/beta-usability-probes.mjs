@@ -292,16 +292,23 @@ async function touchDragSelect(ctx, placementExpr) {
     绝不内嵌副本——与文档漂移即失败）。 */
 function readReadmeStudioSection(root) {
   const text = readFileSync(join(root, "README.md"), "utf8");
-  const heading = "## Studio (D3 MVP) — local install & start";
+  // The R5 README keeps the actual CLI instructions but uses a shorter heading.
+  // Accept both historical and current section names; verify commands and flags
+  // against the real studio executable below rather than locking old prose.
+  const headings = ["## Run locally", "## Studio (D3 MVP) — local install & start"];
+  const heading = headings.find((h) => text.includes(h));
+  if (heading === undefined) throw new Error(`README.md has no local Studio install/start section (expected one of ${headings.join(", ")})`);
   const start = text.indexOf(heading);
-  if (start < 0) throw new Error(`README.md does not carry the studio section heading: ${heading}`);
   const next = text.indexOf("\n## ", start + 1);
   const section = text.slice(start, next < 0 ? undefined : next);
-  const codeBlock = /```bash\n([\s\S]*?)```/.exec(section)?.[1] ?? "";
-  const commandLines = codeBlock.split("\n").map((l) => l.trim()).map((l) => l.replace(/\s+#.*$/, "").trim()).filter((l) => l.length > 0 && !l.startsWith("#"));
-  const startCommand = commandLines.find((l) => l.startsWith("npm run start")) ?? null;
-  const installCommand = commandLines.find((l) => l.startsWith("npm ci")) ?? null;
-  const optionsLine = section.split("\n").map((l) => l.trim()).find((l) => l.startsWith("Options:")) ?? null;
+  const codeBlocks = [...section.matchAll(/```(?:sh|bash)\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const commandLines = codeBlocks.flatMap((block) => block.split("\n"))
+    .map((l) => l.trim()).map((l) => l.replace(/\s+#.*$/, "").trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#"));
+  const startCommand = commandLines.find((l) => l === "npm run start --workspace @treeai/studio") ?? null;
+  const installCommand = commandLines.find((l) => l === "npm ci") ?? null;
+  const optionsLine = section.split("\n").map((l) => l.trim()).find((l) => l.startsWith("Options:"))
+    ?? commandLines.find((l) => l.includes("npm run start") && l.includes("--port") && l.includes("--data")) ?? null;
   return { heading, startCommand, installCommand, optionsLine, urlLine: /http:\/\/127\.0\.0\.1:\d+/.exec(section)?.[0] ?? null };
 }
 
@@ -375,6 +382,12 @@ export async function probeBetaUsability(ctx) {
         flagsWithinReadmeOptions: actualArgv.includes("--port") && actualArgv.includes("--data"),
       };
       const problems = [];
+      if (readme.installCommand !== "npm ci") {
+        problems.push("README no longer documents npm ci");
+      }
+      if (readme.urlLine !== "http://127.0.0.1:8787") {
+        problems.push(`README local URL changed: ${String(readme.urlLine)}`);
+      }
       if (readme.startCommand !== "npm run start --workspace @treeai/studio") {
         problems.push(`README start command is ${JSON.stringify(readme.startCommand)}`);
       }

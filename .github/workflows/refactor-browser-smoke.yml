@@ -17,6 +17,8 @@ jobs:
           node-version: "24.21.0"
           cache: npm
       - run: npm ci
+      - name: Build Studio internal event-journal dependency
+        run: npm run build:deps --workspace @treeai/studio
       - name: Require real headless Chrome/Chromium
         shell: bash
         run: |
@@ -34,6 +36,7 @@ jobs:
         shell: bash
         run: |
           node scripts/run-d4-browser.mjs --mode selftest \
+            --only d4-import-material \
             --only d4-read-and-select \
             --only d4-beta-usability
       - name: Real Chrome terminology and search navigation (offline Echo)
@@ -42,5 +45,6 @@ jobs:
         shell: bash
         run: |
           node scripts/run-d4-browser.mjs --mode selftest \
+            --only d4-import-material \
             --only terminology-path \
             --only d4-search-recover
