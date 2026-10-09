@@ -5,6 +5,9 @@
  * individual controllers are extracted in later R1 feature slices.
  */
 import { createSourceHasher } from "../shared/source/sha256.js";
+import { createSelectionOffsetsWithin } from "../shared/source/selection.js";
+import { createIsAtBottom } from "../shared/reading-position/scroll.js";
+import { isElementNode, findReusableTurnElement } from "./dom.js";
 
 export function createStudioApp(deps) {
   const { document, window, fetch, EventSource, navigator, localStorage, crypto } = deps;
@@ -416,9 +419,7 @@ const AT_BOTTOM_PX = 48;
 /** 贴底判定：强制贴底（新内容跟随）只允许发生在用户本就在底部的容器上
     （issue #3 P1：流式增量 / 新 turn 到达时，已向上阅读的视图不得被拉回
     底部）。判定须在写入新内容之前取值——写入本身会增高 scrollHeight。 */
-function isAtBottom(container) {
-  return container.scrollTop + container.clientHeight >= container.scrollHeight - AT_BOTTOM_PX;
-}
+const isAtBottom = createIsAtBottom(AT_BOTTOM_PX);
 
 async function api(path, method = "GET", body = undefined) {
   const response = await fetch(path, {
@@ -741,20 +742,7 @@ function sessionRecoveryControls(surface) {
   return wrap;
 }
 
-function selectionOffsetsWithin(element, text) {
-  const selection = window.getSelection();
-  if (selection === null || selection.rangeCount === 0) return null;
-  const range = selection.getRangeAt(0);
-  if (!element.contains(range.commonAncestorContainer)) return null;
-  const selected = range.toString();
-  if (selected.length === 0) return null;
-  const before = range.cloneRange();
-  before.selectNodeContents(element);
-  before.setEnd(range.startContainer, range.startOffset);
-  const start = before.toString().length;
-  if (text.slice(start, start + selected.length) !== selected) return null;
-  return { start, end: start + selected.length, text: selected };
-}
+const selectionOffsetsWithin = createSelectionOffsetsWithin(window);
 
 /** 长摘录折叠阈值（P1 降级卡）：超过即以 <details> 折叠（原生键盘可达）。 */
 const RETURN_EXCERPT_COLLAPSE_THRESHOLD = 120;
@@ -942,28 +930,7 @@ function returnCard(turn, anchor, attempts, placement) {
 /* ------------------------------ ③ 正文/操作分层（issue #7 C ③） ------------------------------ */
 
 /** 元素节点判定（真实 DOM 与脚本桩共用：文本节点无 classList/dataset）。 */
-function isElementNode(node) {
-  return (
-    node !== null &&
-    typeof node === "object" &&
-    typeof node.classList === "object" &&
-    node.classList !== null &&
-    typeof node.dataset === "object"
-  );
-}
-
 /** 容器内按 (turnId, text) 找可复用的 turn 元素（正文层跨重渲稳定）。 */
-function findReusableTurnElement(container, turn) {
-  for (const child of container.children) {
-    if (!isElementNode(child)) continue;
-    if (!child.classList.contains("turn") || child.classList.contains("return")) continue;
-    if (child.dataset.turnId !== turn.id) continue;
-    if (child.dataset.turnText !== turn.text) continue;
-    return child;
-  }
-  return null;
-}
-
 /* -------- 批注锚定联合校验（issue #7 增量验收 2026-09-30 P0） -------- */
 
 const sha256Hex = createSourceHasher();
