@@ -29,6 +29,9 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/style.css": { file: "style.css", type: "text/css; charset=utf-8" },
   "/shared/source/sha256.js": { file: "shared/source/sha256.js", type: "text/javascript; charset=utf-8" },
   "/core/create-studio-app.js": { file: "core/create-studio-app.js", type: "text/javascript; charset=utf-8" },
+  "/core/dom.js": { file: "core/dom.js", type: "text/javascript; charset=utf-8" },
+  "/shared/source/selection.js": { file: "shared/source/selection.js", type: "text/javascript; charset=utf-8" },
+  "/shared/reading-position/scroll.js": { file: "shared/reading-position/scroll.js", type: "text/javascript; charset=utf-8" },
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
