@@ -361,6 +361,8 @@ async function startChrome() {
   chrome.profileDir = mkdtempSync(join(tmpdir(), "treeai-d4-chrome-"));
   const args = [
     "--headless=new",
+    // Explicit CI-only escape hatch. Never disable Chrome sandbox by default.
+    ...(process.env["TREEAI_TEST_CHROME_NO_SANDBOX"] === "1" ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
     "--remote-debugging-port=0",
     `--user-data-dir=${chrome.profileDir}`,
     "--no-first-run",
@@ -374,6 +376,10 @@ async function startChrome() {
     "about:blank",
   ];
   chrome.child = spawn(chrome.executable, args, { stdio: ["ignore", "ignore", "pipe"] });
+  let chromeStderrTail = "";
+  chrome.child.stderr.on("data", (chunk) => {
+    chromeStderrTail = (chromeStderrTail + String(chunk)).slice(-2500);
+  });
 
   const wsUrl = await new Promise((resolve, reject) => {
     let buffer = "";
@@ -383,7 +389,10 @@ async function startChrome() {
       const match = /DevTools listening on (ws:\/\/\S+)/.exec(buffer);
       if (match !== null) { clearTimeout(timer); resolve(match[1]); }
     });
-    chrome.child.on("exit", () => { clearTimeout(timer); reject(new Error(`chrome exited during boot (code ${String(chrome.child.exitCode)})`)); });
+    chrome.child.on("exit", (code, signal) => {
+      clearTimeout(timer);
+      reject(new Error(`chrome exited during boot (code ${String(code)}, signal ${String(signal)}): ${sanitizeText(chromeStderrTail)}`));
+    });
   });
 
   const url = new URL(wsUrl);
