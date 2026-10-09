@@ -14,6 +14,7 @@ Pinned: Node `24.21.0`, npm `11.19.0`.
 
 ```sh
 npm ci
+npm run build:deps --workspace @treeai/studio
 npm run start --workspace @treeai/studio
 ```
 

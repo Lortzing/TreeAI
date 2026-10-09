@@ -1,21 +1,23 @@
-# Task-to-file map
+# Task-to-file map — current refactor candidate
 
-Begin with the named entry and its direct imports, then broaden only when a change crosses a boundary. Paths are current as of baseline `e427460b31f61722d5e74a6fa4ee24d140abe67b`; keep this map in sync with later modularization.
+Start from the narrowest owner and its tests; expand only when crossing a public API, persistence or runner boundary. Paths refer to [integration PR #27](https://github.com/Lortzing/TreeAI/pull/27), not the old main layout.
 
-| Work | First files | Expand when | Minimal check |
+| Task | Start here | Broaden when necessary | Verification |
 | --- | --- | --- | --- |
-| Main conversation and branches | `apps/studio/public/app.js`, `apps/studio/src/service.ts` | Pi execution, API or storage changes | Studio service/UI tests |
-| Return and idempotency | `apps/studio/src/service.ts`, `packages/persistence/src/tree-repository.ts` | Adoption/prompt semantics change | Replay, conflict, failure persistence |
-| Terminology UI | `apps/studio/public/app.js`, `apps/studio/tests/ui-terminology.test.ts` | Promotion or provider budget | Terminology/UI cases and real browser |
-| Terminology backend | `apps/studio/src/terminology.ts` | Shared transaction changes | Terminology tests and evaluator |
-| Markdown/PDF reading | `apps/studio/src/materials/`, `apps/studio/tests/ui-pdf-reader.test.ts` | Source range/selection changes | PDF fixed fixtures and Chrome selection |
-| Source offsets | `apps/studio/src/materials/range-resolver.ts` | Any new source type | UTF-16, duplicate text, emoji and combining tests |
-| Search | `apps/studio/src/search/`, `apps/studio/tests/ui-search.test.ts` | Jump-to-source or persistence changes | Scope and stale version cases |
-| Large-tree nav | `apps/studio/src/nav/`, `apps/studio/tests/ui-nav.test.ts` | Persisted expansion state | B9 scale and keyboard tests |
-| HTTP/static routing | `apps/studio/src/server.ts` | New browser module, MIME or installer files | API/static and install smoke |
-| Tool permissions | `packages/tool-policy/`, `packages/runtime-pi/` | Event projection or UI changes | Allow/deny and provenance tests |
-| Portable data | `apps/studio/src/portability/` | Import version/migrations | Corrupt restore and atomicity tests |
-| Installer | `scripts/d4/installer/`, `scripts/d4/package-installer.mjs` | Bundle manifest or entry paths | Target platform package smoke |
-| Browser/real Pi evidence | `scripts/run-d3-browser.mjs`, `scripts/run-d3-real-pi.mjs` | Scenario/check ID change | Both verifier selftests |
+| Studio startup/UI state | `apps/studio/public/app.js`, `core/create-studio-app.js` | ESM/static/installer wiring | Studio scripted DOM + native Chrome |
+| Source identity/offsets | `public/shared/source/{sha256,selection}.js`, `public/core/dom.js` | Server range resolver and Unicode contract | source SHA/selection + fixed range cases |
+| Reading position | `public/shared/reading-position/scroll.js` | Material reader or branch navigation | bottom-follow + Chrome scrolling |
+| Return rendering/source | `public/features/return/presentation.js` | Return write/adoption in `src/service.ts` | W1 replay/conflict/source/display |
+| Tree conversation / Branch / Return behavior | `public/core/create-studio-app.js`, `src/service.ts` | Pi session cursor or repository writes | Studio, runtime, journal, real Pi |
+| Terminology | `src/terminology.ts`, `src/terminology/suggestion-density.ts` | Promotion ledger, model budget, UI view | Terminology API/UI/evaluator, manual vs auto gate |
+| Markdown/PDF | `src/materials/`, `public/core/create-studio-app.js` | source/selection and PDF parser | B1/B2/B3 + native selection |
+| Search and navigation | `src/search/`, `src/nav/`, Studio factory | index rebuild, versions or cursor semantics | B4/B9 engine and Chrome |
+| HTTP / static / API | `src/server.ts`, `src/http/{requests,responses,errors,static}.ts` | New static route, PDF.js resource or installer | HTTP/static tests, MIME and browser 404 |
+| Runtime SDK boundary | `packages/runtime-pi/src/pi-runtime.ts`, `session-inspection.ts` | Pi port and tool policy only when affected | runtime-pi / session restore / policy |
+| Storage, backups and session recovery | `packages/persistence/src/`, `src/portability/` | Multi-entity DB transaction | restart/integrity/failure injection |
+| Browser/real Pi runner | `scripts/run-d4-browser.mjs`, `run-d3-browser.mjs` | Domains in `scripts/d4/browser/` | check IDs / exit codes 0-3 / CI smoke |
+| PDF fixture generation | `scripts/d4/pdf/content.mjs`, `content/fixtures-*.mjs` | Unicode parser/source changes | `content.test.mjs`, frozen B1 hash |
+| B6 large-scale testing | `scripts/d4/gen-b6-scale-dataset.mjs`, `tests/support/verifier/d4-b6-scale.ts` | Font provisioning on non-Mac | Linux B6 + invariant checks; real Chrome B6 separately |
+| Installed product | `scripts/d4/installer/`, `package-installer.mjs` | Bundled public files, Node runtime | bundle smoke and physical target devices |
 
-Never assume a renamed or nested `*.test.ts` is discovered automatically; check actual npm test globs. A successful offline Echo test is not evidence of real Pi/Chrome/Mac verification.
+**Important:** The factory and several service/runner files remain large by design only as an intermediate migration state, **not** as approved permanent size exceptions. Do not mark R1/R3/R4 complete before splitting them and retaining the entire old scenario/fixture denominator. The root and Studio workspace test globs are not recursive by default.
