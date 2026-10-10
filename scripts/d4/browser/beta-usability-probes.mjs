@@ -293,9 +293,12 @@ async function touchDragSelect(ctx, placementExpr) {
     throw new Error(`touch-drag selection failed during active touch — ${JSON.stringify(placed)}`);
   }
   const stillSelected = await ctx.evalJs(`(() => String(window.getSelection()))()`);
+  await sleep(80);
+  const barDuring = await readCaptureBar(ctx);
   await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await sleep(120);
-  return { placed, stillSelected };
+  const afterRelease = await ctx.evalJs(`(() => String(window.getSelection()))()`);
+  return { placed, stillSelected, barDuring, afterRelease };
 }
 
 /** README「Studio (D3 MVP) — local install & start」段解析（运行时读取，
@@ -851,7 +854,7 @@ export async function probeBetaUsability(ctx) {
             readerOpen: !document.getElementById("material-reader")?.hidden,
             pdfFrames: document.querySelectorAll("#mat-blocks .pdf-page-frame").length };
         })()`);
-        throw new Error(`touch pdf-01 selection: ${String(error)}; native diagnostic ${JSON.stringify(diagnostic)}`);
+        throw new Error(`touch pdf-01 selection: ${String(error)}; drag lifecycle ${JSON.stringify(drag)}; native diagnostic ${JSON.stringify(diagnostic)}`);
       }
       if (bar.payload === null) {
         throw new Error(`touch: the capture bar did not arm with a payload — ${JSON.stringify(bar)}`);
