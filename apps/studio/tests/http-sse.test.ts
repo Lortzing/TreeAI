@@ -19,7 +19,7 @@ test("SSE emits the owning tree only, snapshot before events, and disconnects on
   const responses = new Set<ServerResponse>();
   createSseStream(service,responses)(request,response,"a" as never,{ok:true} as unknown as TreeDiagnostics);
   assert.equal(response.status,200);
-  assert.match(response.chunks.join(""),/^: connected\\n\\nevent: snapshot\\ndata: /);
+  assert.deepEqual(response.chunks.slice(0,2).map(text=>text.split(String.fromCharCode(10))[0]),[": connected","event: snapshot"]);
   assert.equal(responses.size,1);
   assert.ok(listener!==null);
   (listener as (event:{treeId:string;type:string})=>void)({treeId:"b",type:"wrong"});
