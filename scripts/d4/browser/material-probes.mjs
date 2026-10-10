@@ -167,15 +167,25 @@ const PAGE_HELPERS = `
     }
     return null;
   };
-  const toAnchor = (blockEl, localOffset) => {
+  const toAnchor = (blockEl, localOffset, preferNextOnBoundary = false) => {
     const walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT);
     let pos = 0;
+    let last = null;
     for (;;) {
       const node = walker.nextNode();
-      if (node === null) return null;
+      if (node === null) return last && localOffset === pos ? last : null;
       const len = node.data.length;
-      if (localOffset <= pos + len) return { node, offset: localOffset - pos };
+      /* Adjacent DOM positions can represent the same canonical UTF-16 offset.
+         Prefer the *next* rendered text node for selection starts: in the PDF
+         geometry layer, an exact line boundary may otherwise anchor in the
+         preceding direct newline node, which Chrome treats as unselectable.
+         Never adjust offsets/excerpts or manufacture a selection. */
+      if (localOffset < pos + len ||
+          (localOffset === pos + len && !preferNextOnBoundary)) {
+        return { node, offset: localOffset - pos };
+      }
       pos += len;
+      last = { node, offset: len };
     }
   };
 `;
@@ -196,7 +206,7 @@ export function pageSelectCanonical(blockId, start, end) {
       return { error: "canonical range [${start}, ${end}) is outside block ${blockId}" };
     }
     blockEl.scrollIntoView({ block: "center" });
-    const a = toAnchor(blockEl, localStart);
+    const a = toAnchor(blockEl, localStart, true);
     const b = toAnchor(blockEl, localEnd);
     if (a === null || b === null) return { error: "offsets did not map onto text nodes of ${blockId}" };
     const range = document.createRange();
