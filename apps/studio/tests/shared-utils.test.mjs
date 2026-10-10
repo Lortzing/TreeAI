@@ -4,6 +4,7 @@ import { createIsAtBottom } from "../public/shared/reading-position/scroll.js";
 import { createSelectionOffsetsWithin } from "../public/shared/source/selection.js";
 import { isElementNode, findReusableTurnElement } from "../public/core/dom.js";
 import { createMarkdownRenderer } from "../public/core/views/markdown.js";
+import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
   const isAtBottom = createIsAtBottom(48);
@@ -64,4 +65,19 @@ test("R1 Markdown view carries fenced-code state between material blocks", () =>
   const second = element();
   assert.equal(renderMarkdownInto(second, "const y = 2;\n~~~", open), false);
   assert.equal(second.textContent, "const y = 2;\n~~~");
+});
+
+
+test("R1 material selection snaps surrogate pairs and combining graphemes outwards", () => {
+  assert.deepEqual(clampToGraphemeBoundaries("x🚀y", 2, 3), { start: 1, end: 3, snapped: true });
+  assert.deepEqual(clampToGraphemeBoundaries("a\u0301b", 1, 2), { start: 0, end: 2, snapped: true });
+  assert.deepEqual(clampToGraphemeBoundaries("x", 0, 1), { start: 0, end: 1, snapped: false });
+  assert.equal(clampToGraphemeBoundaries("x", 0, 0), null);
+});
+
+test("R1 material selection keeps a joined emoji grapheme intact", () => {
+  const text = "x👩‍💻y";
+  assert.deepEqual(clampToGraphemeBoundaries(text, 2, text.length - 1), {
+    start: 1, end: text.length - 1, snapped: true,
+  });
 });
