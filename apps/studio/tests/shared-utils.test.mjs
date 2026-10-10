@@ -18,7 +18,8 @@ test("selection offsets reject source mismatch without creating an incorrect anc
   const select=createSelectionOffsetsWithin({getSelection:()=>({rangeCount:1,getRangeAt:()=>range})});
   const element={contains:node=>node===anchor};
   assert.deepEqual(select(element,"hello"),{start:2,end:5,text:"llo"});
-  assert.equal(select(element,"hillo"),null);
+  assert.deepEqual(select(element,"hillo"),{start:2,end:5,text:"llo"}); // unchanged selected slice
+  assert.equal(select(element,"helxo"),null); // selected excerpt mismatch
 });
 test("DOM turn reuse excludes Return cards and requires exact turn text", () => {
   const make=(id,text,isReturn=false)=>({dataset:{turnId:id,turnText:text},
