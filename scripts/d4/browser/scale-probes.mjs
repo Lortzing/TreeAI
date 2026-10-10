@@ -44,6 +44,7 @@ import { loadB6IntoFreshDir } from "../../../tests/support/verifier/d4-b6-loader
 
 import { sleep, waitFor, inputClickAt, switchTreeInUi, materialButtonSelector, assertNoPageErrors } from "./material-probes.mjs";
 import { armWaiterExpr, awaitWaiter } from "./nav-probes.mjs";
+import { timingStats, fmt, settleReaderReadable } from "./scale-measurements.mjs";
 
 /* charter B6 冻结目标（不得为通过而调整）。 */
 const OPEN_P95_LIMIT_MS = 2_000;
@@ -62,42 +63,6 @@ const OPEN_INDICES = [
 /* ------------------------------------------------------------------ */
 /* 小工具                                                               */
 /* ------------------------------------------------------------------ */
-
-function percentile(values, p) {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.ceil(p * sorted.length) - 1];
-}
-
-function timingStats(values) {
-  return {
-    count: values.length,
-    medianMs: percentile(values, 0.5),
-    p95Ms: percentile(values, 0.95),
-    maxMs: values.length === 0 ? 0 : Math.max(...values),
-  };
-}
-
-const fmt = (n) => n.toFixed(1);
-
-/** 阅读器就位结算：阅读器可见 + 首块在场（PDF：首页文本层已渲染——
- *  「先渲染可见页」的可读口径）。 */
-function settleReaderReadable(materialId, isPdf) {
-  const pdfCheck = isPdf
-    ? `const firstLayer = blocks.querySelector(".pdf-page-text"); ` +
-      `if (firstLayer === null || firstLayer.dataset.rendered !== "true") return false; ` +
-      `pdfFrames = blocks.querySelectorAll(".pdf-page-frame").length;`
-    : `pdfFrames = null;`;
-  return `(() => { const reader = document.getElementById("material-reader"); ` +
-    `if (reader === null || reader.hidden) return false; ` +
-    `const blocks = document.getElementById("mat-blocks"); ` +
-    `if (blocks === null) return false; ` +
-    `let pdfFrames = null; ${pdfCheck} ` +
-    `const blockCount = ${isPdf ? `blocks.querySelectorAll(".pdf-page-frame").length` : `blocks.querySelectorAll(".material-block").length`}; ` +
-    `if (blockCount < 1) return false; ` +
-    `if (document.getElementById("mat-tail") === null) return false; ` +
-    `return { blockCount, pdfFrames }; })()`;
-}
 
 /* ------------------------------------------------------------------ */
 /* 探针：d4-b6-scale-browser                                            */

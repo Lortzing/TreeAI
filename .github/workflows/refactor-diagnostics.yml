@@ -60,6 +60,9 @@ jobs:
       - name: D4 CLI refactor contract tests
         if: always()
         run: node --test scripts/d4/browser/cli.test.mjs
+      - name: D4 B6 browser measurement contract tests
+        if: always()
+        run: node --test scripts/d4/browser/scale-measurements.test.mjs
       - name: D4 verifier failure-injection selftest
         if: always()
         run: node scripts/verify-d4-selftest.js
