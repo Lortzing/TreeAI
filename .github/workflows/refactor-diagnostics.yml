@@ -22,6 +22,8 @@ jobs:
           node -e 'const r=require("/tmp/treeai-inventory.json"); if(r.files.length<3000) process.exit(1); console.log("Tracked files:",r.files.length,"Review candidates:",r.files.filter(x=>x.review).length)'
       - name: Native ESM/CSS and package inclusion dependency audit
         run: node scripts/audit-studio-assets.mjs
+      - name: Browser shared source/view regressions (Node, no browser shim)
+        run: node --test apps/studio/tests/shared-utils.test.mjs
       - name: Root test typecheck (diagnostic output)
         run: node node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false
       - name: All production typechecks (diagnostic output)

@@ -10,7 +10,7 @@ npm run typecheck
 npm test
 ```
 
-Studio uses `node --test tests/*.test.ts` under `apps/studio`; root has separate `tests/unit/*.test.ts`, `tests/integration/*.test.ts` and `tests/live/*.test.ts` globs. Nested tests are **not** automatically included. Changes to test locations must expand discovery or retain aggregators and compare scenario IDs.
+Studio uses `node --test tests/*.test.ts` under `apps/studio`; root has separate `tests/unit/*.test.ts`, `tests/integration/*.test.ts` and `tests/live/*.test.ts` globs. The refactor diagnostics workflow explicitly runs `node --test apps/studio/tests/shared-utils.test.mjs` to gate extracted browser source/view helpers. Nested tests are **not** automatically included. Changes to test locations must expand discovery or retain aggregators and compare scenario IDs.
 
 ## Offline acceptance and fault injection
 
