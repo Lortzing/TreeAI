@@ -6,7 +6,7 @@
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
 | R0 repository map | `scripts/repo-inventory.mjs`, `scripts/audit-studio-assets.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
-| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; Search, Turn-backed Return, diagnostics, and navigation-finder presentation views isolated in `public/core/views/{search,return,diagnostics,nav-finder}.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/terminology/materials and virtualized navigation; real Chrome regressions |
+| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; Search, Turn-backed Return, diagnostics, navigation-finder, and navigation-chrome presentation views isolated in `public/core/views/{search,return,diagnostics,nav-finder,nav-chrome}.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/terminology/materials and virtualized navigation; real Chrome regressions |
 | R2 UI tests | Shared app harness, CSS source loader and targeted module regressions | Deduplicate remaining eight suites' DOM/selection/backend/storage mocks; audit original case/ID denominator |
 | R3 Studio server/services | HTTP response, errors, request validation, static and SSE handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
 | R4 runtime and runners | Pi session inspection, four ordered PDF fixture groups and frozen registry test | Full browser/Pi/installer/verification runner boundaries, dataset ownership and old CLI/check ID compatibility |
@@ -44,6 +44,12 @@
 - Local offline evidence: D2 `21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for authorization-gated D1 repro), D2 selftest `5/5`; D4 `19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for owner-only B8 install/real-Pi acceptance), D4 selftest and 13 contract tests pass.
 - The local preview loaded `/core/views/nav-finder.js` with no console errors or failed requests. No local native Chrome binary is available; browser-pane loading is not real-Pi or physical-install acceptance.
 - No pagination limit, stale-cursor behavior, focus semantics, acceptance standard, scenario denominator, evidence artifact, or physical acceptance gate was changed.
+
+## 2026-10-10 Navigation-chrome wave (working candidate based on `16f70f3c542d3977c485d4d8965e50e0a435fa17`)
+
+- R1 moved navigation surface overview/action presentation into `public/core/views/nav-chrome.js`; tree session, overview fetch/retry controller, virtualized rows, finder, source locate, and keyboard behavior remain in `create-studio-app.js`.
+- Direct view, static/factory, nav, diagnostics, and Return regressions pass; full Studio/root and D2/D4 gates will be recorded after this focused commit.
+- No navigation semantics, acceptance standard, scenario denominator, evidence artifact, or physical acceptance gate was changed.
 
 ## Verified CI facts (exact commit required)
 

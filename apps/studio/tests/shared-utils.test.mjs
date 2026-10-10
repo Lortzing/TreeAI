@@ -8,6 +8,7 @@ import { createSearchView } from "../public/core/views/search.js";
 import { createReturnCardRenderer } from "../public/core/views/return.js";
 import { createDiagnosticsView } from "../public/core/views/diagnostics.js";
 import { createNavFinderView } from "../public/core/views/nav-finder.js";
+import { createNavChromeView } from "../public/core/views/nav-chrome.js";
 import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
@@ -520,4 +521,63 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
   assert.match(searchMore.textContent, /More tree hits \(1 loaded\)/);
   searchMore.listeners.click();
   assert.equal(calls.at(-1), "search-more");
+});
+
+
+test("R1 navigation chrome view preserves overview and action state", () => {
+  function element(tag) {
+    const node = {
+      tag, className: "", title: "", hidden: false, disabled: false, children: [], listeners: {},
+      append(...nodes) { this.children.push(...nodes); },
+      replaceChildren(...nodes) { this.children = [...nodes]; },
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      set textContent(value) { this.children = [{ textContent: String(value) }]; },
+      get textContent() { return this.children.map((child) => child.textContent ?? "").join(""); },
+    };
+    return node;
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: String(value) }) };
+  const nodes = new Map();
+  for (const id of ["nav-surface", "nav-tree-title", "nav-tree-meta", "nav-locate-current", "nav-source-selected"]) {
+    nodes.set(id, element(id));
+  }
+  const state = { treeState: null, nav: { session: null } };
+  const calls = [];
+  const view = createNavChromeView({
+    document,
+    getElement: (id) => nodes.get(id),
+    getState: () => state,
+    openNavTree: (id) => calls.push(id),
+  });
+
+  view.renderNavSurfaceChrome();
+  assert.equal(nodes.get("nav-surface").hidden, true);
+  assert.equal(nodes.get("nav-locate-current").disabled, true);
+  assert.equal(nodes.get("nav-source-selected").disabled, true);
+
+  state.treeState = { cursor: null, trunkBranchId: "trunk" };
+  state.nav.session = {
+    treeId: "tree-1", overviewState: "loading", overview: null, selectedBranchId: null,
+  };
+  view.renderNavSurfaceChrome();
+  assert.equal(nodes.get("nav-tree-title").textContent, "tree-1");
+  assert.equal(nodes.get("nav-tree-meta").textContent, "loading the tree overview…");
+  assert.equal(nodes.get("nav-locate-current").disabled, false);
+  assert.equal(nodes.get("nav-source-selected").disabled, true);
+
+  state.nav.session.overviewState = "failed";
+  state.nav.session.overviewError = "timeout";
+  view.renderNavSurfaceChrome();
+  assert.match(nodes.get("nav-tree-meta").textContent, /tree overview failed — timeout/);
+  nodes.get("nav-tree-meta").children[1].listeners.click();
+  assert.deepEqual(calls, ["tree-1"]);
+
+  state.nav.session.overviewState = "loaded";
+  state.nav.session.selectedBranchId = "branch-1";
+  state.nav.session.overview = { treeId: "tree-1", title: null, nodeCount: 1, maxDepth: 0 };
+  view.renderNavSurfaceChrome();
+  assert.match(nodes.get("nav-tree-title").textContent, /tree-1 — untitled/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /1 nodes · max depth 0/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /no branches yet/);
+  assert.equal(nodes.get("nav-source-selected").disabled, false);
 });

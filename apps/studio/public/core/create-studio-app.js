@@ -13,6 +13,7 @@ import { createSearchView, SEARCH_KIND_LABELS, SEARCH_KIND_ORDER } from "./views
 import { createReturnCardRenderer } from "./views/return.js";
 import { createDiagnosticsView } from "./views/diagnostics.js";
 import { createNavFinderView } from "./views/nav-finder.js";
+import { createNavChromeView } from "./views/nav-chrome.js";
 import { clampToGraphemeBoundaries } from "../shared/source/grapheme.js";
 
 export function createStudioApp(deps) {
@@ -8303,68 +8304,14 @@ async function navJumpToSource() {
   }
 }
 
+const { renderNavSurfaceChrome, renderNavTreeActions } = createNavChromeView({
+  document,
+  getElement: $,
+  getState: () => state,
+  openNavTree,
+});
+
 /* ------------------------------ 面板 chrome / renderAll 接线 ------------------------------ */
-
-/** 导航树头部 chrome（标题/概要/动作可用性；概要失败 + Retry；空树指引）。 */
-function renderNavSurfaceChrome() {
-  const session = state.nav.session;
-  const title = $("nav-tree-title");
-  const meta = $("nav-tree-meta");
-  if (session === null) {
-    $("nav-surface").hidden = true;
-    title.textContent = "";
-    meta.textContent = "";
-    renderNavTreeActions();
-    return;
-  }
-  if (session.overviewState === "loading") {
-    title.textContent = session.treeId;
-    meta.textContent = "loading the tree overview…";
-  } else if (session.overviewState === "failed") {
-    title.textContent = session.treeId;
-    meta.replaceChildren();
-    meta.append(document.createTextNode(`tree overview failed — ${session.overviewError} `));
-    const retry = document.createElement("button");
-    retry.className = "drawer-retry";
-    retry.textContent = "Retry";
-    retry.addEventListener("click", () => void openNavTree(session.treeId));
-    meta.append(retry);
-  } else {
-    const overview = session.overview;
-    title.textContent =
-      overview.title !== null
-        ? `${overview.title} (${overview.treeId})`
-        : `${overview.treeId} — untitled (no first question on the trunk)`;
-    title.title = title.textContent;
-    meta.textContent = `${String(overview.nodeCount)} nodes · max depth ${String(overview.maxDepth)}`;
-    if (overview.nodeCount <= 1) {
-      meta.append(
-        document.createTextNode(" · this tree has no branches yet — branch from any answer to grow it"),
-      );
-    }
-  }
-  renderNavTreeActions();
-}
-
-/** 动作可用性同步（renderAll 每次调用——工作台树切换即时反映；不触碰
-    树视图 DOM/焦点）。 */
-function renderNavTreeActions() {
-  const session = state.nav.session;
-  const locate = $("nav-locate-current");
-  const source = $("nav-source-selected");
-  const st = state.treeState;
-  const workbenchBranch = st !== null ? (st.cursor !== null ? st.cursor.branchId : st.trunkBranchId) : null;
-  locate.disabled = session === null || workbenchBranch === null;
-  locate.title =
-    workbenchBranch === null
-      ? "no tree is open in the workbench — open one (Forest) to locate its current branch here"
-      : `locate the workbench's current branch (${workbenchBranch}) in this navigation view`;
-  source.disabled = session === null || session.selectedBranchId === null;
-  source.title =
-    session === null || session.selectedBranchId === null
-      ? "select a branch first (click a row or press Enter)"
-      : `reveal the saved origin of ${session.selectedBranchId} (turn → source reveal; material → the reader)`;
-}
 
 /** renderAll 接线面：只同步动作可用性（树查找/树视图/路径行/命中列表由
     本面函数独占管理——SSE 刷新/面板开合绝不重建虚拟化窗口）。 */

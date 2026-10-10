@@ -17,6 +17,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/core/views/return.js": { file: "core/views/return.js", type: "text/javascript; charset=utf-8" },
   "/core/views/diagnostics.js": { file: "core/views/diagnostics.js", type: "text/javascript; charset=utf-8" },
   "/core/views/nav-finder.js": { file: "core/views/nav-finder.js", type: "text/javascript; charset=utf-8" },
+  "/core/views/nav-chrome.js": { file: "core/views/nav-chrome.js", type: "text/javascript; charset=utf-8" },
   "/shared/source/selection.js": { file: "shared/source/selection.js", type: "text/javascript; charset=utf-8" },
   "/shared/source/grapheme.js": { file: "shared/source/grapheme.js", type: "text/javascript; charset=utf-8" },
   "/shared/reading-position/scroll.js": { file: "shared/reading-position/scroll.js", type: "text/javascript; charset=utf-8" },
