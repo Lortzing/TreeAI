@@ -4,6 +4,7 @@ import { createIsAtBottom } from "../public/shared/reading-position/scroll.js";
 import { createSelectionOffsetsWithin } from "../public/shared/source/selection.js";
 import { isElementNode, findReusableTurnElement } from "../public/core/dom.js";
 import { createMarkdownRenderer } from "../public/core/views/markdown.js";
+import { createSearchView } from "../public/core/views/search.js";
 import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
@@ -81,4 +82,118 @@ test("R1 material selection keeps a joined emoji grapheme intact", () => {
   assert.deepEqual(clampToGraphemeBoundaries(text, 2, text.length - 1), {
     start: 1, end: text.length - 1, snapped: true,
   });
+});
+
+
+test("R1 Search view preserves honest idle, loading, failed, empty, and populated states", async () => {
+  function element(tag) {
+    const node = {
+      tag,
+      className: "",
+      title: "",
+      disabled: false,
+      dataset: {},
+      children: [],
+      attributes: {},
+      listeners: {},
+      focused: false,
+      append(...nodes) { this.children.push(...nodes); },
+      replaceChildren(...nodes) { this.children = [...nodes]; },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      focus() { this.focused = true; },
+      classList: {
+        toggle(name, on) { node.className = on ? `${node.className} ${name}`.trim() : node.className; },
+      },
+      set textContent(value) { this.children = [{ textContent: String(value) }]; },
+      get textContent() { return this.children.map((child) => child.textContent ?? "").join(""); },
+    };
+    return node;
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: String(value) }) };
+  const nodes = new Map();
+  for (const id of [
+    "search-scope-tree", "search-scope-all", "search-kind-material", "search-kind-annotation",
+    "search-kind-return", "search-kind-turn", "search-status", "search-results",
+    "prompt-input", "panel-prompt-input",
+  ]) nodes.set(id, element(id));
+  const state = {
+    currentTreeId: null,
+    treeState: null,
+    search: {
+      scope: "tree", kinds: ["material", "annotation", "return", "turn"], phase: "idle", note: null,
+      resultScope: "all", resultQuery: null, hits: [], error: null,
+    },
+  };
+  let jumped = null;
+  let openedBranch = null;
+  const view = createSearchView({
+    document,
+    getElement: (id) => nodes.get(id),
+    getState: () => state,
+    mutedListItem: (text) => { const item = element("li"); item.textContent = text; return item; },
+    formatProductTime: () => "2026-10-10",
+    closeSidebar: () => {},
+    guard: async (fn) => fn(),
+    jumpToSearchHit: (hit) => { jumped = hit; },
+    locateAnnotationHit: () => null,
+    locateTurnHit: (hit) => ({ view: { branch: { id: hit.target.branchId } } }),
+    branchView: (branchId) => branchId === "b1" ? { sessionAvailability: "unavailable" } : null,
+    trunkBranchId: () => "trunk",
+    openBranchPanel: async (branchId) => { openedBranch = branchId; },
+  });
+
+  view.renderSearchSection();
+  assert.equal(nodes.get("search-scope-tree").disabled, true);
+  assert.match(nodes.get("search-status").textContent, /saved facts/);
+  assert.equal(nodes.get("search-results").children.length, 0);
+
+  state.search.phase = "loading";
+  view.renderSearchSection();
+  assert.equal(nodes.get("search-results").textContent, "searching…");
+
+  state.search.phase = "failed";
+  state.search.error = "network down";
+  view.renderSearchSection();
+  assert.match(nodes.get("search-status").textContent, /network down/);
+  assert.match(nodes.get("search-results").textContent, /network down/);
+
+  state.search.phase = "loaded";
+  state.search.error = null;
+  state.search.resultQuery = "missing";
+  state.search.hits = [];
+  view.renderSearchSection();
+  assert.match(nodes.get("search-status").textContent, /0 hits/);
+  assert.match(nodes.get("search-results").textContent, /no results/);
+
+  state.currentTreeId = "t1";
+  state.search.scope = "all";
+  state.search.resultScope = "all";
+  state.search.resultQuery = "alpha";
+  const materialHit = {
+    kind: "material", treeId: "t2", treeTitle: "other tree", materialTitle: "Notes",
+    versionLabel: "v1", oldVersion: true, createdAt: "2026-10-10T00:00:00Z", title: "Notes",
+    excerpt: "alpha", target: { kind: "material", treeId: "t2", materialId: "m1", versionId: "v1", blockId: "b1" },
+  };
+  state.search.hits = [materialHit];
+  view.renderSearchSection();
+  assert.match(nodes.get("search-results").textContent, /旧版本/);
+  assert.match(nodes.get("search-results").textContent, /other tree/);
+  assert.equal(view.getSearchHitButton("material:t2:m1:v1:b1").dataset.hitKey, "material:t2:m1:v1:b1");
+
+  state.treeState = { branches: [] };
+  const turnHit = {
+    kind: "turn", treeId: "t1", treeTitle: "current", oldVersion: false,
+    createdAt: "2026-10-10T00:00:00Z", title: "Answer", excerpt: "saved", target: {
+      kind: "turn", treeId: "t1", branchId: "b1", turnId: "turn-1",
+    },
+  };
+  state.search.hits = [turnHit];
+  view.renderSearchSection();
+  assert.match(nodes.get("search-results").textContent, /session unavailable/);
+  const explore = nodes.get("search-results").children[0].children[1].children[1];
+  explore.listeners.click();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(openedBranch, "b1");
+  assert.equal(jumped, null);
 });

@@ -1,18 +1,25 @@
 # TreeAI refactor acceptance — live candidate matrix
 
-**Last updated:** 2026-10-09. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
+**Last updated:** 2026-10-10. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
 **Integration PR:** [#27](https://github.com/Lortzing/TreeAI/pull/27), branch `refactor/integration-r0-r7`. The current candidate must be read from the PR HEAD; this document does **not** claim that an earlier successful run validates every subsequent commit.
 
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
 | R0 repository map | `scripts/repo-inventory.mjs`, `scripts/audit-studio-assets.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
-| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse (Return display extraction reverted after scripted UI regression) | Split remaining large factory by conversation/branch/Return/terms/materials/search/nav; real Chrome regressions |
+| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; D4-4 Search presentation view boundary now isolated in `public/core/views/search.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/Return/terms/materials/navigation; real Chrome regressions |
 | R2 UI tests | Shared app harness, CSS source loader and targeted module regressions | Deduplicate remaining eight suites' DOM/selection/backend/storage mocks; audit original case/ID denominator |
 | R3 Studio server/services | HTTP response, errors, request validation, static and SSE handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
 | R4 runtime and runners | Pi session inspection, four ordered PDF fixture groups and frozen registry test | Full browser/Pi/installer/verification runner boundaries, dataset ownership and old CLI/check ID compatibility |
 | R5 documentation | Short README/AGENTS, docs index/task map/architecture, archived D3 historical ledger | Verify all references and final product authority consistency |
 | R6 evidence lifecycle | Original evidence retained; read-only `scripts/evidence-index.mjs` locator and [usage](evidence-index.md); Linux-compatible frozen B6 generator font path | Verify evidence index completeness, then remove redundant raw artifacts **only after full project acceptance** |
 | R7 integration/acceptance | CI typechecks, D2/D4 offline, native Chrome smoke workflows | Final-SHA real Pi and actual Mac/Windows/Linux install, owner acceptance, independent participant trials |
+
+## 2026-10-10 Search-view wave (working candidate based on `28d809537099fad04e6c32df2c647e266bacbca5`)
+
+- R1 moved the Search panel's status/meta/result/session-unavailable rendering and hit registry behind `apps/studio/public/core/views/search.js`; request, jump, tree/session, and frozen UI contracts remain in `create-studio-app.js`.
+- Local validation on this working candidate: 412 Studio tests passed; shared extracted-view/factory/static/Search suites passed; production and root test typechecks passed; Studio asset audit passed.
+- Local offline evidence: D2 `21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for authorization-gated D1 repro) and D4 `19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for owner-only B8 install/real-Pi acceptance); D2/D4 selftests and contract suites passed.
+- No local Chrome binary is available, so native Chrome was not rerun here. Existing PR-head Echo Chrome runs remain non-real-Pi evidence and do not close final-SHA, physical-install, owner-signoff, or trial gates.
 
 ## Verified CI facts (exact commit required)
 
