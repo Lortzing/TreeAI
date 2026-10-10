@@ -8,7 +8,7 @@ import type { TreeStudioService } from "../../service.ts";
 import type { MaterialImportService } from "../../materials/import-service.ts";
 import type { MaterialRangeResolver, ResolveSelectionInput } from "../../materials/range-resolver.ts";
 import type { MaterialBranchingService } from "../../materials/branching.ts";
-import { sendJson, sendPdfBytes, sendNoContent } from "../responses.ts";
+import { sendJson, sendPdfBytes, sendNoContent, type ApiErrorBody } from "../responses.ts";
 import {
   asTreeId, decodeFilenameHeader, readMaterialBody, readJsonBody,
   requireString, parseMaterialSelection,

@@ -11,7 +11,7 @@ test("B3/B9 D4 browser CLI default remains offline selftest without credentials"
   assert.match(USAGE,/--mode/);
 });
 test("browser CLI --only repetitions, flags, and order are preserved",()=>{
-  const x=parseCli(["--only","d4-read-and-select","--mode","selftest","--only","terminology-path","--keep-data"]);
+  const x=parseCli(["--keep-data","--only","d4-read-and-select","--mode","selftest","--only","terminology-path"]);
   assert.deepEqual(x.only,["d4-read-and-select","terminology-path"]);
   assert.equal(x.keepData,true);
 });
