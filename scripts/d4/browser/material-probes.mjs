@@ -207,7 +207,7 @@ export function pageSelectCanonical(blockId, start, end) {
     }
     blockEl.scrollIntoView({ block: "center" });
     const a = toAnchor(blockEl, localStart, true);
-    const b = toAnchor(blockEl, localEnd);
+    const b = toAnchor(blockEl, localEnd, false);
     if (a === null || b === null) return { error: "offsets did not map onto text nodes of ${blockId}" };
     const range = document.createRange();
     range.setStart(a.node, a.offset);
@@ -226,8 +226,8 @@ function pageSelectCrossBlock(blockA, localStartA, blockB, localEndB) {
     const elB = findBlock(${JSON.stringify(blockB)});
     if (elA === null || elB === null) return { error: "block not loaded" };
     elA.scrollIntoView({ block: "center" });
-    const a = toAnchor(elA, ${Number(localStartA)});
-    const b = toAnchor(elB, ${Number(localEndB)});
+    const a = toAnchor(elA, ${Number(localStartA)}, true);
+    const b = toAnchor(elB, ${Number(localEndB)}, false);
     if (a === null || b === null) return { error: "offsets did not map onto text nodes" };
     const range = document.createRange();
     range.setStart(a.node, a.offset);
@@ -255,8 +255,8 @@ function pageClickPoints(blockId, start, end) {
     const blockStart = Number(blockEl.dataset.start);
     const blocksEl = document.getElementById("mat-blocks");
     const rectOf = (localFrom, localTo) => {
-      const a = toAnchor(blockEl, localFrom);
-      const b = toAnchor(blockEl, localTo);
+      const a = toAnchor(blockEl, localFrom, true);
+      const b = toAnchor(blockEl, localTo, false);
       if (a === null || b === null) return null;
       const range = document.createRange();
       range.setStart(a.node, a.offset);
