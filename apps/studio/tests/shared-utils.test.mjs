@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createIsAtBottom } from "../public/shared/reading-position/scroll.js";
 import { createSelectionOffsetsWithin } from "../public/shared/source/selection.js";
 import { isElementNode, findReusableTurnElement } from "../public/core/dom.js";
+import { createMarkdownRenderer } from "../public/core/views/markdown.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
   const isAtBottom = createIsAtBottom(48);
@@ -25,4 +26,42 @@ test("DOM turn reuse excludes Return cards and requires exact turn text", () => 
   assert.equal(isElementNode(normal),true);
   assert.equal(findReusableTurnElement({children:[ret,normal]}, {id:"t1",text:"text"}),normal);
   assert.equal(findReusableTurnElement({children:[ret,normal]}, {id:"t1",text:"other"}),null);
+});
+
+
+test("R1 Markdown view preserves syntax, source offsets and styled text", () => {
+  function element(tag) {
+    return {
+      tag, className: "", title: "", children: [],
+      append(...nodes) { this.children.push(...nodes); },
+      set textContent(value) { this.children = [{ textContent: value }]; },
+      get textContent() { return this.children.map((node) => node.textContent).join(""); },
+    };
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: value }) };
+  const { renderMarkdownInto } = createMarkdownRenderer(document);
+  const source = "# Heading\nA **strong** [link](url) and 🚀\n\n~~~\nconst x = 1;\n~~~";
+  const container = element("div");
+  assert.equal(renderMarkdownInto(container, source, false), false);
+  assert.equal(container.textContent, source);
+  assert.ok(container.children.some((child) => child.className === "mat-h1"));
+  assert.ok(container.children.some((child) => child.className === "mat-code-line"));
+  assert.equal(container.textContent.indexOf("🚀"), source.indexOf("🚀"));
+});
+
+test("R1 Markdown view carries fenced-code state between material blocks", () => {
+  const element = () => ({
+    children: [], append(...nodes) { this.children.push(...nodes); },
+    set textContent(value) { this.children = [{ textContent: value }]; },
+    get textContent() { return this.children.map((node) => node.textContent).join(""); },
+  });
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: value }) };
+  const { renderMarkdownInto } = createMarkdownRenderer(document);
+  const first = element();
+  const open = renderMarkdownInto(first, "~~~\nconst x = 1;", false);
+  assert.equal(open, true);
+  assert.equal(first.textContent, "~~~\nconst x = 1;");
+  const second = element();
+  assert.equal(renderMarkdownInto(second, "const y = 2;\n~~~", open), false);
+  assert.equal(second.textContent, "const y = 2;\n~~~");
 });

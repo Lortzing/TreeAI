@@ -12,6 +12,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/shared/source/sha256.js": { file: "shared/source/sha256.js", type: "text/javascript; charset=utf-8" },
   "/core/create-studio-app.js": { file: "core/create-studio-app.js", type: "text/javascript; charset=utf-8" },
   "/core/dom.js": { file: "core/dom.js", type: "text/javascript; charset=utf-8" },
+  "/core/views/markdown.js": { file: "core/views/markdown.js", type: "text/javascript; charset=utf-8" },
   "/shared/source/selection.js": { file: "shared/source/selection.js", type: "text/javascript; charset=utf-8" },
   "/shared/reading-position/scroll.js": { file: "shared/reading-position/scroll.js", type: "text/javascript; charset=utf-8" },
 };
