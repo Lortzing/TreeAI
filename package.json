@@ -30,7 +30,8 @@
     "package:d4": "node scripts/d4/package-installer.mjs",
     "smoke:d4-installer": "node scripts/d4/installer/smoke-bundle.mjs",
     "test:d4-installer": "node --test tests/unit/d4-7-installer.test.ts",
-    "test:d4-macos-local": "node scripts/d4/installer/test-macos-local.mjs"
+    "test:d4-macos-local": "node scripts/d4/installer/test-macos-local.mjs",
+    "audit:studio-assets": "node scripts/audit-studio-assets.mjs"
   },
   "devDependencies": {
     "@types/node": "24.13.5",
