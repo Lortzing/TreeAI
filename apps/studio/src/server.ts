@@ -2,6 +2,7 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { sendError } from "./http/errors.ts";
+import { createSseStream } from "./http/sse.ts";
 import { createStaticResponder } from "./http/static.ts";
 import { readJsonBody, requireString, parseMaterialSelection, readMaterialBody, decodeFilenameHeader, parseSearchQuery, navNumberParam, navPageOptions, parseNavExpandStateBody, asTreeId } from "./http/requests.ts";
 import { sendJson, sendNoContent, sendPdfBytes, type ApiErrorBody } from "./http/responses.ts";
@@ -17,7 +18,6 @@ import { SEARCH_DOCUMENT_KINDS, SearchService, toContractSearchHit } from "./sea
 import { NavEngineError, type NavSearchMode } from "./nav/nav-engine.ts";
 import { NavService } from "./nav/nav-service.ts";
 
-const SSE_HEARTBEAT_MS = 15_000;
 const JOURNAL_DEFAULT_LIMIT = 50;
 const JOURNAL_MAX_LIMIT = 500;
 
@@ -87,38 +87,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
    * UI 事件；~15s 心跳注释；客户端断开即退订。headers 写出后不再抛错
    * （写失败静默——客户端已断开时 write 不 throw）。
    */
-  function startSseStream(req: IncomingMessage, res: ServerResponse, treeId: TreeId, snapshot: TreeDiagnostics): void {
-    res.writeHead(200, {
-      "content-type": "text/event-stream; charset=utf-8",
-      "cache-control": "no-store",
-      connection: "keep-alive",
-    });
-    res.write(": connected\n\n");
-    const writeEvent = (name: string, data: unknown): void => {
-      res.write(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
-    };
-    writeEvent("snapshot", snapshot);
-    const unsubscribe = service.subscribeStudioEvents((event) => {
-      if (event.treeId !== treeId) return;
-      writeEvent(event.type, event);
-    });
-    const heartbeat = setInterval(() => {
-      res.write(": heartbeat\n\n");
-    }, SSE_HEARTBEAT_MS);
-    heartbeat.unref?.();
-    sseResponses.add(res);
-    let closed = false;
-    const cleanup = (): void => {
-      if (closed) return;
-      closed = true;
-      clearInterval(heartbeat);
-      unsubscribe();
-      sseResponses.delete(res);
-      res.end();
-    };
-    req.on("close", cleanup);
-    res.on("close", cleanup);
-  }
+  const startSseStream = createSseStream(service, sseResponses);
 
   const server = createServer((req, res) => {
     void handle(req, res);
