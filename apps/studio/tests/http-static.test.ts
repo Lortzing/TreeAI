@@ -19,7 +19,7 @@ async function call(pathname: string) {
 test("ESM and CSS static allowlist serves correct content type", async () => {
   for (const path of ["/app.js", "/core/create-studio-app.js", "/core/dom.js",
     "/shared/source/sha256.js", "/shared/source/selection.js",
-    "/shared/reading-position/scroll.js", "/features/return/presentation.js"]) {
+    "/shared/reading-position/scroll.js"]) {
     const r=await call(path);
     assert.equal(r.handled,true,path);
     assert.equal(r.status,200,path);

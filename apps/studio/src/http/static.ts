@@ -14,7 +14,6 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/core/dom.js": { file: "core/dom.js", type: "text/javascript; charset=utf-8" },
   "/shared/source/selection.js": { file: "shared/source/selection.js", type: "text/javascript; charset=utf-8" },
   "/shared/reading-position/scroll.js": { file: "shared/reading-position/scroll.js", type: "text/javascript; charset=utf-8" },
-  "/features/return/presentation.js": { file: "features/return/presentation.js", type: "text/javascript; charset=utf-8" },
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
