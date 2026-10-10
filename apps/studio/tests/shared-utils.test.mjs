@@ -6,6 +6,7 @@ import { isElementNode, findReusableTurnElement } from "../public/core/dom.js";
 import { createMarkdownRenderer } from "../public/core/views/markdown.js";
 import { createSearchView } from "../public/core/views/search.js";
 import { createReturnCardRenderer } from "../public/core/views/return.js";
+import { createDiagnosticsView } from "../public/core/views/diagnostics.js";
 import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
@@ -304,4 +305,94 @@ test("R1 Return view preserves anchored/fallback source facts and adoption state
     focusRunId: deliveredId,
     trigger: { kind: "return-card", turnId: "return-delivered" },
   }]);
+});
+
+
+test("R1 diagnostics view preserves run, policy, and failure-panel states", () => {
+  function element(tag) {
+    const node = {
+      tag,
+      className: "",
+      hidden: false,
+      disabled: false,
+      children: [],
+      listeners: {},
+      append(...nodes) { this.children.push(...nodes); },
+      replaceChildren(...nodes) { this.children = [...nodes]; },
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      set textContent(value) { this.children = [{ textContent: String(value) }]; },
+      get textContent() { return this.children.map((child) => child.textContent ?? "").join(""); },
+    };
+    return node;
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: String(value) }) };
+  const nodes = new Map();
+  for (const id of ["diagnostics-bar", "failure-panel", "run-status", "run-detail", "abort-run", "policy-note"]) {
+    nodes.set(id, element(id));
+  }
+  const state = { diagnostics: null, treeState: null, dismissedFailureRunIds: new Set() };
+  const view = createDiagnosticsView({
+    document,
+    getElement: (id) => nodes.get(id),
+    getState: () => state,
+    branchLabel: (id) => id === "branch-1" ? "Branch 1" : id,
+  });
+
+  view.renderDiagnostics();
+  assert.equal(nodes.get("diagnostics-bar").hidden, true);
+  assert.equal(nodes.get("failure-panel").hidden, true);
+
+  state.treeState = {};
+  state.diagnostics = {
+    runtimeState: "idle", activeRun: null, runs: [],
+    policyDecisions: { observed: false, reason: "offline" },
+  };
+  view.renderDiagnostics();
+  assert.equal(nodes.get("diagnostics-bar").hidden, false);
+  assert.equal(nodes.get("run-status").textContent, "idle");
+  assert.equal(nodes.get("run-detail").textContent, "no runs yet");
+  assert.equal(nodes.get("abort-run").hidden, true);
+  assert.equal(nodes.get("policy-note").textContent, "policy: no decisions observed — offline");
+
+  state.diagnostics = {
+    runtimeState: "streaming",
+    activeRun: { runId: "run-active", branchId: "branch-1" },
+    runs: [{ runId: "run-old", state: "aborted", failure: null }],
+    policyDecisions: {
+      observed: true,
+      decisions: [{ tool: "read", outcome: "allow", ruleId: "rule-1" }],
+    },
+  };
+  view.renderDiagnostics();
+  assert.equal(nodes.get("run-status").className, "run-status streaming");
+  assert.match(nodes.get("run-detail").textContent, /active run on Branch 1/);
+  assert.match(nodes.get("run-detail").textContent, /last run: aborted/);
+  assert.equal(nodes.get("abort-run").textContent, "Abort run");
+  assert.equal(nodes.get("abort-run").disabled, false);
+  assert.match(nodes.get("policy-note").textContent, /1 decision\(s\) observed/);
+  assert.match(nodes.get("policy-note").textContent, /latest: read allow \(rule-1\)/);
+
+  state.diagnostics.runtimeState = "aborting";
+  view.renderDiagnostics();
+  assert.equal(nodes.get("abort-run").textContent, "Aborting…");
+  assert.equal(nodes.get("abort-run").disabled, true);
+
+  state.diagnostics = {
+    runtimeState: "idle", activeRun: null,
+    runs: [{ runId: "run-failed-123456789", state: "failed", failure: { code: "session-corrupt", message: "missing session" } }],
+    policyDecisions: { observed: false, reason: "offline" },
+  };
+  view.renderDiagnostics();
+  assert.match(nodes.get("failure-panel").textContent, /session-corrupt: missing session/);
+  assert.equal(nodes.get("failure-panel").children[0].className, "failure-panel-label");
+  assert.match(nodes.get("failure-panel").children[0].textContent, /Run run-failed-1… failed/);
+  assert.equal(nodes.get("failure-panel").children[1].className, "failure-panel-dismiss");
+  nodes.get("failure-panel").children[1].listeners.click();
+  assert.equal(nodes.get("failure-panel").hidden, true);
+  view.renderDiagnostics();
+  assert.equal(nodes.get("failure-panel").hidden, true);
+
+  state.diagnostics.runs.push({ runId: "run-new-failed", state: "failed", failure: { code: "other", message: "new failure" } });
+  view.renderDiagnostics();
+  assert.match(nodes.get("failure-panel").textContent, /new failure/);
 });

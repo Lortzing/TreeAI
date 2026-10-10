@@ -5,6 +5,7 @@ Start from the narrowest owner and its tests; expand only when crossing a public
 | Task | Start here | Broaden when necessary | Verification |
 | --- | --- | --- | --- |
 | Studio startup/UI state | `apps/studio/public/app.js`, `core/create-studio-app.js` | ESM/static/installer wiring | Studio scripted DOM + native Chrome |
+| Studio diagnostics/status | `public/core/views/diagnostics.js`, `public/core/create-studio-app.js` | diagnostics refresh/polling/SSE and abort controller | diagnostics/failure UI + Studio suite |
 | Source identity/offsets | `public/shared/source/{sha256,selection}.js`, `public/core/dom.js` | Server range resolver and Unicode contract | source SHA/selection + fixed range cases |
 | Reading position | `public/shared/reading-position/scroll.js` | Material reader or branch navigation | bottom-follow + Chrome scrolling |
 | Return rendering/source | `public/core/views/return.js`, `public/core/create-studio-app.js` | Return write/adoption in `src/service.ts`; material Return and shared motion maps remain in factory | W1 replay/conflict/source/display |

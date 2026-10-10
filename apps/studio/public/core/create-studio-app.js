@@ -11,6 +11,7 @@ import { isElementNode, findReusableTurnElement } from "./dom.js";
 import { createMarkdownRenderer } from "./views/markdown.js";
 import { createSearchView, SEARCH_KIND_LABELS, SEARCH_KIND_ORDER } from "./views/search.js";
 import { createReturnCardRenderer } from "./views/return.js";
+import { createDiagnosticsView } from "./views/diagnostics.js";
 import { clampToGraphemeBoundaries } from "../shared/source/grapheme.js";
 
 export function createStudioApp(deps) {
@@ -1764,88 +1765,12 @@ $("return-input").addEventListener("input", () => {
 
 /* ------------------------------ 诊断面 ------------------------------ */
 
-function renderDiagnostics() {
-  const diag = state.diagnostics;
-  const bar = $("diagnostics-bar");
-  if (diag === null || state.treeState === null) {
-    bar.hidden = true;
-    renderFailurePanel(null);
-    return;
-  }
-  bar.hidden = false;
-
-  const status = $("run-status");
-  status.textContent = diag.runtimeState;
-  status.className = `run-status ${diag.runtimeState}`;
-
-  const parts = [];
-  if (diag.activeRun !== null) {
-    parts.push(`active run on ${branchLabel(diag.activeRun.branchId)}`);
-  }
-  const last = diag.runs.length > 0 ? diag.runs[diag.runs.length - 1] : null;
-  const detail = $("run-detail");
-  detail.replaceChildren();
-  if (parts.length > 0) {
-    detail.append(document.createTextNode(`${parts.join(" · ")} · `));
-  }
-  if (last === null) {
-    detail.append(document.createTextNode("no runs yet"));
-  } else {
-    /* 终态呈现可区分：aborted 单独着色（中止是显式用户动作，非失败）。 */
-    const stateSpan = document.createElement("span");
-    stateSpan.className = `last-run-state ${last.state}`;
-    stateSpan.textContent = `last run: ${last.state}`;
-    detail.append(stateSpan);
-  }
-
-  /* P1 失败面板（持久、不自动消失）：最新失败 run 的 code+消息+定位，
-     可手动关闭；dismiss 后该 run 不再复显（新失败会再次出现）。 */
-  const lastFailed = [...diag.runs].reverse().find((run) => run.failure !== null) ?? null;
-  renderFailurePanel(lastFailed);
-
-  const abortButton = $("abort-run");
-  const isActive = diag.activeRun !== null;
-  abortButton.hidden = !isActive;
-  abortButton.textContent = diag.runtimeState === "aborting" ? "Aborting…" : "Abort run";
-  abortButton.disabled = diag.runtimeState === "aborting";
-
-  /* 如实呈现：默认装配未观测任何策略决策；观测到的决定（含拒绝）按
-     脱敏 provenance 呈现（工具名/outcome/规则来源——参数/路径/命令
-     绝不出现在诊断面）。 */
-  const policy = diag.policyDecisions;
-  if (policy.observed === false) {
-    $("policy-note").textContent = `policy: no decisions observed — ${policy.reason}`;
-  } else {
-    const latest = policy.decisions[policy.decisions.length - 1];
-    const latestNote =
-      latest === undefined
-        ? ""
-        : ` — latest: ${latest.tool ?? "unknown tool"} ${latest.outcome} (${latest.ruleId ?? "no rule"})`;
-    $("policy-note").textContent = `policy: ${String(policy.decisions.length)} decision(s) observed${latestNote}`;
-  }
-}
-
-/** 失败面板渲染（P1）。run 为 null 或已被 dismiss → 隐藏。 */
-function renderFailurePanel(run) {
-  const panel = $("failure-panel");
-  if (run === null || run.failure === null || state.dismissedFailureRunIds.has(run.runId)) {
-    panel.hidden = true;
-    return;
-  }
-  panel.replaceChildren();
-  const label = document.createElement("span");
-  label.className = "failure-panel-label";
-  label.textContent = `Run ${run.runId.slice(0, 12)}… failed — ${run.failure.code}: ${run.failure.message}`;
-  const dismiss = document.createElement("button");
-  dismiss.className = "failure-panel-dismiss";
-  dismiss.textContent = "Dismiss";
-  dismiss.addEventListener("click", () => {
-    state.dismissedFailureRunIds.add(run.runId);
-    renderFailurePanel(run);
-  });
-  panel.append(label, dismiss);
-  panel.hidden = false;
-}
+const { renderDiagnostics } = createDiagnosticsView({
+  document,
+  getElement: $,
+  getState: () => state,
+  branchLabel,
+});
 
 async function refreshDiagnostics() {
   if (state.currentTreeId === null) {
