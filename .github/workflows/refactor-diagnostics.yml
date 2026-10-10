@@ -57,6 +57,9 @@ jobs:
           echo "Inspecting latest B6 verifier log (no pass/fail override)"
           file=$(find evidence/d4/runs -type f -name '*b6-scale-performance*' 2>/dev/null | sort | tail -n 1)
           if [ -n "$file" ]; then sed -n '1,120p' "$file"; else echo "No B6 log found"; fi
+      - name: D4 CLI refactor contract tests
+        if: always()
+        run: node --test scripts/d4/browser/cli.test.mjs
       - name: D4 verifier failure-injection selftest
         if: always()
         run: node scripts/verify-d4-selftest.js
