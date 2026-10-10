@@ -276,32 +276,52 @@ function pdfLayerSelectExpr(blockId, start, end) {
 /** 触摸手势进行内置位选区（app 的触路径：selectionchange 武装，零鼠标事件）。
     手势坐标取选区中点（拖选语义）。 */
 async function touchDragSelect(ctx, placementExpr) {
+  // Resolve a real text-layer hit point, then clear the probe's initial
+  // selection: it must be created *during* touch, not before touchStart.
+  // Otherwise Chrome can clear it on touchEnd before selectionchange arms
+  // the reader, which does not model a user dragging text on a touch screen.
+  const point = await ctx.evalJs(placementExpr);
+  if (point === null || point.error !== undefined) {
+    throw new Error(`touch-drag selection could not be placed — ${JSON.stringify(point)}`);
+  }
+  await ctx.evalJs(`(() => { window.getSelection().removeAllRanges(); return true; })()`);
+  await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: point.x, y: point.y, id: 1 }] });
+  await sleep(60);
   const placed = await ctx.evalJs(placementExpr);
   if (placed === null || placed.error !== undefined) {
-    throw new Error(`touch-drag selection could not be placed — ${JSON.stringify(placed)}`);
+    await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    throw new Error(`touch-drag selection failed during active touch — ${JSON.stringify(placed)}`);
   }
-  await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: placed.x, y: placed.y, id: 1 }] });
-  await sleep(60);
   const stillSelected = await ctx.evalJs(`(() => String(window.getSelection()))()`);
+  await sleep(80);
+  const barDuring = await readCaptureBar(ctx);
   await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await sleep(120);
-  return { placed, stillSelected };
+  const afterRelease = await ctx.evalJs(`(() => String(window.getSelection()))()`);
+  return { placed, stillSelected, barDuring, afterRelease };
 }
 
 /** README「Studio (D3 MVP) — local install & start」段解析（运行时读取，
     绝不内嵌副本——与文档漂移即失败）。 */
 function readReadmeStudioSection(root) {
   const text = readFileSync(join(root, "README.md"), "utf8");
-  const heading = "## Studio (D3 MVP) — local install & start";
+  // The R5 README keeps the actual CLI instructions but uses a shorter heading.
+  // Accept both historical and current section names; verify commands and flags
+  // against the real studio executable below rather than locking old prose.
+  const headings = ["## Run locally", "## Studio (D3 MVP) — local install & start"];
+  const heading = headings.find((h) => text.includes(h));
+  if (heading === undefined) throw new Error(`README.md has no local Studio install/start section (expected one of ${headings.join(", ")})`);
   const start = text.indexOf(heading);
-  if (start < 0) throw new Error(`README.md does not carry the studio section heading: ${heading}`);
   const next = text.indexOf("\n## ", start + 1);
   const section = text.slice(start, next < 0 ? undefined : next);
-  const codeBlock = /```bash\n([\s\S]*?)```/.exec(section)?.[1] ?? "";
-  const commandLines = codeBlock.split("\n").map((l) => l.trim()).map((l) => l.replace(/\s+#.*$/, "").trim()).filter((l) => l.length > 0 && !l.startsWith("#"));
-  const startCommand = commandLines.find((l) => l.startsWith("npm run start")) ?? null;
-  const installCommand = commandLines.find((l) => l.startsWith("npm ci")) ?? null;
-  const optionsLine = section.split("\n").map((l) => l.trim()).find((l) => l.startsWith("Options:")) ?? null;
+  const codeBlocks = [...section.matchAll(/```(?:sh|bash)\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const commandLines = codeBlocks.flatMap((block) => block.split("\n"))
+    .map((l) => l.trim()).map((l) => l.replace(/\s+#.*$/, "").trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#"));
+  const startCommand = commandLines.find((l) => l === "npm run start --workspace @treeai/studio") ?? null;
+  const installCommand = commandLines.find((l) => l === "npm ci") ?? null;
+  const optionsLine = section.split("\n").map((l) => l.trim()).find((l) => l.startsWith("Options:"))
+    ?? commandLines.find((l) => l.includes("npm run start") && l.includes("--port") && l.includes("--data")) ?? null;
   return { heading, startCommand, installCommand, optionsLine, urlLine: /http:\/\/127\.0\.0\.1:\d+/.exec(section)?.[0] ?? null };
 }
 
@@ -375,6 +395,12 @@ export async function probeBetaUsability(ctx) {
         flagsWithinReadmeOptions: actualArgv.includes("--port") && actualArgv.includes("--data"),
       };
       const problems = [];
+      if (readme.installCommand !== "npm ci") {
+        problems.push("README no longer documents npm ci");
+      }
+      if (readme.urlLine !== "http://127.0.0.1:8787") {
+        problems.push(`README local URL changed: ${String(readme.urlLine)}`);
+      }
       if (readme.startCommand !== "npm run start --workspace @treeai/studio") {
         problems.push(`README start command is ${JSON.stringify(readme.startCommand)}`);
       }
@@ -815,7 +841,21 @@ export async function probeBetaUsability(ctx) {
           `touch: the in-gesture selection on the pdf text layer did not hold — placed ${JSON.stringify(drag.placed.selectedText)}, at touchEnd ${JSON.stringify(drag.stillSelected)}, want ${JSON.stringify(pdfRange.excerpt)}`,
         );
       }
-      const bar = await waitForArmedBar(ctx, "touch pdf-01 selection", 6000);
+      let bar;
+      try {
+        bar = await waitForArmedBar(ctx, "touch pdf-01 selection", 6000);
+      } catch (error) {
+        const diagnostic = await ctx.evalJs(`(() => {
+          const s = window.getSelection(), r = s && s.rangeCount ? s.getRangeAt(0) : null;
+          const frame = document.querySelector("#mat-blocks .pdf-page-frame");
+          return { selectionText: s?.toString() ?? null, rangeText: r?.toString() ?? null,
+            collapsed: r?.collapsed ?? null, anchor: r?.startContainer?.parentElement?.className ?? null,
+            focus: r?.endContainer?.parentElement?.className ?? null,
+            readerOpen: !document.getElementById("material-reader")?.hidden,
+            pdfFrames: document.querySelectorAll("#mat-blocks .pdf-page-frame").length };
+        })()`);
+        throw new Error(`touch pdf-01 selection: duringArmed=${String(drag.barDuring.payload !== null)}, afterReleaseLen=${String(drag.afterRelease.length)}, heldLen=${String(drag.stillSelected.length)}, placedLen=${String(drag.placed.selectedText.length)}; ${String(error)}; native diagnostic ${JSON.stringify(diagnostic)}`);
+      }
       if (bar.payload === null) {
         throw new Error(`touch: the capture bar did not arm with a payload — ${JSON.stringify(bar)}`);
       }

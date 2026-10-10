@@ -167,15 +167,25 @@ const PAGE_HELPERS = `
     }
     return null;
   };
-  const toAnchor = (blockEl, localOffset) => {
+  const toAnchor = (blockEl, localOffset, preferNextOnBoundary = false) => {
     const walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT);
     let pos = 0;
+    let last = null;
     for (;;) {
       const node = walker.nextNode();
-      if (node === null) return null;
+      if (node === null) return last && localOffset === pos ? last : null;
       const len = node.data.length;
-      if (localOffset <= pos + len) return { node, offset: localOffset - pos };
+      /* Adjacent DOM positions can represent the same canonical UTF-16 offset.
+         Prefer the *next* rendered text node for selection starts: in the PDF
+         geometry layer, an exact line boundary may otherwise anchor in the
+         preceding direct newline node, which Chrome treats as unselectable.
+         Never adjust offsets/excerpts or manufacture a selection. */
+      if (localOffset < pos + len ||
+          (localOffset === pos + len && !preferNextOnBoundary)) {
+        return { node, offset: localOffset - pos };
+      }
       pos += len;
+      last = { node, offset: len };
     }
   };
 `;
@@ -196,8 +206,8 @@ export function pageSelectCanonical(blockId, start, end) {
       return { error: "canonical range [${start}, ${end}) is outside block ${blockId}" };
     }
     blockEl.scrollIntoView({ block: "center" });
-    const a = toAnchor(blockEl, localStart);
-    const b = toAnchor(blockEl, localEnd);
+    const a = toAnchor(blockEl, localStart, true);
+    const b = toAnchor(blockEl, localEnd, false);
     if (a === null || b === null) return { error: "offsets did not map onto text nodes of ${blockId}" };
     const range = document.createRange();
     range.setStart(a.node, a.offset);
@@ -216,8 +226,8 @@ function pageSelectCrossBlock(blockA, localStartA, blockB, localEndB) {
     const elB = findBlock(${JSON.stringify(blockB)});
     if (elA === null || elB === null) return { error: "block not loaded" };
     elA.scrollIntoView({ block: "center" });
-    const a = toAnchor(elA, ${Number(localStartA)});
-    const b = toAnchor(elB, ${Number(localEndB)});
+    const a = toAnchor(elA, ${Number(localStartA)}, true);
+    const b = toAnchor(elB, ${Number(localEndB)}, false);
     if (a === null || b === null) return { error: "offsets did not map onto text nodes" };
     const range = document.createRange();
     range.setStart(a.node, a.offset);
@@ -245,8 +255,8 @@ function pageClickPoints(blockId, start, end) {
     const blockStart = Number(blockEl.dataset.start);
     const blocksEl = document.getElementById("mat-blocks");
     const rectOf = (localFrom, localTo) => {
-      const a = toAnchor(blockEl, localFrom);
-      const b = toAnchor(blockEl, localTo);
+      const a = toAnchor(blockEl, localFrom, true);
+      const b = toAnchor(blockEl, localTo, false);
       if (a === null || b === null) return null;
       const range = document.createRange();
       range.setStart(a.node, a.offset);
@@ -446,9 +456,31 @@ async function captureFrozenSelection(ctx, { treeId, material, item, truth, page
     throw new Error(`${item.id}: canonical selection could not be placed — ${JSON.stringify(placed)}`);
   }
   if (placed.selectedText !== expected.excerpt) {
+    // Failure-only native browser evidence. No test denominator or expected
+    // source is changed, and this never repairs a mismatched selection.
+    const diagnostic = await ctx.evalJs(`(() => {
+      const s = window.getSelection();
+      const range = s && s.rangeCount ? s.getRangeAt(0) : null;
+      const layer = [...document.querySelectorAll("#mat-blocks .pdf-page-text, #mat-blocks .material-block")]
+        .find((el) => el.dataset?.blockId === ${JSON.stringify(expected.blockId)});
+      const style = layer ? getComputedStyle(layer) : null;
+      return {
+        rangeText: range ? range.toString() : null,
+        selectionText: s ? s.toString() : null,
+        collapsed: range ? range.collapsed : null,
+        anchorNode: range?.startContainer?.parentElement?.className ?? null,
+        focusNode: range?.endContainer?.parentElement?.className ?? null,
+        layerLength: layer ? layer.textContent.length : null,
+        lineCount: layer ? layer.querySelectorAll(".pdf-line").length : null,
+        rendered: layer?.dataset?.rendered ?? null,
+        userSelect: style?.userSelect ?? null,
+        visibility: style?.visibility ?? null
+      };
+    })()`);
     throw new Error(
       `${item.id}: the DOM selection does not reproduce the frozen excerpt ` +
-        `(got ${JSON.stringify(placed.selectedText)}, want ${JSON.stringify(expected.excerpt)})`,
+        `(got ${JSON.stringify(placed.selectedText)}, want ${JSON.stringify(expected.excerpt)}; ` +
+        `native diagnostics: ${JSON.stringify(diagnostic)})`,
     );
   }
   const bar = await waitForArmedBar(ctx, item.id);

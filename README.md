@@ -1,95 +1,92 @@
 # TreeAI
 
-Trusted-local, tree-structured agent runtime built on the [Pi coding agent SDK](https://www.npmjs.com/package/@earendil-works/pi-coding-agent).
+TreeAI is a local thinking workspace built on the Pi Agent SDK. Start with a question, branch from a specific source in a conversation or Markdown/PDF material, then explicitly Return useful findings to the main thread. Sources remain independently readable when the model session is no longer available.
 
-> **Status: D2 (engineering convergence) — Wave 1 delivered, Wave 2 offline closure done.**
-> D2 turns the D1-validated Pi SDK capabilities into a maintainable, testable,
-> recoverable first-version runtime. D2 is **not** production release approval.
+**Status:** local Beta under development, not a completed cross-platform or human-accepted release. Saved conversations, terminology annotations, source selection, material search, hierarchical navigation, export/restore and Return have code paths; final-candidate gates remain independent.
 
-- **Route** (ADR-001, Accepted 2026-09-20): TypeScript/Node.js + Pi SDK in-process embedding. Same-process risk is accepted **only** in trusted-local mode — this is not a sandbox or security boundary.
-- **Pinned baselines**: Node `24.21.0` / npm `11.19.0` (engines), TypeScript `5.9.3`, Pi `@earendil-works/pi-coding-agent@0.85.1` (exact; `latest`/`*`/ranges/Git HEAD are forbidden). Deviations require an explicit upgrade record and regression.
-- **Data boundary** (ADR-001 §4): the TreeAI-owned database is the fact source for Forest/Tree/Branch/Episode/Run; Pi sessions are only referenced (sessionFile/sessionId/entryId) for recovery and replay. TreeAI never writes Pi session JSONL and never copies credentials.
+- [Current acceptance status](docs/acceptance/status.md)
+- [Documentation index](docs/index.md)
+- [Product authority](docs/product/index.md)
 
-## Non-negotiable rules
+## Run locally
 
-1. **`d1-spikes/` is read-only** in D2. It is the D1 evidence area: no rewriting history, no deleting failed runs, no moving probe files into production directories. D1 regression stays executable via `./d1-spikes/scripts/verify-d1 --repro` as a version-upgrade gate.
-2. **Pi type isolation**: only `packages/runtime-pi` may depend on / import `@earendil-works/pi-coding-agent`. `contracts`, `persistence`, `tool-policy` and `event-journal` must not import Pi types; TreeAI exposes its own session-reference, event, error and run-state types.
-3. **Gate order is strict**: Gate 0 (scaffold & contract freeze) → Wave 1 (parallel module work) → Gate 1 (module acceptance) → Wave 2 (integration) → Gate 2 (automated acceptance) → Wave 3 (owner acceptance). No skipping; Gate 0 not passed means no parallel development.
-4. Root `package.json` / `package-lock.json` / `tsconfig.base.json` are Integrator-only; new dependencies go through `coordination/d2/` requests.
+Pinned: Node `24.21.0`, npm `11.19.0`.
 
-## Workspace layout
-
-```text
-packages/contracts      frozen core contracts & domain types   (Agent A)
-packages/runtime-pi     PiRuntime — Pi SDK lifecycle            (Agent B)
-packages/persistence    TreeRepository, migrations             (Agent C)
-packages/tool-policy    default-deny tool policy               (Agent D)
-packages/event-journal  append-only journal & run-state         (Agent E)
-apps/runtime-smoke      end-to-end integration app             (Integrator)
-apps/studio             D3 Core MVP local web surface (offline echo default)
-coordination/d2/        agent status files & dependency requests
-evidence/d2/            append-only verification evidence
+```sh
+npm ci
+npm run build:deps --workspace @treeai/studio
+npm run start --workspace @treeai/studio
 ```
 
-Dependency direction: `apps/runtime-smoke` → { runtime-pi, persistence, tool-policy, event-journal } → `contracts`; `apps/studio` → { runtime-pi, persistence } → `contracts`. No lateral package dependencies; cooperate through `contracts`.
+Open `http://127.0.0.1:8787`. Default driver is offline Echo; no model key is required.
 
-## Commands
+Set a persistent data directory and port:
 
-| Command | Status (2026-09-28, D2 live conditional closeout) |
-|---|---|
-| `npm ci` | working — clean install from the lockfile |
-| `npm run typecheck` | working — all six workspaces with TypeScript sources checked |
-| `npm test` | working — five package suites + Agent F unit (75) / integration (8) / live selftest (3, offline fake driver) |
-| `npm run test:integration` | working — `apps/runtime-smoke` (Wave 2 offline integration, 2/2) + Agent F integration (8/8) |
-| `npm run verify:d2` | working — default offline run records the optional `d1-repro` as NOT_RUN (exit 3); `npm run verify:d2 -- --d1-repro` passed 21/21 checks (exit 0) |
-| `npm run verify:d2:selftest` | working — verifier failure-injection selftest, 4/4 |
-| `npm run verify:d2:live` | working — controlled real-Pi run passed 9/9 checks; credentialless runs remain BLOCKED (exit 3) by design |
-
-Exit-code convention (shared with the D2 verifier): `0` all PASS · `1` tool error · `2` at least one FAIL · `3` no FAIL but BLOCKED/NOT_RUN present.
-
-What was actually verified, what was not, and what needs an owner decision:
-see `docs/d2/D2-verification.md`, `docs/d2/D2-known-limitations.md` and
-`docs/d2/D2-owner-checklist.md`.
-
-## Studio (D3 MVP) — local install & start
-
-```bash
-npm ci                                     # pinned Node 24.21.0 / npm 11.19.0
-npm run start --workspace @treeai/studio   # http://127.0.0.1:8787
+```sh
+npm run start --workspace @treeai/studio -- --data "/absolute/path/treeai-data" --port 8787
 ```
 
-Options: `--port N`, `--data DIR` (default `./treeai-studio-data/` under
-`apps/studio/` — SQLite DB + Pi session files, survives restarts). The default
-driver is the offline **echo** driver: deterministic, no network, no
-credentials, no `~/.pi` access. Real Pi is optional and credentialed —
-`--driver pi --provider ID --model ID` — with the API key supplied **only**
-through `TREEAI_STUDIO_API_KEY` (in-memory injection via runtime-pi credentials;
-never a CLI flag, never logged or persisted). The controlled Pi agent directory
-is `--agent-dir DIR`, defaulting to `<data>/pi-agent/`; Studio never silently
-reads `~/.pi`. Missing provider, model, API key, or an unusable agent directory
-fails at startup. Tools are disabled by default (zero tools, no policy — the
-default behavior is unchanged); the real-Pi driver can enable Pi's built-in
-tools behind the request-time ToolPolicy gate with `--pi-tools TOOL,TOOL`
-(e.g. `read`; needs a one-time `npm run build:deps --workspace @treeai/studio`,
-which compiles the ToolPolicy engine) and `--policy-read-roots DIR,DIR`
-(absolute, existing, comma-separated directories; defaults to
-`<data>/workspace/` and says so in the startup banner). The gate fails closed:
-reads outside the roots, all writes, shell, and network are denied before
-execution — a denial converges the run failed (`policy-denied`) with
-`tool.decision` provenance — and there is no CLI switch to relax it. Both flags
-are pi-driver-only and rejected elsewhere with explicit startup errors.
-Tests: `npm test --workspace @treeai/studio` (part of
-`npm test` and of the `verify:d2` offline CI gate). D3 status: offline Echo
-vertical slice only — Gate 2 / real-Pi acceptance and user trials are not
-complete.
+Saved product facts are in TreeAI storage; Pi sessions provide model continuation, not the only copy of your work.
 
-## Coordination & evidence
+## Real Pi (optional)
 
-- Agent status/handoff/dependency-request files: `coordination/d2/` (each file is written only by its owning agent; see `coordination/d2/README.md`).
-- Integrator status: `coordination/d2/integrator-status.md` (Wave 1) ·
-  `coordination/d2/integrator-wave2-status.md` (Wave 2 closure record).
-- Verification evidence (append-only): `evidence/d2/`.
+Supply an approved provider/model and a controlled agent directory. Provide the key via `TREEAI_STUDIO_API_KEY` in the environment, never in flags, code, screenshots or issues.
+
+```sh
+npm run start --workspace @treeai/studio -- \
+  --driver pi --provider "<provider-id>" --model "<model-id>" \
+  --data "/absolute/path/treeai-data" --agent-dir "/absolute/path/controlled-pi-agent"
+```
+
+Missing credentials or mismatched provider/model should fail explicitly. The Studio does not silently read `~/.pi`. Tools are disabled by default; the optional read-only tool policy requires explicit controlled configuration.
+
+## Structure
+
+| Path | Role |
+| --- | --- |
+| `apps/studio` | Native browser UI, loopback HTTP API, services |
+| `apps/runtime-smoke` | Runtime integration checks |
+| `packages/contracts` | SDK-independent TreeAI contracts |
+| `packages/runtime-pi` | Pi SDK session and event adapter |
+| `packages/persistence` | DB-backed product facts and transactions |
+| `packages/tool-policy` | Tool authorization |
+| `packages/event-journal` | Event/run journal |
+| `scripts` and `tests` | Tests, verifiers, probes and installers |
+| `docs` | Architecture, developer navigation, product rules and status |
+| `evidence` | Acceptance evidence; cleanup only after whole-project acceptance |
+| `d1-spikes` | Read-only D1 baseline and regression sources |
+
+[Architecture](docs/architecture/overview.md) · [Task map](docs/development/task-map.md) · [Testing](docs/development/testing.md)
+
+## Checks
+
+```sh
+npm run typecheck
+npm test
+npm run verify:d2
+npm run verify:d2:selftest
+npm run verify:d4
+npm run verify:d4:selftest
+```
+
+Exit code `3` means a gated check is BLOCKED/NOT_RUN, not that the entire project passed. Real browser, real Pi, Mac signoff, participant trials and actual target-platform installer verification must be recorded on the final SHA.
+
+To generate a reviewable tracked-file baseline without dumping it into agent context:
+
+```sh
+node scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json
+```
+
+See [testing guidance](docs/development/testing.md) before moving or deleting code. In particular, moving a browser module also requires a static route and installer asset audit, and moving a test requires updating discovery.
+
+## Installer targets
+
+Planned targets: macOS Apple Silicon, Windows 11 x64, Ubuntu 24.04 x64. Availability and tested artifacts are tracked in [D4 status](docs/d4/D4-status.md); this README does not invent a download URL.
+
+## Contributing
+
+Read [AGENTS.md](AGENTS.md), [task map](docs/development/task-map.md), and the authoritative product rules before changing a cross-cutting boundary. Report issues with version, complete SHA, OS/browser, reproduction and sanitized errors. Do not attach API keys or full personal materials.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — [LICENSE](LICENSE).
