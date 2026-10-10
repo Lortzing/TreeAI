@@ -854,7 +854,7 @@ export async function probeBetaUsability(ctx) {
             readerOpen: !document.getElementById("material-reader")?.hidden,
             pdfFrames: document.querySelectorAll("#mat-blocks .pdf-page-frame").length };
         })()`);
-        throw new Error(`touch pdf-01 selection: ${String(error)}; drag lifecycle ${JSON.stringify(drag)}; native diagnostic ${JSON.stringify(diagnostic)}`);
+        throw new Error(`touch pdf-01 selection: duringArmed=${String(drag.barDuring.payload !== null)}, afterReleaseLen=${String(drag.afterRelease.length)}, heldLen=${String(drag.stillSelected.length)}, placedLen=${String(drag.placed.selectedText.length)}; ${String(error)}; native diagnostic ${JSON.stringify(diagnostic)}`);
       }
       if (bar.payload === null) {
         throw new Error(`touch: the capture bar did not arm with a payload — ${JSON.stringify(bar)}`);
