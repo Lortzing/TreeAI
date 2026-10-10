@@ -9261,6 +9261,38 @@ registerDocumentListener("keydown", (event) => {
   }
 });
 
+/* Native touch selection may be cleared by Chrome on touchEnd even after the
+   reader captured a valid selection during the gesture. Preserve that exact
+   captured payload through the release's transient empty selectionchange;
+   never synthesize a range, and reset the grace on the next touchstart.
+   A later explicit clear/outside gesture still disarms as before. */
+let materialTouchStartKey = null;
+let materialTouchReleaseGraceUntil = 0;
+function materialTouchKey(selection) {
+  if (selection === null) return null;
+  return selection.kind === "valid"
+    ? [selection.materialId, selection.versionId, selection.blockId, selection.start, selection.end].join(":")
+    : [selection.materialId, selection.versionId, selection.kind, selection.reason].join(":");
+}
+registerDocumentListener("touchstart", () => {
+  materialTouchStartKey = materialTouchKey(state.materialSelection);
+  materialTouchReleaseGraceUntil = 0;
+});
+registerDocumentListener("touchend", (event) => {
+  const target = event.target;
+  const inReader = target !== null && typeof target.closest === "function" &&
+    target.closest("#mat-blocks") !== null;
+  const key = materialTouchKey(state.materialSelection);
+  if (inReader && key !== null && key !== materialTouchStartKey) {
+    materialTouchReleaseGraceUntil = Date.now() + 350;
+  }
+  materialTouchStartKey = null;
+});
+registerDocumentListener("touchcancel", () => {
+  materialTouchStartKey = null;
+  materialTouchReleaseGraceUntil = 0;
+});
+
 /* ③ 触屏选区（selectionchange 武装——与 mouseUp 同一武装守卫）：长按/拖
    动把手产生的选区不必经过 mouseup 也能武装工具条。空选区的解除延迟一
    拍（0ms）判定：正在与工具条交互（焦点在工具条内）时不解除——点击工
@@ -9285,6 +9317,7 @@ registerDocumentListener("selectionchange", () => {
     const still = findLiveSelectionTurn();
     if (still !== null) return;
     if (findLiveMaterialSelection()) return;
+    if (state.materialSelection !== null && Date.now() < materialTouchReleaseGraceUntil) return;
     const activeNow = document.activeElement;
     if (activeNow !== null && isElementNode(activeNow) && withinTerminologySurface(activeNow)) return;
     disarmArmedSelection();
