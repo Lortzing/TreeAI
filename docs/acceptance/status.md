@@ -5,13 +5,13 @@
 
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
-| R0 repository map | `scripts/repo-inventory.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
-| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position, DOM reuse and Return display policy | Split remaining large factory by conversation/branch/Return/terms/materials/search/nav; real Chrome regressions |
+| R0 repository map | `scripts/repo-inventory.mjs`, `scripts/audit-studio-assets.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
+| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse (Return display extraction reverted after scripted UI regression) | Split remaining large factory by conversation/branch/Return/terms/materials/search/nav; real Chrome regressions |
 | R2 UI tests | Shared app harness, CSS source loader and targeted module regressions | Deduplicate remaining eight suites' DOM/selection/backend/storage mocks; audit original case/ID denominator |
-| R3 Studio server/services | HTTP response, errors, request validation and static handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
+| R3 Studio server/services | HTTP response, errors, request validation, static and SSE handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
 | R4 runtime and runners | Pi session inspection, four ordered PDF fixture groups and frozen registry test | Full browser/Pi/installer/verification runner boundaries, dataset ownership and old CLI/check ID compatibility |
 | R5 documentation | Short README/AGENTS, docs index/task map/architecture, archived D3 historical ledger | Verify all references and final product authority consistency |
-| R6 evidence lifecycle | Original evidence retained; Linux-compatible frozen B6 generator font path | Index evidence, then remove redundant raw artifacts **only after full project acceptance** |
+| R6 evidence lifecycle | Original evidence retained; read-only `scripts/evidence-index.mjs` locator and [usage](evidence-index.md); Linux-compatible frozen B6 generator font path | Verify evidence index completeness, then remove redundant raw artifacts **only after full project acceptance** |
 | R7 integration/acceptance | CI typechecks, D2/D4 offline, native Chrome smoke workflows | Final-SHA real Pi and actual Mac/Windows/Linux install, owner acceptance, independent participant trials |
 
 ## Verified CI facts (exact commit required)

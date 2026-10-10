@@ -18,3 +18,5 @@ Start with the [README](../README.md). Each link below names a different authori
 | D3 historical engineering ledger | [Original append-only record](archive/d3/D3-status-history.md) |
 
 `evidence/` and `d1-spikes/` are read on demand. Do not treat an old run as proof for a newer SHA.
+
+- [Pre-acceptance evidence locator](acceptance/evidence-index.md) — per-run marker hashes; no raw artifact deletion

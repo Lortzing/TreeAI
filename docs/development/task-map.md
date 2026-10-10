@@ -7,7 +7,7 @@ Start from the narrowest owner and its tests; expand only when crossing a public
 | Studio startup/UI state | `apps/studio/public/app.js`, `core/create-studio-app.js` | ESM/static/installer wiring | Studio scripted DOM + native Chrome |
 | Source identity/offsets | `public/shared/source/{sha256,selection}.js`, `public/core/dom.js` | Server range resolver and Unicode contract | source SHA/selection + fixed range cases |
 | Reading position | `public/shared/reading-position/scroll.js` | Material reader or branch navigation | bottom-follow + Chrome scrolling |
-| Return rendering/source | `public/features/return/presentation.js` | Return write/adoption in `src/service.ts` | W1 replay/conflict/source/display |
+| Return rendering/source | `public/core/create-studio-app.js` (extraction paused after scripted UI regressions) | Return write/adoption in `src/service.ts` | W1 replay/conflict/source/display |
 | Tree conversation / Branch / Return behavior | `public/core/create-studio-app.js`, `src/service.ts` | Pi session cursor or repository writes | Studio, runtime, journal, real Pi |
 | Terminology | `src/terminology.ts`, `src/terminology/suggestion-density.ts` | Promotion ledger, model budget, UI view | Terminology API/UI/evaluator, manual vs auto gate |
 | Markdown/PDF | `src/materials/`, `public/core/create-studio-app.js` | source/selection and PDF parser | B1/B2/B3 + native selection |
