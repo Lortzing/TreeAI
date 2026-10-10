@@ -55,9 +55,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   } else {
     const sha = execFileSync("git",["rev-parse","HEAD"],{cwd:ROOT,encoding:"utf8"}).trim();
     const paths = execFileSync("git",["ls-files","-z","--","evidence/"],{cwd:ROOT,encoding:"utf8"})
-      .split("\\0").filter(Boolean);
+      .split(String.fromCharCode(0)).filter(Boolean);
     const index = buildEvidenceIndex(paths,sha,path=>readFileSync(resolve(ROOT,path)));
-    const json=JSON.stringify(index,null,2)+"\\n";
+    const json=JSON.stringify(index,null,2)+String.fromCharCode(10);
     if(argv.length===2) writeFileSync(resolve(argv[1]),json);
     else process.stdout.write(json);
   }
