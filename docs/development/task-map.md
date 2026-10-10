@@ -12,7 +12,7 @@ Start from the narrowest owner and its tests; expand only when crossing a public
 | Tree conversation / Branch / Return behavior | `public/core/create-studio-app.js`, `src/service.ts` | Pi session cursor or repository writes | Studio, runtime, journal, real Pi |
 | Terminology | `src/terminology.ts`, `src/terminology/suggestion-density.ts` | Promotion ledger, model budget, UI view | Terminology API/UI/evaluator, manual vs auto gate |
 | Markdown/PDF | `src/materials/`, `public/core/create-studio-app.js` | source/selection and PDF parser | B1/B2/B3 + native selection |
-| Search and navigation | `src/search/`, `src/nav/`, `public/core/views/search.js`, `public/core/create-studio-app.js` | index rebuild, versions or cursor semantics | Search UI + B4/B9 engine and Chrome |
+| Search and navigation | `src/search/`, `src/nav/`, `public/core/views/{search,nav-finder}.js`, `public/core/create-studio-app.js` | index rebuild, versions or cursor semantics; nav session/virtualized tree controllers remain in factory | Search/finder UI + B4/B9 engine and Chrome |
 | HTTP / static / API | `src/server.ts`, `src/http/{requests,responses,errors,static}.ts` | New static route, PDF.js resource or installer | HTTP/static tests, MIME and browser 404 |
 | Runtime SDK boundary | `packages/runtime-pi/src/pi-runtime.ts`, `session-inspection.ts` | Pi port and tool policy only when affected | runtime-pi / session restore / policy |
 | Storage, backups and session recovery | `packages/persistence/src/`, `src/portability/` | Multi-entity DB transaction | restart/integrity/failure injection |

@@ -7,6 +7,7 @@ import { createMarkdownRenderer } from "../public/core/views/markdown.js";
 import { createSearchView } from "../public/core/views/search.js";
 import { createReturnCardRenderer } from "../public/core/views/return.js";
 import { createDiagnosticsView } from "../public/core/views/diagnostics.js";
+import { createNavFinderView } from "../public/core/views/nav-finder.js";
 import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
@@ -395,4 +396,128 @@ test("R1 diagnostics view preserves run, policy, and failure-panel states", () =
   state.diagnostics.runs.push({ runId: "run-new-failed", state: "failed", failure: { code: "other", message: "new failure" } });
   view.renderDiagnostics();
   assert.match(nodes.get("failure-panel").textContent, /new failure/);
+});
+
+
+test("R1 navigation finder view preserves states, paging, and active-tree row behavior", () => {
+  function element(tag) {
+    const node = {
+      tag,
+      className: "",
+      title: "",
+      disabled: false,
+      dataset: {},
+      children: [],
+      listeners: {},
+      append(...nodes) { this.children.push(...nodes); },
+      replaceChildren(...nodes) { this.children = [...nodes]; },
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      focus() {},
+      classList: {
+        add(...names) { node.className = `${node.className} ${names.join(" ")}`.trim(); },
+        contains(name) { return node.className.split(/\s+/).includes(name); },
+      },
+      set textContent(value) { this.children = [{ textContent: String(value) }]; },
+      get textContent() { return this.children.map((child) => child.textContent ?? "").join(""); },
+    };
+    return node;
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: String(value) }) };
+  const nodes = new Map([["nav-tree-results", element("ul")], ["nav-tree-find-note", element("p")]]);
+  const state = {
+    nav: {
+      session: null,
+      finder: {
+        phase: "loading", mode: "listing", query: null, error: null, moreError: null, moreLoading: false,
+        hitCursor: null, hits: [], listing: { trees: [], nextCursor: null, totalTrees: 0 },
+      },
+    },
+  };
+  const navFinderButtons = new Map();
+  const calls = [];
+  const view = createNavFinderView({
+    document,
+    getElement: (id) => nodes.get(id),
+    getState: () => state,
+    mutedListItem: (text) => { const item = element("li"); item.textContent = text; return item; },
+    formatProductTime: () => "formatted-time",
+    closeSidebar: () => calls.push("close"),
+    openNavTree: (id) => calls.push(`open:${id}`),
+    runNavTreeFind: () => calls.push("search-retry"),
+    refreshNavForestListing: () => calls.push("listing-retry"),
+    loadNavForestMore: () => calls.push("listing-more"),
+    loadNavTreeSearchMore: () => calls.push("search-more"),
+    navFinderButtons,
+    replaceList: (list, items, registry) => {
+      calls.push(`render:${registry.size}`);
+      list.replaceChildren(...items);
+    },
+  });
+
+  view.renderNavFinder();
+  assert.equal(nodes.get("nav-tree-find-note").textContent, "loading the forest…");
+  assert.equal(nodes.get("nav-tree-results").textContent, "loading trees…");
+
+  state.nav.finder.mode = "search";
+  state.nav.finder.query = "alpha";
+  view.renderNavFinder();
+  assert.equal(nodes.get("nav-tree-find-note").textContent, "searching trees for “alpha”…");
+
+  state.nav.finder.phase = "failed";
+  state.nav.finder.error = "internal";
+  view.renderNavFinder();
+  assert.match(nodes.get("nav-tree-results").textContent, /trees failed to load — internal/);
+  nodes.get("nav-tree-results").children[0].children[1].listeners.click();
+  assert.equal(calls.at(-1), "search-retry");
+
+  state.nav.finder.mode = "listing";
+  view.renderNavFinder();
+  nodes.get("nav-tree-results").children[0].children[1].listeners.click();
+  assert.equal(calls.at(-1), "listing-retry");
+
+  state.nav.finder.phase = "loaded";
+  state.nav.finder.listing = { trees: [], nextCursor: null, totalTrees: 0 };
+  view.renderNavFinder();
+  assert.match(nodes.get("nav-tree-results").textContent, /no trees in this forest yet/);
+
+  state.nav.finder.mode = "search";
+  state.nav.finder.hits = [];
+  state.nav.finder.query = "missing";
+  view.renderNavFinder();
+  assert.match(nodes.get("nav-tree-results").textContent, /no tree matches “missing”/);
+
+  state.nav.session = { treeId: "tree-1" };
+  state.nav.finder.mode = "listing";
+  state.nav.finder.listing = {
+    trees: [{ treeId: "tree-1", title: "Alpha", createdAt: "now" }], nextCursor: "cursor-1", totalTrees: 2,
+  };
+  view.renderNavFinder();
+  const listingButton = nodes.get("nav-tree-results").children[0].children[0];
+  assert.ok(listingButton.classList.contains("active"));
+  assert.match(listingButton.children[1].textContent, /formatted-time/);
+  listingButton.listeners.click();
+  assert.deepEqual(calls.slice(-2), ["close", "open:tree-1"]);
+  const listingMore = nodes.get("nav-tree-results").children[1].children[0];
+  assert.match(listingMore.textContent, /More trees \(1 of 2\)/);
+  listingMore.listeners.click();
+  assert.equal(calls.at(-1), "listing-more");
+
+  state.nav.finder.moreLoading = true;
+  view.renderNavFinder();
+  assert.equal(nodes.get("nav-tree-results").children[1].children[0].textContent, "loading more trees…");
+  assert.equal(nodes.get("nav-tree-results").children[1].children[0].disabled, true);
+
+  state.nav.finder.mode = "search";
+  state.nav.finder.query = "tree-1";
+  state.nav.finder.hits = [{ treeId: "tree-1", title: "Alpha", createdAt: "now", matchedOn: "id" }];
+  state.nav.finder.hitCursor = "cursor-hit";
+  state.nav.finder.moreLoading = false;
+  state.nav.finder.moreError = "timeout";
+  view.renderNavFinder();
+  assert.match(nodes.get("nav-tree-results").children[0].children[0].children[1].textContent, /matched on id/);
+  assert.match(nodes.get("nav-tree-find-note").textContent, /loading more failed — timeout/);
+  const searchMore = nodes.get("nav-tree-results").children[1].children[0];
+  assert.match(searchMore.textContent, /More tree hits \(1 loaded\)/);
+  searchMore.listeners.click();
+  assert.equal(calls.at(-1), "search-more");
 });
