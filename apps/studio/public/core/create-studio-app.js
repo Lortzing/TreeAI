@@ -10,6 +10,7 @@ import { createIsAtBottom } from "../shared/reading-position/scroll.js";
 import { isElementNode, findReusableTurnElement } from "./dom.js";
 import { createMarkdownRenderer } from "./views/markdown.js";
 import { createSearchView, SEARCH_KIND_LABELS, SEARCH_KIND_ORDER } from "./views/search.js";
+import { createReturnCardRenderer } from "./views/return.js";
 import { clampToGraphemeBoundaries } from "../shared/source/grapheme.js";
 
 export function createStudioApp(deps) {
@@ -747,50 +748,6 @@ function sessionRecoveryControls(surface) {
 
 const selectionOffsetsWithin = createSelectionOffsetsWithin(window);
 
-/** 长摘录折叠阈值（P1 降级卡）：超过即以 <details> 折叠（原生键盘可达）。 */
-const RETURN_EXCERPT_COLLAPSE_THRESHOLD = 120;
-
-/** 摘录元素（P1）：完整文本始终在卡片内（短摘录内联引用，长摘录折叠——
-    <summary> 携带前缀切片 + 省略号，展开后是落库快照原文）。 */
-function returnExcerptElement(text) {
-  if (text.length <= RETURN_EXCERPT_COLLAPSE_THRESHOLD) return null;
-  const details = document.createElement("details");
-  details.className = "return-excerpt collapsible";
-  const summary = document.createElement("summary");
-  summary.textContent = `“${text.slice(0, 100)}…”`;
-  const full = document.createElement("span");
-  full.className = "return-excerpt-full";
-  full.textContent = `“${text}”`;
-  details.append(summary, full);
-  return details;
-}
-
-/**
- * 回退放置的来源判定（P1：区分「来源位于其他 Branch / 已变化 / 缺失」）：
- * 以 targetAnchor 快照在树状态里反查锚点 turn——查不到 → missing；查到但
- * role/切片不再匹配快照 → changed；查到且仍匹配 → 该锚点在其他分支
- * （elsewhere，携带其所在分支）。树状态缺失（极端）按 missing。
- */
-function returnFallbackReason(turn) {
-  const st = state.treeState;
-  const anchor = turn.targetAnchor;
-  if (st === null || anchor === null) return { kind: "missing", anchor: null };
-  let anchorTurn = null;
-  for (const view of st.branches) {
-    const found = view.turns.find((t) => t.id === anchor.anchorTurnId);
-    if (found !== undefined) {
-      anchorTurn = found;
-      break;
-    }
-  }
-  if (anchorTurn === null) return { kind: "missing", anchor };
-  const stillHolds =
-    anchorTurn.role === "assistant" &&
-    anchorTurn.text.slice(anchor.selection.start, anchor.selection.end) === anchor.selection.text;
-  if (!stillHolds) return { kind: "changed", anchor };
-  return { kind: "elsewhere", anchor, anchorBranchId: anchorTurn.branchId };
-}
-
 /**
  * Return 卡片（W2 §2.4 + M3/M4 + signed v3 §3.2 + issue #7 P1）：
  * - placement "anchored"：锚点答案在当前视图内 → 紧随其后渲染，meta 携带
@@ -826,109 +783,20 @@ function formatProductTime(iso) {
   }
 }
 
-function returnCard(turn, anchor, attempts, placement) {
-  const treeKey = `${state.currentTreeId}:${turn.id}`;
-  const nowMs = Date.now();
-  const div = document.createElement("div");
-  div.className = "turn return";
-  div.dataset.turnId = turn.id;
-  div.dataset.turnText = turn.text;
-  turnElements.set(turn.id, div); /* 供提交后滚动定位 / 反查焦点还原 */
-  /* M3：插入动效（高度展开 + 淡入 ≤200ms）只在首次出现的卡上播放。 */
-  if (!state.knownReturnIds.has(treeKey)) {
-    state.knownReturnIds.add(treeKey);
-    returnInsertedAt.set(treeKey, nowMs);
-  }
-  const insertedAt = returnInsertedAt.get(treeKey);
-  if (insertedAt !== undefined && nowMs - insertedAt < MOTION_EPOCH_MS) {
-    div.classList.add("insert");
-  }
-
-  const meta = document.createElement("span");
-  meta.className = "meta";
-  const from = branchLabel(turn.fromBranchId ?? "");
-  const savedAt = formatProductTime(turn.createdAt);
-  /* 锚点注记（P1）：anchored = 摘录 + 来源分支内联；fallback = 以
-     targetAnchor 快照区分来源去向（其他 Branch / 已变化 / 缺失），摘录
-     随卡面可读（短内联 / 长折叠）。 */
-  let anchorNote;
-  let excerptElement = null;
-  const shortExcerpt = anchor !== null && anchor.selection.text.length <= RETURN_EXCERPT_COLLAPSE_THRESHOLD;
-  if (placement === "anchored" && anchor !== null) {
-    anchorNote = shortExcerpt
-      ? ` · anchored on “${anchor.selection.text}” from ${branchLabel(anchor.sourceBranchId)}`
-      : ` · anchored on a long selection from ${branchLabel(anchor.sourceBranchId)}`;
-    excerptElement = returnExcerptElement(anchor.selection.text);
-  } else if (anchor !== null) {
-    const reason = returnFallbackReason(turn);
-    const inline = shortExcerpt ? ` (anchored on “${anchor.selection.text}”)` : "";
-    if (reason.kind === "elsewhere") {
-      anchorNote = ` · source on ${branchLabel(reason.anchor.sourceBranchId)}${inline}`;
-    } else if (reason.kind === "changed") {
-      anchorNote = ` · source changed${inline}`;
-    } else if (reason.anchor !== null) {
-      anchorNote = ` · source missing${inline}`;
-    } else {
-      anchorNote = " · original anchor unavailable";
-    }
-    excerptElement = returnExcerptElement(anchor.selection.text);
-  } else {
-    anchorNote = " · original anchor unavailable";
-  }
-  meta.append(document.createTextNode(`↩ Return from ${from} · saved ${savedAt}${anchorNote}`));
-
-  const delivered = turn.deliveredRunId !== null;
-  const delivery = document.createElement(delivered ? "button" : "span");
-  delivery.className = `delivery${delivered ? " delivered delivery-link" : ""}`;
-  /* M4：pending → delivered 徽标切换（~100ms 颜色/文案过渡；只在已见
-     pending 的卡上检测到状态变化时播放；reduced-motion 即时）。
-     观测窗口内随重渲保持 class（见函数头注释）。 */
-  const seenRun = state.seenDeliveredRunIds.get(treeKey);
-  if (delivered && seenRun === null) {
-    deliveredChangedAt.set(treeKey, nowMs);
-  }
-  const changedAt = deliveredChangedAt.get(treeKey);
-  if (delivered && changedAt !== undefined && nowMs - changedAt < MOTION_EPOCH_MS) {
-    delivery.classList.add("badge-change");
-  }
-  if (delivered) {
-    /* deliveredRunId 只表示首次成功采用的 run（signed v3 §3.2）；
-       此前的失败/中止尝试记录在来源抽屉（Sources → Attempts）。
-       P1：送达时间从采用尝试记录反查该 run 的 terminalAt（产品事实；
-       记录缺失的旧快照如实省略）。 */
-    const deliveredAttempt = attempts.find((attempt) => attempt.runId === turn.deliveredRunId);
-    const adoptedNote =
-      deliveredAttempt !== undefined && deliveredAttempt.terminalAt !== null
-        ? `, adopted ${formatProductTime(deliveredAttempt.terminalAt)}`
-        : "";
-    delivery.textContent = `successfully adopted into Trunk context (run ${turn.deliveredRunId.slice(0, 12)}…${adoptedNote})`;
-    delivery.title = `first successfully adopted into Trunk run ${turn.deliveredRunId} — open sources`;
-    div.dataset.deliveredRunId = turn.deliveredRunId;
-    div.title = `first successfully adopted into Trunk run ${turn.deliveredRunId}`;
-    delivery.addEventListener("click", () =>
-      void openDrawer({
-        focusRunId: turn.deliveredRunId,
-        trigger: { kind: "return-card", turnId: turn.id },
-      }),
-    );
-  } else if (attempts.length > 0) {
-    /* 已有主支 run 尝试采用但尚未成功（失败/中止后仍待重注入）：如实呈
-       “采用尝试过 N 次”，不伪装成已送达，也不丢失已保存事实。 */
-    delivery.className = "delivery attempted";
-    delivery.textContent = `adoption attempted (${String(attempts.length)}) — still pending, retried on the next Trunk discussion`;
-    delivery.title = attempts
-      .map((a) => `run ${a.runId.slice(0, 12)}… ${a.runState}${a.failure !== null ? ` (${a.failure.code})` : ""}`)
-      .join("\n");
-  } else {
-    delivery.textContent = "saved — pending adoption on the next Trunk discussion";
-  }
-  state.seenDeliveredRunIds.set(treeKey, turn.deliveredRunId);
-  meta.append(delivery);
-  div.append(meta);
-  if (excerptElement !== null) div.append(excerptElement);
-  div.append(document.createTextNode(turn.text));
-  return div;
-}
+const { returnCard } = createReturnCardRenderer({
+  document,
+  getCurrentTreeId: () => state.currentTreeId,
+  getTreeState: () => state.treeState,
+  knownReturnIds: state.knownReturnIds,
+  seenDeliveredRunIds: state.seenDeliveredRunIds,
+  turnElements,
+  returnInsertedAt,
+  deliveredChangedAt,
+  motionEpochMs: MOTION_EPOCH_MS,
+  branchLabel,
+  formatProductTime,
+  openDrawer,
+});
 
 /* ------------------------------ ③ 正文/操作分层（issue #7 C ③） ------------------------------ */
 

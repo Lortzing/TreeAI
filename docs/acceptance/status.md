@@ -6,7 +6,7 @@
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
 | R0 repository map | `scripts/repo-inventory.mjs`, `scripts/audit-studio-assets.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
-| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; D4-4 Search presentation view boundary now isolated in `public/core/views/search.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/Return/terms/materials/navigation; real Chrome regressions |
+| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; D4-4 Search and Turn-backed Return presentation views isolated in `public/core/views/{search,return}.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/terminology/materials/navigation; real Chrome regressions |
 | R2 UI tests | Shared app harness, CSS source loader and targeted module regressions | Deduplicate remaining eight suites' DOM/selection/backend/storage mocks; audit original case/ID denominator |
 | R3 Studio server/services | HTTP response, errors, request validation, static and SSE handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
 | R4 runtime and runners | Pi session inspection, four ordered PDF fixture groups and frozen registry test | Full browser/Pi/installer/verification runner boundaries, dataset ownership and old CLI/check ID compatibility |
@@ -20,6 +20,14 @@
 - Local validation on this working candidate: 412 Studio tests passed; shared extracted-view/factory/static/Search suites passed; production and root test typechecks passed; Studio asset audit passed.
 - Local offline evidence: D2 `21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for authorization-gated D1 repro) and D4 `19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for owner-only B8 install/real-Pi acceptance); D2/D4 selftests and contract suites passed.
 - No local Chrome binary is available, so native Chrome was not rerun here. Existing PR-head Echo Chrome runs remain non-real-Pi evidence and do not close final-SHA, physical-install, owner-signoff, or trial gates.
+
+## 2026-10-10 Return-view wave (working candidate based on `c32ca66ac5b4c74bfd8bc6679cb1e6d95f5ee77d`)
+
+- R1 moved only Turn-backed Return card presentation into `apps/studio/public/core/views/return.js`; Return drafts/submission/navigation, material Return rendering, `returnAttemptsFor`, and shared motion maps remain in `create-studio-app.js`.
+- Direct shared-view tests, factory/static tests, and the existing Return/material UI suites are green; Studio has 412/412 tests, root tests/typechecks and asset audit pass, and the new direct aggregator has 9/9 tests.
+- Local offline evidence: D2 `21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for authorization-gated D1 repro), D2 selftest `5/5`; D4 `19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for owner-only B8 install/real-Pi acceptance), D4 selftest and 13 contract tests pass.
+- The local preview loaded `/core/views/return.js` with no console errors or failed requests. No local native Chrome binary is available; browser-pane loading is not real-Pi or physical-install acceptance.
+- No acceptance standard, scenario denominator, source/Return semantic, evidence artifact, or physical acceptance gate was changed.
 
 ## Verified CI facts (exact commit required)
 

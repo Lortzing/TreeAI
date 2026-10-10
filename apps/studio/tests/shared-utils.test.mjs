@@ -5,6 +5,7 @@ import { createSelectionOffsetsWithin } from "../public/shared/source/selection.
 import { isElementNode, findReusableTurnElement } from "../public/core/dom.js";
 import { createMarkdownRenderer } from "../public/core/views/markdown.js";
 import { createSearchView } from "../public/core/views/search.js";
+import { createReturnCardRenderer } from "../public/core/views/return.js";
 import { clampToGraphemeBoundaries } from "../public/shared/source/grapheme.js";
 
 test("scroll follow keeps the 48px threshold and does not pull users reading above", () => {
@@ -196,4 +197,111 @@ test("R1 Search view preserves honest idle, loading, failed, empty, and populate
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(openedBranch, "b1");
   assert.equal(jumped, null);
+});
+
+
+test("R1 Return view preserves anchored/fallback source facts and adoption states", () => {
+  function element(tag) {
+    const node = {
+      tag,
+      className: "",
+      title: "",
+      dataset: {},
+      children: [],
+      listeners: {},
+      append(...nodes) { this.children.push(...nodes); },
+      addEventListener(name, listener) { this.listeners[name] = listener; },
+      focus() {},
+      classList: {
+        add(...names) { node.className = [...new Set(`${node.className} ${names.join(" ")}`.trim().split(/\s+/))].join(" "); },
+        contains(name) { return node.className.split(/\s+/).includes(name); },
+      },
+      set textContent(value) { this.children = [{ textContent: String(value) }]; },
+      get textContent() { return this.children.map((child) => child.textContent ?? "").join(""); },
+    };
+    return node;
+  }
+  const document = { createElement: element, createTextNode: (value) => ({ textContent: String(value) }) };
+  const knownReturnIds = new Set();
+  const seenDeliveredRunIds = new Map();
+  const turnElements = new Map();
+  const returnInsertedAt = new Map();
+  const deliveredChangedAt = new Map();
+  let treeState = {
+    branches: [{ turns: [{ id: "anchor-1", branchId: "branch-1", role: "assistant", text: "The answer" }] }],
+  };
+  const drawerCalls = [];
+  const renderer = createReturnCardRenderer({
+    document,
+    getCurrentTreeId: () => "tree-1",
+    getTreeState: () => treeState,
+    knownReturnIds,
+    seenDeliveredRunIds,
+    turnElements,
+    returnInsertedAt,
+    deliveredChangedAt,
+    motionEpochMs: 260,
+    branchLabel: (id) => id === "branch-1" ? "Branch 1" : id,
+    formatProductTime: (value) => value,
+    openDrawer: (opts) => { drawerCalls.push(opts); },
+  });
+  const anchor = {
+    sourceBranchId: "branch-1", anchorTurnId: "anchor-1", anchorEntryId: "entry-1",
+    selection: { start: 4, end: 10, text: "answer" },
+  };
+  const makeTurn = (overrides = {}) => ({
+    id: "return-1", fromBranchId: "branch-1", text: "Returned conclusion.", createdAt: "saved-at",
+    deliveredRunId: null, targetAnchor: anchor, ...overrides,
+  });
+
+  const anchored = renderer.returnCard(makeTurn(), anchor, [], "anchored");
+  assert.ok(anchored.classList.contains("turn"));
+  assert.ok(anchored.classList.contains("return"));
+  assert.ok(anchored.classList.contains("insert"));
+  assert.match(anchored.textContent, /anchored on “answer” from Branch 1/);
+  assert.match(anchored.textContent, /saved — pending adoption on the next Trunk discussion/);
+  assert.equal(turnElements.get("return-1"), anchored);
+  assert.equal(returnInsertedAt.size, 1);
+
+  const elsewhere = renderer.returnCard(makeTurn({ id: "return-elsewhere" }), anchor, [], "fallback");
+  assert.match(elsewhere.textContent, /source on Branch 1/);
+  treeState = { branches: [{ turns: [{ id: "anchor-1", branchId: "branch-1", role: "assistant", text: "Changed answer" }] }] };
+  const changed = renderer.returnCard(makeTurn({ id: "return-changed" }), anchor, [], "fallback");
+  assert.match(changed.textContent, /source changed/);
+  treeState = { branches: [] };
+  const missing = renderer.returnCard(makeTurn({ id: "return-missing" }), anchor, [], "fallback");
+  assert.match(missing.textContent, /source missing/);
+
+  const longText = "x".repeat(121);
+  const longAnchor = { ...anchor, selection: { ...anchor.selection, text: longText } };
+  const longCard = renderer.returnCard(makeTurn({ id: "return-long", targetAnchor: longAnchor }), longAnchor, [], "anchored");
+  const details = longCard.children.find((child) => child.className === "return-excerpt collapsible");
+  assert.ok(details !== undefined);
+  assert.equal(details.textContent, `“${longText.slice(0, 100)}…”“${longText}”`);
+
+  const attempted = renderer.returnCard(
+    makeTurn({ id: "return-attempted" }),
+    anchor,
+    [{ turnId: "return-attempted", runId: "run-failed", runState: "failed", failure: { code: "model-error" } }],
+    "anchored",
+  );
+  assert.match(attempted.textContent, /adoption attempted \(1\) — still pending/);
+
+  const deliveredId = "run-delivered-123456789";
+  seenDeliveredRunIds.set("tree-1:return-delivered", null);
+  const delivered = renderer.returnCard(
+    makeTurn({ id: "return-delivered", deliveredRunId: deliveredId }),
+    anchor,
+    [{ turnId: "return-delivered", runId: deliveredId, runState: "succeeded", failure: null, terminalAt: "adopted-at" }],
+    "anchored",
+  );
+  assert.match(delivered.textContent, /successfully adopted into Trunk context/);
+  assert.match(delivered.textContent, /adopted-at/);
+  assert.ok(delivered.children[0].children[1].classList.contains("delivered"));
+  assert.ok(delivered.children[0].children[1].classList.contains("badge-change"));
+  delivered.children[0].children[1].listeners.click();
+  assert.deepEqual(drawerCalls, [{
+    focusRunId: deliveredId,
+    trigger: { kind: "return-card", turnId: "return-delivered" },
+  }]);
 });
