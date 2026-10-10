@@ -5,9 +5,10 @@ import { sendError } from "./http/errors.ts";
 import { createSseStream } from "./http/sse.ts";
 import { createStaticResponder } from "./http/static.ts";
 import { handleNavRoute } from "./http/routes/nav.ts";
+import { handleTerminologyRoute } from "./http/routes/terminology.ts";
 import { readJsonBody, requireString, parseMaterialSelection, readMaterialBody, decodeFilenameHeader, parseSearchQuery, asTreeId } from "./http/requests.ts";
 import { sendJson, sendNoContent, sendPdfBytes, type ApiErrorBody } from "./http/responses.ts";
-import type { BranchId, MaterialId, MaterialVersionId, RunId, TerminologyMode, TreeId, TurnId } from "@treeai/contracts";
+import type { BranchId, MaterialId, MaterialVersionId, RunId, TreeId, TurnId } from "@treeai/contracts";
 import { ConstraintViolationError, EntityNotFoundError, InvalidArgumentError, PersistenceError } from "@treeai/persistence";
 import { RunNotActiveError, NewExplorationConflictError, ReturnConflictError, type TreeDiagnostics, type TreeStudioService, type TreeState } from "./service.ts";
 import { type TerminologyService } from "./terminology.ts";
@@ -158,134 +159,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
 
       /* 术语三部分（issue #7 C）：/api/trees/:id/terminology/*。
          未装配（terminology === null）→ 503 如实说明，绝不伪装成功。 */
-      const terminologyMatch = /^\/api\/trees\/([^/]+)\/terminology(?:\/(.*))?$/.exec(pathname);
-      if (terminologyMatch !== null) {
-        const term = terminology;
-        if (term === null || term === undefined) {
-          sendJson(res, 503, {
-            error: { code: "terminology-not-wired", message: "the terminology service is not wired in this process" },
-          });
-          return;
-        }
-        const treeId = asTreeId(terminologyMatch[1]!);
-        const rest = terminologyMatch[2] ?? "";
-        if (rest === "" && method === "GET") {
-          sendJson(res, 200, term.readModel(treeId));
-          return;
-        }
-        if (rest === "explain" && method === "POST") {
-          const body = await readJsonBody(req);
-          const selection = body["selection"];
-          if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
-            throw new InvalidArgumentError("request field 'selection' must be an object {start, end, text}");
-          }
-          const mode = body["mode"];
-          if (mode !== "term" && mode !== "range") {
-            throw new InvalidArgumentError("request field 'mode' must be 'term' or 'range'");
-          }
-          const outcome = await term.explain({
-            treeId,
-            branchId: requireString(body, "branchId") as BranchId,
-            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
-            selection: selection as { start: number; end: number; text: string },
-            mode: mode as TerminologyMode,
-          });
-          sendJson(res, 200, outcome);
-          return;
-        }
-        if (rest === "extract" && method === "POST") {
-          const body = await readJsonBody(req);
-          const task = await term.extract({
-            treeId,
-            branchId: requireString(body, "branchId") as BranchId,
-            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
-          });
-          sendJson(res, 200, { task });
-          return;
-        }
-        if (rest === "annotations" && method === "POST") {
-          const body = await readJsonBody(req);
-          const selection = body["selection"];
-          if (selection === null || typeof selection !== "object" || Array.isArray(selection)) {
-            throw new InvalidArgumentError("request field 'selection' must be an object {start, end, text}");
-          }
-          const mode = body["mode"];
-          if (mode !== "term" && mode !== "range" && mode !== "auto") {
-            throw new InvalidArgumentError("request field 'mode' must be 'term' | 'range' | 'auto'");
-          }
-          const saved = term.saveAnnotation({
-            treeId,
-            branchId: requireString(body, "branchId") as BranchId,
-            anchorTurnId: requireString(body, "anchorTurnId") as TurnId,
-            selection: selection as { start: number; end: number; text: string },
-            mode: mode as TerminologyMode,
-            term: requireString(body, "term"),
-            explanation: requireString(body, "explanation"),
-          });
-          sendJson(res, saved.created ? 201 : 200, { annotation: saved.annotation, created: saved.created });
-          return;
-        }
-        const promoteMatch = /^annotations\/([^/]+)\/promote$/.exec(rest);
-        if (promoteMatch !== null && method === "POST") {
-          const body = await readJsonBody(req);
-          const promotion = await term.promote({
-            treeId,
-            annotationId: decodeURIComponent(promoteMatch[1]!),
-            idempotencyKey: requireString(body, "idempotencyKey"),
-            firstQuestion: requireString(body, "firstQuestion"),
-          });
-          sendJson(res, promotion.created ? 201 : 200, { ...promotion, state: service.getTreeState(treeId) });
-          return;
-        }
-        const cancelMatch = /^tasks\/([^/]+)\/cancel$/.exec(rest);
-        if (cancelMatch !== null && method === "POST") {
-          sendJson(res, 200, { task: term.executor.cancel(decodeURIComponent(cancelMatch[1]!)) });
-          return;
-        }
-        if (rest === "preferences" && method === "PUT") {
-          const body = await readJsonBody(req);
-          const cacheEnabled = body["cacheEnabled"];
-          if (typeof cacheEnabled !== "boolean") {
-            throw new InvalidArgumentError("request field 'cacheEnabled' must be a boolean");
-          }
-          term.setCachePreference(cacheEnabled);
-          sendJson(res, 200, { cacheEnabled: term.executor.cacheEnabled });
-          return;
-        }
-        /* 阅读模式（issue #7 术语①）：GET/PUT settings/reading-mode。
-           枚举校验 → 400；未知树 → 404。模式可保存、可切换——质量门禁
-           未过时零自动派发由 TerminologyService 保证（readModel 如实暴露
-           autoSuggestions.enabled=false + 原因），路由层不伪装启用。 */
-        if (rest === "settings/reading-mode" && method === "GET") {
-          sendJson(res, 200, { readingMode: term.getReadingMode(treeId) });
-          return;
-        }
-        if (rest === "settings/reading-mode" && method === "PUT") {
-          const body = await readJsonBody(req);
-          const mode = body["mode"];
-          if (mode !== "manual-only" && mode !== "minimal-hints" && mode !== "assisted-reading") {
-            throw new InvalidArgumentError(
-              "request field 'mode' must be one of 'manual-only' | 'minimal-hints' | 'assisted-reading'",
-            );
-          }
-          term.setReadingMode(treeId, mode);
-          sendJson(res, 200, { readingMode: mode });
-          return;
-        }
-        /* 建议集显式重试（budget-paused/failed 的「可恢复入口」——用户
-           显式动作；gate 未过 → 400 建议管线整体关闭，绝不旁路）。 */
-        const suggestRetryMatch = /^suggestions\/([^/]+)\/retry$/.exec(rest);
-        if (suggestRetryMatch !== null && method === "POST") {
-          const state = await term.retrySuggestions(
-            treeId,
-            decodeURIComponent(suggestRetryMatch[1]!) as TurnId,
-          );
-          sendJson(res, 200, { autoSuggestions: state });
-          return;
-        }
-        sendJson(res, 405, { error: { code: "method-not-allowed", message: `${method} ${pathname}` } });
-        return;
-      }
+      if (await handleTerminologyRoute(req, res, method, pathname, terminology, service)) return;
 
       /* 材料导入/读取（issue #8 D4-1，契约 §3）。未装配（materials ===
          null）→ 503 如实说明，绝不伪装成功。上传为原始字节 body +
