@@ -276,12 +276,22 @@ function pdfLayerSelectExpr(blockId, start, end) {
 /** 触摸手势进行内置位选区（app 的触路径：selectionchange 武装，零鼠标事件）。
     手势坐标取选区中点（拖选语义）。 */
 async function touchDragSelect(ctx, placementExpr) {
+  // Resolve a real text-layer hit point, then clear the probe's initial
+  // selection: it must be created *during* touch, not before touchStart.
+  // Otherwise Chrome can clear it on touchEnd before selectionchange arms
+  // the reader, which does not model a user dragging text on a touch screen.
+  const point = await ctx.evalJs(placementExpr);
+  if (point === null || point.error !== undefined) {
+    throw new Error(`touch-drag selection could not be placed — ${JSON.stringify(point)}`);
+  }
+  await ctx.evalJs(`(() => { window.getSelection().removeAllRanges(); return true; })()`);
+  await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: point.x, y: point.y, id: 1 }] });
+  await sleep(60);
   const placed = await ctx.evalJs(placementExpr);
   if (placed === null || placed.error !== undefined) {
-    throw new Error(`touch-drag selection could not be placed — ${JSON.stringify(placed)}`);
+    await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    throw new Error(`touch-drag selection failed during active touch — ${JSON.stringify(placed)}`);
   }
-  await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: placed.x, y: placed.y, id: 1 }] });
-  await sleep(60);
   const stillSelected = await ctx.evalJs(`(() => String(window.getSelection()))()`);
   await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await sleep(120);
