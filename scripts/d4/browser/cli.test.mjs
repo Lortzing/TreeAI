@@ -21,3 +21,20 @@ test("browser CLI refuses unknown flags, missing values, inappropriate real-Pi f
   assert.throws(()=>parseCli(["--model","not-a-model"]),/only to --mode real-pi/);
   assert.throws(()=>parseCli(["--mode","real-pi"]),/requires --provider and --model/);
 });
+
+test("browser CLI accepts --keep-data as a standalone final switch", () => {
+  assert.equal(parseCli(["--keep-data"]).keepData, true);
+  assert.deepEqual(parseCli(["--only", "d4-read-and-select", "--keep-data"]).only, ["d4-read-and-select"]);
+  assert.equal(parseCli(["--keep-data", "--mode", "selftest", "--keep-data"]).keepData, true);
+});
+
+test("browser CLI retains positional values and rejects incomplete option pairs", () => {
+  const x = parseCli(["--data", "sample-data", "--artifacts", "sample-artifacts", "--prompt-timeout-ms", "1000", "--keep-data"]);
+  assert.equal(x.dataDir, "sample-data");
+  assert.equal(x.artifactsDir, "sample-artifacts");
+  assert.equal(x.promptTimeoutMs, 1000);
+  assert.equal(x.keepData, true);
+  assert.throws(() => parseCli(["--only"]), /missing value/);
+  assert.throws(() => parseCli(["--unknown"]), /unknown flag/);
+  assert.throws(() => parseCli(["--prompt-timeout-ms", "999"]), />= 1000/);
+});

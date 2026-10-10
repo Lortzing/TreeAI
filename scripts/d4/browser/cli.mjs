@@ -60,13 +60,20 @@ export function parseCli(argv) {
     agentDir: null,
     only: [],
   };
-  for (let i = 0; i < argv.length; i += 2) {
+  for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
-    const value = argv[i + 1];
+    // A switch consumes no value, including when it is the final argument.
+    if (flag === "--keep-data") {
+      raw.keepData = true;
+      continue;
+    }
+    if (!["--mode", "--data", "--artifacts", "--chrome-executable", "--prompt-timeout-ms", "--provider", "--model", "--agent-dir", "--only"].includes(flag)) {
+      throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
+    }
+    const value = argv[++i];
     if (value === undefined) throw new Error(`${USAGE}\n(bad or missing value for '${String(flag)}')`);
     if (flag === "--mode") raw.mode = value;
     else if (flag === "--data") raw.dataDir = value;
-    else if (flag === "--keep-data") { raw.keepData = true; i -= 1; }
     else if (flag === "--artifacts") raw.artifactsDir = value;
     else if (flag === "--chrome-executable") raw.chromeExecutable = value;
     else if (flag === "--prompt-timeout-ms") raw.promptTimeoutMs = Number(value);
@@ -74,7 +81,6 @@ export function parseCli(argv) {
     else if (flag === "--model") raw.model = value;
     else if (flag === "--agent-dir") raw.agentDir = value;
     else if (flag === "--only") raw.only.push(value);
-    else throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
   }
   if (!MODES.includes(raw.mode)) throw new Error(`${USAGE}\n(--mode must be one of ${MODES.join(", ")})`);
   if (!Number.isFinite(raw.promptTimeoutMs) || raw.promptTimeoutMs < 1000) {
