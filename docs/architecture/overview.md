@@ -7,7 +7,8 @@ TreeAI remains a **single** npm workspaces monorepo and one loopback Studio HTTP
 | Browser entry | `apps/studio/public/app.js`: thin module wrapper constructing one `createStudioApp` instance |
 | Browser core | `public/core/create-studio-app.js`: still-large instance-owned state/handlers; `core/dom.js` holds element identity |
 | Source/reading | `public/shared/source/{sha256,selection}.js`, `shared/reading-position/scroll.js` |
-| Return view (pending extraction) | `public/core/create-studio-app.js` |
+| Return view | `public/core/views/return.js`; material Return and submission remain in the factory |
+| Navigation | `public/core/controllers/nav-finder.js` owns finder request epochs; `core/views/nav-tree.js` owns virtual rows, load pumping and focus restoration |
 | Styles | `public/style.css` ordered `@import` manifest, `public/styles/*.css` domain/viewport sources |
 | HTTP | `src/server.ts`: route ownership; `src/http/{requests,responses,errors,static}.ts` for adapters |
 | Product | `src/service.ts` with extracted `studio/{event-summary,prompt-text}.ts`; `src/terminology.ts` with suggestion-density helper |

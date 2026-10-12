@@ -1,12 +1,12 @@
 # TreeAI refactor acceptance — live candidate matrix
 
-**Last updated:** 2026-10-10. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
+**Last updated:** 2026-10-12. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
 **Integration PR:** [#27](https://github.com/Lortzing/TreeAI/pull/27), branch `refactor/integration-r0-r7`. The current candidate must be read from the PR HEAD; this document does **not** claim that an earlier successful run validates every subsequent commit.
 
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
 | R0 repository map | `scripts/repo-inventory.mjs`, `scripts/audit-studio-assets.mjs`, task map and agent navigation | Complete importer/CLI/test/installer reverse-dependency audit; initial-to-final measured comparison |
-| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; Search, Turn-backed Return, diagnostics, navigation-finder, and navigation-chrome presentation views isolated in `public/core/views/{search,return,diagnostics,nav-finder,nav-chrome}.js` with focused no-browser coverage | Split remaining large factory by conversation/branch/terminology/materials and virtualized navigation; real Chrome regressions |
+| R1 browser UI | Thin `app.js` bootstrap, isolated `createStudioApp`, ESM/static allowlist, CSS modules, source hash/selection, reading position and DOM reuse; Search, Turn-backed Return, diagnostics, navigation-finder, and navigation-chrome presentation views isolated in `public/core/views/{search,return,diagnostics,nav-finder,nav-chrome}.js` with focused no-browser coverage; finder request controller and virtualized tree view extracted | Split remaining large factory by conversation/branch/terminology/materials and navigation session/keyboard/persistence; real Chrome regressions |
 | R2 UI tests | Shared app harness, CSS source loader and targeted module regressions | Deduplicate remaining eight suites' DOM/selection/backend/storage mocks; audit original case/ID denominator |
 | R3 Studio server/services | HTTP response, errors, request validation, static and SSE handlers; safe journal summaries, prompt composition, terminology density | Separate HTTP routes, Studio services, terminology executor/promotion/ledger and DB repositories while preserving transaction coordinator |
 | R4 runtime and runners | Pi session inspection, four ordered PDF fixture groups and frozen registry test | Full browser/Pi/installer/verification runner boundaries, dataset ownership and old CLI/check ID compatibility |
@@ -58,6 +58,15 @@
 - Replaced the global-search snapshot's per-branch Turn query loop with a fresh tree-wide repository read ordered by branch creation/rowid and per-branch Turn creation/rowid; freshness, role partition, ranking, offsets, match counts, and tree scoping remain unchanged.
 - Added persistence and SearchService snapshot-order parity coverage; focused search/API/persistence suites pass **45/45**. No B6 threshold, verifier rerun rule, or frozen evidence semantics changed.
 - Local D4 after the optimization: B6 warm p95 **210.7ms ≤ 500ms**, exact 50-query offsets passed; overall **19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN**. D2 remains **21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN** with selftest **5/5**.
+
+## 2026-10-12 Navigation-controller and virtualized-tree wave (base `71becfd8574e79b0c778823f392dd77d7eda9555`)
+
+- Extracted finder request epochs, listing/search and pagination into `public/core/controllers/nav-finder.js`; extracted virtual row ordering/rendering, window load pumping, status and focus restoration into `public/core/views/nav-tree.js`. The factory is 356 lines smaller. Session loading, keyboard and persistence remain explicit follow-up work.
+- Preserved page limits, request paths, error messages, 34px row geometry, 10-row overscan, stale-response guards and all existing navigation scenarios. Added three direct regressions for superseded requests, independent instances, retry cursors and stale pagination; the existing shared-utils aggregator includes them in root tests and refactor CI.
+- Working-tree validation: production and root-test typechecks, full `npm test` (826 Node tests, including 413 Studio tests; contracts negative type checks also pass), focused nav/static/factory tests and ESM/CSS/installer asset audit passed.
+- Native Chrome scoped Echo run: 5 PASS / 0 FAIL; B9 first open 111.8ms, 55 timed navigation operations p95 35.2ms, virtualization capped at 39 DOM rows, keyboard focus retained and expansion restored after SIGTERM. This is local Echo navigation evidence, not real-Pi or whole-project acceptance.
+- Initial sandbox runs failed because local HTTP listeners were denied (`listen EPERM`): D2 Studio tests and D4 B6/B9. Original failure evidence remains on disk. D2 outside the sandbox: 21 PASS / 0 FAIL / 1 NOT_RUN (exit 3, explicit D1 live authorization absent). D4 outside the sandbox: 19 PASS / 0 FAIL / 1 NOT_RUN (exit 3, owner cross-platform install gate). D2 and D4 failure-injection selftests passed.
+- No frozen fixture, verifier threshold, acceptance denominator or historical evidence was removed or relaxed. Final-SHA real Pi, physical installations and owner/participant acceptance remain open.
 
 ## Verified CI facts (exact commit required)
 

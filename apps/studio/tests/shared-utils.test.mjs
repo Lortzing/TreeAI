@@ -1,3 +1,4 @@
+import "./nav-finder-controller.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createIsAtBottom } from "../public/shared/reading-position/scroll.js";
