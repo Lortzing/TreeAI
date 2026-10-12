@@ -340,29 +340,27 @@ export class SearchService {
         });
       }
 
-      // Turn / Return：按分支枚举（returns-per-tree 无独立读路径；Return
-      // 即已落库的 role="return" Turn——saved/attempted/adopted 全部）。
-      for (const branch of this.#trees.listBranches(tree.id)) {
-        for (const turn of this.#trees.listTurns(branch.id)) {
-          if (turn.role === "return") {
-            returns.push({
-              id: turn.id,
-              treeId: tree.id,
-              branchId: branch.id,
-              title: `Return：${headOf(turn.text)}`,
-              text: turn.text,
-              createdAt: turn.createdAt,
-            });
-          } else {
-            turns.push({
-              id: turn.id,
-              treeId: tree.id,
-              branchId: branch.id,
-              title: `${turn.role === "user" ? "提问" : "回答"}：${headOf(turn.text)}`,
-              text: turn.text,
-              createdAt: turn.createdAt,
-            });
-          }
+      // Turn / Return：按树读取并保持分支创建序、分支内追加序；returns-per-tree
+      // 无独立读路径，Return 即已落库的 role="return" Turn。
+      for (const turn of this.#trees.listTurnsForTree(tree.id)) {
+        if (turn.role === "return") {
+          returns.push({
+            id: turn.id,
+            treeId: tree.id,
+            branchId: turn.branchId,
+            title: `Return：${headOf(turn.text)}`,
+            text: turn.text,
+            createdAt: turn.createdAt,
+          });
+        } else {
+          turns.push({
+            id: turn.id,
+            treeId: tree.id,
+            branchId: turn.branchId,
+            title: `${turn.role === "user" ? "提问" : "回答"}：${headOf(turn.text)}`,
+            text: turn.text,
+            createdAt: turn.createdAt,
+          });
         }
       }
     }

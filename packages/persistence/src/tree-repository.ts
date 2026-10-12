@@ -1098,6 +1098,22 @@ export class TreeRepository {
     return rows.map(rowToTurn);
   }
 
+  /** Tree 内按分支创建序、再按 Turn 追加序列出全部 Turn。 */
+  listTurnsForTree(treeId: TreeId): Turn[] {
+    this.#assertOpen();
+    assertNonEmptyString(treeId, "tree id");
+    const rows = this.#db!
+      .prepare(
+        `SELECT t.id, t.tree_id, t.branch_id, t.episode_id, t.run_id, t.role, t.text, t.pi_entry_id,
+                t.from_branch_id, t.delivered_run_id, t.idempotency_key, t.target_anchor, t.created_at
+         FROM branches AS b
+         INNER JOIN turns AS t ON t.branch_id = b.id
+         WHERE b.tree_id = ?
+         ORDER BY b.created_at, b.rowid, t.created_at, t.rowid`,
+      )
+      .all(treeId) as unknown as TurnRow[];
+    return rows.map(rowToTurn);
+  }
   /**
    * 按幂等键查找 return turn（树内定位；无键/无匹配为 null）。
    * 同键唯一由树内部分唯一索引保证（idx_turns_idempotency_key_tree，

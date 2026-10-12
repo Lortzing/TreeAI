@@ -48,8 +48,16 @@
 ## 2026-10-10 Navigation-chrome wave (working candidate based on `16f70f3c542d3977c485d4d8965e50e0a435fa17`)
 
 - R1 moved navigation surface overview/action presentation into `public/core/views/nav-chrome.js`; tree session, overview fetch/retry controller, virtualized rows, finder, source locate, and keyboard behavior remain in `create-studio-app.js`.
-- Direct view, static/factory, nav, diagnostics, and Return regressions pass; full Studio/root and D2/D4 gates will be recorded after this focused commit.
+- Direct view, static/factory, nav, diagnostics, and Return regressions pass; Studio has 412/412 tests, root tests/typechecks and asset audit pass, and the shared-utils aggregator has 12/12 tests.
+- Local offline evidence: D2 `21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for authorization-gated D1 repro), D2 selftest `5/5`; D4 `19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN` (exit 3 for owner-only B8 install/real-Pi acceptance), D4 selftest and 13 contract tests pass.
+- The local preview loaded `/core/views/nav-chrome.js` with no console errors or failed requests. No local native Chrome binary is available; browser-pane loading is not real-Pi or physical-install acceptance.
 - No navigation semantics, acceptance standard, scenario denominator, evidence artifact, or physical acceptance gate was changed.
+
+## 2026-10-12 B6 search snapshot wave (working candidate based on `1f0bf09`)
+
+- Replaced the global-search snapshot's per-branch Turn query loop with a fresh tree-wide repository read ordered by branch creation/rowid and per-branch Turn creation/rowid; freshness, role partition, ranking, offsets, match counts, and tree scoping remain unchanged.
+- Added persistence and SearchService snapshot-order parity coverage; focused search/API/persistence suites pass **45/45**. No B6 threshold, verifier rerun rule, or frozen evidence semantics changed.
+- Local D4 after the optimization: B6 warm p95 **210.7ms ≤ 500ms**, exact 50-query offsets passed; overall **19 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN**. D2 remains **21 PASS / 0 FAIL / 0 BLOCKED / 1 NOT_RUN** with selftest **5/5**.
 
 ## Verified CI facts (exact commit required)
 
