@@ -1,5 +1,8 @@
 /** Pure terminology density rules: behavior moved without semantic changes. */
-import type { ReadingModeDensityLimits, TerminologyCandidate } from "../terminology.ts";
+import type {
+  ReadingModeDensityLimits,
+  TerminologyCandidate,
+} from "../terminology.ts";
 
 /**
  * 「每段」的切分口径（**工程占位**：v2 的段落精确口径未在库内定位到文本，

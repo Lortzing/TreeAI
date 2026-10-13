@@ -1,6 +1,19 @@
 /** Navigation nav-locate; preserves the existing D4 endpoint and display contracts. */
 export function createNavLocateController(deps) {
-  const { getElement: $, getState, api, navChildEntry, navLoadChildrenPage, selectNavNode, openNavTree, renderNavTree, renderNavTreeActions, openTree, revealOrigin, openMaterial } = deps;
+  const {
+    getElement: $,
+    getState,
+    api,
+    navChildEntry,
+    navLoadChildrenPage,
+    selectNavNode,
+    openNavTree,
+    renderNavTree,
+    renderNavTreeActions,
+    openTree,
+    revealOrigin,
+    openMaterial,
+  } = deps;
   const state = getState();
 
   const NAV_REVEAL_PAGE_GUARD = 2000;

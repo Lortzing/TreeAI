@@ -1,6 +1,17 @@
 /** Instance-owned navigation sessions and child paging; stale responses never update the active tree. */
 export function createNavSessionController(deps) {
-  const { getState, getElement: $, api, renderNavSurfaceChrome, renderNavTree, renderNavPath, renderNavNodeResults, renderNavFinder, selectNavNode, navRevealBranch } = deps;
+  const {
+    getState,
+    getElement: $,
+    api,
+    renderNavSurfaceChrome,
+    renderNavTree,
+    renderNavPath,
+    renderNavNodeResults,
+    renderNavFinder,
+    selectNavNode,
+    navRevealBranch,
+  } = deps;
   const state = getState();
 
   const NAV_CHILDREN_PAGE_LIMIT = 50;

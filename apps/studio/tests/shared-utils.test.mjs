@@ -1,3 +1,6 @@
+import { createConversationView } from "../public/core/views/conversation.js";
+import { createMaterialPdfView } from "../public/core/views/material-pdf.js";
+import { createStudioBasics } from "../public/core/controllers/basics.js";
 import "./nav-session-controller.test.mjs";
 import "./nav-finder-controller.test.mjs";
 import { test } from "node:test";
@@ -582,4 +585,68 @@ test("R1 navigation chrome view preserves overview and action state", () => {
   assert.match(nodes.get("nav-tree-meta").textContent, /1 nodes · max depth 0/);
   assert.match(nodes.get("nav-tree-meta").textContent, /no branches yet/);
   assert.equal(nodes.get("nav-source-selected").disabled, false);
+});
+
+
+test("Studio API calls injected native fetch without a dependency-object receiver", async () => {
+  const requests = [];
+  const controller = createStudioBasics({
+    fetch: async function (path, options) {
+      assert.equal(this, undefined, "native Window.fetch rejects a foreign receiver");
+      requests.push({ path, options });
+      return { ok: true, json: async () => ({ ok: true }) };
+    },
+  });
+  assert.deepEqual(await controller.api("/api/trees", "POST", { text: "saved" }), { ok: true });
+  assert.deepEqual(requests, [{ path: "/api/trees", options: {
+    method: "POST", headers: { "content-type": "application/json" }, body: '{"text":"saved"}',
+  } }]);
+});
+
+
+test("PDF pages reserve trusted geometry before paint so source jumps keep their viewport position", () => {
+  const element = () => ({ dataset: {}, style: {}, children: [], setAttribute() {}, append(...nodes) { this.children.push(...nodes); } });
+  const view = createMaterialPdfView({ document: { createElement: element } });
+  const entry = { block: { blockId: "page-2", start: 10, end: 20, page: 2,
+    geometry: { pageWidth: 600, pageHeight: 800, lines: [] } }, text: "source text" };
+  const frame = view.createPdfPageFrame(entry);
+  assert.equal(frame.children[1].style.aspectRatio, "600 / 800");
+  assert.equal(frame.children[1].dataset.rendered, "false", "reserving layout does not eagerly paint off-screen pages");
+  assert.equal(frame.dataset.blockId, "page-2");
+  const withoutGeometry = view.createPdfPageFrame({ ...entry, block: { ...entry.block, geometry: null } });
+  assert.equal(withoutGeometry.children[1].style.aspectRatio, undefined);
+  const invalidGeometry = view.createPdfPageFrame({ ...entry, block: { ...entry.block, geometry: { pageWidth: 0, pageHeight: Infinity, lines: [] } } });
+  assert.equal(invalidGeometry.children[1].style.aspectRatio, undefined);
+});
+
+
+test("stream follow records native scroll position before delayed scroll events and preserves readers above", () => {
+  const positions = new Map([["tree:branch", 800]]);
+  const state = { streaming: { runId: "run", branchId: "branch", text: "first" }, panelBranchId: null, scrollPositions: positions };
+  const container = { id: "conversation", scrollTop: 800, clientHeight: 200, scrollHeight: 1000,
+    scrollTo({ top }) { this.scrollTop = Math.min(top, this.scrollHeight - this.clientHeight); } };
+  const node = { parentElement: container, firstChild: {
+    set data(value) { if (container.clientHeight > 0) container.scrollHeight += 200; },
+    get data() { return "text"; },
+  } };
+  const view = createConversationView({ state, document: { getElementById: () => node },
+    trunkBranchId: () => "branch", conversationContainerId: () => "conversation", scrollKey: () => "tree:branch",
+    scrollBehavior: () => "auto", isAtBottom: createIsAtBottom(48),
+  });
+  view.updateStreamingPlaceholder();
+  assert.equal(container.scrollTop, 1000);
+  assert.equal(positions.get("tree:branch"), 1000, "a same-task refresh cannot restore the obsolete 800px snapshot");
+  state.streaming.text = "second";
+  view.updateStreamingPlaceholder();
+  assert.equal(positions.get("tree:branch"), 1200);
+  container.scrollTop = 100;
+  positions.set("tree:branch", 100);
+  view.updateStreamingPlaceholder();
+  assert.equal(container.scrollTop, 100, "streaming never forces a reader above to the bottom");
+  assert.equal(positions.get("tree:branch"), 100);
+  container.clientHeight = 0;
+  container.scrollHeight = 0;
+  container.scrollTop = 0;
+  view.updateStreamingPlaceholder();
+  assert.equal(positions.get("tree:branch"), 100, "hidden zero-size geometry cannot erase the last reading position");
 });

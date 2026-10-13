@@ -16,6 +16,8 @@ const styleSource=readFileSync(resolve(PUBLIC,"style.css"),"utf8");
 const errors=[];
 const staticRoutes=new Map([...serverSource.matchAll(/"(\/[a-zA-Z0-9_.\/-]+)":\s*\{\s*file:\s*"([^"]+)"/g)]
   .map(m=>[m[1],m[2]]));
+const staticRouteNames = [...serverSource.matchAll(/"(\/[a-zA-Z0-9_.\/-]+)":\s*\{\s*file:/g)].map(match => match[1]);
+if (new Set(staticRouteNames).size !== staticRouteNames.length) errors.push("Duplicate exact static JS/CSS route");
 const cssEntry=/const CSS_MODULE_FILES = new Set\(\[([^\]]+)\]\)/.exec(serverSource);
 if(cssEntry===null)errors.push("Missing static CSS filename allowlist");
 const cssFiles=new Set(cssEntry?[...cssEntry[1].matchAll(/"([^"]+\.css)"/g)].map(x=>x[1]):[]);

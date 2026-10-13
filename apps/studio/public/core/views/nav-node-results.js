@@ -1,6 +1,16 @@
 /** Navigation nav-node-results; preserves the existing D4 endpoint and display contracts. */
 export function createNavNodeResultsView(deps) {
-  const { document, getElement: $, getState, mutedListItem, navNodeHitButtons, navReplaceList, runNavNodeSearch, loadNavNodeSearchMore, navRevealBranch } = deps;
+  const {
+    document,
+    getElement: $,
+    getState,
+    mutedListItem,
+    navNodeHitButtons,
+    navReplaceList,
+    runNavNodeSearch,
+    loadNavNodeSearchMore,
+    navRevealBranch,
+  } = deps;
   const state = getState();
 
   function navStepLabel(step) {

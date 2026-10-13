@@ -2,7 +2,18 @@ import { NAV_ROW_HEIGHT_PX } from "../views/nav-tree.js";
 
 /** Navigation selection, scrolling and keyboard interaction over the current virtual tree. */
 export function createNavInteractionController(deps) {
-  const { getState, getElement: $, api, navVisibleRows, navRowElements, navLoadChildrenPage, scheduleNavPersist, renderNavTree, renderNavPath, renderNavTreeActions } = deps;
+  const {
+    getState,
+    getElement: $,
+    api,
+    navVisibleRows,
+    navRowElements,
+    navLoadChildrenPage,
+    scheduleNavPersist,
+    renderNavTree,
+    renderNavPath,
+    renderNavTreeActions,
+  } = deps;
   const state = getState();
 
   /** 展开/收起（鼠标 toggle 与键盘 →/← 共用；展开即按需加载首页）。 */
