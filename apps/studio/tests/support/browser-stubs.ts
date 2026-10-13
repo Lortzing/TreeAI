@@ -119,3 +119,16 @@ export function createQueryAll<T extends SelectorElement>(Element: new (tag: str
     return out;
   };
 }
+
+export function stubResponse(status: number, payload: unknown): StubResponse {
+  return { ok: status < 400, status, json: async () => payload };
+}
+
+export function createMemoryStorage(store: Map<string, string>) {
+  return {
+    getItem: (key: string): string | null => store.has(key) ? store.get(key)! : null,
+    setItem: (key: string, value: string): void => { store.set(key, String(value)); },
+    removeItem: (key: string): void => { store.delete(key); },
+    clear: (): void => { store.clear(); },
+  };
+}

@@ -1,4 +1,34 @@
-import { matchesSelector, createQueryAll, asRecord, createStubEventSource, type StubSseEvent, type StubFetchInit, type StubResponse } from "./support/browser-stubs.ts";
+import {
+  extractMediaBlocks,
+  declarationsOf,
+  baseCssLayer,
+} from "./support/styles.ts";
+
+import {
+  createStubText,
+  setClassName,
+  createClassList,
+  appendNode,
+  insertNode,
+  removeNode,
+  replaceNodes,
+  containsNode,
+  replaceText,
+  addListener,
+  dispatchStubEvent,
+  buildStubDom,
+} from "./support/dom-primitives.ts";
+import {
+  createMemoryStorage,
+  stubResponse,
+} from "./support/browser-stubs.ts";
+import {
+  createQueryAll,
+  asRecord,
+  createStubEventSource,
+  type StubFetchInit,
+  type StubResponse,
+} from "./support/browser-stubs.ts";
 /**
  * D4-8 大规模树导航前端套件（issue #8 工作包 D4-8「大规模树导航」；charter
  * §5 大规模树导航 / §6 B9 的 DOM 面锁定）。
@@ -50,13 +80,25 @@ import { matchesSelector, createQueryAll, asRecord, createStubEventSource, type 
  * 几何与 p95 归 evidence/d4 浏览器口径）。
  */
 
-import { test } from "node:test";
+import {
+  test,
+} from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { mountStudioApp } from "./support/app-harness.ts";
-import { readStudioCss } from "./support/styles.ts";
+import {
+  readFileSync,
+} from "node:fs";
+import {
+  join,
+} from "node:path";
+import {
+  fileURLToPath,
+} from "node:url";
+import {
+  mountStudioApp,
+} from "./support/app-harness.ts";
+import {
+  readStudioCss,
+} from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
@@ -107,16 +149,8 @@ const settle = async (rounds = 25): Promise<void> => {
 type StubNode = StubText | StubElement;
 type StubListener = (event: StubEvent) => void;
 
-class StubText {
-  data: string;
-  parentElement: StubElement | null = null;
-  constructor(data: string) {
-    this.data = data;
-  }
-  get textContent(): string {
-    return this.data;
-  }
-}
+const StubText = createStubText<StubElement>();
+type StubText = InstanceType<typeof StubText>;
 
 class StubElement {
   readonly tagName: string;
@@ -148,31 +182,9 @@ class StubElement {
     return [...this.classes].join(" ");
   }
 
-  set className(value: string) {
-    this.classes.clear();
-    for (const c of value.split(/\s+/)) {
-      if (c !== "") this.classes.add(c);
-    }
-  }
+  set className(value: string) { setClassName(this.classes, value); }
 
-  get classList() {
-    const self = this;
-    return {
-      add: (...names: string[]): void => {
-        for (const c of names) self.classes.add(c);
-      },
-      remove: (...names: string[]): void => {
-        for (const c of names) self.classes.delete(c);
-      },
-      toggle: (c: string, force?: boolean): boolean => {
-        const on = force === undefined ? !self.classes.has(c) : force;
-        if (on) self.classes.add(c);
-        else self.classes.delete(c);
-        return on;
-      },
-      contains: (c: string): boolean => self.classes.has(c),
-    };
-  }
+  get classList() { return createClassList(this.classes); }
 
   get scrollTop(): number {
     return this._scrollTop;
@@ -191,69 +203,21 @@ class StubElement {
     for (const n of nodes) this.appendChild(n);
   }
 
-  appendChild(node: StubNode | string): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    n.parentElement = this;
-    this.children.push(n);
-    return n;
-  }
+  appendChild(node: StubNode | string): StubNode { return appendNode<StubNode, StubElement>(this, node, (text) => new StubText(text)); }
 
-  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (ref === null || ref === undefined) {
-      this.appendChild(n);
-      return n;
-    }
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    const index = this.children.indexOf(ref);
-    if (index < 0) {
-      n.parentElement = this;
-      this.children.push(n);
-    } else {
-      this.children.splice(index, 0, n);
-      n.parentElement = this;
-    }
-    return n;
-  }
+  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode { return insertNode<StubNode, StubElement>(this, node, ref, (text) => new StubText(text)); }
 
-  removeChild(node: StubNode): StubNode {
-    const index = this.children.indexOf(node);
-    if (index >= 0) {
-      this.children.splice(index, 1);
-      node.parentElement = null;
-    }
-    return node;
-  }
+  removeChild(node: StubNode): StubNode { return removeNode<StubNode, StubElement>(this, node); }
 
-  replaceChildren(...nodes: Array<StubNode | string>): void {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    this.append(...nodes);
-  }
+  replaceChildren(...nodes: Array<StubNode | string>): void { replaceNodes<StubNode, StubElement>(this, nodes); }
 
-  contains(node: StubNode | null | undefined): boolean {
-    let cur: StubNode | null | undefined = node;
-    while (cur !== null && cur !== undefined) {
-      if (cur === this) return true;
-      cur = cur.parentElement;
-    }
-    return false;
-  }
+  contains(node: StubNode | null | undefined): boolean { return containsNode<StubNode, StubElement>(this, node); }
 
   get textContent(): string {
     return this.children.map((c) => (c instanceof StubText ? c.data : c.textContent)).join("");
   }
 
-  set textContent(value: string) {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    if (value !== "") {
-      const text = new StubText(value);
-      text.parentElement = this;
-      this.children.push(text);
-    }
-  }
+  set textContent(value: string) { replaceText<StubNode, StubElement>(this, value, (text) => new StubText(text)); }
 
   setAttribute(key: string, value: string): void {
     this.attributes.set(key, value);
@@ -269,25 +233,13 @@ class StubElement {
     this.attributes.delete(key);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.listeners, type, fn); }
 
   removeEventListener(type: string, fn: StubListener): void {
     this.listeners.get(type)?.delete(fn);
   }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.listeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.listeners, type, init); }
 
   click(): void {
     this.dispatchEvent("click", {});
@@ -329,35 +281,7 @@ class StubElement {
 const queryAll = createQueryAll(StubElement);
 
 /** 完整 index.html DOM 桩：按标签词法解析真实 index.html 建树。 */
-function buildDomFromHtml(html: string, doc: StubDocument): StubElement {
-  const src = html
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<script[\s\S]*?<\/script>/g, "");
-  const voidTags = new Set(["meta", "link", "br", "hr", "input", "img", "source"]);
-  const root = new StubElement("#document");
-  let current = root;
-  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-  let match: RegExpExecArray | null;
-  while ((match = tagRe.exec(src)) !== null) {
-    const full = match[0];
-    const tag = match[1]!.toLowerCase();
-    if (full.startsWith("</")) {
-      if (current.parentElement !== null) current = current.parentElement;
-      continue;
-    }
-    const el = new StubElement(tag);
-    el.ownerDocument = doc;
-    const attrRe = /([a-zA-Z-]+)(?:\s*=\s*("[^"]*"|'[^']*'))?/g;
-    let attrMatch: RegExpExecArray | null;
-    while ((attrMatch = attrRe.exec(match[2] ?? "")) !== null) {
-      const value = attrMatch[2] !== undefined ? attrMatch[2]!.slice(1, -1) : "";
-      el.setAttribute(attrMatch[1]!, value);
-    }
-    current.appendChild(el);
-    if (!voidTags.has(tag)) current = el;
-  }
-  return root;
-}
+function buildDomFromHtml(html: string, doc: StubDocument): StubElement { return buildStubDom(html, doc, StubElement); }
 
 class StubDocument {
   activeElement: StubElement | null = null;
@@ -392,21 +316,9 @@ class StubDocument {
     return this.root === null ? [] : queryAll(this.root, sel);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.docListeners.has(type)) this.docListeners.set(type, new Set());
-    this.docListeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.docListeners, type, fn); }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.docListeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.docListeners, type, init); }
 }
 
 /* ------------------------------ EventSource 桩 ------------------------------ */
@@ -728,18 +640,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       addEventListener(): void {},
       removeEventListener(): void {},
     }),
-    localStorage: {
-      getItem: (key) => (localStorageStore.has(key) ? localStorageStore.get(key)! : null),
-      setItem: (key, value) => {
-        localStorageStore.set(key, String(value));
-      },
-      removeItem: (key) => {
-        localStorageStore.delete(key);
-      },
-      clear: () => {
-        localStorageStore.clear();
-      },
-    },
+    localStorage: createMemoryStorage(localStorageStore),
     confirm: () => true,
   };
 
@@ -790,11 +691,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     backend.requests.push({ method, path: String(input), body });
     const url = new URL(String(input), "http://studio.local");
     const p = url.pathname;
-    const respond = (status: number, payload: unknown): StubResponse => ({
-      ok: status < 400,
-      status,
-      json: async () => payload,
-    });
+    const respond = stubResponse;
     const fail = (status: number, code: string, message: string): StubResponse =>
       respond(status, { error: { code, message } });
 
@@ -1782,76 +1679,6 @@ test("an empty tree stays honestly usable: single trunk, null title, explicit gr
 /* ------------------------------------------------------------------ */
 /* 9. CSS 词法锁定                                                      */
 /* ------------------------------------------------------------------ */
-
-interface CssRule {
-  selector: string;
-  declarations: string;
-}
-
-interface CssMediaBlock {
-  query: string;
-  rules: CssRule[];
-}
-
-function extractMediaBlocks(css: string): CssMediaBlock[] {
-  const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const blocks: CssMediaBlock[] = [];
-  const mediaRe = /@media([^{]+)\{/g;
-  let match: RegExpExecArray | null;
-  while ((match = mediaRe.exec(src)) !== null) {
-    const query = match[1]!.trim();
-    let depth = 1;
-    let end = mediaRe.lastIndex;
-    while (end < src.length && depth > 0) {
-      const ch = src[end];
-      if (ch === "{") depth += 1;
-      else if (ch === "}") depth -= 1;
-      end += 1;
-    }
-    const body = depth === 0 ? src.slice(mediaRe.lastIndex, end - 1) : src.slice(mediaRe.lastIndex, end);
-    const rules: CssRule[] = [];
-    const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
-    let ruleMatch: RegExpExecArray | null;
-    while ((ruleMatch = ruleRe.exec(body)) !== null) {
-      rules.push({
-        selector: ruleMatch[1]!.trim().replace(/\s+/g, " "),
-        declarations: ruleMatch[2]!.replace(/\s+/g, " ").trim(),
-      });
-    }
-    blocks.push({ query, rules });
-    mediaRe.lastIndex = end;
-  }
-  return blocks;
-}
-
-function declarationsOf(block: CssMediaBlock, selector: string): string | null {
-  const rule = block.rules.find((r) => r.selector === selector);
-  return rule === undefined ? null : rule.declarations;
-}
-
-function baseCssLayer(css: string): string {
-  const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  let out = "";
-  let i = 0;
-  while (i < src.length) {
-    const at = src.indexOf("@media", i);
-    if (at === -1) {
-      out += src.slice(i);
-      break;
-    }
-    out += src.slice(i, at);
-    const open = src.indexOf("{", at);
-    let depth = 1;
-    let j = open + 1;
-    while (j < src.length && depth > 0) {
-      if (src[j] === "{") depth += 1;
-      else if (src[j] === "}") depth -= 1;
-      j += 1;
-    }
-    i = j;
-  }
-  return out;
-}
 
 test("CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically", () => {
   const base = baseCssLayer(STYLE_CSS);

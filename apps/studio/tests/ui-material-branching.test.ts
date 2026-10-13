@@ -1,4 +1,36 @@
-import { matchesSelector, createQueryAll, asRecord, createStubEventSource, type StubEventInit, type StubEvent, type StubSseEvent, type StubFetchInit, type StubResponse } from "./support/browser-stubs.ts";
+import {
+  flattenNodes,
+} from "./support/dom-primitives.ts";
+import {
+  createStubRange,
+} from "./support/selection-stubs.ts";
+import {
+  createStubText,
+  setClassName,
+  createClassList,
+  appendNode,
+  insertNode,
+  removeNode,
+  replaceNodes,
+  containsNode,
+  replaceText,
+  addListener,
+  dispatchStubEvent,
+  buildStubDom,
+} from "./support/dom-primitives.ts";
+import {
+  createMemoryStorage,
+  stubResponse,
+} from "./support/browser-stubs.ts";
+import {
+  createQueryAll,
+  asRecord,
+  createStubEventSource,
+  type StubEventInit,
+  type StubEvent,
+  type StubFetchInit,
+  type StubResponse,
+} from "./support/browser-stubs.ts";
 /**
  * D4-3 材料建枝闭环前端套件（issue #8 工作包 D4-3「原文探索闭环」的
  * 前端增量；charter §3.3 / ADR-004；消费已落地的四个 HTTP 端点——
@@ -65,13 +97,25 @@ import { matchesSelector, createQueryAll, asRecord, createStubEventSource, type 
  * 状/呈现/跳转/状态诚实/不重发纪律）。
  */
 
-import { test } from "node:test";
+import {
+  test,
+} from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { mountStudioApp } from "./support/app-harness.ts";
-import { readStudioCss } from "./support/styles.ts";
+import {
+  readFileSync,
+} from "node:fs";
+import {
+  join,
+} from "node:path";
+import {
+  fileURLToPath,
+} from "node:url";
+import {
+  mountStudioApp,
+} from "./support/app-harness.ts";
+import {
+  readStudioCss,
+} from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
@@ -238,16 +282,8 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 type StubNode = StubText | StubElement;
 type StubListener = (event: StubEvent) => void;
 
-class StubText {
-  data: string;
-  parentElement: StubElement | null = null;
-  constructor(data: string) {
-    this.data = data;
-  }
-  get textContent(): string {
-    return this.data;
-  }
-}
+const StubText = createStubText<StubElement>();
+type StubText = InstanceType<typeof StubText>;
 
 class StubElement {
   readonly tagName: string;
@@ -280,31 +316,9 @@ class StubElement {
     return [...this.classes].join(" ");
   }
 
-  set className(value: string) {
-    this.classes.clear();
-    for (const c of value.split(/\s+/)) {
-      if (c !== "") this.classes.add(c);
-    }
-  }
+  set className(value: string) { setClassName(this.classes, value); }
 
-  get classList() {
-    const self = this;
-    return {
-      add: (...names: string[]): void => {
-        for (const c of names) self.classes.add(c);
-      },
-      remove: (...names: string[]): void => {
-        for (const c of names) self.classes.delete(c);
-      },
-      toggle: (c: string, force?: boolean): boolean => {
-        const on = force === undefined ? !self.classes.has(c) : force;
-        if (on) self.classes.add(c);
-        else self.classes.delete(c);
-        return on;
-      },
-      contains: (c: string): boolean => self.classes.has(c),
-    };
-  }
+  get classList() { return createClassList(this.classes); }
 
   get scrollTop(): number {
     return this._scrollTop;
@@ -327,69 +341,21 @@ class StubElement {
     for (const n of nodes) this.appendChild(n);
   }
 
-  appendChild(node: StubNode | string): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    n.parentElement = this;
-    this.children.push(n);
-    return n;
-  }
+  appendChild(node: StubNode | string): StubNode { return appendNode<StubNode, StubElement>(this, node, (text) => new StubText(text)); }
 
-  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (ref === null || ref === undefined) {
-      this.appendChild(n);
-      return n;
-    }
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    const index = this.children.indexOf(ref);
-    if (index < 0) {
-      n.parentElement = this;
-      this.children.push(n);
-    } else {
-      this.children.splice(index, 0, n);
-      n.parentElement = this;
-    }
-    return n;
-  }
+  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode { return insertNode<StubNode, StubElement>(this, node, ref, (text) => new StubText(text)); }
 
-  removeChild(node: StubNode): StubNode {
-    const index = this.children.indexOf(node);
-    if (index >= 0) {
-      this.children.splice(index, 1);
-      node.parentElement = null;
-    }
-    return node;
-  }
+  removeChild(node: StubNode): StubNode { return removeNode<StubNode, StubElement>(this, node); }
 
-  replaceChildren(...nodes: Array<StubNode | string>): void {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    this.append(...nodes);
-  }
+  replaceChildren(...nodes: Array<StubNode | string>): void { replaceNodes<StubNode, StubElement>(this, nodes); }
 
-  contains(node: StubNode | null | undefined): boolean {
-    let cur: StubNode | null | undefined = node;
-    while (cur !== null && cur !== undefined) {
-      if (cur === this) return true;
-      cur = cur.parentElement;
-    }
-    return false;
-  }
+  contains(node: StubNode | null | undefined): boolean { return containsNode<StubNode, StubElement>(this, node); }
 
   get textContent(): string {
     return this.children.map((c) => (c instanceof StubText ? c.data : c.textContent)).join("");
   }
 
-  set textContent(value: string) {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    if (value !== "") {
-      const text = new StubText(value);
-      text.parentElement = this;
-      this.children.push(text);
-    }
-  }
+  set textContent(value: string) { replaceText<StubNode, StubElement>(this, value, (text) => new StubText(text)); }
 
   setAttribute(key: string, value: string): void {
     this.attributes.set(key, value);
@@ -405,25 +371,13 @@ class StubElement {
     this.attributes.delete(key);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.listeners, type, fn); }
 
   removeEventListener(type: string, fn: StubListener): void {
     this.listeners.get(type)?.delete(fn);
   }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.listeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.listeners, type, init); }
 
   click(): void {
     this.dispatchEvent("click", {});
@@ -459,75 +413,8 @@ class StubElement {
 
 /* ------------------------------ 选区 Range 桩（跨文本节点语义） ------------------------------ */
 
-class StubRange {
-  private readonly doc: StubDocument;
-  startContainer: StubNode;
-  startOffset: number;
-  endContainer: StubNode;
-  endOffset: number;
-
-  constructor(
-    doc: StubDocument,
-    startContainer: StubNode,
-    startOffset: number,
-    endContainer: StubNode,
-    endOffset: number,
-  ) {
-    this.doc = doc;
-    this.startContainer = startContainer;
-    this.startOffset = startOffset;
-    this.endContainer = endContainer;
-    this.endOffset = endOffset;
-  }
-
-  get commonAncestorContainer(): StubNode {
-    const startPath: StubNode[] = [];
-    let cur: StubNode | null = this.startContainer;
-    while (cur !== null) {
-      startPath.push(cur);
-      cur = cur.parentElement;
-    }
-    let end: StubNode | null = this.endContainer;
-    while (end !== null) {
-      if (startPath.includes(end)) return end;
-      end = end.parentElement;
-    }
-    return this.doc.root!;
-  }
-
-  cloneRange(): StubRange {
-    return new StubRange(this.doc, this.startContainer, this.startOffset, this.endContainer, this.endOffset);
-  }
-
-  selectNodeContents(element: StubElement): void {
-    this.startContainer = element;
-    this.startOffset = 0;
-    this.endContainer = element;
-    this.endOffset = element.children.length;
-  }
-
-  setEnd(container: StubNode, offset: number): void {
-    this.endContainer = container;
-    this.endOffset = offset;
-  }
-
-  toString(): string {
-    const from = this.documentPosition(this.startContainer, this.startOffset);
-    const to = this.documentPosition(this.endContainer, this.endOffset);
-    return this.doc.flattenedText().slice(Math.min(from, to), Math.max(from, to));
-  }
-
-  private documentPosition(container: StubNode, offset: number): number {
-    if (container instanceof StubText) {
-      return this.doc.textStartOf(container) + offset;
-    }
-    let position = this.doc.textStartOf(container);
-    for (let i = 0; i < offset && i < container.children.length; i += 1) {
-      position += this.doc.subtreeTextLength(container.children[i]!);
-    }
-    return position;
-  }
-}
+const StubRange = createStubRange<StubNode, StubElement, StubText>(StubText);
+type StubRange = InstanceType<typeof StubRange>;
 
 /* 极简选择器引擎：#id / tag / .class / tag.class。 */
 
@@ -535,35 +422,7 @@ class StubRange {
 const queryAll = createQueryAll(StubElement);
 
 /** 完整 index.html DOM 桩：按标签词法解析真实 index.html 建树。 */
-function buildDomFromHtml(html: string, doc: StubDocument): StubElement {
-  const src = html
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<script[\s\S]*?<\/script>/g, "");
-  const voidTags = new Set(["meta", "link", "br", "hr", "input", "img", "source"]);
-  const root = new StubElement("#document");
-  let current = root;
-  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-  let match: RegExpExecArray | null;
-  while ((match = tagRe.exec(src)) !== null) {
-    const full = match[0];
-    const tag = match[1]!.toLowerCase();
-    if (full.startsWith("</")) {
-      if (current.parentElement !== null) current = current.parentElement;
-      continue;
-    }
-    const el = new StubElement(tag);
-    el.ownerDocument = doc;
-    const attrRe = /([a-zA-Z-]+)(?:\s*=\s*("[^"]*"|'[^']*'))?/g;
-    let attrMatch: RegExpExecArray | null;
-    while ((attrMatch = attrRe.exec(match[2] ?? "")) !== null) {
-      const value = attrMatch[2] !== undefined ? attrMatch[2]!.slice(1, -1) : "";
-      el.setAttribute(attrMatch[1]!, value);
-    }
-    current.appendChild(el);
-    if (!voidTags.has(tag)) current = el;
-  }
-  return root;
-}
+function buildDomFromHtml(html: string, doc: StubDocument): StubElement { return buildStubDom(html, doc, StubElement); }
 
 class StubDocument {
   activeElement: StubElement | null = null;
@@ -599,38 +458,13 @@ class StubDocument {
     return this.root === null ? [] : queryAll(this.root, sel);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.docListeners.has(type)) this.docListeners.set(type, new Set());
-    this.docListeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.docListeners, type, fn); }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.docListeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.docListeners, type, init); }
 
   private rebuildFlat(): void {
-    const starts = new Map<StubNode, number>();
-    const ends = new Map<StubNode, number>();
-    let text = "";
-    const walk = (node: StubNode): void => {
-      starts.set(node, text.length);
-      if (node instanceof StubText) {
-        text += node.data;
-        ends.set(node, text.length);
-        return;
-      }
-      for (const child of node.children) walk(child);
-      ends.set(node, text.length);
-    };
-    if (this.root !== null) walk(this.root);
-    this.flat = { text, starts, ends };
+    this.flat = flattenNodes<StubNode>(this.root, (node) => node instanceof StubText ? node.data : null,
+      (node) => node instanceof StubText ? [] : node.children);
   }
 
   flattenedText(): string {
@@ -805,18 +639,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       addEventListener(): void {},
       removeEventListener(): void {},
     }),
-    localStorage: {
-      getItem: (key) => (localStorageStore.has(key) ? localStorageStore.get(key)! : null),
-      setItem: (key, value) => {
-        localStorageStore.set(key, String(value));
-      },
-      removeItem: (key) => {
-        localStorageStore.delete(key);
-      },
-      clear: () => {
-        localStorageStore.clear();
-      },
-    },
+    localStorage: createMemoryStorage(localStorageStore),
     getSelection: () => ({
       get rangeCount(): number {
         return scriptedSelection === null ? 0 : 1;
@@ -1076,11 +899,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     backend.requests.push({ method, path: String(input), body });
     const url = new URL(String(input), "http://studio.local");
     const p = url.pathname;
-    const respond = (status: number, payload: unknown): StubResponse => ({
-      ok: status < 400,
-      status,
-      json: async () => payload,
-    });
+    const respond = stubResponse;
 
     /* ---- 材料面（D4 契约 §3 已落地形状 + D4-3 四端点的脚本镜像） ---- */
     if (p === "/api/trees" && method === "GET") {
