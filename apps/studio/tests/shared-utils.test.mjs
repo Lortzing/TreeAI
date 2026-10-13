@@ -1,3 +1,4 @@
+import "./nav-session-controller.test.mjs";
 import "./nav-finder-controller.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";

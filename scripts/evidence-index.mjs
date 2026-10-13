@@ -24,9 +24,13 @@ export function evidenceLocator(path) {
 }
 export function buildEvidenceIndex(paths, sha, readMarker) {
   const runs = new Map();
+  const unassignedPaths = [];
   for (const path of paths.slice().sort()) {
     const loc = evidenceLocator(path);
-    if (loc === null) continue;
+    if (loc === null) {
+      unassignedPaths.push(path);
+      continue;
+    }
     const key = [loc.domain,loc.stream,loc.runId].join("/");
     const entry = runs.get(key) ?? {
       ...loc, files:0, markers:[], rawFiles:0,
@@ -42,6 +46,8 @@ export function buildEvidenceIndex(paths, sha, readMarker) {
   return {
     schema:"treeai-evidence-locator-v1",
     sourceCommit:sha,
+    pathCoverage: { total: paths.length, grouped: paths.length - unassignedPaths.length, unassigned: unassignedPaths.length },
+    unassignedPaths,
     note:"Repository paths and marker hashes only: no verdict, no private content, no deletion; same-SHA acceptance remains mandatory.",
     runs:[...runs.values()].sort((a,b)=>
       [a.domain,a.stream,a.runId].join("/").localeCompare([b.domain,b.stream,b.runId].join("/"))),

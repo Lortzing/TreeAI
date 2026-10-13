@@ -16,3 +16,22 @@ test("R6 evidence locator groups by verified source path, not verdict",()=>{
   assert.equal(JSON.stringify(report).includes("PASS"),false);
   assert.deepEqual(buildEvidenceIndex(paths.slice().reverse(),"a".repeat(40),p=>Buffer.from(p)),report);
 });
+
+
+test("R6 locator accounts for flat historical, guidance and quarantined paths without reading their contents", () => {
+  const paths = [
+    "evidence/d3/real-pi/historical-run.md",
+    "evidence/d2/README.md",
+    "evidence/d2-quarantine/old/raw.json",
+    "evidence/d4/browser/run/summary.json",
+  ];
+  const read = [];
+  const report = buildEvidenceIndex(paths, "b".repeat(40), (path) => {
+    read.push(path);
+    return Buffer.from("marker");
+  });
+  assert.deepEqual(report.pathCoverage, { total: 4, grouped: 1, unassigned: 3 });
+  assert.deepEqual(report.unassignedPaths, paths.slice(0, 3).sort());
+  assert.deepEqual(read, [paths[3]]);
+  assert.equal(report.runs.reduce((sum, run) => sum + run.files, 0) + report.unassignedPaths.length, paths.length);
+});

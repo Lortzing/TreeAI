@@ -1,5 +1,12 @@
+import { createNavPathView } from "./views/nav-path.js";
+import { createNavNodeResultsView } from "./views/nav-node-results.js";
+import { createNavNodeSearchController } from "./controllers/nav-node-search.js";
+import { createNavLocateController } from "./controllers/nav-locate.js";
+import { createNavSessionController } from "./controllers/nav-session.js";
+import { createNavInteractionController } from "./controllers/nav-interaction.js";
+import { createNavPersistenceController } from "./controllers/nav-persistence.js";
 import { createNavFinderController } from "./controllers/nav-finder.js";
-import { createNavTreeView, NAV_ROW_HEIGHT_PX } from "./views/nav-tree.js";
+import { createNavTreeView } from "./views/nav-tree.js";
 /**
  * Studio state factory. Every start owns its state, event listeners,
  * pollers, SSE connection, render caches and DOM integration.
@@ -7130,30 +7137,11 @@ async function jumpToTurnFactHit(hit, trigger) {
  * 话）；所有入口自捕获失败（导航是只读面，不进 guard/busy 锁——绝不锁住
  * composer）。 */
 
-/** 子节点分页大小（children 端点 limit 上限 500，取后端默认值 50）。 */
-const NAV_CHILDREN_PAGE_LIMIT = 50;
-/** 标题/标识搜索的分页大小。 */
-const NAV_SEARCH_LIMIT = 20;
-/** 路径行收拢阈值（超过即默认收拢，show full path 展开完整——收拢是显示
- * 态，数据永不截断）。 */
-const NAV_PATH_COLLAPSE_THRESHOLD = 6;
-/** 揭示续页安全上限（单次 reveal 最多翻的子节点页数——防病态环）。 */
-const NAV_REVEAL_PAGE_GUARD = 2000;
 
 /** 渲染期注册表（renderNavTree 重建）：焦点还原与键盘定位按 id 取最新 DOM。 */
 const navRowElements = new Map();
 const navFinderButtons = new Map();
 const navNodeHitButtons = new Map();
-
-/** 子节点分页条目（惰性建——首次加载才出现）。 */
-function navChildEntry(session, parentId) {
-  let entry = session.childPages.get(parentId);
-  if (entry === undefined) {
-    entry = { ids: [], nextCursor: null, totalChildren: 0, state: "idle", error: null, inFlight: null };
-    session.childPages.set(parentId, entry);
-  }
-  return entry;
-}
 
 /* ------------------------------ 树查找（finder） ------------------------------ */
 
@@ -7183,6 +7171,60 @@ function navReplaceList(list, elements, registry) {
   }
 }
 
+const { renderNavPath } = createNavPathView({
+  document, getElement: $, getState: () => state,
+  selectNavNode: (...args) => selectNavNode(...args),
+});
+const { renderNavNodeResults } = createNavNodeResultsView({
+  document, getElement: $, getState: () => state, mutedListItem, navNodeHitButtons, navReplaceList,
+  runNavNodeSearch: () => runNavNodeSearch(),
+  loadNavNodeSearchMore: () => loadNavNodeSearchMore(),
+  navRevealBranch: (...args) => navRevealBranch(...args),
+});
+const { runNavNodeSearch, loadNavNodeSearchMore } = createNavNodeSearchController({
+  getElement: $, getState: () => state, api, renderNavNodeResults,
+});
+const { navRevealBranch, navLocateCurrent, navJumpToSource } = createNavLocateController({
+  getElement: $, getState: () => state, api,
+  navChildEntry: (...args) => navChildEntry(...args),
+  navLoadChildrenPage: (...args) => navLoadChildrenPage(...args),
+  selectNavNode: (...args) => selectNavNode(...args),
+  openNavTree: (...args) => openNavTree(...args),
+  renderNavTree: () => renderNavTree(),
+  renderNavTreeActions: () => renderNavTreeActions(),
+  openTree, revealOrigin, openMaterial,
+});
+
+const { scheduleNavPersist } = createNavPersistenceController({
+  getState: () => state,
+  api,
+  renderNavTreeStatusOnly: (session) => renderNavTreeStatusOnly(session),
+});
+const { navToggleExpansion, selectNavNode, navTreeKeydown } = createNavInteractionController({
+  getState: () => state,
+  getElement: $,
+  api,
+  navVisibleRows: (session) => navVisibleRows(session),
+  navRowElements,
+  navLoadChildrenPage: (...args) => navLoadChildrenPage(...args),
+  scheduleNavPersist,
+  renderNavTree: () => renderNavTree(),
+  renderNavPath,
+  renderNavTreeActions: () => renderNavTreeActions(),
+});
+const { openNavTree, closeNavTree, navLoadChildrenPage, navChildEntry } = createNavSessionController({
+  getState: () => state,
+  getElement: $,
+  api,
+  renderNavSurfaceChrome: () => renderNavSurfaceChrome(),
+  renderNavTree: () => renderNavTree(),
+  renderNavPath,
+  renderNavNodeResults,
+  renderNavFinder: () => renderNavFinder(),
+  selectNavNode,
+  navRevealBranch,
+});
+
 const { renderNavFinder } = createNavFinderView({
   document,
   getElement: $,
@@ -7199,282 +7241,7 @@ const { renderNavFinder } = createNavFinderView({
   replaceList: navReplaceList,
 });
 
-/* ------------------------------ 会话（开/关树） ------------------------------ */
-
-/**
- * 在导航面打开一棵树（finder 结果点击 / locate 跨树 / 失败重试共用）。
- * 顺序：单树概览（含 trunkBranchId——主干节点视图由概要合成）→ 根子节点
- * 首页 + 展开状态（并行取，独立落地）→ 恢复展开集合（世代守卫：恢复揭示
- * 按需续页）。opts.reveal = {branchId, path}（locate 已带完整路径时免再拉）。
- */
-async function openNavTree(treeId, opts = {}) {
-  const session = {
-    treeId,
-    overview: null,
-    overviewState: "loading",
-    overviewError: null,
-    nodes: new Map(),
-    childPages: new Map(),
-    expanded: new Set(),
-    selectedBranchId: null,
-    focusBranchId: null,
-    path: null,
-    pathShowAll: false,
-    search: { phase: "idle", error: null, query: null, hits: [], nextCursor: null },
-    persistError: null,
-    locateNote: null,
-    persistQueued: false,
-    persistRunning: false,
-  };
-  state.nav.session = session;
-  $("nav-surface").hidden = false;
-  $("nav-tree-scroll").scrollTop = 0;
-  $("nav-node-search").value = "";
-  $("nav-node-note").textContent = "";
-  renderNavSurfaceChrome();
-  renderNavTree();
-  renderNavPath();
-  renderNavNodeResults();
-  renderNavFinder(); /* active 标记随会话切换刷新 */
-  try {
-    const overview = await api(`/api/nav/trees/${encodeURIComponent(treeId)}`);
-    if (state.nav.session !== session) return; /* 迟到丢弃 */
-    session.overview = overview;
-    session.overviewState = "loaded";
-    /* 主干节点视图由概要合成（children 分页到达后补真实 childCount）。 */
-    session.nodes.set(overview.trunkBranchId, {
-      id: overview.trunkBranchId,
-      treeId,
-      parentBranchId: null,
-      depth: 0,
-      title: overview.title,
-      originKind: "none",
-      childCount: 0,
-      createdAt: overview.createdAt,
-    });
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.overviewState = "failed";
-    session.overviewError = String(err && err.message ? err.message : err);
-    renderNavSurfaceChrome();
-    return;
-  }
-  renderNavSurfaceChrome();
-  /* overview 常量只存在于上方 try 块作用域——这里取 session.overview（已 loaded）。 */
-  const childrenLoad = navLoadChildrenPage(session, session.overview.trunkBranchId, "first");
-  let expandPayload = null;
-  try {
-    expandPayload = await api(`/api/nav/trees/${encodeURIComponent(treeId)}/expand-state`);
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    /* 展开状态读失败：浏览照常（诚实注记，绝不伪造默认展开）。 */
-    session.locateNote = `saved navigation state could not be read — ${String(err && err.message ? err.message : err)}`;
-  }
-  if (state.nav.session !== session) return;
-  await childrenLoad;
-  if (state.nav.session !== session) return;
-  if (expandPayload !== null && expandPayload.expandState !== null) {
-    const saved = expandPayload.expandState;
-    session.selectedBranchId = saved.selectedBranchId ?? null;
-    session.focusBranchId = saved.selectedBranchId ?? null;
-    for (const id of saved.expandedBranchIds) session.expanded.add(id);
-    renderNavTree(); /* 窗口内的展开节点即刻按需加载（navPumpLoads） */
-    if (session.selectedBranchId !== null) {
-      if (session.nodes.has(session.selectedBranchId)) {
-        /* 浅层选中：已在场——补完整路径行并滚到选中行。persist:false——
-           恢复读回不回写（PUT 只属于用户动作）。 */
-        void selectNavNode(session.selectedBranchId, { scroll: true, persist: false });
-      } else {
-        /* 深层选中：沿保存的祖先链续页直到选中行可见（重启不丢位置）。 */
-        void navRevealBranch(session, session.selectedBranchId, undefined, { persist: false });
-      }
-    }
-  } else {
-    renderNavTree();
-  }
-  if (opts.reveal !== undefined) {
-    void navRevealBranch(session, opts.reveal.branchId, opts.reveal.path);
-  }
-}
-
-/** 关闭导航树（回到仅树查找的面；持久化已在每次变更时整组落库）。 */
-function closeNavTree() {
-  state.nav.session = null;
-  $("nav-surface").hidden = true;
-  $("nav-tree").replaceChildren();
-  renderNavFinder();
-}
-
-/* ------------------------------ 子节点分页加载 ------------------------------ */
-
-/**
- * 子节点分页（mode "first" = 首页/重试；"next" = 游标续页）。在途合并
- * （同父级并发调用共享同一 promise）；stale-cursor 409 = 索引已失效——
- * 该父级从首页重开（旧子节点从结构缓存移除，不自愈旧游标）；其余失败
- * 如实落 failed 态（Retry 行重试）。
- */
-async function navLoadChildrenPage(session, parentId, mode) {
-  const entry = navChildEntry(session, parentId);
-  if (entry.state === "loading" && entry.inFlight !== null) return entry.inFlight;
-  if (mode === "first" && entry.ids.length > 0 && entry.state !== "failed") return Promise.resolve();
-  if (mode === "next" && entry.nextCursor === null) return Promise.resolve();
-  const requestCursor = mode === "next" ? entry.nextCursor : null;
-  if (mode === "first" && entry.ids.length > 0) {
-    /* 显式重试首页：旧子节点先出结构缓存（即将整页重建）。 */
-    for (const id of entry.ids) session.nodes.delete(id);
-    entry.ids = [];
-  }
-  entry.state = "loading";
-  entry.error = null;
-  const promise = (async () => {
-    try {
-      let path =
-        `/api/nav/trees/${encodeURIComponent(session.treeId)}/branches/${encodeURIComponent(parentId)}` +
-        `/children?limit=${String(NAV_CHILDREN_PAGE_LIMIT)}`;
-      if (requestCursor !== null) path += `&cursor=${encodeURIComponent(requestCursor)}`;
-      const payload = await api(path);
-      if (state.nav.session !== session) return; /* 迟到丢弃 */
-      if (mode === "first") entry.ids = [];
-      for (const node of payload.nodes) {
-        session.nodes.set(node.id, node);
-        entry.ids.push(node.id);
-      }
-      entry.totalChildren = payload.totalChildren;
-      entry.nextCursor = payload.nextCursor;
-      entry.state = entry.nextCursor === null ? "complete" : "partial";
-      if (session.overview !== null && parentId === session.overview.trunkBranchId) {
-        const trunk = session.nodes.get(parentId);
-        if (trunk !== undefined && trunk.childCount !== payload.totalChildren) {
-          trunk.childCount = payload.totalChildren;
-        }
-      }
-    } catch (err) {
-      if (state.nav.session !== session) return;
-      if (err !== null && typeof err === "object" && err.code === "stale-cursor" && requestCursor !== null) {
-        /* 409：索引失效后旧游标不可续——从首页重开（一次重试；首页请求
-           不带游标，不会再 stale）。 */
-        navForgetChildren(session, parentId);
-        await navLoadChildrenPage(session, parentId, "first");
-        return;
-      }
-      entry.state = "failed";
-      entry.error = String(err && err.message ? err.message : err);
-    } finally {
-      entry.inFlight = null;
-      if (state.nav.session === session) renderNavTree();
-    }
-  })();
-  entry.inFlight = promise;
-  return promise;
-}
-
-/** 丢弃某父级已载子节点（stale-cursor 重开前——旧页不是事实）。 */
-function navForgetChildren(session, parentId) {
-  const entry = session.childPages.get(parentId);
-  if (entry === undefined) return;
-  for (const id of entry.ids) session.nodes.delete(id);
-  session.childPages.delete(parentId);
-}
-
 /* ------------------------------ 展开 / 选中 ------------------------------ */
-
-/** 展开/收起（鼠标 toggle 与键盘 →/← 共用；展开即按需加载首页）。 */
-function navToggleExpansion(branchId) {
-  const session = state.nav.session;
-  if (session === null || session.overview === null) return;
-  if (session.expanded.has(branchId)) {
-    session.expanded.delete(branchId);
-    scheduleNavPersist(session);
-    renderNavTree();
-    return;
-  }
-  session.expanded.add(branchId);
-  scheduleNavPersist(session);
-  if (!session.childPages.has(branchId)) {
-    void navLoadChildrenPage(session, branchId, "first");
-  }
-  renderNavTree();
-}
-
-/**
- * 选中节点（点击行 / Enter / 路径步 / 揭示收尾共用）：选中 + 焦点 + 完整
- * 路径行（path 端点——100 层深链完整返回）+ 滚动到选中行 + 持久化。
- * opts.persist = false：重启恢复读回的选中（restore）——读回不回写，
- * PUT 只属于用户动作（展开/选中/收起）。
- */
-async function selectNavNode(branchId, opts = {}) {
-  const session = state.nav.session;
-  if (session === null) return;
-  session.selectedBranchId = branchId;
-  session.focusBranchId = branchId;
-  if (opts.persist !== false) scheduleNavPersist(session);
-  session.path = { state: "loading", steps: [], error: null };
-  renderNavPath();
-  renderNavTreeActions();
-  if (opts.scroll !== false) navScrollToBranch(session, branchId);
-  renderNavTree();
-  try {
-    const payload = await api(
-      `/api/nav/trees/${encodeURIComponent(session.treeId)}/branches/${encodeURIComponent(branchId)}/path`,
-    );
-    if (state.nav.session !== session) return;
-    session.path = { state: "loaded", steps: payload.path, error: null };
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.path = { state: "failed", steps: [], error: String(err && err.message ? err.message : err) };
-  }
-  renderNavPath();
-}
-
-/** 滚动容器定位到某分支行（窗口重算使其进入渲染窗口；瞬时滚动——键盘
-    连续移动不与平滑滚动竞态）。 */
-function navScrollToBranch(session, branchId) {
-  const scroller = $("nav-tree-scroll");
-  const rows = navVisibleRows(session);
-  const index = rows.findIndex((row) => row.kind === "node" && row.node.id === branchId);
-  if (index < 0) return;
-  const viewport = typeof scroller.clientHeight === "number" ? scroller.clientHeight : 0;
-  const top = index * NAV_ROW_HEIGHT_PX;
-  const bottom = top + NAV_ROW_HEIGHT_PX;
-  if (bottom > scroller.scrollTop + Math.max(viewport, NAV_ROW_HEIGHT_PX) || top < scroller.scrollTop) {
-    scroller.scrollTop = Math.max(0, top - Math.max(0, Math.floor((viewport - NAV_ROW_HEIGHT_PX * 3) / 2)));
-  }
-}
-
-/* ------------------------------ 展开状态持久化 ------------------------------ */
-
-/**
- * 整组持久化（PUT expand-state：expandedBranchIds 全集 + selectedBranchId
- * ——服务端校验成员归属）。串行 + 最新快照胜出：连续展开/收起不等逐个
- * PUT 完成，队列只发最新整组（乱序到达不落旧态）。失败如实注记（浏览不
- * 阻断），成功清除注记。
- */
-function scheduleNavPersist(session) {
-  session.persistQueued = true;
-  if (session.persistRunning) return;
-  session.persistRunning = true;
-  const run = async () => {
-    for (;;) {
-      if (!session.persistQueued) break;
-      session.persistQueued = false;
-      const body = {
-        expandedBranchIds: [...session.expanded],
-        selectedBranchId: session.selectedBranchId,
-      };
-      try {
-        await api(`/api/nav/trees/${encodeURIComponent(session.treeId)}/expand-state`, "PUT", body);
-        if (state.nav.session !== session) return;
-        session.persistError = null;
-      } catch (err) {
-        if (state.nav.session !== session) return;
-        session.persistError = String(err && err.message ? err.message : err);
-      }
-    }
-    session.persistRunning = false;
-    if (state.nav.session === session) renderNavTreeStatusOnly(session);
-  };
-  void run();
-}
 
 /* ------------------------------ 可见行序 + 虚拟化窗口 ------------------------------ */
 
@@ -7487,466 +7254,6 @@ const { navVisibleRows, renderNavTree, renderNavTreeStatusOnly } = createNavTree
   navToggleExpansion,
   selectNavNode,
 });
-
-/* ------------------------------ 键盘（逐层移动与展开） ------------------------------ */
-
-/**
- * 树视图键盘模型（charter「键盘可逐层移动与展开；焦点不因虚拟化消失」）：
- * ↑/↓ 沿可见行序逐行移动（跨层——层级导航的扁平呈现序）；→ 展开焦点行
- * （已展开则入首子行）；← 收起焦点行（已收起则回父行）；Enter 选中；Home/
- * End 首末行。移动超出渲染窗口时先滚动（瞬时）再重渲染再落焦——焦点行
- * 必在 DOM。toggle/标签按钮自身的 Enter/Space 走原生 click，不在此拦截。
- */
-function navTreeKeydown(event) {
-  const session = state.nav.session;
-  if (session === null || session.overview === null) return;
-  const key = event.key;
-  if (
-    key !== "ArrowDown" &&
-    key !== "ArrowUp" &&
-    key !== "ArrowLeft" &&
-    key !== "ArrowRight" &&
-    key !== "Enter" &&
-    key !== " " &&
-    key !== "Home" &&
-    key !== "End"
-  ) {
-    return;
-  }
-  const target = event.target;
-  const onButton = target !== null && typeof target === "object" && target.tagName === "BUTTON";
-  if ((key === "Enter" || key === " ") && onButton) return; /* 原生按钮键盘激活 */
-  const rows = navVisibleRows(session);
-  const nodeRows = [];
-  rows.forEach((row, index) => {
-    if (row.kind === "node") nodeRows.push({ index, node: row.node });
-  });
-  if (nodeRows.length === 0) return;
-  const currentPos = nodeRows.findIndex((entry) => entry.node.id === session.focusBranchId);
-  event.preventDefault();
-  if (key === "ArrowDown" || key === "ArrowUp") {
-    const delta = key === "ArrowDown" ? 1 : -1;
-    const fallback = delta > 0 ? 0 : nodeRows.length - 1;
-    let nextPos = currentPos < 0 ? fallback : currentPos + delta;
-    if (nextPos < 0) nextPos = 0;
-    if (nextPos >= nodeRows.length) nextPos = nodeRows.length - 1;
-    navSetFocusBranch(session, nodeRows[nextPos].node.id);
-    return;
-  }
-  if (key === "Home" || key === "End") {
-    const pos = key === "Home" ? 0 : nodeRows.length - 1;
-    navSetFocusBranch(session, nodeRows[pos].node.id);
-    return;
-  }
-  if (currentPos < 0) return;
-  const node = nodeRows[currentPos].node;
-  const expanded = session.expanded.has(node.id);
-  if (key === "Enter" || key === " ") {
-    void selectNavNode(node.id);
-    return;
-  }
-  if (key === "ArrowRight") {
-    if (!expanded && node.childCount > 0) {
-      session.focusBranchId = node.id;
-      navToggleExpansion(node.id);
-      return;
-    }
-    if (expanded) {
-      const child = nodeRows.find((entry) => entry.node.parentBranchId === node.id);
-      if (child !== undefined) navSetFocusBranch(session, child.node.id);
-    }
-    return;
-  }
-  if (key === "ArrowLeft") {
-    if (expanded) {
-      session.focusBranchId = node.id;
-      navToggleExpansion(node.id);
-      return;
-    }
-    if (node.parentBranchId !== null && session.nodes.has(node.parentBranchId)) {
-      navSetFocusBranch(session, node.parentBranchId);
-    }
-  }
-}
-
-/** 焦点行落位：置焦点分支 → 需要时瞬时滚动进窗口 → 重渲染 → 聚焦最新元素。 */
-function navSetFocusBranch(session, branchId) {
-  session.focusBranchId = branchId;
-  navScrollToBranch(session, branchId);
-  renderNavTree();
-  const el = navRowElements.get(branchId);
-  if (el !== undefined) el.focus();
-}
-
-/* ------------------------------ 路径行（完整父路径） ------------------------------ */
-
-function navStepLabel(step) {
-  return step.title !== null ? step.title : step.depth === 0 ? "Trunk" : step.id;
-}
-
-/** 路径行渲染：当前节点的完整根→选中链（path 端点 100 层完整返回）；长链
-    默认收拢（首两步 + “show full path” + 末两步——收拢是显示态，展开后
-    全部步在场）；每步可点击选中该祖先（向上导航）。 */
-function renderNavPath() {
-  const session = state.nav.session;
-  const heading = $("nav-path-heading");
-  const wrap = $("nav-path");
-  wrap.replaceChildren();
-  if (session === null || session.overview === null) {
-    heading.textContent = "";
-    return;
-  }
-  if (session.selectedBranchId === null) {
-    heading.textContent = "no branch selected — click a row (or press Enter) to select it and see its full path";
-    return;
-  }
-  const path = session.path;
-  if (path === null || path.state === "loading") {
-    heading.textContent = "loading the full path…";
-    return;
-  }
-  if (path.state === "failed") {
-    heading.textContent = `full path failed to load — ${path.error}`;
-    const retry = document.createElement("button");
-    retry.className = "drawer-retry";
-    retry.textContent = "Retry";
-    retry.addEventListener("click", () => {
-      if (session.selectedBranchId !== null) void selectNavNode(session.selectedBranchId);
-    });
-    wrap.append(retry);
-    return;
-  }
-  if (path.state === "idle") return;
-  const steps = path.steps;
-  heading.textContent = `full path · ${String(steps.length)} level(s), root → selected`;
-  const stepButton = (step, isCurrent) => {
-    const button = document.createElement("button");
-    button.className = isCurrent ? "nav-path-step active" : "nav-path-step";
-    button.textContent = navStepLabel(step);
-    button.title = `select ${step.id} (depth ${String(step.depth)})`;
-    button.addEventListener("click", () => void selectNavNode(step.id));
-    return button;
-  };
-  const parts = [];
-  if (steps.length > NAV_PATH_COLLAPSE_THRESHOLD && !session.pathShowAll) {
-    /* 首两步 + 末两步（收拢态仍保上下文两端；隐藏层数 = 总数 − 4）。 */
-    parts.push(stepButton(steps[0], false));
-    parts.push(stepButton(steps[1], false));
-    const more = document.createElement("button");
-    more.className = "nav-path-more";
-    more.textContent = `… ${String(steps.length - 4)} more level(s) — show full path`;
-    more.addEventListener("click", () => {
-      session.pathShowAll = true;
-      renderNavPath();
-    });
-    parts.push(more);
-    parts.push(stepButton(steps[steps.length - 2], false));
-    parts.push(stepButton(steps[steps.length - 1], true));
-  } else {
-    steps.forEach((step, index) => parts.push(stepButton(step, index === steps.length - 1)));
-  }
-  const out = [];
-  parts.forEach((part, index) => {
-    if (index > 0) {
-      const sep = document.createElement("span");
-      sep.className = "nav-path-sep";
-      sep.textContent = " / ";
-      out.push(sep);
-    }
-    out.push(part);
-  });
-  wrap.replaceChildren(...out);
-  if (steps.length > NAV_PATH_COLLAPSE_THRESHOLD && session.pathShowAll) {
-    const collapse = document.createElement("button");
-    collapse.className = "nav-path-more";
-    collapse.textContent = "collapse path";
-    collapse.addEventListener("click", () => {
-      session.pathShowAll = false;
-      renderNavPath();
-    });
-    wrap.append(collapse);
-  }
-}
-
-/* ------------------------------ 分支搜索（同名消歧） ------------------------------ */
-
-/** 分支搜索（当前导航树范围；命中携带完整路径——同名节点的身份载荷）。 */
-async function runNavNodeSearch() {
-  const session = state.nav.session;
-  if (session === null) return;
-  const text = $("nav-node-search").value.trim();
-  if (text === "") {
-    session.search = { phase: "idle", error: null, query: null, hits: [], nextCursor: null };
-    renderNavNodeResults();
-    return;
-  }
-  session.search.phase = "loading";
-  session.search.error = null;
-  session.search.query = text;
-  renderNavNodeResults();
-  try {
-    const payload = await api(
-      `/api/nav/search/branches?text=${encodeURIComponent(text)}&mode=substring` +
-        `&treeId=${encodeURIComponent(session.treeId)}&limit=${String(NAV_SEARCH_LIMIT)}`,
-    );
-    if (state.nav.session !== session) return; /* 迟到丢弃 */
-    session.search.phase = "loaded";
-    session.search.hits = payload.hits;
-    session.search.nextCursor = payload.nextCursor;
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.search.phase = "failed";
-    session.search.error = String(err && err.message ? err.message : err);
-  }
-  renderNavNodeResults();
-}
-
-/** 分支搜索续页。 */
-async function loadNavNodeSearchMore() {
-  const session = state.nav.session;
-  if (session === null || session.search.phase !== "loaded" || session.search.nextCursor === null) return;
-  const epochSession = session;
-  try {
-    const payload = await api(
-      `/api/nav/search/branches?text=${encodeURIComponent(session.search.query)}&mode=substring` +
-        `&treeId=${encodeURIComponent(session.treeId)}&limit=${String(NAV_SEARCH_LIMIT)}` +
-        `&cursor=${encodeURIComponent(session.search.nextCursor)}`,
-    );
-    if (state.nav.session !== epochSession) return;
-    session.search.hits = [...session.search.hits, ...payload.hits];
-    session.search.nextCursor = payload.nextCursor;
-  } catch (err) {
-    if (state.nav.session !== epochSession) return;
-    session.search.error = String(err && err.message ? err.message : err);
-  }
-  renderNavNodeResults();
-}
-
-/** 命中路径摘要（长链首末收拢显示，完整路径在 title 属性——同名消歧的
-    完整身份始终可辨）。 */
-function navHitPathText(path) {
-  const labels = path.map((step) => navStepLabel(step));
-  if (labels.length > 6) {
-    return `${labels.slice(0, 2).join(" / ")} / … / ${labels.slice(-3).join(" / ")}`;
-  }
-  return labels.join(" / ");
-}
-
-function renderNavNodeResults() {
-  const session = state.nav.session;
-  const list = $("nav-node-results");
-  const note = $("nav-node-note");
-  navNodeHitButtons.clear();
-  if (session === null) {
-    list.replaceChildren();
-    note.textContent = "";
-    return;
-  }
-  const search = session.search;
-  const items = [];
-  if (search.phase === "idle") {
-    list.replaceChildren();
-    note.textContent = "find branches by title or id — every hit carries its full path (same-name branches stay distinguishable)";
-    return;
-  }
-  if (search.phase === "loading") {
-    items.push(mutedListItem(`searching branches for “${search.query}”…`));
-    note.textContent = "searching…";
-  } else if (search.phase === "failed") {
-    const li = document.createElement("li");
-    li.className = "muted";
-    li.append(document.createTextNode(`branch search failed — ${search.error} `));
-    const retry = document.createElement("button");
-    retry.className = "drawer-retry";
-    retry.textContent = "Retry";
-    retry.addEventListener("click", () => void runNavNodeSearch());
-    li.append(retry);
-    items.push(li);
-    note.textContent = "the failure stays visible with a retry";
-  } else {
-    if (search.hits.length === 0) {
-      items.push(
-        mutedListItem(`no branch in this tree matches “${search.query}” by title or id — nothing is fabricated`),
-      );
-    } else {
-      for (const hit of search.hits) {
-        const li = document.createElement("li");
-        const button = document.createElement("button");
-        button.dataset.branchId = hit.branchId;
-        if (hit.branchId === session.selectedBranchId) button.classList.add("active");
-        const name = document.createElement("span");
-        name.className = "nav-finder-name";
-        name.textContent =
-          (hit.title !== null ? hit.title : "(no first question yet)") +
-          (hit.matchedOn === "id" ? " (matched on id)" : "");
-        const meta = document.createElement("span");
-        meta.className = "nav-finder-meta";
-        meta.textContent = `${hit.branchId} · depth ${String(hit.depth)} · ${hit.originKind}`;
-        const pathEl = document.createElement("span");
-        pathEl.className = "nav-hit-path";
-        pathEl.textContent = navHitPathText(hit.path);
-        button.append(name, meta, pathEl);
-        button.title = `${hit.branchId} · ${hit.path.map((step) => navStepLabel(step)).join(" / ")}`;
-        button.addEventListener("click", () => {
-          void navRevealBranch(session, hit.branchId, hit.path);
-        });
-        navNodeHitButtons.set(hit.branchId, button);
-        li.append(button);
-        items.push(li);
-      }
-      if (search.nextCursor !== null) {
-        const li = document.createElement("li");
-        const more = document.createElement("button");
-        more.className = "nav-more";
-        more.textContent = `More branch hits (${String(search.hits.length)} loaded)`;
-        more.addEventListener("click", () => void loadNavNodeSearchMore());
-        li.append(more);
-        items.push(li);
-      }
-    }
-    note.textContent = `${String(search.hits.length)} branch hit(s) for “${search.query}” in this tree`;
-  }
-  navReplaceList(list, items, navNodeHitButtons);
-}
-
-/* ------------------------------ 揭示（reveal / locate / source） ------------------------------ */
-
-/**
- * 揭示某分支：沿根→该节点的完整路径逐层展开并续页（页序即创建序，目标
- * 不在已载页时按游标翻页直到出现/翻尽——有界），然后选中 + 滚动 + 聚焦。
- * locate / 分支搜索命中 / 重启恢复的深层选中共用本函数。opts.persist =
- * false 透传给收尾选中（恢复读回不回写；locate/搜索命中是用户动作，照常
- * 持久化）。
- */
-async function navRevealBranch(session, branchId, pathSteps, opts = {}) {
-  try {
-    let steps = pathSteps;
-    if (steps === undefined) {
-      const payload = await api(
-        `/api/nav/trees/${encodeURIComponent(session.treeId)}/branches/${encodeURIComponent(branchId)}/path`,
-      );
-      if (state.nav.session !== session) return;
-      steps = payload.path;
-    }
-    if (steps === undefined || steps.length === 0) return;
-    for (let i = 0; i + 1 < steps.length; i += 1) {
-      const parentId = steps[i].id;
-      const wantedId = steps[i + 1].id;
-      if (!session.expanded.has(parentId)) session.expanded.add(parentId);
-      let guard = 0;
-      for (;;) {
-        if (state.nav.session !== session) return;
-        if (session.nodes.has(wantedId)) break;
-        const entry = navChildEntry(session, parentId);
-        if (entry.state === "loading" && entry.inFlight !== null) {
-          await entry.inFlight; /* 与在途页合并，完成后复查 */
-          continue;
-        }
-        if (entry.state === "failed") break; /* 该层加载失败——如实停下（Retry 行在场） */
-        if (entry.ids.length === 0) {
-          /* 该层从未加载（恢复早于窗口泵触发）：直接取首页。 */
-          await navLoadChildrenPage(session, parentId, "first");
-          guard += 1;
-          continue;
-        }
-        if (entry.nextCursor === null) break; /* 翻尽未见——节点已不在当前事实 */
-        await navLoadChildrenPage(session, parentId, "next");
-        guard += 1;
-        if (guard > NAV_REVEAL_PAGE_GUARD) break;
-      }
-    }
-    if (state.nav.session !== session) return;
-    if (!session.nodes.has(branchId)) {
-      session.locateNote = `${branchId} is no longer reachable in this tree's current facts — no approximate node is substituted`;
-      renderNavTree();
-      return;
-    }
-    await selectNavNode(branchId, { scroll: true, persist: opts.persist !== false });
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.locateNote = `locating ${branchId} failed — ${String(err && err.message ? err.message : err)}`;
-    renderNavTree();
-  }
-}
-
-/** 定位工作台当前分支（跨树：locate 携带目标树与完整路径——切换导航树
-    并续走揭示）。 */
-async function navLocateCurrent() {
-  const session = state.nav.session;
-  if (session === null) return;
-  const st = state.treeState;
-  const branchId = st === null ? null : st.cursor !== null ? st.cursor.branchId : st.trunkBranchId;
-  if (branchId === null || st === null) return;
-  $("nav-locate-current").disabled = true;
-  session.locateNote = "locating the workbench's current branch…";
-  renderNavTree();
-  try {
-    const payload = await api(`/api/nav/branches/${encodeURIComponent(branchId)}/locate`);
-    if (state.nav.session !== session) return;
-    session.locateNote = null;
-    if (payload.treeId !== session.treeId) {
-      await openNavTree(payload.treeId, { reveal: { branchId: payload.node.id, path: payload.path } });
-      return;
-    }
-    await navRevealBranch(session, payload.node.id, payload.path);
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.locateNote = `locating the current branch failed — ${String(err && err.message ? err.message : err)}`;
-  } finally {
-    renderNavTreeActions();
-    renderNavTree();
-  }
-}
-
-/**
- * 跳回所选节点的来源（既有揭示约定，产品事实——绝不由 session 可用性决
- * 定）：locate 携带 origin——turn 来源走 revealOrigin（/source 揭示 + 降级
- * 纪律）；material 来源走阅读器按版本+块定位（sourceJump 语义）；无来源
- * 如实说明。目标树不在工作台时先 openTree 进入（工作台既有开树行为）。
- */
-async function navJumpToSource() {
-  const session = state.nav.session;
-  if (session === null || session.selectedBranchId === null) return;
-  const branchId = session.selectedBranchId;
-  $("nav-source-selected").disabled = true;
-  session.locateNote = `revealing the origin of ${branchId}…`;
-  renderNavTree();
-  try {
-    const locate = await api(`/api/nav/branches/${encodeURIComponent(branchId)}/locate`);
-    if (state.nav.session !== session) return;
-    const origin = locate.origin;
-    if (origin === null) {
-      session.locateNote =
-        `${branchId} has no saved origin to reveal (the trunk, or a branch created without one) — nothing is faked`;
-      renderNavTree();
-      return;
-    }
-    if (state.currentTreeId !== locate.treeId) {
-      await openTree(locate.treeId);
-      if (state.currentTreeId !== locate.treeId) {
-        throw new Error(`opening tree ${locate.treeId} in the workbench did not complete — cannot reveal the origin here`);
-      }
-    }
-    session.locateNote = null;
-    renderNavTree();
-    if (origin.kind === "turn") {
-      await revealOrigin(branchId);
-    } else {
-      await openMaterial(origin.materialId, {
-        versionId: origin.versionId,
-        focusBlockId: origin.blockId,
-        arrival: "return-source",
-        trigger: { kind: "element", element: $("nav-source-selected") },
-      });
-    }
-  } catch (err) {
-    if (state.nav.session !== session) return;
-    session.locateNote = `revealing the origin failed — ${String(err && err.message ? err.message : err)}`;
-    renderNavTree();
-  } finally {
-    renderNavTreeActions();
-  }
-}
 
 const { renderNavSurfaceChrome, renderNavTreeActions } = createNavChromeView({
   document,

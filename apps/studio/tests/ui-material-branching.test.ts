@@ -1,3 +1,4 @@
+import { matchesSelector, createQueryAll, asRecord, createStubEventSource, type StubEventInit, type StubEvent, type StubSseEvent, type StubFetchInit, type StubResponse } from "./support/browser-stubs.ts";
 /**
  * D4-3 材料建枝闭环前端套件（issue #8 工作包 D4-3「原文探索闭环」的
  * 前端增量；charter §3.3 / ADR-004；消费已落地的四个 HTTP 端点——
@@ -215,37 +216,6 @@ interface StubMaterial {
 
 /* ------------------------------ 桩事件 / fetch 形状 ------------------------------ */
 
-interface StubEventInit {
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubEvent {
-  type: string;
-  preventDefault(): void;
-  stopPropagation(): void;
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubSseEvent {
-  type: string;
-  data: string;
-}
-
-interface StubFetchInit {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-interface StubResponse {
-  ok: boolean;
-  status: number;
-  json(): Promise<unknown>;
-}
 
 interface RecordedRequest {
   method: string;
@@ -253,9 +223,6 @@ interface RecordedRequest {
   body: unknown;
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
-}
 
 /* ------------------------------ 事件轮转 / 短等待 ------------------------------ */
 
@@ -563,35 +530,9 @@ class StubRange {
 }
 
 /* 极简选择器引擎：#id / tag / .class / tag.class。 */
-function matchesSelector(el: StubElement, sel: string): boolean {
-  if (sel.startsWith("#")) return el.id === sel.slice(1);
-  let tag: string | null = null;
-  let cls: string | null = null;
-  let rest = sel;
-  const dot = rest.indexOf(".");
-  if (dot >= 0) {
-    cls = rest.slice(dot + 1);
-    rest = rest.slice(0, dot);
-  }
-  if (rest !== "") tag = rest.toLowerCase();
-  if (tag !== null && el.tagName.toLowerCase() !== tag) return false;
-  if (cls !== null && !el.classList.contains(cls)) return false;
-  return true;
-}
 
-function queryAll(root: StubElement, sel: string): StubElement[] {
-  const out: StubElement[] = [];
-  const walk = (el: StubElement): void => {
-    for (const c of el.children) {
-      if (c instanceof StubElement) {
-        if (matchesSelector(c, sel)) out.push(c);
-        walk(c);
-      }
-    }
-  };
-  walk(root);
-  return out;
-}
+
+const queryAll = createQueryAll(StubElement);
 
 /** 完整 index.html DOM 桩：按标签词法解析真实 index.html 建树。 */
 function buildDomFromHtml(html: string, doc: StubDocument): StubElement {
@@ -710,46 +651,8 @@ class StubDocument {
 
 /* ------------------------------ EventSource 桩 ------------------------------ */
 
-class StubEventSource {
-  private static readonly registry: StubEventSource[] = [];
-
-  static resetRegistry(): void {
-    StubEventSource.registry.length = 0;
-  }
-
-  static latest(): StubEventSource | null {
-    return StubEventSource.registry[StubEventSource.registry.length - 1] ?? null;
-  }
-
-  readonly url: string;
-  readyState = 0;
-  onopen: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  private readonly sseListeners = new Map<string, Set<(event: StubSseEvent) => void>>();
-
-  constructor(url: string) {
-    this.url = url;
-    StubEventSource.registry.push(this);
-    queueMicrotask(() => {
-      this.readyState = 1;
-      this.onopen?.();
-    });
-  }
-
-  addEventListener(type: string, fn: (event: StubSseEvent) => void): void {
-    if (!this.sseListeners.has(type)) this.sseListeners.set(type, new Set());
-    this.sseListeners.get(type)!.add(fn);
-  }
-
-  close(): void {
-    this.readyState = 2;
-  }
-
-  emit(type: string, data: unknown): void {
-    const event: StubSseEvent = { type, data: JSON.stringify(data) };
-    for (const fn of this.sseListeners.get(type) ?? []) fn(event);
-  }
-}
+const StubEventSource = createStubEventSource();
+type StubEventSource = InstanceType<typeof StubEventSource>;
 
 /* ------------------------------ window / navigator 桩形状 ------------------------------ */
 
@@ -881,7 +784,6 @@ interface WorldOptions {
   /** material-return 的回程导航脚本（默认 navigated）。 */
   returnNavigation?: "navigated" | "no-session";
 }
-
 
 
 async function createWorld(options: WorldOptions = {}): Promise<World> {

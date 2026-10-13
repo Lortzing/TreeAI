@@ -30,3 +30,14 @@ Follow `docs/d3/D3-status.md`, `docs/d4/D4-status.md` and issue #7 for real Pi, 
 ## Structural refactor requirements
 
 Before moving a file inventory all imports, dynamic paths, scripts, CLI flags, browser static MIME/routes, installer allowlists, verifier check IDs and fixtures. Keep old scenario/denominator mapping, failure injection and original failure records. No deletion of raw acceptance evidence until whole-project completion.
+
+## Read-only refactor comparison
+
+```sh
+node scripts/audit-refactor-boundaries.mjs --base e427460b31f61722d5e74a6fa4ee24d140abe67b --out /tmp/treeai-boundaries.json
+npm run audit:studio-assets
+```
+
+The first report compares physical entrypoint sizes, literal source reverse imports and counts of static `test`/`it` names against the selected commit. It fails for lost static scenarios, unresolved literal imports and production imports of tests/fixtures. It includes untracked source files and labels the report as a working-tree comparison. Dynamic scenario names, individual assertions, computed paths and behavioral parity still require the original suites and runner gates. The diagnostics CI job compares against the PR base SHA.
+
+The eight UI suites share browser event/network types, record conversion, selector traversal and an SSE stub factory. Each suite constructs its own SSE class/registry; DOM/selection and backend-specific behavior remains suite-owned. New controller race regressions are imported by `shared-utils.test.mjs`, retaining root and CI discovery.

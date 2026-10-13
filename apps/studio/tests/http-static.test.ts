@@ -17,7 +17,7 @@ async function call(pathname: string) {
   return {handled,status,headers,body};
 }
 test("ESM and CSS static allowlist serves correct content type", async () => {
-  for (const path of ["/app.js", "/core/create-studio-app.js", "/core/dom.js", "/core/controllers/nav-finder.js", "/core/views/nav-tree.js", "/core/views/search.js", "/core/views/return.js", "/core/views/diagnostics.js", "/core/views/nav-finder.js", "/core/views/nav-chrome.js",
+  for (const path of ["/app.js", "/core/create-studio-app.js", "/core/dom.js", "/core/controllers/nav-finder.js", "/core/controllers/nav-session.js", "/core/controllers/nav-interaction.js", "/core/controllers/nav-persistence.js", "/core/controllers/nav-node-search.js", "/core/controllers/nav-locate.js", "/core/views/nav-path.js", "/core/views/nav-node-results.js", "/core/views/nav-tree.js", "/core/views/search.js", "/core/views/return.js", "/core/views/diagnostics.js", "/core/views/nav-finder.js", "/core/views/nav-chrome.js",
     "/shared/source/sha256.js", "/shared/source/selection.js",
     "/shared/reading-position/scroll.js"]) {
     const r=await call(path);
