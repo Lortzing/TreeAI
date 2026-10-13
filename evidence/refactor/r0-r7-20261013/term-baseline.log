@@ -1,0 +1,11 @@
+
+  [PASS] pipeline-integrity — explain: 74/74 clean terminal states (74 not applicable, 0 unexpected); extract: 106/106 clean terminal states (0 unexpected) — mode echo, provider baseline
+  [NOT_RUN] explain-source-match (reported-only) — provider does not explain (baseline)
+  [FAIL] extract-negative-mislabel (reported-only) — negativeTerms mislabel (term level) = 38/318 = 11.9% (gate ≤10%); separately: full-negative item level 51/51 = 100.0%, unlisted extra marks 561
+  [PENDING] usefulness (reported-only) — 有用率 (≥90%) needs two-person annotation of annotation-sheet.csv (rater1/rater2 + arbitration); never asserted mechanically
+  [PENDING] key-obstacle-coverage (reported-only) — 关键理解障碍覆盖率 (≥80%) needs two-person annotation (key_obstacle columns + arbitrated useful explanations); never asserted mechanically
+
+term-eval: 3 PASS / 1 FAIL (0 binding) / 2 PENDING / 1 NOT_RUN (set dev, mode echo, provider baseline)
+  evidence: /tmp/treeai-r0-r7-final-verification/term-baseline/term-eval-20261013T105048766Z-dev-echo-baseline
+  annotation sheet (two-person): /tmp/treeai-r0-r7-final-verification/term-baseline/term-eval-20261013T105048766Z-dev-echo-baseline/annotation-sheet.csv
+  note: echo mode with the zero-dependency baseline — offline reference floor for the baseline/strong-model comparison; quality gates are reported, not binding

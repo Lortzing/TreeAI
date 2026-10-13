@@ -515,7 +515,7 @@ try {
     `- 被测提交：${gitHead.stdout.trim()}`,
     `- 产物：A=${ARCHIVE_A}、B=${ARCHIVE_B}（同一提交的两个版本号，验证升级机制）`,
     `- 安装路径（中文+空格）：${redact(INSTALL_PARENT)}`,
-    `- 真实数据目录：${redact(REAL_DATA_DIR)}（运行前不存在=${String(dataDirExistedBefore)}；结束后不存在=${String(!existsSync(REAL_DATA_DIR))}）`,
+    `- 真实数据目录：${redact(REAL_DATA_DIR)}（运行前不存在=${String(!dataDirExistedBefore)}；结束后不存在=${String(!existsSync(REAL_DATA_DIR))}）`,
     "",
     `## 结果：PASS ${String(passed)} / FAIL ${String(failed)}`,
     "",

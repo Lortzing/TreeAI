@@ -82,7 +82,7 @@ export function auditComputedPaths(root = ROOT) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  if (args.length !== 0 && !(args.length === 2 && args[0] === '--out')) {
+  if (args.length !== 0 && !(args.length === 2 && args[0] === '--out' && args[1] && !args[1].startsWith('--'))) {
     console.error('Usage: node scripts/audit-computed-paths.mjs [--out report.json]'); process.exitCode = 1;
   } else {
     const report = auditComputedPaths();

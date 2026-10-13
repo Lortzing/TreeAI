@@ -1,0 +1,21 @@
+package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+  平台          darwin-arm64
+  bundle 版本   0.0.0+1ea8e9ee
+  内置 Node     24.21.0（nodejs.org 官方发行包）
+  git 提交      1ea8e9ee506d999a050a32be535a88a91e5f91cd（工作区有未提交改动）
+  输出目录      /tmp/treeai-r0-r7-final-package
+package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+package-installer: 使用缓存发行包 /tmp/treeai-r0-r7-final-package/.cache/node-dist/node-v24.21.0-darwin-arm64.tar.gz
+package-installer: 下载并核对官方 SHASUMS256.txt …
+package-installer: 发行包 SHA256 与官方一致（bed7eea5325e1108…）
+package-installer: 解包 Node 发行包…
+package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+package-installer: 密钥扫描通过（277 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+package-installer: 压缩 treeai-studio-0.0.0+1ea8e9ee-darwin-arm64.tar.gz …
+
+package-installer: 构建完成（27.9s）
+  /tmp/treeai-r0-r7-final-package/treeai-studio-0.0.0+1ea8e9ee-darwin-arm64.tar.gz（83.6 MiB）
+  SHA256 bdf20041cab53eb0c097effa869c86293072e2f4539c4fef58cd862a507db113
+  裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, linux-x64, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32, win32-x64
+  签名状态：未签名 / 未公证（如实记录）

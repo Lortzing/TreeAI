@@ -1,0 +1,18 @@
+{
+  "rule": "home-path",
+  "scope": "newly copied report/log paths only",
+  "replacements": {
+    "evidence/refactor/r0-r7-20261013/d2-selftest.log": 2,
+    "evidence/refactor/r0-r7-20261013/d4-selftest.log": 1,
+    "evidence/refactor/r0-r7-20261013/d3-api.log": 1,
+    "evidence/refactor/r0-r7-20261013/d4-offline.log": 1,
+    "evidence/refactor/r0-r7-20261013/root-test.log": 7,
+    "evidence/refactor/r0-r7-20261013/d2-offline.log": 1,
+    "evidence/refactor/r0-r7-20261013/initial-failures/treeai-r0-r7-test.log": 9,
+    "evidence/refactor/r0-r7-20261013/initial-failures/treeai-r0-r7-npm-ci.log": 1,
+    "evidence/refactor/r0-r7-20261013/initial-failures/treeai-r0-r7-root-types.log": 1,
+    "evidence/d4/browser/d4-browser-20261013T104226-95599/45-beta-usability.json": 1
+  },
+  "rawLocalLogsRetained": true,
+  "note": "No check IDs, counts, timing, errors, thresholds or SHA fields were changed."
+}

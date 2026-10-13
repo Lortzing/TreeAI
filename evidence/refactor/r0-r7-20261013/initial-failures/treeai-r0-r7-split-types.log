@@ -1,0 +1,8 @@
+tests/support/verifier/b3/harness.ts(34,28): error TS2307: Cannot find module '../../../apps/studio/src/service.ts' or its corresponding type declarations.
+tests/support/verifier/b3/harness.ts(49,46): error TS2307: Cannot find module '../../../apps/studio/src/service.ts' or its corresponding type declarations.
+tests/support/verifier/fixtures/search.ts(18,21): error TS2304: Cannot find name 'registries'.
+tests/support/verifier/fixtures/selections.ts(136,23): error TS2304: Cannot find name 'registries'.
+tests/support/verifier/fixtures/selections.ts(166,21): error TS2304: Cannot find name 'registries'.
+tests/support/verifier/fixtures/selections.ts(166,38): error TS7006: Parameter 'r' implicitly has an 'any' type.
+tests/support/verifier/fixtures/selections.ts(166,73): error TS7006: Parameter 'p' implicitly has an 'any' type.
+tests/support/verifier/fixtures/selections.ts(167,50): error TS7006: Parameter 'p' implicitly has an 'any' type.

@@ -1,0 +1,963 @@
+{
+  "schema": "treeai-computed-paths-v1",
+  "resources": [
+    {
+      "owner": "tests/support/verifier/b3/scenarios.ts",
+      "expression": "join(REPO_ROOT, \"packages\", \"event-journal\", \"dist\", \"src\", \"index.js\")",
+      "target": "packages/event-journal/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/b6-scale/check.ts",
+      "expression": "join(\"scripts\", \"d4\", \"gen-b6-scale-dataset.mjs\")",
+      "target": "scripts/d4/gen-b6-scale-dataset.mjs",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/b6-scale/check.ts",
+      "expression": "join(\"scripts\", \"d4\", \"gen-b6-scale-dataset.mjs\")",
+      "target": "scripts/d4/gen-b6-scale-dataset.mjs",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/b6-scale/harness.ts",
+      "expression": "new URL(\"../../../../apps/studio/public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/src/http/static.ts",
+      "expression": "new URL(\"../../../../node_modules/pdfjs-dist/\", import.meta.url)",
+      "target": "node_modules/pdfjs-dist",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/src/materials/import/executor.ts",
+      "expression": "new URL(\"../parse-worker.ts\", import.meta.url)",
+      "target": "apps/studio/src/materials/parse-worker.ts",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/api.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/events.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/http-static.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-api.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-api.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-branching.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-branching.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-reading-api.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/materials-service.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/nav-api.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/pdf-parser.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/search-api.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/search-engine.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/search-engine.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b4-search/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b4-search",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/styles.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/support/app-harness.ts",
+      "expression": "new URL(\"../../public/core/create-studio-app.js\", import.meta.url)",
+      "target": "apps/studio/public/core/create-studio-app.js",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-material-branching.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-material-branching.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-material-reader.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-material-reader.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-nav.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-pdf-reader.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-pdf-reader.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-pdf-reader.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b2-anchors/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b2-anchors",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-probe.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-regressions.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-search.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-search.test.ts",
+      "expression": "new URL(\"../../../tests/fixtures/d4/b1-import/\", import.meta.url)",
+      "target": "tests/fixtures/d4/b1-import",
+      "exists": true
+    },
+    {
+      "owner": "apps/studio/tests/ui-terminology.test.ts",
+      "expression": "new URL(\"../public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "packages/persistence/tests/concurrency.test.ts",
+      "expression": "new URL(\"./concurrency-worker.ts\", import.meta.url)",
+      "target": "packages/persistence/tests/concurrency-worker.ts",
+      "exists": true
+    },
+    {
+      "owner": "packages/runtime-pi/tests/real-port/offline.test.ts",
+      "expression": "new URL(\"./offline-child.ts\", import.meta.url)",
+      "target": "packages/runtime-pi/tests/real-port/offline-child.ts",
+      "exists": true
+    },
+    {
+      "owner": "packages/runtime-pi/tests/real-port/offline.test.ts",
+      "expression": "new URL(\"../unit/\", import.meta.url)",
+      "target": "packages/runtime-pi/tests/unit",
+      "exists": true
+    },
+    {
+      "owner": "scripts/audit-studio-assets.mjs",
+      "expression": "resolve(ROOT,\"apps/studio/public\")",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "scripts/audit-studio-assets.mjs",
+      "expression": "resolve(ROOT,\"apps/studio/src/http/static.ts\")",
+      "target": "apps/studio/src/http/static.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/audit-studio-assets.mjs",
+      "expression": "resolve(ROOT,\"scripts/d4/package-installer.mjs\")",
+      "target": "scripts/d4/package-installer.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/browser/scale-probes.mjs",
+      "expression": "join(\"scripts\", \"d4\", \"gen-b6-scale-dataset.mjs\")",
+      "target": "scripts/d4/gen-b6-scale-dataset.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/gen-b6-scale-dataset.mjs",
+      "expression": "new URL(\".\", import.meta.url)",
+      "target": "scripts/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/gen-b6-scale-dataset.mjs",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/gen-b9-nav-dataset.mjs",
+      "expression": "new URL(\".\", import.meta.url)",
+      "target": "scripts/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/gen-b9-nav-dataset.mjs",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"d4\", \"b9-nav\")",
+      "target": "tests/fixtures/d4/b9-nav",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/gen-pdf-fixtures.mjs",
+      "expression": "join(ROOT, \"..\")",
+      "target": "..",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "join(REPO_ROOT, \"package.json\")",
+      "target": "package.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "join(\"packages\", \"event-journal\", \"tsconfig.build.json\")",
+      "target": "packages/event-journal/tsconfig.build.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "join(REPO_ROOT, \"apps\", \"studio\")",
+      "target": "apps/studio",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/run-b9-nav-engine-check.mjs",
+      "expression": "join(ROOT, \"tests\", \"fixtures\", \"d4\", \"b9-nav\", \"spec.json\")",
+      "target": "tests/fixtures/d4/b9-nav/spec.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/d4/run-b9-nav-engine-check.mjs",
+      "expression": "join(ROOT, \"tests\", \"fixtures\", \"d4\", \"MANIFEST.sha256\")",
+      "target": "tests/fixtures/d4/MANIFEST.sha256",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d3-browser.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"index.ts\")",
+      "target": "apps/studio/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d3-real-pi-tool-policy.mjs",
+      "expression": "new URL(\"..\", import.meta.url)",
+      "target": "",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d3-real-pi-tool-policy.mjs",
+      "expression": "join(ROOT, \"packages/runtime-pi/src/index.ts\")",
+      "target": "packages/runtime-pi/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d3-real-pi-tool-policy.mjs",
+      "expression": "join(ROOT, \"packages/tool-policy/src/index.ts\")",
+      "target": "packages/tool-policy/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d3-real-pi.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"index.ts\")",
+      "target": "apps/studio/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d4-browser.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"index.ts\")",
+      "target": "apps/studio/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-d4-browser.mjs",
+      "expression": "join(ROOT, \"tests\", \"fixtures\", \"d4\", \"MANIFEST.sha256\")",
+      "target": "tests/fixtures/d4/MANIFEST.sha256",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-eval.mjs",
+      "expression": "join(ROOT, \"scripts\", \"terminology\", \"baseline.mjs\")",
+      "target": "scripts/terminology/baseline.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-eval.mjs",
+      "expression": "join(ROOT, \"packages\", \"runtime-pi\", \"src\", \"index.ts\")",
+      "target": "packages/runtime-pi/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-eval.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"echo-port.ts\")",
+      "target": "apps/studio/src/echo-port.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-eval.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"terminology.ts\")",
+      "target": "apps/studio/src/terminology.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-eval.mjs",
+      "expression": "join(ROOT, \"scripts\", \"terminology\", \"baseline.mjs\")",
+      "target": "scripts/terminology/baseline.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"terminology\", \"quality-set.json\")",
+      "target": "apps/studio/terminology/quality-set.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"packages\", \"persistence\", \"src\", \"index.ts\")",
+      "target": "packages/persistence/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"packages\", \"runtime-pi\", \"src\", \"index.ts\")",
+      "target": "packages/runtime-pi/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"echo-port.ts\")",
+      "target": "apps/studio/src/echo-port.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"service.ts\")",
+      "target": "apps/studio/src/service.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/run-terminology-trials.mjs",
+      "expression": "join(ROOT, \"apps\", \"studio\", \"src\", \"terminology.ts\")",
+      "target": "apps/studio/src/terminology.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\")",
+      "target": "tests/fixtures",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"schemas\", \"d2\")",
+      "target": "schemas/d2",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"packages\", \"contracts\")",
+      "target": "packages/contracts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"packages\", \"runtime-pi\")",
+      "target": "packages/runtime-pi",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"packages\", \"persistence\")",
+      "target": "packages/persistence",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"packages\", \"tool-policy\")",
+      "target": "packages/tool-policy",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"packages\", \"event-journal\")",
+      "target": "packages/event-journal",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"apps\", \"runtime-smoke\")",
+      "target": "apps/runtime-smoke",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(\"apps\", \"studio\")",
+      "target": "apps/studio",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"packages\", \"runtime-pi\", \"package.json\")",
+      "target": "packages/runtime-pi/package.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"tests\")",
+      "target": "tests",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"schemas\", \"d2\")",
+      "target": "schemas/d2",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \".github\", \"workflows\")",
+      "target": ".github/workflows",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"scripts\")",
+      "target": "scripts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d2-checks.mjs",
+      "expression": "join(deps.ROOT, \"d1-spikes\", \"scripts\", \"verify-d1\")",
+      "target": "d1-spikes/scripts/verify-d1",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"docs\", \"d4\", \"D4-project-v1.md\")",
+      "target": "docs/d4/D4-project-v1.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"docs\", \"d4\", \"D4-status.md\")",
+      "target": "docs/d4/D4-status.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"docs\", \"adr\", \"ADR-003-d4-material-sources-versions-run-origins.md\")",
+      "target": "docs/adr/ADR-003-d4-material-sources-versions-run-origins.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"docs\", \"adr\", \"ADR-004-d4-material-branching-and-first-question.md\")",
+      "target": "docs/adr/ADR-004-d4-material-branching-and-first-question.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"docs\", \"d4\", \"D4-contracts.md\")",
+      "target": "docs/d4/D4-contracts.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, \"package.json\")",
+      "target": "package.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(\"scripts\", \"run-d4-browser.mjs\")",
+      "target": "scripts/run-d4-browser.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(\"tests\", \"unit\", \"d4-fixtures-integrity.test.ts\")",
+      "target": "tests/unit/d4-fixtures-integrity.test.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(\"tests\", \"unit\", \"d4-7-installer.test.ts\")",
+      "target": "tests/unit/d4-7-installer.test.ts",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-material.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-material.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-material.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verification/d4-material.mjs",
+      "expression": "join(deps.ROOT, \"tests\", \"fixtures\", \"d4\")",
+      "target": "tests/fixtures/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-live.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-live.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-selftest.js",
+      "expression": "join(REPO_ROOT, \"scripts\", \"verify-d2.js\")",
+      "target": "scripts/verify-d2.js",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-selftest.js",
+      "expression": "join(REPO_ROOT, \"scripts\", \"verify-d2.js\")",
+      "target": "scripts/verify-d2.js",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-selftest.js",
+      "expression": "join(REPO_ROOT, \"tests\")",
+      "target": "tests",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2-selftest.js",
+      "expression": "join(REPO_ROOT, \"schemas\", \"d2\")",
+      "target": "schemas/d2",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, \"packages\", \"runtime-pi\", \"package.json\")",
+      "target": "packages/runtime-pi/package.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"environment.schema.json\")",
+      "target": "schemas/d2/environment.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"event.schema.json\")",
+      "target": "schemas/d2/event.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"package.json\")",
+      "target": "package.json",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"scripts\", \"verify-d4.js\")",
+      "target": "scripts/verify-d4.js",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"scripts\", \"verify-d4-selftest.js\")",
+      "target": "scripts/verify-d4-selftest.js",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"scripts\", \"run-d4-browser.mjs\")",
+      "target": "scripts/run-d4-browser.mjs",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"scripts\", \"d4\", \"browser\")",
+      "target": "scripts/d4/browser",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"tests\")",
+      "target": "tests",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"docs\", \"d4\")",
+      "target": "docs/d4",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"docs\", \"adr\", \"ADR-003-d4-material-sources-versions-run-origins.md\")",
+      "target": "docs/adr/ADR-003-d4-material-sources-versions-run-origins.md",
+      "exists": true
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"docs\", \"adr\", \"ADR-004-d4-material-branching-and-first-question.md\")",
+      "target": "docs/adr/ADR-004-d4-material-branching-and-first-question.md",
+      "exists": true
+    },
+    {
+      "owner": "tests/integration/scenarios.test.ts",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"e2e\")",
+      "target": "tests/fixtures/e2e",
+      "exists": true
+    },
+    {
+      "owner": "tests/integration/scenarios.test.ts",
+      "expression": "join(REPO_ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "tests/integration/scenarios.test.ts",
+      "expression": "join(REPO_ROOT, \"schemas\", \"d2\", \"event.schema.json\")",
+      "target": "schemas/d2/event.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "tests/live/framework.ts",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"e2e\", \"live\", \"notes.txt\")",
+      "target": "tests/fixtures/e2e/live/notes.txt",
+      "exists": true
+    },
+    {
+      "owner": "tests/live/framework.ts",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"e2e\", \"live\")",
+      "target": "tests/fixtures/e2e/live",
+      "exists": true
+    },
+    {
+      "owner": "tests/live/framework.ts",
+      "expression": "join(REPO_ROOT, \"tests\", \"fixtures\", \"e2e\", \"workspace\")",
+      "target": "tests/fixtures/e2e/workspace",
+      "exists": true
+    },
+    {
+      "owner": "tests/live/selftest.test.ts",
+      "expression": "join(REPO_ROOT, \"schemas\", \"d2\", \"result.schema.json\")",
+      "target": "schemas/d2/result.schema.json",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/d4-b5-restore.ts",
+      "expression": "join(\"apps\", \"studio\", \"src\", \"index.ts\")",
+      "target": "apps/studio/src/index.ts",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/d4-b9-nav.ts",
+      "expression": "new URL(\"../../../apps/studio/public/\", import.meta.url)",
+      "target": "apps/studio/public",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/d4-b9-nav.ts",
+      "expression": "join(\"scripts\", \"d4\", \"gen-b9-nav-dataset.mjs\")",
+      "target": "scripts/d4/gen-b9-nav-dataset.mjs",
+      "exists": true
+    },
+    {
+      "owner": "tests/support/verifier/d4-b9-nav.ts",
+      "expression": "join(\"scripts\", \"d4\", \"gen-b9-nav-dataset.mjs\")",
+      "target": "scripts/d4/gen-b9-nav-dataset.mjs",
+      "exists": true
+    }
+  ],
+  "discovery": [
+    {
+      "packagePath": "apps/runtime-smoke/package.json",
+      "script": "test",
+      "pattern": "tests/*.test.ts",
+      "matches": 2
+    },
+    {
+      "packagePath": "apps/studio/package.json",
+      "script": "test",
+      "pattern": "tests/*.test.ts",
+      "matches": 33
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "tests/unit/*.test.ts",
+      "matches": 11
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "tests/integration/*.test.ts",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "tests/live/*.test.ts",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "scripts/d4/pdf/content.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "scripts/d4/browser/scale-measurements.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "scripts/d4/browser/scale-responsiveness.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "apps/studio/tests/source-sha256.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "apps/studio/tests/app-factory.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "apps/studio/tests/shared-utils.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "tests/unit/evidence-index.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test",
+      "pattern": "tests/unit/computed-paths.test.mjs",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test:integration",
+      "pattern": "tests/integration/*.test.ts",
+      "matches": 1
+    },
+    {
+      "packagePath": "package.json",
+      "script": "test:d4-installer",
+      "pattern": "tests/unit/d4-7-installer.test.ts",
+      "matches": 1
+    },
+    {
+      "packagePath": "packages/event-journal/package.json",
+      "script": "test",
+      "pattern": "'dist/tests/*.test.js'",
+      "matches": 5
+    },
+    {
+      "packagePath": "packages/persistence/package.json",
+      "script": "test",
+      "pattern": "\"tests/*.test.ts\"",
+      "matches": 10
+    },
+    {
+      "packagePath": "packages/runtime-pi/package.json",
+      "script": "test",
+      "pattern": "tests/unit/*.test.ts",
+      "matches": 8
+    },
+    {
+      "packagePath": "packages/runtime-pi/package.json",
+      "script": "test",
+      "pattern": "tests/real-port/*.test.ts",
+      "matches": 1
+    },
+    {
+      "packagePath": "packages/tool-policy/package.json",
+      "script": "test",
+      "pattern": "tests/*.test.ts",
+      "matches": 4
+    }
+  ],
+  "unresolved": [
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "resolve(REPO_ROOT, argValue(\"out-dir\") ?? join(\"dist\", \"d4-installer\"))"
+    },
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "join(REPO_ROOT, \"packages\", pkg)"
+    },
+    {
+      "owner": "scripts/d4/package-installer.mjs",
+      "expression": "join(REPO_ROOT, \"packages\", pkg, \"package.json\")"
+    },
+    {
+      "owner": "scripts/evidence-index.mjs",
+      "expression": "resolve(ROOT,path)"
+    },
+    {
+      "owner": "scripts/record-d3-evidence.mjs",
+      "expression": "join(ROOT, relativePath)"
+    },
+    {
+      "owner": "scripts/terminology-eval/set-integrity.mjs",
+      "expression": "join(deps.ROOT, \"apps\", \"studio\", \"terminology\", `eval-set-${split}.json`)"
+    },
+    {
+      "owner": "scripts/verification/d4-foundation.mjs",
+      "expression": "join(deps.ROOT, file)"
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, pkgDir)"
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, pkgDir, \"src\")"
+    },
+    {
+      "owner": "scripts/verify-d2.js",
+      "expression": "join(ROOT, pkgDir, \"package.json\")"
+    },
+    {
+      "owner": "scripts/verify-d4-selftest.js",
+      "expression": "join(ROOT, \"evidence\", \"d4\", \"selftest\", utcRunId(\"d4-selftest\"))"
+    },
+    {
+      "owner": "tests/unit/d3-runner-cli.test.ts",
+      "expression": "resolve(\"scripts\", entry)"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Only import.meta URL and literal root-relative join/resolve inputs are resolved; unresolved expressions are enumerated, never assumed PASS.",
+    "Generated output, optional provider registries, installed bundles and dynamic fixture recipes require verifier/browser/package execution.",
+    "This report is structural evidence, not physical installation, model quality or human acceptance."
+  ]
+}
