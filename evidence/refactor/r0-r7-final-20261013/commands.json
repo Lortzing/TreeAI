@@ -1,0 +1,261 @@
+{
+  "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+  "records": [
+    {
+      "name": "d4-browser",
+      "command": [
+        "node",
+        "scripts/run-d4-browser.mjs",
+        "--mode",
+        "selftest",
+        "--artifacts",
+        "/tmp/treeai-r0-r7-final2-d4-browser"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T10:58:56.631Z",
+      "endedAt": "2026-10-13T11:03:06.164Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "d3-browser",
+      "command": [
+        "node",
+        "scripts/run-d3-browser.mjs",
+        "--mode",
+        "selftest",
+        "--artifacts",
+        "/tmp/treeai-r0-r7-final2-d3-browser"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:03:06.165Z",
+      "endedAt": "2026-10-13T11:03:32.285Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "d3-api",
+      "command": [
+        "node",
+        "scripts/run-d3-real-pi.mjs",
+        "--mode",
+        "echo-selftest"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:03:32.286Z",
+      "endedAt": "2026-10-13T11:03:34.449Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:03:34.449Z",
+      "endedAt": "2026-10-13T11:03:39.557Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "test-types",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tests/tsconfig.json",
+        "--pretty",
+        "false"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:03:39.558Z",
+      "endedAt": "2026-10-13T11:03:40.877Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "root-test",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:03:40.877Z",
+      "endedAt": "2026-10-13T11:04:05.175Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "integration",
+      "command": [
+        "npm",
+        "run",
+        "test:integration"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:04:05.175Z",
+      "endedAt": "2026-10-13T11:04:07.849Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "d2-offline",
+      "command": [
+        "node",
+        "scripts/verify-d2.js",
+        "--runs-root",
+        "/tmp/treeai-r0-r7-final2-verification/d2"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:04:07.849Z",
+      "endedAt": "2026-10-13T11:04:40.253Z",
+      "exitCode": 3,
+      "signal": null
+    },
+    {
+      "name": "d4-offline",
+      "command": [
+        "node",
+        "scripts/verify-d4.js",
+        "--runs-root",
+        "/tmp/treeai-r0-r7-final2-verification/d4"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:04:40.254Z",
+      "endedAt": "2026-10-13T11:05:55.215Z",
+      "exitCode": 3,
+      "signal": null
+    },
+    {
+      "name": "d2-selftest",
+      "command": [
+        "node",
+        "scripts/verify-d2-selftest.js"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:05:55.215Z",
+      "endedAt": "2026-10-13T11:05:56.387Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "d4-selftest",
+      "command": [
+        "node",
+        "scripts/verify-d4-selftest.js"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:05:56.387Z",
+      "endedAt": "2026-10-13T11:06:03.288Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "term-dev",
+      "command": [
+        "node",
+        "scripts/run-terminology-eval.mjs",
+        "--set",
+        "dev",
+        "--mode",
+        "echo",
+        "--evidence-root",
+        "/tmp/treeai-r0-r7-final2-verification/term-dev"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:06:03.288Z",
+      "endedAt": "2026-10-13T11:06:04.252Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "term-frozen",
+      "command": [
+        "node",
+        "scripts/run-terminology-eval.mjs",
+        "--set",
+        "frozen",
+        "--mode",
+        "echo",
+        "--evidence-root",
+        "/tmp/treeai-r0-r7-final2-verification/term-frozen"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:06:04.252Z",
+      "endedAt": "2026-10-13T11:06:05.192Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "term-baseline",
+      "command": [
+        "node",
+        "scripts/run-terminology-eval.mjs",
+        "--set",
+        "dev",
+        "--mode",
+        "echo",
+        "--provider",
+        "baseline",
+        "--evidence-root",
+        "/tmp/treeai-r0-r7-final2-verification/term-baseline"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:06:05.193Z",
+      "endedAt": "2026-10-13T11:06:06.981Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "package",
+      "command": [
+        "node",
+        "scripts/d4/package-installer.mjs",
+        "--platform",
+        "darwin-arm64",
+        "--out-dir",
+        "/tmp/treeai-r0-r7-final2-package"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:06:06.981Z",
+      "endedAt": "2026-10-13T11:06:27.020Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "package-smoke",
+      "command": [
+        "node",
+        "scripts/d4/installer/smoke-bundle.mjs",
+        "--archive",
+        "/tmp/treeai-r0-r7-final2-package/treeai-studio-0.0.0+0173fc34-darwin-arm64.tar.gz",
+        "--work-dir",
+        "/tmp/treeai-r0-r7-final2-package-smoke"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:06:27.021Z",
+      "endedAt": "2026-10-13T11:07:29.245Z",
+      "exitCode": 0,
+      "signal": null
+    },
+    {
+      "name": "macos-local",
+      "command": [
+        "node",
+        "scripts/d4/installer/test-macos-local.mjs",
+        "--version-a",
+        "0.0.0-refactor.0173fc3.local-a",
+        "--version-b",
+        "0.0.0-refactor.0173fc3.local-b"
+      ],
+      "codeSha": "0173fc34a4900e45355224693a27b17a51a47dc6",
+      "startedAt": "2026-10-13T11:07:29.246Z",
+      "endedAt": "2026-10-13T11:09:40.803Z",
+      "exitCode": 0,
+      "signal": null
+    }
+  ]
+}

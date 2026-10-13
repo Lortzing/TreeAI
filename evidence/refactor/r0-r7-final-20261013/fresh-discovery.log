@@ -1,0 +1,12 @@
+FAIL: 131 resolved resources, 20 test globs; 12 computed expressions require runtime gates
+Empty test discovery: packages/event-journal/package.json test 'dist/tests/*.test.js'
+Missing computed resource: tests/support/verifier/b3/scenarios.ts -> packages/event-journal/dist/src/index.js
+
+> @treeai/studio@0.0.0 build:deps
+> npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+PASS: 131 resolved resources, 20 test globs; 12 computed expressions require runtime gates

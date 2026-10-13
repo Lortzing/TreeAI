@@ -5,14 +5,14 @@
 
 | Wave | Implemented now | Still required |
 | --- | --- | --- |
-| R0 repository map | Inventory, literal reverse-import/static-scenario comparison, native assets and computed resources/test discovery audits | Final committed-SHA execution and review of the enumerated dynamic expressions; static audit never substitutes for behavior |
-| R1 browser UI | Instance lifecycle/state/composition, source/selection/reading, controllers and domain views separated | Final-candidate complete Chrome/Pi regressions |
-| R2 UI tests | Eight suites share protocol, DOM/selection constructors, storage, response and backend primitives; suite-specific variants and all 146 original UI declarations retained | Full suite and native runner evidence; static names alone do not prove assertions |
-| R3 Studio server/services | HTTP adapters/routes, Studio coordinators/read models, terminology services and domain repositories separated with original transaction/lifecycle ownership | Final shared-path regression; preserve source/session separation and saved Return semantics |
-| R4 runtime and runners | Runtime session coordination, material/PDF/nav/restore, installer, D3/D4 native probes/reporting, evaluator, B9 and B6 dataset/verifier domains separated; stable compatibility entries retained | Full original verifier/selftest, browser, evaluator and installed-package execution |
-| R5 documentation | README/AGENTS, live navigation/architecture/testing and historical ledger separated; current documentation links audited | Record final evidence without converting incomplete gates into PASS |
-| R6 evidence lifecycle | Read-only tracked-path locator; all historical and failed evidence retained | Raw deletion remains prohibited until whole-project acceptance, including human gates |
-| R7 integration/acceptance | Diagnostics/native browser/installer CI workflows and automatic regression commands wired | Final-SHA Pi (configured credential required), real OS installations, owner signoff, independent participant trials and terminology quality annotation |
+| R0 repository map | Literal/scenario, ESM/CSS, computed resource/discovery and evidence inventories completed; final local audit is linked below | Enumerated dynamic paths have execution evidence; generated discovery requires the original dependency build |
+| R1 browser UI | Complete Chrome Echo 16/16; domain lifecycle/state/controllers/views remain separated | Final real-Pi coverage requires credentials; physical owner signoff remains separate |
+| R2 UI tests | Shared suite primitives, all 146 original UI declarations retained; root 850/850 and all 794 baseline static declarations retained | Echo/static names do not substitute for real Pi or independent trials |
+| R3 Studio server/services | Complete production/test types, root/integration suites and original D2/D4 domain checks pass at the tested SHA | Real Pi with configured credentials remains open |
+| R4 runtime and runners | Domain owners, all frozen original checks, both independent selftests, complete Echo/evaluator pipelines, package smoke 46/46 and Mac engineer automation 55/55 verified | Real-Pi/model quality and target-device/human acceptance remain open |
+| R5 documentation | Live architecture/task/testing/audit navigation reconciled; final evidence records full tested SHA and every exclusion | Record/CI-only successor does not claim a new remote CI run |
+| R6 evidence lifecycle | All prior evidence preserved; tracked locator accounts for 2,662 paths at the tested SHA; new raw logs/screenshots/reports retained and scanned | Raw deletion remains prohibited until whole-project acceptance |
+| R7 integration/acceptance | Complete local automatic verification recorded at `0173fc34a4900e45355224693a27b17a51a47dc6` | Existing PR #27 push and remote CI await explicit approval; real Pi credentials, owner physical/signoff, trials and quality annotation remain open |
 
 ## 2026-10-10 Search-view wave (working candidate based on `28d809537099fad04e6c32df2c647e266bacbca5`)
 
@@ -180,3 +180,9 @@ Relevant detailed history: [D3 status](../d3/D3-status.md), [full D3 ledger](../
 
 - Completion run at `1ea8e9ee506d999a050a32be535a88a91e5f91cd`: [command/evidence record](../../evidence/refactor/r0-r7-20261013/README.md). Complete Chrome Echo 16/16, root 849/849, D2 21+1 NOT_RUN and D4 19+1 NOT_RUN, both independent selftests, both complete terminology Echo sets, package smoke 46/46 and local macOS engineering automation 55/55. The macOS summary's before-existence label was inverted while the precondition/data protection were correct; preserve its original record and erratum, fix the generator, then re-record the final candidate. No human gate is closed.
 - External integration remains blocked on explicit push approval: automatic permission review rejected source/evidence egress to the existing GitHub PR #27. The local result is reviewable; no workaround push or main merge was attempted.
+
+## Final local automatic record — 2026-10-13
+
+Full tested code SHA: `0173fc34a4900e45355224693a27b17a51a47dc6`. [Complete commands, metrics, failures, exclusions and retained evidence](../../evidence/refactor/r0-r7-final-20261013/README.md). Chrome Echo 16/16, root 850/850, package 46/46 and Mac engineer automation 55/55 passed. D2 (21+1 NOT_RUN) and D4 (19+1 NOT_RUN) remain exit 3 INCOMPLETE. Both complete 180-item Echo sets retain human PENDING; the weak baseline's 11.9% mislabel FAIL is retained. Original frozen fixture/evaluator/contract/lockfile and evidence bytes are unchanged.
+
+The macOS label correction was re-recorded: before/after directory absent=true, 55/55, prior incorrect label and erratum retained. Fresh-build audit reproduced the expected failure without generated journal tests and success after the original dependency build; CI discovery now follows Studio build. This subsequent documentation/evidence/CI-order commit changes no product, runner or test implementation. Remote CI and actual integration are awaiting explicit approval because automatic permission review rejected pushing source/evidence to GitHub. Human gates and missing-credential blockers remain open; whole-project acceptance is not claimed.

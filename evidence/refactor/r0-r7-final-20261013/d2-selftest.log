@@ -1,0 +1,11 @@
+verify-d2-selftest — failure-path selftest
+evidence: <repo>/evidence/d2/selftest/d2-selftest-20261013T110555278Z
+
+  [PASS] control-clean-tree (child exit 0)
+  [PASS] inject-secret (child exit 2)
+  [PASS] inject-secret-browser-evidence (child exit 2)
+  [PASS] inject-bad-schema (child exit 2)
+  [PASS] inject-illegal-exit-codes (child exit 2)
+
+verify-d2-selftest summary: 5 PASS, 0 FAIL → ALL_PASS (exit 0)
+evidence: <repo>/evidence/d2/selftest/d2-selftest-20261013T110555278Z

@@ -1,0 +1,127 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "prompt-input",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "Branch 1",
+    "anchorContext": "Branched from Trunk — anchored selection: “ine, turn one. The trunk top” · source available",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_0fce2334-6222-42ea-9167-14de73734a6e",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_8a7187be-9e6e-4a07-8982-a4cb8306b657",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.]"
+      },
+      {
+        "role": "return",
+        "turnId": "turn_5b829671-5b2a-4840-909a-e82e45b74d32",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_250ddbce-950a-44c5-84b0-b4666edc68cb",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_52bc0ac1-34f7-46e3-ae26-c3d973804fc9",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.]"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_22a82032-0cbb-43e2-b085-5e2b50ceebc6",
+        "text": "We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_2e60cd0d-0b8a-49e3-9b29-4443f98e975c",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_b9fca544-f577-45c1-9fce-64b5fdabff46",
+        "text": "Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_45e59915-3a05-4932-b25a-a150a0b49b23",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|We are now on branch A, about avocados. Remember branch A's codeword: cedar. Reply with: ok-a1.|Branch A, turn two. List every codeword and every secret number you can see in this conversation so far, comma-separated, nothing else.]"
+      }
+    ]
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · saved 2026/10/13 19:03:13 · anchored on “ine, turn one. The trunk top” from Trunksaved — pending adoption on the next Trunk discussionBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": false,
+      "deliveryText": "saved — pending adoption on the next Trunk discussion"
+    }
+  ],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}
