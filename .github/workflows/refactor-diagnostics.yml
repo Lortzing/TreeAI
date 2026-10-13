@@ -28,6 +28,10 @@ jobs:
         run: node scripts/audit-refactor-boundaries.mjs --base "$REFACTOR_BASE_SHA" --out /tmp/treeai-boundaries.json
       - name: Native ESM/CSS and package inclusion dependency audit
         run: node scripts/audit-studio-assets.mjs
+      - name: Computed resources and original test discovery
+        run: |
+          npm run audit:computed-paths
+          node --test tests/unit/computed-paths.test.mjs
       - name: Browser shared source/view regressions (Node, no browser shim)
         run: node --test apps/studio/tests/shared-utils.test.mjs
       - name: Runner CLI and migrated verifier scan regressions

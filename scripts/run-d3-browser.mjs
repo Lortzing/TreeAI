@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createBrowserReporting } from "./d3/browser-reporting.mjs";
 import { createBrowserResults } from "./d3/browser-results.mjs";
 import { createBrowserProbes } from "./d3/browser-probes.mjs";
 import { createBrowserFixtures } from "./d3/browser-fixtures.mjs";
@@ -578,69 +579,30 @@ async function main() {
  *  数组恒少 1 行（console-clean）的 off-by-one；例外：chrome 缺失的
  *  BLOCKED 早退发生在 artifacts 目录创建之前，本就无落盘位置（stdout
  *  全量 BLOCKED 报告为准）。 */
-async function writeSummaryArtifact() {
-  const summary = await evalJs(pageSummaryExpression()).catch(() => null);
-  const payload = {
-    script: SCRIPT_NAME,
-    version: VERSION,
-    mode: MODE,
-    generatedAt: new Date().toISOString(),
-    git: gitInfo(),
-    checks: results.map((r) => ({ id: r.id, status: r.status })),
-    pageFinalState: summary === null ? null : sanitizeSummary(summary),
-    pageErrors: chrome.pageErrors,
-    netLog: chrome.netLog.filter((e) => !e.url.includes("favicon")),
-  };
-  writeFileSync(join(sc.artifactsDir, "summary.json"), `${JSON.stringify(payload, null, 2)}\n`);
-}
 
-async function cleanup() {
-  killStudio();
-  stopChrome();
-  const keep = CLI.keepData || CLI.dataDir !== null;
-  if (keep && sc.dataDir !== null) {
-    console.log(`  data dir kept: ${sanitizeText(sc.dataDir)}`);
-  } else if (sc.dataDir !== null) {
-    try { rmSync(sc.dataDir, { recursive: true, force: true }); } catch { /* 尽力而为 */ }
-  }
-  /* 工具面场景的 canary/marker 纪律（镜像 run-d3-real-pi.mjs）：canary
-     位于数据目录 workspace 内（随数据目录处置）——布局若把它放到数据
-     目录之外才需单独删除；marker 位于首个读取根，显式根属操作者目录
-     ——非保留路径下移除本脚本创建的标记文件。 */
-  const tp = sc.toolPolicy;
-  if (tp !== null && sc.dataDir !== null) {
-    const dataPhysical = physicalPath(sc.dataDir) ?? sc.dataDir;
-    if (tp.canaryPath !== null && !isPathWithin(physicalPath(tp.canaryPath) ?? tp.canaryPath, dataPhysical)) {
-      try { rmSync(tp.canaryPath, { force: true }); } catch { /* 尽力而为 */ }
-    }
-    if (tp.markerPath !== null && !keep && !isPathWithin(physicalPath(tp.markerPath) ?? tp.markerPath, dataPhysical)) {
-      try { rmSync(tp.markerPath, { force: true }); } catch { /* 尽力而为 */ }
-    }
-  }
-  /* 模型错误相的错配 registry 副本（系统临时目录，数据目录/仓库之外）：
-     绿色且非保留时删除；保留（--keep-data/--data）或有 FAIL（取证）时
-     打印脱敏路径留档（镜像 run-d3-real-pi.mjs 的处置纪律）。 */
-  const me = sc.modelError;
-  if (me !== null && me.misconfigDir !== null) {
-    if (keep || results.some((r) => r.status === "FAIL")) {
-      console.log(`  misconfigured agent-dir copy kept: ${sanitizeText(me.misconfigDir)}`);
-    } else {
-      try { rmSync(me.misconfigDir, { recursive: true, force: true }); } catch { /* 尽力而为 */ }
-    }
-  }
-  if (sc.artifactsDir !== null) {
-    console.log(`  artifacts kept: ${sanitizeText(sc.artifactsDir)}`);
-  }
-}
 
-function finish(code) {
-  const counts = { PASS: 0, FAIL: 0, BLOCKED: 0, NOT_RUN: 0 };
-  for (const entry of results) counts[entry.status] += 1;
-  console.log(
-    `\n${SCRIPT_NAME}: ${String(counts.PASS)} PASS / ${String(counts.FAIL)} FAIL / ${String(counts.BLOCKED)} BLOCKED / ${String(counts.NOT_RUN)} NOT_RUN (mode ${MODE})`,
-  );
-  process.exit(code);
-}
+
+
+
+
+const { writeSummaryArtifact, cleanup, finish } = createBrowserReporting({
+  get evalJs() { return evalJs; },
+  get pageSummaryExpression() { return pageSummaryExpression; },
+  get SCRIPT_NAME() { return SCRIPT_NAME; },
+  get VERSION() { return VERSION; },
+  get MODE() { return MODE; },
+  get gitInfo() { return gitInfo; },
+  get results() { return results; },
+  get sanitizeSummary() { return sanitizeSummary; },
+  get chrome() { return chrome; },
+  get sc() { return sc; },
+  get killStudio() { return killStudio; },
+  get stopChrome() { return stopChrome; },
+  get CLI() { return CLI; },
+  get sanitizeText() { return sanitizeText; },
+  get physicalPath() { return physicalPath; },
+  get isPathWithin() { return isPathWithin; },
+});
 
 process.on("exit", () => {
   /* 同步兜底：任何退出路径都不留孤儿进程/临时目录（--keep 项除外）。 */
