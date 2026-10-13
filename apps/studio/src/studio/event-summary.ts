@@ -1,6 +1,11 @@
 /** Safe runtime/Studio event projection; redact by allowlisted fields only. */
-import type { JsonValue, TreeAIEvent } from "@treeai/contracts";
-import { parseSerializedError } from "@treeai/event-journal";
+import type {
+  JsonValue,
+  TreeAIEvent,
+} from "@treeai/contracts";
+import {
+  parseSerializedError,
+} from "@treeai/event-journal";
 
 export function payloadString(payload: JsonValue, key: string): string | undefined {
   if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return undefined;
