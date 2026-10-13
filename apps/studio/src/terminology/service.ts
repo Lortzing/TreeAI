@@ -22,6 +22,7 @@ import type {
   TerminologyTask,
 } from "./model.ts";
 import {
+  ESTIMATE_UNIT_LABEL,
   isTerminologyReadingMode,
   MAX_SUGGESTION_SETS,
   READING_MODE_DENSITY_LIMITS,
@@ -98,7 +99,7 @@ export class TerminologyService {
         outputTokens: TERMINOLOGY_V2_OUTPUT_TOKEN_LIMIT,
         maxCandidates: TERMINOLOGY_V2_MAX_CANDIDATES,
         density: READING_MODE_DENSITY_LIMITS,
-        tokenEstimate: "chars/4-unverified",
+        tokenEstimate: ESTIMATE_UNIT_LABEL,
       },
       readingMode: this.#readingModeOf(treeId),
       autoSuggestions: this.autoSuggestionsState(treeId),

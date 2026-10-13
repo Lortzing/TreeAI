@@ -67,6 +67,10 @@ jobs:
         shell: bash
         run: npm ci
 
+      - name: Installer module and layout regressions
+        shell: bash
+        run: node --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts
+
       - name: Build installer artifact
         shell: bash
         run: |

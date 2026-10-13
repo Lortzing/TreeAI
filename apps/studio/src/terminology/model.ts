@@ -1,3 +1,4 @@
+import type { ESTIMATE_UNIT_LABEL } from "./policy.ts";
 /** Terminology model ownership; public compatibility exports remain in ../terminology.ts. */
 import type {
   PromptOutcome,
@@ -290,7 +291,7 @@ export interface TerminologyReadModel {
     readonly outputTokens: number;
     readonly maxCandidates: number;
     readonly density: Readonly<typeof READING_MODE_DENSITY_LIMITS>;
-    readonly tokenEstimate: "chars/4-unverified";
+    readonly tokenEstimate: typeof ESTIMATE_UNIT_LABEL;
   };
   /** 每树阅读模式（issue #7 术语①；缺省 manual-only）。 */
   readonly readingMode: TerminologyReadingMode;

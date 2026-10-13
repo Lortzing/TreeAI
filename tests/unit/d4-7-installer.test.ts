@@ -25,6 +25,7 @@ import { join } from "node:path";
 
 import {
   BUNDLE_MANIFEST_SCHEMA,
+  BUNDLE_LAYOUT,
   CONFIG_FILE_NAME,
   DATA_DIR_ENV,
   DEFAULT_PORT,
@@ -295,7 +296,10 @@ function makeSyntheticBundle(platform: "darwin-arm64" | "linux-x64" | "win-x64")
   mkdirSync(join(root, nodeBin, ".."), { recursive: true });
   writeFileSync(join(root, nodeBin), "fake", { flag: "wx" });
   if (platform !== "win-x64") chmodSync(join(root, nodeBin), 0o755);
-  for (const f of [join("launcher", "launcher.ts"), join("launcher", "core.ts"), "README.md"]) {
+  const coreModules = Object.entries(BUNDLE_LAYOUT)
+    .filter(([key, value]) => key.startsWith("launcher") && key !== "launcherCore" && key !== "launcherEntry" && typeof value === "string")
+    .map(([, value]) => value as string);
+  for (const f of [join("launcher", "launcher.ts"), join("launcher", "core.ts"), ...coreModules, "README.md"]) {
     mkdirSync(join(root, f, ".."), { recursive: true });
     writeFileSync(join(root, f), "");
   }
@@ -549,4 +553,16 @@ test("windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 
   assert.match(script, /exit 0/);
   /* 空目录临时文件自身也要清理。 */
   assert.match(script, /Remove-Item -LiteralPath \$empty -Recurse -Force/);
+});
+
+test("validateBundleLayout: 拆分后的启动器模块缺失必须拒绝", () => {
+  const root = makeSyntheticBundle("darwin-arm64");
+  try {
+    rmSync(join(root, BUNDLE_LAYOUT.launcherMaintenance));
+    const problems = validateBundleLayout(root, "darwin-arm64");
+    assert.equal(problems.length, 1);
+    assert.match(problems[0]!, /commands[/\\]maintenance\.ts/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

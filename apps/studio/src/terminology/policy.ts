@@ -107,3 +107,6 @@ export const READING_MODE_DENSITY_LIMITS: Readonly<
 export const MAX_SUGGESTION_SETS = 60;
 
 export const ZERO_USAGE: TerminologyUsageDelta = { requests: 0, promptChars: 0, completionChars: 0 };
+
+/** Public estimate unit label; keep its exact read-model value and literal type together. */
+export const ESTIMATE_UNIT_LABEL = "chars/4-unverified" as const;
