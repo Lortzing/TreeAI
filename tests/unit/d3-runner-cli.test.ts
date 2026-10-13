@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
-for (const entry of ["run-d3-browser.mjs", "run-d3-real-pi.mjs"]) {
+for (const entry of ["run-d3-browser.mjs", "run-d3-real-pi.mjs", "run-terminology-eval.mjs"]) {
   test(`${entry} help exits before Chrome, Studio or provider initialization`, () => {
     const result = spawnSync(process.execPath, [resolve("scripts", entry), "--help"], {
       encoding: "utf8", timeout: 5000,
