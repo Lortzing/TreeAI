@@ -1,0 +1,985 @@
+diagnose	Set up job	﻿2026-10-14T02:07:14.5616009Z Current runner version: '2.337.0'
+diagnose	Set up job	2026-10-14T02:07:14.5642573Z ##[group]Runner Image Provisioner
+diagnose	Set up job	2026-10-14T02:07:14.5643524Z Hosted Compute Agent
+diagnose	Set up job	2026-10-14T02:07:14.5644289Z Version: 20261002.596
+diagnose	Set up job	2026-10-14T02:07:14.5645052Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+diagnose	Set up job	2026-10-14T02:07:14.5645851Z Build Date: 2026-10-02T22:28:27Z
+diagnose	Set up job	2026-10-14T02:07:14.5646550Z Worker ID: {3ab2e49f-f1c3-4c92-abbb-c12e21779930}
+diagnose	Set up job	2026-10-14T02:07:14.5647260Z Region: westus
+diagnose	Set up job	2026-10-14T02:07:14.5647892Z Cloud: Azure
+diagnose	Set up job	2026-10-14T02:07:14.5648457Z ##[endgroup]
+diagnose	Set up job	2026-10-14T02:07:14.5650348Z ##[group]Operating System
+diagnose	Set up job	2026-10-14T02:07:14.5651076Z Ubuntu
+diagnose	Set up job	2026-10-14T02:07:14.5651611Z 24.04.5
+diagnose	Set up job	2026-10-14T02:07:14.5652204Z LTS
+diagnose	Set up job	2026-10-14T02:07:14.5652723Z ##[endgroup]
+diagnose	Set up job	2026-10-14T02:07:14.5653321Z ##[group]Runner Image
+diagnose	Set up job	2026-10-14T02:07:14.5654013Z Image: ubuntu-24.04
+diagnose	Set up job	2026-10-14T02:07:14.5654624Z Version: 20261004.327.1
+diagnose	Set up job	2026-10-14T02:07:14.5655785Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+diagnose	Set up job	2026-10-14T02:07:14.5657535Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+diagnose	Set up job	2026-10-14T02:07:14.5658593Z ##[endgroup]
+diagnose	Set up job	2026-10-14T02:07:14.5659916Z ##[group]GITHUB_TOKEN Permissions
+diagnose	Set up job	2026-10-14T02:07:14.5661930Z Contents: read
+diagnose	Set up job	2026-10-14T02:07:14.5662608Z Metadata: read
+diagnose	Set up job	2026-10-14T02:07:14.5663258Z ##[endgroup]
+diagnose	Set up job	2026-10-14T02:07:14.5665381Z Secret source: Actions
+diagnose	Set up job	2026-10-14T02:07:14.5666410Z Cache mode: write
+diagnose	Set up job	2026-10-14T02:07:14.5667205Z Prepare workflow directory
+diagnose	Set up job	2026-10-14T02:07:14.6024819Z Prepare all required actions
+diagnose	Set up job	2026-10-14T02:07:14.6098927Z Getting action download info
+diagnose	Set up job	2026-10-14T02:07:14.9734625Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+diagnose	Set up job	2026-10-14T02:07:15.0659151Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+diagnose	Set up job	2026-10-14T02:07:15.2477821Z Complete job name: diagnose
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	﻿2026-10-14T02:07:15.3351667Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3352750Z with:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3353181Z   fetch-depth: 0
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3353633Z   repository: Lortzing/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3357327Z   token: ***
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3357752Z   ssh-strict: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3358185Z   ssh-user: git
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3358618Z   persist-credentials: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3359091Z   clean: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3359790Z   sparse-checkout-cone-mode: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3360324Z   fetch-tags: false
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3360769Z   show-progress: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3361205Z   lfs: false
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3361602Z   submodules: false
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3362039Z   set-safe-directory: true
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.3362791Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4366076Z Syncing repository: Lortzing/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4368626Z ##[group]Getting Git version info
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4370123Z Working directory is '<home>/work/TreeAI/TreeAI'
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4371826Z [command]/usr/bin/git version
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4430608Z git version 2.55.0
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4443388Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4453050Z Temporarily overriding HOME='<home>/work/_temp/69b9daa7-daf5-4f45-b292-41cb659a2fda' before making global git config changes
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4467670Z Adding repository directory to the temporary git global config as a safe directory
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4471039Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4518498Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4527958Z ##[group]Initializing the repository
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4528755Z [command]/usr/bin/git init <home>/work/TreeAI/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4639617Z hint: Using 'master' as the name for the initial branch. This default branch name
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4640869Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4645312Z hint: to use in all of your new repositories, which will suppress this warning,
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4646866Z hint: call:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4647656Z hint:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4648598Z hint: 	git config --global init.defaultBranch <name>
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4650025Z hint:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4651099Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4652708Z hint: 'development'. The just-created branch can be renamed via this command:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4654055Z hint:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4654837Z hint: 	git branch -m <name>
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4655685Z hint:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4656794Z hint: Disable this message with "git config set advice.defaultBranchName false"
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4658901Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4662363Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4709112Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4710938Z ##[group]Disabling automatic garbage collection
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4713742Z [command]/usr/bin/git config --local gc.auto 0
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4748067Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4749779Z ##[group]Setting up auth
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4755526Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.4791745Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5164879Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5206654Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5454407Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5495484Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5496645Z ##[group]Fetching the repository
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:15.5506000Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +56e0178d5b2d3559704e77648c440ef44e4f7ba2:refs/remotes/pull/27/merge
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4868486Z From https://github.com/Lortzing/TreeAI
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4870817Z  * [new branch]      main                                     -> origin/main
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4872947Z  * [new branch]      refactor/b6-linux-font-portability-r6    -> origin/refactor/b6-linux-font-portability-r6
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4877435Z  * [new branch]      refactor/chromium-browser-gate-r7        -> origin/refactor/chromium-browser-gate-r7
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4880031Z  * [new branch]      refactor/d3-status-history-r5            -> origin/refactor/d3-status-history-r5
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4882374Z  * [new branch]      refactor/d4-pdf-fixture-groups-r4        -> origin/refactor/d4-pdf-fixture-groups-r4
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4884824Z  * [new branch]      refactor/http-request-validation-r3      -> origin/refactor/http-request-validation-r3
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4887293Z  * [new branch]      refactor/http-runtime-boundaries-r3      -> origin/refactor/http-runtime-boundaries-r3
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4889951Z  * [new branch]      refactor/http-static-adapter-r3          -> origin/refactor/http-static-adapter-r3
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4892476Z  * [new branch]      refactor/implementation-commentary-r5    -> origin/refactor/implementation-commentary-r5
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4894984Z  * [new branch]      refactor/integration-r0-r7               -> origin/refactor/integration-r0-r7
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4897305Z  * [new branch]      refactor/repository-foundation-r0        -> origin/refactor/repository-foundation-r0
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4899174Z  * [new branch]      refactor/return-source-presentation-r1   -> origin/refactor/return-source-presentation-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4902021Z  * [new branch]      refactor/studio-app-state-factory-r1     -> origin/refactor/studio-app-state-factory-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4903449Z  * [new branch]      refactor/studio-css-modules-r1           -> origin/refactor/studio-css-modules-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4904871Z  * [new branch]      refactor/studio-esm-test-bootstrap-r1    -> origin/refactor/studio-esm-test-bootstrap-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4906587Z  * [new branch]      refactor/studio-event-projection-r3      -> origin/refactor/studio-event-projection-r3
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4908637Z  * [new branch]      refactor/studio-selection-scroll-dom-r1  -> origin/refactor/studio-selection-scroll-dom-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4910834Z  * [new branch]      refactor/studio-sha256-source-module-r1  -> origin/refactor/studio-sha256-source-module-r1
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4912598Z  * [new branch]      refactor/terminology-density-r3          -> origin/refactor/terminology-density-r3
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4914228Z  * [new branch]      refactor/ui-test-instance-harness-r2     -> origin/refactor/ui-test-instance-harness-r2
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4915704Z  * [new branch]      wip/d4-1-pdf-parser                      -> origin/wip/d4-1-pdf-parser
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4916877Z  * [new branch]      wip/d4-2-pdf                             -> origin/wip/d4-2-pdf
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4918052Z  * [new branch]      wip/d4-3-backend                         -> origin/wip/d4-3-backend
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4919234Z  * [new branch]      wip/d4-3-frontend                        -> origin/wip/d4-3-frontend
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4920711Z  * [new branch]      wip/d4-4-frontend                        -> origin/wip/d4-4-frontend
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4921945Z  * [new branch]      wip/d4-4-search-core                     -> origin/wip/d4-4-search-core
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4923156Z  * [new branch]      wip/d4-5-export                          -> origin/wip/d4-5-export
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4924291Z  * [new branch]      wip/d4-6-perf                            -> origin/wip/d4-6-perf
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4925550Z  * [new branch]      wip/d4-8-frontend                        -> origin/wip/d4-8-frontend
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4927056Z  * [new branch]      wip/d4-8-nav                             -> origin/wip/d4-8-nav
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4928197Z  * [new branch]      wip/d4-browser-ev                        -> origin/wip/d4-browser-ev
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4929664Z  * [new branch]      wip/d4-browser-face                      -> origin/wip/d4-browser-face
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4931046Z  * [new branch]      wip/d4-browser-probes                    -> origin/wip/d4-browser-probes
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4932199Z  * [new ref]         56e0178d5b2d3559704e77648c440ef44e4f7ba2 -> pull/27/merge
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4934198Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4934972Z ##[group]Determining the checkout info
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4935851Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4936367Z [command]/usr/bin/git sparse-checkout disable
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4954675Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4989051Z ##[group]Checking out the ref
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.4994491Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/27/merge
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9580612Z Note: switching to 'refs/remotes/pull/27/merge'.
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9582665Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9583691Z You are in 'detached HEAD' state. You can look around, make experimental
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9585980Z changes and commit them, and you can discard any commits you make in this
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9588246Z state without impacting any branches by switching back to a branch.
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9589826Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9590746Z If you want to create a new branch to retain commits you create, you may
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9592922Z do so (now or later) by using -c with the switch command. Example:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9594264Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9594839Z   git switch -c <new-branch-name>
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9595809Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9596379Z Or undo this operation with:
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9597644Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9598160Z   git switch -
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9598886Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9600300Z Turn off this advice by setting config variable advice.detachedHead to false
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9601976Z 
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9603859Z HEAD is now at 56e0178 Merge 40b84b7f179f91b5242bdbd3497e2e752082503f into e427460b31f61722d5e74a6fa4ee24d140abe67b
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9617430Z ##[endgroup]
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9667202Z [command]/usr/bin/git log -1 --format=%H
+diagnose	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:07:17.9695753Z 56e0178d5b2d3559704e77648c440ef44e4f7ba2
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-10-14T02:07:18.0078737Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0080762Z with:
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0081701Z   node-version: 24.21.0
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0082760Z   cache: npm
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0083718Z   always-auth: false
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0084759Z   check-latest: false
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0094795Z   token: ***
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.0095766Z ##[endgroup]
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.1508006Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.1513406Z (node:2269) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.1518306Z (Use `node --trace-deprecation ...` to show where the warning was created)
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.1522662Z ##[group]Environment details
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.5652908Z node: v24.21.0
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.5653238Z npm: 11.19.0
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.5653728Z yarn: 1.22.22
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.5654627Z ##[endgroup]
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.5677136Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.6776172Z <home>/.npm
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.9444678Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:18.9570951Z (node:2269) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:20.2316154Z Received 4194304 of 170878268 (2.5%), 4.0 MBs/sec
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:21.2320563Z Received 130023424 of 170878268 (76.1%), 62.0 MBs/sec
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:21.7290582Z Received 170878268 of 170878268 (100.0%), 65.4 MBs/sec
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:21.7295547Z Cache Size: ~163 MB (170878268 B)
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:21.7353583Z [command]/usr/bin/tar -xf <home>/work/_temp/59af982d-449c-446f-ad4c-14481e8f7254/cache.tzst -P -C <home>/work/TreeAI/TreeAI --use-compress-program unzstd
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:22.0166038Z Cache restored successfully
+diagnose	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:07:22.0246637Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+diagnose	Run npm ci	﻿2026-10-14T02:07:22.0458187Z ##[group]Run npm ci
+diagnose	Run npm ci	2026-10-14T02:07:22.0458510Z ^[[36;1mnpm ci^[[0m
+diagnose	Run npm ci	2026-10-14T02:07:22.0729704Z shell: /usr/bin/bash -e {0}
+diagnose	Run npm ci	2026-10-14T02:07:22.0730073Z ##[endgroup]
+diagnose	Run npm ci	2026-10-14T02:07:25.9544054Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+diagnose	Run npm ci	2026-10-14T02:07:29.0576447Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0577465Z added 178 packages, and audited 186 packages in 7s
+diagnose	Run npm ci	2026-10-14T02:07:29.0577991Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0578639Z 17 packages are looking for funding
+diagnose	Run npm ci	2026-10-14T02:07:29.0579519Z   run `npm fund` for details
+diagnose	Run npm ci	2026-10-14T02:07:29.0705624Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0706288Z 3 vulnerabilities (1 moderate, 2 high)
+diagnose	Run npm ci	2026-10-14T02:07:29.0706703Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0707138Z To address issues that do not require attention, run:
+diagnose	Run npm ci	2026-10-14T02:07:29.0707776Z   npm audit fix
+diagnose	Run npm ci	2026-10-14T02:07:29.0708015Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0708445Z To address all issues (including breaking changes), run:
+diagnose	Run npm ci	2026-10-14T02:07:29.0709122Z   npm audit fix --force
+diagnose	Run npm ci	2026-10-14T02:07:29.0709716Z 
+diagnose	Run npm ci	2026-10-14T02:07:29.0710083Z Run `npm audit` for details.
+diagnose	Run npm ci	2026-10-14T02:07:29.0722686Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+diagnose	Run npm ci	2026-10-14T02:07:29.0723902Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+diagnose	Run npm ci	2026-10-14T02:07:29.0725419Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+diagnose	Run npm ci	2026-10-14T02:07:29.0726528Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+diagnose	Run npm ci	2026-10-14T02:07:29.0727296Z npm warn install-scripts
+diagnose	Run npm ci	2026-10-14T02:07:29.0728371Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+diagnose	Repository inventory sanity	﻿2026-10-14T02:07:29.3021227Z ##[group]Run node scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.3022209Z ^[[36;1mnode scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json^[[0m
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.3023904Z ^[[36;1mnode -e 'const r=require("/tmp/treeai-inventory.json"); if(r.files.length<3000) process.exit(1); console.log("Tracked files:",r.files.length,"Review candidates:",r.files.filter(x=>x.review).length)'^[[0m
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.3106174Z shell: /usr/bin/bash -e {0}
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.3106442Z ##[endgroup]
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.6314172Z Inventory written: /tmp/treeai-inventory.json (4046 files, SHA 56e0178d5b2d3559704e77648c440ef44e4f7ba2)
+diagnose	Repository inventory sanity	2026-10-14T02:07:29.6736831Z Tracked files: 4046 Review candidates: 54
+diagnose	Refactor import boundaries and original static scenarios	﻿2026-10-14T02:07:29.8064685Z ##[group]Run node scripts/audit-refactor-boundaries.mjs --base "$REFACTOR_BASE_SHA" --out /tmp/treeai-boundaries.json
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:29.8066170Z ^[[36;1mnode scripts/audit-refactor-boundaries.mjs --base "$REFACTOR_BASE_SHA" --out /tmp/treeai-boundaries.json^[[0m
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:29.8149823Z shell: /usr/bin/bash -e {0}
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:29.8150241Z env:
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:29.8150681Z   REFACTOR_BASE_SHA: e427460b31f61722d5e74a6fa4ee24d140abe67b
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:29.8151255Z ##[endgroup]
+diagnose	Refactor import boundaries and original static scenarios	2026-10-14T02:07:31.9609024Z PASS: 794 baseline static scenarios / 853 current; 0 boundary violations
+diagnose	Native ESM/CSS and package inclusion dependency audit	﻿2026-10-14T02:07:31.9982435Z ##[group]Run node scripts/audit-studio-assets.mjs
+diagnose	Native ESM/CSS and package inclusion dependency audit	2026-10-14T02:07:31.9982868Z ^[[36;1mnode scripts/audit-studio-assets.mjs^[[0m
+diagnose	Native ESM/CSS and package inclusion dependency audit	2026-10-14T02:07:32.0047141Z shell: /usr/bin/bash -e {0}
+diagnose	Native ESM/CSS and package inclusion dependency audit	2026-10-14T02:07:32.0047419Z ##[endgroup]
+diagnose	Native ESM/CSS and package inclusion dependency audit	2026-10-14T02:07:32.0483629Z PASS: 53 native ESM assets + 9 CSS modules and installer/public allowlist accounted for
+diagnose	Browser shared source/view regressions (Node, no browser shim)	﻿2026-10-14T02:07:32.0579043Z ##[group]Run node --test apps/studio/tests/shared-utils.test.mjs
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.0580100Z ^[[36;1mnode --test apps/studio/tests/shared-utils.test.mjs^[[0m
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.0664795Z shell: /usr/bin/bash -e {0}
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.0665226Z ##[endgroup]
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1851495Z ✔ navigation sessions ignore obsolete overview failures and closed-tree responses independently (7.649426ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1862838Z ✔ restoring shallow and deep selection stays read-only and preserves the full expanded set (1.515088ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1872696Z ✔ child paging merges in-flight requests and recovers stale cursors from the first page (1.278736ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1890312Z ✔ navigation persistence serializes writes and coalesces rapid changes to the newest full snapshot (1.074074ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1981839Z ✔ a late persistence failure after navigation closes never contaminates the next session (1.620244ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1992162Z ✔ finder epochs discard superseded listing successes and search failures independently per instance (0.759046ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1993935Z ✔ finder keeps loaded pages on failure and retries the same cursor without duplicate in-flight requests (0.429081ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1995212Z ✔ blank finder input replaces search and ignores its late continuation (0.30564ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1996523Z ✔ scroll follow keeps the 48px threshold and does not pull users reading above (0.283829ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1997759Z ✔ selection offsets reject source mismatch without creating an incorrect anchor (0.492519ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.1998924Z ✔ DOM turn reuse excludes Return cards and requires exact turn text (0.311201ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2000213Z ✔ R1 Markdown view preserves syntax, source offsets and styled text (0.77174ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2010491Z ✔ R1 Markdown view carries fenced-code state between material blocks (0.320669ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2040717Z ✔ R1 material selection snaps surrogate pairs and combining graphemes outwards (0.299579ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2042447Z ✔ R1 material selection keeps a joined emoji grapheme intact (0.151713ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2130768Z ✔ R1 Search view preserves honest idle, loading, failed, empty, and populated states (9.050882ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2160957Z ✔ R1 Return view preserves anchored/fallback source facts and adoption states (1.988251ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2162770Z ✔ R1 diagnostics view preserves run, policy, and failure-panel states (0.898256ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2164651Z ✔ R1 navigation finder view preserves states, paging, and active-tree row behavior (1.266745ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2166452Z ✔ R1 navigation chrome view preserves overview and action state (0.633211ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2168051Z ✔ Studio API calls injected native fetch without a dependency-object receiver (0.372164ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2170099Z ✔ PDF pages reserve trusted geometry before paint so source jumps keep their viewport position (0.377705ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2173475Z ✔ stream follow records native scroll position before delayed scroll events and preserves readers above (0.369129ms)
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2226750Z ℹ tests 23
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2227468Z ℹ suites 0
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2228263Z ℹ pass 23
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2228893Z ℹ fail 0
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2229752Z ℹ cancelled 0
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2230563Z ℹ skipped 0
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2231297Z ℹ todo 0
+diagnose	Browser shared source/view regressions (Node, no browser shim)	2026-10-14T02:07:32.2232000Z ℹ duration_ms 115.904116
+diagnose	Runner CLI and migrated verifier scan regressions	﻿2026-10-14T02:07:32.2335664Z ##[group]Run node --test tests/unit/d3-runner-cli.test.ts tests/unit/verifier-owner-scan.test.ts
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.2336533Z ^[[36;1mnode --test tests/unit/d3-runner-cli.test.ts tests/unit/verifier-owner-scan.test.ts^[[0m
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.2401732Z shell: /usr/bin/bash -e {0}
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.2401998Z ##[endgroup]
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.6813838Z ✔ run-d3-browser.mjs help exits before Chrome, Studio or provider initialization (68.582092ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.6859163Z ✔ run-d3-real-pi.mjs help exits before Chrome, Studio or provider initialization (60.502082ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.6893148Z ✔ run-terminology-eval.mjs help exits before Chrome, Studio or provider initialization (57.907542ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.6907882Z ✔ browser runner rejects an unknown flag before launching a child (67.661724ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.6933193Z ✔ browser runner accepts a trailing standalone keep-data flag (40.4289ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7031139Z ✔ D2 workspace scan includes extracted verifier owners (304.459975ms)
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7149808Z ℹ tests 6
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7150558Z ℹ suites 0
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7151402Z ℹ pass 6
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7152163Z ℹ fail 0
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7152820Z ℹ cancelled 0
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7153550Z ℹ skipped 0
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7154175Z ℹ todo 0
+diagnose	Runner CLI and migrated verifier scan regressions	2026-10-14T02:07:32.7154858Z ℹ duration_ms 435.000421
+diagnose	Root test typecheck (diagnostic output)	﻿2026-10-14T02:07:32.7295079Z ##[group]Run node node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false
+diagnose	Root test typecheck (diagnostic output)	2026-10-14T02:07:32.7296178Z ^[[36;1mnode node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false^[[0m
+diagnose	Root test typecheck (diagnostic output)	2026-10-14T02:07:32.7388040Z shell: /usr/bin/bash -e {0}
+diagnose	Root test typecheck (diagnostic output)	2026-10-14T02:07:32.7388494Z ##[endgroup]
+diagnose	All production typechecks (diagnostic output)	﻿2026-10-14T02:07:36.6972180Z ##[group]Run npm run typecheck
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.6972508Z ^[[36;1mnpm run typecheck^[[0m
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.7044311Z shell: /usr/bin/bash -e {0}
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.7044595Z ##[endgroup]
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.8130894Z 
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.8131509Z > treeai@0.0.0 typecheck
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.8132123Z > node scripts/typecheck.js
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.8132375Z 
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:36.8455405Z [typecheck] checking @treeai/runtime-smoke (apps/runtime-smoke)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:39.2507836Z [typecheck] checking @treeai/studio (apps/studio)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:43.9324571Z [typecheck] checking @treeai/contracts (packages/contracts)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:44.6411927Z [typecheck] checking @treeai/event-journal (packages/event-journal)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:45.7407300Z [typecheck] checking @treeai/persistence (packages/persistence)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:47.0985527Z [typecheck] checking @treeai/runtime-pi (packages/runtime-pi)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:49.2892417Z [typecheck] checking @treeai/tool-policy (packages/tool-policy)
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:50.1216269Z 
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:50.1217065Z typecheck summary (Gate 0 scaffold):
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:50.1219155Z   checked: @treeai/runtime-smoke, @treeai/studio, @treeai/contracts, @treeai/event-journal, @treeai/persistence, @treeai/runtime-pi, @treeai/tool-policy
+diagnose	All production typechecks (diagnostic output)	2026-10-14T02:07:50.1220750Z [typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.
+diagnose	Studio test suite (diagnostic output)	﻿2026-10-14T02:07:50.1344784Z ##[group]Run npm test --workspace @treeai/studio
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.1345188Z ^[[36;1mnpm test --workspace @treeai/studio^[[0m
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.1406837Z shell: /usr/bin/bash -e {0}
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.1407096Z ##[endgroup]
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.2816286Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.2816872Z > @treeai/studio@0.0.0 test
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.2817521Z > npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.2817879Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.4097231Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.4097947Z > @treeai/studio@0.0.0 build:deps
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.4098757Z > npm run --workspace @treeai/event-journal build:test
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.4099048Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.5381943Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.5382572Z > @treeai/event-journal@0.0.0 build:test
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.5383178Z > tsc -p tsconfig.build.json
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:50.5383430Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:51.8384860Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:51.8385449Z > @treeai/studio@0.0.0 typecheck
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:51.8385898Z > tsc --noEmit -p tsconfig.json
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:51.8386099Z 
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.1791585Z ✔ HTTP API serves the UI and the full D3 flow, surviving a restart (236.146759ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.2735719Z ✔ return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5) (95.392615ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.3552111Z ✔ new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text (80.090832ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.3805947Z ✔ HTTP layer rejects malformed bodies and unknown routes predictably (28.116883ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.7277160Z ✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (345.871724ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.7861044Z ✔ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (60.014847ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:07:58.8331386Z ✔ response-loss resubmit and double-click converge to exactly one return (58.130458ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2495121Z ✔ b9 dataset: two generations are byte-identical (determinism) with equal manifest hashes (320.067666ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2497529Z ✔ b9 dataset: structure-truth invariants all hold (totals, six special-tree rules, origin discipline) (135.10631ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2606650Z ✔ b9 dataset: loads into a real persistence database with row counts matching the structure truth (7420.334657ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2609012Z ✔ b9 engine probes: all frozen probes pass 100% against the structure truth (locate/origins/pagination/deep/samename/search/empty/shape/tree-list/p95) (1357.610057ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2611167Z ✔ b9 engine: cross-tree locate spot-checks (switch trees by branch id alone) (163.246476ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.2612240Z ✔ b9 cleanup: close repositories and remove the temp data dir (24.906747ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3191373Z ✔ shared factories preserve constructor and SSE registry isolation (1.7302ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3221015Z ✔ material ranges retain cross-node offsets and fresh text after edits (1.014959ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3231537Z ✔ text ranges reject another node while preserving reversed endpoint slices (0.77361ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3290260Z ✔ storage and response stubs retain separate stores and payload identity (0.40337ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3320585Z ✔ echo defaults are unchanged (offline driver, no agent dir) (2.573993ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3322016Z ✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.308755ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3324094Z ✔ --agent-dir is rejected for the echo driver (0.807373ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3326903Z ✔ --driver pi fails clearly without provider/model (error names the env var too) (0.362806ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3328512Z ✔ empty --provider value still fails the pi boundary check (0.303054ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3330333Z ✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.267929ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3331594Z ✔ --driver pi accepts an explicit absolute agent dir (1.018958ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3351047Z ✔ --driver pi resolves a relative agent dir against the process cwd (0.282176ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3370691Z ✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.563559ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3372022Z ✔ empty or whitespace-only --agent-dir value is a usage error (0.638439ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3373203Z ✔ unknown flags and missing values keep failing with the usage error (0.533103ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3374603Z ✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.290811ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3377841Z ✔ readPiApiKey treats whitespace-only values as missing (0.913351ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3379158Z ✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.143497ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3381513Z ✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (1.193442ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3382850Z ✔ resolvePiDriverWiring fails for non-pi options (0.460106ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3384117Z ✔ no tool flags keeps the defaults at zero tools and no policy roots (echo and pi alike) (0.160249ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3385279Z ✔ --pi-tools is rejected for the echo driver (0.231902ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3386506Z ✔ --pi-tools must list at least one tool (empty or whitespace-only lists are usage errors) (0.237592ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3387862Z ✔ --pi-tools parses a trimmed comma-separated allowlist (order preserved) (0.174205ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3389189Z ✔ --policy-read-roots without --pi-tools is a usage error (echo and pi alike) (0.233084ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3390717Z ✔ --policy-read-roots must list at least one directory when given (3.195891ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3392154Z ✔ --policy-read-roots entries must be absolute (relative entries are boundary errors) (0.265885ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3393580Z ✔ --pi-tools with explicit absolute read roots parses the trimmed list (0.212967ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3395367Z ✔ resolvePiToolWiring is null without --pi-tools (echo and pi alike) (0.222284ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3396910Z ✔ resolvePiToolWiring defaults the read roots to the workspace and marks the default (0.238585ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3398680Z ✔ resolvePiToolWiring keeps explicit read roots and does not mark them defaulted (0.175817ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3400506Z ✔ resolvePiToolWiring probes every effective root and fails closed on a missing directory (0.263371ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3402093Z ✔ the wired policy engine allows in-root reads and denies out-of-root reads, writes, and shell (32.0436ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3403694Z ✔ D4-5: 'export' subcommand parses --out/--include-sessions/--readable and lands in export mode (2.49133ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3405213Z ✔ D4-5: '--import-package DIR' parses into import mode and stays exclusive with 'export' (0.979855ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3406652Z ✔ D4-5: export/import mode-confused and missing-value argvs fail with clear errors (0.527132ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3408106Z ✔ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (180.455074ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3409804Z ✔ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (52.509821ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3411528Z ✔ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (67.143231ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3413516Z ✔ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (142.245242ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3415604Z ✔ process restart: journal and diagnostics converge consistently (host-crash semantics) (47.914996ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3417749Z ✔ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (48.044968ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3419660Z ✔ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (85.645463ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3421077Z ✔ tool-activity events project tool name and phase only (scripted runtime) (41.771632ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3422521Z ✔ session availability derivation: live probe refines the cached assessment honestly (44.818642ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3424389Z ✔ policy request-time gate: denial surfaces provenance, fails the run, and reports honestly (34.359162ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3425858Z ✔ SSE emits the owning tree only, snapshot before events, and disconnects once (2.884401ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3427070Z ✔ ESM and CSS static allowlist serves correct content type (22.809354ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3428333Z ✔ unknown static paths and traversal attempts are rejected, not read from disk (1.60575ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3429902Z ✔ frozen identity constants: parserKind markdown / parserVersion d4-md-v1 (2.934885ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3431386Z ✔ Chinese prose: paragraphs split into blocks, same-block line breaks preserved (1.65398ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3432988Z ✔ English prose: multi-block with same-block continuation lines and a cross-line excerpt (0.439358ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3434358Z ✔ fenced code block with several lines and no blank line stays ONE block (0.682641ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3435985Z ✔ fenced code block between prose: only blank lines split blocks (0.378274ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3437523Z ✔ fenced code block containing a blank line SPLITS into blocks (no fence awareness) (0.295439ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3438828Z ✔ CRLF line endings canonicalize to single LF (never doubled) (0.328041ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3440141Z ✔ lone CR and mixed CRLF/CR/LF endings canonicalize to LF (0.254104ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3441509Z ✔ emoji incl. astral-plane characters: UTF-16 offsets count surrogate pairs as 2 units (0.280392ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3442887Z ✔ combining characters kept verbatim: no NFC normalization anywhere (0.490383ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3444282Z ✔ repeated distinctive words: both occurrences resolved to stable offsets and blocks (0.309046ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3445367Z ✔ links and inline code kept verbatim (0.890538ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3446369Z ✔ single-block document with and without a trailing newline (0.259443ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3447638Z ✔ document without trailing newline: final block keeps no forced terminator (0.251658ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3448840Z ✔ leading and trailing blank lines are dropped entirely (0.23091ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3451181Z ✔ whitespace-only separator lines contribute only their newline (blank-line whitespace dropped) (0.32235ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3453054Z ✔ multi-blank-line runs keep every newline (N blanks yield N+1 newlines) (0.2198ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3454435Z ✔ content lines keep leading/trailing spaces and tabs verbatim (0.177761ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3455952Z ✔ realistic mixed document: zh prose + fenced code + links + emoji, exact block map (0.202748ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3457092Z ✔ rejection: empty (0 bytes) (0.216152ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3458550Z ✔ rejection: invalid-utf8 (truncated / bad continuation / overlong / surrogate) (0.321428ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3460363Z ✔ rejection: nul-byte (embedded U+0000, incl. precedence over whitespace-only) (0.239065ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3462202Z ✔ rejection: whitespace-only (no meaningful content) (0.189333ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3463791Z ✔ rejection precedence: decode failure precedes NUL detection (0.169766ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3465212Z ✔ leading BOM is stripped by the strict decoder; content parses normally (1.933431ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3472227Z ✔ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (252.046199ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3474841Z ✔ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (290.567294ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3477184Z ✔ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (45.448681ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3479245Z ✔ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (115.491899ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3500949Z ✔ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (33.288254ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3504477Z ✔ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (28.174493ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3506658Z ✔ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (158.552157ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3508472Z ✔ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (116.961149ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3512065Z ✔ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (45.177514ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3513772Z ✔ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (130.962936ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3516315Z ✔ material branching: creation lands branch/origin/binding with zero runs/turns; the context view is deterministic and byte-identical at dispatch time (charter §3.3 rule 1/3, ADR-004 §4) (170.680097ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3518943Z ✔ material branching: a text-layer PDF selection branches through the real d4-pdf-v1 pipeline with page-bearing blocks (B1 pdf-01) (171.514208ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3526724Z ✔ material context bounds: a large material truncates the window honestly; an oversized selection is refused with zero dispatch (ADR-003 §4 / ADR-004 §7) (255.072897ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3534527Z ✔ material first question: independent session, audited versionId prefix, composed context enters the model input; replay and post-restart replay are deterministic (ADR-004 §2/§4/§5) (158.436405ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3538007Z ✔ material first question reconciliation: a non-terminal run blocks re-dispatch (unknown, no blind send); an explicit failure allows the retry (ADR-004 §5 rules 3/4) (178.511109ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3541684Z ✔ restore-or-open: same source restores the existing branch, explicit new opens a second one; look-alike selections in other materials/versions are never reused; cross-tree isolation holds (charter §3.3 rule 5/6) (400.238647ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3545669Z ✔ material return: lands on the owning tree's trunk with targetAnchor null, a full material source card, idempotent replay, and adoption attempts recorded after the trunk prompt (charter §3.3 rule 7, ADR-004 §8) (214.360648ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3549083Z ✔ missing session: normal continuation fails closed; explicit new material exploration succeeds with the material context carried; an available session refuses the new exploration (W1 §3.4 + ADR-004 §3c) (121.256112ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3552141Z ✔ non-ready versions refuse branching with the honest reason (charter §3.2 — never disguise unsupported as an empty success) (96.246501ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3554671Z ✔ material branching HTTP API: from-material create/replay/conflict/restore/new + first-question + return + new-exploration + 503 unwired (D4-contracts §3 D4-3 rows) (197.786066ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3556912Z ✔ material branching HTTP API: unwired materials → 503 material-branching-not-wired for every D4-3 route (32.381807ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3559007Z ✔ valid categories resolve exactly: repeat-word-2nd (overlapping occurrences), cross-line, unicode, long-tail, utf16-range (27.454364ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3560812Z ✔ invalid categories are rejected with the correct frozen reason code (9.156083ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3562900Z ✔ stale-version: same range, changed text → stale for the new version; the old version stays readable and the anchor is not migrated (7.833961ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3564924Z ✔ reference errors: unknown version 404s; a version of another material is an input error (7.8929ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3566654Z ✔ grapheme cache is content-addressed: identical canonical texts in different versions never cross-contaminate (6.0729ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3568349Z ✔ reading position GET: empty state, PUT round-trip, upsert replaces, 404/405/503 surfaces (235.217184ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3570491Z ✔ reading positions stay isolated per tree and per material; exploration never clobbers reading (charter §3.2) (239.57557ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3572783Z ✔ resolve-selection over HTTP: 200 exact canonical selection for both locator kinds; sourceHash equals canonicalText SHA-256 (120.748815ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3574713Z ✔ resolve-selection rejection surface: 400 with the frozen reason codes, 409 not-ready, 404/400/405/503 (465.028258ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3576472Z ✔ markdown import: async pending→parsing→ready with chunked reads paginating blocks (134.810266ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3578302Z ✔ version semantics: tree-scoped same-bytes reuse; new bytes append a version; old versions stay readable (212.366602ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3580371Z ✔ limits: frozen defaults; small injected limits reject before parsing with zero persistence (44.536226ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3582299Z ✔ pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination (113.586118ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3584651Z ✔ pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready (105.185148ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3586592Z ✔ pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting (152.102702ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3588676Z ✔ custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence (12.303584ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3591428Z ✔ canonical text over the limit: version fails with text-units-exceeded; the oversized text is never stored (85.362235ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3594048Z ✔ parse cancellation with a gated fake parser: canceled stays canceled; the late result is discarded, never attached (30.719162ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3596235Z ✔ host interruption recovery: a version left parsing converges to failed (parse-interrupted) on the next construction (27.447206ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:06.3598425Z ✔ honest rejections before any persistence: unknown extension, empty input, unknown tree (24.349679ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:13.9522261Z ✔ nav api: trees listing is paginated scalar summaries with no full-tree payloads (7495.317433ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.4261441Z ✔ nav api: tree overview carries the structure-truth shape of the special trees (472.435907ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.4381380Z ✔ nav api: children pagination pages b9-wide's 220 root children in truth order (13.435693ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.4553808Z ✔ nav api: lazy endpoints enforce bounded limits and reject malformed cursors/params (19.211336ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.5754572Z ✔ nav api: b9-big full tree only ever arrives page-bounded (5000 nodes via subtree pagination, <1MiB pages) (119.715821ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.5772649Z ✔ nav api: deep chain /path returns the complete 100-level chain (2.161465ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.5800390Z ✔ nav api: locate switches trees by branch id alone with ancestors and origin (2.74937ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.8792557Z ✔ nav api: same-name search disambiguates by full path and paginates in the full-order (297.634432ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.8861132Z ✔ nav api: tree search paginates the deterministic order (ids and titles) (3.641772ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:14.8863490Z ✔ nav api: empty tree stays honestly usable (4.183822ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:20.7968526Z ✔ nav api: expand-state round trip, validation, and survival across a simulated restart (101.828828ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:23.9310824Z ✔ nav api: product tree ≠ run/session trees — session availability sweep leaves nav byte-identical (8928.103613ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:23.9354205Z ✔ nav api: 503 when nav is not wired (19.366627ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:23.9358891Z ✔ nav api cleanup: close the shared instance and remove its data dir (0.26351ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0237874Z ✔ children pagination: page through 300 children at multiple page sizes without duplicates or gaps (728.555701ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0240227Z ✔ children pagination: parameter validation and cursor discipline (35.63643ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0242008Z ✔ index invalidation: new branch invisible until invalidate, visible after (25.320172ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0243882Z ✔ subtree expansion: depth limits, node limit truncation and cursor continuation (51.743599ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0245969Z ✔ locate: cross-tree identity, ancestors, sibling position, turn and material origins (52.100483ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0247642Z ✔ branch search: exact/prefix/substring, case folding, matchedOn, tree scope, honest zero (53.385907ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0249292Z ✔ search pagination: deterministic pages without duplicates or gaps; cursor discipline (57.915634ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0251661Z ✔ same-name disambiguation: identical titles under different parents carry distinct full paths (29.874219ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0253281Z ✔ empty tree: honest empty pages, single-node expansion, null title overview (19.405592ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0254861Z ✔ deep chain: 12000-level parent path and locate computed iteratively (no stack overflow) (6459.23738ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0256272Z ✔ tree list: paginated across forests without duplicates or gaps (24.393376ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0257668Z ✔ frozen identity constants: parserKind pdf / parserVersion d4-pdf-v1 / limits (2.833007ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0259152Z ✔ all registry ready fixtures extract to their frozen truth byte-exactly (12 PDF) (145.33195ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0260910Z ✔ all registry negatives reject with their frozen reason (encrypted/corrupt/no-text-layer) (1.818276ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0262164Z ✔ determinism: the same bytes parse to deep-equal results (7.469982ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0263578Z ✔ pages limit: pdf-08 (10 pages) is rejected before content interpretation under a tighter limit (35.321674ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0265073Z ✔ content operators beyond the fixture writer: TJ array, T-star, quote forms, TD, Tm (4.186217ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0266699Z ✔ FlateDecode-compressed content stream round-trips (fixture content streams are uncompressed) (1.742496ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0268161Z ✔ literal string octal escapes and WinAnsi high bytes decode exactly (1.517036ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0270080Z ✔ pinned reading order: left band completes before the right band; same-y ties break by x (1.385651ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0271744Z ✔ page blocks: non-final pages end with a newline; empty pages are skipped with true page numbers kept (3.237085ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0273194Z ✔ rejection: corrupt — not a PDF / truncated / Length mismatch / misplaced startxref (1.33171ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0274644Z ✔ rejection: unsupported — xref stream, DCTDecode, non-WinAnsi Type1, Type0 without ToUnicode (1.867919ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0276509Z ✔ rejection: unsupported — a CID absent from the ToUnicode map refuses to guess text (0.721253ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0277971Z ✔ Identity-H mapping: bfchar and bfrange both decode; surrogate pairs carry through (0.968955ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0278909Z ✔ bfrange array values map code-by-code (an array is never misread as a sequential range) (1.46592ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0280034Z ✔ inline images (BI/ID/EI) are skipped whole; text before and after survives intact (1.528286ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0280778Z ✔ lazy fonts: only a font actually used to show text can fail the page (3.063796ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0281659Z ✔ rejection: encrypted — a trailer carrying /Encrypt is refused without any decryption attempt (0.394404ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0282624Z ✔ rejection: no-text-layer — image-only content (no text operators) is never an empty ready document (0.48842ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0284762Z ✔ export default: versioned package with frozen facts set, content-addressed blobs and per-entry checksums; sessions/credentials/logs excluded (235.372035ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0287015Z ✔ export is byte-deterministic for the same database under an injected clock (211.850778ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0288261Z ✔ export --include-sessions: explicit opt-in copies referenced session files, marks the package sensitive and reports missing files honestly (194.529621ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0289791Z ✔ export --include-sessions refuses colliding session basenames instead of silently overwriting either file (215.227378ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0290733Z ✔ export --readable renders human-readable markdown alongside the data package (208.659788ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0291903Z ✔ export --readable refuses database ids that would escape the package (write-side path traversal guard) (202.672976ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0292780Z ✔ export guards: refuses a non-empty --out directory and a missing database (195.57474ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0293739Z ✔ restore into an empty data directory rebuilds every fact table and blob byte-identically; saved excerpts survive (262.768757ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0294969Z ✔ restore into an existing-but-empty directory works; carried sessions are placed, their references rewritten, missing references kept verbatim (243.402617ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0296287Z ✔ a corrupted package is rejected before anything is placed: checksum mismatch, empty target stays empty, source untouched, no staging residue (193.741196ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0297305Z ✔ restore refuses a non-empty target and leaves the existing files byte-identical (185.597101ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0298226Z ✔ restore rejects path traversal, symlinks, unexpected files, missing entries and oversized declarations (244.258053ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0299818Z ✔ restore rejects adversarial packages whose checksums were re-minted: schema lies, shape drift, dangling foreign keys, duplicate keys, unknown tables, marker mismatches (298.69656ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0301053Z ✔ restore of a sessions package refuses when a session file was dropped after export (checksum honesty) (216.61465ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0301967Z ✔ scoped search returns contract-shaped material hits positioned in the canonical text (217.947301ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0302864Z ✔ annotation hits omit the material-only fields; absent queries return an honest empty list (46.236674ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0303674Z ✔ /api/search spans all trees; a scoped search never leaks another tree's facts (199.983534ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0304286Z ✔ kinds filter passes through to the engine (134.356135ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0304907Z ✔ rejections: blank/wrong-type text, malformed kinds, bad JSON → 400 (43.201534ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0305578Z ✔ unknown tree → 404; non-POST methods → 405; unwired search → 503 (52.207613ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0306381Z ✔ B4 corpus shape: 3 trees, 35 saved-fact documents (12 material / 11 annotation / 6 return / 6 turn) (9.159848ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0307226Z ✔ B4 frozen positives (55): every pre-specified target lands in the engine's top-5 (32.083951ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0307945Z ✔ B4 frozen no-result queries (12): zero hits, nothing fabricated (14.222315ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0308634Z ✔ B4 sample: current-tree vs all-trees scoping changes the hit set exactly (17.250024ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0309548Z ✔ B4 material hits are precisely positioned in the frozen canonical text (26.161154ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0310319Z ✔ zh matching is substring-based: a query inside a longer sentence still hits (0.402009ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0311035Z ✔ en matching is whole-word: 'tree' must not match 'street' or 'trees' (0.450268ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0311765Z ✔ scoping: treeId restricts to one tree; kinds filter restricts source types (1.030088ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0312667Z ✔ old-version labeling: v1-only sentences hit with oldVersion=true; current v2 ranks first on shared text (2.126981ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0313464Z ✔ empty and punctuation-only queries return zero hits honestly (16.505788ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0314337Z ✔ determinism: rebuild, serialize/restore round-trip, and reversed input order all yield identical results (74.827007ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0315550Z ✔ ranking: phrase tier beats kind; kind order annotation<return<turn<material; then matchCount, recency, refId (0.89717ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0316499Z ✔ mixed zh/latin query: contiguous phrase ranks above scattered segment hits, both are returned (0.349662ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0317285Z ✔ invalid documents and query options fail fast with SearchEngineError (1.770527ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0318016Z ✔ repeated CJK grams and Latin words keep original hit offsets and match counts (0.610137ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0319236Z ✔ material versions enter the index per version: chain-derived oldVersion/labels, positioned hits, current version ranks first on shared text (228.789601ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0320726Z ✔ non-ready versions are honestly absent from the index; a failed chain tail still marks the last ready version old (193.615061ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0321852Z ✔ annotations are indexed as explanation+term bodies; explanation-only phrases are findable and annotations outrank turns (23.729614ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0323001Z ✔ returns and turns are indexed (return turns are not double-indexed as turns); display titles follow the frozen convention (26.336145ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0323945Z ✔ tree snapshot preserves branch-order turn documents with batched repository reads (28.340158ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0324896Z ✔ per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only (24.316489ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0326040Z ✔ scoping: a tree snapshot never leaks other trees; unknown trees throw; materials linked to several trees yield one document per tree (123.897993ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0326880Z ✔ kinds filter and limit pass through to the engine (97.117706ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0327946Z ✔ buildSearchDocuments is pure: identical snapshots assemble identically, empty bodies are skipped, note concatenation order holds, unknown trees fail fast (0.518695ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0329084Z ✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (198.827878ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0330101Z ✔ composePromptText prefixes pending returns deterministically (0.468492ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0330796Z ✔ branch anchoring is validated (answer role, slice integrity, bounds) (34.979063ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0331360Z ✔ return and prompt validation errors (44.79506ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0332044Z ✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (19.922969ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0332892Z ✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (28.163668ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0333789Z ✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (319.597826ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0334784Z ✔ concurrent prompt is rejected as a conflict and leaves no phantom run (99.888809ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0335780Z ✔ anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2) (30.902168ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0337765Z ✔ changed anchor (DB-constructed): originStatus reports changed, the excerpt stays readable, reveal refuses without fallback, nothing is silently repaired (W1 §6-3) (54.780623ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0339053Z ✔ return idempotency: same key+content replays the same turn; different content conflicts (43.622716ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0340234Z ✔ return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4) (64.158282ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0341121Z ✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (41.806223ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0342498Z ✔ missing session: submit saves the return first, navigation fails separately; same-key retries replay without duplicates (signed v3 §3.5) (53.895934ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0344002Z ✔ source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1): a deleted session still locates the database original; cursor alignment fails separately (43.209954ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0345792Z ✔ whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2) (87.039464ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0348031Z ✔ new exploration preconditions (v3 §4.4): available session and never-prompted trunks are refused as conflicts; an anchored branch with a lost anchor session explores from the excerpt alone (54.066786ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0349780Z ✔ empty-trunk return: submit persists directly without a session; the first trunk prompt creates the session and delivers it exactly once (W1 §6-7) (48.245591ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0351176Z ✔ failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4) (66.68048ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0352035Z ✔ return persists its target anchor snapshot of the branch origin (36.522261ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0352832Z ✔ repository-level return without a key still round-trips (legacy shape) (21.165529ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0353813Z ✔ published CSS modules preserve ordered cascade and critical responsive rules (6.380292ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0354574Z ✔ terminology eval sets: 180 + 180 items, ids unique within and across files (2.400791ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0355469Z ✔ terminology eval sets: group-based leakage prevention (group ids and source texts never straddle dev/frozen) (1.353911ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0356341Z ✔ terminology eval sets: Chinese >= 240 across 360; negatives >= 25% across 360 (0.340984ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0357198Z ✔ terminology eval sets: all six v2 coverage categories present in both files, with both task kinds (0.384576ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0358201Z ✔ terminology eval sets: homonym-polysemy terms (ambiguity dimension) span >= 2 semantic-context groups per file (0.423729ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0359568Z ✔ terminology eval sets: every explain term resolves mechanically at its occurrence with slice equality (0.452001ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0361220Z ✔ terminology eval sets: extract expectedTerms and negativeTerms verified against sources (expectedTerms outside code/URL spans; full negatives carry negativeTerms) (1.732527ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0362561Z ✔ terminology eval sets: long-answer items are >= 1500 chars with every target term in the final third (0.487949ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0363501Z ✔ terminology eval sets: code-mixed items carry real code fences (0.92375ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0364745Z ✔ reading modes pure helpers: blank-line paragraphs, per-paragraph/per-answer density caps (first-come, hiddenCount), and source-invalid projection (5.06385ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0366304Z ✔ reading mode persistence: default manual-only, enum validation, unknown tree 404, kv round-trip across a restart, corrupt kv degrades to the default (54.308591ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0368172Z ✔ quality gate OFF (production default): modes save and switch, but assistant answer completions dispatch NOTHING — zero term-runtime prompts, zero tasks, zero usage, honest autoSuggestions state (105.049477ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0370127Z ✔ gate ON (test-forced): only an assistant answer completion triggers exactly one extract; browsing adds nothing; failed and aborted runs dispatch nothing; auto-saving never happens (183.741517ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0371655Z ✔ gate ON + assisted reading: v2 per-paragraph 2 / per-answer 6 caps are enforced honestly (40.79653ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0372638Z ✔ gate ON: zero validated candidates surface as no-suggestions; one suggestion set per completed answer (46.375328ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0374205Z ✔ gate ON + exhausted budget: budget-paused with zero dispatch and untouched accounting; the explicit retry stays honestly paused; no annotation is ever written (34.613626ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0375627Z ✔ gate ON + unparseable model answer: the set lands on failed honestly; the explicit retry re-runs and recovers (43.854675ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0377131Z ✔ reading-mode HTTP surface: GET/PUT settings/reading-mode (enum 400 / unknown tree 404), read model carries mode + autoSuggestions, retry 200/404/400(gate)/400(manual-only) (142.38243ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0379173Z ✔ terminology pure helpers: prompts carry the passage and UTF-16 offsets; candidates are validated against the source (slice equality, dedup, density, code/URL exclusion) (2.946648ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0380969Z ✔ terminology explain is isolated: zero tree writes, zero main session files, main cursor untouched; echo task succeeds with the prompt as context (59.079018ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0382537Z ✔ terminology explain dedups against a saved annotation (zero model calls) and enforces UTF-16 slice integrity (emoji / cross-line / duplicate words) (44.073219ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0384542Z ✔ terminology save dedups by range; promotion reuses the Anchor/Branch/Origin machinery, dispatches the first question with composed context, and is idempotent across replays and conflicts (55.218689ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0386647Z ✔ promotion survives a failed first question: the binding and dispatch ledger are durable, and the same-key retry re-dispatches the SAME question without rebuilding the branch (41.996354ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0388358Z ✔ terminology cancel: queued cancels immediately; a late result after a running cancel is discarded (usage still recorded — honest cost) (83.599003ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0390196Z ✔ terminology cache key carries source identity, position and context: the same word at two semantic positions is explained separately (bank repro + 中文 + repeated word), and only the same anchor reuses (47.462473ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0392608Z ✔ terminology cancel accounting: a dispatched request that is aborted keeps its reservation and records UNKNOWN usage (requests >= 1, never zeroed); a timeout likewise; a dirty restart and a failing persistence fail-closed with zero dispatch (71.677165ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0394906Z ✔ terminology budget reserves input+output bounds before dispatch: an insufficient budget means ZERO dispatch (budgetTokens=1), usage settles by real completion, and the persisted state resumes across restarts (50.658529ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0397147Z ✔ terminology context discipline: explain windows oversized passages honestly (remapped offsets) and refuses unbounded stuffing; extract refuses oversized sources with zero dispatch (26.531757ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0400051Z ✔ terminology auto extract: validated JSON candidates (slice equality, dedup, density, code/URL exclusion); an unparseable echo answer fails honestly (34.75044ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0403303Z ✔ terminology promotion is atomic: a promotion key already held by another annotation is a 409 conflict with ZERO new rows, injected crashes at each write point roll the whole promotion back, and a double-click is idempotent (32.349417ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0406403Z ✔ terminology promotion first-question identity: the same key with a different question is a 409 conflict (not a replay); an unknown-result dispatch is reconciled against the ledger evidence and never blind-resent (59.964224ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0408760Z ✔ terminology promotion replay across a process restart: the binding and dispatch ledger are durable — a landed first question is never re-dispatched, and a different question under the same key stays a 409 (29.863341ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0410859Z ✔ terminology HTTP surface: read model, explain, annotations 201/200, promote 201/200/409 (incl. same-key different-question), preferences, cancel, and an honest 503 when unwired (105.914643ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0412788Z ✔ branch entry: the armed capture bar offers branching; the click resolves the canonical selection (server-signed sourceHash) then posts from-material — zero runs/turns, no cursor switch (206.334368ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0414602Z ✔ context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted (106.674377ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0416280Z ✔ context declaration: a truncated window carries the explicit TRUNCATED marker with the truncation note verbatim — the 24,000-unit cap is never silent (charter §3.3 rule 3) (95.473477ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0417938Z ✔ first question: submitting posts material-first-question with the same intent key, lands the turns, closes the reader, and opens the branch panel (333.282203ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0420027Z ✔ no-duplicate discipline: a double-click submits exactly once (in-flight lock); a replay (same key, same content) reconciles without re-sending (321.898834ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0422026Z ✔ dispatch outcomes: 'failed' is shown honestly and a same-key retry is an explicit new attempt; 'unknown' is never auto-retried and is disclosed as not re-sent (412.939289ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0423770Z ✔ resume-or-create hits an existing exploration: the honest choice — open the existing branch (nothing new is created) or explicitly start a new one (fresh key, new branch) (316.047209ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0425172Z ✔ explicit new exploration: from the choice, a fresh intent key posts mode 'new' and the full first-question flow follows on the new branch (347.981161ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0426787Z ✔ pending intent resume: a branch created but never asked resumes straight to the declared scope with the SAME key after a refresh (idempotent continuation — localStorage carries the submission identity) (321.193585ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0428265Z ✔ restored branch navigation/session facts ride along honestly (failed navigation and unavailable session are disclosed, never masked) (88.323514ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0430717Z ✔ first-question conflict (409): after an in-flight dispatch lands unseen, a changed question is refused — the immutability is disclosed and the changed question is offered as a normal continuation (panel opens prefilled; sending stays an explicit action) (366.975729ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0433764Z ✔ branch-intent conflict (409 material-branch-conflict, same key bound to a different selection): the flow fails honestly and offers a retry (86.454128ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0435584Z ✔ material return: the panel return posts material-return with the draft idempotency key; the mainline card renders the material source fields, adoption state, and the source jump opens the reader at the anchored version and block (588.66966ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0437351Z ✔ material return card: a cached source card renders on the mainline at boot; a missing cache degrades honestly (the Return itself is intact, no source details are fabricated) (477.423802ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0438969Z ✔ session-unavailable material branch: the explicit new exploration posts material-new-exploration (material context rides along); an available session is refused with the honest 409 (147.261601ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0440737Z ✔ css lexical locks: the branching flow, the scope card, the truncation marker, and the material return source card have base-layer rules (0.903102ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0442289Z ✔ material list: honest per-state rows (ready / failed-with-reason / parsing / pdf), an honest empty state, a loading state, and a retryable list failure (303.203966ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0443888Z ✔ block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end (140.455875ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0445398Z ✔ keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container) (56.690146ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0446667Z ✔ reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block) (1995.174071ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0447833Z ✔ reading position beyond the first page: the open loop pages forward until the saved block is loaded, then restores onto it (61.058591ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0449051Z ✔ lossless rendering: every rendered block's textContent equals the frozen canonicalText slice byte-for-byte, carrying its absolute range (60.987438ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0450780Z ✔ cross-line selection inside one block: the captured payload is the frozen md-sel-22 range [1015, 1036) over canonicalText (61.797704ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0452553Z ✔ repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19) (61.112521ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0453734Z ✔ cross-block selection: the honest not-anchorable state — no payload, no silent truncation (B2 discipline) (58.487158ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0455214Z ✔ grapheme-safe capture: a boundary inside a surrogate pair or a combining sequence snaps outward — the payload never splits a cluster (md-06 / md-07 fixtures) (86.773176ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0457776Z ✔ copy quote: the clipboard receives the exact canonical slice; the D4-3 anchor payload stays honestly displayed (64.237949ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0459213Z ✔ version awareness: the reader shows which version it renders, an older version is explicitly labeled and readable, and switching is non-destructive with a never-migrates note (119.975366ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0460850Z ✔ a saved reading position on an older version reopens that version (charter §1: return to the original text), with the older-version note and restore (68.250962ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0462103Z ✔ a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment) (67.481143ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0463647Z ✔ a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks (90.586227ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0464900Z ✔ a failed version shows its reason verbatim with no empty-document masquerade; the version strip keeps it honestly unlabeled-readable (58.186123ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0466013Z ✔ honest retry surfaces: a detail failure retries the open; an append-page failure retries the next page (199.343249ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0467367Z ✔ armed selection survives async refreshes and page appends: block elements and their text nodes keep identity while armed (no re-render during selection over the reading view) (170.885116ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0468782Z ✔ capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift) (93.346325ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0471216Z ✔ touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check (76.889874ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0473147Z ✔ Esc closes the reader with focus returned to the material's list button; keyboard affordances are native buttons (301.498948ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.0474616Z ✔ CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically (3.652772ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3390276Z ✔ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (356.340452ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3392132Z ✔ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (187.673191ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3393808Z ✔ children page failures are honest: a first-page failure shows the error with a Retry row, and an auto-paged More failure keeps the loaded page and retries the next page (396.094684ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3395311Z ✔ expand-state persistence: every expansion/selection PUTs the full set, and reopening restores the saved expansion and the deep selection via ancestor paging (315.104376ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3396969Z ✔ keyboard traversal: arrows move row-by-row across the windowed order, → expands / enters the first child, ← collapses / returns to the parent, Enter selects, and the focused row never leaves the DOM (306.193932ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.3398712Z ✔ same-name disambiguation: branch search hits carry distinct full paths, rows carry id chips, and the selected node's full parent path is complete (long chains collapse but expand to every level) (1062.278329ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.5371672Z ✔ stale-cursor 409 recovery: a cursor page after index invalidation restarts from the first page (request sequence locked, no duplicate rows) (198.637003ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.7431639Z ✔ nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues (203.199167ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:24.9254876Z ✔ locate current branch: cross-tree locate switches the nav tree and reveals the workbench's current branch through its ancestor chain (183.355813ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.3014621Z ✔ jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin (377.244059ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.5447941Z ✔ jump to source across trees: the workbench first opens the origin's tree (existing openTree behavior), then the existing reveal runs (243.326718ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6527337Z ✔ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (109.198862ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6530524Z ✔ CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically (1.775717ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6682799Z ✔ import entry: the file picker accepts exactly the D4-1 support set and lives in the Materials section (106.675608ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6685199Z ✔ import happy path: a Chinese-and-space filename uploads raw bytes with the percent-encoded header, the parsing state is honest, and ready opens the reader (128.106374ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6687449Z ✔ import dedup: importing the exact same bytes again reports the reused version honestly (no new version, no fake success) (131.130156ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6688736Z ✔ import parse failures surface the reason verbatim (failed / rejected), never an empty-document masquerade (179.863375ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6690828Z ✔ import cancel: canceling an in-flight parse task stops it and reports canceled honestly; a 409 (already terminal) triggers an immediate recheck (180.721494ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6692646Z ✔ import upload failures surface verbatim: unsupported extension (415) and oversize (413) (158.77123ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6693934Z ✔ import state resets on tree switch (the in-flight poll and status never leak across trees) (95.885854ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6695082Z ✔ PDF pages render as real reading surfaces: page identifiers, frozen block text, absolute ranges, and the pdf fetch limit (59.057382ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6696261Z ✔ same-page selections map through the canonical-offset machinery to the frozen B2 payloads (pdf-sel-01 / pdf-sel-02) (67.072119ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6697351Z ✔ double-column PDF (pdf-06): both columns and a cross-line excerpt map to the frozen ranges on the same page (81.069855ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6698389Z ✔ grapheme safety on PDF pages: a boundary inside a surrogate pair snaps outward (pdf-12 payload discipline) (66.229289ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6699785Z ✔ cross-page selection is refused with the select-within-one-page prompt — no payload, no silent truncation (62.76003ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6701070Z ✔ reading positions work per PDF version: scrolling saves page-N via PUT, and reopening restores onto it (forward fill + rendered jump target) (105.917519ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6702546Z ✔ a server-side resolve-selection refusal surfaces verbatim in the branch flow (the backend already refuses — the UI relays it) (89.796064ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6704877Z ✔ lazy page rendering: a 30-page PDF renders a bounded leading batch first, and the scroll window (±1200px) renders/unloads page text layers (121.759288ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:25.6706136Z ✔ CSS lexicon: PDF page frames, placeholders, and the import row/styles exist lexically (the suite does not execute CSS) (0.615907ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0123440Z ✔ visual baseline: real index.html skeleton and boot-rendered structure (100.385713ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0124587Z ✔ journal drawer: failure with retry, honest empty state, Esc focus restore (341.259858ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0125951Z ✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (475.926438ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0127419Z ✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (78.726651ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0128757Z ✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (283.159012ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0130772Z ✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (555.27676ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.0567267Z ✔ adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer (44.628905ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.3401115Z ✔ a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately (282.153271ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.6213710Z ✔ Esc on the branch panel closes it and restores focus to the triggering tab (281.130848ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.6856309Z ✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (64.81719ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.7617232Z ✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (75.798939ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:26.9039387Z ✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (139.332836ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:27.2390594Z ✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (337.497884ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:27.7995160Z ✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (561.034209ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.1905458Z ✔ Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs (391.083046ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.2826252Z ✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (92.456817ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.3503599Z ✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (67.755337ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.3812742Z ✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (31.163571ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.4695118Z ✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (88.021269ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.5274563Z ✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (57.671222ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.5832788Z ✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (55.422355ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.6414360Z ✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (57.968175ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.6972720Z ✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (55.732762ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:28.7562764Z ✔ A2 cross-line selection: offsets and the revealed text span the line break intact (60.1333ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.0494065Z ✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (292.991934ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.0934016Z ✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (44.064045ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.1409890Z ✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (43.945713ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.1412817Z ✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (1.465709ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.1421318Z ✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (0.902069ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.2283534Z ✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (86.928854ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.2782583Z ✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (49.864775ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.3886687Z ✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (112.574581ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4047964Z ✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (112.516595ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4050227Z ✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (62.997722ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4051448Z ✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (384.947947ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4052565Z ✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (295.160978ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4053719Z ✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (60.136143ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4054835Z ✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (278.089183ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4056108Z ✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (286.250199ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4057351Z ✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (60.336896ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4058479Z ✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (282.47491ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4060139Z ✔ a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch (284.018526ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4061563Z ✔ scope: default is the current tree (scoped endpoint, full kinds), an explicit toggle spans all trees, and a scoped search never leaks another tree's facts (174.188084ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4062834Z ✔ type filter: kinds pass through to the engine, and results render in the order returned (annotation → Return → turn → material) (112.9083ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4063908Z ✔ old-version hits are explicitly marked 旧版本 and open the older version's read-only reader at the hit block (94.926108ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4064860Z ✔ a current-version material hit opens the reader on that version and scrolls to the hit block (97.225228ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4065937Z ✔ session-unavailable hits show the explicit new-exploration entry alongside the source jump, and the jump still views the source (126.659519ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4067186Z ✔ a trunk hit in a session-unavailable trunk shows the same entry, and it routes to the trunk composer (no branch panel exists for the trunk) (119.938352ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4068189Z ✔ an annotation hit reveals the anchored answer and opens the saved annotation card (95.764288ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4068850Z ✔ a Return hit reveals the Return card on the trunk (98.02658ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4070216Z ✔ honest gates: blank queries and empty filters are stopped client-side (the server's own rule), and zero hits stay an honest empty state (117.605558ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4071651Z ✔ in-flight is honest, a failed search surfaces its error and is retryable, and unwired search reports 503 verbatim (247.116737ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4073293Z ✔ cross-tree hits open the hit's tree first; searching creates no turns; tree-scoped results clear honestly on tree switch while all-trees results persist (170.307077ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4074568Z ✔ with an empty library the search face stays available, this-tree is honestly disabled, and the honest zero-hit state renders (61.563341ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4075640Z ✔ CSS lexicon: the search form, hit rows, old-version mark, and session note rules are locked in the base layer (1.409485ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4846066Z ✔ layered turn structure: prose is its own layer, textContent stays byte-identical, and an async refresh never replaces the content layer (137.914294ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4848646Z ✔ selection drag window: an overlay-changing re-render is deferred until mouseup — the content layer is never swapped under the cursor (79.901118ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4851031Z ✔ toolbar modes: single-word selections arm term mode, spans arm range mode (exact POST payloads), dblclick arms like mouseup, and Esc closes the card with focus return (62.190908ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4852556Z ✔ Esc layering with the term card: a card inside the open panel closes before the panel; the panel branch keeps its semantics (297.441364ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4853973Z ✔ Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost (59.703698ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4855786Z ✔ explain card states: cached success note, honest failure with a working retry, cancelled with the late-discard note, and idempotent save showing the existing annotation (272.24017ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4857161Z ✔ late explain responses are discarded honestly when the target leaves: no resurrection of a closed card, counted in the drawer usage (62.816463ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4858453Z ✔ unified range overlays: annotation marks and the source highlight share one slice-exact mechanism, survive re-renders, and never alter the text (86.09406ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4859986Z ✔ resume-or-create: an already-promoted annotation surfaces the existing follow-up explicitly — no second promotion form, no silent reuse (60.317641ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4861325Z ✔ promotion outcomes: success opens the branch, a same-key replay is named honestly, and a 409 conflict lands on the card with the same-key retry kept (221.33601ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4862658Z ✔ promotion response loss resolves to the recorded promotion: the card refreshes to the resume affordance instead of pretending nothing happened (90.326681ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4864087Z ✔ narrow window and reduced motion: the ③ CSS rules are locked lexically (toolbar/card full width under 720px; card entrance animation neutralized under reduce) (2.190169ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4865794Z ✔ touch selection: selectionchange arms the toolbar without mouseup, and an emptied selection disarms it after the deferred check (47.717537ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4867602Z ✔ return draft/focus discipline holds under the layered renderer: submit closes the panel to the main input; the term-card first-question draft keeps its value and focus across re-renders (324.804821ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4869112Z ✔ drawer terminology surface: tasks with modes, honest usage counts, cache preference toggle with a retryable failure, and the read-model failure state (132.179521ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4870871Z ✔ P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders (46.412688ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4872453Z ✔ P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths) (84.723007ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4873847Z ✔ P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches (28.502025ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4875244Z ✔ P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations (119.477525ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4876891Z ✔ P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card (76.476269ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4878195Z ✔ reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure (134.36604ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.4879748Z ✔ suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips (85.231975ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.5841215Z ✔ suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus (99.436516ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6409767Z ✔ answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path (58.950484ms)
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6590073Z ℹ tests 417
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6590629Z ℹ suites 0
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6591064Z ℹ pass 417
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6591472Z ℹ fail 0
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6591906Z ℹ cancelled 0
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6592346Z ℹ skipped 0
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6592759Z ℹ todo 0
+diagnose	Studio test suite (diagnostic output)	2026-10-14T02:08:29.6593231Z ℹ duration_ms 33135.739704
+diagnose	Computed resources and original test discovery	﻿2026-10-14T02:08:29.6762198Z ##[group]Run npm run audit:computed-paths
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.6762589Z ^[[36;1mnpm run audit:computed-paths^[[0m
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.6762941Z ^[[36;1mnode --test tests/unit/computed-paths.test.mjs^[[0m
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.6824637Z shell: /usr/bin/bash -e {0}
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.6824904Z ##[endgroup]
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.7866212Z 
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.7866856Z > treeai@0.0.0 audit:computed-paths
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.7867466Z > node scripts/audit-computed-paths.mjs
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:29.7867699Z 
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.1806650Z PASS: 131 resolved resources, 20 test globs; 12 computed expressions require runtime gates
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.7990663Z ✔ computed resource audit catches a moved Worker URL and preserves unresolved dynamic paths (8.453651ms)
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.7992516Z ✔ computed discovery audit expands quoted globs and rejects a stranded test entry (4.969244ms)
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.7993849Z ✔ computed audit rejects a missing output path as usage before traversing the repository (260.858347ms)
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8135707Z ℹ tests 3
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8136174Z ℹ suites 0
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8136543Z ℹ pass 3
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8136893Z ℹ fail 0
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8137254Z ℹ cancelled 0
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8140403Z ℹ skipped 0
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8149657Z ℹ todo 0
+diagnose	Computed resources and original test discovery	2026-10-14T02:08:31.8150201Z ℹ duration_ms 567.141808
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	﻿2026-10-14T02:08:31.8247510Z ##[group]Run sudo apt-get update -qq
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:31.8247909Z ^[[36;1msudo apt-get update -qq^[[0m
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:31.8248337Z ^[[36;1msudo apt-get install -y --no-install-recommends fonts-wqy-zenhei^[[0m
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:31.8249029Z ^[[36;1mtest -r /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc^[[0m
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:31.8311011Z shell: /usr/bin/bash -e {0}
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:31.8311281Z ##[endgroup]
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.1284107Z Reading package lists...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.3488903Z Building dependency tree...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.3496590Z Reading state information...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5126328Z The following NEW packages will be installed:
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5133600Z   fonts-wqy-zenhei
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5303457Z 0 upgraded, 1 newly installed, 0 to remove and 30 not upgraded.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5304246Z Need to get 7472 kB of archives.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5304713Z After this operation, 16.8 MB of additional disk space will be used.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.5305249Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:36.6166859Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.1931436Z Fetched 7472 kB in 0s (17.6 MB/s)
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2156677Z Selecting previously unselected package fonts-wqy-zenhei.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2458216Z (Reading database ... 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2458761Z (Reading database ... 5%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2459181Z (Reading database ... 10%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2460059Z (Reading database ... 15%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2460618Z (Reading database ... 20%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2461247Z (Reading database ... 25%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2461650Z (Reading database ... 30%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2461995Z (Reading database ... 35%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2462326Z (Reading database ... 40%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2462646Z (Reading database ... 45%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2462971Z (Reading database ... 50%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.2503747Z (Reading database ... 55%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.3532491Z (Reading database ... 60%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.5599583Z (Reading database ... 65%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.7504767Z (Reading database ... 70%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:37.9140963Z (Reading database ... 75%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.0470029Z (Reading database ... 80%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.1484697Z (Reading database ... 85%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.2664584Z (Reading database ... 90%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.4064931Z (Reading database ... 95%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.4065378Z (Reading database ... 100%
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.4065963Z (Reading database ... 203191 files and directories currently installed.)
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.4107409Z Preparing to unpack .../fonts-wqy-zenhei_0.9.45-8_all.deb ...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.4225806Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.9014794Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:38.9140619Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5867533Z 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5868194Z Running kernel seems to be up-to-date.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5868514Z 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5868725Z No services need to be restarted.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5869000Z 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5869196Z No containers need to be restarted.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5869806Z 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5870052Z No user sessions are running outdated binaries.
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5870343Z 
+diagnose	Install deterministic TrueType CJK test font (Linux B6)	2026-10-14T02:08:39.5870711Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+diagnose	D4 offline verifier (report blocked honestly)	﻿2026-10-14T02:08:40.5392452Z ##[group]Run set +e
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5392735Z ^[[36;1mset +e^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5392960Z ^[[36;1mnode scripts/verify-d4.js^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5393217Z ^[[36;1mcode=$?^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5393568Z ^[[36;1mecho "D4 offline verifier exit: $code (3 means NOT_RUN/BLOCKED, not PASS)"^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5394072Z ^[[36;1mif [ "$code" -eq 1 ] || [ "$code" -eq 2 ]; then exit "$code"; fi^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5394421Z ^[[36;1mexit 0^[[0m
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5457127Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5457494Z env:
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5457784Z   TREEAI_B6_FONT_PATH: /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:40.5458156Z ##[endgroup]
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:41.6018196Z verify-d4 0.1.0 — offline acceptance run
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:41.6020551Z root: <home>/work/TreeAI/TreeAI
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:41.6021306Z evidence: <home>/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261014T020841599Z
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:41.6022006Z 
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:42.0252139Z   [PASS] fixtures-integrity-d4
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:42.0260764Z   [PASS] docs-integrity-d4
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:42.0747800Z   [PASS] entrypoints-d4
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:55.3253764Z   [PASS] typecheck
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:08:59.1268075Z   [PASS] tests-typecheck
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:05.6943558Z   [PASS] unit-tests-d4
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:08.1612960Z   [PASS] b1-import-versions
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:10.1182102Z   [PASS] b2-precise-anchors
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:11.0680591Z   [PASS] b3-material-exploration
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:11.0697005Z   [PASS] b3-real-exploration
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:11.0936243Z   [PASS] b4-cross-material-find
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:09:17.4084378Z   [PASS] b5-restore-integrity
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:10:46.0776048Z   [PASS] b6-scale-performance
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:10:46.0787446Z   [PASS] b6-browser-face
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:10:46.0798591Z   [PASS] b7-beta-usability
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:10:46.0801873Z   [NOT_RUN] b8-install-crossplatform — engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute (owner: D4-7)
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.2970086Z   [PASS] b9-large-tree-nav
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.2979481Z   [PASS] b9-nav-browser-face
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.2982994Z   [PASS] exit-codes
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.2983735Z   [PASS] evidence-write-hygiene
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3039583Z 
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3039881Z verify-d4 summary:
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3042361Z   19 PASS, 0 FAIL, 0 BLOCKED, 1 NOT_RUN
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3042997Z   verdict: INCOMPLETE (exit 3)
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3043762Z   evidence: <home>/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261014T020841599Z
+diagnose	D4 offline verifier (report blocked honestly)	2026-10-14T02:11:04.3867534Z D4 offline verifier exit: 3 (3 means NOT_RUN/BLOCKED, not PASS)
+diagnose	D4 performance failure diagnostic (no metric override)	﻿2026-10-14T02:11:04.3904181Z ##[group]Run echo "Inspecting latest B6 verifier log (no pass/fail override)"
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.3904767Z ^[[36;1mecho "Inspecting latest B6 verifier log (no pass/fail override)"^[[0m
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.3905381Z ^[[36;1mfile=$(find evidence/d4/runs -type f -name '*b6-scale-performance*' 2>/dev/null | sort | tail -n 1)^[[0m
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.3905996Z ^[[36;1mif [ -n "$file" ]; then sed -n '1,120p' "$file"; else echo "No B6 log found"; fi^[[0m
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.3977611Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.3978018Z ##[endgroup]
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4070570Z Inspecting latest B6 verifier log (no pass/fail override)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4113048Z b6 scale/performance check
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4116286Z environment: node v24.21.0; linux 6.17.0-1022-azure x64; cpu 4× AMD EPYC 7763 64-Core Processor; total memory 15.6 GiB; loadavg at start 2.06/1.08/0.43 — NOTE: parallel D4 wave agents may be building on this machine during this run; loadavg is recorded per probe and any timed probe within 20% of its limit (or over it) is rerun once with BOTH runs recorded
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4118753Z generator CLI run A (with --load-check): exit 0 in 9350ms
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4119233Z generator CLI run B (fresh process): exit 0 in 7558ms
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4121080Z generator determinism: 103/103 artifacts byte-identical across two CLI runs (+ in-process engine reproduces the truth exactly); totals: 100 materials / 1000000 units / 1000 non-trunk branches / 10000 saved facts
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4122844Z load: 100 ready versions (1000000 units exactly) + 1010 branch rows / 10 trees + 6000 qa turns + 2500 annotations + 1500 returns into a real persistence DB in 1839ms (real parsers + repository APIs, deterministic clock; sqlite integrity ok)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4124664Z search cold pass (first-ever queries; doubles as warmup): 50 frozen queries through POST /api/search (per-request rebuild) — p50 445.5ms / p95 492.9ms / max 552.0ms (loadavg 1.76/1.07/0.44 → 1.50/1.07/0.46)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4126446Z search warm pass (verdict): 50 frozen queries through POST /api/search (per-request rebuild) — p50 431.6ms / p95 479.1ms / max 485.6ms (loadavg 1.50/1.07/0.46 → 1.36/1.06/0.47)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4128230Z search warm pass rerun (contention disclosure: first warm pass neared/exceeded the limit; BOTH recorded): 50 frozen queries through POST /api/search (per-request rebuild) — p50 439.6ms / p95 477.9ms / max 493.4ms (loadavg 1.36/1.06/0.47 → 1.25/1.06/0.48)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4129766Z search warm p95 rerun recorded: first 479.1ms, rerun 477.9ms (verdict from the definitive rerun; limit 500ms)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4130784Z search-p95: PASS — warm p95 477.9ms ≤ 500ms (cold p95 492.9ms; every query hit its frozen material at the exact needle offset)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4132799Z material-open-p95: PASS — 30 cold opens of existing materials (detail + first visible blocks page; 4 long PDFs + 8 long md + 18 shorts) p50 1.5ms / p95 4.6ms / max 6.3ms ≤ 2000ms; hot re-opens p50 1.7ms / p95 3.1ms (cold/hot reported separately); resume-opens deep inside the long PDFs (60% afterBlock): p50 1.3ms / max 1.5ms (evidence)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4134982Z scroll (server-side): 32 consecutive block-page fetches through the long md (limit 5) + long pdf (default limit) — p50 1.2ms / p95 1.3ms / max 1.7ms ≤ 200ms (round-trip budget of the scroll path; browser smoothness stays NOT_RUN)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4136909Z input (server-side evidence): 20 tree-scoped short searches (POST /api/trees/b6-t01/search, as-you-type shape) — p50 43.8ms / p95 47.1ms / max 47.4ms (no offline assert: the charter's freeze criterion is a browser main-thread metric — see NOT_RUN)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4138993Z import-10mib-100p: PASS — 10.33 MiB / 100-page sample (sha256 958dc14686b1b277…) imported through POST /api/trees/:id/materials to parse-ready in 1.64s ≤ 30s (upload + parse, real import pipeline; first-blocks read back: 1 block(s), textUnits 999999)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4141197Z cancel: gated import in parsing state → POST …/parse-tasks/:id/cancel answered 200 (state canceled) in 1.9ms ≤ 200ms (import request itself took 4.5ms; gated markdown parser holds the task open)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4142905Z cancel: late parse result structurally discarded after cancel (task lateResultDiscarded=true, version stays canceled; second cancel answered 409 in 0.9ms)
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4144601Z NOT_RUN: scrolling (browser face): real-browser scroll smoothness with no >200ms main-thread segments while paging the reader — frontend wave / run:d4-browser; server-side block-page fetch timings recorded here as evidence only
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4146306Z NOT_RUN: input (browser face): keydown-to-render latency for search-as-you-type and question input — frontend wave; server-side tree-scoped search timings recorded here as evidence only
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4147801Z NOT_RUN: search hit-list rendering (browser face): render latency of the result list in a real browser — frontend wave; the server-side p95 measured here is the data path only
+diagnose	D4 performance failure diagnostic (no metric override)	2026-10-14T02:11:04.4149011Z NOT_RUN: cold app boot (browser face): first application open in a real browser — frontend wave / final candidate-SHA regression
+diagnose	D4 CLI refactor contract tests	﻿2026-10-14T02:11:04.4179740Z ##[group]Run node --test scripts/d4/browser/cli.test.mjs
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.4180205Z ^[[36;1mnode --test scripts/d4/browser/cli.test.mjs^[[0m
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.4240793Z shell: /usr/bin/bash -e {0}
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.4241059Z ##[endgroup]
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5136384Z ✔ B3/B9 D4 browser CLI default remains offline selftest without credentials (1.584325ms)
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5148976Z ✔ browser CLI --only repetitions, flags, and order are preserved (0.253022ms)
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5150624Z ✔ browser CLI refuses unknown flags, missing values, inappropriate real-Pi flags (1.310784ms)
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5151951Z ✔ browser CLI accepts --keep-data as a standalone final switch (0.199632ms)
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5153264Z ✔ browser CLI retains positional values and rejects incomplete option pairs (0.275183ms)
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5251263Z ℹ tests 5
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5251694Z ℹ suites 0
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5252583Z ℹ pass 5
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5252933Z ℹ fail 0
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5253293Z ℹ cancelled 0
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5253733Z ℹ skipped 0
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5254088Z ℹ todo 0
+diagnose	D4 CLI refactor contract tests	2026-10-14T02:11:04.5254488Z ℹ duration_ms 64.207729
+diagnose	D4 B6 browser measurement contract tests	﻿2026-10-14T02:11:04.5340009Z ##[group]Run node --test scripts/d4/browser/scale-measurements.test.mjs
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.5340580Z ^[[36;1mnode --test scripts/d4/browser/scale-measurements.test.mjs^[[0m
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.5402573Z shell: /usr/bin/bash -e {0}
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.5402844Z ##[endgroup]
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6361143Z ✔ B6 timing statistics keep the original nearest-rank p95 and empty-sample semantics (1.449343ms)
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6364119Z ✔ B6 browser readable predicate keeps PDF text-layer readiness and markdown block readiness distinct (5.49671ms)
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6465190Z ℹ tests 2
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6465639Z ℹ suites 0
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6465997Z ℹ pass 2
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6466346Z ℹ fail 0
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6466699Z ℹ cancelled 0
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6467134Z ℹ skipped 0
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6470249Z ℹ todo 0
+diagnose	D4 B6 browser measurement contract tests	2026-10-14T02:11:04.6481233Z ℹ duration_ms 66.649953
+diagnose	D4 B6 responsiveness verdict and paging contract tests	﻿2026-10-14T02:11:04.6554703Z ##[group]Run node --test scripts/d4/browser/scale-responsiveness.test.mjs
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.6555264Z ^[[36;1mnode --test scripts/d4/browser/scale-responsiveness.test.mjs^[[0m
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.6617380Z shell: /usr/bin/bash -e {0}
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.6617643Z ##[endgroup]
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7652470Z ✔ B6 responsiveness retains original p95, longtask and minimum typing count (1.570979ms)
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7659014Z ✔ B6 fails a longtask over 200ms even when scroll frames are fast (0.290051ms)
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7660920Z ✔ B6 independently rejects slow scroll frames and too few rendered keystrokes (0.191396ms)
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7661778Z ✔ B6 keeps keystroke-to-render p95 frozen at 200ms, not keydown-to-value (0.195004ms)
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7662428Z ✔ B6 accepts values exactly at the frozen limits (0.227534ms)
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7756790Z ℹ tests 5
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7757326Z ℹ suites 0
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7757747Z ℹ pass 5
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7760237Z ℹ fail 0
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7770430Z ℹ cancelled 0
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7771311Z ℹ skipped 0
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7772000Z ℹ todo 0
+diagnose	D4 B6 responsiveness verdict and paging contract tests	2026-10-14T02:11:04.7772325Z ℹ duration_ms 76.756407
+diagnose	D4 verifier failure-injection selftest	﻿2026-10-14T02:11:04.7848585Z ##[group]Run node scripts/verify-d4-selftest.js
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:04.7848987Z ^[[36;1mnode scripts/verify-d4-selftest.js^[[0m
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:04.7910403Z shell: /usr/bin/bash -e {0}
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:04.7910670Z ##[endgroup]
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:04.8921769Z verify-d4-selftest — failure-path injections against the real verifier
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:04.8934428Z evidence: <home>/work/TreeAI/TreeAI/evidence/d4/selftest/d4-selftest-20261014T021104889Z
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:06.2326418Z   [PASS] control-clean-tree: clean copy → exit 0 (ALL_PASS)
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:07.5458238Z   [PASS] inject-tampered-fixture: fixtures-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:08.8424384Z   [PASS] inject-stray-fixture: fixtures-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:10.1580295Z   [PASS] inject-broken-selection-behind-regenerated-manifest: fixtures-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:11.4747244Z   [PASS] inject-fake-no-result-query: fixtures-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:12.7800146Z   [PASS] inject-missing-mirror: docs-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:14.0746557Z   [PASS] inject-missing-adr-004: docs-integrity-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:15.3319847Z   [PASS] inject-unwired-entrypoint: entrypoints-d4 FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:16.6345932Z   [PASS] inject-stripped-b7-sidecar: b7-beta-usability FAIL with exit 2
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:16.6538375Z 
+diagnose	D4 verifier failure-injection selftest	2026-10-14T02:11:16.6539096Z verify-d4-selftest: all injections detected; control clean (exit 0)
+diagnose	Frozen PDF registry regression	﻿2026-10-14T02:11:16.6634234Z ##[group]Run node --test scripts/d4/pdf/content.test.mjs
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.6634691Z ^[[36;1mnode --test scripts/d4/pdf/content.test.mjs^[[0m
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.6694103Z shell: /usr/bin/bash -e {0}
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.6694544Z ##[endgroup]
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7575233Z ✔ B1 frozen PDF fixture registry retains every ID, order, and render routine (1.46529ms)
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7672605Z ℹ tests 1
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7673096Z ℹ suites 0
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7673492Z ℹ pass 1
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7673719Z ℹ fail 0
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7674011Z ℹ cancelled 0
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7690225Z ℹ skipped 0
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7690514Z ℹ todo 0
+diagnose	Frozen PDF registry regression	2026-10-14T02:11:16.7690803Z ℹ duration_ms 61.892293
+diagnose	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-10-14T02:11:16.7828516Z Post job cleanup.
+diagnose	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:11:16.9077712Z (node:4274) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+diagnose	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:11:16.9079067Z (Use `node --trace-deprecation ...` to show where the warning was created)
+diagnose	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:11:16.9082755Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db, not saving cache.
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	﻿2026-10-14T02:11:16.9234897Z Post job cleanup.
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0097746Z [command]/usr/bin/git version
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0140116Z git version 2.55.0
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0179558Z Temporarily overriding HOME='<home>/work/_temp/b03c3258-f276-4b10-9513-051a61fdc33a' before making global git config changes
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0181281Z Adding repository directory to the temporary git global config as a safe directory
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0185480Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0225247Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0260623Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0521138Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0560431Z http.https://github.com/.extraheader
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0563379Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+diagnose	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:11:17.0599218Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+diagnose	Complete job	﻿2026-10-14T02:11:17.1119885Z Cleaning up orphan processes
+diagnose	Complete job	2026-10-14T02:11:17.1438307Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

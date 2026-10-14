@@ -1,0 +1,59 @@
+  [SKIP] 本机无 pwsh（内容断言已另行覆盖；CI 三平台 runner 预装 pwsh）
+✔ dataDirFor: macOS 平台目录（无覆盖时） (0.605292ms)
+✔ dataDirFor: Windows 尊重 APPDATA (0.069ms)
+✔ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.057458ms)
+✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.063541ms)
+✔ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.067375ms)
+✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (1.453541ms)
+✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.119583ms)
+✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.056208ms)
+✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.103833ms)
+✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.100167ms)
+✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.062375ms)
+✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.048166ms)
+✔ defaultLauncherConfig: 零依赖离线缺省 (0.038583ms)
+✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.113167ms)
+✔ portCandidates: 从期望端口连续顺延 (0.064583ms)
+✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.040666ms)
+✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.162042ms)
+✔ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.055208ms)
+✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.037166ms)
+✔ validateBundleManifest: 合法清单通过 (0.103042ms)
+✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.040041ms)
+✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.043375ms)
+✔ validateBundleLayout: 合成最小产物通过（三平台） (41.914292ms)
+✔ validateBundleLayout: 缺件必须点名报错 (14.656666ms)
+✔ validateBundleLayout: node 缺执行位必须报错（posix） (13.028417ms)
+✔ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (11.691791ms)
+✔ parseRuntimeState: 合法状态与损坏输入 (0.11725ms)
+✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.210292ms)
+✔ shims/launcher 类型层纳入检查（type-only import） (0.040666ms)
+✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.043959ms)
+✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.203542ms)
+✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (3.86525ms)
+✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.163167ms)
+✔ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (11.35325ms)
+✖ synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection (11.349375ms)
+✔ installer core loads without npm modules from a Chinese and space bundle path (286.651417ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 35
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 414.693334
+
+✖ failing tests:
+
+test at tests/unit/d4-7-installer.test.ts:603:1
+✖ synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection (11.349375ms)
+  TypeError: handle.restore is not a function
+      at validateSyntheticLayout (file://<repo>/tests/unit/d4-7-installer.test.ts:373:12)
+      at TestContext.<anonymous> (file://<repo>/tests/unit/d4-7-installer.test.ts:608:22)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

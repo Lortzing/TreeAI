@@ -1,6 +1,6 @@
 # TreeAI refactor acceptance — live candidate matrix
 
-**Last updated:** 2026-10-13. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
+**Last updated:** 2026-10-14. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
 **Integration PR:** [#27](https://github.com/Lortzing/TreeAI/pull/27), branch `refactor/integration-r0-r7`. The current candidate must be read from the PR HEAD; this document does **not** claim that an earlier successful run validates every subsequent commit.
 
 | Wave | Implemented now | Still required |
@@ -12,7 +12,7 @@
 | R4 runtime and runners | Domain owners, all frozen original checks, both independent selftests, complete Echo/evaluator pipelines, package smoke 46/46 and Mac engineer automation 55/55 verified | Real-Pi/model quality and target-device/human acceptance remain open |
 | R5 documentation | Live architecture/task/testing/audit navigation reconciled; final evidence records full tested SHA and every exclusion | Record/CI-only successor does not claim a new remote CI run |
 | R6 evidence lifecycle | All prior evidence preserved; tracked locator accounts for 2,662 paths at the tested SHA; new raw logs/screenshots/reports retained and scanned | Raw deletion remains prohibited until whole-project acceptance |
-| R7 integration/acceptance | Complete local automatic verification recorded at `0173fc34a4900e45355224693a27b17a51a47dc6` | Existing PR #27 push and remote CI await explicit approval; real Pi credentials, owner physical/signoff, trials and quality annotation remain open |
+| R7 integration/acceptance | Complete local automatic verification recorded at `0173fc34a4900e45355224693a27b17a51a47dc6` | User approved and PR #27 was fast-forwarded; PR CI passed at `40b84b7`, Windows installer fixture correction awaits committed-SHA three-platform rerun; real Pi credentials and human/physical gates remain open |
 
 ## 2026-10-10 Search-view wave (working candidate based on `28d809537099fad04e6c32df2c647e266bacbca5`)
 
@@ -186,3 +186,7 @@ Relevant detailed history: [D3 status](../d3/D3-status.md), [full D3 ledger](../
 Full tested code SHA: `0173fc34a4900e45355224693a27b17a51a47dc6`. [Complete commands, metrics, failures, exclusions and retained evidence](../../evidence/refactor/r0-r7-final-20261013/README.md). Chrome Echo 16/16, root 850/850, package 46/46 and Mac engineer automation 55/55 passed. D2 (21+1 NOT_RUN) and D4 (19+1 NOT_RUN) remain exit 3 INCOMPLETE. Both complete 180-item Echo sets retain human PENDING; the weak baseline's 11.9% mislabel FAIL is retained. Original frozen fixture/evaluator/contract/lockfile and evidence bytes are unchanged.
 
 The macOS label correction was re-recorded: before/after directory absent=true, 55/55, prior incorrect label and erratum retained. Fresh-build audit reproduced the expected failure without generated journal tests and success after the original dependency build; CI discovery now follows Studio build. This subsequent documentation/evidence/CI-order commit changes no product, runner or test implementation. Remote CI and actual integration are awaiting explicit approval because automatic permission review rejected pushing source/evidence to GitHub. Human gates and missing-credential blockers remain open; whole-project acceptance is not claimed.
+
+## 2026-10-14 authorized remote integration and Windows fixture audit
+
+The user's explicit approval completed the PR #27 push through the existing authenticated SSH identity. [Remote results and preserved Windows failure](../../evidence/refactor/r0-r7-ci-20261014/README.md) bind to `40b84b7f179f91b5242bdbd3497e2e752082503f`: D2, Chrome and diagnostics CI pass; Linux B6 definitive rerun p95 477.9ms≤500ms. Linux/macOS packaging+smoke pass; Windows failed in complete unit coverage because the synthetic fixtures assumed POSIX separators/mode bits on every host. Fixture-only corrections preserve all original assertions and production guards, with a new scoped-mock restoration regression. Local focused 36/36, complete root 851/851 and root types pass. Three-platform committed-SHA revalidation is next; human/real-Pi/quality gates and evidence retention remain unchanged.
