@@ -1,0 +1,151 @@
+/* ------------------------------ 来源抽屉（W2 §2.7） ------------------------------ */
+
+/* 可见性契约同 #branch-panel：hidden 属性 + .enter/.exit 动效。 */
+#source-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, 92vw);
+  overflow-y: auto;
+  padding: 18px 20px;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
+  z-index: 30;
+}
+#source-drawer h2 { font-size: 15px; margin: 0 0 8px; }
+#source-drawer h3 { font-size: 11.5px; margin: 16px 0 5px; color: var(--muted); letter-spacing: 0.03em; }
+
+/* 抽屉头部（附-4，option B 方向）：标题与关闭按钮同行——覆盖层打开时
+   盖住主线 Send 与 Sources 开关自身，鼠标用户需要抽屉内的可见关闭路径
+   （此前唯一关闭路径是 Esc）。宽窗右侧抽屉与窄窗全幅抽屉同一排布。 */
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+}
+#source-drawer .drawer-head h2 { margin: 0; }
+#drawer-close {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+#drawer-close:hover { background: var(--surface-dim); }
+
+.drawer-list { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+.drawer-list li { margin: 5px 0; line-height: 1.5; }
+.drawer-list li.attempt { margin: 2px 0 2px 14px; color: var(--muted); font-size: 11px; }
+.drawer-list.journal-list li { font-family: var(--font-mono); font-size: 11px; }
+
+/* journal 加载失败态的重试（W2 §2.7 打开-加载失败；issue #3 P1——
+   失败如实呈现，绝不伪装成“无事件”）。 */
+.drawer-retry {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.drawer-retry:hover { background: var(--surface-dim); }
+
+/* 抽屉内术语面（③）：近期任务列表与缓存偏好切换（同 .drawer-retry 的
+   安静形态）。 */
+.drawer-list.term-task-list li { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.term-cache-line { margin: 4px 0 0; }
+.term-cache-toggle {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-cache-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+
+/* 抽屉内阅读模式三选一（①阅读模式）：manual-only / minimal-hints /
+   assisted-reading——aria-pressed 呈现当前档；gate 未过的旁注由 app.js
+   以 .muted 行呈现（诚实披露，不伪装启用）。 */
+.term-mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+.term-mode-toggle {
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.term-mode-toggle[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+}
+.term-mode-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+
+/* ------------------------------ 窄窗侧栏开关（<720px） ------------------------------ */
+
+#sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 70;
+  font-size: 13px;
+  padding: 7px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(35, 40, 31, 0.12);
+}
+
+#sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 40, 31, 0.35);
+  z-index: 55;
+}
+
+/* 兼容钩子（W1/W2 事件与 UI 探测按词法断言）：宽窗右滑的 enter/exit。
+   必须置于窄窗块之前——窄窗块对 #source-drawer.enter/.exit 的自底向上
+   变体（drawer-up-*）才能在级联中胜出（后定义者胜）。 */
+#branch-panel.enter { animation: panel-in var(--motion-panel) ease-out; }
+#branch-panel.exit { animation: panel-out 150ms ease-in forwards; }
+#source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
+#source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes drawer-up-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes drawer-up-out {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@media (min-width: 720px) {
+  #sidebar-backdrop { display: none !important; }
+}
+

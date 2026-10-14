@@ -498,9 +498,14 @@ export class LocalSearchEngine {
       set.add(docIndex);
     };
     indexed.forEach((entry, docIndex): void => {
+      // Postings contain document IDs, not occurrence counts. Repeated
+      // grams need only one global insertion per document. This local set
+      // is rebuilt for every request; it never caches product facts.
+      const uniqueKeys = new Set<string>();
       indexBody(entry.doc.body, entry.lowered, (key) => {
-        emit(key, docIndex);
+        uniqueKeys.add(key);
       });
+      for (const key of uniqueKeys) emit(key, docIndex);
     });
     return new LocalSearchEngine({
       documents: indexed,

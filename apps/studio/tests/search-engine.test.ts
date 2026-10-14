@@ -751,3 +751,31 @@ test("invalid documents and query options fail fast with SearchEngineError", () 
     searchError(/query text must be a string/),
   );
 });
+
+// B6 rebuild optimization must not turn posting deduplication into hit-count deduplication.
+test("repeated CJK grams and Latin words keep original hit offsets and match counts", () => {
+  const docs: SearchDocument[] = [
+    {
+      refId: "many", kind: "turn", treeId: "t1", treeTitle: "Tree",
+      title: "Repeated", body: "回归回归回归 tree tree tree",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+    {
+      refId: "once", kind: "turn", treeId: "t1", treeTitle: "Tree",
+      title: "Single", body: "回归 tree",
+      createdAt: "2026-01-02T00:00:00.000Z",
+    },
+  ];
+  const engine = LocalSearchEngine.build(docs);
+  for (const query of ["回归", "tree"]) {
+    const hits = engine.search(query);
+    assert.deepEqual(hits.map((hit) => hit.refId), ["many", "once"]);
+    assert.deepEqual(hits.map((hit) => hit.matchCount), [3, 1]);
+    assert.deepEqual(hits.map((hit) => hit.start), [query === "回归" ? 0 : 7, query === "回归" ? 0 : 3]);
+    assert.deepEqual(
+      LocalSearchEngine.restore(engine.serialize()).search(query),
+      hits,
+      "fresh rebuild and serialization round-trip must preserve exact results",
+    );
+  }
+});

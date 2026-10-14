@@ -389,9 +389,38 @@ test("returns and turns are indexed (return turns are not double-indexed as turn
   }
 });
 
-/* ------------------------------------------------------------------ */
-/* 只索引已保存产品事实 + 每请求重建（零缓存）                            */
-/* ------------------------------------------------------------------ */
+test("tree snapshot preserves branch-order turn documents with batched repository reads", () => {
+  const harness = makeHarness();
+  try {
+    const forest = harness.treeRepository.createForest();
+    const tree = harness.treeRepository.createTree(forest.id);
+    const root = harness.treeRepository.createBranch(tree.id);
+    const second = harness.treeRepository.createBranch(tree.id, { parentBranchId: root.id });
+    const rootFirst = seedTurn(harness.treeRepository, {
+      treeId: tree.id, branchId: root.id, role: "user", text: "root first",
+    });
+    const secondTurn = seedTurn(harness.treeRepository, {
+      treeId: tree.id, branchId: second.id, role: "assistant", text: "second turn",
+    });
+    const rootReturn = seedTurn(harness.treeRepository, {
+      treeId: tree.id, branchId: root.id, role: "return", text: "root return", fromBranchId: second.id,
+    });
+    const rootSecond = seedTurn(harness.treeRepository, {
+      treeId: tree.id, branchId: root.id, role: "assistant", text: "root second",
+    });
+
+    const snapshot = harness.search.readSnapshot(tree.id);
+    assert.deepEqual(
+      snapshot.turns.map((turn) => turn.id),
+      [rootFirst.id, rootSecond.id, secondTurn.id],
+      "non-return documents retain the old branch then per-branch order",
+    );
+    assert.deepEqual(snapshot.returns.map((turn) => turn.id), [rootReturn.id]);
+  } finally {
+    harness.shutdown();
+  }
+});
+
 
 test("per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only", async () => {
   const harness = makeHarness();

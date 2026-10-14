@@ -1,0 +1,7 @@
+{
+  "expectedMissingGeneratedExit": 1,
+  "actualMissingGeneratedExit": 1,
+  "dependencyBuildExit": 0,
+  "afterBuildAuditExit": 0,
+  "savedGeneratedDirectoryRetained": true
+}

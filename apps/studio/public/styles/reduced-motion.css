@@ -1,0 +1,19 @@
+/* ------------------------------ prefers-reduced-motion（W2 §3） ------------------------------ */
+
+/* M1–M7 的 reduced-motion 变体：全部动效即时化（直接出现/切换/跳转）。 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  #branch-panel, #source-drawer, #sidebar, #material-reader { transform: none; }
+  #sidebar { transition: none; }
+  .streaming-caret { animation: none; }
+  .source-highlight.pulse { animation: none; box-shadow: 0 0 0 3px rgba(243, 211, 106, 0.45); }
+  /* ③ 术语卡进场动效在 reduce 下即时化（卡直接出现，无位移/淡入）。 */
+  .term-explain-card.enter { animation: none; }
+  /* D4-2 阅读器进场在 reduce 下即时化（无滑移/淡入）。 */
+  #material-reader.enter { animation: none; }
+}

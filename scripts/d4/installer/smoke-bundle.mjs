@@ -22,7 +22,7 @@
  * 诚实边界：CI 冒烟 ≠ 负责人目标机干净安装实测（B8 后者另行记录）。
  */
 
-import { spawnSync } from "node:child_process";
+
 import { createServer } from "node:net";
 import {
   chmodSync,
@@ -36,7 +36,9 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { tarExtractArgs, validateBundleLayout, validateBundleManifest } from "./core.ts";
+import { validateBundleLayout, validateBundleManifest } from "./core.ts";
+
+import { run, httpJson, sleep, extractArchive, execVisible, parseUrlFrom, readdirHasBackup, waitFor } from './smoke-support.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -86,32 +88,11 @@ function check(ok, label, detail = "") {
   }
 }
 
-function run(command, argv, opts = {}) {
-  const shell = IS_WIN && typeof command === "string" && command.startsWith('"');
-  const res = spawnSync(command, argv, {
-    encoding: "utf8",
-    timeout: opts.timeoutMs ?? 120_000,
-    env: { ...process.env, ...(opts.env ?? {}) },
-    cwd: opts.cwd,
-    windowsHide: true,
-    ...(shell ? { shell: true } : {}),
-  });
-  return { status: res.status, stdout: res.stdout ?? "", stderr: res.stderr ?? "" };
-}
 
-async function httpJson(url, init) {
-  try {
-    const res = await fetch(url, init);
-    const body = await res.json();
-    return { status: res.status, ok: res.ok, body };
-  } catch (err) {
-    return { status: 0, ok: false, body: { error: String(err) } };
-  }
-}
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+
+
+
 
 /** 解压产物（tar.gz/tar.xz/zip 全平台）。
  *  zip 不能无条件交给 PATH 里的 tar：Git Bash/部分 Linux 的 GNU tar 不识别
@@ -119,36 +100,8 @@ function sleep(ms) {
  *  bsdtar（绝对路径，不受 Git Bash PATH 遮蔽）→ unzip → PowerShell
  *  Expand-Archive（Windows 兜底）；tar.gz/tar.xz 仍走 tar。tar 调用恒带
  *  --no-same-owner（rootless 容器属主恢复失败回归，issue #8 P2）。 */
-function extractArchive(archivePath, intoDir) {
-  mkdirSync(intoDir, { recursive: true });
-  if (archivePath.endsWith(".zip")) {
-    if (process.platform === "win32") {
-      const system32Tar = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
-      if (existsSync(system32Tar)) {
-        execVisible(system32Tar, ["-xf", archivePath, "-C", intoDir, "--no-same-owner"]);
-        return;
-      }
-      execVisible("powershell.exe", [
-        "-NoProfile",
-        "-Command",
-        `Expand-Archive -LiteralPath ${JSON.stringify(archivePath)} -DestinationPath ${JSON.stringify(intoDir)} -Force`,
-      ]);
-      return;
-    }
-    const hasUnzip = spawnSync("which", ["unzip"], { encoding: "utf8" }).status === 0;
-    if (hasUnzip) {
-      execVisible("unzip", ["-q", "-o", archivePath, "-d", intoDir]);
-      return;
-    }
-  }
-  execVisible("tar", tarExtractArgs(archivePath, intoDir));
-}
-function execVisible(command, argv) {
-  const res = run(command, argv, { timeoutMs: 300_000 });
-  if (res.status !== 0) {
-    throw new Error(`${command} ${argv.join(" ")} 退出码 ${String(res.status)}\n${res.stdout}\n${res.stderr}`);
-  }
-}
+
+
 
 /* ------------------------------------------------------------------ */
 /* 平台入口                                                            */
@@ -180,10 +133,7 @@ function entryCommand(bundleRoot, subcommand, extra = []) {
   return run(entry, [subcommand, ...extra], { env });
 }
 
-function parseUrlFrom(output) {
-  const m = /url=(http:\/\/127\.0\.0\.1:(\d+))/.exec(output);
-  return m === null ? null : { url: m[1], port: Number(m[2]) };
-}
+
 
 /* ------------------------------------------------------------------ */
 /* 主流程                                                              */
@@ -403,20 +353,3 @@ try {
 process.exit(exitCode);
 
 /* ------------------------------------------------------------------ */
-
-function readdirHasBackup(parent, bundleBaseName) {
-  try {
-    return readdirSync(parent).some((name) => name.startsWith(`${bundleBaseName}.backup-`));
-  } catch {
-    return false;
-  }
-}
-
-async function waitFor(timeoutMs, predicate) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (predicate()) return true;
-    await sleep(500);
-  }
-  return predicate();
-}

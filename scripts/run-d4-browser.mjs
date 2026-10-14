@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { createD4Reporting } from "./d4/browser/reporting.mjs";
+import { createChromeHost } from "./d4/browser/chrome-host.mjs";
 /**
  * run-d4-browser — TreeAI D4 浏览器验收入口（issue #8 §8）。
  *
@@ -111,6 +113,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { parseCli, PI_API_KEY_ENV, MODES } from "./d4/browser/cli.mjs";
 
 import {
   probeImportMaterial,
@@ -128,111 +131,13 @@ import {
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STUDIO_ENTRY = join(ROOT, "apps", "studio", "src", "index.ts");
 const D4_FIXTURES_MANIFEST = join(ROOT, "tests", "fixtures", "d4", "MANIFEST.sha256");
-const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
-const MODES = ["selftest", "real-pi"];
 const BOOT_TIMEOUT_MS = 60_000;
 const GET_TIMEOUT_MS = 15_000;
-const DEFAULT_PROMPT_TIMEOUT_MS = 240_000;
-const CDP_SEND_TIMEOUT_MS = 30_000;
 const VIEWPORT = { width: 1280, height: 900 };
-
-const CHROME_CANDIDATES = [
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
-  "/usr/bin/chromium",
-  "/usr/bin/chromium-browser",
-  "/usr/bin/google-chrome",
-];
-
-const USAGE = [
-  "run-d4-browser — TreeAI D4 浏览器验收入口",
-  "",
-  "用法:",
-  "  node scripts/run-d4-browser.mjs --mode selftest",
-  "  node scripts/run-d4-browser.mjs --mode real-pi --provider <id> --model <id> [options]",
-  "",
-  "选项:",
-  "  --mode <selftest|real-pi>   selftest=离线 echo 驱动（不是真实 Pi 证据）；real-pi=真实 Pi",
-  "  --data <dir>                Studio 数据目录（缺省临时目录；--keep-data 保留）",
-  "  --keep-data                 运行后保留数据目录",
-  "  --artifacts <dir>           证据落盘目录（缺省临时目录）",
-  "  --chrome-executable <path>  浏览器可执行文件（缺省探测常见安装路径）",
-  "  --prompt-timeout-ms <ms>    模型回答等待上限（>=1000，缺省 240000）",
-  "  --provider <id>             受控 provider（仅 real-pi）",
-  "  --model <id>                受控 model（仅 real-pi）",
-  "  --agent-dir <dir>           受控 agent 注册表目录（仅 real-pi；常用 .pi-d2-live）",
-  "  --only <id>                 只运行指定检查（可重复；boot 检查恒随行——",
-  "                              其余检查不列出；summary 记录范围，绝不冒充全量）",
-  "  --help                      打印本说明",
-  "",
-  "凭据: real-pi 需要 TREEAI_STUDIO_API_KEY 环境变量（只检查变量名，值由",
-  "      Studio 子进程自行读取；凭据不落命令、截图或证据）。",
-  "",
-  "浏览器路径: 真实 headless Chromium 经 CDP 驱动（--remote-debugging-port=0，",
-  "            随机 --user-data-dir 临时 profile，运行后清理）。",
-  "数据目录:   Studio --data 指向的本地 SQLite 数据目录。",
-].join("\n");
 
 /* ------------------------------------------------------------------ */
 /* CLI                                                                 */
 /* ------------------------------------------------------------------ */
-
-function parseCli(argv) {
-  if (argv.includes("--help") || argv.includes("-h")) {
-    console.log(USAGE);
-    process.exit(0);
-  }
-  const raw = {
-    mode: "selftest",
-    dataDir: null,
-    keepData: false,
-    artifactsDir: null,
-    chromeExecutable: null,
-    promptTimeoutMs: DEFAULT_PROMPT_TIMEOUT_MS,
-    provider: null,
-    model: null,
-    agentDir: null,
-    only: [],
-  };
-  for (let i = 0; i < argv.length; i += 2) {
-    const flag = argv[i];
-    const value = argv[i + 1];
-    if (value === undefined) throw new Error(`${USAGE}\n(bad or missing value for '${String(flag)}')`);
-    if (flag === "--mode") raw.mode = value;
-    else if (flag === "--data") raw.dataDir = value;
-    else if (flag === "--keep-data") { raw.keepData = true; i -= 1; }
-    else if (flag === "--artifacts") raw.artifactsDir = value;
-    else if (flag === "--chrome-executable") raw.chromeExecutable = value;
-    else if (flag === "--prompt-timeout-ms") raw.promptTimeoutMs = Number(value);
-    else if (flag === "--provider") raw.provider = value;
-    else if (flag === "--model") raw.model = value;
-    else if (flag === "--agent-dir") raw.agentDir = value;
-    else if (flag === "--only") raw.only.push(value);
-    else throw new Error(`${USAGE}\n(unknown flag: ${String(flag)})`);
-  }
-  if (!MODES.includes(raw.mode)) throw new Error(`${USAGE}\n(--mode must be one of ${MODES.join(", ")})`);
-  if (!Number.isFinite(raw.promptTimeoutMs) || raw.promptTimeoutMs < 1000) {
-    throw new Error(`${USAGE}\n(--prompt-timeout-ms must be a number >= 1000)`);
-  }
-  if (raw.mode === "real-pi") {
-    if (raw.provider === null || raw.model === null) {
-      throw new Error(`${USAGE}\n(--mode real-pi requires --provider and --model)`);
-    }
-    if (raw.agentDir !== null && !existsSync(raw.agentDir)) {
-      throw new Error(`${USAGE}\n(--agent-dir does not exist: ${raw.agentDir})`);
-    }
-    if (process.env[PI_API_KEY_ENV] === undefined || process.env[PI_API_KEY_ENV] === "") {
-      throw new Error(
-        `BLOCKED: --mode real-pi needs the ${PI_API_KEY_ENV} env var (name only is printed; the value is never read by this script)`,
-      );
-    }
-  } else if (raw.provider !== null || raw.model !== null || raw.agentDir !== null) {
-    throw new Error(`${USAGE}\n(--provider/--model/--agent-dir apply only to --mode real-pi)`);
-  }
-  return raw;
-}
 
 const CLI = parseCli(process.argv.slice(2));
 const MODE = CLI.mode;
@@ -262,210 +167,13 @@ async function freePort() {
   });
 }
 
-function findChromeExecutable() {
-  if (CLI.chromeExecutable !== null) {
-    return existsSync(CLI.chromeExecutable) ? CLI.chromeExecutable : null;
-  }
-  for (const candidate of CHROME_CANDIDATES) {
-    if (existsSync(candidate)) return candidate;
-  }
-  return null;
-}
-
 /* ------------------------------------------------------------------ */
 /* CDP                                                                 */
 /* ------------------------------------------------------------------ */
 
-class CdpConnection {
-  constructor(ws) {
-    this.ws = ws;
-    this.nextId = 1;
-    this.pending = new Map();
-    this.listeners = new Map();
-    this.closed = false;
-  }
-
-  static async connect(url) {
-    const ws = new WebSocket(url);
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`CDP WebSocket connect timeout: ${url}`)), 10_000);
-      ws.addEventListener("open", () => { clearTimeout(timer); resolve(); }, { once: true });
-      ws.addEventListener("error", () => { clearTimeout(timer); reject(new Error(`CDP WebSocket error: ${url}`)); }, { once: true });
-    });
-    const conn = new CdpConnection(ws);
-    ws.addEventListener("message", (event) => conn.handleMessage(String(event.data)));
-    ws.addEventListener("close", () => { conn.closed = true; });
-    return conn;
-  }
-
-  handleMessage(raw) {
-    let message;
-    try { message = JSON.parse(raw); } catch { return; }
-    if (message.id !== undefined) {
-      const entry = this.pending.get(message.id);
-      if (entry !== undefined) {
-        this.pending.delete(message.id);
-        clearTimeout(entry.timer);
-        if (message.error !== undefined) entry.reject(new Error(`CDP ${entry.method}: ${message.error.message}`));
-        else entry.resolve(message.result);
-      }
-      return;
-    }
-    const handlers = this.listeners.get(message.method);
-    if (handlers !== undefined) for (const fn of handlers) fn(message.params ?? {});
-  }
-
-  send(method, params = {}, timeoutMs = CDP_SEND_TIMEOUT_MS) {
-    if (this.closed) return Promise.reject(new Error(`CDP send after close: ${method}`));
-    const id = this.nextId++;
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        reject(new Error(`CDP send timeout (${String(timeoutMs)}ms): ${method}`));
-      }, timeoutMs);
-      this.pending.set(id, { resolve, reject, timer, method });
-      this.ws.send(JSON.stringify({ id, method, params }));
-    });
-  }
-
-  on(method, fn) {
-    const handlers = this.listeners.get(method) ?? [];
-    handlers.push(fn);
-    this.listeners.set(method, handlers);
-  }
-
-  close() {
-    this.closed = true;
-    try { this.ws.close(); } catch { /* already closed */ }
-  }
-}
-
-const chrome = {
-  executable: null,
-  profileDir: null,
-  child: null,
-  port: 0,
-  cdp: null,
-  pageErrors: [],
-  screenshotSeq: 0,
-};
-
-async function startChrome() {
-  chrome.executable = findChromeExecutable();
-  if (chrome.executable === null) {
-    throw new Error(
-      "BLOCKED: no Chromium/Chrome executable found — pass --chrome-executable PATH (candidates probed: " +
-        `${CHROME_CANDIDATES.map((p) => `"${p}"`).join(", ")})`,
-    );
-  }
-  chrome.profileDir = mkdtempSync(join(tmpdir(), "treeai-d4-chrome-"));
-  const args = [
-    "--headless=new",
-    "--remote-debugging-port=0",
-    `--user-data-dir=${chrome.profileDir}`,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-gpu",
-    "--disable-extensions",
-    "--disable-background-timer-throttling",
-    "--disable-backgrounding-occluded-windows",
-    "--force-device-scale-factor=1",
-    `--window-size=${String(VIEWPORT.width)},${String(VIEWPORT.height)}`,
-    "about:blank",
-  ];
-  chrome.child = spawn(chrome.executable, args, { stdio: ["ignore", "ignore", "pipe"] });
-
-  const wsUrl = await new Promise((resolve, reject) => {
-    let buffer = "";
-    const timer = setTimeout(() => reject(new Error("chrome boot timeout: no DevTools listening line in 20s")), 20_000);
-    chrome.child.stderr.on("data", (chunk) => {
-      buffer += String(chunk);
-      const match = /DevTools listening on (ws:\/\/\S+)/.exec(buffer);
-      if (match !== null) { clearTimeout(timer); resolve(match[1]); }
-    });
-    chrome.child.on("exit", () => { clearTimeout(timer); reject(new Error(`chrome exited during boot (code ${String(chrome.child.exitCode)})`)); });
-  });
-
-  const url = new URL(wsUrl);
-  chrome.port = Number(url.port);
-
-  let target = null;
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${String(chrome.port)}/json/list`);
-      if (res.ok) {
-        const targets = await res.json();
-        target = targets.find((t) => t.type === "page") ?? null;
-        if (target !== null) break;
-      }
-    } catch { /* chrome 尚未就绪 */ }
-    await sleep(100);
-  }
-  if (target === null) throw new Error("chrome booted but no page target appeared on /json/list");
-
-  chrome.cdp = await CdpConnection.connect(target.webSocketDebuggerUrl);
-  await chrome.cdp.send("Page.enable");
-  await chrome.cdp.send("Runtime.enable");
-  await chrome.cdp.send("Log.enable");
-  await chrome.cdp.send("Emulation.setDeviceMetricsOverride", {
-    width: VIEWPORT.width,
-    height: VIEWPORT.height,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
-  chrome.cdp.on("Runtime.consoleAPICalled", (params) => {
-    if (params.type !== "error") return;
-    const text = (params.args ?? []).map((a) => a.value ?? a.description ?? "").join(" ");
-    if (text.includes("favicon")) return;
-    chrome.pageErrors.push({ source: "console", text: sanitizeText(text) });
-  });
-  chrome.cdp.on("Log.entryAdded", (params) => {
-    const entry = params.entry ?? {};
-    if (entry.level !== "error") return;
-    const url = entry.url ?? "";
-    if (url.includes("favicon")) return;
-    chrome.pageErrors.push({ source: "log", text: sanitizeText(`${entry.text}${url === "" ? "" : ` (${url})`}`) });
-  });
-}
-
-function stopChrome() {
-  if (chrome.cdp !== null) chrome.cdp.close();
-  if (chrome.child !== null && chrome.child.exitCode === null) chrome.child.kill("SIGKILL");
-  if (chrome.profileDir !== null) {
-    try { rmSync(chrome.profileDir, { recursive: true, force: true }); } catch { /* 尽力而为 */ }
-  }
-}
-
-async function navigate(url) {
-  await chrome.cdp.send("Page.navigate", { url });
-  await sleep(600);
-}
-
-async function evalJs(expression, timeoutMs = CDP_SEND_TIMEOUT_MS) {
-  const res = await chrome.cdp.send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true }, timeoutMs);
-  if (res.exceptionDetails !== undefined) {
-    throw new Error(
-      `page eval failed: ${truncate(sanitizeText(JSON.stringify(res.exceptionDetails)), 400)} — expression: ${truncate(expression, 600)}`,
-    );
-  }
-  return res.result.value;
-}
-
-async function screenshot(name) {
-  chrome.screenshotSeq += 1;
-  const path = join(sc.artifactsDir, `${String(chrome.screenshotSeq).padStart(2, "0")}-${name}.jpg`);
-  const shot = await chrome.cdp.send("Page.captureScreenshot", { format: "jpeg", quality: 70 });
-  writeFileSync(path, Buffer.from(shot.data, "base64"));
-  return path;
-}
-
-/** JSON sidecar（与截图同一序号空间；确定性事实入证据，脱敏纪律同 summary）。 */
-async function sidecar(name, data) {
-  chrome.screenshotSeq += 1;
-  const path = join(sc.artifactsDir, `${String(chrome.screenshotSeq).padStart(2, "0")}-${name}.json`);
-  writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
-  return path;
-}
+const { chrome, startChrome, stopChrome, navigate, evalJs, screenshot, sidecar } = createChromeHost({
+  cli: CLI, viewport: VIEWPORT, getContext: () => sc, sanitizeText, truncate, sleep,
+});
 
 /* ------------------------------------------------------------------ */
 /* Studio 进程                                                          */
@@ -694,18 +402,7 @@ const SELECTED_CHECK_IDS = CLI.only.length === 0
   ? CHECK_DEFS.map((def) => def.id)
   : CHECK_DEFS.filter((def) => CLI.only.includes(def.id) || BOOT_ALWAYS_IDS.includes(def.id)).map((def) => def.id);
 
-function report(entry) {
-  results.push(entry);
-  const tail =
-    entry.reason !== undefined
-      ? ` — ${entry.reason}`
-      : entry.detail !== undefined
-        ? ` — ${entry.detail}`
-        : entry.error !== undefined
-          ? ` — ${truncate(entry.error.message, 400)}`
-          : "";
-  console.log(`  [${entry.status}] ${entry.id}${tail}`);
-}
+
 
 let booted = false;
 let chromeReady = false;
@@ -713,122 +410,17 @@ let chromeReady = false;
 /** 级联 NOT_RUN（探针间依赖未就位）：如实登记原因，不伪装成 FAIL/PASS。 */
 class NotRunError extends Error {}
 
-async function runCheck(id, fn) {
-  const def = byId.get(id);
-  if (!def.modes.includes(MODE)) {
-    /* 模式门控的 NOT_RUN（如 selftest 下的 real-pi 专有检查）：不属于
-       所选模式的义务，不计入 exit-3 判定（charter：0=所选模式全部通过）。 */
-    report({ id, status: "NOT_RUN", reason: def.notRun?.[MODE] ?? `not applicable in --mode ${MODE}`, modeGated: true });
-    return null;
-  }
-  if (fn === null) {
-    /* 骨架检查：实现未落地，如实 NOT_RUN（计入 exit-3 判定）。 */
-    report({ id, status: "NOT_RUN", reason: def.notRun?.[MODE] ?? "not implemented yet" });
-    return null;
-  }
-  if (def.id !== "chrome-boot" && !chromeReady) {
-    report({ id, status: "NOT_RUN", reason: "chrome did not boot (see chrome-boot)" });
-    return null;
-  }
-  if (def.id !== "chrome-boot" && def.id !== "studio-boot" && !booted) {
-    report({ id, status: "NOT_RUN", reason: "studio process did not boot (see studio-boot)" });
-    return null;
-  }
-  const startedAt = Date.now();
-  try {
-    const outcome = (await fn()) ?? {};
-    report({ id, status: "PASS", ...(outcome.detail !== undefined ? { detail: outcome.detail } : {}), durationMs: Date.now() - startedAt });
-    return outcome;
-  } catch (err) {
-    if (err instanceof NotRunError) {
-      /* 探针级联（如导入未就位 → 阅读探针无对象）：NOT_RUN + 原因。 */
-      report({ id, status: "NOT_RUN", reason: sanitizeText(err instanceof Error ? err.message : String(err)) });
-      return null;
-    }
-    report({
-      id,
-      status: "FAIL",
-      error: { message: sanitizeText(err instanceof Error ? err.message : String(err)) },
-      durationMs: Date.now() - startedAt,
-    });
-    return null;
-  }
-}
 
-function sweepBlocked(reason) {
-  for (const def of CHECK_DEFS) report({ id: def.id, status: "BLOCKED", reason });
-}
 
-function gitInfo() {
-  try {
-    const head = execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    let dirty = false;
-    try {
-      dirty = execSync("git status --porcelain", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().length > 0;
-    } catch { /* 如实保持 false */ }
-    return { head, dirty };
-  } catch {
-    return null;
-  }
-}
+
+
+
 
 /** 冻结集绑定（evidence/d4/README 规则 5）：引用 tests/fixtures/d4/ 的
     运行记录 MANIFEST.sha256 的 SHA-256（哈希的哈希）。 */
-function fixturesBinding() {
-  if (scenario.fixturesUsed === null || scenario.fixturesUsed.length === 0) return null;
-  try {
-    const manifest = readFileSync(D4_FIXTURES_MANIFEST);
-    return {
-      manifestPath: "tests/fixtures/d4/MANIFEST.sha256",
-      manifestSha256: createHash("sha256").update(manifest).digest("hex"),
-      used: scenario.fixturesUsed,
-    };
-  } catch {
-    return { manifestPath: "tests/fixtures/d4/MANIFEST.sha256", manifestSha256: null, used: scenario.fixturesUsed };
-  }
-}
 
-function finish(code) {
-  const counts = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  for (const r of results) counts[r.status === "PASS" ? "pass" : r.status === "FAIL" ? "fail" : r.status === "BLOCKED" ? "blocked" : "notRun"] += 1;
-  /* 冻结语义（charter §8）：0=所选模式全部通过；2=失败；3=阻塞/未运行。
-     模式门控的 NOT_RUN 不属于所选模式的义务，不触发 3；实现未落地的
-     NOT_RUN 与 BLOCKED、级联 NOT_RUN 触发 3。 */
-  let exit = code;
-  if (exit === 0 && counts.fail > 0) exit = 2;
-  else if (exit === 0 && (counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true))) exit = 3;
-  console.log("");
-  console.log(
-    `run-d4-browser: ${String(counts.pass)} PASS / ${String(counts.fail)} FAIL / ${String(counts.blocked)} BLOCKED / ${String(counts.notRun)} NOT_RUN (mode ${MODE})`,
-  );
-  if (MODE === "selftest") {
-    console.log("note: selftest uses the offline echo driver — these results are never real-Pi evidence");
-  }
-  try {
-    const git = gitInfo();
-    const fixtures = fixturesBinding();
-    /* 结构化结论字段（issue #8 增量验收 2026-09-30 18:18 P1：runId/gitCommit/
-       mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
-    writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
-      script: "run-d4-browser.mjs",
-      version: "0.6.0",
-      runId: sc.runId,
-      mode: MODE,
-      verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
-      exitCode: exit,
-      ...(CLI.only.length > 0 ? { scoped: CLI.only } : {}),
-      counts: { pass: counts.pass, fail: counts.fail, blocked: counts.blocked, notRun: counts.notRun },
-      gitCommit: git === null ? "unavailable (git rev-parse failed)" : git.head,
-      gitDirty: git === null ? null : git.dirty,
-      generatedAt: new Date().toISOString(),
-      ...(git !== null ? { git } : {}),
-      ...(fixtures !== null ? { fixtures } : {}),
-      checks: results,
-      pageErrors: chrome.pageErrors,
-    }, null, 2));
-  } catch { /* 尽力而为 */ }
-  process.exit(exit);
-}
+
+
 
 /* ------------------------------------------------------------------ */
 /* 场景上下文与主流程                                                    */
@@ -841,6 +433,24 @@ const sc = { dataDir: null, artifactsDir: null, studioUrl: null, runId: `d4-brow
 const scenario = { treeId: null, materials: null, fixturesUsed: null };
 
 /** 探针上下文：真实 Chrome（CDP）+ 真实 studio 进程的受控句柄集合。 */
+const { report, runCheck, sweepBlocked, gitInfo, fixturesBinding, finish } = createD4Reporting({
+  get results() { return results; },
+  get truncate() { return truncate; },
+  get byId() { return byId; },
+  get MODE() { return MODE; },
+  get chromeReady() { return chromeReady; },
+  get booted() { return booted; },
+  get NotRunError() { return NotRunError; },
+  get sanitizeText() { return sanitizeText; },
+  get CHECK_DEFS() { return CHECK_DEFS; },
+  get ROOT() { return ROOT; },
+  get scenario() { return scenario; },
+  get D4_FIXTURES_MANIFEST() { return D4_FIXTURES_MANIFEST; },
+  get sc() { return sc; },
+  get CLI() { return CLI; },
+  get chrome() { return chrome; },
+});
+
 const probeCtx = {
   MODE,
   ROOT,

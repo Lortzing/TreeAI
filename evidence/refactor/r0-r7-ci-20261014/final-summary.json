@@ -1,0 +1,73 @@
+{
+  "codeCommit": "d20d808262b50859a855e91a54eb57004a78df74",
+  "pr": "https://github.com/Lortzing/TreeAI/pull/27",
+  "runs": [
+    {
+      "name": "d2-offline",
+      "id": 38501050211,
+      "conclusion": "success",
+      "underlyingVerdict": "INCOMPLETE",
+      "verifierExitCode": 3,
+      "pass": 21,
+      "notRun": 1
+    },
+    {
+      "name": "refactor-browser-smoke",
+      "id": 38501050229,
+      "conclusion": "success",
+      "mode": "Echo",
+      "scopedCounts": [
+        7,
+        7
+      ]
+    },
+    {
+      "name": "refactor-diagnostics",
+      "id": 38501050231,
+      "conclusion": "success",
+      "d4VerifierExitCode": 3,
+      "d4Pass": 19,
+      "d4NotRun": 1,
+      "b6WarmP95Ms": 471.1,
+      "b6DefinitiveRerunP95Ms": 459.7,
+      "b6LimitMs": 500
+    },
+    {
+      "name": "d4-installer",
+      "id": 38501239760,
+      "conclusion": "success",
+      "platforms": [
+        {
+          "name": "build + smoke (win-x64)",
+          "conclusion": "success",
+          "smokePass": 46,
+          "smokeFail": 0
+        },
+        {
+          "name": "build + smoke (linux-x64)",
+          "conclusion": "success",
+          "smokePass": 46,
+          "smokeFail": 0
+        },
+        {
+          "name": "build + smoke (darwin-arm64)",
+          "conclusion": "success",
+          "smokePass": 46,
+          "smokeFail": 0
+        }
+      ]
+    }
+  ],
+  "localRootPass": 851,
+  "localRootFail": 0,
+  "openGates": [
+    "real-Pi/real-model credentials",
+    "one-shot frozen real verdict",
+    "independent two-person annotation/arbitration",
+    "owner Mac signoff",
+    "Windows 11/Ubuntu 24.04 physical clean installation and real Pi",
+    "3\u20135 independent participant trials"
+  ],
+  "wholeProjectAccepted": false,
+  "rawEvidenceDeleted": false
+}

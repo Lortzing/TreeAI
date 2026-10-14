@@ -1,11 +1,50 @@
+import {
+  flattenNodes,
+} from "./support/dom-primitives.ts";
+import {
+  extractMediaBlocks,
+  declarationsOf,
+  baseCssLayer,
+} from "./support/styles.ts";
+
+import {
+  createStubRange,
+} from "./support/selection-stubs.ts";
+import {
+  createStubText,
+  setClassName,
+  createClassList,
+  appendNode,
+  insertNode,
+  removeNode,
+  replaceNodes,
+  containsNode,
+  replaceText,
+  addListener,
+  dispatchStubEvent,
+  buildStubDom,
+} from "./support/dom-primitives.ts";
+import {
+  createMemoryStorage,
+  stubResponse,
+} from "./support/browser-stubs.ts";
+import {
+  createQueryAll,
+  asRecord,
+  createStubEventSource,
+  type StubEventInit,
+  type StubEvent,
+  type StubFetchInit,
+  type StubResponse,
+} from "./support/browser-stubs.ts";
 /**
  * D4-2 材料阅读器前端套件（issue #8 工作包 D4-2「阅读与来源定位」的
  * Markdown 阅读增量；charter §3.2 锚点与材料阅读 / §3.1 版本语义 / 契约
  * §3 已落地的材料 HTTP 面）。
  *
  * 方法与 ui-probe / ui-regressions / ui-terminology 套件一致（issue #4 P1
- * 「证据工程化」的脚本化 DOM E2E）：以 data: URL 加载仓库真实
- * public/app.js 为 ES module（URL fragment 随机化绕过 ES 模块缓存——每个
+ * 「证据工程化」的脚本化 DOM E2E）：以 file: URL 加载仓库真实
+ * public/app.js 为 ES module（URL query 随机化绕过 ES 模块缓存——每个
  * 场景一份全新实例），运行在「按真实 public/index.html 词法解析出的完整
  * DOM 桩 + 脚本化后端」之上：fetch / EventSource / localStorage / 计时器 /
  * matchMedia / getSelection / navigator.clipboard 全部为内存桩。后端按
@@ -55,17 +94,30 @@
  * offsetTop/offsetHeight 修真）。
  */
 
-import { test } from "node:test";
+import {
+  test,
+} from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import {
+  readFileSync,
+} from "node:fs";
+import {
+  join,
+} from "node:path";
+import {
+  fileURLToPath,
+} from "node:url";
+import {
+  mountStudioApp,
+} from "./support/app-harness.ts";
+import {
+  readStudioCss,
+} from "./support/styles.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
-const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const STYLE_CSS = readFileSync(join(PUBLIC_DIR, "style.css"), "utf8");
+const STYLE_CSS = readStudioCss(PUBLIC_DIR);
 
 /* 冻结 fixture（B1 真值——阅读器正文与选区断言的唯一事实源）。 */
 const B1_ROOT = fileURLToPath(new URL("../../../tests/fixtures/d4/b1-import/", import.meta.url));
@@ -236,37 +288,6 @@ interface StubMaterialEntry extends StubMaterial {
 
 /* ------------------------------ 桩事件 / fetch 形状 ------------------------------ */
 
-interface StubEventInit {
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubEvent {
-  type: string;
-  preventDefault(): void;
-  stopPropagation(): void;
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubSseEvent {
-  type: string;
-  data: string;
-}
-
-interface StubFetchInit {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-interface StubResponse {
-  ok: boolean;
-  status: number;
-  json(): Promise<unknown>;
-}
 
 interface RecordedRequest {
   method: string;
@@ -274,9 +295,6 @@ interface RecordedRequest {
   body: unknown;
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
-}
 
 /* ------------------------------ 事件轮转 / 短等待 ------------------------------ */
 
@@ -293,16 +311,8 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 type StubNode = StubText | StubElement;
 type StubListener = (event: StubEvent) => void;
 
-class StubText {
-  data: string;
-  parentElement: StubElement | null = null;
-  constructor(data: string) {
-    this.data = data;
-  }
-  get textContent(): string {
-    return this.data;
-  }
-}
+const StubText = createStubText<StubElement>();
+type StubText = InstanceType<typeof StubText>;
 
 class StubElement {
   readonly tagName: string;
@@ -336,31 +346,9 @@ class StubElement {
     return [...this.classes].join(" ");
   }
 
-  set className(value: string) {
-    this.classes.clear();
-    for (const c of value.split(/\s+/)) {
-      if (c !== "") this.classes.add(c);
-    }
-  }
+  set className(value: string) { setClassName(this.classes, value); }
 
-  get classList() {
-    const self = this;
-    return {
-      add: (...names: string[]): void => {
-        for (const c of names) self.classes.add(c);
-      },
-      remove: (...names: string[]): void => {
-        for (const c of names) self.classes.delete(c);
-      },
-      toggle: (c: string, force?: boolean): boolean => {
-        const on = force === undefined ? !self.classes.has(c) : force;
-        if (on) self.classes.add(c);
-        else self.classes.delete(c);
-        return on;
-      },
-      contains: (c: string): boolean => self.classes.has(c),
-    };
-  }
+  get classList() { return createClassList(this.classes); }
 
   get scrollTop(): number {
     return this._scrollTop;
@@ -383,69 +371,21 @@ class StubElement {
     for (const n of nodes) this.appendChild(n);
   }
 
-  appendChild(node: StubNode | string): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    n.parentElement = this;
-    this.children.push(n);
-    return n;
-  }
+  appendChild(node: StubNode | string): StubNode { return appendNode<StubNode, StubElement>(this, node, (text) => new StubText(text)); }
 
-  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (ref === null || ref === undefined) {
-      this.appendChild(n);
-      return n;
-    }
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    const index = this.children.indexOf(ref);
-    if (index < 0) {
-      n.parentElement = this;
-      this.children.push(n);
-    } else {
-      this.children.splice(index, 0, n);
-      n.parentElement = this;
-    }
-    return n;
-  }
+  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode { return insertNode<StubNode, StubElement>(this, node, ref, (text) => new StubText(text)); }
 
-  removeChild(node: StubNode): StubNode {
-    const index = this.children.indexOf(node);
-    if (index >= 0) {
-      this.children.splice(index, 1);
-      node.parentElement = null;
-    }
-    return node;
-  }
+  removeChild(node: StubNode): StubNode { return removeNode<StubNode, StubElement>(this, node); }
 
-  replaceChildren(...nodes: Array<StubNode | string>): void {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    this.append(...nodes);
-  }
+  replaceChildren(...nodes: Array<StubNode | string>): void { replaceNodes<StubNode, StubElement>(this, nodes); }
 
-  contains(node: StubNode | null | undefined): boolean {
-    let cur: StubNode | null | undefined = node;
-    while (cur !== null && cur !== undefined) {
-      if (cur === this) return true;
-      cur = cur.parentElement;
-    }
-    return false;
-  }
+  contains(node: StubNode | null | undefined): boolean { return containsNode<StubNode, StubElement>(this, node); }
 
   get textContent(): string {
     return this.children.map((c) => (c instanceof StubText ? c.data : c.textContent)).join("");
   }
 
-  set textContent(value: string) {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    if (value !== "") {
-      const text = new StubText(value);
-      text.parentElement = this;
-      this.children.push(text);
-    }
-  }
+  set textContent(value: string) { replaceText<StubNode, StubElement>(this, value, (text) => new StubText(text)); }
 
   setAttribute(key: string, value: string): void {
     this.attributes.set(key, value);
@@ -461,25 +401,13 @@ class StubElement {
     this.attributes.delete(key);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.listeners, type, fn); }
 
   removeEventListener(type: string, fn: StubListener): void {
     this.listeners.get(type)?.delete(fn);
   }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.listeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.listeners, type, init); }
 
   click(): void {
     this.dispatchEvent("click", {});
@@ -521,140 +449,16 @@ class StubElement {
  * selectNodeContents(元素) + setEnd(文本节点, 偏移) 的前缀长度法与真实
  * DOM Range 同一语义（app.js materialBlockLocalStart 依赖）。
  */
-class StubRange {
-  private readonly doc: StubDocument;
-  startContainer: StubNode;
-  startOffset: number;
-  endContainer: StubNode;
-  endOffset: number;
-
-  constructor(
-    doc: StubDocument,
-    startContainer: StubNode,
-    startOffset: number,
-    endContainer: StubNode,
-    endOffset: number,
-  ) {
-    this.doc = doc;
-    this.startContainer = startContainer;
-    this.startOffset = startOffset;
-    this.endContainer = endContainer;
-    this.endOffset = endOffset;
-  }
-
-  get commonAncestorContainer(): StubNode {
-    const startPath: StubNode[] = [];
-    let cur: StubNode | null = this.startContainer;
-    while (cur !== null) {
-      startPath.push(cur);
-      cur = cur.parentElement;
-    }
-    let end: StubNode | null = this.endContainer;
-    while (end !== null) {
-      if (startPath.includes(end)) return end;
-      end = end.parentElement;
-    }
-    return this.doc.root!;
-  }
-
-  cloneRange(): StubRange {
-    return new StubRange(this.doc, this.startContainer, this.startOffset, this.endContainer, this.endOffset);
-  }
-
-  selectNodeContents(element: StubElement): void {
-    this.startContainer = element;
-    this.startOffset = 0;
-    this.endContainer = element;
-    this.endOffset = element.children.length;
-  }
-
-  setEnd(container: StubNode, offset: number): void {
-    this.endContainer = container;
-    this.endOffset = offset;
-  }
-
-  toString(): string {
-    const from = this.documentPosition(this.startContainer, this.startOffset);
-    const to = this.documentPosition(this.endContainer, this.endOffset);
-    return this.doc.flattenedText().slice(Math.min(from, to), Math.max(from, to));
-  }
-
-  /** 边界 → 全文档扁平文本位置：文本节点 = 节点文本起点 + offset；元素
-      offset k = 前 k 个子树的文本之后（0 = 子树起点，children.length =
-      子树终点——selectNodeContents 的两处用法）。 */
-  private documentPosition(container: StubNode, offset: number): number {
-    if (container instanceof StubText) {
-      return this.doc.textStartOf(container) + offset;
-    }
-    let position = this.doc.textStartOf(container);
-    for (let i = 0; i < offset && i < container.children.length; i += 1) {
-      position += this.doc.subtreeTextLength(container.children[i]!);
-    }
-    return position;
-  }
-}
+const StubRange = createStubRange<StubNode, StubElement, StubText>(StubText);
+type StubRange = InstanceType<typeof StubRange>;
 
 /* 极简选择器引擎：#id / tag / .class / tag.class。 */
-function matchesSelector(el: StubElement, sel: string): boolean {
-  if (sel.startsWith("#")) return el.id === sel.slice(1);
-  let tag: string | null = null;
-  let cls: string | null = null;
-  let rest = sel;
-  const dot = rest.indexOf(".");
-  if (dot >= 0) {
-    cls = rest.slice(dot + 1);
-    rest = rest.slice(0, dot);
-  }
-  if (rest !== "") tag = rest.toLowerCase();
-  if (tag !== null && el.tagName.toLowerCase() !== tag) return false;
-  if (cls !== null && !el.classList.contains(cls)) return false;
-  return true;
-}
 
-function queryAll(root: StubElement, sel: string): StubElement[] {
-  const out: StubElement[] = [];
-  const walk = (el: StubElement): void => {
-    for (const c of el.children) {
-      if (c instanceof StubElement) {
-        if (matchesSelector(c, sel)) out.push(c);
-        walk(c);
-      }
-    }
-  };
-  walk(root);
-  return out;
-}
+
+const queryAll = createQueryAll(StubElement);
 
 /** 完整 index.html DOM 桩：按标签词法解析真实 index.html 建树。 */
-function buildDomFromHtml(html: string, doc: StubDocument): StubElement {
-  const src = html
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<script[\s\S]*?<\/script>/g, "");
-  const voidTags = new Set(["meta", "link", "br", "hr", "input", "img", "source"]);
-  const root = new StubElement("#document");
-  let current = root;
-  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-  let match: RegExpExecArray | null;
-  while ((match = tagRe.exec(src)) !== null) {
-    const full = match[0];
-    const tag = match[1]!.toLowerCase();
-    if (full.startsWith("</")) {
-      if (current.parentElement !== null) current = current.parentElement;
-      continue;
-    }
-    const el = new StubElement(tag);
-    el.ownerDocument = doc;
-    const attrRe = /([a-zA-Z-]+)(?:\s*=\s*("[^"]*"|'[^']*'))?/g;
-    let attrMatch: RegExpExecArray | null;
-    while ((attrMatch = attrRe.exec(match[2] ?? "")) !== null) {
-      const value = attrMatch[2] !== undefined ? attrMatch[2]!.slice(1, -1) : "";
-      el.setAttribute(attrMatch[1]!, value);
-    }
-    current.appendChild(el);
-    if (!voidTags.has(tag)) current = el;
-  }
-  return root;
-}
+function buildDomFromHtml(html: string, doc: StubDocument): StubElement { return buildStubDom(html, doc, StubElement); }
 
 class StubDocument {
   activeElement: StubElement | null = null;
@@ -690,39 +494,14 @@ class StubDocument {
     return this.root === null ? [] : queryAll(this.root, sel);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.docListeners.has(type)) this.docListeners.set(type, new Set());
-    this.docListeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.docListeners, type, fn); }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.docListeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.docListeners, type, init); }
 
   /* 扁平文本（每次重建——测试文档小，正确性优先于缓存）。 */
   private rebuildFlat(): void {
-    const starts = new Map<StubNode, number>();
-    const ends = new Map<StubNode, number>();
-    let text = "";
-    const walk = (node: StubNode): void => {
-      starts.set(node, text.length);
-      if (node instanceof StubText) {
-        text += node.data;
-        ends.set(node, text.length);
-        return;
-      }
-      for (const child of node.children) walk(child);
-      ends.set(node, text.length);
-    };
-    if (this.root !== null) walk(this.root);
-    this.flat = { text, starts, ends };
+    this.flat = flattenNodes<StubNode>(this.root, (node) => node instanceof StubText ? node.data : null,
+      (node) => node instanceof StubText ? [] : node.children);
   }
 
   flattenedText(): string {
@@ -743,46 +522,8 @@ class StubDocument {
 
 /* ------------------------------ EventSource 桩 ------------------------------ */
 
-class StubEventSource {
-  private static readonly registry: StubEventSource[] = [];
-
-  static resetRegistry(): void {
-    StubEventSource.registry.length = 0;
-  }
-
-  static latest(): StubEventSource | null {
-    return StubEventSource.registry[StubEventSource.registry.length - 1] ?? null;
-  }
-
-  readonly url: string;
-  readyState = 0;
-  onopen: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  private readonly sseListeners = new Map<string, Set<(event: StubSseEvent) => void>>();
-
-  constructor(url: string) {
-    this.url = url;
-    StubEventSource.registry.push(this);
-    queueMicrotask(() => {
-      this.readyState = 1;
-      this.onopen?.();
-    });
-  }
-
-  addEventListener(type: string, fn: (event: StubSseEvent) => void): void {
-    if (!this.sseListeners.has(type)) this.sseListeners.set(type, new Set());
-    this.sseListeners.get(type)!.add(fn);
-  }
-
-  close(): void {
-    this.readyState = 2;
-  }
-
-  emit(type: string, data: unknown): void {
-    const event: StubSseEvent = { type, data: JSON.stringify(data) };
-    for (const fn of this.sseListeners.get(type) ?? []) fn(event);
-  }
-}
+const StubEventSource = createStubEventSource();
+type StubEventSource = InstanceType<typeof StubEventSource>;
 
 /* ------------------------------ window / navigator 桩形状 ------------------------------ */
 
@@ -915,7 +656,6 @@ interface WorldOptions {
   holdSuffix?: string;
 }
 
-let appLoadCounter = 0;
 
 async function createWorld(options: WorldOptions = {}): Promise<World> {
   const documentStub = new StubDocument();
@@ -935,18 +675,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       addEventListener(): void {},
       removeEventListener(): void {},
     }),
-    localStorage: {
-      getItem: (key) => (localStorageStore.has(key) ? localStorageStore.get(key)! : null),
-      setItem: (key, value) => {
-        localStorageStore.set(key, String(value));
-      },
-      removeItem: (key) => {
-        localStorageStore.delete(key);
-      },
-      clear: () => {
-        localStorageStore.clear();
-      },
-    },
+    localStorage: createMemoryStorage(localStorageStore),
     getSelection: () => ({
       get rangeCount(): number {
         return scriptedSelection === null ? 0 : 1;
@@ -1047,11 +776,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     if (holdGate !== null && backend.holdSuffix !== null && p.endsWith(backend.holdSuffix)) {
       await holdGate;
     }
-    const respond = (status: number, payload: unknown): StubResponse => ({
-      ok: status < 400,
-      status,
-      json: async () => payload,
-    });
+    const respond = stubResponse;
 
     /* ---- 材料面（D4 契约 §3 的已落地形状） ---- */
     if (p === "/api/trees" && method === "GET") {
@@ -1237,8 +962,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     writable: true,
   });
 
-  appLoadCounter += 1;
-  await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(APP_JS)}#load=${appLoadCounter}`);
+  await mountStudioApp();
   await settle(25);
 
   const world: World = {
@@ -2135,76 +1859,6 @@ test("Esc closes the reader with focus returned to the material's list button; k
 /* ------------------------------------------------------------------ */
 /* 7. CSS 词法锁定（窄窗 / reduced-motion / 宽窗 / 基础层）              */
 /* ------------------------------------------------------------------ */
-
-interface CssRule {
-  selector: string;
-  declarations: string;
-}
-
-interface CssMediaBlock {
-  query: string;
-  rules: CssRule[];
-}
-
-function extractMediaBlocks(css: string): CssMediaBlock[] {
-  const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const blocks: CssMediaBlock[] = [];
-  const mediaRe = /@media([^{]+)\{/g;
-  let match: RegExpExecArray | null;
-  while ((match = mediaRe.exec(src)) !== null) {
-    const query = match[1]!.trim();
-    let depth = 1;
-    let end = mediaRe.lastIndex;
-    while (end < src.length && depth > 0) {
-      const ch = src[end];
-      if (ch === "{") depth += 1;
-      else if (ch === "}") depth -= 1;
-      end += 1;
-    }
-    const body = depth === 0 ? src.slice(mediaRe.lastIndex, end - 1) : src.slice(mediaRe.lastIndex, end);
-    const rules: CssRule[] = [];
-    const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
-    let ruleMatch: RegExpExecArray | null;
-    while ((ruleMatch = ruleRe.exec(body)) !== null) {
-      rules.push({
-        selector: ruleMatch[1]!.trim().replace(/\s+/g, " "),
-        declarations: ruleMatch[2]!.replace(/\s+/g, " ").trim(),
-      });
-    }
-    blocks.push({ query, rules });
-    mediaRe.lastIndex = end;
-  }
-  return blocks;
-}
-
-function declarationsOf(block: CssMediaBlock, selector: string): string | null {
-  const rule = block.rules.find((r) => r.selector === selector);
-  return rule === undefined ? null : rule.declarations;
-}
-
-function baseCssLayer(css: string): string {
-  const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  let out = "";
-  let i = 0;
-  while (i < src.length) {
-    const at = src.indexOf("@media", i);
-    if (at === -1) {
-      out += src.slice(i);
-      break;
-    }
-    out += src.slice(i, at);
-    const open = src.indexOf("{", at);
-    let depth = 1;
-    let j = open + 1;
-    while (j < src.length && depth > 0) {
-      if (src[j] === "{") depth += 1;
-      else if (src[j] === "}") depth -= 1;
-      j += 1;
-    }
-    i = j;
-  }
-  return out;
-}
 
 test("CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically", () => {
   const narrow = extractMediaBlocks(STYLE_CSS).find((b) => b.query === "(max-width: 719px)");

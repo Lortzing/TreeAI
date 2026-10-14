@@ -16,7 +16,9 @@
  *   - 产物布局校验（合成最小产物：缺件必须报、齐件必须过、符号链接必须报）。
  */
 
-import test from "node:test";
+import test, { mock } from "node:test";
+import fs from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -25,6 +27,7 @@ import { join } from "node:path";
 
 import {
   BUNDLE_MANIFEST_SCHEMA,
+  BUNDLE_LAYOUT,
   CONFIG_FILE_NAME,
   DATA_DIR_ENV,
   DEFAULT_PORT,
@@ -68,7 +71,7 @@ const NIX_HOME = "/home/" + "t";
 const WIN_HOME = "C:\\Users\\" + "t";
 
 test("dataDirFor: macOS 平台目录（无覆盖时）", () => {
-  assert.equal(dataDirFor("darwin", {}, MAC_HOME), `${MAC_HOME}/Library/Application Support/TreeAI`);
+  assert.equal(dataDirFor("darwin", {}, MAC_HOME), join(MAC_HOME, "Library", "Application Support", "TreeAI"));
 });
 
 test("dataDirFor: Windows 尊重 APPDATA", () => {
@@ -81,8 +84,8 @@ test("dataDirFor: Windows 尊重 APPDATA", () => {
 });
 
 test("dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share", () => {
-  assert.equal(dataDirFor("linux", {}, NIX_HOME), `${NIX_HOME}/.local/share/TreeAI`);
-  assert.equal(dataDirFor("linux", { XDG_DATA_HOME: `${NIX_HOME}/xdg` }, NIX_HOME), `${NIX_HOME}/xdg/TreeAI`);
+  assert.equal(dataDirFor("linux", {}, NIX_HOME), join(NIX_HOME, ".local", "share", "TreeAI"));
+  assert.equal(dataDirFor("linux", { XDG_DATA_HOME: `${NIX_HOME}/xdg` }, NIX_HOME), join(NIX_HOME, "xdg", "TreeAI"));
 });
 
 test(`dataDirFor: ${DATA_DIR_ENV} 覆盖一切平台缺省（测试/多实例隔离）`, () => {
@@ -92,12 +95,12 @@ test(`dataDirFor: ${DATA_DIR_ENV} 覆盖一切平台缺省（测试/多实例隔
 });
 
 test("installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖", () => {
-  assert.equal(installRootFor("darwin", {}, MAC_HOME), `${MAC_HOME}/Applications/TreeAI`);
+  assert.equal(installRootFor("darwin", {}, MAC_HOME), join(MAC_HOME, "Applications", "TreeAI"));
   assert.equal(
     installRootFor("win32", { LOCALAPPDATA: `${WIN_HOME}\\AppData\\Local` }, WIN_HOME),
     join(`${WIN_HOME}\\AppData\\Local`, "Programs", "TreeAI"),
   );
-  assert.equal(installRootFor("linux", {}, NIX_HOME), `${NIX_HOME}/.local/opt/TreeAI`);
+  assert.equal(installRootFor("linux", {}, NIX_HOME), join(NIX_HOME, ".local", "opt", "TreeAI"));
   assert.equal(installRootFor("linux", { TREEAI_INSTALL_ROOT: "/opt/treeai" }, NIX_HOME), "/opt/treeai");
 });
 
@@ -228,7 +231,7 @@ test("browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参�
 test("nodeDistFor: 三平台官方 URL 与包内二进制路径", () => {
   const mac = nodeDistFor("24.21.0", "darwin-arm64");
   assert.equal(mac.archiveUrl, "https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz");
-  assert.equal(mac.binaryInArchive, "node-v24.21.0-darwin-arm64/bin/node");
+  assert.equal(mac.binaryInArchive, join("node-v24.21.0-darwin-arm64", "bin", "node"));
   const win = nodeDistFor("24.21.0", "win-x64");
   assert.equal(win.archiveUrl, "https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip");
   assert.equal(win.binaryInArchive, join("node-v24.21.0-win-x64", "node.exe"));
@@ -295,7 +298,10 @@ function makeSyntheticBundle(platform: "darwin-arm64" | "linux-x64" | "win-x64")
   mkdirSync(join(root, nodeBin, ".."), { recursive: true });
   writeFileSync(join(root, nodeBin), "fake", { flag: "wx" });
   if (platform !== "win-x64") chmodSync(join(root, nodeBin), 0o755);
-  for (const f of [join("launcher", "launcher.ts"), join("launcher", "core.ts"), "README.md"]) {
+  const coreModules = Object.entries(BUNDLE_LAYOUT)
+    .filter(([key, value]) => key.startsWith("launcher") && key !== "launcherCore" && key !== "launcherEntry" && typeof value === "string")
+    .map(([, value]) => value as string);
+  for (const f of [join("launcher", "launcher.ts"), join("launcher", "core.ts"), ...coreModules, "README.md"]) {
     mkdirSync(join(root, f, ".."), { recursive: true });
     writeFileSync(join(root, f), "");
   }
@@ -338,11 +344,42 @@ function makeSyntheticBundle(platform: "darwin-arm64" | "linux-x64" | "win-x64")
   return root;
 }
 
+/** Paths describe the host filesystem; injected platform selects directory segments.
+ * Windows chmod cannot represent a foreign POSIX execute bit. For synthetic
+ * POSIX bundles only, supply that one file's mode through a scoped fs mock.
+ * Actual package/launcher checks always use the unmodified production validator.
+ */
+function validateSyntheticLayout(
+  root: string,
+  platform: "darwin-arm64" | "linux-x64" | "win-x64",
+  mode = 0o755,
+  emulateMetadata = process.platform === "win32",
+): string[] {
+  if (platform === "win-x64" || !emulateMetadata) return validateBundleLayout(root, platform);
+  const originalStat = fs.statSync;
+  const nodePath = join(root, "node", "bin", "node");
+  const replacement = ((...args: Parameters<typeof originalStat>) => {
+    const stat = Reflect.apply(originalStat, fs, args) as ReturnType<typeof originalStat>;
+    if (stat === undefined || String(args[0]) !== nodePath || typeof stat.mode !== "number") return stat;
+    return Object.assign(Object.create(Object.getPrototypeOf(stat)), stat, {
+      mode: (stat.mode & ~0o777) | mode,
+    });
+  }) as typeof originalStat;
+  const handle = mock.method(fs, "statSync", replacement);
+  syncBuiltinESMExports();
+  try {
+    return validateBundleLayout(root, platform);
+  } finally {
+    handle.mock.restore();
+    syncBuiltinESMExports();
+  }
+}
+
 test("validateBundleLayout: 合成最小产物通过（三平台）", () => {
   for (const platform of ["darwin-arm64", "linux-x64", "win-x64"] as const) {
     const root = makeSyntheticBundle(platform);
     try {
-      assert.deepEqual(validateBundleLayout(root, platform), [], platform);
+      assert.deepEqual(validateSyntheticLayout(root, platform), [], platform);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -353,7 +390,7 @@ test("validateBundleLayout: 缺件必须点名报错", () => {
   const root = makeSyntheticBundle("darwin-arm64");
   try {
     rmSync(join(root, "app", "apps", "studio", "public", "index.html"));
-    const problems = validateBundleLayout(root, "darwin-arm64");
+    const problems = validateSyntheticLayout(root, "darwin-arm64");
     assert.equal(problems.length, 1);
     assert.match(problems[0]!, /studio 静态前端/);
   } finally {
@@ -365,7 +402,7 @@ test("validateBundleLayout: node 缺执行位必须报错（posix）", () => {
   const root = makeSyntheticBundle("darwin-arm64");
   try {
     chmodSync(join(root, "node", "bin", "node"), 0o644);
-    const problems = validateBundleLayout(root, "darwin-arm64");
+    const problems = validateSyntheticLayout(root, "darwin-arm64", 0o644);
     assert.equal(problems.length, 1);
     assert.match(problems[0]!, /执行位/);
   } finally {
@@ -379,7 +416,7 @@ test("validateBundleLayout: node_modules 内的符号链接必须报错（Window
     const target = join(root, "app", "packages", "persistence", "package.json");
     const link = join(root, "app", "node_modules", "@treeai", "persistence", "evil-link");
     symlinkSync(target, link);
-    const problems = validateBundleLayout(root, "linux-x64");
+    const problems = validateSyntheticLayout(root, "linux-x64");
     assert.equal(problems.length, 1);
     assert.match(problems[0]!, /符号链接/);
   } finally {
@@ -549,4 +586,32 @@ test("windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 
   assert.match(script, /exit 0/);
   /* 空目录临时文件自身也要清理。 */
   assert.match(script, /Remove-Item -LiteralPath \$empty -Recurse -Force/);
+});
+
+test("validateBundleLayout: 拆分后的启动器模块缺失必须拒绝", () => {
+  const root = makeSyntheticBundle("darwin-arm64");
+  try {
+    rmSync(join(root, BUNDLE_LAYOUT.launcherMaintenance));
+    const problems = validateSyntheticLayout(root, "darwin-arm64");
+    assert.equal(problems.length, 1);
+    assert.match(problems[0]!, /commands[/\\]maintenance\.ts/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection", () => {
+  const root = makeSyntheticBundle("darwin-arm64");
+  const originalStat = fs.statSync;
+  try {
+    const realResult = validateBundleLayout(root, "darwin-arm64");
+    assert.deepEqual(validateSyntheticLayout(root, "darwin-arm64", 0o755, true), []);
+    const missingExecution = validateSyntheticLayout(root, "darwin-arm64", 0o644, true);
+    assert.equal(missingExecution.length, 1);
+    assert.match(missingExecution[0]!, /执行位/);
+    assert.strictEqual(fs.statSync, originalStat);
+    assert.deepEqual(validateBundleLayout(root, "darwin-arm64"), realResult);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

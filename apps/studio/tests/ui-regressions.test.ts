@@ -1,8 +1,46 @@
+import {
+  createBackendModels,
+} from "./support/backend-models.ts";
+import type {
+  Selection,
+  Tree,
+  Branch,
+  Origin,
+  Turn,
+  BranchView,
+  TreeState,
+} from "./support/backend-models.ts";
+import {
+  createStubText,
+  setClassName,
+  createClassList,
+  appendNode,
+  insertNode,
+  removeNode,
+  replaceNodes,
+  containsNode,
+  addListener,
+  dispatchStubEvent,
+  buildStubDom,
+} from "./support/dom-primitives.ts";
+import {
+  createMemoryStorage,
+  stubResponse,
+} from "./support/browser-stubs.ts";
+import {
+  createQueryAll,
+  asRecord,
+  createStubEventSource,
+  type StubEventInit,
+  type StubEvent,
+  type StubFetchInit,
+  type StubResponse,
+} from "./support/browser-stubs.ts";
 /**
  * Studio 前端回归套件 —— W1 contract v2.0 审计缺陷修复的回归面。
  *
  * 方法与 ui-probe 套件一致（issue #4 P1「证据工程化」的脚本化 DOM E2E）：
- * 以 data: URL 加载仓库真实 public/app.js 为 ES module（URL fragment 随机化
+ * 以 file: URL 加载仓库真实 public/app.js 为 ES module（URL query 随机化
  * 绕过模块缓存——每个场景一份全新实例），运行在「按真实 public/index.html
  * 词法解析出的完整 DOM 桩 + 脚本化后端」之上：fetch / EventSource /
  * localStorage / 计时器 / matchMedia / getSelection 全部为内存桩。无网络、
@@ -34,15 +72,25 @@
  * 前端脚本的唯一动态接面。
  */
 
-import { test } from "node:test";
+import {
+  test,
+} from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import {
+  readFileSync,
+} from "node:fs";
+import {
+  join,
+} from "node:path";
+import {
+  fileURLToPath,
+} from "node:url";
+import {
+  mountStudioApp,
+} from "./support/app-harness.ts";
 
 /* 加载真实前端产物（绝不硬编码副本——桩面对的必须是仓库当前 UI）。 */
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
-const APP_JS = readFileSync(join(PUBLIC_DIR, "app.js"), "utf8");
 const INDEX_HTML = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
 
 /* ------------------------------ 测试数据模型（对齐 app.js 头部 JSDoc） ------------------------------ */
@@ -52,82 +100,6 @@ const ISO = "2026-09-29T00:00:00.000Z";
 const A2_TEXT = "Second trunk answer — the latest one.";
 const BA1_TEXT = "Branch one answer.";
 const B2_TEXT = "Branch two answer.";
-
-interface Selection {
-  start: number;
-  end: number;
-  text: string;
-}
-
-interface ReturnTargetAnchor {
-  sourceBranchId: string;
-  anchorTurnId: string;
-  anchorEntryId: string;
-  selection: Selection;
-}
-
-interface Tree {
-  id: string;
-  createdAt: string;
-  forestId: string;
-}
-
-interface Branch {
-  id: string;
-  treeId: string;
-  parentBranchId: string | null;
-  createdAt: string;
-}
-
-interface Origin {
-  branchId: string;
-  sourceBranchId: string;
-  anchorTurnId: string;
-  anchorEntryId: string;
-  selection: Selection;
-  createdAt: string;
-}
-
-interface Turn {
-  id: string;
-  treeId: string;
-  branchId: string;
-  episodeId: string;
-  runId: string | null;
-  role: "user" | "assistant" | "return";
-  text: string;
-  piEntryId: string | null;
-  fromBranchId: string | null;
-  deliveredRunId: string | null;
-  idempotencyKey: string | null;
-  targetAnchor: ReturnTargetAnchor | null;
-  createdAt: string;
-}
-
-interface ReturnAttempt {
-  turnId: string;
-  runId: string;
-  runState: string;
-  failure: { code: string; message: string } | null;
-  attemptedAt: string;
-  terminalAt: string | null;
-}
-
-interface BranchView {
-  branch: Branch;
-  origin: Origin | null;
-  originStatus: "available" | "changed" | "unavailable" | null;
-  sessionAvailability: "available" | "unavailable" | null;
-  turns: Turn[];
-  returnAttempts: ReturnAttempt[];
-}
-
-interface TreeState {
-  tree: Tree;
-  trunkBranchId: string | null;
-  branches: BranchView[];
-  cursor: { treeId: string; branchId: string; entryId: string } | null;
-}
 
 interface RunDiagnostics {
   runId: string;
@@ -160,42 +132,7 @@ const JOURNAL_EVENTS: JournalEvent[] = [
   { eventId: "evt-1", runId: "run-a1", seq: 1, occurredAt: ISO, type: "run-started", summary: "run started on Trunk" },
 ];
 
-interface TurnExtra {
-  runId?: string | null;
-  piEntryId?: string | null;
-  fromBranchId?: string | null;
-  deliveredRunId?: string | null;
-  idempotencyKey?: string | null;
-  targetAnchor?: ReturnTargetAnchor | null;
-}
-
-function makeTurn(id: string, branchId: string, role: Turn["role"], text: string, extra: TurnExtra = {}): Turn {
-  return {
-    id,
-    treeId: TREE,
-    branchId,
-    episodeId: "ep-1",
-    runId: extra.runId !== undefined ? extra.runId : `run-${id}`,
-    role,
-    text,
-    piEntryId: extra.piEntryId !== undefined ? extra.piEntryId : `pi-${id}`,
-    fromBranchId: extra.fromBranchId ?? null,
-    deliveredRunId: extra.deliveredRunId ?? null,
-    idempotencyKey: extra.idempotencyKey ?? null,
-    targetAnchor: extra.targetAnchor ?? null,
-    createdAt: ISO,
-  };
-}
-
-function makeBranchView(
-  branch: Branch,
-  origin: Origin | null,
-  sessionAvailability: "available" | "unavailable" | null,
-  turns: Turn[],
-  returnAttempts: ReturnAttempt[] = [],
-): BranchView {
-  return { branch, origin, originStatus: origin === null ? null : "available", sessionAvailability, turns, returnAttempts };
-}
+const { makeTurn, makeBranchView } = createBackendModels(TREE, ISO);
 
 /** 预置到 trunk 的已落库 Return（冲突 / 对账命中场景的服务端种子）。 */
 interface SeedReturn {
@@ -255,37 +192,6 @@ function freshBackendState(seedReturns: SeedReturn[]): TreeState {
 
 /* ------------------------------ 桩事件 / fetch 形状 ------------------------------ */
 
-interface StubEventInit {
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubEvent {
-  type: string;
-  preventDefault(): void;
-  stopPropagation(): void;
-  key?: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-}
-
-interface StubSseEvent {
-  type: string;
-  data: string;
-}
-
-interface StubFetchInit {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-interface StubResponse {
-  ok: boolean;
-  status: number;
-  json(): Promise<unknown>;
-}
 
 interface RecordedRequest {
   method: string;
@@ -319,9 +225,6 @@ interface Backend {
 
 /* ------------------------------ unknown 收窄辅助（不使用 any） ------------------------------ */
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
-}
 
 interface PersistedDraft {
   idempotencyKey: string;
@@ -370,16 +273,8 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 type StubNode = StubText | StubElement;
 type StubListener = (event: StubEvent) => void;
 
-class StubText {
-  data: string;
-  parentElement: StubElement | null = null;
-  constructor(data: string) {
-    this.data = data;
-  }
-  get textContent(): string {
-    return this.data;
-  }
-}
+const StubText = createStubText<StubElement>();
+type StubText = InstanceType<typeof StubText>;
 
 class StubElement {
   readonly tagName: string;
@@ -409,31 +304,9 @@ class StubElement {
     return [...this.classes].join(" ");
   }
 
-  set className(value: string) {
-    this.classes.clear();
-    for (const c of value.split(/\s+/)) {
-      if (c !== "") this.classes.add(c);
-    }
-  }
+  set className(value: string) { setClassName(this.classes, value); }
 
-  get classList() {
-    const self = this;
-    return {
-      add: (...names: string[]): void => {
-        for (const c of names) self.classes.add(c);
-      },
-      remove: (...names: string[]): void => {
-        for (const c of names) self.classes.delete(c);
-      },
-      toggle: (c: string, force?: boolean): boolean => {
-        const on = force === undefined ? !self.classes.has(c) : force;
-        if (on) self.classes.add(c);
-        else self.classes.delete(c);
-        return on;
-      },
-      contains: (c: string): boolean => self.classes.has(c),
-    };
-  }
+  get classList() { return createClassList(this.classes); }
 
   get offsetHeight(): number {
     return 0;
@@ -458,58 +331,18 @@ class StubElement {
     for (const n of nodes) this.appendChild(n);
   }
 
-  appendChild(node: StubNode | string): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    n.parentElement = this;
-    this.children.push(n);
-    return n;
-  }
+  appendChild(node: StubNode | string): StubNode { return appendNode<StubNode, StubElement>(this, node, (text) => new StubText(text)); }
 
   /** insertBefore（真实 DOM 语义：ref 为 null/undefined 时等价 appendChild；
       已挂载节点重挂即移动到指定位）。issue #7 C ③ 正文/操作分层的按位调和
       （reconcileTopLevel）使用——仅为桩面能力补齐，不改变任何既有断言。 */
-  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode {
-    const n: StubNode = typeof node === "string" ? new StubText(node) : node;
-    if (ref === null || ref === undefined) {
-      this.appendChild(n);
-      return n;
-    }
-    if (n.parentElement !== null) n.parentElement.removeChild(n);
-    const index = this.children.indexOf(ref);
-    if (index < 0) {
-      n.parentElement = this;
-      this.children.push(n);
-    } else {
-      this.children.splice(index, 0, n);
-      n.parentElement = this;
-    }
-    return n;
-  }
+  insertBefore(node: StubNode | string, ref: StubNode | null): StubNode { return insertNode<StubNode, StubElement>(this, node, ref, (text) => new StubText(text)); }
 
-  removeChild(node: StubNode): StubNode {
-    const index = this.children.indexOf(node);
-    if (index >= 0) {
-      this.children.splice(index, 1);
-      node.parentElement = null;
-    }
-    return node;
-  }
+  removeChild(node: StubNode): StubNode { return removeNode<StubNode, StubElement>(this, node); }
 
-  replaceChildren(...nodes: Array<StubNode | string>): void {
-    for (const c of this.children) c.parentElement = null;
-    this.children = [];
-    this.append(...nodes);
-  }
+  replaceChildren(...nodes: Array<StubNode | string>): void { replaceNodes<StubNode, StubElement>(this, nodes); }
 
-  contains(node: StubNode | null | undefined): boolean {
-    let cur: StubNode | null | undefined = node;
-    while (cur !== null && cur !== undefined) {
-      if (cur === this) return true;
-      cur = cur.parentElement;
-    }
-    return false;
-  }
+  contains(node: StubNode | null | undefined): boolean { return containsNode<StubNode, StubElement>(this, node); }
 
   get textContent(): string {
     return this.children.map((c) => (c instanceof StubText ? c.data : c.textContent)).join("");
@@ -535,25 +368,13 @@ class StubElement {
     this.attributes.delete(key);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.listeners.has(type)) this.listeners.set(type, new Set());
-    this.listeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.listeners, type, fn); }
 
   removeEventListener(type: string, fn: StubListener): void {
     this.listeners.get(type)?.delete(fn);
   }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.listeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.listeners, type, init); }
 
   click(): void {
     this.dispatchEvent("click", {});
@@ -588,67 +409,13 @@ class StubElement {
 
 /* 极简选择器引擎：#id / tag / .class / tag.class（app.js 与本套件所用
    的全部形态）。 */
-function matchesSelector(el: StubElement, sel: string): boolean {
-  if (sel.startsWith("#")) return el.id === sel.slice(1);
-  let tag: string | null = null;
-  let cls: string | null = null;
-  let rest = sel;
-  const dot = rest.indexOf(".");
-  if (dot >= 0) {
-    cls = rest.slice(dot + 1);
-    rest = rest.slice(0, dot);
-  }
-  if (rest !== "") tag = rest.toLowerCase();
-  if (tag !== null && el.tagName.toLowerCase() !== tag) return false;
-  if (cls !== null && !el.classList.contains(cls)) return false;
-  return true;
-}
 
-function queryAll(root: StubElement, sel: string): StubElement[] {
-  const out: StubElement[] = [];
-  const walk = (el: StubElement): void => {
-    for (const c of el.children) {
-      if (c instanceof StubElement) {
-        if (matchesSelector(c, sel)) out.push(c);
-        walk(c);
-      }
-    }
-  };
-  walk(root);
-  return out;
-}
+
+const queryAll = createQueryAll(StubElement);
 
 /** 完整 index.html DOM 桩：按标签词法解析真实 index.html 建树（含全部
  *  id/class/aria 属性与嵌套），使桩 DOM 与仓库静态页结构一致。 */
-function buildDomFromHtml(html: string, doc: StubDocument): StubElement {
-  const src = html
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<script[\s\S]*?<\/script>/g, "");
-  const voidTags = new Set(["meta", "link", "br", "hr", "input", "img", "source"]);
-  const root = new StubElement("#document");
-  let current = root;
-  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-  let match: RegExpExecArray | null;
-  while ((match = tagRe.exec(src)) !== null) {
-    const full = match[0]!;
-    const tag = match[1]!.toLowerCase();
-    if (full.startsWith("</")) {
-      if (current.parentElement !== null) current = current.parentElement;
-      continue;
-    }
-    const el = new StubElement(tag);
-    el.ownerDocument = doc;
-    const attrRe = /([a-zA-Z-]+)(?:\s*=\s*("[^"]*"|'[^']*'))?/g;
-    let attrMatch: RegExpExecArray | null;
-    while ((attrMatch = attrRe.exec(match[2] ?? "")) !== null) {
-      const value = attrMatch[2] !== undefined ? attrMatch[2]!.slice(1, -1) : "";
-      el.setAttribute(attrMatch[1]!, value);
-    }
-    current.appendChild(el);
-    if (!voidTags.has(tag)) current = el;
-  }
-  return root;
-}
+function buildDomFromHtml(html: string, doc: StubDocument): StubElement { return buildStubDom(html, doc, StubElement); }
 
 class StubDocument {
   activeElement: StubElement | null = null;
@@ -683,67 +450,16 @@ class StubDocument {
     return this.root === null ? [] : queryAll(this.root, sel);
   }
 
-  addEventListener(type: string, fn: StubListener): void {
-    if (!this.docListeners.has(type)) this.docListeners.set(type, new Set());
-    this.docListeners.get(type)!.add(fn);
-  }
+  addEventListener(type: string, fn: StubListener): void { addListener(this.docListeners, type, fn); }
 
-  dispatchEvent(type: string, init: StubEventInit = {}): boolean {
-    const event: StubEvent = {
-      type,
-      preventDefault(): void {},
-      stopPropagation(): void {},
-      ...init,
-    };
-    for (const fn of this.docListeners.get(type) ?? []) fn(event);
-    return true;
-  }
+  dispatchEvent(type: string, init: StubEventInit = {}): boolean { return dispatchStubEvent(this.docListeners, type, init); }
 }
 
 /* ------------------------------ EventSource 桩 ------------------------------ */
 
 /** 实例注册表按 world 重置（liveSse = 当前场景最新连接；旧场景连接不再可见）。 */
-class StubEventSource {
-  private static readonly registry: StubEventSource[] = [];
-
-  static resetRegistry(): void {
-    StubEventSource.registry.length = 0;
-  }
-
-  static latest(): StubEventSource | null {
-    return StubEventSource.registry[StubEventSource.registry.length - 1] ?? null;
-  }
-
-  readonly url: string;
-  readyState = 0;
-  onopen: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  private readonly sseListeners = new Map<string, Set<(event: StubSseEvent) => void>>();
-
-  constructor(url: string) {
-    this.url = url;
-    StubEventSource.registry.push(this);
-    queueMicrotask(() => {
-      this.readyState = 1;
-      this.onopen?.();
-    });
-  }
-
-  addEventListener(type: string, fn: (event: StubSseEvent) => void): void {
-    if (!this.sseListeners.has(type)) this.sseListeners.set(type, new Set());
-    this.sseListeners.get(type)!.add(fn);
-  }
-
-  close(): void {
-    this.readyState = 2;
-  }
-
-  /** 测试侧注入事件（data 自动 JSON 序列化——对齐真实 SSE 的字符串 data）。 */
-  emit(type: string, data: unknown): void {
-    const event: StubSseEvent = { type, data: JSON.stringify(data) };
-    for (const fn of this.sseListeners.get(type) ?? []) fn(event);
-  }
-}
+const StubEventSource = createStubEventSource();
+type StubEventSource = InstanceType<typeof StubEventSource>;
 
 /* ------------------------------ window 桩形状 ------------------------------ */
 
@@ -793,11 +509,10 @@ interface WorldOptions {
   seedReturns?: SeedReturn[];
 }
 
-let appLoadCounter = 0;
 
 /**
  * 构建一套全新场景环境：真实 index.html 解析出的 DOM 桩 + 脚本化后端 +
- * 全局桩注入 + 全新 app.js 模块实例（fragment 随机化绕过模块缓存），
+ * 全局桩注入 + 全新 app.js 模块实例（query 随机化绕过模块缓存），
  * 等待引导（自动打开第一棵树）完成。场景之间完全隔离（DOM、后端、
  * localStorage、SSE 注册表、模块级前端状态各自独立）。
  */
@@ -824,18 +539,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       addEventListener(): void {},
       removeEventListener(): void {},
     }),
-    localStorage: {
-      getItem: (key) => (localStorageStore.has(key) ? localStorageStore.get(key)! : null),
-      setItem: (key, value) => {
-        localStorageStore.set(key, String(value));
-      },
-      removeItem: (key) => {
-        localStorageStore.delete(key);
-      },
-      clear: () => {
-        localStorageStore.clear();
-      },
-    },
+    localStorage: createMemoryStorage(localStorageStore),
     getSelection: () => ({ rangeCount: 0 }),
     confirm: (message) => {
       confirmCalls.push(message);
@@ -875,11 +579,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     backend.requests.push({ method, path: String(input), body });
     const url = new URL(String(input), "http://studio.local");
     const p = url.pathname;
-    const respond = (status: number, payload: unknown): StubResponse => ({
-      ok: status < 400,
-      status,
-      json: async () => payload,
-    });
+    const respond = stubResponse;
 
     if (p === "/api/trees" && method === "GET") return respond(200, { trees: backend.trees });
     let m = /^\/api\/trees\/([^/]+)\/state$/.exec(p);
@@ -1063,10 +763,9 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.EventSource = StubEventSource;
   globals.fetch = fetchStub;
 
-  /* data: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
+  /* file: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
      模块缓存：每个场景加载一份全新 app.js 实例，模块级状态互不渗透。 */
-  appLoadCounter += 1;
-  await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(APP_JS)}#load=${appLoadCounter}`);
+  await mountStudioApp();
   await settle(25);
 
   return {

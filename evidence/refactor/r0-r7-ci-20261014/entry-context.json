@@ -1,0 +1,43 @@
+{
+  "baseline": "e427460b31f61722d5e74a6fa4ee24d140abe67b",
+  "head": "d20d808262b50859a855e91a54eb57004a78df74",
+  "rows": [
+    {
+      "path": "apps/studio/public/app.js",
+      "before": {
+        "utf8Bytes": 436290,
+        "physicalLines": 9719
+      },
+      "after": {
+        "utf8Bytes": 639,
+        "physicalLines": 20
+      }
+    },
+    {
+      "path": "apps/studio/src/server.ts",
+      "before": {
+        "utf8Bytes": 82411,
+        "physicalLines": 1733
+      },
+      "after": {
+        "utf8Bytes": 7281,
+        "physicalLines": 168
+      }
+    },
+    {
+      "path": "scripts/run-d4-browser.mjs",
+      "before": {
+        "utf8Bytes": 44858,
+        "physicalLines": 997
+      },
+      "after": {
+        "utf8Bytes": 28646,
+        "physicalLines": 607
+      }
+    }
+  ],
+  "limitations": [
+    "Physical compatibility-entry measurements only; implementation moved into linked domain owners, rather than disappeared.",
+    "Not token counts or a total-agent-context measurement; follow task-map dependencies for actual edits."
+  ]
+}

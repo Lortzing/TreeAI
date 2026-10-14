@@ -1,0 +1,14 @@
+{
+  "rule": "home-path",
+  "paths": [
+    "evidence/refactor/r0-r7-final-20261013/d2-offline.log",
+    "evidence/refactor/r0-r7-final-20261013/d2-selftest.log",
+    "evidence/refactor/r0-r7-final-20261013/d3-api.log",
+    "evidence/refactor/r0-r7-final-20261013/d4-offline.log",
+    "evidence/refactor/r0-r7-final-20261013/d4-selftest.log",
+    "evidence/refactor/r0-r7-final-20261013/root-test.log",
+    "evidence/d4/browser/d4-browser-20261013T105856-2934/45-beta-usability.json"
+  ],
+  "rawLocalLogsRetained": true,
+  "checkFieldsUnchanged": true
+}

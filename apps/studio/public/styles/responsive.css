@@ -1,0 +1,101 @@
+/* ------------------------------ 窄窗（<720px）：单面板 ------------------------------ */
+
+@media (max-width: 719px) {
+  #sidebar-toggle { display: block; }
+
+  /* 侧栏收进左侧抽屉（固定定位脱流，骨架高度链不受影响）。 */
+  #sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(300px, 86vw);
+    z-index: 60;
+    transform: translateX(-100%);
+    visibility: hidden;
+    box-shadow: 18px 0 44px -26px rgba(35, 40, 31, 0.4);
+    transition: transform 220ms ease-out, visibility 0s 220ms;
+  }
+  body.sidebar-open #sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 220ms ease-out, visibility 0s 0s;
+  }
+
+  #new-tree { width: 100%; }
+  .turn { max-width: 100%; }
+  #branch-panel, #source-drawer { width: 100%; max-width: 100%; }
+  /* D4-2 阅读器同款全幅（单独规则：上行的词法形状被既有套件锁定）。 */
+  #material-reader { width: 100%; max-width: 100%; }
+
+  /* 顶栏让出固定开关的位置（开关固定于左上，覆盖顶栏左侧）。 */
+  #branch-bar { padding-left: 96px; padding-right: 12px; }
+  #topbar-path-wrap { flex-direction: column; align-items: flex-start; gap: 1px; }
+
+  #diagnostics-bar #run-detail, #diagnostics-bar #policy-note { display: none; }
+
+  #session-banner { margin: 8px 12px 0; font-size: 11.5px; }
+
+  #conversation { padding: 16px 14px; gap: 12px; }
+  .turn, .turn.user { max-width: none; }
+  .turn.assistant { font-size: 15px; }
+
+  /* ③ 术语面（触屏）：<720px 工具条全宽换行、按钮加大触点；解释卡动作
+     纵排、输入与按钮全宽。 */
+  .selection-toolbar { display: flex; width: 100%; margin-left: 0; }
+  .selection-toolbar button { flex: 1 1 auto; padding: 8px 12px; font-size: 13px; }
+  .term-explain-card .term-explain-actions { flex-direction: column; align-items: stretch; }
+  .term-explain-card .term-explain-actions input,
+  .term-explain-card .term-explain-actions button { width: 100%; }
+  .turn .term-annotation-mark { text-underline-offset: 4px; }
+
+  /* ①阅读模式（触屏）：<720px 建议条确认面纵排、chip/重试加大触点。 */
+  .term-suggest-confirm { width: 100%; }
+  .term-suggest-confirm button { flex: 1 1 auto; padding: 8px 12px; font-size: 13px; }
+  .term-suggest-chip { padding: 6px 12px; font-size: 13px; }
+  .term-suggest-retry { padding: 6px 12px; font-size: 12.5px; }
+
+  /* D4-2 材料阅读器（触屏）：<720px 阅读器全幅推栈（同支线面板）；选区
+     捕获条动作纵排、按钮全宽加大触点；正文留白收窄。 */
+  .mat-selection-bar .mat-selection-actions { flex-direction: column; align-items: stretch; }
+  .mat-selection-bar .mat-selection-actions button { width: 100%; padding: 8px 12px; font-size: 13px; }
+  .mat-blocks { padding: 14px 12px 22px; font-size: 15px; }
+  .material-block .mat-code-line, .material-block .mat-code { font-size: 12px; }
+
+  /* D4-8 导航面（触屏）：<720px 查找/Find 按钮加大触点、结果区放宽限高
+     （行高 34px 的虚拟化常数不变——媒体查询不改行高，窗口数学恒定）。 */
+  .nav-find-row button { padding: 8px 14px; font-size: 13px; }
+  #nav-tree-results, #nav-node-results { max-height: 216px; }
+  .nav-toggle { width: 26px; height: 30px; }
+
+  #composer, #panel-composer, #return-panel { padding: 10px 14px 12px; }
+  #composer, #panel-composer { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+
+  /* 16px 输入避免 iOS 聚焦缩放。 */
+  textarea { font-size: 16px; }
+
+  /* 支线面板占满主区（推栈式）；固定来源/回程保持可触达。 */
+  #branch-panel {
+    width: 100%;
+    border-left: none;
+    box-shadow: -24px 0 48px -28px rgba(35, 40, 31, 0.45);
+  }
+
+  #source-drawer.enter { animation: drawer-up-in var(--motion-panel) ease-out; }
+  #source-drawer.exit { animation: drawer-up-out 150ms ease-in forwards; }
+
+  /* 来源抽屉：自底向上全宽。 */
+  #source-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 78dvh;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--line-strong);
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+}
+

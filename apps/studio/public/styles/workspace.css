@@ -1,0 +1,620 @@
+/* ------------------------------ 布局骨架 ------------------------------ */
+
+/* 有界高度链：#app（100dvh 列）→ #workspace → #main（列）→ #tree-view
+   → #reading-area → #main-pane → #conversation（overflow-y:auto）——
+   滚动收敛在会话容器内，文档级滚动不出现。 */
+#app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+
+#workspace { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+
+/* 左栏：New Tree 置顶 + Forest（树列表）+ Branches（分支导航）+ 常驻
+   页脚（白色面 + 发丝右边界）。Branches 区长列表自身滚动，Forest 与
+   页脚保持稳定。 */
+#sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 14px 14px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+#new-tree { width: 100%; }
+
+/* 侧栏五段（Forest/Branches/Materials/Search/Navigate）统一为自然高度 +
+   区块内滚动：区块一律不伸展不收缩（flex:0 0 auto），长清单（树/分支页签/
+   材料/导航树）各自带上限滚动容器；侧栏整体 #sidebar overflow-y:auto 兜底
+   滚动。此前 flex:1/flex:1.2 1 0 的「吸收剩余空间」模型在五段并存时把
+   basis-0 的 Branches/Navigate 压扁到 0 或让其内容溢出画到相邻区块下面
+   （浏览器探针 elementFromPoint 实测两处），一律废弃。 */
+.sidebar-section { display: flex; flex-direction: column; min-height: 0; flex: 0 0 auto; }
+#branch-section { flex: 0 0 auto; max-height: 30vh; overflow-y: auto; }
+#material-list { max-height: 38vh; overflow-y: auto; }
+#tree-list { max-height: 22vh; overflow-y: auto; }
+
+.sidebar-heading {
+  margin: 6px 0 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+#tree-list, #branch-tabs, #material-list { list-style: none; margin: 0; padding: 0; }
+#tree-list li, #branch-tabs li, #material-list li { margin: 3px 0; }
+
+#tree-list button, #branch-tabs button, #material-list button {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#tree-list button:hover, #branch-tabs button:hover, #material-list button:hover { background: var(--surface-dim); }
+#tree-list button.active, #branch-tabs button.active, #material-list button.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+/* 主线 tab 恒为当前主阅读面（W2 §2.2）；打开的支线 tab 以柔和绿底呈现
+   （不加粗，与 active 相区分）。 */
+#branch-tabs button.panel-open { background: var(--green-wash); border-color: var(--green-line); color: var(--green-deep); }
+#tree-list .tree-date { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+#branch-tabs button .dot { color: var(--green); }
+#branch-tabs button.panel-open .dot { color: var(--green); }
+#branch-tabs button .session-badge { font-size: 10px; color: var(--gold-deep); margin-left: 4px; }
+
+/* D4-2 材料列表：与树列表同一形态（标题行 + 状态行），状态行按解析态
+   如实着色（failed/unsupported/rejected = 危险色；pending/parsing = 暖金
+   “仍在进行”；canceled = 弱化）。列表三态（加载中/空态/失败 + 重试）以
+   li.muted 呈现，重试按钮复用 .drawer-retry 形态。 */
+#material-list button { white-space: normal; } /* 标题可换行（材料名无 UI 截断） */
+#material-list .material-meta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 1px;
+  white-space: normal;
+}
+#material-list .material-status.pending,
+#material-list .material-status.parsing { color: var(--gold-deep); }
+#material-list .material-status.failed,
+#material-list .material-status.unsupported,
+#material-list .material-status.rejected { color: var(--danger); }
+#material-list li.muted { font-size: 12px; color: var(--muted); line-height: 1.5; }
+#material-list .drawer-retry { margin-top: 4px; }
+
+/* D4-2 用户导入行（owner P1）：Materials 段顶部的真实文件选择入口
+   （按钮触发隐藏 input[type=file]——浏览器原生对话框）。状态行如实承载
+   pending/parsing/ready/failed/rejected/canceled/去重各态（原因逐字、
+   常驻不自动消失）；在途解析的取消/复查按钮就近内联。 */
+.material-import-row { display: flex; margin: 0 0 6px; }
+#material-import {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+}
+#material-import:hover { background: var(--surface-dim); }
+#material-import-status {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  white-space: normal;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+#material-import-status:empty { display: none; margin: 0; }
+#material-import-status .mat-import-error { color: var(--danger); }
+#material-import-status .mat-import-cancel,
+#material-import-status .mat-import-refresh,
+#material-import-status .mat-import-open {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+#material-import-status .mat-import-cancel { border-color: var(--danger); color: var(--danger); }
+
+/* D4-4 搜索（issue #8 工作包 D4-4，charter §5）：侧栏第四段——跨已保存
+   产品事实的检索面。表单（输入 + 范围开关 + 来源类型筛选 + 执行）是静态
+   DOM（app.js 只同步开关态）；结果列表与材料列表同形态（全宽左对齐按钮
+   行，白名单换行），行内并排 session 不可用注记 + 「⑃ 新探索」换轨入口。
+   旧版本命中的「旧版本」标注用暖金（版本诚实同 D4-2 的 older 标注色系）。 */
+#search-section { gap: 7px; }
+#search-input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+#search-input:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+#search-input::placeholder { color: var(--muted); }
+
+.search-scope, .search-kinds { display: flex; flex-wrap: wrap; gap: 5px; }
+.search-scope-toggle, .search-kind-toggle {
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.search-scope-toggle:hover:not(:disabled), .search-kind-toggle:hover:not(:disabled) { background: var(--surface-dim); }
+.search-scope-toggle.active, .search-kind-toggle.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+#search-run { width: 100%; }
+#search-status { margin: 0; font-size: 11px; line-height: 1.5; }
+
+#search-results { list-style: none; margin: 0; padding: 0; }
+#search-results li { margin: 4px 0; }
+#search-results li.muted { font-size: 12px; line-height: 1.5; }
+#search-results button.search-hit {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+#search-results button.search-hit:hover { background: var(--surface-dim); }
+.search-hit-kind {
+  display: inline-block;
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
+  margin-right: 6px;
+  border-radius: 4px;
+  vertical-align: 1px;
+}
+.search-hit-kind.k-material { background: var(--green-wash); color: var(--green-deep); }
+.search-hit-kind.k-annotation { background: var(--gold-wash); color: var(--gold-deep); }
+.search-hit-kind.k-return { background: var(--gold); color: #fff; }
+.search-hit-kind.k-turn { background: var(--surface-dim); color: var(--ink-soft); border: 1px solid var(--line); }
+.search-hit-title { font-weight: 600; }
+.search-hit-meta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: normal;
+}
+.search-hit-meta .search-old-version { color: var(--gold-deep); font-weight: 600; }
+.search-hit-excerpt {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.search-hit-session {
+  margin: 2px 0 4px;
+  padding: 5px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  background: var(--gold-wash);
+  font-size: 11px;
+  color: var(--gold-deep);
+  line-height: 1.45;
+}
+.search-hit-session-text { display: block; }
+.search-hit-explore {
+  margin-top: 4px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: var(--gold);
+  color: #fff;
+  cursor: pointer;
+}
+.search-hit-explore:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+
+/* D4-8 大规模树导航（issue #8 工作包 D4-8，charter §5）：侧栏 Navigate 段
+   ——树查找（输入 + Find + 结果列表）+ 层级树视图（有界滚动容器内的虚
+   拟化窗口）。.nav-item 固定行高 34px 是虚拟化窗口的行高常数（与 app.js
+   NAV_ROW_HEIGHT_PX 同值——改一处必须同步另一处）；长标题截断 + title
+   全文；id 徽标即同名节点的身份；.nav-item.focused 是 roving tabindex 键
+   盘焦点的可见态（窗口重划后焦点行必在 DOM）。 */
+#nav-section { flex: 0 0 auto; }
+
+#nav-tree-search, #nav-node-search {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+  color: var(--ink);
+}
+#nav-tree-search:focus, #nav-node-search:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
+#nav-tree-search::placeholder, #nav-node-search::placeholder { color: var(--muted); }
+
+.nav-find-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.nav-find-row button {
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-find-row button:hover { background: var(--surface-dim); }
+.nav-find-row .muted { font-size: 10.5px; line-height: 1.4; }
+
+#nav-tree-results, #nav-node-results { list-style: none; margin: 4px 0 6px; padding: 0; max-height: 168px; overflow-y: auto; }
+#nav-tree-results li, #nav-node-results li { margin: 2px 0; }
+#nav-tree-results button, #nav-node-results button {
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: normal;
+}
+#nav-tree-results button:hover, #nav-node-results button:hover { background: var(--surface-dim); }
+#nav-tree-results button.active, #nav-node-results button.active {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+.nav-finder-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-finder-meta { display: block; font-size: 10.5px; color: var(--muted); }
+#nav-tree-results li.muted, #nav-node-results li.muted { font-size: 12px; color: var(--muted); line-height: 1.5; }
+#nav-tree-results .drawer-retry, #nav-node-results .drawer-retry { margin-left: 4px; }
+.nav-hit-path { display: block; font-size: 10.5px; color: var(--muted); white-space: normal; }
+.nav-more { width: 100%; text-align: left; font-size: 11.5px; }
+
+#nav-surface {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+#nav-tree-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#nav-tree-meta { margin: 0 0 2px; }
+#nav-tree-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
+#nav-tree-actions button { font-size: 11px; padding: 3px 7px; }
+
+#nav-path { display: flex; flex-wrap: wrap; align-items: center; gap: 1px 0; margin: 2px 0; }
+.nav-path-step {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 11.5px;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-path-step:hover { background: var(--surface-dim); }
+.nav-path-step.active { background: var(--green-wash); border-color: var(--green-line); color: var(--green-deep); font-weight: 600; }
+.nav-path-sep { color: var(--muted); font-size: 11px; margin: 0 1px; }
+.nav-path-more {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: underline;
+  padding: 2px 3px;
+}
+
+/* 有界滚动容器：虚拟化窗口的事实源（窗口外只留 spacer 高度占位）。 */
+#nav-tree-scroll {
+  min-height: 132px;
+  max-height: 34vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-dim);
+}
+#nav-tree { list-style: none; margin: 0; padding: 3px 0; }
+/* 固定行高（虚拟化常数）+ 收起子树零行（DOM-free）。 */
+.nav-item { height: 34px; display: flex; align-items: center; margin: 0; }
+.nav-row { display: flex; align-items: center; gap: 4px; width: 100%; min-width: 0; height: 100%; }
+.nav-toggle {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+}
+.nav-toggle.leaf { cursor: default; }
+.nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: left;
+}
+.nav-label:hover { background: var(--surface); }
+/* 长标题截断——全文在 title 属性（hover 可读完整标题）。 */
+.nav-title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-id {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--muted);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-count { flex: 0 0 auto; font-size: 10px; color: var(--muted); }
+.nav-item.active > .nav-row > .nav-label {
+  background: var(--green-wash);
+  border-color: var(--green-line);
+  color: var(--green-deep);
+  font-weight: 600;
+}
+/* 键盘焦点行的可见态（roving tabindex——焦点不因虚拟化消失的可见保证）。 */
+.nav-item.focused { outline: 2px solid var(--green); outline-offset: -2px; border-radius: var(--radius); }
+.nav-status-row { margin: 0; padding: 5px 10px; font-size: 11.5px; color: var(--muted); min-height: 20px; }
+.nav-status-row.failed { color: var(--danger); }
+.nav-status-row .drawer-retry, .nav-more-row .drawer-retry { font-size: 11px; padding: 3px 8px; margin-left: 4px; }
+.nav-more-row { margin: 0; padding: 2px 10px; }
+.nav-more-row .nav-more {
+  width: 100%;
+  text-align: left;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 4px 8px;
+}
+.nav-more-row .nav-more:hover:not(:disabled) { background: var(--surface); color: var(--ink); }
+#nav-tree-status { margin: 2px 0 0; }
+
+/* 树列表加载失败态（W2 §2.1）：常驻错误 + 重试——与 8 秒自动隐藏横幅
+   不同，失败不消失，重试入口一直可用；重试在途为按钮禁用 +
+   “Retrying…” 文案（诚实待态）。 */
+#list-load-error {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: var(--danger-wash);
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 12px;
+}
+#list-load-error p { margin: 0 0 6px; }
+#list-load-error button {
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+#list-load-error button:hover:not(:disabled) { background: #f6dcd4; }
+
+/* 页脚常驻左栏底部。 */
+#sidebar-foot { margin-top: auto; }
+.subtitle { margin: 0; font-size: 11.5px; color: var(--muted); }
+
+/* 主区 */
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+#empty-state { margin: auto; text-align: center; max-width: 420px; padding: 24px; }
+.empty-title { font-family: var(--font-read); font-size: 22px; margin: 0 0 6px; }
+#empty-state .muted { font-size: 13px; line-height: 1.5; margin: 0 0 18px; }
+/* 空态主操作：与左栏 New Tree 同为 primary，居中收束成主要入口。 */
+#empty-new-tree { width: 100%; max-width: 260px; margin-top: 6px; }
+
+#tree-view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* 顶栏（#branch-bar，58px 白条 + 发丝下边界）：品牌 + 位置路径（app.js
+   renderTopbarPath 如实渲染 `<treeId> / Trunk [ / Branch n]`，长树名以
+   省略号截断）+ 真实 cursor 注记 + 内联诊断面 + 来源抽屉入口。 */
+#branch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 58px;
+  padding: 0 20px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+#topbar-brand { flex-shrink: 0; margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+#topbar-path-wrap { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+#topbar-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+#cursor-note {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.drawer-toggle {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 5px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+button.drawer-toggle:hover { background: var(--surface-dim); border-color: var(--line-strong); }
+
+/* 诊断面（A5）：内联于顶栏的段落——run 状态、失败、中止、诚实策略
+   注记（无树打开时 app.js 以 hidden 收起整段；空间紧张时内部换行
+   而非溢出 58px 条高）。 */
+#diagnostics-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+#diagnostics-bar #policy-note { margin-left: auto; text-align: right; }
+
+.run-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--canvas);
+  transition: color var(--motion-state) ease-out, background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out;
+}
+.run-status.streaming { color: var(--green-deep); border-color: var(--green); background: var(--green-wash); }
+.run-status.aborting { color: var(--gold-deep); border-color: var(--gold); background: var(--gold-wash); }
+
+/* 终态着色：aborted 是显式用户动作（金），非失败。 */
+.last-run-state.succeeded { color: var(--green-deep); font-weight: 600; }
+.last-run-state.failed { color: var(--danger); font-weight: 600; }
+.last-run-state.aborted { color: var(--gold-deep); font-weight: 600; }
+
+/* P1 失败面板：持久（不自动消失）直到手动关闭。 */
+#failure-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 20px;
+  background: var(--danger-wash);
+  border-bottom: 1px solid var(--danger);
+  font-size: 12px;
+  color: var(--danger);
+}
+#failure-panel .failure-panel-dismiss {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+#failure-panel .failure-panel-dismiss:hover { background: #f6dcd4; }
+
+/* A4 缺失 session 横幅（主线）：持久、可关闭。 */
+#session-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 10px 20px 0;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  background: var(--gold-wash);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius);
+  color: var(--gold-deep);
+}
+#session-banner .session-banner-dismiss {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: none;
+  color: var(--gold-deep);
+  cursor: pointer;
+}
+#session-banner .session-banner-dismiss:hover { background: #f3e6c4; }
+
+/* A4/W2 §2.8 恢复动作（issue #3 P1：可执行的恢复按钮）：主线横幅与
+   面板降级提示共用；无可用候选时禁用并内联说明原因。 */
+.session-recovery { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+#session-banner .session-recovery { margin-right: 8px; }
+#panel-session-note .session-recovery { display: flex; margin-top: 6px; }
+.session-recovery-button {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: none;
+  color: var(--gold-deep);
+  cursor: pointer;
+}
+.session-recovery-button:hover:not(:disabled) { background: #f3e6c4; }
+.session-recovery-reason { font-size: 11px; opacity: 0.85; }
+

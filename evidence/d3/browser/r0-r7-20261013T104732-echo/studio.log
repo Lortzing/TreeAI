@@ -1,0 +1,7 @@
+treeai-studio: listening http://127.0.0.1:58170
+treeai-studio: driver=echo model=studio-provider/studio-model
+treeai-studio: data=<dir> (schema v10)
+treeai-studio: journal=<dir>/journal.jsonl (99 events loaded)
+treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)
+treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)

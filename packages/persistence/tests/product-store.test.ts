@@ -157,6 +157,38 @@ test("turns round-trip and list in append order; roles are discriminated", () =>
   }
 });
 
+test("tree-wide turns preserve branch order and per-branch append order", () => {
+  const dir = makeTempDir();
+  try {
+    const repo = TreeRepository.open({ path: dbPath(dir), now: makeClock(), generateId: makeIdGenerator("t") });
+    const ids = setupDomainWithRun(repo);
+    const secondEpisode = repo.createEpisode(ids.secondBranchId);
+    const secondRun = repo.createRun(secondEpisode.id, makeSessionReference());
+
+    const rootFirst = repo.createTurn({
+      treeId: ids.treeId, branchId: ids.rootBranchId, episodeId: ids.episodeId, runId: ids.runId,
+      role: "user", text: "root first",
+    });
+    const secondOnly = repo.createTurn({
+      treeId: ids.treeId, branchId: ids.secondBranchId, episodeId: secondEpisode.id, runId: secondRun.id,
+      role: "assistant", text: "second only",
+    });
+    const rootSecond = repo.createTurn({
+      treeId: ids.treeId, branchId: ids.rootBranchId, episodeId: ids.episodeId, runId: ids.runId,
+      role: "assistant", text: "root second",
+    });
+
+    assert.deepEqual(
+      repo.listTurnsForTree(ids.treeId).map((turn) => turn.id),
+      [rootFirst.id, rootSecond.id, secondOnly.id],
+      "tree-wide reads retain branch creation order, then each branch's append order",
+    );
+    assert.deepEqual(repo.listTurnsForTree(ids.treeId).filter((turn) => turn.branchId === ids.secondBranchId), [secondOnly]);
+    repo.close();
+  } finally {
+    cleanupTempDir(dir);
+  }
+});
 test("turn role invariants are rejected with InvalidArgumentError", () => {
   const dir = makeTempDir();
   try {

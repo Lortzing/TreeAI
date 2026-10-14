@@ -323,6 +323,8 @@ for (const licenseName of ["LICENSE", "LICENSE.md"]) {
 /* 2. 启动器（.ts 由内置 Node 类型剥离直接执行；无 npm 依赖） */
 copyFile(join(SCRIPT_DIR, "installer", "launcher.ts"), join(stageDir, "launcher", "launcher.ts"));
 copyFile(join(SCRIPT_DIR, "installer", "core.ts"), join(stageDir, "launcher", "core.ts"));
+copyDirFiltered(join(SCRIPT_DIR, "installer", "core"), join(stageDir, "launcher", "core"));
+copyDirFiltered(join(SCRIPT_DIR, "installer", "commands"), join(stageDir, "launcher", "commands"));
 
 /* 3. 应用快照（白名单：源码 + 静态前端 + package.json + event-journal dist） */
 const WORKSPACE_PACKAGES = ["contracts", "event-journal", "persistence", "runtime-pi", "tool-policy"];

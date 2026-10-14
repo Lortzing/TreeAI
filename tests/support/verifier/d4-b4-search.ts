@@ -274,7 +274,14 @@ function runB4SearchCheck(d4Root: string): B4SearchCheckOutcome {
           problems.push(`b4 facts ${factId}: annotation missing term/explanation`);
           continue;
         }
-        annotations.push({ id: factId, treeId, title, term, explanation, note: note ?? null, createdAt });
+        // The frozen B4 facts already carry a real Branch identifier; retain it
+        // in the shared SearchSnapshot rather than manufacturing a UI target.
+        const branchId = asString(record["branchId"]);
+        if (branchId === null || branchId.length === 0) {
+          problems.push(`b4 facts ${factId}: annotation missing branchId`);
+          continue;
+        }
+        annotations.push({ id: factId, treeId, branchId, title, term, explanation, note: note ?? null, createdAt });
         fact = {
           factId, docKind, treeId, title, createdAt,
           refId: searchDocumentRefId(treeId, "annotation", factId),
@@ -288,7 +295,12 @@ function runB4SearchCheck(d4Root: string): B4SearchCheckOutcome {
           problems.push(`b4 facts ${factId}: ${docKind} missing text`);
           continue;
         }
-        const entry = { id: factId, treeId, title, text, createdAt };
+        const branchId = asString(record["branchId"]);
+        if (branchId === null || branchId.length === 0) {
+          problems.push(`b4 facts ${factId}: ${docKind} missing branchId`);
+          continue;
+        }
+        const entry = { id: factId, treeId, branchId, title, text, createdAt };
         if (docKind === "return") returns.push(entry);
         else turns.push(entry);
         fact = {

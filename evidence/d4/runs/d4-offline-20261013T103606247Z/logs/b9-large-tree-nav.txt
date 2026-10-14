@@ -1,0 +1,8 @@
+b9 large-scale tree nav check
+generator CLI run A (with --load-check): exit 0
+generator CLI run B (fresh process): exit 0
+generator determinism: two independent CLI runs byte-identical (structure truth sha256 4f36f4e51337a561…, manifest 619de9b093a994b7…, 100 trees / 10000 non-trunk branches)
+NOT_RUN: nav-p95 (browser): p95 of scripted expand/switch operations in a real browser — frontend wave / run:d4-browser, not claimed here (engine-side p95 recorded as evidence only)
+NOT_RUN: virtualization: DOM node count growing with the viewport rather than the full tree — frontend wave, not claimed here
+NOT_RUN: keyboard: keyboard navigation with focus surviving virtualization — frontend wave, not claimed here
+NOT_RUN: browser-face first-open: b9-big first open in a real browser — frontend wave / run:d4-browser, not claimed here
