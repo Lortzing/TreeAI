@@ -7,12 +7,12 @@
 | --- | --- | --- |
 | R0 repository map | Literal/scenario, ESM/CSS, computed resource/discovery and evidence inventories completed; final local audit is linked below | Enumerated dynamic paths have execution evidence; generated discovery requires the original dependency build |
 | R1 browser UI | Complete Chrome Echo 16/16; domain lifecycle/state/controllers/views remain separated | Final real-Pi coverage requires credentials; physical owner signoff remains separate |
-| R2 UI tests | Shared suite primitives, all 146 original UI declarations retained; root 850/850 and all 794 baseline static declarations retained | Echo/static names do not substitute for real Pi or independent trials |
+| R2 UI tests | Shared suite primitives, all 146 original UI declarations retained; root 851/851 and all 794 baseline static declarations retained | Echo/static names do not substitute for real Pi or independent trials |
 | R3 Studio server/services | Complete production/test types, root/integration suites and original D2/D4 domain checks pass at the tested SHA | Real Pi with configured credentials remains open |
 | R4 runtime and runners | Domain owners, all frozen original checks, both independent selftests, complete Echo/evaluator pipelines, package smoke 46/46 and Mac engineer automation 55/55 verified | Real-Pi/model quality and target-device/human acceptance remain open |
 | R5 documentation | Live architecture/task/testing/audit navigation reconciled; final evidence records full tested SHA and every exclusion | Record/CI-only successor does not claim a new remote CI run |
 | R6 evidence lifecycle | All prior evidence preserved; tracked locator accounts for 2,662 paths at the tested SHA; new raw logs/screenshots/reports retained and scanned | Raw deletion remains prohibited until whole-project acceptance |
-| R7 integration/acceptance | Complete local automatic verification recorded at `0173fc34a4900e45355224693a27b17a51a47dc6` | User approved and PR #27 was fast-forwarded; PR CI passed at `40b84b7`, Windows installer fixture correction awaits committed-SHA three-platform rerun; real Pi credentials and human/physical gates remain open |
+| R7 integration/acceptance | Complete local automatic verification recorded at `0173fc34a4900e45355224693a27b17a51a47dc6` | User-approved push complete; D2/Chrome/diagnostics plus all three installer jobs pass at `d20d808262b50859a855e91a54eb57004a78df74`; real Pi credentials and human/physical gates remain open |
 
 ## 2026-10-10 Search-view wave (working candidate based on `28d809537099fad04e6c32df2c647e266bacbca5`)
 
@@ -190,3 +190,9 @@ The macOS label correction was re-recorded: before/after directory absent=true, 
 ## 2026-10-14 authorized remote integration and Windows fixture audit
 
 The user's explicit approval completed the PR #27 push through the existing authenticated SSH identity. [Remote results and preserved Windows failure](../../evidence/refactor/r0-r7-ci-20261014/README.md) bind to `40b84b7f179f91b5242bdbd3497e2e752082503f`: D2, Chrome and diagnostics CI pass; Linux B6 definitive rerun p95 477.9ms≤500ms. Linux/macOS packaging+smoke pass; Windows failed in complete unit coverage because the synthetic fixtures assumed POSIX separators/mode bits on every host. Fixture-only corrections preserve all original assertions and production guards, with a new scoped-mock restoration regression. Local focused 36/36, complete root 851/851 and root types pass. Three-platform committed-SHA revalidation is next; human/real-Pi/quality gates and evidence retention remain unchanged.
+
+## 2026-10-14 final remote automatic engineering result
+
+Code candidate `d20d808262b50859a855e91a54eb57004a78df74`: [full CI evidence and first failure](../../evidence/refactor/r0-r7-ci-20261014/README.md). D2, Chrome and diagnostics PR checks succeed; Linux/macOS/Windows installer build, actual 46/46 smoke, checksums and uploads all succeed. Windows takes 23m20s; no timeout/assertion was shortened or case excluded. D4's definitive Linux B6 rerun is 459.7ms≤500ms (first 471.1ms also retained).
+
+These green CI jobs preserve D2/D4 exit-3 INCOMPLETE outcomes (one NOT_RUN each). Real Pi/model-quality credentials and independent annotation/signoff/physical installation/participant gates remain open. PR description is updated around the actual final implementation and exact code SHA; this following record commit changes no product, runner, test or workflow implementation. Whole-project acceptance and evidence deletion remain prohibited until the original gates pass.

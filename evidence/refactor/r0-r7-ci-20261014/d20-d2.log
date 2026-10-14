@@ -1,0 +1,276 @@
+verify:d2 (offline, no credentials)	Set up job	﻿2026-10-14T02:26:47.0753108Z Current runner version: '2.337.0'
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0778963Z ##[group]Runner Image Provisioner
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0779975Z Hosted Compute Agent
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0780582Z Version: 20261002.596
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0781191Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0782227Z Build Date: 2026-10-02T22:28:27Z
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0782926Z Worker ID: {26f828fb-6e0e-4777-a3b8-cdab8f65538c}
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0783745Z Region: westus2
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0784290Z Cloud: Azure
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0784803Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0786314Z ##[group]Operating System
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0786981Z Ubuntu
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0787589Z 24.04.5
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0788208Z LTS
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0788773Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0789424Z ##[group]Runner Image
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0790076Z Image: ubuntu-24.04
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0790730Z Version: 20261004.327.1
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0792192Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0794063Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0795035Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0796218Z ##[group]GITHUB_TOKEN Permissions
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0798080Z Contents: read
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0798840Z Metadata: read
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0799431Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0801680Z Secret source: Actions
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0802809Z Cache mode: write
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.0803503Z Prepare workflow directory
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.1147616Z Prepare all required actions
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.1195599Z Getting action download info
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.4600474Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.5452161Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.6467610Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+verify:d2 (offline, no credentials)	Set up job	2026-10-14T02:26:47.8478602Z Complete job name: verify:d2 (offline, no credentials)
+verify:d2 (offline, no credentials)	Check out	﻿2026-10-14T02:26:47.9355067Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9356138Z with:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9356596Z   repository: Lortzing/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9360540Z   token: ***
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9360973Z   ssh-strict: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9361764Z   ssh-user: git
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9362220Z   persist-credentials: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9362733Z   clean: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9363171Z   sparse-checkout-cone-mode: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9363687Z   fetch-depth: 1
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9364116Z   fetch-tags: false
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9364543Z   show-progress: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9364994Z   lfs: false
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9365403Z   submodules: false
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9365841Z   set-safe-directory: true
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:47.9366612Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0375320Z Syncing repository: Lortzing/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0378435Z ##[group]Getting Git version info
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0379674Z Working directory is '<home>/work/TreeAI/TreeAI'
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0381747Z [command]/usr/bin/git version
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0472721Z git version 2.55.0
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0489355Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0513482Z Temporarily overriding HOME='<home>/work/_temp/6f7e49ad-594c-453a-b6bd-33271f5523c5' before making global git config changes
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0515783Z Adding repository directory to the temporary git global config as a safe directory
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0517731Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0566598Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0569997Z ##[group]Initializing the repository
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0576888Z [command]/usr/bin/git init <home>/work/TreeAI/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0702986Z hint: Using 'master' as the name for the initial branch. This default branch name
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0704109Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0705058Z hint: to use in all of your new repositories, which will suppress this warning,
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0705835Z hint: call:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0706234Z hint:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0706996Z hint: 	git config --global init.defaultBranch <name>
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0707620Z hint:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0708216Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0709143Z hint: 'development'. The just-created branch can be renamed via this command:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0709886Z hint:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0710302Z hint: 	git branch -m <name>
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0710783Z hint:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0711774Z hint: Disable this message with "git config set advice.defaultBranchName false"
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0717916Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0729610Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0777786Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0778887Z ##[group]Disabling automatic garbage collection
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0782170Z [command]/usr/bin/git config --local gc.auto 0
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0815656Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0816775Z ##[group]Setting up auth
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0823198Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.0858630Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1242994Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1286596Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1522719Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1566834Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1568457Z ##[group]Fetching the repository
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:48.1578873Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +dff8d48ad48517824ae1b901f1f8db163f7125da:refs/remotes/pull/27/merge
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3565746Z From https://github.com/Lortzing/TreeAI
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3568790Z  * [new ref]         dff8d48ad48517824ae1b901f1f8db163f7125da -> pull/27/merge
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3575348Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3577922Z ##[group]Determining the checkout info
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3580538Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3582195Z [command]/usr/bin/git sparse-checkout disable
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3630122Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3662644Z ##[group]Checking out the ref
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.3666545Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/27/merge
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8240293Z Note: switching to 'refs/remotes/pull/27/merge'.
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8241211Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8241915Z You are in 'detached HEAD' state. You can look around, make experimental
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8242660Z changes and commit them, and you can discard any commits you make in this
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8243354Z state without impacting any branches by switching back to a branch.
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8243757Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8244070Z If you want to create a new branch to retain commits you create, you may
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8244708Z do so (now or later) by using -c with the switch command. Example:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8245170Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8245493Z   git switch -c <new-branch-name>
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8245844Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8246026Z Or undo this operation with:
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8246712Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8246861Z   git switch -
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8247066Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8247373Z Turn off this advice by setting config variable advice.detachedHead to false
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8247795Z 
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8248257Z HEAD is now at dff8d48 Merge d20d808262b50859a855e91a54eb57004a78df74 into e427460b31f61722d5e74a6fa4ee24d140abe67b
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8279678Z ##[endgroup]
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8325919Z [command]/usr/bin/git log -1 --format=%H
+verify:d2 (offline, no credentials)	Check out	2026-10-14T02:26:51.8352771Z dff8d48ad48517824ae1b901f1f8db163f7125da
+verify:d2 (offline, no credentials)	Set up Node (pinned)	﻿2026-10-14T02:26:51.8757533Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8758050Z with:
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8758318Z   node-version: 24.21.0
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8758593Z   cache: npm
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8758838Z   always-auth: false
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8759113Z   check-latest: false
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8762098Z   token: ***
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:51.8762387Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.0139559Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.0144507Z (node:2526) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.0145335Z (Use `node --trace-deprecation ...` to show where the warning was created)
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.0147501Z ##[group]Environment details
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.3956750Z node: v24.21.0
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.3957353Z npm: 11.19.0
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.3957652Z yarn: 1.22.22
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.3958893Z ##[endgroup]
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.3982085Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.5134391Z <home>/.npm
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.7686630Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:52.7802180Z (node:2526) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:54.0620300Z Received 4194304 of 170878268 (2.5%), 4.0 MBs/sec
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.0625405Z Received 113246208 of 170878268 (66.3%), 54.0 MBs/sec
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.5845218Z Received 170878268 of 170878268 (100.0%), 64.6 MBs/sec
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.5846819Z Cache Size: ~163 MB (170878268 B)
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.5923659Z [command]/usr/bin/tar -xf <home>/work/_temp/5d7e77d2-789a-4431-bbc2-4e5806ece1b5/cache.tzst -P -C <home>/work/TreeAI/TreeAI --use-compress-program unzstd
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.8331031Z Cache restored successfully
+verify:d2 (offline, no credentials)	Set up Node (pinned)	2026-10-14T02:26:55.8424307Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	﻿2026-10-14T02:26:55.8607953Z ##[group]Run npm ci
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:26:55.8608287Z ^[[36;1mnpm ci^[[0m
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:26:55.8884204Z shell: /usr/bin/bash -e {0}
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:26:55.8884548Z ##[endgroup]
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:26:59.7016532Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7153599Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7154557Z added 178 packages, and audited 186 packages in 7s
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7155031Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7155310Z 17 packages are looking for funding
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7156715Z   run `npm fund` for details
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7254663Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7255343Z 3 vulnerabilities (1 moderate, 2 high)
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7256181Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7256828Z To address issues that do not require attention, run:
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7257757Z   npm audit fix
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7258285Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7258991Z To address all issues (including breaking changes), run:
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7259916Z   npm audit fix --force
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7260460Z 
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7261026Z Run `npm audit` for details.
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7282604Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7283948Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7285491Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7286596Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7287391Z npm warn install-scripts
+verify:d2 (offline, no credentials)	Install dependencies (npm ci)	2026-10-14T02:27:02.7288445Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	﻿2026-10-14T02:27:02.8229197Z ##[group]Run set +e
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8229500Z ^[[36;1mset +e^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8229747Z ^[[36;1mnode scripts/verify-d2.js^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8230157Z ^[[36;1mstatus=$?^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8230623Z ^[[36;1mif [ "$status" -ne 0 ] && [ "$status" -ne 3 ]; then^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8230985Z ^[[36;1m  exit "$status"^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8231214Z ^[[36;1mfi^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8232425Z ^[[36;1mecho "offline gate completed with expected incomplete status: $status"^[[0m
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8299917Z shell: /usr/bin/bash -e {0}
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.8300402Z ##[endgroup]
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.9546180Z verify-d2 1.0.0 — offline acceptance run
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.9562183Z root: <home>/work/TreeAI/TreeAI
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.9592333Z evidence: <home>/work/TreeAI/TreeAI/evidence/d2/runs/d2-offline-20261014T022702950Z
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:02.9595845Z 
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:03.4070983Z   [PASS] fixtures-integrity
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:03.4079889Z   [PASS] schema-validator-selftest
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:03.4116475Z   [PASS] secret-scanner-selftest
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:16.9304885Z   [PASS] typecheck
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:20.7526897Z   [PASS] tests-typecheck
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:26.5819708Z   [PASS] unit-tests-contracts
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:30.6294984Z   [PASS] unit-tests-runtime-pi
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:34.5350588Z   [PASS] unit-tests-persistence
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:36.0322889Z   [PASS] unit-tests-tool-policy
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:38.8801642Z   [PASS] unit-tests-event-journal
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:41.9327933Z   [PASS] unit-tests-agent-f
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:42.4775359Z   [PASS] integration-tests-agent-f
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:46.6462525Z   [PASS] live-framework-selftest
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:27:52.1139235Z   [PASS] runtime-smoke
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.2420807Z   [PASS] unit-tests-studio
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.2423630Z   [PASS] pi-version-pin
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7480175Z   [PASS] secret-scan-workspace
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7485971Z   [PASS] residual-resources
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7489120Z   [NOT_RUN] d1-repro — explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7490464Z   [PASS] exit-codes
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7491811Z   [PASS] evidence-write-hygiene
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7510363Z   [PASS] schema-validation
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7575584Z 
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7575875Z verify-d2 summary:
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7576354Z   21 PASS, 0 FAIL, 0 BLOCKED, 1 NOT_RUN
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7576904Z   verdict: INCOMPLETE (exit 3)
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7577737Z   evidence: <home>/work/TreeAI/TreeAI/evidence/d2/runs/d2-offline-20261014T022702950Z
+verify:d2 (offline, no credentials)	D2 offline acceptance verifier	2026-10-14T02:28:31.7665635Z offline gate completed with expected incomplete status: 3
+verify:d2 (offline, no credentials)	D2 failure-path selftest	﻿2026-10-14T02:28:31.7703821Z ##[group]Run node scripts/verify-d2-selftest.js
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.7704235Z ^[[36;1mnode scripts/verify-d2-selftest.js^[[0m
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.7766653Z shell: /usr/bin/bash -e {0}
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.7766926Z ##[endgroup]
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.8722979Z verify-d2-selftest — failure-path selftest
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.8731174Z evidence: <home>/work/TreeAI/TreeAI/evidence/d2/selftest/d2-selftest-20261014T022831868Z
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:31.8732174Z 
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:32.2179701Z   [PASS] control-clean-tree (child exit 0)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:32.5450480Z   [PASS] inject-secret (child exit 2)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:32.8664135Z   [PASS] inject-secret-browser-evidence (child exit 2)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:33.1015363Z   [PASS] inject-bad-schema (child exit 2)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:33.3323582Z   [PASS] inject-illegal-exit-codes (child exit 2)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:33.3579716Z 
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:33.3580731Z verify-d2-selftest summary: 5 PASS, 0 FAIL → ALL_PASS (exit 0)
+verify:d2 (offline, no credentials)	D2 failure-path selftest	2026-10-14T02:28:33.3582506Z evidence: <home>/work/TreeAI/TreeAI/evidence/d2/selftest/d2-selftest-20261014T022831868Z
+verify:d2 (offline, no credentials)	Upload evidence (always)	﻿2026-10-14T02:28:33.3723777Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3724222Z with:
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3724434Z   name: d2-evidence-38501050211-1
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3724723Z   path: evidence/d2/
+verify:d2 (offline, no credentials)	Upload evidence (always)	evidence/d3/offline/
+verify:d2 (offline, no credentials)	Upload evidence (always)	
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3725018Z   retention-days: 14
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3745576Z   if-no-files-found: warn
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3746079Z   compression-level: 6
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3746449Z   overwrite: false
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3746803Z   include-hidden-files: false
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.3747194Z ##[endgroup]
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.5379158Z (node:4103) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.5380071Z (Use `node --trace-deprecation ...` to show where the warning was created)
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.7670196Z Multiple search paths detected. Calculating the least common ancestor of all paths
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.7673579Z The least common ancestor is <home>/work/TreeAI/TreeAI/evidence. This will be the root directory of the artifact
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.7674805Z With the provided path, there will be 838 files uploaded
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.7683494Z Artifact name is valid!
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:33.7684026Z Root directory input is valid!
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:34.1566588Z Beginning upload of artifact content to blob storage
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:34.6863483Z (node:4103) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.4005656Z Uploaded bytes 1094484
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.4788588Z Finished uploading artifact content to blob storage!
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.4789592Z SHA256 digest of uploaded artifact zip is 7b9f7a9667eb8fe1d21d17e07c87337bca9850223f34d78b3ce0b4127d8dc882
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.4791109Z Finalizing artifact upload
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.7968889Z Artifact d2-evidence-38501050211-1.zip successfully finalized. Artifact ID 11865696965
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.7970296Z Artifact d2-evidence-38501050211-1 has been successfully uploaded! Final size is 1094484 bytes. Artifact ID is 11865696965
+verify:d2 (offline, no credentials)	Upload evidence (always)	2026-10-14T02:28:35.7977663Z Artifact download URL: https://github.com/Lortzing/TreeAI/actions/runs/38501050211/artifacts/11865696965
+verify:d2 (offline, no credentials)	Post Set up Node (pinned)	﻿2026-10-14T02:28:35.8220026Z Post job cleanup.
+verify:d2 (offline, no credentials)	Post Set up Node (pinned)	2026-10-14T02:28:35.9415014Z (node:4115) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+verify:d2 (offline, no credentials)	Post Set up Node (pinned)	2026-10-14T02:28:35.9416798Z (Use `node --trace-deprecation ...` to show where the warning was created)
+verify:d2 (offline, no credentials)	Post Set up Node (pinned)	2026-10-14T02:28:35.9419133Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db, not saving cache.
+verify:d2 (offline, no credentials)	Post Check out	﻿2026-10-14T02:28:35.9546688Z Post job cleanup.
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0487598Z [command]/usr/bin/git version
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0535513Z git version 2.55.0
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0581998Z Temporarily overriding HOME='<home>/work/_temp/218329f7-cf95-44be-b6e6-3fbc5180337d' before making global git config changes
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0583885Z Adding repository directory to the temporary git global config as a safe directory
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0586996Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0632304Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.0674873Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.1033025Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.1035990Z http.https://github.com/.extraheader
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.1037857Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+verify:d2 (offline, no credentials)	Post Check out	2026-10-14T02:28:36.1100444Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+verify:d2 (offline, no credentials)	Complete job	﻿2026-10-14T02:28:36.1475132Z Cleaning up orphan processes
+verify:d2 (offline, no credentials)	Complete job	2026-10-14T02:28:36.1860580Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
