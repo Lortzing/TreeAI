@@ -641,6 +641,26 @@ const TERM_SUGGEST_FOLLOW_INTERVAL_MS = 1000;
 
 const $ = (id) => document.getElementById(id);
 
+/* 展示用标题只来自已保存的用户首问，不生成或写入新的产品事实。
+   浏览过的树在本页保留摘要；未读到首问的树仍如实显示身份。 */
+const readingTitles = new Map();
+function questionTitle(view) {
+  const firstQuestion = view?.turns.find((turn) => turn.role === "user");
+  return firstQuestion ? firstQuestion.text.replace(/\s+/g, " ").trim() : "";
+}
+function renderReadingHeading() {
+  const view = branchView(trunkBranchId());
+  const title = questionTitle(view);
+  if (state.currentTreeId !== null && title) readingTitles.set(state.currentTreeId, title);
+  const heading = $("reading-title");
+  if (heading) {
+    heading.textContent = title || "一个问题，无限可能。";
+    heading.title = title;
+  }
+  if ($("forest-count")) $("forest-count").textContent = String(state.trees.length).padStart(2, "0");
+  if ($("branch-count")) $("branch-count").textContent = String(state.treeState?.branches.length ?? 0).padStart(2, "0");
+}
+
 /* ------------------------------ 动效辅助（M7 / reduced-motion） ------------------------------ */
 
 /** W2 §3：JS 侧滚动定位尊重 prefers-reduced-motion（reduce → auto 直接跳转）。 */
@@ -727,7 +747,7 @@ function updateComposerLocks() {
   $("prompt-input").disabled = busy;
   $("prompt-input").placeholder = trunkUnavailable
     ? "Session missing on the Trunk — type the first question of a new exploration, then “Start new exploration”…"
-    : "Ask on the Trunk…";
+    : "继续对话…";
   $("send").disabled = trunkLocked;
   $("new-exploration").hidden = !trunkUnavailable;
   $("new-exploration").disabled = busy;
@@ -737,7 +757,7 @@ function updateComposerLocks() {
   $("panel-prompt-input").disabled = busy;
   $("panel-prompt-input").placeholder = panelUnavailable
     ? "Session missing on this branch — type the first question of a new exploration, then “Start new exploration”…"
-    : "Continue this branch…";
+    : "继续对话…";
   $("panel-send").disabled = panelLocked;
   $("panel-new-exploration").hidden = !panelUnavailable;
   $("panel-new-exploration").disabled = busy;
@@ -758,7 +778,9 @@ function branchView(branchId) {
 
 /** 每分支阅读位置键（W2 §4：切树/切分支后回来恢复原位）。 */
 function scrollKey(branchId) {
-  return `${state.currentTreeId}:${branchId}`;
+  const view = branchView(branchId);
+  const round = view ? currentSessionRound(view).round : null;
+  return `${state.currentTreeId}:${branchId}:${round?.id || "empty"}`;
 }
 
 /** 流式占位 turn 所属的滚动容器（主线 or 面板）。 */
@@ -782,9 +804,12 @@ function renderTrees() {
   for (const tree of state.trees) {
     const li = document.createElement("li");
     const button = document.createElement("button");
+    button.dataset.treeId = tree.id;
     if (tree.id === state.currentTreeId) button.classList.add("active");
     const name = document.createElement("span");
-    name.textContent = tree.id;
+    const summary = readingTitles.get(tree.id);
+    name.textContent = summary || tree.id;
+    button.title = summary ? `${summary}\n${tree.id}` : tree.id;
     const date = document.createElement("span");
     date.className = "tree-date";
     date.textContent = new Date(tree.createdAt).toLocaleString();
@@ -811,8 +836,15 @@ function renderBranchTabs() {
     if (isTrunk) button.classList.add("active");
     else if (view.branch.id === state.panelBranchId) button.classList.add("panel-open");
     const label = document.createElement("span");
-    label.textContent = branchLabel(view.branch.id);
+    label.textContent = isTrunk ? "思考主线 · Trunk" : branchLabel(view.branch.id);
     button.append(label);
+    const summary = questionTitle(view) || view.origin?.selection.text || "";
+    if (summary) {
+      const excerpt = document.createElement("span");
+      excerpt.className = "branch-summary";
+      excerpt.textContent = summary;
+      button.append(excerpt);
+    }
     if (view.origin !== null) {
       const anchorStatus = view.originStatus ?? "unavailable";
       button.title = `branched from ${branchLabel(view.origin.sourceBranchId)} · “${view.origin.selection.text}” · source ${anchorStatus}`;
@@ -844,6 +876,7 @@ function renderBranchTabs() {
        发现：elementFromPoint 于面板输入框命中抽屉遮罩）。 */
     button.addEventListener("click", () => {
       closeSidebar();
+      if (sessionUI.mode !== "chat") setWorkspaceView("chat", view.branch.id);
       if (isTrunk) {
         void guard(() => returnToTrunk(view.branch.id));
       } else {
@@ -860,6 +893,7 @@ function renderBranchTabs() {
     cursor === null
       ? "session: —"
       : `session @ ${branchLabel(cursor.branchId)} · ${cursor.entryId}`;
+  if ($("cursor-note-details")) $("cursor-note-details").textContent = $("cursor-note").textContent;
 }
 
 /* 顶栏位置路径（源设计 §二 顶栏行）：无树 → 空；有树 → `<treeId> / Trunk`；
@@ -870,11 +904,13 @@ function renderTopbarPath() {
   const st = state.treeState;
   if (st === null || state.currentTreeId === null) {
     el.textContent = "";
+    el.title = "";
     return;
   }
   const segments = [state.currentTreeId, branchLabel(st.trunkBranchId)];
   if (state.panelBranchId !== null) segments.push(branchLabel(state.panelBranchId));
   el.textContent = segments.join(" / ");
+  el.title = el.textContent;
 }
 
 /**
@@ -1477,7 +1513,7 @@ function buildTurnActions(turn, branchId) {
 
   const branchButton = document.createElement("button");
   branchButton.className = "branch-here";
-  branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+  branchButton.textContent = armedHere ? "⑃ 从选文展开支线" : "⑃ 从这里展开支线";
   branchHereButtons.set(turn.id, branchButton);
   branchButton.addEventListener("click", () => guard(() => branchFromTurn(turn), view));
 
@@ -1486,7 +1522,7 @@ function buildTurnActions(turn, branchId) {
      回退）。武装态读 state.armedSelection（与工具条同源）。 */
   const explainButton = document.createElement("button");
   explainButton.className = "term-explain";
-  explainButton.textContent = "⌖ Explain selection";
+  explainButton.textContent = "⌖ 解释选文";
   explainButton.disabled = !armedHere;
   explainButton.title =
     "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
@@ -1614,7 +1650,7 @@ function syncTurnActionsArmedState(element, turn, branchId) {
   const armedHere = armed !== null && armed.branchId === branchId && armed.turnId === turn.id;
   const branchButton = actions.querySelector(".branch-here");
   if (branchButton !== null) {
-    branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+    branchButton.textContent = armedHere ? "⑃ 从选文展开支线" : "⑃ 从这里展开支线";
   }
   const explainButton = actions.querySelector(".term-explain");
   if (explainButton !== null) explainButton.disabled = !armedHere;
@@ -1886,6 +1922,10 @@ function reconcileTopLevel(container, desired) {
  * 直接落底（自然的阅读起点，非强制拉动）。
  */
 function renderTurnsInto(container, view, branchId, stick) {
+  const page = currentSessionRound(view);
+  view = { ...view, turns: page.round ? [...page.round.turns, ...page.round.returns] : page.unattached };
+  if (page.round) container.dataset.episodeId = page.round.id;
+  else delete container.dataset.episodeId;
   const st = state.treeState;
   /* 贴底判定取重渲前实况（结构变更会改变 scrollHeight）。 */
   const wasAtBottom = isAtBottom(container);
@@ -1960,7 +2000,7 @@ function renderTurnsInto(container, view, branchId, stick) {
   /* P1 流式占位回显：在途 run 位于本视图分支时追加瞬态占位 turn
      （run-terminal 后由 /state 权威刷新取代）。 */
   const streaming = state.streaming;
-  if (streaming !== null && streaming.branchId === branchId) {
+  if (streaming !== null && streaming.branchId === branchId && (!page.round || page.index === page.rounds.length - 1)) {
     desired.push(streamingPlaceholder(streaming.text));
   }
 
@@ -2102,6 +2142,7 @@ function renderAll(opts = {}) {
   /* 无树打开 → 无源可溯：来源抽屉入口（顶栏）直接隐藏，优于必然为空的
      诚实空态；有树后随 renderAll 恢复。 */
   $("source-drawer-toggle").hidden = !hasTree;
+  renderReadingHeading();
   renderTopbarPath();
   if (hasTree) {
     renderBranchTabs();
@@ -2122,6 +2163,341 @@ function renderAll(opts = {}) {
      路径行/命中列表由 D4-8 函数独占管理（虚拟化窗口与焦点不随整树重渲
      重建）。 */
   renderNavSection();
+  renderSessionWorkspace();
+}
+
+/* ------------------------------ Session 对话与关系 ------------------------------
+ * Session 是产品层一条可继续的探索（Branch），不是 Pi 的物理会话文件。
+ * Episode 是已有契约中的对话单元，可含多次 Run / 多条用户与模型消息。
+ * 轮次按 Episode 投影保存事实；翻页不调用模型、不新增 Turn。
+ */
+const sessionUI = { mode: "chat", treeId: null, branchId: null, zoom: 1, signature: "", rounds: new Map(), followBranchId: null };
+const SESSION_GRAPH_LIMIT = 120;
+
+function sessionRounds(view) {
+  const rounds = [];
+  const groups = new Map();
+  const turnRounds = new Map();
+  for (const turn of view.turns) {
+    if (turn.role === "return") continue;
+    // 旧记录没有 Episode 时保守使用 Run / Turn 身份，绝不猜测消息配对。
+    const id = turn.episodeId || turn.runId || turn.id;
+    let round = groups.get(id);
+    if (!round) {
+      round = { id, turns: [], returns: [], createdAt: turn.createdAt, runs: new Set() };
+      groups.set(id, round);
+      rounds.push(round);
+    }
+    round.turns.push(turn);
+    if (turn.runId) round.runs.add(turn.runId);
+    turnRounds.set(turn.id, round);
+  }
+  const unattached = [];
+  for (const turn of view.turns) {
+    if (turn.role !== "return") continue;
+    const anchored = turn.targetAnchor ? turnRounds.get(turn.targetAnchor.anchorTurnId) : null;
+    const previous = [...rounds].reverse().find((round) => round.createdAt <= turn.createdAt);
+    const round = anchored || previous;
+    if (round) round.returns.push(turn);
+    else unattached.push(turn);
+  }
+  return { rounds, unattached };
+}
+
+function sessionName(view) {
+  return questionTitle(view) || view.origin?.selection.text || (view.branch.id === trunkBranchId() ? "还未提问的主线" : "还未开始的探索");
+}
+
+function workspaceElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+
+function workspaceButton(label, className, action) {
+  const button = workspaceElement("button", className, label);
+  button.type = "button";
+  button.addEventListener("click", action);
+  return button;
+}
+
+function animateSessionSurface(target, origin) {
+  if (!target || !origin || prefersReducedMotion() || typeof target.animate !== "function") return;
+  const destination = target.getBoundingClientRect();
+  if (!origin.width || !origin.height || !destination.width || !destination.height) return;
+  target.style.animation = "none";
+  const animation = target.animate([
+    { transformOrigin: "top left", transform: `translate(${origin.left - destination.left}px, ${origin.top - destination.top}px) scale(${origin.width / destination.width}, ${origin.height / destination.height})`, opacity: .45 },
+    { transformOrigin: "top left", transform: "translate(0, 0) scale(1, 1)", opacity: 1 },
+  ], { duration: 420, easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
+  animation.onfinish = () => animation.cancel();
+}
+
+function roundKey(view) { return `${state.currentTreeId}:${view.branch.id}`; }
+
+function currentSessionRound(view) {
+  const model = sessionRounds(view);
+  const key = roundKey(view);
+  let round = model.rounds.find((item) => item.id === sessionUI.rounds.get(key));
+  if (!round || sessionUI.followBranchId === view.branch.id) round = model.rounds[model.rounds.length - 1];
+  if (round) sessionUI.rounds.set(key, round.id);
+  return { ...model, round, index: model.rounds.indexOf(round) };
+}
+
+function selectRoundForTurn(turnId) {
+  const found = findTurnById(turnId);
+  if (!found) return;
+  const round = sessionRounds(found.view).rounds.find((item) => [...item.turns, ...item.returns].some((turn) => turn.id === turnId));
+  if (round && sessionUI.rounds.get(roundKey(found.view)) !== round.id) {
+    sessionUI.rounds.set(roundKey(found.view), round.id);
+    return true;
+  }
+  return false;
+}
+
+function setWorkspaceView(mode, branchId, originRect, focus = true) {
+  if (!["chat", "map"].includes(mode)) return;
+  if (state.drawerOpen) closeDrawer();
+  closeSidebar();
+  sessionUI.branchId = branchId || state.panelBranchId || trunkBranchId();
+  sessionUI.mode = mode;
+  sessionUI.signature = "";
+  renderSessionWorkspace();
+  if (!focus) return;
+  if (mode === "chat") {
+    if (state.treeState) focusComposerWhenSelectable($(state.panelBranchId ? "panel-prompt-input" : "prompt-input"));
+    else $("empty-new-tree").focus();
+  } else $("session-workspace").focus({ preventScroll: true });
+}
+
+function renderRoundNavigation() {
+  const root = $("round-navigation");
+  if (!root) return;
+  root.hidden = !state.treeState || sessionUI.mode !== "chat";
+  const view = branchView(state.panelBranchId || trunkBranchId());
+  if (!view) return;
+  const { round, rounds, index } = currentSessionRound(view);
+  $("round-previous").disabled = index <= 0;
+  $("round-next").disabled = index < 0 || index >= rounds.length - 1;
+  $("round-position").textContent = round ? `${String(index + 1).padStart(2, "0")} / ${String(rounds.length).padStart(2, "0")}` : "00 / 00";
+  for (const id of ["main-reading-content", "branch-panel"]) {
+    const card = $(id);
+    card.classList.toggle("has-history", rounds.length > 1);
+    card.classList.toggle("has-more-history", rounds.length > 2);
+  }
+}
+
+function renderSessionWorkspace() {
+  const root = $("session-workspace");
+  if (!root) return; // 独立功能测试中的最小旧骨架仍可运行。
+  const st = state.treeState;
+  const treeId = state.currentTreeId;
+  if (sessionUI.treeId !== treeId) {
+    sessionUI.treeId = treeId;
+    sessionUI.branchId = st?.trunkBranchId ?? null;
+    sessionUI.signature = "";
+    sessionUI.zoom = 1;
+  }
+  if (st && !st.branches.some((view) => view.branch.id === sessionUI.branchId)) {
+    sessionUI.branchId = st.trunkBranchId;
+  }
+  $("main").dataset.workspaceView = sessionUI.mode;
+  for (const mode of ["chat", "map"]) {
+    const button = $("mode-" + mode);
+    button?.classList.toggle("active", sessionUI.mode === mode);
+    button?.setAttribute("aria-pressed", String(sessionUI.mode === mode));
+  }
+  const alternate = sessionUI.mode !== "chat";
+  if (alternate && treeId) {
+    const context = "Session 关系";
+    $("topbar-path").textContent = `${readingTitles.get(treeId) || treeId} / ${context}`;
+    $("topbar-path").title = `${treeId} / ${context}`;
+  } else {
+    renderTopbarPath();
+  }
+  root.hidden = !alternate;
+  for (const id of ["tree-view", "empty-state"]) {
+    const underlying = $(id);
+    if (alternate) {
+      underlying.setAttribute("inert", "");
+      underlying.setAttribute("aria-hidden", "true");
+    } else {
+      underlying.removeAttribute("inert");
+      underlying.removeAttribute("aria-hidden");
+    }
+  }
+  renderRoundNavigation();
+  if (!alternate) return;
+  const signature = JSON.stringify([sessionUI.mode, treeId, sessionUI.branchId, sessionUI.zoom,
+    st?.branches.map((view) => [view.branch.id, view.branch.parentBranchId, view.sessionAvailability,
+      view.origin, view.turns.map((turn) => [turn.id, turn.episodeId, turn.role, turn.text, turn.deliveredRunId])])]);
+  if (signature === sessionUI.signature) return;
+  sessionUI.signature = signature;
+  const focused = document.activeElement;
+  const focusId = focused?.id;
+  const previousScroll = root.querySelector(".session-map-scroll");
+  const savedScroll = previousScroll ? { top: previousScroll.scrollTop, left: previousScroll.scrollLeft } : null;
+  root.replaceChildren();
+  if (!st) {
+    const empty = workspaceElement("div", "session-view-empty");
+    empty.append(workspaceElement("h1", "", "暂无 Session"), workspaceButton("＋ 新建思考树", "primary", () => guard(createTree)));
+    root.append(empty);
+  } else renderSessionMap(root, st, savedScroll);
+  if (focusId && focused !== document.body && !document.body.contains?.(focused)) {
+    const replacement = $(focusId);
+    if (replacement) replacement.focus({ preventScroll: true });
+    else root.focus({ preventScroll: true });
+  }
+}
+
+function sessionViewHeading(root, eyebrow, title, description) {
+  const heading = workspaceElement("header", "session-view-heading");
+  heading.append(workspaceElement("h1", "", title));
+  root.append(heading);
+  return heading;
+}
+
+function renderSessionMap(root, st, savedScroll) {
+  const heading = sessionViewHeading(root, "", "Session 关系", "");
+  const tools = workspaceElement("div", "session-map-tools");
+  tools.append(workspaceElement("span", "", `${st.branches.length} 个 Session · 当前思考树`));
+  const zoomGroup = workspaceElement("div", "map-zoom");
+  const zoom = (amount) => {
+    sessionUI.zoom = Math.min(1.25, Math.max(.5, Math.round((sessionUI.zoom + amount) * 100) / 100));
+    renderSessionWorkspace();
+  };
+  const zoomOut = workspaceButton("−", "", () => zoom(-.15));
+  zoomOut.id = "session-zoom-out";
+  zoomOut.setAttribute("aria-label", "缩小 Session 关系图");
+  zoomOut.disabled = sessionUI.zoom <= .5;
+  const zoomIn = workspaceButton("＋", "", () => zoom(.15));
+  zoomIn.id = "session-zoom-in";
+  zoomIn.setAttribute("aria-label", "放大 Session 关系图");
+  zoomIn.disabled = sessionUI.zoom >= 1.25;
+  const reset = workspaceButton("重置", "", () => { sessionUI.zoom = 1; renderSessionWorkspace(); });
+  reset.id = "session-zoom-reset";
+  zoomGroup.append(zoomOut, workspaceElement("span", "", `${Math.round(sessionUI.zoom * 100)}%`), zoomIn, reset);
+  tools.append(zoomGroup);
+  root.append(tools);
+  // 按实际父子关系做横向布局；限制可视图节点，规模导航仍由既有按需加载树承担。
+  const shown = st.branches.slice(0, SESSION_GRAPH_LIMIT);
+  const byId = new Map(shown.map((view) => [view.branch.id, view]));
+  const children = new Map(shown.map((view) => [view.branch.id, []]));
+  const roots = [];
+  for (const view of shown) {
+    const parent = view.branch.parentBranchId;
+    if (parent && byId.has(parent) && parent !== view.branch.id) children.get(parent).push(view.branch.id);
+    else roots.push(view.branch.id);
+  }
+  const positions = new Map();
+  const visited = new Set();
+  let row = 0;
+  let maxDepth = 0;
+  function place(id, depth) {
+    if (visited.has(id)) return null;
+    visited.add(id);
+    maxDepth = Math.max(maxDepth, depth);
+    const childRows = children.get(id).map((child) => place(child, depth + 1)).filter((value) => value !== null);
+    const y = childRows.length ? (childRows[0] + childRows[childRows.length - 1]) / 2 : row++ * 220 + 105;
+    positions.set(id, { x: 48 + depth * 310, y });
+    return y;
+  }
+  roots.forEach((id) => place(id, 0));
+  shown.filter((view) => !visited.has(view.branch.id)).forEach((view) => place(view.branch.id, 0));
+  const width = Math.max(650, 360 + maxDepth * 310);
+  const height = Math.max(460, row * 220 + 80);
+  const scroller = workspaceElement("div", "session-map-scroll");
+  scroller.setAttribute("aria-label", "Session 关系图；滚动查看，点击卡片组进入轮次");
+  const canvas = workspaceElement("div", "session-map-canvas");
+  canvas.setAttribute("style", `width:${width * sessionUI.zoom}px;height:${height * sessionUI.zoom}px`);
+  const layer = workspaceElement("div", "session-map-layer");
+  layer.setAttribute("style", `width:${width}px;height:${height}px;transform:scale(${sessionUI.zoom})`);
+  // SVG 只画关系；可访问、可键盘操作的 Session 仍是原生 HTML 按钮。
+  if (typeof document.createElementNS === "function") {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.setAttribute("aria-hidden", "true");
+    svg.classList.add("session-connectors");
+    for (const view of shown) {
+      const child = positions.get(view.branch.id);
+      const parent = positions.get(view.branch.parentBranchId);
+      if (!parent || !child || child.x <= parent.x) continue;
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const x1 = parent.x + 222, x2 = child.x;
+      path.setAttribute("d", `M ${x1} ${parent.y + 72} C ${x1 + 48} ${parent.y + 72}, ${x2 - 48} ${child.y + 72}, ${x2} ${child.y + 72}`);
+      svg.append(path);
+    }
+    layer.append(svg);
+  }
+  for (const view of shown) {
+    const id = view.branch.id;
+    const position = positions.get(id);
+    const { rounds } = sessionRounds(view);
+    const selected = id === sessionUI.branchId;
+    const node = workspaceButton("", "session-stack" + (selected ? " selected" : ""), () => void guard(() => openSessionRound(id, node.getBoundingClientRect?.())));
+    if (rounds.length > 1) node.classList.add("stack-double");
+    if (rounds.length > 2) node.classList.add("stack-multiple");
+    node.dataset.sessionId = id;
+    node.dataset.parentSessionId = view.branch.parentBranchId || "";
+    node.setAttribute("style", `left:${position.x}px;top:${position.y}px`);
+    node.setAttribute("aria-label", `${sessionName(view)}，${rounds.length} 轮对话，打开 Session 卡片`);
+    node.setAttribute("aria-pressed", String(selected));
+    const face = workspaceElement("span", "stack-face");
+    face.append(workspaceElement("span", "stack-kind", id === st.trunkBranchId ? "主线 SESSION" : "探索 SESSION"),
+      workspaceElement("strong", "stack-title", sessionName(view)),
+      workspaceElement("span", "stack-meta", `${String(rounds.length).padStart(2, "0")} 轮对话${view.sessionAvailability === "unavailable" ? " · 原执行会话不可用" : ""}`));
+    node.append(face);
+    node.title = `${id}\n${sessionName(view)}${view.origin ? `\n来源：${view.origin.selection.text}` : ""}`;
+    layer.append(node);
+  }
+  canvas.append(layer);
+  scroller.append(canvas);
+  root.append(scroller);
+  const foot = workspaceElement("footer", "session-view-foot");
+
+  if (st.branches.length > shown.length) {
+    foot.append(workspaceButton(`仅展示前 ${shown.length} 个 · 打开深度导航`, "session-text-button", () => {
+      setWorkspaceView("chat");
+      $("nav-section").open = true;
+      document.body.classList.add("sidebar-open");
+      $("sidebar-toggle").setAttribute("aria-expanded", "true");
+      $("nav-tree-search").focus();
+    }));
+  }
+  root.append(foot);
+  if (savedScroll) { scroller.scrollTop = savedScroll.top; scroller.scrollLeft = savedScroll.left; }
+}
+
+function moveSessionRound(delta) {
+  const view = branchView(state.panelBranchId || trunkBranchId());
+  if (!view || sessionUI.mode !== "chat") return;
+  const { rounds, index: current } = currentSessionRound(view);
+  const index = Math.max(0, Math.min(rounds.length - 1, current + delta));
+  if (!rounds[index] || index === current) return;
+  sessionUI.followBranchId = null;
+  sessionUI.rounds.set(roundKey(view), rounds[index].id);
+  renderAll();
+  const container = $(state.panelBranchId ? "panel-conversation" : "conversation");
+  container.scrollTop = 0;
+  const card = $(state.panelBranchId ? "branch-panel" : "main-reading-content");
+  if (!prefersReducedMotion() && typeof card.animate === "function") card.animate([
+    { opacity: .35, transform: `translateX(${delta > 0 ? 24 : -24}px)` },
+    { opacity: 1, transform: "translateX(0)" },
+  ], { duration: 280, easing: "cubic-bezier(.22,1,.36,1)" });
+}
+
+async function openSessionRound(branchId, originRect) {
+  setWorkspaceView("chat", branchId, undefined, false);
+  if (state.materialReader !== null) closeMaterialReader();
+  if (branchId === trunkBranchId()) {
+    if (state.panelBranchId !== null) await closePanel({ focus: "none" });
+  } else if (state.panelBranchId !== branchId) {
+    await openBranchPanel(branchId, { trigger: { kind: "element", element: $("mode-map") } });
+  }
+  renderAll();
+  animateSessionSurface($(state.panelBranchId ? "branch-panel" : "main-reading-content"), originRect);
 }
 
 /* ------------------------------ Return 草稿（持久化） ------------------------------ */
@@ -2519,6 +2895,11 @@ function updateStreamingPlaceholder() {
   const visible =
     streaming.branchId === trunkBranchId() || streaming.branchId === state.panelBranchId;
   if (!visible) return;
+  const view = branchView(streaming.branchId);
+  if (view) {
+    const page = currentSessionRound(view);
+    if (page.round && page.index !== page.rounds.length - 1) return;
+  }
   let node = document.getElementById("streaming-turn");
   const containerId = conversationContainerId(streaming.branchId);
   if (node === null || node.parentElement === null || node.parentElement.id !== containerId) {
@@ -2683,6 +3064,10 @@ function focusComposerWhenSelectable(el) {
 
 /** 揭示到位：滚动到锚点 turn 并把焦点移过去（W2 §2.6）。 */
 function revealAnchorTurn(turnId) {
+  if (selectRoundForTurn(turnId)) renderAll();
+  if (state.materialReader !== null && findTurnById(turnId)?.view.branch.id === trunkBranchId()) {
+    closeMaterialReader();
+  }
   const el = turnElements.get(turnId);
   if (el === undefined) return;
   if (typeof el.scrollIntoView === "function") {
@@ -2923,6 +3308,8 @@ async function openBranchPanel(branchId, opts = {}) {
  */
 async function closePanel(opts = {}) {
   if (state.panelBranchId === null) return;
+  /* 中央材料阅读面覆盖主线：回程必须显露收获和真实的主线焦点。 */
+  if (state.materialReader !== null) closeMaterialReader();
   state.panelBranchId = null;
   state.forcePanelSessionNote = false;
   hidePanel();
@@ -2954,6 +3341,7 @@ async function closePanel(opts = {}) {
 
 /** Trunk tab：收面板回主线；已在主线时重复点击仍对齐游标（旧行为）。 */
 async function returnToTrunk(trunkId) {
+  if (state.materialReader !== null) closeMaterialReader();
   if (state.panelBranchId !== null) {
     await closePanel({ focus: { kind: "tab", branchId: trunkId } });
     return;
@@ -3000,6 +3388,7 @@ async function revealOrigin(branchId) {
     $("panel-anchor-context").focus();
     return;
   }
+  selectRoundForTurn(payload.source.anchorTurnId);
   state.sourceHighlight = {
     branchId: payload.source.sourceBranchId,
     turnId: payload.source.anchorTurnId,
@@ -3012,7 +3401,11 @@ async function revealOrigin(branchId) {
       ? `${navigation.code}: ${navigation.message}`
       : null;
   if (payload.source.sourceBranchId === trunkBranchId()) {
-    renderAll();
+    /* 中小窗口的支线覆盖主线；揭示原文时先收起覆盖层，避免把高亮
+       和焦点留在面板后面。来源请求已完成导航，不重复发送 /switch。 */
+    if (state.panelBranchId !== null) {
+      await closePanel({ focus: "none", skipSwitch: true });
+    } else renderAll();
     revealAnchorTurn(payload.source.anchorTurnId);
     if (navigationFailed !== null) {
       showError(
@@ -3054,6 +3447,7 @@ async function sendPrompt(viewKind) {
   const input = $(isPanel ? "panel-prompt-input" : "prompt-input");
   const text = input.value;
   if (branchId === null || text.trim() === "") return;
+  sessionUI.followBranchId = branchId;
   if (!sseHealthy) startDiagnosticsPolling();
   let promptError = null;
   try {
@@ -3090,6 +3484,7 @@ async function sendPrompt(viewKind) {
   /* 终局渲染（所有收尾路径共用）：清掉流式占位、呈现恢复横幅与最终树态。
      失败路径的诊断面刷新尽力而为——刷新失败不得掩盖原始 prompt 错误。 */
   renderAll({ stick: branchId });
+  sessionUI.followBranchId = null;
   if (promptError === null) {
     await refreshDiagnostics();
     focusComposerWhenSelectable(input);
@@ -3369,6 +3764,7 @@ async function submitReturn() {
      重复提交），主线横幅如实告知「已保存，返回主线失败」+ 重新导航
      指引；navigated / no-session → 按既有语义收尾（客户端游标对齐失败
      仍呈现在主线横幅——可见面，不吞错，也不把已成功的提交伪装成失败）。 */
+  if (submittedTurnId !== null) selectRoundForTurn(submittedTurnId);
   if (navigation !== null && navigation.status === "failed") {
     await closePanel({ focus: "main-input", skipSwitch: true });
     showError(
@@ -4680,6 +5076,8 @@ function renderMaterialsSection() {
   }
   section.hidden = false;
   const materials = state.materials;
+  const count = $("reading-material-count");
+  if (count) count.textContent = materials === null ? "…" : materials.ok ? String(materials.materials.length) : "!";
   if (materials === null) {
     list.replaceChildren(mutedListItem("loading materials…"));
     return;
@@ -4702,8 +5100,7 @@ function renderMaterialsSection() {
   if (materials.materials.length === 0) {
     list.replaceChildren(
       mutedListItem(
-        "no materials linked to this tree yet — import a .md, .markdown or .pdf file with the import entry above; " +
-          "imported materials appear here",
+        "导入 PDF 或 Markdown，围绕自己的材料展开思考。",
       ),
     );
     return;
@@ -4722,6 +5119,7 @@ function renderMaterialsSection() {
     button.title = `open ${entry.material.title} in the material reader`;
     button.addEventListener("click", () => {
       closeSidebar(); /* 窄窗：选材料后收起侧栏抽屉（与树选择同一纪律） */
+      if (sessionUI.mode !== "chat") setWorkspaceView("chat");
       void openMaterial(entry.material.id, {
         trigger: { kind: "material-button", materialId: entry.material.id },
       });
@@ -8277,6 +8675,17 @@ function navReplaceList(list, elements, registry) {
 /** 树查找面渲染（finder 数据变化时调用；renderAll 不重建本面）。 */
 function renderNavFinder() {
   const finder = state.nav.finder;
+  if (finder.phase === "loaded") {
+    let changed = false;
+    const summaries = finder.mode === "listing" ? finder.listing.trees : finder.hits;
+    for (const tree of summaries) {
+      if (tree.title && readingTitles.get(tree.treeId) !== tree.title) {
+        readingTitles.set(tree.treeId, tree.title);
+        changed = true;
+      }
+    }
+    if (changed) renderTrees();
+  }
   const list = $("nav-tree-results");
   const note = $("nav-tree-find-note");
   navFinderButtons.clear();
@@ -9479,7 +9888,76 @@ $("sidebar-toggle").addEventListener("click", () => {
   $("sidebar-toggle").setAttribute("aria-expanded", open ? "true" : "false");
 });
 
+/* 真实搜索表单仍在原位；只展开 disclosure，不复制表单或重置筛选。 */
+function focusThoughtSearch() {
+  const section = $("search-section");
+  section.open = true;
+  $("search-shortcut")?.setAttribute("aria-expanded", "true");
+  document.body.classList.add("sidebar-open");
+  $("sidebar-toggle").setAttribute("aria-expanded", "true");
+  $("search-input").focus();
+  section.scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
+}
+$("search-shortcut")?.addEventListener("click", focusThoughtSearch);
+$("search-section").addEventListener("toggle", () => {
+  $("search-shortcut")?.setAttribute("aria-expanded", $("search-section").open ? "true" : "false");
+});
+$("reading-materials")?.addEventListener("click", () => {
+  if (state.materialReader !== null) {
+    $("material-reader").focus();
+    return;
+  }
+  if (state.materials?.ok && state.materials.materials.length === 1) {
+    void openMaterial(state.materials.materials[0].material.id, {
+      trigger: { kind: "element", element: $("reading-materials") },
+    });
+    return;
+  }
+  document.body.classList.add("sidebar-open");
+  $("sidebar-toggle").setAttribute("aria-expanded", "true");
+  $("material-import").focus();
+  $("materials-section").scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
+});
+$("reading-trunk")?.addEventListener("click", () => {
+  closeMaterialReader();
+  $("prompt-input").focus();
+});
+document.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+    event.preventDefault();
+    focusThoughtSearch();
+  }
+});
+
 /* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
+
+for (const mode of ["chat", "map"]) {
+  $("mode-" + mode)?.addEventListener("click", () => setWorkspaceView(mode));
+}
+$("view-map-entry")?.addEventListener("click", () => setWorkspaceView("map"));
+$("round-previous")?.addEventListener("click", () => moveSessionRound(-1));
+$("round-next")?.addEventListener("click", () => moveSessionRound(1));
+document.addEventListener("keydown", (event) => {
+  if (sessionUI.mode !== "chat" || state.drawerOpen || state.materialReader !== null || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (["SELECT", "INPUT", "TEXTAREA", "BUTTON"].includes(event.target?.tagName) || event.target?.isContentEditable) return;
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    event.preventDefault();
+    moveSessionRound(event.key === "ArrowLeft" ? -1 : 1);
+  }
+});
+for (const id of ["conversation", "panel-conversation"]) {
+  let touch = null;
+  $(id).addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch") touch = { x: event.clientX, y: event.clientY };
+  });
+  $(id).addEventListener("pointerup", (event) => {
+    if (!touch) return;
+    const dx = event.clientX - touch.x, dy = event.clientY - touch.y;
+    touch = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5 && !window.getSelection()?.toString()) moveSessionRound(dx < 0 ? 1 : -1);
+  });
+  $(id).addEventListener("pointercancel", () => { touch = null; });
+}
 
 $("conversation").addEventListener("scroll", () => {
   const trunk = trunkBranchId();
@@ -9604,6 +10082,11 @@ document.addEventListener("keydown", (event) => {
   if (state.drawerOpen) {
     event.preventDefault();
     closeDrawer();
+    return;
+  }
+  if (sessionUI.mode !== "chat") {
+    event.preventDefault();
+    setWorkspaceView("chat");
     return;
   }
   if (state.materialReader !== null) {

@@ -2676,7 +2676,7 @@ test("P1 stale read-model race: tree A's late terminology response never lands w
 
   /* A 的读模型在途时切到树 B（B 自身读模型为空）。 */
   const treeButton = (treeId: string): StubElement => {
-    const found = world.el("tree-list").querySelectorAll("button").find((b) => b.textContent.startsWith(treeId));
+    const found = world.el("tree-list").querySelectorAll("button").find((b) => b.dataset.treeId === treeId);
     assert.ok(found !== undefined, `the sidebar lists ${treeId}`);
     return found;
   };

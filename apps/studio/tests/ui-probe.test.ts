@@ -1693,8 +1693,8 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   }
 
   /* 输入面契约：placeholder / aria-label。 */
-  assert.equal(world.el("prompt-input").getAttribute("placeholder"), "Ask on the Trunk…");
-  assert.equal(world.el("panel-prompt-input").getAttribute("placeholder"), "Continue this branch…");
+  assert.equal(world.el("prompt-input").getAttribute("placeholder"), "继续对话…");
+  assert.equal(world.el("panel-prompt-input").getAttribute("placeholder"), "继续对话…");
   assert.equal(world.el("return-input").getAttribute("aria-label"), "Return draft");
 
   /* §2.4 冲突/失败提示可 Tab 触达并朗读（issue #6 P1）：两横幅 role=alert
@@ -1743,6 +1743,131 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   const caret = placeholder.querySelector(".streaming-caret");
   assert.ok(caret !== null, "streaming placeholder carries the caret indicator");
   assert.equal(caret.textContent, " ▍ streaming…");
+});
+
+test("thought search shortcut preserves the current query and draft without creating product facts", async () => {
+  const world = await createWorld();
+  const search = world.el("search-input");
+  const prompt = world.el("prompt-input");
+  search.value = "saved feedback";
+  prompt.value = "An unfinished thought";
+  const requestsBefore = world.backend.requests.length;
+  world.el("search-shortcut").click();
+  assert.equal(world.document.activeElement, search, "the shortcut focuses the existing search field");
+  assert.equal(search.value, "saved feedback", "the existing query survives navigation");
+  assert.equal(prompt.value, "An unfinished thought", "the trunk draft survives navigation");
+  assert.equal(world.el("search-shortcut").getAttribute("aria-expanded"), "true");
+  assert.equal(world.backend.requests.length, requestsBefore, "opening search dispatches no request or new turn");
+});
+
+test("Session map opens the real paged dialogue and preserves drafts", async () => {
+  const world = await createWorld({ twoBranches: true });
+  world.el("prompt-input").value = "Unsubmitted trunk thought";
+  const prompts = world.requestsOf("/prompt").length;
+  world.el("mode-map").click();
+  const stacks = world.el("session-workspace").querySelectorAll(".session-stack");
+  assert.equal(stacks.length, 3);
+  assert.equal(stacks.find((node) => node.dataset.sessionId === "branch-2")!.dataset.parentSessionId, "trunk-1");
+  stacks.find((node) => node.dataset.sessionId === "branch-2")!.click();
+  await settle();
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+  assert.equal(world.el("session-workspace").hidden, true);
+  assert.ok(world.el("panel-conversation").textContent.includes(B2_R1_TEXT));
+  assert.ok(!world.el("panel-conversation").textContent.includes(B1_R1_TEXT));
+  assert.equal(world.el("panel-prompt-input").disabled, false, "the round itself is an editable conversation surface");
+  assert.equal(world.el("prompt-input").value, "Unsubmitted trunk thought");
+  assert.equal(world.requestsOf("/prompt").length, prompts, "navigation never starts a model run");
+});
+
+test("Paged dialogue groups multi-run Episodes and filters canonical turns to exactly one round", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  assert.equal(world.el("round-next").disabled, true);
+  assert.ok(world.turnElement("conversation", "a1"));
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  const extra = [
+    makeTurn("round2-u", "trunk-1", "user", "Second episode question", { runId: "multi-run-a" }),
+    makeTurn("round2-a", "trunk-1", "assistant", "First execution in same episode", { runId: "multi-run-a" }),
+    makeTurn("round2-steer", "trunk-1", "user", "Steering in same episode", { runId: "multi-run-b" }),
+    makeTurn("round2-final", "trunk-1", "assistant", "Second execution in same episode", { runId: "multi-run-b" }),
+  ];
+  for (const turn of extra) turn.episodeId = "episode-2";
+  trunk.turns.push(...extra);
+  world.liveSse().emit("run-terminal", { runId: "multi-run-b", branchId: "trunk-1" });
+  await settle(30);
+  assert.equal(world.el("round-next").disabled, false);
+  world.el("round-next").click();
+  assert.equal(world.el("conversation").dataset.episodeId, "episode-2");
+  assert.equal(world.el("conversation").querySelectorAll(".turn").length, 4, "multiple runs stay on one round page");
+  assert.equal(world.el("conversation").querySelectorAll(".turn").some((node) => node.dataset.turnId === "a1"), false);
+  assert.equal(world.el("round-next").disabled, true);
+  world.document.dispatchEvent("keydown", { key: "ArrowLeft" });
+  assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
+  assert.ok(world.turnElement("conversation", "a1"));
+  assert.equal(world.el("round-previous").disabled, true);
+  assert.ok(world.el("conversation").querySelectorAll(".turn").some((node) => node.classList.contains("return")), "anchored harvest returns with its round");
+});
+
+test("Source reveal opens the older round containing the anchor", async () => {
+  const world = await createWorld();
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  for (const turn of trunk.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "episode-later";
+  world.liveSse().emit("run-terminal", { runId: "later-round" });
+  await settle(30);
+  world.el("round-next").click();
+  assert.equal(world.el("conversation").dataset.episodeId, "episode-later");
+  world.tabButton("branch-1")!.click();
+  await settle();
+  world.el("panel-view-source").click();
+  await settle(250);
+  assert.equal(world.el("branch-panel").hidden, true);
+  assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
+  assert.ok(world.turnElement("conversation", "a1").querySelector(".source-highlight"));
+});
+
+test("Session map Escape returns to the same conversation and retains the Return draft", async () => {
+  const world = await createWorld();
+  world.tabButton("branch-1")!.click();
+  await settle();
+  world.el("return-input").value = "Keep this Return draft";
+  world.el("return-input").dispatchEvent("input", {});
+  const before = world.requestsOf("/switch").length;
+  world.el("mode-map").click();
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+  assert.equal(world.el("branch-panel").hidden, false);
+  assert.equal(world.el("return-input").value, "Keep this Return draft");
+  assert.equal(world.requestsOf("/switch").length, before);
+});
+
+test("Session graph limits rendered groups and empty Sessions have no invented dialogue rounds", async () => {
+  const world = await createWorld();
+  for (let i = 0; i < 130; i += 1) {
+    world.backend.treeState.branches.push(makeBranchView({ id: `extra-${i}`, treeId: TREE, parentBranchId: "trunk-1", createdAt: ISO }, null, "available", []));
+  }
+  world.liveSse().emit("run-terminal", { runId: "scale-check" });
+  await settle(30);
+  world.el("mode-map").click();
+  const stacks = world.el("session-workspace").querySelectorAll(".session-stack");
+  assert.equal(stacks.length, 120);
+  assert.ok(world.el("session-workspace").textContent.includes("仅展示前 120 个"));
+  stacks.find((node) => node.dataset.sessionId === "extra-0")!.click();
+  await settle();
+  assert.equal(world.el("round-previous").disabled, true);
+  assert.equal(world.el("round-next").disabled, true);
+  assert.equal(world.el("round-position").textContent, "00 / 00");
+  assert.equal(world.el("panel-conversation").querySelectorAll(".turn").length, 0);
+});
+
+test("Session map without a tree shows a creation action and creates nothing during browsing", async () => {
+  const world = await createWorld({ noTrees: true });
+  const before = world.backend.requests.filter((request) => request.method === "POST").length;
+  world.el("mode-map").click();
+  assert.equal(world.el("session-workspace").querySelectorAll(".session-stack").length, 0);
+  assert.ok(world.el("session-workspace").textContent.includes("新建思考树"));
+  world.el("mode-chat").click();
+  assert.equal(world.el("empty-state").hidden, false);
+  assert.equal(world.el("round-navigation").hidden, true);
+  assert.equal(world.backend.requests.filter((request) => request.method === "POST").length, before);
 });
 
 /* ------------------------------------------------------------------ */
@@ -2433,10 +2558,10 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   const a1 = world.turnElement("conversation", "a1");
   const a1Button = a1.querySelector(".branch-here");
   assert.ok(a1Button !== null, "assistant turns carry the branch affordance");
-  assert.equal(a1Button.textContent, "⑃ Branch from here");
+  assert.equal(a1Button.textContent, "⑃ 从这里展开支线");
   a1.dispatchEvent("mouseup", {});
   assert.ok(!a1.classList.contains("has-selection"), "no selection: the whole-answer affordance stays");
-  assert.equal(a1Button.textContent, "⑃ Branch from here");
+  assert.equal(a1Button.textContent, "⑃ 从这里展开支线");
 
   /* 选区属于另一条 turn → 不武装本 turn 的入口（真实 contains 守卫）。 */
   const a2Early = world.turnElement("conversation", "a2");
@@ -2492,7 +2617,7 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   assert.ok(a2.classList.contains("has-selection"), "mouseup arms the selection state");
   const a2Button = a2.querySelector(".branch-here");
   assert.ok(a2Button !== null);
-  assert.equal(a2Button.textContent, "⑃ Branch from selection", "the affordance switches to the selection form");
+  assert.equal(a2Button.textContent, "⑃ 从选文展开支线", "the affordance switches to the selection form");
   a2Button.click();
   await settle();
   const selPost = world.lastRequest("/branches");
@@ -2539,7 +2664,10 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
     { block: "center", behavior: "smooth" },
     "the reveal scrolls the anchor into view (smooth in the default world)",
   );
-  assert.equal(world.el("branch-panel").hidden, false, "the panel stays open while the anchor reveals in the main pane");
+  await settle(200);
+  assert.equal(world.el("branch-panel").hidden, true, "source navigation reveals the source Session as the foreground round");
+  world.tabButton("branch-recovered-2")!.click();
+  await settle();
 
   /* 揭示降级（unavailable）：如实报告，不伪造高亮，摘录仍在锚点卡可读。 */
   world.backend.sourceMode = "unavailable";
@@ -3210,7 +3338,7 @@ test("post-rework layout CSS: the >=1180px juxtaposed branch column and the boun
   const columnDecl = declarationsOf(wide, "#branch-column");
   assert.ok(columnDecl !== null, "the wide block styles #branch-column");
   assert.ok(columnDecl.includes("position: relative"), "the column is the panel's positioning basis (position: relative)");
-  assert.ok(columnDecl.includes("width: min(440px, 34vw)"), "the resident column keeps its own width (min(440px, 34vw))");
+  assert.ok(columnDecl.includes("width: clamp(340px, 28vw, 390px)"), "the resident column keeps its own bounded width across panel changes");
   const panelDecl = declarationsOf(wide, "#branch-panel");
   assert.ok(panelDecl !== null, "the wide block styles #branch-panel inside the column");
   assert.ok(panelDecl.includes("width: 100%"), "the open panel spans the column exactly");

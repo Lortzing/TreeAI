@@ -1451,10 +1451,10 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
   const emptyList = emptyWorld.el("material-list");
   assert.match(
     emptyList.textContent!,
-    /no materials linked to this tree yet/,
+    /导入 PDF 或 Markdown/,
     "an empty list shows the honest empty state with guidance",
   );
-  assert.match(emptyList.textContent!, /import a \.md, \.markdown or \.pdf file with the import entry above/);
+  assert.match(emptyList.textContent!, /围绕自己的材料展开思考/);
   assert.ok(emptyWorld.byId("material-import") !== null, "the import entry exists (owner P1)");
   assert.match(
     emptyWorld.byId("material-import-input")!.getAttribute("accept") ?? "",
@@ -1491,6 +1491,26 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
 /* ------------------------------------------------------------------ */
 /* 2. 打开 + 分块懒加载 + 阅读位置（保存/恢复/跨页前补）                  */
 /* ------------------------------------------------------------------ */
+
+test("central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material", async () => {
+  const world = await createWorld({ materials: [MD01_SCRIPT], pageSize: 5 });
+  const conversation = world.el("conversation");
+  const nodes = [...conversation.children];
+  conversation.scrollTop = 180;
+  world.el("prompt-input").value = "Keep this unfinished thought";
+  world.el("reading-materials").click();
+  await settle(30);
+  assert.equal(world.el("material-reader").hidden, false, "the header opens the single material directly");
+  assert.ok(world.matBlocks().querySelectorAll(".material-block").length > 0, "the real reader loads canonical blocks");
+  assert.equal(world.requestsOf("/switch").length, 0, "reading does not change the live conversation cursor");
+  world.el("reading-trunk").click();
+  await settle(200);
+  assert.equal(world.el("material-reader").hidden, true, "returning exposes the trunk again");
+  assert.deepEqual([...conversation.children], nodes, "the trunk nodes retain their identity");
+  assert.equal(conversation.scrollTop, 180, "the trunk reading position is retained");
+  assert.equal(world.el("prompt-input").value, "Keep this unfinished thought", "the draft is retained");
+  assert.equal(world.document.activeElement, world.el("prompt-input"), "focus returns to the trunk composer");
+});
 
 test("block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT], pageSize: 5 });
@@ -2236,11 +2256,11 @@ test("CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and 
   assert.ok(wide !== undefined, "style.css carries the (min-width: 1180px) media query");
   assert.ok(
     declarationsOf(wide!, "#material-reader")!.includes("width: 100%"),
-    "the reader spans the resident column at >=1180px",
+    "the reader spans its reading surface at >=1180px",
   );
   assert.ok(
-    declarationsOf(wide!, "#branch-column:has(#material-reader:not([hidden])) #branch-empty")!.includes("visibility: hidden"),
-    "an open reader hides the column's empty state (same cover contract as the branch panel)",
+    declarationsOf(wide!, "#main-reading-content:has(#material-reader:not([hidden])) > :not(#material-reader)")!.includes("visibility: hidden"),
+    "an open reader hides the underlying trunk surface without replacing its DOM or scroll position",
   );
 
   /* 基础层：覆盖层定位/有界滚动容器/无损 pre-wrap 渲染/可选摘录。 */

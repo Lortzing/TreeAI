@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>TreeAI · 思考，向深处生长</title>
+  <link rel="stylesheet" href="design.css">
+</head>
+<body>
+  <svg class="icon-defs" aria-hidden="true"><defs>
+    <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 21V5M12 13l-6-5M12 17l7-6M12 8l5-4"/><circle cx="6" cy="8" r="2"/><circle cx="19" cy="11" r="2"/><circle cx="17" cy="4" r="2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-branch" viewBox="0 0 24 24"><path d="M6 20V5M6 15c0-7 12-2 12-10"/><circle cx="6" cy="4" r="2"/><circle cx="18" cy="4" r="2"/><circle cx="6" cy="20" r="2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-return" viewBox="0 0 24 24"><path d="M19 5v7a5 5 0 0 1-5 5H5m5-5-5 5 5 5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5v15M3 4c3-1 6-1 9 1 3-2 6-2 9-1v15c-3-1-6-1-9 1-3-2-6-2-9-1Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8Zm0 0v5h5M8 12h8M8 16h6"/></symbol>
+  </defs></svg>
+  <div class="studio">
+    <aside class="sidebar" id="sidebar" aria-label="思考导航">
+      <a class="brand" href="#"><span class="brand-mark"><svg><use href="#i-tree"/></svg></span>TreeAI<span class="brand-period">.</span></a>
+      <p class="brand-caption">让每一次好奇，都有归处。</p>
+      <button class="new-tree" id="new-tree"><svg><use href="#i-plus"/></svg>种下一棵思考树</button>
+      <button class="search-entry" id="search-open"><svg><use href="#i-search"/></svg>找回思考<span>⌘ K</span></button>
+      <div class="section-label">我的森林 <span id="forest-count">03</span></div>
+      <nav class="forest" aria-label="思考树">
+        <button class="forest-item selected" data-tree="系统思维的日常练习"><span class="tree-dot"></span><span>系统思维的日常练习<small>正在生长 · 今天</small></span></button>
+        <button class="forest-item" data-tree="如何建立长期的学习系统"><span class="tree-dot"></span><span>如何建立长期的学习系统<small>昨天</small></span></button>
+        <button class="forest-item" data-tree="设计中的秩序与留白"><span class="tree-dot"></span><span>设计中的秩序与留白<small>10 月 12 日</small></span></button>
+      </nav>
+      <div class="section-label branch-label">这棵树的路径 <span id="path-count">03</span></div>
+      <nav class="paths" aria-label="当前树的分支">
+        <button class="path trunk active" id="trunk-nav"><span class="path-dot"></span>思考主线<span class="tiny-label">主干</span></button>
+        <div class="path-children">
+          <button class="path" data-branch="feedback"><span class="path-dot"></span>反馈回路与习惯</button>
+          <button class="path" data-branch="leverage"><span class="path-dot"></span>寻找杠杆点</button>
+        </div>
+      </nav>
+      <div class="sidebar-bottom"><span class="local-dot"></span><div>属于你的思考空间<small>交互设计稿 · 示例数据</small></div><span class="avatar">T</span></div>
+    </aside>
+    <div class="workbench">
+      <header class="topbar">
+        <button class="icon-button menu-button" id="menu" aria-label="打开导航" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
+        <div class="breadcrumb">我的森林 <span>/</span> <strong id="tree-title">系统思维的日常练习</strong></div>
+        <span class="preview-badge">DESIGN PREVIEW</span>
+        <button class="quiet-button" id="source-open"><svg><use href="#i-file"/></svg>来源</button>
+      </header>
+      <div class="workspace">
+        <main class="main-pane">
+          <div class="page-heading"><span class="eyebrow">A SPACE FOR DEEPER THINKING</span><h1 id="page-title">系统思维的日常练习</h1><p>从理解一个概念，到看见事物之间的联系。</p></div>
+          <div class="view-tabs" role="tablist" aria-label="阅读内容">
+            <button id="conversation-tab" role="tab" aria-selected="true" aria-controls="conversation" class="tab active"><svg><use href="#i-tree"/></svg>思考主线</button>
+            <button id="material-tab" role="tab" aria-selected="false" aria-controls="material" class="tab"><svg><use href="#i-book"/></svg>阅读材料<span>1</span></button>
+            <span class="tab-note">每条支线，都能回到这里</span>
+          </div>
+          <div class="reading-scroll" id="reading-scroll">
+            <section id="conversation" role="tabpanel" aria-labelledby="conversation-tab">
+              <div class="date-divider"><span>今天的思考</span><span>10:24</span></div>
+              <article class="question"><span class="author">你</span><p>为什么我们常常努力解决一个问题，却让它变得更糟？</p></article>
+              <article class="answer" id="answer-anchor">
+                <div class="answer-byline"><span class="assistant-mark"><svg><use href="#i-tree"/></svg></span><span>TreeAI</span><span class="answer-note">一起把问题想清楚</span></div>
+                <h2>也许，我们只看见了事件，<br>还没有看见系统。</h2>
+                <p>当我们把一个问题孤立地看待，直觉会带我们寻找最快的解法。但在一个相互连接的系统里，局部的改善，有时会成为整体的新问题。</p>
+                <p>比如，为了缓解疲惫，我们不断喝咖啡；睡眠因此变差，第二天又需要更多咖啡。真正推动结果的，是藏在事件背后的 <button class="inline-concept" id="concept">反馈回路<svg><use href="#i-branch"/></svg></button>。</p>
+                <blockquote>不要只问「怎样解决这个问题」，<br>也问「什么结构在不断产生这个问题」。</blockquote>
+                <p>我们可以从一个具体的日常习惯开始：画出它的因果关系，识别回路，再寻找一个能改变系统走向的小切入点。</p>
+                <div class="answer-actions"><button id="explore" class="branch-action"><svg><use href="#i-branch"/></svg>沿着「反馈回路」深入<span>↗</span></button><span class="muted">从这一段生长出支线</span></div>
+                <div id="return-card" class="return-card" hidden><div class="return-title"><svg><use href="#i-return"/></svg><span>从支线带回的收获</span><span class="saved">已确认 · 演示</span></div><p id="return-text"></p><button id="return-source" class="text-button">反馈回路与习惯 · 查看探索 <span>↗</span></button></div>
+              </article>
+              <div id="material-returns"></div>
+              <div id="new-thoughts"></div>
+            </section>
+            <section id="material" role="tabpanel" aria-labelledby="material-tab" hidden>
+              <div class="material-meta"><svg><use href="#i-file"/></svg>系统之美 · 阅读摘记.md <span>v1 · 第 02 段 · 示例材料</span></div>
+              <article class="material-prose"><span class="eyebrow">READ, NOTICE, EXPLORE</span><h2>看见反馈，才能看见变化</h2><p>系统不只是一组事物。它是由元素、相互关系，以及功能或目标共同构成的整体。</p><p>我们能直接看见的是事件，持续产生事件的却是结构。想理解一个系统，我们需要把目光从独立的事物移向它们之间的关系。</p><blockquote id="material-anchor">反馈回路是一个闭合的因果链：系统过去的行为，会影响它未来的行为。</blockquote><p>有些回路放大变化，有些回路维持稳定。延迟则让我们更难觉察行动与结果之间的联系。</p><button id="material-explore" class="branch-action"><svg><use href="#i-branch"/></svg>从这段原文展开探索<span>↗</span></button></article>
+            </section>
+          </div>
+          <form class="composer" id="main-form"><label class="sr-only" for="main-input">继续主线思考</label><textarea id="main-input" rows="2" placeholder="让思考继续生长…"></textarea><div class="composer-footer"><span><svg><use href="#i-tree"/></svg>在主线上继续 <span class="composer-hint">· 示例中仅展示你的输入</span></span><button class="send-button" type="submit" aria-label="提交示例思考"><svg><use href="#i-arrow"/></svg></button></div></form>
+          <p class="bottom-note">深入一条支线，不必丢失整条思路。</p>
+        </main>
+        <aside class="branch-pane" id="branch-pane" aria-label="支线探索">
+          <section id="branch-empty" class="branch-empty">
+            <div class="panel-kicker"><span class="small-dot"></span>思考的另一种可能</div>
+            <div class="growth-illustration"><svg viewBox="0 0 280 250" role="img" aria-label="主线延伸出探索支线，收获再回到主线"><defs><linearGradient id="line-grad" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#c3cdbf"/><stop offset="1" stop-color="#527359"/></linearGradient></defs><circle class="growth-halo" cx="147" cy="112" r="88"/><path class="quiet-line" d="M112 225V38"/><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"/><path class="quiet-line" d="M112 124C112 96 57 105 57 65"/><circle class="growth-node" cx="112" cy="175" r="5"/><circle class="growth-node leaf-node" cx="199" cy="62" r="7"/><circle class="small-node" cx="57" cy="65" r="4"/><circle class="small-node" cx="112" cy="38" r="4"/><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg></div>
+            <h2>好奇，可以走远一点。</h2><p>从一个词、一段话、一个疑问出发。<br>在支线里深入，把有价值的发现<br>带回正在生长的思考。</p>
+            <button class="outline-button" id="empty-explore"><svg><use href="#i-branch"/></svg>试着展开一条支线</button>
+            <div class="three-steps"><span><b>01</b>找到起点</span><i></i><span><b>02</b>深入探索</span><i></i><span><b>03</b>带回收获</span></div>
+            <div class="field-note"><span>THINK IN BRANCHES.</span><p>向深处探索，向主线汇聚。</p></div>
+          </section>
+          <section id="branch-active" class="branch-active" hidden>
+            <div class="branch-header"><div><span class="eyebrow">BRANCH EXPLORATION</span><h2 id="branch-title">反馈回路与习惯</h2></div><button class="icon-button" id="branch-close" aria-label="收起支线，回到主线"><svg><use href="#i-close"/></svg></button></div>
+            <div class="branch-fixed-actions"><button id="reveal-source"><svg><use href="#i-file"/></svg>回到出处</button><button id="back-trunk"><svg><use href="#i-return"/></svg>返回主线</button></div>
+            <div class="branch-content"><div class="origin-card"><span>从这里生长</span><p id="origin-quote">“真正推动结果的，是藏在事件背后的反馈回路。”</p><small id="origin-label">思考主线 · 今天 10:24</small></div><div class="branch-question" id="branch-question">怎样识别我日常习惯里的反馈回路？</div><div class="branch-answer"><div class="answer-byline"><span class="assistant-mark"><svg><use href="#i-tree"/></svg></span>TreeAI <span class="answer-note">示例回答</span></div><p id="branch-answer-intro">先观察一个会重复出现的行为，再追踪它如何影响下一次行为。</p><div class="causal-chain" id="causal-chain"><span>疲惫</span><i>→</i><span>咖啡</span><i>→</i><span>睡眠变差</span><i>↩</i></div><p id="branch-answer-detail">这个回路不断放大疲惫。改变它的切入点，可能不是「少喝一杯」，而是给下午设置一个固定的休息时间。</p><p class="branch-insight">把关注点从意志力，移到行为发生的结构上。</p></div><div id="branch-thoughts"></div></div>
+            <form class="branch-composer" id="branch-form"><label class="sr-only" for="branch-input">支线追问</label><input id="branch-input" placeholder="沿着这条支线继续追问…"><button class="icon-button" type="submit" aria-label="提交示例追问"><svg><use href="#i-arrow"/></svg></button></form>
+            <div class="return-footer"><span>有了新的理解？</span><button class="primary-button" id="return-open"><svg><use href="#i-return"/></svg>把收获带回主线</button></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+  <dialog id="return-dialog"><form id="return-form"><div class="dialog-heading"><span class="eyebrow">BRING IT BACK</span><button type="button" class="icon-button" data-close="return-dialog" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>把探索，变成自己的理解。</h2><p>编辑这次收获，确认后放回主线。返回主线也可以不提交收获。</p><label for="harvest">这条支线带给我的启发</label><textarea id="harvest" rows="5">与其依赖意志力打破坏习惯，不如先找出维持它的反馈回路，再改变一个关键的结构：例如，用固定的午后休息替代咖啡。</textarea><div class="dialog-origin" id="dialog-origin">来源：反馈回路与习惯 → 思考主线</div><div class="dialog-actions"><button class="quiet-button" type="button" data-close="return-dialog">继续探索</button><button type="submit" class="primary-button"><svg><use href="#i-check"/></svg>确认带回</button></div></form></dialog>
+  <dialog id="source-dialog"><div class="dialog-heading"><span class="eyebrow">TRACEABLE THINKING</span><button class="icon-button" data-close="source-dialog" aria-label="关闭来源"><svg><use href="#i-close"/></svg></button></div><h2>每一次探索，都有来处。</h2><p>这里展示设计稿的示例来源关系。</p><div class="source-detail"><span id="source-kind">主线回答</span><h3 id="source-title">系统思维的日常练习</h3><p id="source-quote">“真正推动结果的，是藏在事件背后的反馈回路。”</p><small id="source-meta">示例锚点 · 今天 10:24</small></div><button class="primary-button" id="source-locate">定位到原文<svg><use href="#i-arrow"/></svg></button></dialog>
+  <dialog id="search-dialog"><div class="dialog-heading"><span class="eyebrow">FIND YOUR WAY BACK</span><button class="icon-button" data-close="search-dialog" aria-label="关闭查找"><svg><use href="#i-close"/></svg></button></div><h2>找回曾经的思考</h2><label class="sr-only" for="search-input">搜索示例思考</label><input id="search-input" type="search" placeholder="试试「反馈」「学习」「设计」"><div id="search-results" class="search-results"></div><p class="muted">仅检索本设计稿的示例条目。</p></dialog>
+  <dialog id="new-dialog"><form id="new-form"><div class="dialog-heading"><span class="eyebrow">PLANT A QUESTION</span><button type="button" class="icon-button" data-close="new-dialog" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><h2>每棵树，从一个问题开始。</h2><label for="new-title">你想深入思考什么？</label><input id="new-title" placeholder="例如：如何建立我的学习系统" required maxlength="60"><p class="muted">这是交互演示，内容只保留在当前页面。</p><div class="dialog-actions"><button class="primary-button" type="submit">种下这棵树<svg><use href="#i-arrow"/></svg></button></div></form></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="design.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,7 +9,7 @@
 <body>
   <div id="app">
     <!-- 窄窗（<720px）侧栏开关：桌面隐藏。 -->
-    <button id="sidebar-toggle" aria-expanded="false" aria-controls="sidebar">☰ Trees</button>
+    <button id="sidebar-toggle" aria-label="打开思考导航" aria-expanded="false" aria-controls="sidebar">☰</button>
 
     <!-- 顶栏（目标视觉：58px 白条）。品牌 + Forest/Tree/主干路径（主阅读面
          恒为 Trunk，W2 §2.2；路径由 app.js renderTopbarPath 渲染）；诊断面
@@ -17,18 +17,20 @@
          Abort）；来源抽屉入口。无树打开时诊断面与来源入口的 hidden 均由
          app.js（renderAll）统一管理。 -->
     <header id="branch-bar">
-      <h1 id="topbar-brand">TreeAI</h1>
+      <span id="topbar-brand">TreeAI<span class="brand-period">.</span></span>
       <div id="topbar-path-wrap">
         <div id="topbar-path"></div>
         <span id="cursor-note" class="muted"></span>
       </div>
       <div id="diagnostics-bar" hidden>
         <span id="run-status" class="run-status idle" aria-live="polite">idle</span>
-        <span id="run-detail" class="muted"></span>
+        <details class="runtime-details">
+          <summary>运行详情</summary>
+          <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
+        </details>
         <button id="abort-run" class="danger" hidden>Abort run</button>
-        <span id="policy-note" class="muted"></span>
       </div>
-      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ Sources</button>
+      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ 来源</button>
     </header>
 
     <!-- 左右分栏工作区：左栏 Forest/Branches 导航 + 主区；高度受限使
@@ -38,9 +40,12 @@
            分支导航，即既有 branch-tabs——点击语义不变：支线开局部面板 /
            Trunk 收面板回主线）同栏；New Tree 置顶为主操作。 -->
       <aside id="sidebar" aria-label="Trees">
-        <button id="new-tree" class="primary">＋ New Tree</button>
+        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
+
+        <button id="new-tree" class="primary">＋ 种下一棵思考树</button>
+        <button id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><span aria-hidden="true">⌕</span> 找回思考 <kbd>⌘ K</kbd></button>
         <section class="sidebar-section" id="forest-section">
-          <h2 class="sidebar-heading">Forest</h2>
+          <h2 class="sidebar-heading">我的森林 <span id="forest-count"></span></h2>
           <ul id="tree-list" aria-label="Trees"></ul>
           <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
           <div id="list-load-error" hidden>
@@ -49,7 +54,7 @@
           </div>
         </section>
         <section class="sidebar-section" id="branch-section">
-          <h2 class="sidebar-heading">Branches</h2>
+          <h2 class="sidebar-heading">这棵树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
         <!-- D4-8 大规模树导航面（issue #8 工作包 D4-8，charter §5）：侧栏第
@@ -59,8 +64,8 @@
              run/session 可用性；DOM 有界（可视窗口渲染——见 app.js D4-8 段
              的虚拟化纪律）。静态骨架由 app.js 注册一次；动态列表（查找结果/
              树行/路径）由 D4-8 渲染函数独占管理，renderAll 不重建。 -->
-        <section class="sidebar-section" id="nav-section" aria-label="Navigate trees">
-          <h2 class="sidebar-heading">Navigate</h2>
+        <details class="sidebar-section sidebar-disclosure" id="nav-section" aria-label="Navigate trees">
+          <summary class="sidebar-heading">深度导航 <span>查找与定位</span></summary>
           <input id="nav-tree-search" type="search" placeholder="Find a tree…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
           <div class="nav-find-row">
             <button type="button" id="nav-tree-find">Find</button>
@@ -90,7 +95,7 @@
             </div>
             <p id="nav-tree-status" class="muted" role="status"></p>
           </div>
-        </section>
+        </details>
         <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
              （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
              不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
@@ -100,9 +105,9 @@
              failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
              在途解析可取消（parse-tasks cancel 端点）。 -->
         <section class="sidebar-section" id="materials-section" hidden>
-          <h2 class="sidebar-heading">Materials</h2>
+          <h2 class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></h2>
           <div class="material-import-row">
-            <button id="material-import" type="button">⬆ Import file…</button>
+            <button id="material-import" type="button">＋ 导入阅读材料</button>
             <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
           </div>
           <p id="material-import-status" role="status" aria-live="polite"></p>
@@ -117,12 +122,12 @@
              Turn → 对应事实的既有视图）。搜索纯只读（不创建 Turn）；只索引
              已保存产品事实——未提交草稿结构性不入索引（服务端已裁决），本
              面如实声明、绝不暗示草稿可搜。 -->
-        <section class="sidebar-section" id="search-section">
-          <h2 class="sidebar-heading">Search</h2>
+        <details class="sidebar-section sidebar-disclosure" id="search-section">
+          <summary class="sidebar-heading">找回思考 <span>已保存内容</span></summary>
           <input id="search-input" type="search" placeholder="Search saved thoughts…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
           <div class="search-scope" role="group" aria-label="Search scope">
-            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">This tree</button>
-            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">All trees</button>
+            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
+            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">全部树</button>
           </div>
           <div class="search-kinds" role="group" aria-label="Filter results by source type">
             <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
@@ -130,22 +135,35 @@
             <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">Return</button>
             <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
           </div>
-          <button type="button" id="search-run" class="primary">Search</button>
+          <button type="button" id="search-run" class="primary">查找已保存的思考</button>
           <p id="search-status" class="muted" role="status"></p>
           <ul id="search-results" aria-label="Search results"></ul>
-        </section>
+        </details>
         <div id="sidebar-foot">
-          <p class="subtitle">D3 Core MVP · trusted-local</p>
-          <p id="driver-note" class="muted"></p>
+          <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
+          <p id="driver-note" class="muted">思考记录保存在本机</p>
         </div>
       </aside>
 
-      <main id="main">
+      <main id="main" data-workspace-view="chat">
+        <nav id="workspace-modes" aria-label="工作区视图">
+          <button id="mode-chat" type="button" class="workspace-mode active" aria-pressed="true">对话</button>
+          <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">Session 关系</button>
+        </nav>
+        <button id="view-map-entry" class="view-edge view-edge-left" type="button" aria-label="E：打开 Session 关系视图"><span aria-hidden="true">⑂</span><small>关系</small></button>
+        <nav id="round-navigation" aria-label="切换对话轮次" hidden>
+          <button id="round-previous" type="button" aria-label="上一轮">←</button>
+          <span id="round-position" role="status" aria-live="polite">00 / 00</span>
+          <button id="round-next" type="button" aria-label="下一轮">→</button>
+        </nav>
+        <section id="session-workspace" hidden aria-label="Session 工作区" tabindex="-1"></section>
         <!-- 空态：无树打开。主操作直达（窄窗侧栏在抽屉后，不在首屏）。 -->
         <div id="empty-state" hidden>
-          <p class="empty-title">No Tree open.</p>
-          <p class="muted">Create a Tree to start a Trunk conversation — branches fork from any answer, and Return brings the result back.</p>
-          <button id="empty-new-tree" class="primary">＋ New Tree</button>
+          <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
+
+          <h1 class="empty-title">暂无对话</h1>
+
+          <button id="empty-new-tree" class="primary">＋ 新建思考树</button>
         </div>
         <section id="tree-view" hidden>
           <!-- P1 失败面板（持久、不自动消失）：树级警示条，置于阅读区之上。 -->
@@ -156,66 +174,79 @@
                W2 §2.2/§2.3 开合期间主线阅读位置不动）。 -->
           <div id="reading-area">
             <div id="main-pane">
+              <header id="reading-heading">
+
+                <h1 id="reading-title">一个问题，无限可能。</h1>
+
+                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">⑂ 思考主线</button><button id="reading-materials" type="button" aria-controls="materials-section">▤ 阅读材料 <span id="reading-material-count">0</span></button></div>
+              </header>
+              <div id="main-reading-content">
               <!-- A4 缺失 session 横幅（主线视角，可关闭、不自动消失）。 -->
               <div id="session-banner" hidden></div>
               <div id="conversation" aria-live="polite" aria-label="Trunk conversation"></div>
               <!-- 错误横幅朗读语义（W2 §2.4）：role=alert（隐式 aria-live）+ 可 Tab 触达。 -->
               <div id="error-banner" role="alert" tabindex="0" hidden></div>
               <div id="composer">
-                <textarea id="prompt-input" rows="3" aria-label="Ask on the Trunk" placeholder="Ask on the Trunk…"></textarea>
+                <textarea id="prompt-input" rows="2" aria-label="Ask on the Trunk" placeholder="继续对话…"></textarea>
                 <div class="composer-actions">
-                  <button id="send" class="primary">Send</button>
+                  <span class="composer-context">⑂ 在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
+                  <button id="send" class="primary" aria-label="发送到主线">发送 ↗</button>
                   <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                   <button id="new-exploration" class="accent" hidden>⑃ Start new exploration</button>
                 </div>
+              </div>
+
+              <!-- 材料使用中央阅读面；覆盖而不替换主线，保留正文节点与滚动位置。 -->
+              <aside id="material-reader" hidden aria-label="Material reader" tabindex="-1"></aside>
               </div>
             </div>
             <div id="branch-column">
               <!-- 受控空态（列的常驻底面）：面板打开时被面板覆盖（visibility
                    隐藏，见 style.css ≥1180px 块），收起后如实呈现指引。 -->
               <div id="branch-empty">
-                <span class="branch-empty-orn" aria-hidden="true"></span>
-                <p class="branch-empty-title">No branch open</p>
-                <p class="muted">Select text in an answer to anchor a branch here — its excerpt, continuation, and Return draft open in this column.</p>
+                <p class="panel-kicker">思考的另一种可能</p>
+                <svg class="growth-illustration" viewBox="0 0 280 250" aria-hidden="true"><circle class="growth-halo" cx="147" cy="112" r="88"/><path class="quiet-line" d="M112 225V38M112 124C112 96 57 105 57 65"/><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"/><circle class="growth-node" cx="112" cy="175" r="5"/><circle class="growth-node" cx="199" cy="62" r="7"/><circle class="small-node" cx="57" cy="65" r="4"/><circle class="small-node" cx="112" cy="38" r="4"/><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg>
+                <h2 class="branch-empty-title">好奇，可以走远一点。</h2>
+                <p class="muted">选中回答中的一个词或一段话，<br>从那里展开支线，再把新的理解<br>带回正在生长的思考。</p>
+                <div class="growth-steps"><span><b>01</b>找到起点</span><i></i><span><b>02</b>深入探索</span><i></i><span><b>03</b>带回收获</span></div>
+                <div class="field-note"><span>THINK IN BRANCHES.</span><p>向深处探索，向主线汇聚。</p></div>
               </div>
               <!-- 支线局部面板（W2 §2.3）：锚点作用域；固定「来源/回程」操作；
                    Return 草稿面就近（面板底部，紧邻头部锚点摘录）。 -->
               <aside id="branch-panel" hidden aria-label="Branch side panel">
                 <header id="panel-header">
                   <div id="panel-heading">
+
                     <p id="panel-title"></p>
                     <!-- 揭示降级焦点的说明区（W2 §2.6）：摘录 + 状态徽标，常驻可读，可程序聚焦。 -->
                     <p id="panel-anchor-context" tabindex="-1"></p>
                   </div>
                   <div id="panel-fixed-actions">
-                    <button id="panel-view-source" class="source-button">⌖ View source</button>
-                    <button id="panel-close" class="panel-close">↩ Back to Trunk</button>
+                    <button id="panel-view-source" class="source-button">⌖ 回到出处</button>
+                    <button id="panel-close" class="panel-close">↩ 返回主线</button>
                   </div>
                   <div id="panel-session-note" hidden tabindex="-1"></div>
                 </header>
                 <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
                 <div id="panel-error-banner" role="alert" tabindex="0" hidden></div>
                 <div id="panel-composer">
-                  <textarea id="panel-prompt-input" rows="3" aria-label="Continue this branch" placeholder="Continue this branch…"></textarea>
+                  <textarea id="panel-prompt-input" rows="2" aria-label="Continue this branch" placeholder="继续对话…"></textarea>
                   <div class="composer-actions">
-                    <button id="panel-send" class="primary">Send</button>
+                    <button id="panel-send" class="primary">发送 ↗</button>
                     <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                     <button id="panel-new-exploration" class="accent" hidden>⑃ Start new exploration</button>
                   </div>
                 </div>
-                <div id="return-panel">
-                  <h2>Return to Trunk</h2>
-                  <p class="muted">Edit the branch result, then explicitly submit it to the Trunk. The draft stays in this browser until submitted; after submitting it is saved on the Trunk first, adopted on the next Trunk discussion.</p>
+                <details id="return-panel">
+                  <summary>↩ 把收获带回主线 </summary>
+
+                  <p class="muted">编辑并确认这次收获。草稿只保留在当前浏览器；确认后保存到主线，下次主线讨论时采用。也可以直接返回，继续保留草稿。</p>
                   <textarea id="return-input" rows="4" aria-label="Return draft"></textarea>
                   <div class="composer-actions">
-                    <button id="submit-return" class="accent">Submit Return to Trunk</button>
+                    <button id="submit-return" class="accent">↩ 确认收获，带回主线</button>
                   </div>
-                </div>
+                </details>
               </aside>
-              <!-- D4-2 材料阅读器（issue #8 工作包 D4-2）：与支线面板同一
-                   右列的另一工作面（app.js 渲染内容；可见性契约同
-                   #branch-panel——hidden 属性 + .enter/.exit 动效）。 -->
-              <aside id="material-reader" hidden aria-label="Material reader" tabindex="-1"></aside>
             </div>
           </div>
         </section>
