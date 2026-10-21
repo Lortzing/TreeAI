@@ -1,0 +1,71 @@
+$ npm test -w @treeai/studio
+
+> @treeai/studio@0.0.0 test
+> npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/studio@0.0.0 build:deps
+> npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+
+> @treeai/studio@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ HTTP API serves the UI and the full D3 flow, surviving a restart (71.374875ms)
+✔ return with a missing Pi session file: 502 before any write; retry creates no duplicate Return (25.157291ms)
+✔ HTTP layer rejects malformed bodies and unknown routes predictably (6.213625ms)
+✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (283.21775ms)
+✔ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (17.602708ms)
+✔ response-loss resubmit and double-click converge to exactly one return (18.725375ms)
+✔ echo defaults are unchanged (offline driver, no agent dir) (0.491791ms)
+✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.0605ms)
+✔ --agent-dir is rejected for the echo driver (0.158416ms)
+✔ --driver pi fails clearly without provider/model (error names the env var too) (0.076292ms)
+✔ empty --provider value still fails the pi boundary check (0.051709ms)
+✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.050125ms)
+✔ --driver pi accepts an explicit absolute agent dir (0.056666ms)
+✔ --driver pi resolves a relative agent dir against the process cwd (0.493708ms)
+✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.06475ms)
+✔ empty or whitespace-only --agent-dir value is a usage error (0.09575ms)
+✔ unknown flags and missing values keep failing with the usage error (0.068958ms)
+✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.064583ms)
+✔ readPiApiKey treats whitespace-only values as missing (0.039875ms)
+✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.028083ms)
+✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (0.325542ms)
+✔ resolvePiDriverWiring fails for non-pi options (0.060708ms)
+✔ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (100.687958ms)
+✔ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (14.721958ms)
+✔ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (33.971667ms)
+✔ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (77.572209ms)
+✔ process restart: journal and diagnostics converge consistently (host-crash semantics) (11.795792ms)
+✔ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (10.671ms)
+✔ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (25.28625ms)
+✔ tool-activity events project tool name and phase only (scripted runtime) (5.507333ms)
+✔ session availability derivation: live probe refines the cached assessment honestly (8.341959ms)
+✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (54.540958ms)
+✔ composePromptText prefixes pending returns deterministically (0.169709ms)
+✔ branch anchoring is validated (answer role, slice integrity, bounds) (8.683542ms)
+✔ return and prompt validation errors (13.317209ms)
+✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (4.138875ms)
+✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (8.569459ms)
+✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (270.694ms)
+✔ concurrent prompt is rejected as a conflict and leaves no phantom run (82.682542ms)
+✔ anchor status preserves duplicate and cross-line selections and degrades when source is unavailable (9.062125ms)
+✔ return idempotency: same key+content replays the same turn; different content conflicts (13.04875ms)
+✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (13.691458ms)
+✔ missing session: submit rejects with no return persisted; restore + same-key retry lands exactly once (13.930917ms)
+✔ return persists its target anchor snapshot of the branch origin (12.477916ms)
+✔ repository-level return without a key still round-trips (legacy shape) (2.899833ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 925.910666
+

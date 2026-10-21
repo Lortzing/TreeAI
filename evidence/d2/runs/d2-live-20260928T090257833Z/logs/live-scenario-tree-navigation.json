@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-tree-navigation",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "tree-navigation",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "Error: Cannot read properties of undefined (reading 'includes')",
+    "code": "unknown"
+  },
+  "durationMs": 11
+}

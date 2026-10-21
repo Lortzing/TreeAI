@@ -1,0 +1,14 @@
+{
+  "id": "live-scenario-tree-navigation",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "tree-navigation",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "navigatedBack": true,
+    "forkAdvanced": true,
+    "answer": "ok: acknowledged."
+  },
+  "durationMs": 84
+}

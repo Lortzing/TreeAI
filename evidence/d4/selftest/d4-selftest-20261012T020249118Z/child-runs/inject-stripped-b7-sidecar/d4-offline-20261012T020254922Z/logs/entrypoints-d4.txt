@@ -1,0 +1,28 @@
+$ node scripts/run-d4-browser.mjs --help
+run-d4-browser — TreeAI D4 浏览器验收入口
+
+用法:
+  node scripts/run-d4-browser.mjs --mode selftest
+  node scripts/run-d4-browser.mjs --mode real-pi --provider <id> --model <id> [options]
+
+选项:
+  --mode <selftest|real-pi>   selftest=离线 echo 驱动（不是真实 Pi 证据）；real-pi=真实 Pi
+  --data <dir>                Studio 数据目录（缺省临时目录；--keep-data 保留）
+  --keep-data                 运行后保留数据目录
+  --artifacts <dir>           证据落盘目录（缺省临时目录）
+  --chrome-executable <path>  浏览器可执行文件（缺省探测常见安装路径）
+  --prompt-timeout-ms <ms>    模型回答等待上限（>=1000，缺省 240000）
+  --provider <id>             受控 provider（仅 real-pi）
+  --model <id>                受控 model（仅 real-pi）
+  --agent-dir <dir>           受控 agent 注册表目录（仅 real-pi；常用 .pi-d2-live）
+  --only <id>                 只运行指定检查（可重复；boot 检查恒随行——
+                              其余检查不列出；summary 记录范围，绝不冒充全量）
+  --help                      打印本说明
+
+凭据: real-pi 需要 TREEAI_STUDIO_API_KEY 环境变量（只检查变量名，值由
+      Studio 子进程自行读取；凭据不落命令、截图或证据）。
+
+浏览器路径: 真实 headless Chromium 经 CDP 驱动（--remote-debugging-port=0，
+            随机 --user-data-dir 临时 profile，运行后清理）。
+数据目录:   Studio --data 指向的本地 SQLite 数据目录。
+

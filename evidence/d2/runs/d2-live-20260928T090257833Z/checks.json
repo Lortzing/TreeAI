@@ -1,0 +1,99 @@
+{
+  "runId": "d2-live-20260928T090257833Z",
+  "checks": [
+    {
+      "id": "live-scenario-basic",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "Error: Cannot read properties of undefined (reading 'includes')",
+        "code": "unknown"
+      },
+      "durationMs": 22
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "Error: Cannot read properties of undefined (reading 'includes')",
+        "code": "unknown"
+      },
+      "durationMs": 5
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "prompt did not emit a streaming update before steer"
+      },
+      "durationMs": 15018
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "prompt did not emit a streaming update before abort"
+      },
+      "durationMs": 15035
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "Error: Cannot read properties of undefined (reading 'includes')",
+        "code": "unknown"
+      },
+      "durationMs": 16
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "Error: Cannot read properties of undefined (reading 'includes')",
+        "code": "unknown"
+      },
+      "durationMs": 11
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

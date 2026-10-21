@@ -1,0 +1,12 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node scripts/typecheck.js
+[typecheck] checking @treeai/runtime-smoke (apps/runtime-smoke)
+[typecheck] checking @treeai/contracts (packages/contracts)
+[typecheck] checking @treeai/event-journal (packages/event-journal)
+[typecheck] checking @treeai/persistence (packages/persistence)
+[typecheck] checking @treeai/runtime-pi (packages/runtime-pi)
+[typecheck] checking @treeai/tool-policy (packages/tool-policy)
+
+typecheck summary (Gate 0 scaffold):
+  checked: @treeai/runtime-smoke, @treeai/contracts, @treeai/event-journal, @treeai/persistence, @treeai/runtime-pi, @treeai/tool-policy
+[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.
+

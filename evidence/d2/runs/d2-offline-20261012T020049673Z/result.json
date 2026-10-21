@@ -1,0 +1,170 @@
+{
+  "runId": "d2-offline-20261012T020049673Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-12T02:00:49.674Z",
+  "endedAt": "2026-10-12T02:01:20.327Z",
+  "verdict": "INCOMPLETE",
+  "counts": {
+    "pass": 21,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 1
+  },
+  "exitCode": 3,
+  "results": [
+    {
+      "durationMs": 7,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "113 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "keyword corpus clean",
+      "id": "schema-validator-selftest"
+    },
+    {
+      "durationMs": 3,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "23 rules fired on the synthetic corpus, clean corpus clean",
+      "id": "secret-scanner-selftest"
+    },
+    {
+      "durationMs": 4097,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 1181,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 1897,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "negative type tests: 7/7 rejected as expected\nok: no Pi imports in packages/contracts (src + tests)",
+      "id": "unit-tests-contracts"
+    },
+    {
+      "durationMs": 1401,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 510.643375",
+      "id": "unit-tests-runtime-pi"
+    },
+    {
+      "durationMs": 1085,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 486.867542",
+      "id": "unit-tests-persistence"
+    },
+    {
+      "durationMs": 567,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 102.815708",
+      "id": "unit-tests-tool-policy"
+    },
+    {
+      "durationMs": 1021,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 56.479291",
+      "id": "unit-tests-event-journal"
+    },
+    {
+      "durationMs": 829,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 800.110667",
+      "id": "unit-tests-agent-f"
+    },
+    {
+      "durationMs": 471,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 436.228",
+      "id": "integration-tests-agent-f"
+    },
+    {
+      "durationMs": 3748,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 3715.476416",
+      "id": "live-framework-selftest"
+    },
+    {
+      "durationMs": 2060,
+      "status": "PASS",
+      "exitCode": 0,
+      "id": "runtime-smoke"
+    },
+    {
+      "durationMs": 11347,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 9157.720375",
+      "id": "unit-tests-studio"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "declared \"0.85.1\" / installed \"0.85.1\"",
+      "id": "pi-version-pin"
+    },
+    {
+      "durationMs": 697,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "2551 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "durationMs": 2,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no treeai-* temp leftovers",
+      "id": "residual-resources"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization",
+      "id": "d1-repro"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}

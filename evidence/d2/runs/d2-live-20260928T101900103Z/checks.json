@@ -1,0 +1,125 @@
+{
+  "runId": "d2-live-20260928T101900103Z",
+  "checks": [
+    {
+      "id": "live-scenario-basic",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "messageLength": 5
+      },
+      "durationMs": 487
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "groundTruthMatched": true,
+        "toolDecisions": [
+          {
+            "toolCallId": "call_00_ET_B7XrUnsAvJyYJV3NiPJf0549",
+            "category": "read",
+            "outcome": "allow",
+            "risk": "low",
+            "ruleId": "allow-read-configured-roots",
+            "reason": "read target resolves inside a configured read root (explicit allow rule)",
+            "scopeRoots": [
+              "[HOME]/Projects/TreeAI/tests/fixtures/e2e/live"
+            ]
+          },
+          {
+            "toolCallId": "call_00_SiIVTjl0KRmgECtKNApB5587",
+            "category": "read",
+            "outcome": "deny",
+            "risk": "low",
+            "ruleId": null,
+            "reason": "read target resolves outside every configured read root; no rule allows it",
+            "scopeRoots": []
+          }
+        ],
+        "deniedExecution": false
+      },
+      "durationMs": 2881
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "steerEnqueued": 1,
+        "agentStarts": 1,
+        "finalMessage": "steered"
+      },
+      "durationMs": 1094
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "aborted": true,
+        "recovered": true
+      },
+      "durationMs": 1593
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "restored": true,
+        "followUpLength": 5,
+        "sessionFile": "<recorded in run evidence>"
+      },
+      "durationMs": 1379
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "PASS",
+      "exitCode": 0,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "meta": {
+        "navigatedBack": true,
+        "forkAdvanced": true,
+        "answer": "A"
+      },
+      "durationMs": 2223
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

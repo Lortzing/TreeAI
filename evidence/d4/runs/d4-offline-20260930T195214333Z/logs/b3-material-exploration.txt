@@ -1,0 +1,15 @@
+b3 material exploration check
+[b3.create.md] PASS — markdown create-from-selection: zero runs/turns, composed=1417u deterministic (creation === dispatch view), excerpt anchored
+[b3.create.pdf] PASS — pdf create-from-selection: page-2 block anchored, dispatched, return card page=2 parser=pdf/d4-pdf-v1
+[b3.context.bounds] PASS — large material: truncated=true with the explicit marker, composed=23022u ≤ 24000, selection in full, distant blocks excluded
+[b3.context.oversized] PASS — a 20100u selection is refused with zero rows (truncating the user's own selection would be a dishonest anchor)
+[b3.firstquestion.dispatch] PASS — independent session (≠ the trunk run's session), audited versionId-only prefix, composed context entered the model input
+[b3.firstquestion.replay] PASS — same key + same question replays the landed turn without re-sending
+[b3.firstquestion.restart] PASS — post-restart replay reconciles the same landed turn/run, zero new sessions or branches
+[b3.firstquestion.conflict] PASS — different first-question content and same-key-different-selection both refuse (409 discipline)
+[b3.reconciliation.unknown] PASS — a non-terminal run yields dispatch 'unknown' WITHOUT re-sending (reconcile first, act second)
+[b3.reconciliation.failed] PASS — an explicit upstream failure reports 'failed' honestly and the retry dispatches (retry = a new explicit attempt)
+[b3.restore] PASS — same source restores the existing branch (session available); explicit new opens a second; look-alike material and cross-tree restores are refused; tree B owns its own branch
+[b3.return] PASS — lands on the trunk with targetAnchor=null (no fabricated mainline anchor), full source card, idempotent replay, one adoption attempt recorded after the trunk prompt
+[b3.sessionloss] PASS — normal continuation fails closed; the explicit new exploration carries the material context; the landed first question still replays idempotently
+[b3.nonready] PASS — the corrupt negative settles 'failed' and branching/refusal stay honest (zero fabricated rows)

@@ -1,0 +1,47 @@
+$ npm test -w @treeai/studio
+
+> @treeai/studio@0.0.0 test
+> npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/studio@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ HTTP API serves the UI and the full D3 flow, surviving a restart (65.097ms)
+✔ return with a missing Pi session file: 502 before any write; retry creates no duplicate Return (26.580875ms)
+✔ HTTP layer rejects malformed bodies and unknown routes predictably (5.332084ms)
+✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (299.694625ms)
+✔ echo defaults are unchanged (offline driver, no agent dir) (0.523041ms)
+✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.060417ms)
+✔ --agent-dir is rejected for the echo driver (0.164334ms)
+✔ --driver pi fails clearly without provider/model (error names the env var too) (0.077041ms)
+✔ empty --provider value still fails the pi boundary check (0.05425ms)
+✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.05075ms)
+✔ --driver pi accepts an explicit absolute agent dir (0.782875ms)
+✔ --driver pi resolves a relative agent dir against the process cwd (0.049792ms)
+✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.050625ms)
+✔ empty or whitespace-only --agent-dir value is a usage error (0.094708ms)
+✔ unknown flags and missing values keep failing with the usage error (0.072917ms)
+✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.062666ms)
+✔ readPiApiKey treats whitespace-only values as missing (0.040625ms)
+✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.027666ms)
+✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (0.342584ms)
+✔ resolvePiDriverWiring fails for non-pi options (0.05575ms)
+✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (45.73425ms)
+✔ composePromptText prefixes pending returns deterministically (0.147459ms)
+✔ branch anchoring is validated (answer role, slice integrity, bounds) (9.216042ms)
+✔ return and prompt validation errors (12.678125ms)
+✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (4.15275ms)
+✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (7.4895ms)
+✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (286.014958ms)
+✔ concurrent prompt is rejected as a conflict and leaves no phantom run (92.460959ms)
+✔ anchor status preserves duplicate and cross-line selections and degrades when source is unavailable (7.521708ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 853.371042
+

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "d2-environment-1",
+  "generatedAt": "2026-09-28T10:25:09.016Z",
+  "mode": "live",
+  "driver": "fake",
+  "runtime": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "typeScript": "5.9.3",
+    "ci": false
+  },
+  "pi": {
+    "pinnedVersion": "0.85.1",
+    "installedVersion": "0.85.1",
+    "source": "node_modules/@earendil-works/pi-coding-agent/package.json"
+  },
+  "credentialPolicy": {
+    "policy": "offline",
+    "note": "--driver=fake: the same six scenarios run against FakePiRuntime; no credentials are present, needed, or read, and the user's real Pi config was not touched"
+  },
+  "git": {
+    "commit": "09a48dfb9243d85eff66a9ef9c65f81d5c7e620d",
+    "tree": "79b333a25155eb9c6490195a3670fcde1f0e5d53",
+    "trackedDirty": true,
+    "untrackedCount": 371,
+    "statusSha256": "7a4bd7bc8406ea2dc79b4c914f956811f563108c2057724ad8eb51fd267a4d4d",
+    "diffSha256": "c629414ff1453316bd9719dae95771400a49d938ac2853ca096d2057c3a489ce"
+  },
+  "verifier": {
+    "name": "verify-d2-live",
+    "version": "1.0.0"
+  }
+}

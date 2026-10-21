@@ -1,0 +1,5 @@
+{"type":"session","version":3,"id":"01a0e740-cb84-7327-b057-2c5f911e4c2e","timestamp":"2026-09-28T09:02:58.436Z","cwd":"[HOME]/Projects/TreeAI"}
+{"type":"model_change","id":"3ba9d9da","parentId":null,"timestamp":"2026-09-28T09:02:58.436Z","provider":"deepseek","modelId":"deepseek-flash"}
+{"type":"thinking_level_change","id":"0bc83d76","parentId":"3ba9d9da","timestamp":"2026-09-28T09:02:58.436Z","thinkingLevel":"off"}
+{"type":"message","id":"8695fac6","parentId":"0bc83d76","timestamp":"2026-09-28T09:02:58.436Z","message":{"role":"user","content":[{"type":"text","text":"Count slowly from 1 to 30, one number per line."}],"timestamp":1790586178436}}
+{"type":"message","id":"a7c5d4bc","parentId":"8695fac6","timestamp":"2026-09-28T09:02:58.436Z","message":{"role":"assistant","content":[],"provider":"deepseek","model":"deepseek-flash","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","errorMessage":"Cannot read properties of undefined (reading 'includes')","timestamp":1790586178436}}

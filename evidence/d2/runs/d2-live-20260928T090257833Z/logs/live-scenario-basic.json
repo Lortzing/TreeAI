@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-basic",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "basic",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "Error: Cannot read properties of undefined (reading 'includes')",
+    "code": "unknown"
+  },
+  "durationMs": 22
+}

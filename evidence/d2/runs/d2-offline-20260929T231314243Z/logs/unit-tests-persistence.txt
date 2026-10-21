@@ -1,0 +1,72 @@
+$ npm test -w @treeai/persistence
+
+> @treeai/persistence@0.0.0 test
+> npm run typecheck && node --test "tests/*.test.ts"
+
+
+> @treeai/persistence@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ backup and restore round-trip restores the snapshot state exactly (90.100833ms)
+✔ createBackup refuses to overwrite an existing target unless asked (11.194083ms)
+✔ restoreFromBackup can save the current database first (backupCurrentTo) (17.622625ms)
+✔ restore and validation fail clearly on bad backup files (7.354625ms)
+✔ restoreFromBackup is rejected for in-memory repositories (6.627833ms)
+✔ two repository handles on one file: second terminal update conflicts, no double terminal (51.259542ms)
+✔ parallel terminal updates from two worker threads produce exactly one terminal state (211.496042ms)
+✔ parallel restart sweeps converge all runs to failed exactly once (45.751875ms)
+✔ direct SQL mutation of a terminal run is blocked by the trigger (third defense layer) (4.899041ms)
+✔ migration applies to an empty file database (39.766292ms)
+✔ migration applies to an empty in-memory database (1.961333ms)
+✔ repeated migration execution is safe (idempotent) (9.32275ms)
+✔ corrupt file (not SQLite) fails with DatabaseCorruptError (4.7185ms)
+✔ foreign SQLite database (tables but no schema_migrations) is rejected (3.786875ms)
+✔ user_version set but schema_migrations missing is treated as corrupt (2.54825ms)
+✔ database from a newer TreeAI version fails with UnsupportedDatabaseVersionError (7.283459ms)
+✔ failed migration rolls back atomically and reports version (3.484083ms)
+✔ migrations bring a fresh database to the current product schema (10.398792ms)
+✔ an existing v1 database is upgraded in place to the current schema without data loss (21.333625ms)
+✔ turns round-trip and list in append order; roles are discriminated (9.181916ms)
+✔ turn role invariants are rejected with InvalidArgumentError (10.267917ms)
+✔ return turns persist provenance and delivery state (7.197209ms)
+✔ return turns persist idempotency key and target anchor; keyed returns are unique (7.855792ms)
+✔ migration 0004 upgrades a v3 database in place; legacy return rows keep NULL key/anchor (12.562041ms)
+✔ branch origins enforce anchor integrity (slice match, assistant role, entry id match) (5.096083ms)
+✔ product state survives repository reopen (fact-source persistence) (5.02275ms)
+✔ getBranchRecovery returns the full context for a dual-branch tree (48.196792ms)
+✔ recovery info surfaces degraded session availability for the latest run (1.062875ms)
+✔ getTreeRecovery covers every branch of the tree (1.12625ms)
+✔ empty branch recovery has no episodes and null latest run (2.002791ms)
+✔ failNonTerminalRuns sweeps I6 recovery: non-terminal to failed, idempotent, terminals untouched (17.685209ms)
+✔ creates the full hierarchy and persists dual-branch relationship across reopen (69.072667ms)
+✔ branch parent validation: missing tree/parent, cross-tree parent, self-parent (2.107167ms)
+✔ tree/episode/run parent validation (0.772875ms)
+✔ duplicate entity ids are rejected as constraint violations without partial state (0.707208ms)
+✔ run creation with explicit duplicate id leaves no partial rows (0.762125ms)
+✔ session reference validation rejects empty reference fields (0.664166ms)
+✔ get/find semantics: EntityNotFoundError vs null (0.520584ms)
+✔ every legal transition in the frozen table is accepted (55.294708ms)
+✔ illegal transitions are rejected (I5 no-skip, no-rollback; I7 exhaustive table) (1.540583ms)
+✔ terminal states are absorbing (I2) and singular (I3): same-connection double terminal rejected (2.657875ms)
+✔ failure is stored iff state is failed (1.35275ms)
+✔ aborting converges to aborted (I4) and leaves no permanent aborting state (2.696416ms)
+✔ updateRunState on unknown run is EntityNotFoundError (1.488834ms)
+✔ creating a run never requires the Pi session file to exist (TreeAI DB is the fact source) (63.150375ms)
+✔ deleting the session file degrades availability but never deletes domain data (11.152792ms)
+✔ markSessionFileAvailability batches per file in both directions (11.728875ms)
+✔ refreshSessionAvailability uses the injected probe and never reads session content (6.937667ms)
+✔ updateRunSessionReference replaces the whole reference (entryId advance) (5.003209ms)
+✔ updateSessionAvailability validates the unavailable reason (4.599459ms)
+✔ mid-transaction failure rolls back every write in the transaction (21.402583ms)
+✔ nested savepoint: inner failure caught by caller rolls back only the inner scope (1.671583ms)
+✔ nested failure that propagates rolls back the outer transaction too (1.685042ms)
+✔ closed repository rejects operations and close is idempotent (1.564875ms)
+ℹ tests 54
+ℹ suites 0
+ℹ pass 54
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 443.670916
+

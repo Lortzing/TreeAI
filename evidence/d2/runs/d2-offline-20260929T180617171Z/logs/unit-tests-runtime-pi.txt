@@ -1,0 +1,80 @@
+$ npm test -w @treeai/runtime-pi
+
+> @treeai/runtime-pi@0.0.0 test
+> npm run typecheck && npm run build:tool-policy && node --test tests/unit/*.test.ts tests/real-port/*.test.ts
+
+
+> @treeai/runtime-pi@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @treeai/runtime-pi@0.0.0 build:tool-policy
+> tsc -p tsconfig.tool-policy-build.json
+
+✔ real Pi SDK offline battery in a sandboxed child process (449.71025ms)
+✔ unit test files never import the real Pi port (import graph isolation) (0.528084ms)
+✔ classifyPiFailure maps message patterns to the 8 closed codes (1.256459ms)
+✔ classification precedence: timeout > auth > model-unavailable > abort > upstream (0.08725ms)
+✔ TreeAIError instances pass through unchanged (identity) (0.147666ms)
+✔ policy marker wins over message classification (0.107916ms)
+✔ cause and fallback message handling (0.074916ms)
+✔ TreeAIRuntimeError redacts message and details at construction (6.493167ms)
+✔ TreeAIRuntimeError is a real Error subclass satisfying the contract shape (0.339917ms)
+✔ redactText rules: headers, cookies, bearer, sk-keys, credential fields, home (0.21175ms)
+✔ redactJsonValue recurses arrays and nested objects; setHomedirForTesting injects (0.224ms)
+✔ POLICY_DENIED_MARKER uses a cross-realm symbol key (0.167042ms)
+✔ createSession in-memory: snapshot, event, no file (3.233ms)
+✔ createSession with sessionDir: file lazily flushed at first assistant message (Pi behavior) (7.570125ms)
+✔ createSession unknown model: TreeAIError model-unavailable + runtime.error event (1.845667ms)
+✔ createSession invalid inputs: TypeError (caller contract violations) (0.584458ms)
+✔ restoreSession after persisted prompts: same ids, entry advanced, prompt works (19.554375ms)
+✔ restoreSession failure taxonomy (8.804708ms)
+✔ restoreSession mid-tree reference: leaf repositioned via branch (10.689416ms)
+✔ restoreSession of never-prompted session: no file on disk (Pi lazy flush) -> missing-file (0.423916ms)
+✔ restoreSession pins the stored model across a completed-prompt session (8.205ms)
+✔ restoreSession model not resolvable: model-unavailable with fallback marker (4.605375ms)
+✔ sessionDir directory is created if missing (file itself is lazily flushed) (0.349416ms)
+✔ navigateTree to assistant entry: same session/file, leaf moved, no new session (46.997958ms)
+✔ navigateTree to user entry: leaf moves to parent (Pi 0.85.1 semantics) (11.096375ms)
+✔ navigateTree to current leaf: no-op success (0.753708ms)
+✔ navigateTree preconditions: TypeError for bad input, in-flight run, missing session (6.748ms)
+✔ prompt success: result message, advanced reference, normalized events (49.955208ms)
+✔ prompt sync throw: auth classification (401 unauthorized) (2.209792ms)
+✔ prompt sync throw: timeout classification (0.719542ms)
+✔ prompt sync throw: upstream classification (503) (0.64725ms)
+✔ prompt run failure (stopReason error + errorMessage): classified from state (4.166542ms)
+✔ prompt run failure with auth-shaped errorMessage: auth classification (5.2915ms)
+✔ prompt precondition violations: TypeError (thrown synchronously) (3.89825ms)
+✔ methods without session: TypeError; abort is a safe no-op (0.366834ms)
+✔ steer without in-flight run: TypeError (0.192125ms)
+✔ steer during in-flight run: same agent run, new turn, steer.enqueued event (133.893166ms)
+✔ abort during hanging run: abort resolves fast, prompt rejects user-abort, runtime non-streaming (11.260417ms)
+✔ double abort: idempotent, single run.abort-requested, no error (6.797625ms)
+✔ abort with no in-flight run: silent no-op (0.266666ms)
+✔ safety timer: prompt still settles user-abort when Pi abort never converges (60.771166ms)
+✔ dispose with in-flight run: prompt settles user-abort, dispose idempotent, events stop (1.745084ms)
+✔ dispose with idle runtime: clean resolve (0.195791ms)
+✔ multiple listeners, unsubscribe, no history replay (19.361125ms)
+✔ eventId format, seq strict monotonic, occurredAt ISO (8.517041ms)
+✔ session replacement: old subscription invalidated, new effective, seq continuous, in-flight settled (5.043584ms)
+✔ listener exceptions are isolated: other listeners and the runtime survive (5.161542ms)
+✔ subscribe preconditions: TypeError for non-function and after dispose (0.251ms)
+✔ classifyPiToolCall maps Pi built-in tools; unknown tools fail closed (0.677042ms)
+✔ tool policy allow: tool executes and the decision surfaces with provenance (8.437833ms)
+✔ tool policy deny: request-time rejection, no execution, run fails policy-denied (12.2095ms)
+✔ tool policy require-approval is treated as denial (fail closed; no approval UI on this path) (5.003584ms)
+✔ mixed batch: allowed tool executes before the denied one fails the run (6.596916ms)
+✔ no tool policy configured: tools execute without decision events (existing behavior) (5.688667ms)
+✔ restored sessions get the tool gate installed too (10.534959ms)
+✔ port reporting a different Pi version fails the constructor explicitly (4.7055ms)
+✔ matching version constructs and reports piVersion = pinned (2.06425ms)
+✔ config without a real port object fails with TypeError (0.2545ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 527.863166
+

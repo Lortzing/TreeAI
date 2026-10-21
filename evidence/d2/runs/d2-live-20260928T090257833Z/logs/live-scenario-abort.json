@@ -1,0 +1,12 @@
+{
+  "id": "live-scenario-abort",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "abort",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "prompt did not emit a streaming update before abort"
+  },
+  "durationMs": 15035
+}

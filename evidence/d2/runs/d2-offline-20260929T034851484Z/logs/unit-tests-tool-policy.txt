@@ -1,0 +1,76 @@
+$ npm test -w @treeai/tool-policy
+
+> @treeai/tool-policy@0.0.0 test
+> npm run typecheck && bash scripts/run-tests.sh
+
+
+> @treeai/tool-policy@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ 审计记录与返回的 ToolDecision 字段一致 (1.954708ms)
+✔ targetPath 记录 canonical 形态 (0.573542ms)
+✔ 审计不含命令/主机原值与秘密形态 (0.365583ms)
+✔ 审计从不包含文件正文（引擎不读取目标内容） (0.523292ms)
+✔ reason 为固定模板，不含用户可控内容 (0.543625ms)
+✔ action 标签按安全模式净化 (0.708875ms)
+✔ 容量截断显式计数，保留最新记录 (0.841875ms)
+✔ 审计快照为只读副本（追加式纪律） (0.753542ms)
+✔ issue 固化 canonical 目标路径与显式有效期 (1.644125ms)
+✔ revoke 后授权立即失效，重复 revoke 返回 false (0.683209ms)
+✔ purgeExpired 清理过期授权并返回数量 (0.622041ms)
+✔ listActive 不含已消费的单次授权与过期授权 (0.807208ms)
+✔ 过期边界：now === expiresAt 即失效 (1.068125ms)
+✔ 授权生命周期写入审计（issued/consumed/revoked/purged） (0.895458ms)
+✔ absolute path with redundant separators and dot segments normalizes (0.339708ms)
+✔ root traversal clamps at filesystem root (0.054583ms)
+✔ relative path resolves against the provided cwd (0.184416ms)
+✔ relative path without cwd resolves against process.cwd() (0.145625ms)
+✔ non-existent suffix stays under the nearest existing ancestor (0.270917ms)
+✔ fully existing path resolves symlinks to the real location (0.754542ms)
+✔ symlink escape resolves outside the linking directory (0.593792ms)
+✔ dot-dot after a symlink follows OS semantics, not lexical collapse (0.477625ms)
+✔ dangling symlink as final target is unresolvable (null) (0.329375ms)
+✔ dangling symlink as intermediate component is unresolvable (null) (0.335667ms)
+✔ path under a file component stays under it lexically (OS would fail) (0.436208ms)
+✔ empty input returns null (fail closed) (0.042959ms)
+✔ 大小写语义：已存在组件收敛到盘上真实大小写，不存在后缀保留输入大小写 (0.533708ms)
+✔ 不存在后缀中的 `..` 不可解析（fail closed） (0.545833ms)
+✔ isPathWithin: containment boundaries (0.043709ms)
+✔ 默认配置下全部类别拒绝（DEFAULT_TOOL_POLICY_CONFIG） (1.879833ms)
+✔ readRoots 为空时 fixtures 式目录也拒绝（目录必须由调用方显式传入） (0.485292ms)
+✔ fixtures 目录内读取允许 (0.90425ms)
+✔ readRoot 内尚不存在的目标路径也可评估（规范化到最近存在祖先） (0.6135ms)
+✔ 授权目录之外的读取拒绝 (0.643583ms)
+✔ `..` 穿越出 read root 拒绝 (0.459125ms)
+✔ 符号链接逃逸拒绝（链接位于 read root 内、真实位置在外） (0.5255ms)
+✔ read 请求缺失目标路径拒绝（fail closed） (0.330125ms)
+✔ read 目标不可规范化（悬空符号链接）拒绝 (0.536292ms)
+✔ shell 默认拒绝 (0.3495ms)
+✔ network 默认拒绝 (0.329416ms)
+✔ 显式配置 allowShell 后 shell 才允许（risk 仍为 high） (0.041459ms)
+✔ 显式配置 allowNetwork 后 network 才允许 (0.039792ms)
+✔ workspace 外写入拒绝 (0.389625ms)
+✔ workspace 内未授权写入返回 require-approval（不是 allow） (0.398042ms)
+✔ workspace 内不存在的新路径（嵌套目录）同样 require-approval (0.350625ms)
+✔ write 目标不可规范化拒绝 (0.384166ms)
+✔ 单次授权：产生一次 allow 后即消费，不可复用 (0.816ms)
+✔ 限时多次授权：有效期内可复用，过期后失效 (0.638459ms)
+✔ 授权路径精确匹配：授权 A 路径不覆盖 B 路径 (0.506834ms)
+✔ 授权类别精确匹配：write 授权不覆盖 other-high-risk (0.526167ms)
+✔ 授权匹配规范化路径：等价路径形式命中同一授权 (0.59275ms)
+✔ 授权签发校验：不可授权类别 / 越界目标 / 非法有效期 / 不可解析路径 (0.723584ms)
+✔ other-high-risk：无路径拒绝、越界拒绝、workspace 内需授权、授权后允许 (1.084125ms)
+✔ 相对 targetPath 按配置 cwd 解析 (0.645875ms)
+✔ 大小写差异：已存在组件按平台语义收敛，不存在后缀精确匹配（fail closed） (0.893583ms)
+✔ 风险级别映射：read=low，其余=high (0.066792ms)
+✔ 配置结构非法抛 TypeError（编程错误，不产出决定） (0.229208ms)
+✔ 请求类别不在封闭枚举内抛 TypeError (0.227083ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60.2915
+
