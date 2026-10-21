@@ -52,9 +52,10 @@ button.primary, button.accent {
   background: var(--green);
   color: #fff;
   cursor: pointer;
-  transition: background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out;
+  box-shadow: var(--shadow-inset-top), 0 1px 3px rgb(31 64 41 / .22);
+  transition: background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out, box-shadow var(--motion-state) ease-out;
 }
-button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); }
+button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); box-shadow: var(--shadow-inset-top), 0 3px 10px -2px rgb(31 64 41 / .32); }
 button.accent { background: var(--gold); border-color: var(--gold); }
 button.accent:hover:not(:disabled) { background: var(--gold-deep); border-color: var(--gold-deep); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -85,14 +86,14 @@ button.danger:hover:not(:disabled) { background: var(--danger-wash); }
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--hairline);
   box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
   z-index: 10;
 }
 
 #panel-header {
   padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--hairline);
   background: var(--surface);
 }
 #panel-heading { outline: none; margin: 0 0 10px; }
