@@ -22,6 +22,8 @@ export function createMaterialListController(deps) {
     }
     section.hidden = false;
     const materials = deps.state.materials;
+    const count = deps.$("reading-material-count");
+    if (count) count.textContent = materials === null ? "…" : materials.ok ? String(materials.materials.length) : "!";
     if (materials === null) {
       list.replaceChildren(deps.mutedListItem("loading materials…"));
       return;
@@ -44,8 +46,7 @@ export function createMaterialListController(deps) {
     if (materials.materials.length === 0) {
       list.replaceChildren(
         deps.mutedListItem(
-          "no materials linked to this tree yet — import a .md, .markdown or .pdf file with the import entry above; " +
-            "imported materials appear here",
+          "导入 PDF 或 Markdown，围绕自己的材料展开思考。",
         ),
       );
       return;
@@ -64,6 +65,7 @@ export function createMaterialListController(deps) {
       button.title = `open ${entry.material.title} in the material reader`;
       button.addEventListener("click", () => {
         deps.closeSidebar(); /* 窄窗：选材料后收起侧栏抽屉（与树选择同一纪律） */
+        if (deps.sessionUI.mode !== "chat") deps.setWorkspaceView("chat");
         void deps.openMaterial(entry.material.id, {
           trigger: { kind: "material-button", materialId: entry.material.id },
         });

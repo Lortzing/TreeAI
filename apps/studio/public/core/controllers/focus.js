@@ -164,6 +164,8 @@ export function createStudioFocusController(deps) {
 
   /** 揭示到位：滚动到锚点 turn 并把焦点移过去（W2 §2.6）。 */
   function revealAnchorTurn(turnId) {
+    if (deps.selectRoundForTurn(turnId)) deps.renderAll();
+    if (deps.state.materialReader !== null && deps.findTurnById(turnId)?.view.branch.id === deps.trunkBranchId()) deps.closeMaterialReader();
     const el = deps.turnElements.get(turnId);
     if (el === undefined) return;
     if (typeof el.scrollIntoView === "function") {

@@ -1306,7 +1306,7 @@ test("import entry: the file picker accepts exactly the D4-1 support set and liv
   assert.equal(section.hidden, false, "the Materials section is visible with a tree open");
   const button = world.el("material-import");
   /* DOM 桩不解析静态文本（按标签词法建树）——按钮文案按 index.html 源断言。 */
-  assert.match(INDEX_HTML, /id="material-import"[^>]*>⬆ Import file…<\/button>/);
+  assert.match(INDEX_HTML, /id="material-import"[^>]*>＋ 导入阅读材料<\/button>/);
   const input = world.el("material-import-input");
   assert.equal(input.tagName, "INPUT");
   assert.equal(input.getAttribute("type"), "file");

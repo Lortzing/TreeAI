@@ -15,7 +15,10 @@ export function createTreeChromeView(deps) {
       const button = deps.document.createElement("button");
       if (tree.id === deps.state.currentTreeId) button.classList.add("active");
       const name = deps.document.createElement("span");
-      name.textContent = tree.id;
+      button.dataset.treeId = tree.id;
+      const summary = deps.readingTitles.get(tree.id);
+      name.textContent = summary || tree.id;
+      button.title = summary ? `${summary}\n${tree.id}` : tree.id;
       const date = deps.document.createElement("span");
       date.className = "tree-date";
       date.textContent = new Date(tree.createdAt).toLocaleString();
@@ -43,8 +46,15 @@ export function createTreeChromeView(deps) {
       if (isTrunk) button.classList.add("active");
       else if (view.branch.id === deps.state.panelBranchId) button.classList.add("panel-open");
       const label = deps.document.createElement("span");
-      label.textContent = deps.branchLabel(view.branch.id);
+      label.textContent = isTrunk ? "思考主线 · Trunk" : deps.branchLabel(view.branch.id);
       button.append(label);
+      const summary = deps.questionTitle(view) || view.origin?.selection.text || "";
+      if (summary) {
+        const excerpt = deps.document.createElement("span");
+        excerpt.className = "branch-summary";
+        excerpt.textContent = summary;
+        button.append(excerpt);
+      }
       if (view.origin !== null) {
         const anchorStatus = view.originStatus ?? "unavailable";
         button.title = `branched from ${deps.branchLabel(view.origin.sourceBranchId)} · “${view.origin.selection.text}” · source ${anchorStatus}`;
@@ -76,6 +86,7 @@ export function createTreeChromeView(deps) {
          发现：elementFromPoint 于面板输入框命中抽屉遮罩）。 */
       button.addEventListener("click", () => {
         deps.closeSidebar();
+        if (deps.sessionUI.mode !== "chat") deps.setWorkspaceView("chat", view.branch.id);
         if (isTrunk) {
           void deps.guard(() => deps.returnToTrunk(view.branch.id));
         } else {
@@ -92,6 +103,7 @@ export function createTreeChromeView(deps) {
       cursor === null
         ? "session: —"
         : `session @ ${deps.branchLabel(cursor.branchId)} · ${cursor.entryId}`;
+    if (deps.$("cursor-note-details")) deps.$("cursor-note-details").textContent = deps.$("cursor-note").textContent;
   }
 
 
@@ -103,11 +115,13 @@ export function createTreeChromeView(deps) {
     const st = deps.state.treeState;
     if (st === null || deps.state.currentTreeId === null) {
       el.textContent = "";
+      el.title = "";
       return;
     }
     const segments = [deps.state.currentTreeId, deps.branchLabel(st.trunkBranchId)];
     if (deps.state.panelBranchId !== null) segments.push(deps.branchLabel(deps.state.panelBranchId));
     el.textContent = segments.join(" / ");
+    el.title = el.textContent;
   }
 
 

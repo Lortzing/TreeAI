@@ -81,7 +81,7 @@
     box-shadow: -24px 0 48px -28px rgba(35, 40, 31, 0.45);
   }
 
-  #source-drawer.enter { animation: drawer-up-in var(--motion-panel) ease-out; }
+  #source-drawer.enter { animation: drawer-up-in var(--motion-panel) var(--ease-grow); }
   #source-drawer.exit { animation: drawer-up-out 150ms ease-in forwards; }
 
   /* 来源抽屉：自底向上全宽。 */

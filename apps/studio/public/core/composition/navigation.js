@@ -153,6 +153,13 @@ export function createNavigationFeatures(deps) {
     const {
       renderNavFinder,
     } = createNavFinderView({
+      rememberTreeTitles: (trees) => {
+        let changed = false;
+        for (const tree of trees) {
+          if (tree.title && deps.readingTitles.get(tree.treeId) !== tree.title) { deps.readingTitles.set(tree.treeId, tree.title); changed = true; }
+        }
+        if (changed) deps.renderTrees();
+      },
       document: deps.environment.document,
       getElement: (...args) => deps.$(...args),
       getState: () => deps.environment.state,

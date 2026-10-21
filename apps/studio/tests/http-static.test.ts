@@ -17,7 +17,7 @@ async function call(pathname: string) {
   return {handled,status,headers,body};
 }
 test("ESM and CSS static allowlist serves correct content type", async () => {
-  for (const path of ["/app.js", "/core/create-studio-app.js", "/core/dom.js", "/core/controllers/nav-finder.js", "/core/controllers/nav-session.js", "/core/controllers/nav-interaction.js", "/core/controllers/nav-persistence.js", "/core/controllers/nav-node-search.js", "/core/controllers/nav-locate.js", "/core/views/nav-path.js", "/core/views/nav-node-results.js", "/core/views/nav-tree.js", "/core/views/search.js", "/core/views/return.js", "/core/views/diagnostics.js", "/core/views/nav-finder.js", "/core/views/nav-chrome.js",
+  for (const path of ["/core/views/session-workspace.js", "/core/controllers/workspace-events.js", "/app.js", "/core/create-studio-app.js", "/core/dom.js", "/core/controllers/nav-finder.js", "/core/controllers/nav-session.js", "/core/controllers/nav-interaction.js", "/core/controllers/nav-persistence.js", "/core/controllers/nav-node-search.js", "/core/controllers/nav-locate.js", "/core/views/nav-path.js", "/core/views/nav-node-results.js", "/core/views/nav-tree.js", "/core/views/search.js", "/core/views/return.js", "/core/views/diagnostics.js", "/core/views/nav-finder.js", "/core/views/nav-chrome.js",
     "/shared/source/sha256.js", "/shared/source/selection.js",
     "/shared/reading-position/scroll.js"]) {
     const r=await call(path);
@@ -25,9 +25,11 @@ test("ESM and CSS static allowlist serves correct content type", async () => {
     assert.equal(r.status,200,path);
     assert.equal(r.headers?.["content-type"],"text/javascript; charset=utf-8",path);
   }
-  const css=await call("/styles/responsive.css");
-  assert.equal(css.status,200);
-  assert.equal(css.headers?.["content-type"],"text/css; charset=utf-8");
+  for (const path of ["/styles/responsive.css", "/styles/session-workspace.css"]) {
+    const css=await call(path);
+    assert.equal(css.status,200);
+    assert.equal(css.headers?.["content-type"],"text/css; charset=utf-8");
+  }
 });
 test("unknown static paths and traversal attempts are rejected, not read from disk", async () => {
   for (const path of ["/.env","/styles/../app.js","/styles/secret.css","/core/nope.js","/package.json"]) {

@@ -25,6 +25,7 @@ export function createStudioRenderer(deps) {
     /* 无树打开 → 无源可溯：来源抽屉入口（顶栏）直接隐藏，优于必然为空的
        诚实空态；有树后随 renderAll 恢复。 */
     deps.$("source-drawer-toggle").hidden = !hasTree;
+    deps.renderReadingHeading();
     deps.renderTopbarPath();
     if (hasTree) {
       deps.renderBranchTabs();
@@ -45,6 +46,7 @@ export function createStudioRenderer(deps) {
        路径行/命中列表由 D4-8 函数独占管理（虚拟化窗口与焦点不随整树重渲
        重建）。 */
     deps.renderNavSection();
+    deps.renderSessionWorkspace();
   }
 
   return {

@@ -1,3 +1,4 @@
+import { createSessionWorkspace } from "./views/session-workspace.js";
 import { createNavigationFeatures } from "./composition/navigation.js";
 import { createMaterialFeatures } from "./composition/materials.js";
 /** Composition of instance-owned Studio domain views/controllers; initialization is separated from event wiring and boot. Instance-owned state and dependencies. */
@@ -28,6 +29,42 @@ import { createSearchView } from "./views/search.js";
 
 export function createStudioFeatures(deps) {
 
+const sessionWorkspace = createSessionWorkspace({
+  get $() { return $; },
+  get trunkBranchId() { return trunkBranchId; },
+  get branchView() { return branchView; },
+  get closeSidebar() { return closeSidebar; },
+  get closeDrawer() { return closeDrawer; },
+  get focusComposerWhenSelectable() { return focusComposerWhenSelectable; },
+  get renderTopbarPath() { return renderTopbarPath; },
+  get renderAll() { return renderAll; },
+  get createTree() { return createTree; },
+  get guard() { return guard; },
+  get openBranchPanel() { return openBranchPanel; },
+  get closePanel() { return closePanel; },
+  get closeMaterialReader() { return closeMaterialReader; },
+  get branchLabel() { return branchLabel; },
+  get state() { return deps.state; },
+  get document() { return deps.document; },
+  prefersReducedMotion: () => deps.window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false,
+  findTurnById(turnId) {
+    for (const view of deps.state.treeState?.branches || []) {
+      const turn = view.turns.find((item) => item.id === turnId);
+      if (turn) return { view, turn };
+    }
+    return null;
+  },
+});
+const { sessionUI, readingTitles, questionTitle, renderReadingHeading, currentSessionRound, selectRoundForTurn, setWorkspaceView, renderSessionWorkspace, moveSessionRound } = sessionWorkspace;
+const findTurnById = (turnId) => {
+  for (const view of deps.state.treeState?.branches || []) {
+    const turn = view.turns.find((item) => item.id === turnId);
+    if (turn) return { view, turn };
+  }
+  return null;
+};
+
+
     const studioEventsController = createStudioEventsController({
       get state() { return deps.state; },
       get renderDiagnostics() { return renderDiagnostics; },
@@ -43,6 +80,11 @@ export function createStudioFeatures(deps) {
 
 
     const studioFocusController = createStudioFocusController({
+      get selectRoundForTurn() { return selectRoundForTurn; },
+      get renderAll() { return renderAll; },
+      get findTurnById() { return findTurnById; },
+      get trunkBranchId() { return trunkBranchId; },
+      get closeMaterialReader() { return closeMaterialReader; },
       get $() { return $; },
       get window() { return deps.window; },
       get tabButtons() { return tabButtons; },
@@ -56,6 +98,10 @@ export function createStudioFeatures(deps) {
     });
 
     const treeChromeView = createTreeChromeView({
+      get readingTitles() { return readingTitles; },
+      get questionTitle() { return questionTitle; },
+      get sessionUI() { return sessionUI; },
+      get setWorkspaceView() { return setWorkspaceView; },
       get $() { return $; },
       get state() { return deps.state; },
       get document() { return deps.document; },
@@ -82,6 +128,7 @@ export function createStudioFeatures(deps) {
 
 
     const conversationView = createConversationView({
+      get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get assistantTurns() { return assistantTurns; },
       get attachTurnSelectionListeners() { return attachTurnSelectionListeners; },
@@ -163,6 +210,7 @@ export function createStudioFeatures(deps) {
 
 
     const studioBasics = createStudioBasics({
+      get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get window() { return deps.window; },
       get fetch() { return deps.fetch; },
@@ -212,6 +260,8 @@ export function createStudioFeatures(deps) {
 
 
     const studioRenderer = createStudioRenderer({
+      get renderReadingHeading() { return renderReadingHeading; },
+      get renderSessionWorkspace() { return renderSessionWorkspace; },
       get state() { return deps.state; },
       get tabButtons() { return tabButtons; },
       get branchHereButtons() { return branchHereButtons; },
@@ -233,6 +283,7 @@ export function createStudioFeatures(deps) {
     });
 
     const returnController = createReturnController({
+      get selectRoundForTurn() { return selectRoundForTurn; },
       get window() { return deps.window; },
       get state() { return deps.state; },
       get branchView() { return branchView; },
@@ -275,6 +326,8 @@ export function createStudioFeatures(deps) {
     });
 
     const branchController = createBranchController({
+      get selectRoundForTurn() { return selectRoundForTurn; },
+      get closeMaterialReader() { return closeMaterialReader; },
       get state() { return deps.state; },
       get api() { return api; },
       get renderAll() { return renderAll; },
@@ -294,6 +347,7 @@ export function createStudioFeatures(deps) {
 
 
     const promptController = createPromptController({
+      get sessionUI() { return sessionUI; },
       get state() { return deps.state; },
       get trunkBranchId() { return trunkBranchId; },
       get $() { return $; },
@@ -343,6 +397,8 @@ export function createStudioFeatures(deps) {
       get openBranchPanel() { return openBranchPanel; },
     });
 const materialsFeatures = createMaterialFeatures({
+      get sessionUI() { return sessionUI; },
+      get setWorkspaceView() { return setWorkspaceView; },
   get environment() { return deps; },
   get $() { return $; },
   get api() { return api; },
@@ -405,6 +461,8 @@ const {
       get openSavedAnnotationCard() { return openSavedAnnotationCard; },
     });
 const navigationFeatures = createNavigationFeatures({
+      get readingTitles() { return readingTitles; },
+      get renderTrees() { return renderTrees; },
   get environment() { return deps; },
   get $() { return $; },
   get api() { return api; },
@@ -572,6 +630,7 @@ const {
   });
 
   return {
+    sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
     $,
     persistReturnDraft,
     runNavTreeFind,

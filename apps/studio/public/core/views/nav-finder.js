@@ -1,4 +1,5 @@
 export function createNavFinderView({
+  rememberTreeTitles = () => {},
   document,
   getElement,
   getState,
@@ -16,6 +17,7 @@ export function createNavFinderView({
   function renderNavFinder() {
     const state = getState();
     const finder = state.nav.finder;
+    if (finder.phase === "loaded") rememberTreeTitles(finder.mode === "listing" ? finder.listing.trees : finder.hits);
     const list = getElement("nav-tree-results");
     const note = getElement("nav-tree-find-note");
     navFinderButtons.clear();

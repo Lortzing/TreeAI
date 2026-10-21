@@ -56,6 +56,7 @@ export function createBranchController(deps) {
    */
   async function closePanel(opts = {}) {
     if (deps.state.panelBranchId === null) return;
+    if (deps.state.materialReader !== null) deps.closeMaterialReader();
     deps.state.panelBranchId = null;
     deps.state.forcePanelSessionNote = false;
     deps.hidePanel();
@@ -88,6 +89,7 @@ export function createBranchController(deps) {
 
   /** Trunk tab：收面板回主线；已在主线时重复点击仍对齐游标（旧行为）。 */
   async function returnToTrunk(trunkId) {
+    if (deps.state.materialReader !== null) deps.closeMaterialReader();
     if (deps.state.panelBranchId !== null) {
       await closePanel({ focus: { kind: "tab", branchId: trunkId } });
       return;
@@ -130,6 +132,7 @@ export function createBranchController(deps) {
       deps.$("panel-anchor-context").focus();
       return;
     }
+    deps.selectRoundForTurn(payload.source.anchorTurnId);
     deps.state.sourceHighlight = {
       branchId: payload.source.sourceBranchId,
       turnId: payload.source.anchorTurnId,
@@ -142,7 +145,8 @@ export function createBranchController(deps) {
         ? `${navigation.code}: ${navigation.message}`
         : null;
     if (payload.source.sourceBranchId === deps.trunkBranchId()) {
-      deps.renderAll();
+      if (deps.state.panelBranchId !== null) await closePanel({ focus: "none", skipSwitch: true });
+      else deps.renderAll();
       deps.revealAnchorTurn(payload.source.anchorTurnId);
       if (navigationFailed !== null) {
         deps.showError(
