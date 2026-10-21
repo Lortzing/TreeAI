@@ -34,6 +34,9 @@ listen($("reading-materials"), "click", () => {
   }
   document.body.classList.add("sidebar-open");
   $("sidebar-toggle").setAttribute("aria-expanded", "true");
+  /* 材料段默认折叠：回退路径（多份材料或无材料）要把列表/导入入口
+     如实亮出来，先展开再聚焦。 */
+  $("materials-section").open = true;
   $("material-import").focus();
   $("materials-section").scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
 });
@@ -53,7 +56,6 @@ listen(document, "keydown", (event) => {
 for (const mode of ["chat", "map"]) {
   listen($("mode-" + mode), "click", () => setWorkspaceView(mode));
 }
-listen($("view-map-entry"), "click", () => setWorkspaceView("map"));
 listen($("round-previous"), "click", () => moveSessionRound(-1));
 listen($("round-next"), "click", () => moveSessionRound(1));
 listen(document, "keydown", (event) => {

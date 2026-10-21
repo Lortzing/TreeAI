@@ -186,12 +186,6 @@
 .workspace-mode { border: 0; padding: 7px 11px; border-radius: 5px; background: transparent; color: #78816f; cursor: pointer; font-size: 11px; white-space: nowrap; transition: background-color 180ms, color 180ms; }
 .workspace-mode:hover { color: var(--green); background: #e9eee2; }
 .workspace-mode.active { color: #f7f9f1; background: var(--green); }
-.view-edge { position: absolute; top: 45%; z-index: 22; display: grid; gap: 5px; place-items: center; width: 38px; min-height: 65px; padding: 9px 4px; border: 1px solid #d4dccb; border-radius: 7px; background: #f8faf3; color: #6d7e61; cursor: pointer; transition: transform 180ms var(--ease-grow), background-color 180ms; }
-.view-edge > span { font-size: 21px; line-height: 1; }
-.view-edge > small { font-size: 10px; letter-spacing: 1px; }
-.view-edge:hover { background: #e4ebda; transform: translateY(-2px); }
-.view-edge-left { left: 13px; }
-#main:not([data-workspace-view="chat"]) .view-edge { display: none; }
 #main #branch-column { display: contents; }
 #main #branch-empty { display: none; }
 #main-pane { background: var(--room); }
@@ -255,7 +249,6 @@
 .session-text-button { border: 0; background: transparent; color: #637e50; font-size: 11px; padding: 3px 0; cursor: pointer; }
 .session-text-button:hover { text-decoration: underline; }
 @media (max-width: 1000px) {
-  .view-edge { display: none; }
   #reading-heading { padding-left: 30px; padding-right: 30px; }
   #conversation { padding-left: 30px; padding-right: 30px; }
   #composer, #panel-header, #panel-composer, #return-panel { width: calc(100% - 60px); }
@@ -330,7 +323,6 @@
 #round-navigation button:hover:enabled { background: #e1ead5; transform: translateY(-2px); }
 #round-navigation button:disabled { opacity: .3; cursor: default; }
 #round-position { min-width: 60px; text-align: center; font-size: 11px; font-variant-numeric: tabular-nums; color: #7a8c69; letter-spacing: 2px; }
-.view-edge-left { top: 46%; }
 .session-view-heading { padding-top: 24px; }
 .session-view-heading h1 { font: 500 18px/1.5 var(--font-ui); margin: 0; }
 .session-map-tools { margin-top: 22px; }

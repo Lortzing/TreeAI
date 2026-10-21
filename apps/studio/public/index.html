@@ -53,7 +53,7 @@
             <button id="list-retry">Retry</button>
           </div>
         </section>
-        <section class="sidebar-section" id="branch-section">
+        <section class="sidebar-section" id="branch-section" hidden>
           <h2 class="sidebar-heading">这棵树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
@@ -103,16 +103,18 @@
              选择器（.md/.markdown/.pdf——D4-1 支持面）经真实导入端点上传
              （原始字节 + 百分号编码文件名头），pending/parsing/ready/
              failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
-             在途解析可取消（parse-tasks cancel 端点）。 -->
-        <section class="sidebar-section" id="materials-section" hidden>
-          <h2 class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></h2>
+             在途解析可取消（parse-tasks cancel 端点）。渐进披露：本段默认
+             折叠（与导航/搜索同形态）；导入开始或阅读导航回退路径会自动
+             展开——在途状态面绝不藏在折叠面板后。 -->
+        <details class="sidebar-section sidebar-disclosure" id="materials-section" hidden>
+          <summary class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></summary>
           <div class="material-import-row">
             <button id="material-import" type="button">＋ 导入阅读材料</button>
             <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
           </div>
           <p id="material-import-status" role="status" aria-live="polite"></p>
           <ul id="material-list" aria-label="Materials"></ul>
-        </section>
+        </details>
         <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：
              跨已保存产品事实的检索入口（材料版本×树链接 / 术语批注 / Return /
              对话 Turn）。默认范围 = 当前树，显式切换全部树；来源类型筛选按
@@ -150,7 +152,6 @@
           <button id="mode-chat" type="button" class="workspace-mode active" aria-pressed="true">对话</button>
           <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">Session 关系</button>
         </nav>
-        <button id="view-map-entry" class="view-edge view-edge-left" type="button" aria-label="E：打开 Session 关系视图"><span aria-hidden="true">⑂</span><small>关系</small></button>
         <nav id="round-navigation" aria-label="切换对话轮次" hidden>
           <button id="round-previous" type="button" aria-label="上一轮">←</button>
           <span id="round-position" role="status" aria-live="polite">00 / 00</span>
