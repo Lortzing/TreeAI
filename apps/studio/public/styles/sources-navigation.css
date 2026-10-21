@@ -36,6 +36,7 @@
   background: none;
   color: var(--ink);
   cursor: pointer;
+  transition: background-color var(--motion-state) ease-out;
 }
 #drawer-close:hover { background: var(--surface-dim); }
 
@@ -54,6 +55,7 @@
   background: none;
   color: var(--ink);
   cursor: pointer;
+  transition: background-color var(--motion-state) ease-out;
 }
 .drawer-retry:hover { background: var(--surface-dim); }
 
@@ -69,6 +71,7 @@
   background: none;
   color: var(--ink);
   cursor: pointer;
+  transition: background-color var(--motion-state) ease-out;
 }
 .term-cache-toggle:hover:not(:disabled) { background: var(--surface-dim); }
 
@@ -89,6 +92,7 @@
   background: none;
   color: var(--ink);
   cursor: pointer;
+  transition: background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out;
 }
 .term-mode-toggle[aria-pressed="true"] {
   border-color: var(--gold);

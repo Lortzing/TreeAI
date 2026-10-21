@@ -28,6 +28,11 @@
   --danger: #a33b2e;
   --danger-wash: #fbece8;
   --highlight: #dfeace;
+  /* Session 工作台室景（session-workspace.css）：主区阅读室底、室内浮面
+     与支线概念列底——同一暖灰绿族的三档明度。 */
+  --room: #eef0e9;
+  --room-raised: #fcfcf7;
+  --room-column: #f3f4ed;
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   --font-read: "Songti SC", "STSong", "Noto Serif SC", "Iowan Old Style", Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
