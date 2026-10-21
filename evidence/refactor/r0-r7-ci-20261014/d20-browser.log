@@ -1,0 +1,264 @@
+chromium	Set up job	﻿2026-10-14T02:26:47.2402441Z Current runner version: '2.337.0'
+chromium	Set up job	2026-10-14T02:26:47.2427801Z ##[group]Runner Image Provisioner
+chromium	Set up job	2026-10-14T02:26:47.2428884Z Hosted Compute Agent
+chromium	Set up job	2026-10-14T02:26:47.2429511Z Version: 20261002.596
+chromium	Set up job	2026-10-14T02:26:47.2430143Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+chromium	Set up job	2026-10-14T02:26:47.2430996Z Build Date: 2026-10-02T22:28:27Z
+chromium	Set up job	2026-10-14T02:26:47.2431720Z Worker ID: {276bcd56-f78e-48f9-a978-b4570fde3330}
+chromium	Set up job	2026-10-14T02:26:47.2432520Z Region: westus
+chromium	Set up job	2026-10-14T02:26:47.2433076Z Cloud: Azure
+chromium	Set up job	2026-10-14T02:26:47.2433587Z ##[endgroup]
+chromium	Set up job	2026-10-14T02:26:47.2435152Z ##[group]Operating System
+chromium	Set up job	2026-10-14T02:26:47.2435831Z Ubuntu
+chromium	Set up job	2026-10-14T02:26:47.2436914Z 24.04.5
+chromium	Set up job	2026-10-14T02:26:47.2437518Z LTS
+chromium	Set up job	2026-10-14T02:26:47.2438042Z ##[endgroup]
+chromium	Set up job	2026-10-14T02:26:47.2438704Z ##[group]Runner Image
+chromium	Set up job	2026-10-14T02:26:47.2439364Z Image: ubuntu-24.04
+chromium	Set up job	2026-10-14T02:26:47.2439980Z Version: 20261004.327.1
+chromium	Set up job	2026-10-14T02:26:47.2441093Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+chromium	Set up job	2026-10-14T02:26:47.2442898Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+chromium	Set up job	2026-10-14T02:26:47.2443953Z ##[endgroup]
+chromium	Set up job	2026-10-14T02:26:47.2445127Z ##[group]GITHUB_TOKEN Permissions
+chromium	Set up job	2026-10-14T02:26:47.2447236Z Contents: read
+chromium	Set up job	2026-10-14T02:26:47.2447992Z Metadata: read
+chromium	Set up job	2026-10-14T02:26:47.2448602Z ##[endgroup]
+chromium	Set up job	2026-10-14T02:26:47.2450698Z Secret source: Actions
+chromium	Set up job	2026-10-14T02:26:47.2451780Z Cache mode: write
+chromium	Set up job	2026-10-14T02:26:47.2452481Z Prepare workflow directory
+chromium	Set up job	2026-10-14T02:26:47.2790615Z Prepare all required actions
+chromium	Set up job	2026-10-14T02:26:47.2840480Z Getting action download info
+chromium	Set up job	2026-10-14T02:26:47.6400686Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+chromium	Set up job	2026-10-14T02:26:47.7584672Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+chromium	Set up job	2026-10-14T02:26:47.9518907Z Complete job name: chromium
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	﻿2026-10-14T02:26:48.0333887Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0335002Z with:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0335459Z   repository: Lortzing/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0339614Z   token: ***
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0340068Z   ssh-strict: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0340509Z   ssh-user: git
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0340949Z   persist-credentials: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0341450Z   clean: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0341891Z   sparse-checkout-cone-mode: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0342411Z   fetch-depth: 1
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0342843Z   fetch-tags: false
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0343287Z   show-progress: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0343736Z   lfs: false
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0344150Z   submodules: false
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0344610Z   set-safe-directory: true
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.0345354Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1440420Z Syncing repository: Lortzing/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1442960Z ##[group]Getting Git version info
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1444062Z Working directory is '<home>/work/TreeAI/TreeAI'
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1445678Z [command]/usr/bin/git version
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1469420Z git version 2.55.0
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1504647Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1514074Z Temporarily overriding HOME='<home>/work/_temp/e08e7d1a-e65f-4841-9615-5cb9448b2bbc' before making global git config changes
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1517010Z Adding repository directory to the temporary git global config as a safe directory
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1519308Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1577397Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1581709Z ##[group]Initializing the repository
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1586943Z [command]/usr/bin/git init <home>/work/TreeAI/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1700621Z hint: Using 'master' as the name for the initial branch. This default branch name
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1702381Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1704382Z hint: to use in all of your new repositories, which will suppress this warning,
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1705852Z hint: call:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1706899Z hint:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1707918Z hint: 	git config --global init.defaultBranch <name>
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1709073Z hint:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1710121Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1711768Z hint: 'development'. The just-created branch can be renamed via this command:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1713083Z hint:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1713915Z hint: 	git branch -m <name>
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1714899Z hint:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1716037Z hint: Disable this message with "git config set advice.defaultBranchName false"
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1718052Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1722987Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1777435Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1778721Z ##[group]Disabling automatic garbage collection
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1781941Z [command]/usr/bin/git config --local gc.auto 0
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1816001Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1817436Z ##[group]Setting up auth
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1826882Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.1867137Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2302941Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2348188Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2578977Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2621836Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2622872Z ##[group]Fetching the repository
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:48.2634383Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +dff8d48ad48517824ae1b901f1f8db163f7125da:refs/remotes/pull/27/merge
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2470019Z From https://github.com/Lortzing/TreeAI
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2473344Z  * [new ref]         dff8d48ad48517824ae1b901f1f8db163f7125da -> pull/27/merge
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2480379Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2483032Z ##[group]Determining the checkout info
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2486405Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2488579Z [command]/usr/bin/git sparse-checkout disable
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2545964Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2579692Z ##[group]Checking out the ref
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.2583998Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/27/merge
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7196660Z Note: switching to 'refs/remotes/pull/27/merge'.
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7197648Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7198079Z You are in 'detached HEAD' state. You can look around, make experimental
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7198976Z changes and commit them, and you can discard any commits you make in this
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7199751Z state without impacting any branches by switching back to a branch.
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7200165Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7200475Z If you want to create a new branch to retain commits you create, you may
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7201120Z do so (now or later) by using -c with the switch command. Example:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7201493Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7201662Z   git switch -c <new-branch-name>
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7201911Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7202091Z Or undo this operation with:
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7202369Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7202507Z   git switch -
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7202725Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7203042Z Turn off this advice by setting config variable advice.detachedHead to false
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7203780Z 
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7204279Z HEAD is now at dff8d48 Merge d20d808262b50859a855e91a54eb57004a78df74 into e427460b31f61722d5e74a6fa4ee24d140abe67b
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7221737Z ##[endgroup]
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7279177Z [command]/usr/bin/git log -1 --format=%H
+chromium	Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:26:52.7307332Z dff8d48ad48517824ae1b901f1f8db163f7125da
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-10-14T02:26:52.7710664Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7711199Z with:
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7711470Z   node-version: 24.21.0
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7711736Z   cache: npm
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7711979Z   always-auth: false
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7712233Z   check-latest: false
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7715057Z   token: ***
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.7715331Z ##[endgroup]
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.9127830Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.9132472Z (node:2276) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.9133969Z (Use `node --trace-deprecation ...` to show where the warning was created)
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:52.9135854Z ##[group]Environment details
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.3154098Z node: v24.21.0
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.3154523Z npm: 11.19.0
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.3154730Z yarn: 1.22.22
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.3155927Z ##[endgroup]
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.3178214Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.4343253Z <home>/.npm
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.7044924Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:53.7155115Z (node:2276) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:54.9703216Z Received 8388608 of 170878268 (4.9%), 8.0 MBs/sec
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:55.9706504Z Received 134217728 of 170878268 (78.5%), 64.0 MBs/sec
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:56.2312741Z Received 170878268 of 170878268 (100.0%), 72.0 MBs/sec
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:56.2314227Z Cache Size: ~163 MB (170878268 B)
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:56.2388520Z [command]/usr/bin/tar -xf <home>/work/_temp/59fbb5d7-9203-4503-a4d6-490d6013ded4/cache.tzst -P -C <home>/work/TreeAI/TreeAI --use-compress-program unzstd
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:56.4721017Z Cache restored successfully
+chromium	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:26:56.4804546Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+chromium	Run npm ci	﻿2026-10-14T02:26:56.5010165Z ##[group]Run npm ci
+chromium	Run npm ci	2026-10-14T02:26:56.5010506Z ^[[36;1mnpm ci^[[0m
+chromium	Run npm ci	2026-10-14T02:26:56.5291439Z shell: /usr/bin/bash -e {0}
+chromium	Run npm ci	2026-10-14T02:26:56.5291813Z ##[endgroup]
+chromium	Run npm ci	2026-10-14T02:27:00.4170814Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+chromium	Run npm ci	2026-10-14T02:27:03.5857974Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5859178Z added 178 packages, and audited 186 packages in 7s
+chromium	Run npm ci	2026-10-14T02:27:03.5859780Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5874395Z 17 packages are looking for funding
+chromium	Run npm ci	2026-10-14T02:27:03.5875430Z   run `npm fund` for details
+chromium	Run npm ci	2026-10-14T02:27:03.5961549Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5962307Z 3 vulnerabilities (1 moderate, 2 high)
+chromium	Run npm ci	2026-10-14T02:27:03.5963065Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5963903Z To address issues that do not require attention, run:
+chromium	Run npm ci	2026-10-14T02:27:03.5964778Z   npm audit fix
+chromium	Run npm ci	2026-10-14T02:27:03.5965274Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5966903Z To address all issues (including breaking changes), run:
+chromium	Run npm ci	2026-10-14T02:27:03.5967604Z   npm audit fix --force
+chromium	Run npm ci	2026-10-14T02:27:03.5967900Z 
+chromium	Run npm ci	2026-10-14T02:27:03.5968221Z Run `npm audit` for details.
+chromium	Run npm ci	2026-10-14T02:27:03.5987474Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+chromium	Run npm ci	2026-10-14T02:27:03.5988783Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+chromium	Run npm ci	2026-10-14T02:27:03.5989895Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+chromium	Run npm ci	2026-10-14T02:27:03.5990985Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+chromium	Run npm ci	2026-10-14T02:27:03.5992172Z npm warn install-scripts
+chromium	Run npm ci	2026-10-14T02:27:03.5993236Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+chromium	Build Studio internal event-journal dependency	﻿2026-10-14T02:27:03.6935165Z ##[group]Run npm run build:deps --workspace @treeai/studio
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.6935914Z ^[[36;1mnpm run build:deps --workspace @treeai/studio^[[0m
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.7024240Z shell: /usr/bin/bash -e {0}
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.7024669Z ##[endgroup]
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.8342131Z 
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.8343015Z > @treeai/studio@0.0.0 build:deps
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.8344209Z > npm run --workspace @treeai/event-journal build:test
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.8344791Z 
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.9832128Z 
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.9833194Z > @treeai/event-journal@0.0.0 build:test
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.9833849Z > tsc -p tsconfig.build.json
+chromium	Build Studio internal event-journal dependency	2026-10-14T02:27:03.9834146Z 
+chromium	Require real headless Chrome/Chromium	﻿2026-10-14T02:27:05.4828832Z ##[group]Run if command -v google-chrome >/dev/null 2>&1; then
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4829348Z ^[[36;1mif command -v google-chrome >/dev/null 2>&1; then^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4829726Z ^[[36;1m  google-chrome --version^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4830046Z ^[[36;1melif command -v chromium >/dev/null 2>&1; then^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4830374Z ^[[36;1m  chromium --version^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4830612Z ^[[36;1melse^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4830883Z ^[[36;1m  echo "No Chrome/Chromium binary on CI runner" >&2^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4831202Z ^[[36;1m  exit 1^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4831398Z ^[[36;1mfi^[[0m
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4898897Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:05.4899296Z ##[endgroup]
+chromium	Require real headless Chrome/Chromium	2026-10-14T02:27:08.7466593Z Google Chrome 154.0.8037.97 
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	﻿2026-10-14T02:27:08.7660514Z ##[group]Run chrome_bin="$(command -v google-chrome || command -v chromium)"
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7661103Z ^[[36;1mchrome_bin="$(command -v google-chrome || command -v chromium)"^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7661586Z ^[[36;1mnode scripts/run-d4-browser.mjs --mode selftest \^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7661962Z ^[[36;1m  --chrome-executable "$chrome_bin" \^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7662296Z ^[[36;1m  --only d4-import-material \^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7662581Z ^[[36;1m  --only d4-read-and-select \^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7662854Z ^[[36;1m  --only d4-beta-usability^[[0m
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7726921Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7727268Z env:
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7727479Z   TREEAI_TEST_CHROME_NO_SANDBOX: 1
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.7727734Z ##[endgroup]
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.8284261Z run-d4-browser 0.6.0 — mode selftest
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.8286341Z data: <tmp>/treeai-d4-data-6l9hrS
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:08.8287170Z artifacts: <tmp>/treeai-d4-browser-artifacts-HCMetr
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:14.6700856Z   [PASS] chrome-boot — /usr/bin/google-chrome on 127.0.0.1:41105
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:15.7534657Z   [PASS] studio-boot — studio healthy on http://127.0.0.1:45209/
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:16.4598056Z   [PASS] page-load — studio shell rendered in headless Chromium
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:16.4599091Z   [PASS] console-clean — no console/log errors on the studio shell
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:16.4600179Z scoped to: d4-import-material, d4-read-and-select, d4-beta-usability (boot checks always run)
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:17.8091259Z   [PASS] d4-import-material — 3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:27:30.2130632Z   [PASS] d4-read-and-select — 45/45 markdown + 30/30 frozen B2 selections captured exactly in the real reader (markdown code/combining/cross-line/emoji/en/links/long-tail/repeat-word-2nd/unicode/zh across md-01..md-12 incl. emoji/ZWJ, repeat-word occurrences, cross-line and long-tail past lazy-load; pdf code/cross-line/en/fonts/footer/header/long-tail/multipage/repeat-word-2nd/two-column-left/two-column-right/unicode/zh across pdf-01..pdf-12 with each targeted page's text layer byte-equal to the frozen truth before capture and multipage pdf-11 fully paged in; 3 real mouse gestures: md click + Shift+click (md-sel-01), md continuous drag (md-sel-02), pdf continuous drag (pdf-sel-01 on a page text layer)); grapheme-split snapped outward; cross-block refused; cross-page refused on pdf (frozen inv-08/inv-09 — no payload, never silently truncated); resolve-selection agrees on all (incl. sourceHash = SHA-256 of the frozen canonicalText); copy quote: clipboard read-back byte-equal
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:28:00.1168420Z   [PASS] d4-beta-usability — README-documented start path booted a clean temp data dir (argv/entry/flags reconciled with README + package.json; honest empty state: no trees/materials, create-tree flow used for real); wide 1600px + narrow 390px (mobile) viewports: sidebar/reader/branch panel usable, no horizontal overflow, capture bar reachable, key controls hit-testable; keyboard: Tab traversal reached new-tree/import/search/reader-text in 33 steps with visible focus outlines, Enter+Space activations, Escape layering with focus restoration, reader arrows scroll; touch: 5 taps + 1 swipes + 1 in-gesture drag-select (drawer open, reader open, swipe scrolled 405px, pdf text-layer selection armed via selectionchange with zero mouse events, copy tap verified clipboard read-back byte-equal); reduced-motion: matchMedia honored, View-source jump + stick-to-bottom landed immediately (no in-transit frames); draft round trip: draft preserved + focus restored to #panel-view-source + panel scroll kept + reader reopened at the saved block (in-session); echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior — automated part only, the Mac sign-off and 3–5 person trials remain the owner's D4-G3 human sequence
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:28:00.1176049Z 
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:28:00.1176969Z run-d4-browser: 7 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN (mode selftest)
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-14T02:28:00.1178592Z note: selftest uses the offline echo driver — these results are never real-Pi evidence
+chromium	Real Chrome terminology and search navigation (offline Echo)	﻿2026-10-14T02:28:00.4739605Z ##[group]Run chrome_bin="$(command -v google-chrome || command -v chromium)"
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4740188Z ^[[36;1mchrome_bin="$(command -v google-chrome || command -v chromium)"^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4740664Z ^[[36;1mnode scripts/run-d4-browser.mjs --mode selftest \^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4741071Z ^[[36;1m  --chrome-executable "$chrome_bin" \^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4741389Z ^[[36;1m  --only d4-import-material \^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4741686Z ^[[36;1m  --only terminology-path \^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4741959Z ^[[36;1m  --only d4-search-recover^[[0m
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4804588Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4804945Z env:
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4805152Z   TREEAI_TEST_CHROME_NO_SANDBOX: 1
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.4805401Z ##[endgroup]
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.5360983Z run-d4-browser 0.6.0 — mode selftest
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.5363601Z data: <tmp>/treeai-d4-data-vwwd2L
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.5364395Z artifacts: <tmp>/treeai-d4-browser-artifacts-xUNprM
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:00.9578925Z   [PASS] chrome-boot — /usr/bin/google-chrome on 127.0.0.1:39399
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:02.2115571Z   [PASS] studio-boot — studio healthy on http://127.0.0.1:35663/
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:02.8525165Z   [PASS] page-load — studio shell rendered in headless Chromium
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:02.8526931Z   [PASS] console-clean — no console/log errors on the studio shell
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:02.8528695Z scoped to: d4-import-material, terminology-path, d4-search-recover (boot checks always run)
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:04.1396073Z   [PASS] d4-import-material — 3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:06.9681364Z   [PASS] d4-search-recover — 5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 探针自产跨树语料
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:27.2344657Z   [PASS] terminology-path — reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (echo — NOT real-Pi evidence), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:27.2350510Z 
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:27.2350839Z run-d4-browser: 7 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN (mode selftest)
+chromium	Real Chrome terminology and search navigation (offline Echo)	2026-10-14T02:28:27.2351590Z note: selftest uses the offline echo driver — these results are never real-Pi evidence
+chromium	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-10-14T02:28:27.3240006Z Post job cleanup.
+chromium	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:28:27.4475692Z (node:3033) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+chromium	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:28:27.4477004Z (Use `node --trace-deprecation ...` to show where the warning was created)
+chromium	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-10-14T02:28:27.4480270Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db, not saving cache.
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	﻿2026-10-14T02:28:27.4636358Z Post job cleanup.
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5505988Z [command]/usr/bin/git version
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5551396Z git version 2.55.0
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5595670Z Temporarily overriding HOME='<home>/work/_temp/b6309af4-5359-428a-a9f1-d36aa1a59303' before making global git config changes
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5597663Z Adding repository directory to the temporary git global config as a safe directory
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5601936Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5642703Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5680364Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5960229Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.5989016Z http.https://github.com/.extraheader
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.6001032Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+chromium	Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683	2026-10-14T02:28:27.6040270Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+chromium	Complete job	﻿2026-10-14T02:28:27.6491085Z Cleaning up orphan processes
+chromium	Complete job	2026-10-14T02:28:27.6830753Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -293,6 +293,7 @@ export function createReturnController(deps) {
        重复提交），主线横幅如实告知「已保存，返回主线失败」+ 重新导航
        指引；navigated / no-session → 按既有语义收尾（客户端游标对齐失败
        仍呈现在主线横幅——可见面，不吞错，也不把已成功的提交伪装成失败）。 */
+    if (submittedTurnId !== null) deps.selectRoundForTurn(submittedTurnId);
     if (navigation !== null && navigation.status === "failed") {
       await deps.closePanel({ focus: "main-input", skipSwitch: true });
       deps.showError(

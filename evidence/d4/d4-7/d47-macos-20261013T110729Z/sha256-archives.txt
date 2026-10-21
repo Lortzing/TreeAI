@@ -1,0 +1,2 @@
+e08db88a69a9d62f4c77752ead3d87aed93072e9d489893af408bb96588f9db7  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.0.0-refactor.0173fc3.local-a-darwin-arm64.tar.gz
+b3ab5c0e135aec458f7bbf318403ddb60bc46431998f49e2458c1491ddedc0be  /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.0.0-refactor.0173fc3.local-b-darwin-arm64.tar.gz

@@ -1,0 +1,253 @@
+build + smoke (win-x64)	Installer module and layout regressions	﻿2026-10-14T02:08:37.2969832Z ##[group]Run node --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.2970700Z ^[[36;1mnode --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts^[[0m
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.2986699Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.2987122Z ##[endgroup]
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9529768Z ✖ dataDirFor: macOS 平台目录（无覆盖时） (2.9114ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9534753Z ✔ dataDirFor: Windows 尊重 APPDATA (0.3866ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9538711Z ✖ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.267ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9541450Z ✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.3146ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9554041Z ✖ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.4238ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9557656Z ✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (1.2504ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9560711Z ✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.299ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9563651Z ✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.1811ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9567900Z ✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.3777ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9569159Z ✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.4197ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9572289Z ✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.2872ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9576065Z ✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.2034ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9580400Z ✔ defaultLauncherConfig: 零依赖离线缺省 (0.232ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9584029Z ✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.4474ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9592357Z ✔ portCandidates: 从期望端口连续顺延 (0.2579ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9596608Z ✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.2042ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9602633Z ✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.547ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9618849Z ✖ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.3853ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9621912Z ✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.1035ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9624880Z ✔ validateBundleManifest: 合法清单通过 (0.3128ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9626964Z ✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.1904ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9631293Z ✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.1466ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9638115Z ✖ validateBundleLayout: 合成最小产物通过（三平台） (79.4031ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9653126Z ✖ validateBundleLayout: 缺件必须点名报错 (70.1903ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9667236Z ✔ validateBundleLayout: node 缺执行位必须报错（posix） (60.7487ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9679602Z ✖ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (81.4972ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9681083Z ✔ parseRuntimeState: 合法状态与损坏输入 (0.432ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9685823Z ✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.1922ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9759575Z ✔ shims/launcher 类型层纳入检查（type-only import） (0.1903ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9762941Z ✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.2608ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9764383Z ✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.9142ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9767175Z ✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (0.286ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9768665Z ✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.3531ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:37.9772662Z ✖ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (64.3211ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1813350Z ✔ installer core loads without npm modules from a Chinese and space bundle path (620.1831ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1956884Z ℹ tests 35
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1957339Z ℹ suites 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1957775Z ℹ pass 27
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1958121Z ℹ fail 8
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1958467Z ℹ cancelled 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1958828Z ℹ skipped 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1959143Z ℹ todo 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.1959517Z ℹ duration_ms 794.8241
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2026404Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2027318Z ✖ failing tests:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2027956Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2028769Z test at tests\unit\d4-7-installer.test.ts:71:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2029760Z ✖ dataDirFor: macOS 平台目录（无覆盖时） (2.9114ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2033813Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2034538Z   + actual - expected
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2034887Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2035345Z   + '\\Users\\tester\\Library\\Application Support\\TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2036037Z   - '<home>/Library/Application Support/TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2036597Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2037066Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:72:10)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2037626Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2038014Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2038405Z       at Test.start (node:internal/test_runner/test:1262:17)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2038916Z       at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2039344Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2039586Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2039946Z     actual: '\\Users\\tester\\Library\\Application Support\\TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2040410Z     expected: '<home>/Library/Application Support/TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2040771Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2040996Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2041187Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2041281Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2041466Z test at tests\unit\d4-7-installer.test.ts:84:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2042073Z ✖ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.267ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2042590Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2042987Z   + actual - expected
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2043183Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2043383Z   + '\\home\\t\\.local\\share\\TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2043671Z   - '<home>/.local/share/TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2043897Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2044309Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:85:10)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2044864Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2045245Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2045706Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2046183Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2046580Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2047064Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2047484Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2047723Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2047995Z     actual: '\\home\\t\\.local\\share\\TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2048322Z     expected: '<home>/.local/share/TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2048601Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2048830Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2049015Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2049112Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2049285Z test at tests\unit\d4-7-installer.test.ts:95:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2049776Z ✖ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.4238ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2050241Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2050619Z   + actual - expected
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2050808Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2051880Z   + '\\Users\\tester\\Applications\\TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2052220Z   - '<home>/Applications/TreeAI'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2052470Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2052890Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:96:10)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2053434Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2054286Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2054766Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2055268Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2056412Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2056911Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2057335Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2057570Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2057854Z     actual: '\\Users\\tester\\Applications\\TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2058222Z     expected: '<home>/Applications/TreeAI',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2058529Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2058758Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2058963Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2059057Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2059234Z test at tests\unit\d4-7-installer.test.ts:229:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2059713Z ✖ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.3853ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2060145Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2061165Z   + actual - expected
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2061414Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2062363Z   + 'node-v24.21.0-darwin-arm64\\bin\\node'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2063200Z   - 'node-v24.21.0-darwin-arm64/bin/node'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2064179Z                                ^
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2064846Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2065346Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:232:10)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2065936Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2066332Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2066791Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2067260Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2067655Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2068117Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2068533Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2068774Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2069061Z     actual: 'node-v24.21.0-darwin-arm64\\bin\\node',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2069422Z     expected: 'node-v24.21.0-darwin-arm64/bin/node',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2069727Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2069953Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2070140Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2070239Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2070419Z test at tests\unit\d4-7-installer.test.ts:345:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2071012Z ✖ validateBundleLayout: 合成最小产物通过（三平台） (79.4031ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2071378Z   AssertionError [ERR_ASSERTION]: darwin-arm64
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2071673Z   + actual - expected
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2071869Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2072025Z   + [
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2072293Z   +   'node 可执行文件没有执行位（打包时未 chmod +x）'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2072535Z   + ]
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2072691Z   - []
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2072846Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2073267Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:349:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2074769Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2075827Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2076331Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2077131Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2077793Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2078292Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2078720Z     generatedMessage: false,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2078971Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2079382Z     actual: [ 'node 可执行文件没有执行位（打包时未 chmod +x）' ],
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2079678Z     expected: [],
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2079914Z     operator: 'deepStrictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2080166Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2080354Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2080456Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2080742Z test at tests\unit\d4-7-installer.test.ts:356:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2081199Z ✖ validateBundleLayout: 缺件必须点名报错 (70.1903ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2081631Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2081992Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2082155Z   2 !== 1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2082317Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2082750Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:361:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2083302Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2083683Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2084135Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2084608Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2085000Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2085486Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2085914Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2086148Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2086361Z     actual: 2,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2086547Z     expected: 1,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2086751Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2086982Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2087296Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2087465Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2087653Z test at tests\unit\d4-7-installer.test.ts:380:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2088534Z ✖ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (81.4972ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2089143Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2089508Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2089715Z   2 !== 1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2089991Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2090418Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:387:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2090956Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2091347Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2091811Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2092287Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2092673Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2093306Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2093729Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2093972Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2094185Z     actual: 2,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2094455Z     expected: 1,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2094798Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2095037Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2095228Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2095330Z 
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2095503Z test at tests\unit\d4-7-installer.test.ts:558:1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2096006Z ✖ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (64.3211ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2096586Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2096942Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2097319Z   2 !== 1
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2097490Z   
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2097900Z       at TestContext.<anonymous> (file:///D:/a/TreeAI/TreeAI/tests/unit/d4-7-installer.test.ts:563:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2098460Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2098842Z       at Test.run (node:internal/test_runner/test:1402:25)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2099292Z       at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2099764Z       at Test.postRun (node:internal/test_runner/test:1542:19)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2100146Z       at Test.run (node:internal/test_runner/test:1467:12)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2100616Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2101032Z     generatedMessage: true,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2101265Z     code: 'ERR_ASSERTION',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2101491Z     actual: 2,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2101675Z     expected: 1,
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2101876Z     operator: 'strictEqual',
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2102108Z     diff: 'simple'
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2102288Z   }
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:08:38.2186758Z ##[error]Process completed with exit code 1.
+build + smoke (win-x64)	Upload installer artifact + checksums	﻿2026-10-14T02:08:38.2439453Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2440018Z with:
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2440245Z   name: d4-installer-win-x64-38499416478-1
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2441296Z   path: dist/d4-installer/treeai-studio-*.tar.gz
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.zip
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.sha256
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/SHA256SUMS.txt
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/VERSION-treeai-studio-*.json
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/build-report-*.json
+build + smoke (win-x64)	Upload installer artifact + checksums	
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2442289Z   retention-days: 14
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2442504Z   if-no-files-found: error
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2442727Z   compression-level: 6
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2442928Z   overwrite: false
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2443135Z   include-hidden-files: false
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.2443359Z ##[endgroup]
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.4520246Z (node:9356) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.4521834Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:08:38.4602002Z ##[error]No files were found with the provided path: dist/d4-installer/treeai-studio-*.tar.gz
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.zip
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.sha256
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/SHA256SUMS.txt
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/VERSION-treeai-studio-*.json
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/build-report-*.json. No artifacts will be uploaded.

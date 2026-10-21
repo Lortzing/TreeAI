@@ -1,0 +1,1230 @@
+build + smoke (win-x64)	Set up job	﻿2026-10-14T02:28:58.9704560Z Current runner version: '2.337.0'
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9766308Z ##[group]Runner Image Provisioner
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9767659Z Hosted Compute Agent
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9768587Z Version: 20260901.588
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9769671Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9770871Z Build Date: 2026-09-01T19:56:44Z
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9771980Z Worker ID: {01f7b008-745c-4c63-b447-1c06fe0bb650}
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9773235Z Azure Region: eastus
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9774148Z ##[endgroup]
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9776389Z ##[group]Operating System
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9777822Z Microsoft Windows Server 2025
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9778875Z 10.0.26100
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9779761Z Datacenter
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9780617Z ##[endgroup]
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9781420Z ##[group]Runner Image
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9782439Z Image: windows-2025-vs2026
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9783381Z Version: 20260925.250.1
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9785429Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9789043Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9790905Z ##[endgroup]
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9792747Z ##[group]GITHUB_TOKEN Permissions
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9795319Z Contents: read
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9796279Z Metadata: read
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9797660Z ##[endgroup]
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9800504Z Secret source: Actions
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9802113Z Cache mode: write
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:58.9803299Z Prepare workflow directory
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:59.0208652Z Prepare all required actions
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:59.0273455Z Getting action download info
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:59.1785237Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+build + smoke (win-x64)	Set up job	2026-10-14T02:28:59.3128703Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+build + smoke (win-x64)	Set up job	2026-10-14T02:29:00.1470298Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+build + smoke (win-x64)	Set up job	2026-10-14T02:29:00.5923459Z Complete job name: build + smoke (win-x64)
+build + smoke (win-x64)	Check out	﻿2026-10-14T02:29:00.7506483Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7507577Z with:
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7507899Z   repository: Lortzing/TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7510536Z   token: ***
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7510829Z   ssh-strict: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7511126Z   ssh-user: git
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7511425Z   persist-credentials: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7511755Z   clean: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7512065Z   sparse-checkout-cone-mode: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7512409Z   fetch-depth: 1
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7512700Z   fetch-tags: false
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7513002Z   show-progress: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7513301Z   lfs: false
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7513602Z   submodules: false
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7513955Z   set-safe-directory: true
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.7514563Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.8967277Z Syncing repository: Lortzing/TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.8968867Z ##[group]Getting Git version info
+build + smoke (win-x64)	Check out	2026-10-14T02:29:00.8969325Z Working directory is 'D:\a\TreeAI\TreeAI'
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.0106046Z [command]"C:\Program Files\Git\bin\git.exe" version
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.3853640Z git version 2.55.0.windows.5
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.3899702Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.3918028Z Temporarily overriding HOME='D:\a\_temp\16c792e0-fc16-45ab-8afe-9a5d8c213fbb' before making global git config changes
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.3918962Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.3928281Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\TreeAI\TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.4565672Z Deleting the contents of 'D:\a\TreeAI\TreeAI'
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.4571665Z ##[group]Initializing the repository
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.4579511Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\TreeAI\TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.5448221Z Initialized empty Git repository in D:/a/TreeAI/TreeAI/.git/
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.5507513Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Lortzing/TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6201208Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6202190Z ##[group]Disabling automatic garbage collection
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6214824Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6543757Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6544632Z ##[group]Setting up auth
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6557114Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+build + smoke (win-x64)	Check out	2026-10-14T02:29:01.6847503Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.2872473Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.3171448Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.8486903Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.8826432Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.8827383Z ##[group]Fetching the repository
+build + smoke (win-x64)	Check out	2026-10-14T02:29:03.8841760Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d20d808262b50859a855e91a54eb57004a78df74:refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1009383Z From https://github.com/Lortzing/TreeAI
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1012442Z  * [new ref]         d20d808262b50859a855e91a54eb57004a78df74 -> origin/refactor/integration-r0-r7
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1065486Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1066185Z ##[group]Determining the checkout info
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1068539Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1083007Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.1654033Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.2134598Z ##[group]Checking out the ref
+build + smoke (win-x64)	Check out	2026-10-14T02:29:09.2159573Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B refactor/integration-r0-r7 refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.2734822Z Updating files:  53% (2186/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3061820Z Updating files:  54% (2192/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3247136Z Updating files:  55% (2232/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3346027Z Updating files:  56% (2273/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3430341Z Updating files:  57% (2314/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3526946Z Updating files:  58% (2354/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3621638Z Updating files:  59% (2395/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3716376Z Updating files:  60% (2435/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3815472Z Updating files:  61% (2476/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.3909953Z Updating files:  62% (2516/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4002629Z Updating files:  63% (2557/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4098909Z Updating files:  64% (2598/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4196139Z Updating files:  65% (2638/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4285886Z Updating files:  66% (2679/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4390681Z Updating files:  67% (2719/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4496715Z Updating files:  68% (2760/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4606370Z Updating files:  69% (2801/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4722662Z Updating files:  70% (2841/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4851784Z Updating files:  71% (2882/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.4970296Z Updating files:  72% (2922/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5076109Z Updating files:  73% (2963/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5187449Z Updating files:  74% (3003/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5296260Z Updating files:  75% (3044/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5407542Z Updating files:  76% (3085/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5515953Z Updating files:  77% (3125/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5623932Z Updating files:  78% (3166/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5730263Z Updating files:  79% (3206/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5839744Z Updating files:  80% (3247/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.5961682Z Updating files:  81% (3287/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6069674Z Updating files:  82% (3328/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6177745Z Updating files:  83% (3369/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6294819Z Updating files:  84% (3409/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6407041Z Updating files:  85% (3450/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6583974Z Updating files:  86% (3490/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6794364Z Updating files:  87% (3531/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.6896662Z Updating files:  88% (3572/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7009956Z Updating files:  89% (3612/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7146776Z Updating files:  90% (3653/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7260444Z Updating files:  91% (3693/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7370807Z Updating files:  92% (3734/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7494311Z Updating files:  93% (3774/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7621956Z Updating files:  94% (3815/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7744131Z Updating files:  95% (3856/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.7841314Z Updating files:  96% (3896/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8009926Z Updating files:  97% (3937/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8114493Z Updating files:  98% (3977/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8264735Z Updating files:  99% (4018/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8268534Z Updating files: 100% (4058/4058)
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8268996Z Updating files: 100% (4058/4058), done.
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8479135Z Switched to a new branch 'refactor/integration-r0-r7'
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8554632Z branch 'refactor/integration-r0-r7' set up to track 'origin/refactor/integration-r0-r7'.
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.8673955Z ##[endgroup]
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.9101119Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+build + smoke (win-x64)	Check out	2026-10-14T02:29:10.9386844Z d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (win-x64)	Set up Node (pinned)	﻿2026-10-14T02:29:10.9925043Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9925503Z with:
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9925693Z   node-version: 24.21.0
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9925896Z   cache: npm
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9926069Z   always-auth: false
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9926262Z   check-latest: false
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9928619Z   token: ***
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:10.9928797Z ##[endgroup]
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:11.2349730Z Found in cache @ C:\hostedtoolcache\windows\node\24.21.0\x64
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:11.2357285Z (node:8928) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:11.2358251Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:11.2361103Z ##[group]Environment details
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:16.5377572Z node: v24.21.0
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:16.5377987Z npm: 11.19.0
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:16.5378284Z yarn: 1.22.22
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:16.5379358Z ##[endgroup]
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:16.6204060Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\24.21.0\x64\npm.cmd config get cache"
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:17.1394192Z C:\npm\cache
+build + smoke (win-x64)	Set up Node (pinned)	2026-10-14T02:29:17.3922513Z npm cache is not found
+build + smoke (win-x64)	Install dependencies (npm ci)	﻿2026-10-14T02:29:17.4259698Z ##[group]Run npm ci
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:17.4260019Z ^[[36;1mnpm ci^[[0m
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:17.4285570Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:17.4286005Z ##[endgroup]
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:28.4693174Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7843062Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7844092Z added 178 packages, and audited 186 packages in 21s
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7844466Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7845974Z 17 packages are looking for funding
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7847827Z   run `npm fund` for details
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7963745Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7964479Z 3 vulnerabilities (1 moderate, 2 high)
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7964826Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7965149Z To address issues that do not require attention, run:
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7966002Z   npm audit fix
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7966198Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7966535Z To address all issues (including breaking changes), run:
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7967101Z   npm audit fix --force
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7967410Z 
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7967596Z Run `npm audit` for details.
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7984615Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7986266Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7987414Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7988551Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7989591Z npm warn install-scripts
+build + smoke (win-x64)	Install dependencies (npm ci)	2026-10-14T02:29:38.7990694Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+build + smoke (win-x64)	Installer module and layout regressions	﻿2026-10-14T02:29:40.1614760Z ##[group]Run node --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:40.1615643Z ^[[36;1mnode --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts^[[0m
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:40.1631894Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:40.1632297Z ##[endgroup]
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0626686Z ✔ dataDirFor: macOS 平台目录（无覆盖时） (2.431ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0720131Z ✔ dataDirFor: Windows 尊重 APPDATA (0.3472ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0723525Z ✔ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.2659ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0725003Z ✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.2589ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0768318Z ✔ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.3591ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0769928Z ✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (1.8046ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0772916Z ✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.4253ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0774503Z ✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.2434ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0776563Z ✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.4375ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0777748Z ✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.4586ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0779100Z ✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.258ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0780202Z ✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.2323ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0781397Z ✔ defaultLauncherConfig: 零依赖离线缺省 (0.1884ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0782506Z ✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.6487ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0784310Z ✔ portCandidates: 从期望端口连续顺延 (0.3239ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0785126Z ✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.264ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0786698Z ✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.6395ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0788329Z ✔ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.3094ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0790349Z ✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.1504ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0791344Z ✔ validateBundleManifest: 合法清单通过 (0.5436ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0792266Z ✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.229ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0793365Z ✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.2334ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0794353Z ✔ validateBundleLayout: 合成最小产物通过（三平台） (224.1514ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0795177Z ✔ validateBundleLayout: 缺件必须点名报错 (62.0647ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0796056Z ✔ validateBundleLayout: node 缺执行位必须报错（posix） (62.897ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0797180Z ✔ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (77.9816ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0798208Z ✔ parseRuntimeState: 合法状态与损坏输入 (0.3367ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0799007Z ✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.1151ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0799819Z ✔ shims/launcher 类型层纳入检查（type-only import） (0.1537ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0800967Z ✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.1864ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0803722Z ✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.6536ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0805321Z ✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (0.3077ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0806778Z ✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.3265ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0808045Z ✔ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (80.5571ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.0809426Z ✔ synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection (86.0653ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2048300Z ✔ installer core loads without npm modules from a Chinese and space bundle path (785.0835ms)
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2218051Z ℹ tests 36
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2218504Z ℹ suites 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2218843Z ℹ pass 36
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2219187Z ℹ fail 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2219513Z ℹ cancelled 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2219988Z ℹ skipped 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2223380Z ℹ todo 0
+build + smoke (win-x64)	Installer module and layout regressions	2026-10-14T02:29:41.2223787Z ℹ duration_ms 955.0364
+build + smoke (win-x64)	Build installer artifact	﻿2026-10-14T02:29:41.2569055Z ##[group]Run node scripts/d4/package-installer.mjs \
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2569558Z ^[[36;1mnode scripts/d4/package-installer.mjs \^[[0m
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2569883Z ^[[36;1m  --platform "win-x64" \^[[0m
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2570163Z ^[[36;1m  --version "0.0.0-ci.${GITHUB_SHA}" \^[[0m
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2570662Z ^[[36;1m  --out-dir dist/d4-installer^[[0m
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2586642Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:41.2587034Z ##[endgroup]
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0427489Z package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0428218Z   平台          win-x64
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0428852Z   bundle 版本   0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0429578Z   内置 Node     24.21.0（nodejs.org 官方发行包）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0430225Z   git 提交      d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0430887Z   输出目录      D:\a\TreeAI\TreeAI\dist\d4-installer
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:42.0431835Z package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:43.5010926Z package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip …
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:44.0125709Z package-installer: 下载并核对官方 SHASUMS256.txt …
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:44.0710211Z package-installer: 发行包 SHA256 与官方一致（158f7685b44de51f…）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:29:44.0717106Z package-installer: 解包 Node 发行包…
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:30:48.8502537Z package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:30:48.8503488Z package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:30:48.9896495Z package-installer: 密钥扫描通过（278 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:30:48.9898420Z package-installer: 压缩 treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-win-x64.zip …
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6304986Z 
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6306863Z package-installer: 构建完成（350.2s）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6308325Z   D:\a\TreeAI\TreeAI\dist\d4-installer\treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-win-x64.zip（83.1 MiB）
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6311675Z   SHA256 49f5c03fffdde43e77cb38351efe1191c51066ca0b7c2b0d3e9945e510c518c8
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6321624Z   裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-arm64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, linux-x64, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32
+build + smoke (win-x64)	Build installer artifact	2026-10-14T02:35:31.6325096Z   签名状态：未签名 / 未公证（如实记录）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	﻿2026-10-14T02:35:31.6670504Z ##[group]Run archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.tar.gz"
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6671310Z ^[[36;1marchive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.tar.gz"^[[0m
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6671846Z ^[[36;1mif [ "win-x64" = "win-x64" ]; then^[[0m
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6672324Z ^[[36;1m  archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.zip"^[[0m
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6672808Z ^[[36;1mfi^[[0m
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6673296Z ^[[36;1mnode scripts/d4/installer/smoke-bundle.mjs --archive "$archive" --work-dir "$RUNNER_TEMP/d47-smoke"^[[0m
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6689816Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.6690285Z ##[endgroup]
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.8619931Z smoke-bundle: 产物 D:\a\TreeAI\TreeAI\dist\d4-installer\treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-win-x64.zip
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.8621465Z smoke-bundle: 工作目录 D:\a\_temp\d47-smoke
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.8621840Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.8624954Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:31.8625688Z == 1. 解压与布局校验
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.8412686Z   [PASS] 解压得到顶层目录
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.8417719Z   [PASS] VERSION.json 清单有效
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.9923533Z   [PASS] 产物布局完整
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.9924081Z   [PASS] 产物平台与当前主机一致（win-x64）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.9924380Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:36.9924698Z == 2. doctor（全新数据目录）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:40.9619969Z   [PASS] doctor 退出码 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:40.9620686Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:35:40.9621770Z == 3. 首次启动（--no-browser）与离线 API 往返
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:40.9746207Z   [PASS] start 退出码 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:40.9747970Z   [PASS] 输出可解析实际 URL
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0095609Z (node:2848) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0097463Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0276369Z   [PASS] GET /api/health → {ok:true}
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0326982Z   [PASS] GET / 静态前端可服务
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0390297Z   [PASS] POST /api/trees 创建树
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0412107Z   [PASS] GET /api/trees 列出刚创建的树（离线往返闭环）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0412688Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.0413190Z == 4. 幂等 start（已在运行）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.6748989Z   [PASS] 重复 start 幂等（不重复起进程）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.6749728Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:37:41.6750811Z == 5. stop / restart 与数据持久
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:38:12.5407360Z   [PASS] stop 优雅停止
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:38:13.5529695Z   [PASS] 停止后端口不再应答
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:40:13.5564902Z   [PASS] restart 再次启动
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:40:13.5636025Z   [PASS] 重启后已创建的树仍在（状态持久）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:40:13.5636546Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:40:13.5639827Z == 6. 端口冲突自动顺延
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:40:44.4300157Z   [PASS] 先停止实例
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4459683Z   [PASS] 端口被占时 start 仍成功
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4460544Z   [PASS] 输出明确提示端口顺延
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4461069Z   [PASS] 实际使用 8788
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4536243Z   [PASS] 顺延端口上健康检查通过
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4536653Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:42:44.4537081Z == 7. 模型配置错误 → 可执行恢复信息
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:43:15.4286425Z   [PASS] 停止后改配置
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:43:16.1034725Z   [PASS] doctor 退出码 1（有问题）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:43:16.1035469Z   [PASS] doctor 给出具体修复步骤
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:43:16.5959019Z   [PASS] start 拒绝坏配置（不静默）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:45:16.6019989Z   [PASS] 修复配置后可再次启动
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:45:16.6067245Z   [PASS] 配置故障期间数据未丢失
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:45:16.6067671Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:45:16.6068502Z == 8. 升级失败自动回滚
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:46:01.2885241Z   [PASS] 损坏新包的升级退出非 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:46:01.2886141Z   [PASS] 输出说明已回滚
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:46:02.0634038Z   [PASS] 回滚后旧安装 doctor 全绿
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:48:02.0691240Z   [PASS] 回滚后旧版本可启动
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:48:02.0735128Z   [PASS] 回滚后数据仍在
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:48:32.9213215Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:48:32.9214053Z == 9. 正常升级（数据保留，旧版备份）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2820643Z   [PASS] upgrade 退出码 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2821353Z   [PASS] 输出升级成功
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2821946Z   [PASS] 输出数据未动说明
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2827480Z   [PASS] 旧版本备份目录存在
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2828076Z   [PASS] 升级成功输出含实际 url=
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2881711Z   [PASS] 升级后数据保留（树仍在）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2885094Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:50:37.2885982Z == 10. 卸载（默认保留数据；显式 --delete-data 删除）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:09.7098825Z   [PASS] uninstall 退出码 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:09.7100067Z   [PASS] 输出数据已保留
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:55.0216682Z   [注] CI 替代收尾：runner 杀分离进程，安装目录由测试机代删（launcher 段与 handoff 已由日志证实；真机收尾属 B8 目标机实测）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:55.0218557Z   [PASS] 安装目录已删除
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:55.0219220Z   [PASS] 数据目录仍在（默认保留）
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:51:55.0219796Z   [PASS] 数据库文件仍在
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6500168Z   [PASS] --delete-data 卸载退出码 0
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6501131Z   [PASS] 输出数据已删除
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6501761Z   [PASS] 数据目录已按显式 opt-in 删除
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6502212Z 
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6502940Z smoke-bundle: 结果 PASS 46 / FAIL 0 — 全部通过
+build + smoke (win-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:52:01.6503965Z 诚实边界：本冒烟是 CI/本机的自动化验证，不等价于负责人目标机的干净安装实测（B8）。
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	﻿2026-10-14T02:52:07.3416303Z ##[group]Run node -e '
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3416745Z ^[[36;1mnode -e '^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3417081Z ^[[36;1m  const { readFileSync } = require("node:fs");^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3417505Z ^[[36;1m  const { createHash } = require("node:crypto");^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3418101Z ^[[36;1m  const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3418614Z ^[[36;1m  let bad = 0;^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3418914Z ^[[36;1m  for (const line of lines) {^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3419301Z ^[[36;1m    const m = /^([0-9a-f]{64})  (.+)$/.exec(line.trim());^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3419852Z ^[[36;1m    if (m === null) { console.log("MALFORMED LINE:", line); bad++; continue; }^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3420527Z ^[[36;1m    const actual = createHash("sha256").update(readFileSync(`dist/d4-installer/${m[2]}`)).digest("hex");^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3421087Z ^[[36;1m    const ok = actual === m[1];^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3421458Z ^[[36;1m    console.log(`${ok ? "OK" : "MISMATCH"}  ${m[2]}`);^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3421922Z ^[[36;1m    if (!ok) bad++;^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3422195Z ^[[36;1m  }^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3422448Z ^[[36;1m  if (bad > 0) process.exit(1);^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3422867Z ^[[36;1m  console.log(`SHA256SUMS.txt: ${lines.length} file(s) verified`);^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3423275Z ^[[36;1m'^[[0m
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3439750Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.3440585Z ##[endgroup]
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.5325266Z OK  treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-win-x64.zip
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.5330794Z OK  VERSION-treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-win-x64.json
+build + smoke (win-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:52:07.5331843Z SHA256SUMS.txt: 2 file(s) verified
+build + smoke (win-x64)	Upload installer artifact + checksums	﻿2026-10-14T02:52:07.5807858Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5808723Z with:
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5811007Z   name: d4-installer-win-x64-38501239760-1
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5812913Z   path: dist/d4-installer/treeai-studio-*.tar.gz
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.zip
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.sha256
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/SHA256SUMS.txt
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/VERSION-treeai-studio-*.json
+build + smoke (win-x64)	Upload installer artifact + checksums	dist/d4-installer/build-report-*.json
+build + smoke (win-x64)	Upload installer artifact + checksums	
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5814839Z   retention-days: 14
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5815276Z   if-no-files-found: error
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5815728Z   compression-level: 6
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5816140Z   overwrite: false
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5816838Z   include-hidden-files: false
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.5817306Z ##[endgroup]
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.7911410Z (node:5948) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.7913291Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.8030119Z With the provided path, there will be 5 files uploaded
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.8038194Z Artifact name is valid!
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:07.8039114Z Root directory input is valid!
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:08.0187590Z Beginning upload of artifact content to blob storage
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:08.3540957Z (node:5948) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:08.7211666Z Uploaded bytes 8388608
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:08.9331812Z Uploaded bytes 16777216
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:09.2895254Z Uploaded bytes 25165824
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:09.4855875Z Uploaded bytes 33554432
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:09.7983730Z Uploaded bytes 41943040
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:10.1412931Z Uploaded bytes 50331648
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:10.4717329Z Uploaded bytes 58720256
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:10.7703220Z Uploaded bytes 67108864
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.0275246Z Uploaded bytes 75497472
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.1887145Z Uploaded bytes 81142944
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.2073140Z Finished uploading artifact content to blob storage!
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.2077656Z SHA256 digest of uploaded artifact zip is 79749d068ca8f168597ee9993e36dfc7aee6f2117da84aeb10aa2341d3f4735a
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.2080162Z Finalizing artifact upload
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.4351940Z Artifact d4-installer-win-x64-38501239760-1.zip successfully finalized. Artifact ID 11865649881
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.4354458Z Artifact d4-installer-win-x64-38501239760-1 has been successfully uploaded! Final size is 81142944 bytes. Artifact ID is 11865649881
+build + smoke (win-x64)	Upload installer artifact + checksums	2026-10-14T02:52:11.4368440Z Artifact download URL: https://github.com/Lortzing/TreeAI/actions/runs/38501239760/artifacts/11865649881
+build + smoke (win-x64)	Post Set up Node (pinned)	﻿2026-10-14T02:52:11.4772418Z Post job cleanup.
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:11.6303735Z (node:6308) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:11.6305309Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:11.7753049Z [command]"C:\Program Files\Git\usr\bin\tar.exe" --posix -cf cache.tzst --exclude cache.tzst -P -C D:/a/TreeAI/TreeAI --files-from manifest.txt --force-local --use-compress-program "zstd -T0"
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:13.0787449Z (node:6308) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:13.9864087Z Sent 172005855 of 172005855 (100.0%), 178.1 MBs/sec
+build + smoke (win-x64)	Post Set up Node (pinned)	2026-10-14T02:52:14.1102777Z Cache saved with the key: node-cache-Windows-x64-npm-71f7bcde3378c5a43e9808e034c8b7cf6d45f6c1711cc0aec6e2d55ad7e35bb3
+build + smoke (win-x64)	Post Check out	﻿2026-10-14T02:52:14.1543106Z Post job cleanup.
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.3879072Z [command]"C:\Program Files\Git\bin\git.exe" version
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4180112Z git version 2.55.0.windows.5
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4256137Z Temporarily overriding HOME='D:\a\_temp\2f49e742-0d5f-48a2-83fe-914c127088aa' before making global git config changes
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4257673Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4269137Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\TreeAI\TreeAI
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4599979Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:14.4974602Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:15.0890934Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:15.1235655Z http.https://github.com/.extraheader
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:15.1287499Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+build + smoke (win-x64)	Post Check out	2026-10-14T02:52:15.1607158Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+build + smoke (win-x64)	Complete job	﻿2026-10-14T02:52:15.7420045Z Cleaning up orphan processes
+build + smoke (win-x64)	Complete job	2026-10-14T02:52:15.8542863Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build + smoke (linux-x64)	Set up job	﻿2026-10-14T02:28:57.6804024Z Current runner version: '2.337.0'
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6829862Z ##[group]Runner Image Provisioner
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6830759Z Hosted Compute Agent
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6831406Z Version: 20261002.596
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6832019Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6832741Z Build Date: 2026-10-02T22:28:27Z
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6833419Z Worker ID: {7ada3ae5-de70-4f20-842e-5ff78b0fa4fa}
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6834159Z Region: northcentralus
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6834781Z Cloud: Azure
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6835387Z ##[endgroup]
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6837208Z ##[group]Operating System
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6837864Z Ubuntu
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6838452Z 24.04.5
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6839031Z LTS
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6839539Z ##[endgroup]
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6840068Z ##[group]Runner Image
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6840765Z Image: ubuntu-24.04
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6841360Z Version: 20261004.327.1
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6842475Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6844212Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6845180Z ##[endgroup]
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6846953Z ##[group]GITHUB_TOKEN Permissions
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6849721Z Contents: read
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6850366Z Metadata: read
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6851007Z ##[endgroup]
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6853088Z Secret source: Actions
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6853990Z Cache mode: write
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.6854981Z Prepare workflow directory
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.7179466Z Prepare all required actions
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.7233358Z Getting action download info
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:57.9522286Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:58.0941740Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:58.2083680Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+build + smoke (linux-x64)	Set up job	2026-10-14T02:28:58.4828441Z Complete job name: build + smoke (linux-x64)
+build + smoke (linux-x64)	Check out	﻿2026-10-14T02:28:58.5544072Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5545072Z with:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5545671Z   repository: Lortzing/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5549633Z   token: ***
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5550153Z   ssh-strict: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5550715Z   ssh-user: git
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5551224Z   persist-credentials: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5551779Z   clean: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5552305Z   sparse-checkout-cone-mode: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5552927Z   fetch-depth: 1
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5553445Z   fetch-tags: false
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5553944Z   show-progress: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5554459Z   lfs: false
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5554947Z   submodules: false
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5555478Z   set-safe-directory: true
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.5556669Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6619454Z Syncing repository: Lortzing/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6621409Z ##[group]Getting Git version info
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6622128Z Working directory is '<home>/work/TreeAI/TreeAI'
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6623340Z [command]/usr/bin/git version
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6634765Z git version 2.55.0
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6658748Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6675586Z Temporarily overriding HOME='<home>/work/_temp/276f900a-e143-4383-a6ea-acf421ecc013' before making global git config changes
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6677884Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6682225Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6734087Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6746668Z ##[group]Initializing the repository
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6751808Z [command]/usr/bin/git init <home>/work/TreeAI/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6846209Z hint: Using 'master' as the name for the initial branch. This default branch name
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6847788Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6848757Z hint: to use in all of your new repositories, which will suppress this warning,
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6850068Z hint: call:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6850716Z hint:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6851434Z hint: 	git config --global init.defaultBranch <name>
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6852128Z hint:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6852722Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6853691Z hint: 'development'. The just-created branch can be renamed via this command:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6854445Z hint:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6855025Z hint: 	git branch -m <name>
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6856118Z hint:
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6856919Z hint: Disable this message with "git config set advice.defaultBranchName false"
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6858165Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6859927Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6904716Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6905663Z ##[group]Disabling automatic garbage collection
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6909868Z [command]/usr/bin/git config --local gc.auto 0
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6943548Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6944783Z ##[group]Setting up auth
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6952211Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.6993673Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7437883Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7484489Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7711462Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7750633Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7751851Z ##[group]Fetching the repository
+build + smoke (linux-x64)	Check out	2026-10-14T02:28:58.7760177Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d20d808262b50859a855e91a54eb57004a78df74:refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3412582Z From https://github.com/Lortzing/TreeAI
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3415658Z  * [new ref]         d20d808262b50859a855e91a54eb57004a78df74 -> origin/refactor/integration-r0-r7
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3426134Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3428205Z ##[group]Determining the checkout info
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3430310Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3431548Z [command]/usr/bin/git sparse-checkout disable
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3478429Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3511654Z ##[group]Checking out the ref
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.3516142Z [command]/usr/bin/git checkout --progress --force -B refactor/integration-r0-r7 refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.8057465Z Switched to a new branch 'refactor/integration-r0-r7'
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.8061264Z branch 'refactor/integration-r0-r7' set up to track 'origin/refactor/integration-r0-r7'.
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.8114885Z ##[endgroup]
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.8118868Z [command]/usr/bin/git log -1 --format=%H
+build + smoke (linux-x64)	Check out	2026-10-14T02:29:02.8145183Z d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (linux-x64)	Set up Node (pinned)	﻿2026-10-14T02:29:02.8420036Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8420683Z with:
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8421085Z   node-version: 24.21.0
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8421616Z   cache: npm
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8421995Z   always-auth: false
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8422426Z   check-latest: false
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8425210Z   token: ***
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.8425599Z ##[endgroup]
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.9789843Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.9794045Z (node:2203) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.9795034Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:02.9797619Z ##[group]Environment details
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.3678150Z node: v24.21.0
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.3680095Z npm: 11.19.0
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.3680637Z yarn: 1.22.22
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.3681716Z ##[endgroup]
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.3735954Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.5323580Z <home>/.npm
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.6621873Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:03.6724785Z (node:2203) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:04.7880183Z Received 155189248 of 170887642 (90.8%), 148.0 MBs/sec
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:04.8709504Z Received 170887642 of 170887642 (100.0%), 150.5 MBs/sec
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:04.8710558Z Cache Size: ~163 MB (170887642 B)
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:04.8747669Z [command]/usr/bin/tar -xf <home>/work/_temp/fd461c56-905a-4139-bda9-056794c9f509/cache.tzst -P -C <home>/work/TreeAI/TreeAI --use-compress-program unzstd
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:05.0466233Z Cache restored successfully
+build + smoke (linux-x64)	Set up Node (pinned)	2026-10-14T02:29:05.0544353Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+build + smoke (linux-x64)	Install dependencies (npm ci)	﻿2026-10-14T02:29:05.0709812Z ##[group]Run npm ci
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:05.0710339Z ^[[36;1mnpm ci^[[0m
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:05.0914201Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:05.0914695Z ##[endgroup]
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:09.7317406Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0383226Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0384516Z added 178 packages, and audited 186 packages in 7s
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0385213Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0385540Z 17 packages are looking for funding
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0386310Z   run `npm fund` for details
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0475666Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0476792Z 3 vulnerabilities (1 moderate, 2 high)
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0487724Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0489165Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0490209Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0491530Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0492416Z npm warn install-scripts
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0494275Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0495001Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0495434Z To address issues that do not require attention, run:
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0496324Z   npm audit fix
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0496628Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0497020Z To address all issues (including breaking changes), run:
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0497856Z   npm audit fix --force
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0498188Z 
+build + smoke (linux-x64)	Install dependencies (npm ci)	2026-10-14T02:29:12.0498463Z Run `npm audit` for details.
+build + smoke (linux-x64)	Installer module and layout regressions	﻿2026-10-14T02:29:12.0950828Z ##[group]Run node --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:12.0951744Z ^[[36;1mnode --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts^[[0m
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:12.0997079Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:12.0997569Z ##[endgroup]
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7420286Z ✔ dataDirFor: macOS 平台目录（无覆盖时） (1.833886ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7421464Z ✔ dataDirFor: Windows 尊重 APPDATA (0.187829ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7423128Z ✔ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.1986ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7434354Z ✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.175428ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7435381Z ✔ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.190864ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7436652Z ✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (0.901327ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7437619Z ✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.362147ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7438505Z ✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.197595ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7439442Z ✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.318636ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7440198Z ✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.371754ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7440881Z ✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.205572ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7441514Z ✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.149172ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7442109Z ✔ defaultLauncherConfig: 零依赖离线缺省 (0.143821ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7442732Z ✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.378881ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7443521Z ✔ portCandidates: 从期望端口连续顺延 (0.180162ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7450820Z ✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.176636ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7454019Z ✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.408078ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7455018Z ✔ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.136608ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7472631Z ✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.051366ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7474412Z ✔ validateBundleManifest: 合法清单通过 (0.249426ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7475601Z ✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.127972ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7477032Z ✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.151325ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7478095Z ✔ validateBundleLayout: 合成最小产物通过（三平台） (12.11565ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7479101Z ✔ validateBundleLayout: 缺件必须点名报错 (2.409347ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7480276Z ✔ validateBundleLayout: node 缺执行位必须报错（posix） (2.494352ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7481517Z ✔ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (2.538703ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7482556Z ✔ parseRuntimeState: 合法状态与损坏输入 (0.233467ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7494573Z ✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.066359ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7496191Z ✔ shims/launcher 类型层纳入检查（type-only import） (0.077429ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7497381Z ✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.087991ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7498157Z ✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.435829ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7499038Z ✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (2434.328864ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7499893Z ✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.363185ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7500750Z ✔ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (2.920213ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7501973Z ✔ synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection (5.223045ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7583714Z ✔ installer core loads without npm modules from a Chinese and space bundle path (539.906854ms)
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7587525Z ℹ tests 36
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7588191Z ℹ suites 0
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7588703Z ℹ pass 36
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7589118Z ℹ fail 0
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7589609Z ℹ cancelled 0
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7590094Z ℹ skipped 0
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7590564Z ℹ todo 0
+build + smoke (linux-x64)	Installer module and layout regressions	2026-10-14T02:29:14.7591032Z ℹ duration_ms 2622.014765
+build + smoke (linux-x64)	Build installer artifact	﻿2026-10-14T02:29:14.7695267Z ##[group]Run node scripts/d4/package-installer.mjs \
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7696229Z ^[[36;1mnode scripts/d4/package-installer.mjs \^[[0m
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7696660Z ^[[36;1m  --platform "linux-x64" \^[[0m
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7697111Z ^[[36;1m  --version "0.0.0-ci.${GITHUB_SHA}" \^[[0m
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7697497Z ^[[36;1m  --out-dir dist/d4-installer^[[0m
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7738831Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:14.7739275Z ##[endgroup]
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1688201Z package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1689385Z   平台          linux-x64
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1690046Z   bundle 版本   0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1690723Z   内置 Node     24.21.0（nodejs.org 官方发行包）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1691367Z   git 提交      d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1691976Z   输出目录      <home>/work/TreeAI/TreeAI/dist/d4-installer
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:15.1692650Z package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:16.3162371Z package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz …
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:16.7446741Z package-installer: 下载并核对官方 SHASUMS256.txt …
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:16.7977732Z package-installer: 发行包 SHA256 与官方一致（fd8e59d5a511510f…）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:16.7978497Z package-installer: 解包 Node 发行包…
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:27.4959588Z package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:27.4961086Z package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:27.5983436Z package-installer: 密钥扫描通过（277 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:27.5985711Z package-installer: 压缩 treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-linux-x64.tar.gz …
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3079702Z 
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3081005Z package-installer: 构建完成（25.4s）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3082820Z   <home>/work/TreeAI/TreeAI/dist/d4-installer/treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-linux-x64.tar.gz（88.6 MiB）
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3083801Z   SHA256 849dade377ce2ca46d81d445d5dde5e915e5d578d79f65b48538c7eb814aa661
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3085730Z   裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-arm64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32, win32-x64
+build + smoke (linux-x64)	Build installer artifact	2026-10-14T02:29:40.3087844Z   签名状态：未签名 / 未公证（如实记录）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	﻿2026-10-14T02:29:40.3203584Z ##[group]Run archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-linux-x64.tar.gz"
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3204455Z ^[[36;1marchive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-linux-x64.tar.gz"^[[0m
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3205012Z ^[[36;1mif [ "linux-x64" = "win-x64" ]; then^[[0m
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3205580Z ^[[36;1m  archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.zip"^[[0m
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3206291Z ^[[36;1mfi^[[0m
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3206851Z ^[[36;1mnode scripts/d4/installer/smoke-bundle.mjs --archive "$archive" --work-dir "$RUNNER_TEMP/d47-smoke"^[[0m
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3249596Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.3250193Z ##[endgroup]
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.4238708Z smoke-bundle: 产物 <home>/work/TreeAI/TreeAI/dist/d4-installer/treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-linux-x64.tar.gz
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.4240657Z smoke-bundle: 工作目录 <home>/work/_temp/d47-smoke
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.4241856Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.4242216Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:40.4243324Z == 1. 解压与布局校验
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.7579491Z   [PASS] 解压得到顶层目录
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.7593553Z   [PASS] VERSION.json 清单有效
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.8083837Z   [PASS] 产物布局完整
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.8084821Z   [PASS] 产物平台与当前主机一致（linux-x64）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.8085172Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.8085464Z == 2. doctor（全新数据目录）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.9966514Z   [PASS] doctor 退出码 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.9967353Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:42.9968337Z == 3. 首次启动（--no-browser）与离线 API 往返
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.1763997Z   [PASS] start 退出码 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.1765225Z   [PASS] 输出可解析实际 URL
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2163941Z   [PASS] GET /api/health → {ok:true}
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2199154Z   [PASS] GET / 静态前端可服务
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2256825Z   [PASS] POST /api/trees 创建树
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2273524Z   [PASS] GET /api/trees 列出刚创建的树（离线往返闭环）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2274370Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.2275383Z == 4. 幂等 start（已在运行）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.3884863Z   [PASS] 重复 start 幂等（不重复起进程）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.3885297Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.3885655Z == 5. stop / restart 与数据持久
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:44.8537417Z   [PASS] stop 优雅停止
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:45.8570541Z   [PASS] 停止后端口不再应答
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:47.0491473Z   [PASS] restart 再次启动
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:47.0526579Z   [PASS] 重启后已创建的树仍在（状态持久）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:47.0527105Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:47.0527409Z == 6. 端口冲突自动顺延
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:47.5240611Z   [PASS] 先停止实例
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7200796Z   [PASS] 端口被占时 start 仍成功
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7201699Z   [PASS] 输出明确提示端口顺延
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7202310Z   [PASS] 实际使用 8788
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7232002Z   [PASS] 顺延端口上健康检查通过
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7232408Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:48.7232643Z == 7. 模型配置错误 → 可执行恢复信息
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:49.1994775Z   [PASS] 停止后改配置
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:49.4009115Z   [PASS] doctor 退出码 1（有问题）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:49.4009971Z   [PASS] doctor 给出具体修复步骤
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:49.5479126Z   [PASS] start 拒绝坏配置（不静默）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:50.7396506Z   [PASS] 修复配置后可再次启动
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:50.7427702Z   [PASS] 配置故障期间数据未丢失
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:50.7428209Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:50.7428472Z == 8. 升级失败自动回滚
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:59.0631568Z   [PASS] 损坏新包的升级退出非 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:59.0632301Z   [PASS] 输出说明已回滚
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:29:59.2382697Z   [PASS] 回滚后旧安装 doctor 全绿
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:00.4223591Z   [PASS] 回滚后旧版本可启动
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:00.4259464Z   [PASS] 回滚后数据仍在
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:00.8852176Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:00.8853140Z == 9. 正常升级（数据保留，旧版备份）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6240706Z   [PASS] upgrade 退出码 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6241479Z   [PASS] 输出升级成功
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6241896Z   [PASS] 输出数据未动说明
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6242409Z   [PASS] 旧版本备份目录存在
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6242934Z   [PASS] 升级成功输出含实际 url=
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6276671Z   [PASS] 升级后数据保留（树仍在）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6277048Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.6277473Z == 10. 卸载（默认保留数据；显式 --delete-data 删除）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:10.1970898Z   [PASS] uninstall 退出码 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:10.1971648Z   [PASS] 输出数据已保留
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:10.1972647Z   [PASS] 安装目录已删除
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:10.1973281Z   [PASS] 数据目录仍在（默认保留）
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:10.1973792Z   [PASS] 数据库文件仍在
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6357679Z   [PASS] --delete-data 卸载退出码 0
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6359370Z   [PASS] 输出数据已删除
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6360060Z   [PASS] 数据目录已按显式 opt-in 删除
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6365654Z 
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6372432Z smoke-bundle: 结果 PASS 46 / FAIL 0 — 全部通过
+build + smoke (linux-x64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.6373317Z 诚实边界：本冒烟是 CI/本机的自动化验证，不等价于负责人目标机的干净安装实测（B8）。
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	﻿2026-10-14T02:30:13.1360789Z ##[group]Run node -e '
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1361186Z ^[[36;1mnode -e '^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1361611Z ^[[36;1m  const { readFileSync } = require("node:fs");^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1362052Z ^[[36;1m  const { createHash } = require("node:crypto");^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1362675Z ^[[36;1m  const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1363244Z ^[[36;1m  let bad = 0;^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1363671Z ^[[36;1m  for (const line of lines) {^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1364269Z ^[[36;1m    const m = /^([0-9a-f]{64})  (.+)$/.exec(line.trim());^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1364923Z ^[[36;1m    if (m === null) { console.log("MALFORMED LINE:", line); bad++; continue; }^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1365699Z ^[[36;1m    const actual = createHash("sha256").update(readFileSync(`dist/d4-installer/${m[2]}`)).digest("hex");^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1366562Z ^[[36;1m    const ok = actual === m[1];^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1366988Z ^[[36;1m    console.log(`${ok ? "OK" : "MISMATCH"}  ${m[2]}`);^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1367540Z ^[[36;1m    if (!ok) bad++;^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1367902Z ^[[36;1m  }^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1368239Z ^[[36;1m  if (bad > 0) process.exit(1);^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1368731Z ^[[36;1m  console.log(`SHA256SUMS.txt: ${lines.length} file(s) verified`);^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1369192Z ^[[36;1m'^[[0m
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1411577Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.1412058Z ##[endgroup]
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.2670921Z OK  treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-linux-x64.tar.gz
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.2675053Z OK  VERSION-treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-linux-x64.json
+build + smoke (linux-x64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:30:13.2676184Z SHA256SUMS.txt: 2 file(s) verified
+build + smoke (linux-x64)	Upload installer artifact + checksums	﻿2026-10-14T02:30:13.2801748Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2802248Z with:
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2802591Z   name: d4-installer-linux-x64-38501239760-1
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2803611Z   path: dist/d4-installer/treeai-studio-*.tar.gz
+build + smoke (linux-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.zip
+build + smoke (linux-x64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.sha256
+build + smoke (linux-x64)	Upload installer artifact + checksums	dist/d4-installer/SHA256SUMS.txt
+build + smoke (linux-x64)	Upload installer artifact + checksums	dist/d4-installer/VERSION-treeai-studio-*.json
+build + smoke (linux-x64)	Upload installer artifact + checksums	dist/d4-installer/build-report-*.json
+build + smoke (linux-x64)	Upload installer artifact + checksums	
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2804674Z   retention-days: 14
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2805033Z   if-no-files-found: error
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2805367Z   compression-level: 6
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2805726Z   overwrite: false
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2806282Z   include-hidden-files: false
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.2806627Z ##[endgroup]
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.4422646Z (node:2767) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.4423856Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.4537171Z With the provided path, there will be 5 files uploaded
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.4596891Z Artifact name is valid!
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.4627406Z Root directory input is valid!
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:13.7291956Z Beginning upload of artifact content to blob storage
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:14.0096952Z (node:2767) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:14.4946198Z Uploaded bytes 8388608
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:14.7506694Z Uploaded bytes 16777216
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:14.7910454Z Uploaded bytes 25165824
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:15.0096481Z Uploaded bytes 33554432
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:15.2788716Z Uploaded bytes 41943040
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:15.6062729Z Uploaded bytes 50331648
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:15.9373962Z Uploaded bytes 58720256
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:16.2333215Z Uploaded bytes 67108864
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:16.4957291Z Uploaded bytes 75497472
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:16.8139667Z Uploaded bytes 83886080
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.0160438Z Uploaded bytes 92274688
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.0531430Z Uploaded bytes 92496484
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.0939182Z Finished uploading artifact content to blob storage!
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.0941822Z SHA256 digest of uploaded artifact zip is 761d71dd72572910ca8ffa203f624567635b1bc206760f1d7c81978e8d360e3c
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.0943933Z Finalizing artifact upload
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.3442425Z Artifact d4-installer-linux-x64-38501239760-1.zip successfully finalized. Artifact ID 11866057053
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.3444228Z Artifact d4-installer-linux-x64-38501239760-1 has been successfully uploaded! Final size is 92496484 bytes. Artifact ID is 11866057053
+build + smoke (linux-x64)	Upload installer artifact + checksums	2026-10-14T02:30:17.3450315Z Artifact download URL: https://github.com/Lortzing/TreeAI/actions/runs/38501239760/artifacts/11866057053
+build + smoke (linux-x64)	Post Set up Node (pinned)	﻿2026-10-14T02:30:17.3635012Z Post job cleanup.
+build + smoke (linux-x64)	Post Set up Node (pinned)	2026-10-14T02:30:17.4862724Z (node:2781) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (linux-x64)	Post Set up Node (pinned)	2026-10-14T02:30:17.4865448Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (linux-x64)	Post Set up Node (pinned)	2026-10-14T02:30:17.4866769Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db, not saving cache.
+build + smoke (linux-x64)	Post Check out	﻿2026-10-14T02:30:17.4987170Z Post job cleanup.
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6078276Z [command]/usr/bin/git version
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6136931Z git version 2.55.0
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6230497Z Temporarily overriding HOME='<home>/work/_temp/40e3a001-9d6f-462e-b535-850412669434' before making global git config changes
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6257385Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6259220Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6261476Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6310248Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6728543Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6792556Z http.https://github.com/.extraheader
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6808551Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+build + smoke (linux-x64)	Post Check out	2026-10-14T02:30:17.6876740Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build + smoke (linux-x64)	Complete job	﻿2026-10-14T02:30:17.7414872Z Cleaning up orphan processes
+build + smoke (linux-x64)	Complete job	2026-10-14T02:30:17.7732540Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build + smoke (darwin-arm64)	Set up job	﻿2026-10-14T02:29:05.1586090Z Current runner version: '2.337.0'
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1605820Z ##[group]Runner Image Provisioner
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1606430Z Hosted Compute Agent
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1606820Z Version: 20260828.587
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1607250Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1607730Z Build Date: 2026-08-28T16:44:25Z
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1608200Z Worker ID: {080dccf8-9f0e-4994-bdb6-2de17d58ffc1}
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1608690Z Azure Region: westus
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1609050Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1609980Z ##[group]Operating System
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1610510Z macOS
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1610850Z 26.6.2
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1611170Z 25G83
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1611550Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1611920Z ##[group]Runner Image
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1612380Z Image: macos-26-arm64
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1612780Z Version: 20260907.0351.1
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1614030Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1615380Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1616060Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1616860Z ##[group]GITHUB_TOKEN Permissions
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1618450Z Contents: read
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1618890Z Metadata: read
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1619350Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1621020Z Secret source: Actions
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1622230Z Cache mode: write
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.1622790Z Prepare workflow directory
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.2003710Z Prepare all required actions
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.2081500Z Getting action download info
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.5243060Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.8468660Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:05.9654090Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+build + smoke (darwin-arm64)	Set up job	2026-10-14T02:29:06.3039030Z Complete job name: build + smoke (darwin-arm64)
+build + smoke (darwin-arm64)	Check out	﻿2026-10-14T02:29:06.3852320Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3853180Z with:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3853680Z   repository: Lortzing/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3857550Z   token: ***
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3858050Z   ssh-strict: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3858420Z   ssh-user: git
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3858780Z   persist-credentials: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3859180Z   clean: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3859540Z   sparse-checkout-cone-mode: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3859980Z   fetch-depth: 1
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3880660Z   fetch-tags: false
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3881390Z   show-progress: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3881840Z   lfs: false
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3882230Z   submodules: false
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3882640Z   set-safe-directory: true
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.3884090Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.8514380Z Syncing repository: Lortzing/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.8515870Z ##[group]Getting Git version info
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.8516460Z Working directory is '<home>/work/TreeAI/TreeAI'
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.8517380Z [command]/opt/homebrew/bin/git version
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9503880Z git version 2.55.0
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9686640Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9695910Z Copying '<home>/.gitconfig' to '<home>/work/_temp/fb5faf86-6d52-420f-86ae-21451aa6191e/.gitconfig'
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9700020Z Temporarily overriding HOME='<home>/work/_temp/fb5faf86-6d52-420f-86ae-21451aa6191e' before making global git config changes
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9703700Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9706790Z [command]/opt/homebrew/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9924650Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9931490Z ##[group]Initializing the repository
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:06.9943530Z [command]/opt/homebrew/bin/git init <home>/work/TreeAI/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0106620Z hint: Using 'master' as the name for the initial branch. This default branch name
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0110260Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0113390Z hint: to use in all of your new repositories, which will suppress this warning,
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0116030Z hint: call:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0116660Z hint:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0117370Z hint: 	git config --global init.defaultBranch <name>
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0117980Z hint:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0118680Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0119680Z hint: 'development'. The just-created branch can be renamed via this command:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0122080Z hint:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0122880Z hint: 	git branch -m <name>
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0123480Z hint:
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0124170Z hint: Disable this message with "git config set advice.defaultBranchName false"
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0125600Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0128320Z [command]/opt/homebrew/bin/git remote add origin https://github.com/Lortzing/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0236060Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0237680Z ##[group]Disabling automatic garbage collection
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0240930Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0327330Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0328290Z ##[group]Setting up auth
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0334410Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.0412680Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.1601770Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.1691810Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.2988570Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.3068330Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.3069650Z ##[group]Fetching the repository
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:07.3074840Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d20d808262b50859a855e91a54eb57004a78df74:refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2012460Z From https://github.com/Lortzing/TreeAI
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2032710Z  * [new ref]         d20d808262b50859a855e91a54eb57004a78df74 -> origin/refactor/integration-r0-r7
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2042680Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2044690Z ##[group]Determining the checkout info
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2046310Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2047630Z [command]/opt/homebrew/bin/git sparse-checkout disable
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2200590Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2324820Z ##[group]Checking out the ref
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:11.2329410Z [command]/opt/homebrew/bin/git checkout --progress --force -B refactor/integration-r0-r7 refs/remotes/origin/refactor/integration-r0-r7
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.2978700Z Updating files:  88% (3602/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3045660Z Updating files:  89% (3612/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3120580Z Updating files:  90% (3653/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3198430Z Updating files:  91% (3693/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3259010Z Updating files:  92% (3734/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3340840Z Updating files:  93% (3774/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3409640Z Updating files:  94% (3815/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3530780Z Updating files:  95% (3856/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3598280Z Updating files:  96% (3896/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3715850Z Updating files:  97% (3937/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3801390Z Updating files:  98% (3977/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3856590Z Updating files:  99% (4018/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3857930Z Updating files: 100% (4058/4058)
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3858530Z Updating files: 100% (4058/4058), done.
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3975280Z Switched to a new branch 'refactor/integration-r0-r7'
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.3994430Z branch 'refactor/integration-r0-r7' set up to track 'origin/refactor/integration-r0-r7'.
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.4005540Z ##[endgroup]
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.4159440Z [command]/opt/homebrew/bin/git log -1 --format=%H
+build + smoke (darwin-arm64)	Check out	2026-10-14T02:29:12.4255840Z d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (darwin-arm64)	Set up Node (pinned)	﻿2026-10-14T02:29:12.4779630Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4781320Z with:
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4782000Z   node-version: 24.21.0
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4782600Z   cache: npm
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4783520Z   always-auth: false
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4783770Z   check-latest: false
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4787460Z   token: ***
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.4787940Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.7012660Z Attempting to download 24.21.0...
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.7292780Z (node:10909) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:12.7315380Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:13.7560880Z Acquiring 24.21.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.21.0-34304089047/node-24.21.0-darwin-arm64.tar.gz
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:14.7741060Z Extracting ...
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:14.7874970Z [command]/usr/bin/tar xz --strip 1 -C <home>/work/_temp/afc22c8c-fbbe-4e2c-83a6-25c83920dd7a -f <home>/work/_temp/d5338646-9811-4a6e-816f-77b1ff1e8610
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:16.2806590Z Adding to the cache ...
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:19.5316990Z ##[group]Environment details
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.2078620Z node: v24.21.0
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.2079170Z npm: 11.19.0
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.2080760Z yarn: 1.22.22
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.2082650Z ##[endgroup]
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.2123290Z [command]<home>/hostedtoolcache/node/24.21.0/arm64/bin/npm config get cache
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.4064630Z <home>/.npm
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.5999060Z (node:10909) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:20.6066240Z Cache hit for: node-cache-macOS-arm64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:21.7643960Z Received 37748736 of 169562202 (22.3%), 36.0 MBs/sec
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:22.7697950Z Received 130023424 of 169562202 (76.7%), 61.9 MBs/sec
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:23.6276210Z Received 169562202 of 169562202 (100.0%), 56.5 MBs/sec
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:23.6282670Z Cache Size: ~162 MB (169562202 B)
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:23.6427490Z [command]/opt/homebrew/bin/gtar -xf <home>/work/_temp/bfaddeee-fe56-4320-9a70-1b0cbafe4698/cache.tzst -P -C <home>/work/TreeAI/TreeAI --delay-directory-restore --use-compress-program unzstd
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:24.4121670Z Cache restored successfully
+build + smoke (darwin-arm64)	Set up Node (pinned)	2026-10-14T02:29:24.4205840Z Cache restored from key: node-cache-macOS-arm64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	﻿2026-10-14T02:29:24.4618050Z ##[group]Run npm ci
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:24.4618810Z ^[[36;1mnpm ci^[[0m
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:24.4726200Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:24.4727100Z ##[endgroup]
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:28.8126140Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2000780Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2002950Z added 178 packages, and audited 186 packages in 9s
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2004270Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2004890Z 17 packages are looking for funding
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2005790Z   run `npm fund` for details
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2089550Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2091070Z 3 vulnerabilities (1 moderate, 2 high)
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2101850Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2106610Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2108160Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2113070Z To address issues that do not require attention, run:
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2115480Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2117370Z   npm audit fix
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2124630Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2125080Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2125960Z npm warn install-scripts
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2136150Z To address all issues (including breaking changes), run:
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2138860Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2140320Z   npm audit fix --force
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2141160Z 
+build + smoke (darwin-arm64)	Install dependencies (npm ci)	2026-10-14T02:29:33.2141820Z Run `npm audit` for details.
+build + smoke (darwin-arm64)	Installer module and layout regressions	﻿2026-10-14T02:29:33.4025030Z ##[group]Run node --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:33.4025850Z ^[[36;1mnode --test tests/unit/d4-7-installer.test.ts tests/unit/installer-module-inclusion.test.ts^[[0m
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:33.4071360Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:33.4072100Z ##[endgroup]
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4203080Z ✔ dataDirFor: macOS 平台目录（无覆盖时） (0.752666ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4252560Z ✔ dataDirFor: Windows 尊重 APPDATA (0.087708ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4254240Z ✔ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.0945ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4255450Z ✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.071958ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4256240Z ✔ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.116833ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4256990Z ✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (0.62ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4257640Z ✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.145792ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4258540Z ✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.064292ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4259650Z ✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.145459ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4260390Z ✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.147833ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4261090Z ✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.071166ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4261810Z ✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.071708ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4262460Z ✔ defaultLauncherConfig: 零依赖离线缺省 (0.059792ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4263270Z ✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.175792ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4263880Z ✔ portCandidates: 从期望端口连续顺延 (0.076125ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4264430Z ✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.044167ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4265030Z ✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.22ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4265560Z ✔ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.075959ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4266100Z ✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.031417ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4266660Z ✔ validateBundleManifest: 合法清单通过 (0.143125ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4267180Z ✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.0745ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4267740Z ✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.063167ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4268270Z ✔ validateBundleLayout: 合成最小产物通过（三平台） (39.029667ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4268680Z ✔ validateBundleLayout: 缺件必须点名报错 (14.285959ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4269230Z ✔ validateBundleLayout: node 缺执行位必须报错（posix） (12.09925ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4270050Z ✔ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (13.707917ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4270590Z ✔ parseRuntimeState: 合法状态与损坏输入 (0.709625ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4271220Z ✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.037875ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4271920Z ✔ shims/launcher 类型层纳入检查（type-only import） (0.053333ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4273350Z ✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.054416ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4273990Z ✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.2605ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4274740Z ✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (1679.573583ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4275550Z ✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.272209ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4276190Z ✔ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (8.46925ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4277030Z ✔ synthetic POSIX mode fixture rejects missing execution and restores real filesystem inspection (12.089292ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4329920Z ✔ installer core loads without npm modules from a Chinese and space bundle path (617.025ms)
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4331310Z ℹ tests 36
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4332130Z ℹ suites 0
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4333190Z ℹ pass 36
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4333820Z ℹ fail 0
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4334800Z ℹ cancelled 0
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4335720Z ℹ skipped 0
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4336420Z ℹ todo 0
+build + smoke (darwin-arm64)	Installer module and layout regressions	2026-10-14T02:29:35.4337770Z ℹ duration_ms 1948.564708
+build + smoke (darwin-arm64)	Build installer artifact	﻿2026-10-14T02:29:35.4493070Z ##[group]Run node scripts/d4/package-installer.mjs \
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4494170Z ^[[36;1mnode scripts/d4/package-installer.mjs \^[[0m
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4494790Z ^[[36;1m  --platform "darwin-arm64" \^[[0m
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4495280Z ^[[36;1m  --version "0.0.0-ci.${GITHUB_SHA}" \^[[0m
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4495910Z ^[[36;1m  --out-dir dist/d4-installer^[[0m
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4540290Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:35.4540740Z ##[endgroup]
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2715440Z package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2716310Z   平台          darwin-arm64
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2717280Z   bundle 版本   0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2718420Z   内置 Node     24.21.0（nodejs.org 官方发行包）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2719300Z   git 提交      d20d808262b50859a855e91a54eb57004a78df74
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2720270Z   输出目录      <home>/work/TreeAI/TreeAI/dist/d4-installer
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:36.2721750Z package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:37.3072890Z package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz …
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:38.2754440Z package-installer: 下载并核对官方 SHASUMS256.txt …
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:38.3811500Z package-installer: 发行包 SHA256 与官方一致（bed7eea5325e1108…）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:38.3817260Z package-installer: 解包 Node 发行包…
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:50.2235320Z package-installer: staging 布局校验通过（node/launcher/app/入口脚本/无符号链接）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:50.2236620Z package-installer: 密钥扫描（tests/support/verifier/secret-scanner.ts）…
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:50.4122130Z package-installer: 密钥扫描通过（277 文件；其文档化盲区适用：scanner 跳过名为 node_modules 的目录，node_modules 内为 registry 发布代码与 workspace 源码副本，已如实记录于构建报告）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:29:50.4125700Z package-installer: 压缩 treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-darwin-arm64.tar.gz …
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6290150Z 
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6447230Z package-installer: 构建完成（32.0s）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6542100Z   <home>/work/TreeAI/TreeAI/dist/d4-installer/treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-darwin-arm64.tar.gz（82.2 MiB）
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6646620Z   SHA256 ad0dfc228bccb311c5f0a651c53692714d83c468288aa2116c798c070a2533ee
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6755910Z   裁剪的平台 esbuild 包：aix-ppc64, android-arm, android-arm64, android-x64, darwin-x64, freebsd-arm64, freebsd-x64, linux-arm, linux-arm64, linux-ia32, linux-loong64, linux-mips64el, linux-ppc64, linux-riscv64, linux-s390x, linux-x64, netbsd-arm64, netbsd-x64, openbsd-arm64, openbsd-x64, openharmony-arm64, sunos-x64, win32-arm64, win32-ia32, win32-x64
+build + smoke (darwin-arm64)	Build installer artifact	2026-10-14T02:30:07.6859150Z   签名状态：未签名 / 未公证（如实记录）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	﻿2026-10-14T02:30:07.7104100Z ##[group]Run archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-darwin-arm64.tar.gz"
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7104870Z ^[[36;1marchive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-darwin-arm64.tar.gz"^[[0m
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7105820Z ^[[36;1mif [ "darwin-arm64" = "win-x64" ]; then^[[0m
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7106370Z ^[[36;1m  archive="dist/d4-installer/treeai-studio-0.0.0-ci.${GITHUB_SHA}-win-x64.zip"^[[0m
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7111550Z ^[[36;1mfi^[[0m
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7112080Z ^[[36;1mnode scripts/d4/installer/smoke-bundle.mjs --archive "$archive" --work-dir "$RUNNER_TEMP/d47-smoke"^[[0m
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7581430Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:07.7582300Z ##[endgroup]
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:08.0847840Z smoke-bundle: 产物 <home>/work/TreeAI/TreeAI/dist/d4-installer/treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-darwin-arm64.tar.gz
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:08.0889360Z smoke-bundle: 工作目录 <home>/work/_temp/d47-smoke
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:08.0891630Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:08.0894770Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:08.0895830Z == 1. 解压与布局校验
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4089330Z   [PASS] 解压得到顶层目录
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4112340Z   [PASS] VERSION.json 清单有效
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4972160Z   [PASS] 产物布局完整
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4974220Z   [PASS] 产物平台与当前主机一致（darwin-arm64）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4975830Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:12.4976440Z == 2. doctor（全新数据目录）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:13.3331100Z   [PASS] doctor 退出码 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:13.3332540Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:13.3335740Z == 3. 首次启动（--no-browser）与离线 API 往返
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.6445400Z   [PASS] start 退出码 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.6508710Z   [PASS] 输出可解析实际 URL
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7089590Z   [PASS] GET /api/health → {ok:true}
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7165500Z   [PASS] GET / 静态前端可服务
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7254520Z   [PASS] POST /api/trees 创建树
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7279070Z   [PASS] GET /api/trees 列出刚创建的树（离线往返闭环）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7280220Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.7281510Z == 4. 幂等 start（已在运行）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.9214990Z   [PASS] 重复 start 幂等（不重复起进程）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.9316310Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:15.9417900Z == 5. stop / restart 与数据持久
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:16.4572700Z   [PASS] stop 优雅停止
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:17.4662560Z   [PASS] 停止后端口不再应答
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:19.2114080Z   [PASS] restart 再次启动
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:19.2148030Z   [PASS] 重启后已创建的树仍在（状态持久）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:19.2148810Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:19.2149570Z == 6. 端口冲突自动顺延
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:19.7718050Z   [PASS] 先停止实例
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7101560Z   [PASS] 端口被占时 start 仍成功
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7105380Z   [PASS] 输出明确提示端口顺延
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7108200Z   [PASS] 实际使用 8788
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7165030Z   [PASS] 顺延端口上健康检查通过
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7165850Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:21.7166550Z == 7. 模型配置错误 → 可执行恢复信息
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:22.2441410Z   [PASS] 停止后改配置
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:22.6214660Z   [PASS] doctor 退出码 1（有问题）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:22.6316430Z   [PASS] doctor 给出具体修复步骤
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:22.9635530Z   [PASS] start 拒绝坏配置（不静默）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:24.7954710Z   [PASS] 修复配置后可再次启动
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:24.7955190Z   [PASS] 配置故障期间数据未丢失
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:24.7955670Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:24.7956440Z == 8. 升级失败自动回滚
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:39.9925570Z   [PASS] 损坏新包的升级退出非 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:40.0022150Z   [PASS] 输出说明已回滚
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:40.2732460Z   [PASS] 回滚后旧安装 doctor 全绿
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:41.4566730Z   [PASS] 回滚后旧版本可启动
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:41.4654510Z   [PASS] 回滚后数据仍在
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:41.9299630Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:41.9349880Z == 9. 正常升级（数据保留，旧版备份）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2481640Z   [PASS] upgrade 退出码 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2576360Z   [PASS] 输出升级成功
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2679170Z   [PASS] 输出数据未动说明
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2783150Z   [PASS] 旧版本备份目录存在
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2885980Z   [PASS] 升级成功输出含实际 url=
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2985660Z   [PASS] 升级后数据保留（树仍在）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2995580Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:55.2998090Z == 10. 卸载（默认保留数据；显式 --delete-data 删除）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:56.9931420Z   [PASS] uninstall 退出码 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:57.0032270Z   [PASS] 输出数据已保留
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:57.0133510Z   [PASS] 安装目录已删除
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:57.0235150Z   [PASS] 数据目录仍在（默认保留）
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:30:57.0336330Z   [PASS] 数据库文件仍在
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1828040Z   [PASS] --delete-data 卸载退出码 0
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1831450Z   [PASS] 输出数据已删除
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1832020Z   [PASS] 数据目录已按显式 opt-in 删除
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1832360Z 
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1833300Z smoke-bundle: 结果 PASS 46 / FAIL 0 — 全部通过
+build + smoke (darwin-arm64)	Packaged-bundle smoke (offline, zero credentials)	2026-10-14T02:31:01.1834330Z 诚实边界：本冒烟是 CI/本机的自动化验证，不等价于负责人目标机的干净安装实测（B8）。
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	﻿2026-10-14T02:31:05.4619660Z ##[group]Run node -e '
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4620410Z ^[[36;1mnode -e '^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4621200Z ^[[36;1m  const { readFileSync } = require("node:fs");^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4621970Z ^[[36;1m  const { createHash } = require("node:crypto");^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4623370Z ^[[36;1m  const lines = readFileSync("dist/d4-installer/SHA256SUMS.txt", "utf8").trim().split("\n");^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4624570Z ^[[36;1m  let bad = 0;^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4625180Z ^[[36;1m  for (const line of lines) {^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4625870Z ^[[36;1m    const m = /^([0-9a-f]{64})  (.+)$/.exec(line.trim());^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4626870Z ^[[36;1m    if (m === null) { console.log("MALFORMED LINE:", line); bad++; continue; }^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4628200Z ^[[36;1m    const actual = createHash("sha256").update(readFileSync(`dist/d4-installer/${m[2]}`)).digest("hex");^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4629620Z ^[[36;1m    const ok = actual === m[1];^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4630480Z ^[[36;1m    console.log(`${ok ? "OK" : "MISMATCH"}  ${m[2]}`);^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4631580Z ^[[36;1m    if (!ok) bad++;^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4632060Z ^[[36;1m  }^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4632770Z ^[[36;1m  if (bad > 0) process.exit(1);^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4633580Z ^[[36;1m  console.log(`SHA256SUMS.txt: ${lines.length} file(s) verified`);^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.4634480Z ^[[36;1m'^[[0m
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.6022850Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.6023740Z ##[endgroup]
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.8141890Z OK  treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-darwin-arm64.tar.gz
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.8149880Z OK  VERSION-treeai-studio-0.0.0-ci.d20d808262b50859a855e91a54eb57004a78df74-darwin-arm64.json
+build + smoke (darwin-arm64)	Verify SHA256SUMS matches the built archive	2026-10-14T02:31:05.8151240Z SHA256SUMS.txt: 2 file(s) verified
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	﻿2026-10-14T02:31:05.8397660Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8398930Z with:
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8399590Z   name: d4-installer-darwin-arm64-38501239760-1
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8403370Z   path: dist/d4-installer/treeai-studio-*.tar.gz
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.zip
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	dist/d4-installer/treeai-studio-*.sha256
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	dist/d4-installer/SHA256SUMS.txt
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	dist/d4-installer/VERSION-treeai-studio-*.json
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	dist/d4-installer/build-report-*.json
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8405810Z   retention-days: 14
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8406440Z   if-no-files-found: error
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8407340Z   compression-level: 6
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8407920Z   overwrite: false
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8408680Z   include-hidden-files: false
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:05.8409520Z ##[endgroup]
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.5660120Z (node:13890) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.5662530Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.5862680Z With the provided path, there will be 5 files uploaded
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.5863710Z Artifact name is valid!
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.5864110Z Root directory input is valid!
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:06.9158530Z Beginning upload of artifact content to blob storage
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:07.2427330Z (node:13890) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:07.8417110Z Uploaded bytes 8388608
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:08.3694610Z Uploaded bytes 16777216
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:08.4198190Z Uploaded bytes 25165824
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:08.8684270Z Uploaded bytes 33554432
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:09.1747620Z Uploaded bytes 41943040
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:09.4594190Z Uploaded bytes 50331648
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:09.8327760Z Uploaded bytes 58720256
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.1605520Z Uploaded bytes 67108864
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.4625970Z Uploaded bytes 75497472
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.6961220Z Uploaded bytes 83886080
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.8699960Z Uploaded bytes 85631588
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.9149330Z Finished uploading artifact content to blob storage!
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.9245150Z SHA256 digest of uploaded artifact zip is 78ce623b08eec4ae46df9d68b6b83e5fdc4613945cf0dba04c5a9356548bb7c1
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:10.9319470Z Finalizing artifact upload
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:11.1882120Z Artifact d4-installer-darwin-arm64-38501239760-1.zip successfully finalized. Artifact ID 11866305798
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:11.1883510Z Artifact d4-installer-darwin-arm64-38501239760-1 has been successfully uploaded! Final size is 85631588 bytes. Artifact ID is 11866305798
+build + smoke (darwin-arm64)	Upload installer artifact + checksums	2026-10-14T02:31:11.1884790Z Artifact download URL: https://github.com/Lortzing/TreeAI/actions/runs/38501239760/artifacts/11866305798
+build + smoke (darwin-arm64)	Post Set up Node (pinned)	﻿2026-10-14T02:31:11.2071940Z Post job cleanup.
+build + smoke (darwin-arm64)	Post Set up Node (pinned)	2026-10-14T02:31:11.3685840Z (node:14141) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build + smoke (darwin-arm64)	Post Set up Node (pinned)	2026-10-14T02:31:11.3789430Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build + smoke (darwin-arm64)	Post Set up Node (pinned)	2026-10-14T02:31:11.3792470Z Cache hit occurred on the primary key node-cache-macOS-arm64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db, not saving cache.
+build + smoke (darwin-arm64)	Post Check out	﻿2026-10-14T02:31:11.4031820Z Post job cleanup.
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5293880Z [command]/opt/homebrew/bin/git version
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5846140Z git version 2.55.0
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5944090Z Copying '<home>/.gitconfig' to '<home>/work/_temp/b2a70e26-eca3-4016-9648-51e7b80212df/.gitconfig'
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5945140Z Temporarily overriding HOME='<home>/work/_temp/b2a70e26-eca3-4016-9648-51e7b80212df' before making global git config changes
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5946400Z Adding repository directory to the temporary git global config as a safe directory
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.5948480Z [command]/opt/homebrew/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.6136510Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.6144040Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.7492680Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.7572240Z http.https://github.com/.extraheader
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.7583540Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+build + smoke (darwin-arm64)	Post Check out	2026-10-14T02:31:11.7743610Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build + smoke (darwin-arm64)	Complete job	﻿2026-10-14T02:31:11.8791760Z Cleaning up orphan processes
+build + smoke (darwin-arm64)	Complete job	2026-10-14T02:31:12.4594670Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

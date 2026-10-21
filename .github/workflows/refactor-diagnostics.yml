@@ -40,6 +40,11 @@ jobs:
       - name: Studio test suite (diagnostic output)
         if: always()
         run: npm test --workspace @treeai/studio
+      - name: Computed resources and original test discovery
+        if: always()
+        run: |
+          npm run audit:computed-paths
+          node --test tests/unit/computed-paths.test.mjs
       - name: Install deterministic TrueType CJK test font (Linux B6)
         if: always()
         run: |

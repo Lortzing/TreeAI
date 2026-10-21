@@ -1,0 +1,15 @@
+2026-10-13T11:08:38.251Z start ok pid=10344 port=8787 bundle=0.0.0-refactor.0173fc3.local-a
+2026-10-13T11:08:39.349Z stop (stop) pid=10344 port=8787 clean=true
+2026-10-13T11:08:40.507Z start ok pid=10377 port=8787 bundle=0.0.0-refactor.0173fc3.local-a
+2026-10-13T11:08:41.957Z stop (stop) pid=10377 port=8787 clean=true
+2026-10-13T11:08:44.533Z start ok pid=10446 port=8787 bundle=0.0.0-refactor.0173fc3.local-a
+2026-10-13T11:08:44.998Z stop (stop) pid=10446 port=8787 clean=true
+2026-10-13T11:08:46.142Z start ok pid=10479 port=8788 bundle=0.0.0-refactor.0173fc3.local-a
+2026-10-13T11:08:47.255Z stop (stop) pid=10479 port=8788 clean=true
+2026-10-13T11:08:48.665Z start ok pid=10530 port=8787 bundle=0.0.0-refactor.0173fc3.local-a
+2026-10-13T11:08:49.239Z stop (stop) pid=10530 port=8787 clean=true
+2026-10-13T11:09:04.363Z start ok pid=10618 port=8787 bundle=0.0.0-refactor.0173fc3.local-b
+2026-10-13T11:09:04.372Z upgrade 0.0.0-refactor.0173fc3.local-a -> 0.0.0-refactor.0173fc3.local-b ok
+2026-10-13T11:09:06.863Z stop (stop) pid=10618 port=8787 clean=true
+2026-10-13T11:09:24.153Z start ok pid=10774 port=8787 bundle=0.0.0-refactor.0173fc3.local-b
+2026-10-13T11:09:24.583Z stop (stop) pid=10774 port=8787 clean=true

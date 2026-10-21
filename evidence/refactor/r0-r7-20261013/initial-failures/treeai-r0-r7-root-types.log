@@ -1,0 +1,1 @@
+tests/unit/computed-paths.test.ts(8,69): error TS7016: Could not find a declaration file for module '../../scripts/audit-computed-paths.mjs'. '<repo>/scripts/audit-computed-paths.mjs' implicitly has an 'any' type.

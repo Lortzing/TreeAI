@@ -1,0 +1,51 @@
+run-d3-real-pi 1.2.0 — D3 real-Pi scenario runner
+root: <repo>
+mode: echo-selftest (offline deterministic echo driver)
+bound commit: 1ea8e9ee506d (gitDirty: false)
+environment: Node v24.21.0 / npm 11.19.0 / darwin arm64
+
+credentials: none needed (echo driver; zero network)
+
+data dir: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d3-run-Z1uIjq (temporary)
+
+  [PASS] studio-boot — echo driver on 127.0.0.1:58394, /api/health ok
+    studio banner (sanitized):
+      treeai-studio: listening http://127.0.0.1:58394
+      treeai-studio: driver=echo model=studio-provider/studio-model
+      treeai-studio: data=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d3-run-Z1uIjq (schema v10)
+      treeai-studio: journal=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d3-run-Z1uIjq/journal.jsonl (0 events loaded)
+      treeai-studio: terminology executor isolated (model=studio-provider/studio-model, budget=1000000 est tokens, thinking=off)
+      treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)
+      treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+  [PASS] tree-create — tree + trunk created; SSE stream attached before any prompt
+  [PASS] trunk-main-line — two trunk prompts succeeded; cursor on trunk; 4 turns persisted
+  [PASS] branch-a-create — branch A forked from the trunk turn-1 answer anchor (origin + selection recorded)
+  [PASS] branch-a-followups — two branch-A follow-ups succeeded (>= 2 turns per branch)
+  [PASS] switch-navigation — explicit switch back to the trunk (session leaf re-navigated)
+  [PASS] branch-b-create — branch B forked from the trunk turn-2 answer anchor (different anchor from branch A)
+  [PASS] branch-b-followups — two branch-B follow-ups succeeded (>= 2 turns per branch)
+  [PASS] no-context-bleed — branch A sees cedar+maple only; branch B sees birch+maple+4127 only; no cross-branch or post-anchor trunk leakage (echo answer surface)
+  [PASS] anchor-reveal — branch A origin revealed: anchor available, selection intact, cursor re-aligned
+  [PASS] return-submit — return submitted (201) with targetAnchor snapshot; deliveredRunId null (confirmed, not delivered)
+  [PASS] return-idempotency — replay 200 (same turn), same-key different-content 409 return-conflict, exactly one return row
+  [PASS] return-delivery — return delivered exactly once with the next trunk prompt (deliveredRunId set)
+  [PASS] model-error-convergence — injected upstream failure converged failed (502, no turns); branch B usable again afterwards
+  [PASS] sse-event-surface — 9 run-started / 9 run-terminal (mix {"succeeded":8,"failed":1}) / 16 message-delta / 0 abort
+  [PASS] diagnostics-projection — safe projection verified for 9 runs; policy note honest for this wiring
+  [PASS] journal-no-leak — 100 journal events, whitelist key set exact, no scenario canary leakage
+  [PASS] restart-persistence — SIGKILL + same-data restart: tree/branches/turns/cursor intact; trunk continuation works
+  [PASS] new-exploration — v3 §4.4 on a probe tree: session deleted → normal continuation fail-closed (502 session-corrupt) → explicit new exploration 200 (first question succeeds, honest not-restored marker, old history readable, availability recovers) → healthy re-exploration 409 → normal continuation works again; main tree untouched
+  [NOT_RUN] mid-flight-abort — the echo driver's ~1ms turn delay leaves no deterministic in-flight window through the production CLI (no delay flag); abort semantics are covered offline by the studio suite with a widened echo window and run for real in --mode real-pi
+  [NOT_RUN] A5-product-tool-policy — the product-path ToolPolicy scenario needs the real Pi request-time gate driven through the studio CLI (--driver pi + --pi-tools read); the echo driver has no tool executor and --pi-tools is rejected in echo mode — the offline lock-in is apps/studio/tests/events.test.ts (request-time policy gate) and the SDK-level real-model half is evidence/d3/real-pi/20260929T105245Z-tool-policy.md
+  [NOT_RUN] A5-product-tool-policy-allow-read — part of the A5 product tool-policy phase — see A5-product-tool-policy (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] A5-product-tool-policy-deny-fail-closed — part of the A5 product tool-policy phase — see A5-product-tool-policy (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] A5-product-tool-policy-deny-provenance — part of the A5 product tool-policy phase — see A5-product-tool-policy (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] A5-product-tool-policy-canary-never-read — part of the A5 product tool-policy phase — see A5-product-tool-policy (needs --mode real-pi with --pi-tools read)
+
+run-d3-real-pi summary:
+  mode: echo-selftest
+  checks: 19 PASS, 0 FAIL, 0 BLOCKED, 6 NOT_RUN
+  NOT_RUN: mid-flight-abort, A5-product-tool-policy, A5-product-tool-policy-allow-read, A5-product-tool-policy-deny-fail-closed, A5-product-tool-policy-deny-provenance, A5-product-tool-policy-canary-never-read (reasons above)
+  verdict: PASS (exit 0)
+  note: this was an offline echo selftest — echo results are never real-Pi evidence
+    (evidence/d3/README.md rule 5)

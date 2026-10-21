@@ -1,0 +1,13 @@
+✔ B3/B9 D4 browser CLI default remains offline selftest without credentials (1.0915ms)
+✔ browser CLI --only repetitions, flags, and order are preserved (0.088708ms)
+✔ browser CLI refuses unknown flags, missing values, inappropriate real-Pi flags (0.482ms)
+✔ browser CLI accepts --keep-data as a standalone final switch (0.058584ms)
+✔ browser CLI retains positional values and rejects incomplete option pairs (0.087334ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40.267125

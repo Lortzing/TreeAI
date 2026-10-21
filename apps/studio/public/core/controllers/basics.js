@@ -99,7 +99,7 @@ export function createStudioBasics(deps) {
     $("prompt-input").disabled = busy;
     $("prompt-input").placeholder = trunkUnavailable
       ? "Session missing on the Trunk — type the first question of a new exploration, then “Start new exploration”…"
-      : "Ask on the Trunk…";
+      : "继续对话…";
     $("send").disabled = trunkLocked;
     $("new-exploration").hidden = !trunkUnavailable;
     $("new-exploration").disabled = busy;
@@ -109,7 +109,7 @@ export function createStudioBasics(deps) {
     $("panel-prompt-input").disabled = busy;
     $("panel-prompt-input").placeholder = panelUnavailable
       ? "Session missing on this branch — type the first question of a new exploration, then “Start new exploration”…"
-      : "Continue this branch…";
+      : "继续对话…";
     $("panel-send").disabled = panelLocked;
     $("panel-new-exploration").hidden = !panelUnavailable;
     $("panel-new-exploration").disabled = busy;
@@ -133,7 +133,9 @@ export function createStudioBasics(deps) {
 
   /** 每分支阅读位置键（W2 §4：切树/切分支后回来恢复原位）。 */
   function scrollKey(branchId) {
-    return `${deps.state.currentTreeId}:${branchId}`;
+    const view = branchView(branchId);
+    const round = view ? deps.currentSessionRound(view).round : null;
+    return `${deps.state.currentTreeId}:${branchId}:${round?.id || "empty"}`;
   }
 
 

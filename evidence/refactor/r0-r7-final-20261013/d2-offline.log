@@ -1,0 +1,31 @@
+verify-d2 1.0.0 — offline acceptance run
+root: <repo>
+evidence: /tmp/treeai-r0-r7-final2-verification/d2/d2-offline-20261013T110407915Z
+
+  [PASS] fixtures-integrity
+  [PASS] schema-validator-selftest
+  [PASS] secret-scanner-selftest
+  [PASS] typecheck
+  [PASS] tests-typecheck
+  [PASS] unit-tests-contracts
+  [PASS] unit-tests-runtime-pi
+  [PASS] unit-tests-persistence
+  [PASS] unit-tests-tool-policy
+  [PASS] unit-tests-event-journal
+  [PASS] unit-tests-agent-f
+  [PASS] integration-tests-agent-f
+  [PASS] live-framework-selftest
+  [PASS] runtime-smoke
+  [PASS] unit-tests-studio
+  [PASS] pi-version-pin
+  [PASS] secret-scan-workspace
+  [PASS] residual-resources
+  [NOT_RUN] d1-repro — explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization
+  [PASS] exit-codes
+  [PASS] evidence-write-hygiene
+  [PASS] schema-validation
+
+verify-d2 summary:
+  21 PASS, 0 FAIL, 0 BLOCKED, 1 NOT_RUN
+  verdict: INCOMPLETE (exit 3)
+  evidence: /tmp/treeai-r0-r7-final2-verification/d2/d2-offline-20261013T110407915Z

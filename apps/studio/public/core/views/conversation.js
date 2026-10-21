@@ -120,6 +120,10 @@ export function createConversationView(deps) {
    * 直接落底（自然的阅读起点，非强制拉动）。
    */
   function renderTurnsInto(container, view, branchId, stick) {
+    const page = deps.currentSessionRound(view);
+    view = { ...view, turns: page.round ? [...page.round.turns, ...page.round.returns] : page.unattached };
+    if (page.round) container.dataset.episodeId = page.round.id;
+    else delete container.dataset.episodeId;
     const st = deps.state.treeState;
     /* 贴底判定取重渲前实况（结构变更会改变 scrollHeight）。 */
     const wasAtBottom = deps.isAtBottom(container);
@@ -194,7 +198,7 @@ export function createConversationView(deps) {
     /* P1 流式占位回显：在途 run 位于本视图分支时追加瞬态占位 turn
        （run-terminal 后由 /state 权威刷新取代）。 */
     const streaming = deps.state.streaming;
-    if (streaming !== null && streaming.branchId === branchId) {
+    if (streaming !== null && streaming.branchId === branchId && (!page.round || page.index === page.rounds.length - 1)) {
       desired.push(streamingPlaceholder(streaming.text));
     }
 
@@ -332,6 +336,11 @@ export function createConversationView(deps) {
     const visible =
       streaming.branchId === deps.trunkBranchId() || streaming.branchId === deps.state.panelBranchId;
     if (!visible) return;
+    const view = deps.branchView(streaming.branchId);
+    if (view) {
+      const page = deps.currentSessionRound(view);
+      if (page.round && page.index !== page.rounds.length - 1) return;
+    }
     let node = deps.document.getElementById("streaming-turn");
     const containerId = deps.conversationContainerId(streaming.branchId);
     if (node === null || node.parentElement === null || node.parentElement.id !== containerId) {

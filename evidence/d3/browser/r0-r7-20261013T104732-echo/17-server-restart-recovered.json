@@ -1,0 +1,136 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "prompt-input",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 1,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": false,
+    "treeViewVisible": true,
+    "runStatus": "idle",
+    "runDetail": "last run: succeeded",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": false,
+      "text": "Run run_f2b052b2… failed — upstream: Error: simulated upstream failure (500)Dismiss"
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": [
+      {
+        "role": "user",
+        "turnId": "turn_24dc8b01-3c24-44ce-be57-9dc3646eda57",
+        "text": "This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_c3524416-a4f3-4be3-b679-f4abcfb9d619",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.]"
+      },
+      {
+        "role": "return",
+        "turnId": "turn_0ff6f129-d34e-48aa-a6e0-2e4faaffff32",
+        "text": "Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line."
+      },
+      {
+        "role": "user",
+        "turnId": "turn_d0eaa96b-186a-42b5-b11f-3d30e716e1ba",
+        "text": "Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_955efd12-9427-4a6e-84c3-20458830a18a",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_d2418489-e275-4104-832a-e7cf4e45f705",
+        "text": "Main line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_08527871-668a-4a2a-b97a-4675fc861177",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_6bc33720-12f6-4cf4-867f-eac69e887cb1]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_cb6960e8-b000-4efa-84eb-46de3ab6ffab",
+        "text": "After the earlier failure, the main line continues. Reply with: back-online."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_465f149c-8e36-43a1-810c-86e77d3ea8fd",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_6bc33720-12f6-4cf4-867f-eac69e887cb1]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.|/fail this prompt must converge as a simulated upstream model error|After the earlier failure, the main line continues. Reply with: back-online.]"
+      },
+      {
+        "role": "user",
+        "turnId": "turn_1ab156c6-055a-4b31-b64e-444f0c797c73",
+        "text": "After the restart, the main line continues. Reply with: restart-ok."
+      },
+      {
+        "role": "assistant",
+        "turnId": "turn_07aad749-3637-4570-a10a-e76e1c2138a5",
+        "text": "echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, turn two. The trunk secret number is 4127. Reply with exactly: noted — the secret number 4127 is registered on the main line.|[Return from branch branch_6bc33720-12f6-4cf4-867f-eac69e887cb1]\nBranch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.\n\nMain line, turn three. Did any branch return a delivery marker to you? Quote it exactly if so, otherwise reply: none.|/fail this prompt must converge as a simulated upstream model error|After the earlier failure, the main line continues. Reply with: back-online.|After the restart, the main line continues. Reply with: restart-ok.]"
+      }
+    ]
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [
+    {
+      "text": "Trunk",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 1 °",
+      "ariaCurrent": null
+    },
+    {
+      "text": "Branch 2 °",
+      "ariaCurrent": null
+    }
+  ],
+  "returnCards": [
+    {
+      "text": "↩ Return from Branch 1 · saved 2026/10/13 18:47:41 · anchored on “ine, turn one. The trunk top” from Trunksuccessfully adopted into Trunk context (run run_e6673aad…, adopted 2026/10/13 18:47:42)Branch A return note: the agreed delivery marker is aspen. Acknowledge the marker when asked on the main line.",
+      "delivered": true,
+      "deliveryText": "successfully adopted into Trunk context (run run_e6673aad…, adopted 2026/10/13 18:47:42)"
+    }
+  ],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

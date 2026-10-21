@@ -1119,7 +1119,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       releaseHoldFn();
     },
     treeButton: (treeId) => {
-      const found = documentStub.getElementById("tree-list")!.querySelectorAll("button").find((b) => b.textContent!.startsWith(treeId));
+      const found = documentStub.getElementById("tree-list")!.querySelectorAll("button").find((b) => b.dataset.treeId === treeId);
       assert.ok(found !== undefined, `the sidebar lists ${treeId}`);
       return found;
     },

@@ -1,36 +1,35 @@
-/* TreeAI Studio — W2 工作台视觉语言（安静克制的阅读工作台）。
+/* TreeAI Studio — 生长中的思考（2026-10-15 设计落地）。
  *
- * 概念：暖灰画布上的白色阅读面。58px 白色顶栏（品牌 / 位置路径 / 内联
- * 诊断面 / 来源入口）+ 白色左栏（Forest / Branches / 常驻页脚）+ 暖灰
- * 阅读列（白色助手卡，≤68ch）；≥1180px 时右侧常驻支线概念列。深绿 =
- * 主线/主动作；暖金 = Return（回到主线的那个动作）。边线安静（发丝级
- * 暖灰）。动效只回答操作（面板/抽屉滑入、Return 插入、徽标切换、锚点
- * 脉冲），全部有 prefers-reduced-motion 等价物。面板与抽屉的可见性由
+ * 暖纸色阅读面 + 松绿森林导航 + 苔绿收获卡。58px 顶栏承载位置、真实
+ * 运行状态与来源；材料在中央阅读，支线在右侧局部展开（≥1180px 常驻
+ * 探索列，窄窗覆盖）。完整行为样式保留在各功能区块，末尾工作台规则
+ * 统一设计语言。动效只回答操作，全部有 prefers-reduced-motion 等价物。
+ * 面板与抽屉的可见性由
  * hidden 属性 + .enter/.exit 动效管理（app.js 契约），基态不预隐藏。
  */
 
 :root {
-  --canvas: #f3f1ec;        /* 暖灰画布 */
-  --surface: #ffffff;       /* 白色阅读面 */
-  --surface-dim: #faf9f5;   /* 输入/悬停的微沉面 */
-  --ink: #23281f;           /* 带绿意的近黑 */
-  --ink-soft: #4f5346;
-  --muted: #85816f;         /* 暖灰弱化文字 */
-  --green: #2e6b4e;         /* 深绿主色 */
-  --green-deep: #23523c;
-  --green-wash: #e8f0e9;
-  --green-line: #c2d6c8;
+  --canvas: #fbfaf7;        /* 暖纸阅读面 */
+  --surface: #fffefa;
+  --surface-dim: #f1f2eb;
+  --ink: #29392e;
+  --ink-soft: #596551;
+  --muted: #737d6c;
+  --green: #34583e;
+  --green-deep: #25432e;
+  --green-wash: #e8eee3;
+  --green-line: #cedac6;
   --gold: #9a7428;          /* 暖金 Return */
   --gold-deep: #7c5d1e;
   --gold-wash: #fbf3e0;
   --gold-line: #e5d3a4;
-  --line: #e5e1d6;          /* 安静边线 */
-  --line-strong: #cec9ba;
+  --line: #e4e6dc;
+  --line-strong: #cdd5c5;
   --danger: #a33b2e;
   --danger-wash: #fbece8;
-  --highlight: #f3d36a;     /* 锚点高亮 */
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
-  --font-read: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --highlight: #dfeace;
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  --font-read: "Songti SC", "STSong", "Noto Serif SC", "Iowan Old Style", Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --radius: 8px;
   /* 动效分镜（W2 §3）：短促、少而克制；全部动效在 prefers-reduced-motion
@@ -38,6 +37,7 @@
   --motion-state: 100ms;
   --motion-panel: 180ms;
   --motion-card: 200ms;
+  --ease-grow: cubic-bezier(.22, 1, .36, 1);
 }
 
 * { box-sizing: border-box; }

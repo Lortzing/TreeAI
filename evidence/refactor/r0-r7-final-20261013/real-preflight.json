@@ -1,0 +1,6 @@
+{
+  "apiKeyEnvironmentPresent": false,
+  "modelCallsExecuted": 0,
+  "status": "BLOCKED",
+  "reason": "Real Pi/real-model evaluation require configured environment credentials; no frozen verdict was consumed or overridden."
+}

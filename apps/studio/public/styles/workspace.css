@@ -3,21 +3,23 @@
 /* 有界高度链：#app（100dvh 列）→ #workspace → #main（列）→ #tree-view
    → #reading-area → #main-pane → #conversation（overflow-y:auto）——
    滚动收敛在会话容器内，文档级滚动不出现。 */
-#app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+#app { display: grid; grid-template-columns: 238px minmax(0, 1fr); grid-template-rows: 58px minmax(0, 1fr); height: 100dvh; overflow: hidden; }
 
-#workspace { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+#workspace { min-height: 0; display: contents; }
 
 /* 左栏：New Tree 置顶 + Forest（树列表）+ Branches（分支导航）+ 常驻
    页脚（白色面 + 发丝右边界）。Branches 区长列表自身滚动，Forest 与
    页脚保持稳定。 */
 #sidebar {
-  width: 264px;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  width: 238px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 14px 14px;
-  background: var(--surface);
+  gap: 12px;
+  padding: 30px 20px 18px;
+  background: var(--surface-dim);
   border-right: 1px solid var(--line);
   overflow-y: auto;
 }
@@ -465,7 +467,7 @@
 .subtitle { margin: 0; font-size: 11.5px; color: var(--muted); }
 
 /* 主区 */
-#main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#main { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 #empty-state { margin: auto; text-align: center; max-width: 420px; padding: 24px; }
 .empty-title { font-family: var(--font-read); font-size: 22px; margin: 0 0 6px; }
@@ -479,11 +481,13 @@
    renderTopbarPath 如实渲染 `<treeId> / Trunk [ / Branch n]`，长树名以
    省略号截断）+ 真实 cursor 注记 + 内联诊断面 + 来源抽屉入口。 */
 #branch-bar {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 12px;
   height: 58px;
-  padding: 0 20px;
+  padding: 0 28px;
   flex-shrink: 0;
   background: var(--surface);
   border-bottom: 1px solid var(--line);

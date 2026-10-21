@@ -1,0 +1,3773 @@
+{
+  "script": "run-d3-browser",
+  "version": "1.3.2",
+  "mode": "selftest",
+  "generatedAt": "2026-10-13T11:03:32.102Z",
+  "git": {
+    "head": "0173fc34a4900e45355224693a27b17a51a47dc6",
+    "dirty": false
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "page-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tree-create",
+      "status": "PASS"
+    },
+    {
+      "id": "trunk-main-line",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-anchoring",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "switch-navigation",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "no-context-bleed",
+      "status": "PASS"
+    },
+    {
+      "id": "return-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "return-delivery",
+      "status": "PASS"
+    },
+    {
+      "id": "model-error-convergence",
+      "status": "PASS"
+    },
+    {
+      "id": "server-restart-recovery",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-session-degradation",
+      "status": "PASS"
+    },
+    {
+      "id": "new-exploration-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "response-loss-midstream",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "a11y-semantics",
+      "status": "PASS"
+    },
+    {
+      "id": "narrow-window-layout",
+      "status": "PASS"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-long",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-duplicate",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-cross-line",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-boot",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-allow-read",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-deny-fail-closed",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-deny-provenance",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tool-policy-canary-never-read",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS"
+    }
+  ],
+  "pageFinalState": {
+    "url": "/",
+    "readyState": "complete",
+    "activeElementId": "",
+    "sidebar": {
+      "toggleExpanded": "false",
+      "treeCount": 4,
+      "driverNote": ""
+    },
+    "main": {
+      "emptyStateVisible": false,
+      "treeViewVisible": true,
+      "runStatus": "idle",
+      "runDetail": "last run: succeeded",
+      "abortVisible": false,
+      "failurePanel": {
+        "hidden": true,
+        "text": "Run run_68997302… failed — upstream: Error: simulated upstream failure (500)Dismiss"
+      },
+      "sessionBanner": {
+        "hidden": true,
+        "text": "Session missing on this branch — the tree stays fully readable (the database is the source of truth), but continuing here will fail. Recovery: start a new exploration from saved content (button next to the composer below), branch from a turn whose session is still available, or start a fresh Tree.⑃ Branch from latest available answerno session currently available — start a new exploration from saved content (composer below), or start a new Tree / restore the session fileDismiss"
+      },
+      "errorBanner": {
+        "hidden": true,
+        "role": "alert",
+        "text": ""
+      }
+    },
+    "panel": {
+      "hidden": true,
+      "title": "Branch 1",
+      "anchorContext": "Branched from Trunk — anchored selection: “anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line” · source available",
+      "sessionNote": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "text": ""
+      }
+    },
+    "conversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_ba8978fc-4afe-4509-83b9-4dc5ec6f518d",
+          "text": "Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_d40e28c4-c70e-41e5-a398-5de346554da2",
+          "text": "echo:[Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block.]"
+        }
+      ]
+    },
+    "panelConversation": {
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_70c9d242-af82-4fb0-98bb-69aa91740fd3",
+          "text": "Follow-up on the cross-line branch. Reply with exactly: deep-cross-branch-live."
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_4af035d2-7122-46b0-b99b-677eb30ea1ef",
+          "text": "echo:[Selection probe. Repeat the block below verbatim in your reply, then stop.\n\nA long structured block follows, composed of numbered sections separated by newlines.\nSection 1: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 2: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 3: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 4: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 5: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 6: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 7: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 8: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 9: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 10: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 11: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 12: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 13: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 14: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 15: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 16: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 17: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 18: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 19: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 20: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nCross-line anchor start: the selection opens on this rendered line.\nthe selection closes on the next rendered line after the break.\nSection 21: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 22: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 23: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 24: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 25: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 26: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 27: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 28: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 29: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 30: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 31: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 32: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 33: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 34: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 35: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nSection 36: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \nThe closing paragraph ends the block.|Follow-up on the cross-line branch. Reply with exactly: deep-cross-branch-live.]"
+        }
+      ]
+    },
+    "branchTabs": [
+      {
+        "text": "Trunk",
+        "ariaCurrent": null
+      },
+      {
+        "text": "Branch 1 °",
+        "ariaCurrent": null
+      }
+    ],
+    "returnCards": [],
+    "drawer": {
+      "open": false,
+      "toggleExpanded": "false",
+      "text": "Sources× CloseRunsTrunk · run run_c03fce94… · succeeded · 19:03:08 → 19:03:08Trunk · run run_f5ce2fdb… · succeeded · 19:03:09 → 19:03:09Branch 1 · run run_999cea20… · succeeded · 19:03:10 → 19:03:10Branch 1 · run run_bfcb478d… · succeeded · 19:03:10 → 19:03:10Branch 2 · run run_5facb346… · succeeded · 19:03:12 → 19:03:12Branch 2 · run run_e6e31b79… · succeeded · 19:03:13 → 19:03:13Trunk · run run_3ff00ff3… · succeeded · 19:03:15 → 19:03:15Trunk · run run_68997302… · failed · failure upstream · 19:03:15 → 19:03:15Trunk · run run_9b1b7765… · succeeded · 19:03:16 → 19:03:16Trunk · run run_ffc43781… · succeeded · 19:03:18 → 19:03:18Trunk · run run_e4ba4b7b… · succeeded · 19:03:20 → 19:03:20Returnsfrom Branch 1 · anchored on “ine, turn one. The trunk top” from Trunk · successfully adopted into run run_3ff00ff3… (first success)attempt: run run_3ff00ff3… · succeededTerminologyno saved term annotations yet — select a term in an answer and “Explain selection”no terminology tasks in this process yetterminology executor: 0 request(s), est. 0/1000000 tokens (chars/4 estimate), 0 late result(s) discarded by the executor, 0 late response(s) discarded client-side, cache oncache preference: on — click to disableManual onlyMinimal hintsAssisted readingthe auto-annotation quality gate has not passed — automatic suggestions stay OFF; only manual explaining is in effectJournal (latest 20)19:03:18 message.completed — message completed (user)19:03:18 message.started — message started (assistant)19:03:18 message.updated — message delta received (417 chars)19:03:18 message.updated — message delta received (416 chars)19:03:18 message.completed — message completed (assistant), stop: stop19:03:18 turn.completed — turn completed (stop: stop)19:03:18 agent.settled — agent run settled19:03:20 session.replaced — session replaced19:03:20 session.created — session created19:03:20 run.state-changed — run state changed: queued → running19:03:20 agent.started — agent run started19:03:20 turn.started — turn started19:03:20 message.started — message started (user)19:03:20 message.completed — message completed (user)19:03:20 message.started — message started (assistant)19:03:20 message.updated — message delta received (1922 chars)19:03:20 message.updated — message delta received (1922 chars)19:03:20 message.completed — message completed (assistant), stop: stop19:03:20 turn.completed — turn completed (stop: stop)19:03:20 agent.settled — agent run settledTool activityno tool activity observed — Studio runs with an empty tool allowlist"
+    },
+    "composers": {
+      "trunkDisabled": false,
+      "panelDisabled": false,
+      "returnDisabled": false
+    }
+  },
+  "pageErrors": [],
+  "netLog": [
+    {
+      "id": "C0D25704F9417E4E27B99FE0F1959BAA",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.2",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.3",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.6",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.7",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.8",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.9",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.10",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.11",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.12",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.13",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.14",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.15",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.16",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.17",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.18",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.19",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.20",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.21",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.22",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.23",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.24",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.25",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.26",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.27",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.28",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.29",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.30",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.31",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.32",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.33",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.34",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.35",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.36",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.37",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.38",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.39",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.40",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.41",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.42",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.43",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.44",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.45",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.46",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.47",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.48",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.49",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.50",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.51",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.52",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.53",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.54",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.55",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.56",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.57",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.58",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.59",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.60",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.61",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.62",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.63",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.64",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.65",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.66",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.67",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.68",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.70",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.71",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.72",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.73",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.74",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.75",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "4295.76",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.77",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.78",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.79",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.80",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.81",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.82",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.83",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.84",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.85",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.86",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.87",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.88",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.89",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.90",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.91",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.92",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.93",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.94",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.95",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.96",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.97",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.98",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.99",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.100",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.101",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.102",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.103",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.104",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.105",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.106",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.107",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.108",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.109",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.110",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.111",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.112",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.113",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.114",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.115",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.116",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.117",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.118",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/return",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.119",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.120",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.121",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.122",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.123",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.124",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.125",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.126",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.127",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.128",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 502,
+      "failed": null
+    },
+    {
+      "id": "4295.129",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.130",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.131",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.132",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.133",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.134",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.135",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.136",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.137",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.138",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.139",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "4295.140",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "4295.141",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "0B87C16D9FEDFAA405D5ED2F048CCFF2",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.143",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.144",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.147",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.148",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.149",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.150",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.151",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.152",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.153",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.154",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.155",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.156",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.157",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.158",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.159",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.160",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.161",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.162",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.163",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.164",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.165",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.166",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.167",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.168",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.169",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.170",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.171",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.172",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.173",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.174",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.175",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.176",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.177",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.178",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.179",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.180",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.181",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.182",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.183",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.184",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.185",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.186",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.187",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.188",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.189",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.190",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.191",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.192",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.193",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.194",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.195",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.196",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.197",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.198",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.199",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.200",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.201",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.202",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.203",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.204",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.205",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.206",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.207",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.208",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.209",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.210",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.211",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.212",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.213",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.214",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.215",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.216",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.217",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.218",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.219",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.220",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.221",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "939319631B6E6E89A3664BAD4E14D7E2",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.223",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.224",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.227",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.228",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.229",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.230",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.231",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.232",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.233",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.234",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.235",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.236",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.237",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.238",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.239",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.240",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.241",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.242",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.243",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.244",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.245",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.246",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.247",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.248",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.249",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.250",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.251",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.252",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.253",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.254",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.255",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.256",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.257",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.258",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.259",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.260",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.261",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.262",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.263",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.264",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.265",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.266",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.267",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.268",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.269",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.270",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.271",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.272",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.273",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.274",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.275",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.276",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.277",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.278",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.279",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.280",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.281",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.282",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.283",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.284",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.285",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.286",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.287",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.288",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.289",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.290",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.291",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.292",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.293",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.294",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.295",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "6DC1FB73AC1843D7B069FA63C0A1B931",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.297",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.298",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.301",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.302",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.303",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.304",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.305",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.306",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.307",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.308",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.309",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.310",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.311",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.312",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.313",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.314",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.315",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.316",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.317",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.318",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.319",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.320",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.321",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.322",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.323",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.324",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.325",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.326",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.327",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.328",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.329",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.330",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.331",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.332",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.333",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.334",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.335",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.336",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.337",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.338",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.339",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.340",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.341",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.342",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.343",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.344",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.345",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.346",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.347",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.348",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.349",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.350",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.351",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.352",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.353",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.354",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.355",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.356",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.357",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.358",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.359",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.360",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.361",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.362",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.363",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.364",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.365",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.366",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.367",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.368",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.369",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "001D93AC27B093D0C6F7C120E16AEF94",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.371",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.372",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.375",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.376",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.377",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.378",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.379",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.380",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.381",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.382",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.383",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.384",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.385",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.386",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.387",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.388",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.389",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.390",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.391",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.392",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.393",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.394",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.395",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.396",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.397",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.398",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.399",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.400",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.401",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.402",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.403",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.404",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.405",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.406",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.407",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.408",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.409",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.410",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.411",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.412",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.413",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.414",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.415",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.416",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.417",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.418",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.419",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.420",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.421",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.422",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.423",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.424",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.425",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.426",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.427",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.428",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.429",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.430",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.431",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.432",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.433",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.434",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.435",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.436",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.437",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.438",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.439",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.440",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.441",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.442",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.443",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "4295.444",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/branches/branch_fa348528-9a72-469b-b326-176e407a7045/new-exploration",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.445",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.446",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.447",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.448",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.449",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.450",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.451",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.452",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.453",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.454",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_6e7b43e5-090e-4818-bfd9-85f19f3c47b4/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.455",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.456",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.457",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.458",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.459",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.460",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "4295.461",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.462",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.463",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.464",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.465",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.466",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.467",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.468",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/branches/branch_d9777f97-80e5-4c11-839b-856e2adf5880/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.469",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.470",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.471",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.472",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.473",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.474",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.475",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_88be538b-451f-48d2-9e19-72943ea01343/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.476",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.477",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.478",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.479",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.480",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.481",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "4295.482",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.483",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.484",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.485",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.486",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.487",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.488",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.489",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/branches/branch_86753b32-2a0d-4cd8-86b3-a953a2c89786/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.490",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.491",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.492",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.493",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.494",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.495",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.496",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_ee10db24-0f19-49ae-b6c6-bb5f2b02ba60/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.497",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.498",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.499",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.500",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.501",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.502",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.503",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.504",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.505",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.506",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.507",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.508",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.509",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "4295.510",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/branches/branch_fa6ef3c0-4257-481b-8ba9-042c79d84fff/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.511",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.512",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.513",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.514",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.515",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.516",
+      "method": "GET",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "4295.517",
+      "method": "POST",
+      "url": "http://127.0.0.1:51522/api/trees/tree_c5a96a2f-0464-45fa-8577-2e86b0166723/switch",
+      "status": 200,
+      "failed": null
+    }
+  ]
+}

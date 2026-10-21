@@ -629,7 +629,7 @@ test("stream follow records native scroll position before delayed scroll events 
     set data(value) { if (container.clientHeight > 0) container.scrollHeight += 200; },
     get data() { return "text"; },
   } };
-  const view = createConversationView({ state, document: { getElementById: () => node },
+  const view = createConversationView({ state, branchView: () => null, document: { getElementById: () => node },
     trunkBranchId: () => "branch", conversationContainerId: () => "conversation", scrollKey: () => "tree:branch",
     scrollBehavior: () => "auto", isAtBottom: createIsAtBottom(48),
   });

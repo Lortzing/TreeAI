@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createD4Reporting } from "./d4/browser/reporting.mjs";
 import { createChromeHost } from "./d4/browser/chrome-host.mjs";
 /**
  * run-d4-browser — TreeAI D4 浏览器验收入口（issue #8 §8）。
@@ -401,18 +402,7 @@ const SELECTED_CHECK_IDS = CLI.only.length === 0
   ? CHECK_DEFS.map((def) => def.id)
   : CHECK_DEFS.filter((def) => CLI.only.includes(def.id) || BOOT_ALWAYS_IDS.includes(def.id)).map((def) => def.id);
 
-function report(entry) {
-  results.push(entry);
-  const tail =
-    entry.reason !== undefined
-      ? ` — ${entry.reason}`
-      : entry.detail !== undefined
-        ? ` — ${entry.detail}`
-        : entry.error !== undefined
-          ? ` — ${truncate(entry.error.message, 400)}`
-          : "";
-  console.log(`  [${entry.status}] ${entry.id}${tail}`);
-}
+
 
 let booted = false;
 let chromeReady = false;
@@ -420,122 +410,17 @@ let chromeReady = false;
 /** 级联 NOT_RUN（探针间依赖未就位）：如实登记原因，不伪装成 FAIL/PASS。 */
 class NotRunError extends Error {}
 
-async function runCheck(id, fn) {
-  const def = byId.get(id);
-  if (!def.modes.includes(MODE)) {
-    /* 模式门控的 NOT_RUN（如 selftest 下的 real-pi 专有检查）：不属于
-       所选模式的义务，不计入 exit-3 判定（charter：0=所选模式全部通过）。 */
-    report({ id, status: "NOT_RUN", reason: def.notRun?.[MODE] ?? `not applicable in --mode ${MODE}`, modeGated: true });
-    return null;
-  }
-  if (fn === null) {
-    /* 骨架检查：实现未落地，如实 NOT_RUN（计入 exit-3 判定）。 */
-    report({ id, status: "NOT_RUN", reason: def.notRun?.[MODE] ?? "not implemented yet" });
-    return null;
-  }
-  if (def.id !== "chrome-boot" && !chromeReady) {
-    report({ id, status: "NOT_RUN", reason: "chrome did not boot (see chrome-boot)" });
-    return null;
-  }
-  if (def.id !== "chrome-boot" && def.id !== "studio-boot" && !booted) {
-    report({ id, status: "NOT_RUN", reason: "studio process did not boot (see studio-boot)" });
-    return null;
-  }
-  const startedAt = Date.now();
-  try {
-    const outcome = (await fn()) ?? {};
-    report({ id, status: "PASS", ...(outcome.detail !== undefined ? { detail: outcome.detail } : {}), durationMs: Date.now() - startedAt });
-    return outcome;
-  } catch (err) {
-    if (err instanceof NotRunError) {
-      /* 探针级联（如导入未就位 → 阅读探针无对象）：NOT_RUN + 原因。 */
-      report({ id, status: "NOT_RUN", reason: sanitizeText(err instanceof Error ? err.message : String(err)) });
-      return null;
-    }
-    report({
-      id,
-      status: "FAIL",
-      error: { message: sanitizeText(err instanceof Error ? err.message : String(err)) },
-      durationMs: Date.now() - startedAt,
-    });
-    return null;
-  }
-}
 
-function sweepBlocked(reason) {
-  for (const def of CHECK_DEFS) report({ id: def.id, status: "BLOCKED", reason });
-}
 
-function gitInfo() {
-  try {
-    const head = execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    let dirty = false;
-    try {
-      dirty = execSync("git status --porcelain", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().length > 0;
-    } catch { /* 如实保持 false */ }
-    return { head, dirty };
-  } catch {
-    return null;
-  }
-}
+
+
+
 
 /** 冻结集绑定（evidence/d4/README 规则 5）：引用 tests/fixtures/d4/ 的
     运行记录 MANIFEST.sha256 的 SHA-256（哈希的哈希）。 */
-function fixturesBinding() {
-  if (scenario.fixturesUsed === null || scenario.fixturesUsed.length === 0) return null;
-  try {
-    const manifest = readFileSync(D4_FIXTURES_MANIFEST);
-    return {
-      manifestPath: "tests/fixtures/d4/MANIFEST.sha256",
-      manifestSha256: createHash("sha256").update(manifest).digest("hex"),
-      used: scenario.fixturesUsed,
-    };
-  } catch {
-    return { manifestPath: "tests/fixtures/d4/MANIFEST.sha256", manifestSha256: null, used: scenario.fixturesUsed };
-  }
-}
 
-function finish(code) {
-  const counts = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  for (const r of results) counts[r.status === "PASS" ? "pass" : r.status === "FAIL" ? "fail" : r.status === "BLOCKED" ? "blocked" : "notRun"] += 1;
-  /* 冻结语义（charter §8）：0=所选模式全部通过；2=失败；3=阻塞/未运行。
-     模式门控的 NOT_RUN 不属于所选模式的义务，不触发 3；实现未落地的
-     NOT_RUN 与 BLOCKED、级联 NOT_RUN 触发 3。 */
-  let exit = code;
-  if (exit === 0 && counts.fail > 0) exit = 2;
-  else if (exit === 0 && (counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true))) exit = 3;
-  console.log("");
-  console.log(
-    `run-d4-browser: ${String(counts.pass)} PASS / ${String(counts.fail)} FAIL / ${String(counts.blocked)} BLOCKED / ${String(counts.notRun)} NOT_RUN (mode ${MODE})`,
-  );
-  if (MODE === "selftest") {
-    console.log("note: selftest uses the offline echo driver — these results are never real-Pi evidence");
-  }
-  try {
-    const git = gitInfo();
-    const fixtures = fixturesBinding();
-    /* 结构化结论字段（issue #8 增量验收 2026-09-30 18:18 P1：runId/gitCommit/
-       mode/verdict/counts 不得缺位——sidecar 曾以 null 混过 Markdown 口头说明）。 */
-    writeFileSync(join(sc.artifactsDir, "summary.json"), JSON.stringify({
-      script: "run-d4-browser.mjs",
-      version: "0.6.0",
-      runId: sc.runId,
-      mode: MODE,
-      verdict: counts.fail > 0 ? "HAS_FAIL" : counts.blocked > 0 || results.some((r) => r.status === "NOT_RUN" && r.modeGated !== true) ? "INCOMPLETE" : "PASS",
-      exitCode: exit,
-      ...(CLI.only.length > 0 ? { scoped: CLI.only } : {}),
-      counts: { pass: counts.pass, fail: counts.fail, blocked: counts.blocked, notRun: counts.notRun },
-      gitCommit: git === null ? "unavailable (git rev-parse failed)" : git.head,
-      gitDirty: git === null ? null : git.dirty,
-      generatedAt: new Date().toISOString(),
-      ...(git !== null ? { git } : {}),
-      ...(fixtures !== null ? { fixtures } : {}),
-      checks: results,
-      pageErrors: chrome.pageErrors,
-    }, null, 2));
-  } catch { /* 尽力而为 */ }
-  process.exit(exit);
-}
+
+
 
 /* ------------------------------------------------------------------ */
 /* 场景上下文与主流程                                                    */
@@ -548,6 +433,24 @@ const sc = { dataDir: null, artifactsDir: null, studioUrl: null, runId: `d4-brow
 const scenario = { treeId: null, materials: null, fixturesUsed: null };
 
 /** 探针上下文：真实 Chrome（CDP）+ 真实 studio 进程的受控句柄集合。 */
+const { report, runCheck, sweepBlocked, gitInfo, fixturesBinding, finish } = createD4Reporting({
+  get results() { return results; },
+  get truncate() { return truncate; },
+  get byId() { return byId; },
+  get MODE() { return MODE; },
+  get chromeReady() { return chromeReady; },
+  get booted() { return booted; },
+  get NotRunError() { return NotRunError; },
+  get sanitizeText() { return sanitizeText; },
+  get CHECK_DEFS() { return CHECK_DEFS; },
+  get ROOT() { return ROOT; },
+  get scenario() { return scenario; },
+  get D4_FIXTURES_MANIFEST() { return D4_FIXTURES_MANIFEST; },
+  get sc() { return sc; },
+  get CLI() { return CLI; },
+  get chrome() { return chrome; },
+});
+
 const probeCtx = {
   MODE,
   ROOT,

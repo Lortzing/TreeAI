@@ -1,3 +1,4 @@
+import { registerWorkspaceEvents } from "./controllers/workspace-events.js";
 import { createStudioFeatures } from "./compose-features.js";
 
 import { createStudioState } from "./state.js";
@@ -41,6 +42,7 @@ const studioFeatures = createStudioFeatures({
   get navigator() { return navigator; },
 });
 const {
+  sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
   $,
   persistReturnDraft,
   runNavTreeFind,
@@ -90,6 +92,8 @@ const {
   stopDiagnosticsPolling,
   disconnectEvents,
 } = studioFeatures;
+
+const disposeWorkspaceEvents = registerWorkspaceEvents({ $, state, document, window, sessionUI, scrollBehavior, openMaterial, closeMaterialReader, setWorkspaceView, moveSessionRound });
 
 /* 失败后编辑 = 新的逻辑提交：旧键可能已被服务端绑定到旧文本（同键异容
    会被 409 拒绝），故文本一变即换新键；未失败的编辑仍属同一草稿。
@@ -240,6 +244,11 @@ registerDocumentListener("keydown", (event) => {
     closeDrawer();
     return;
   }
+  if (sessionUI.mode !== "chat") {
+    event.preventDefault();
+    setWorkspaceView("chat");
+    return;
+  }
   if (state.materialReader !== null) {
     event.preventDefault();
     /* D4-3 建枝流程面是阅读器的内层面（材料范围声明/首问在提交前不丢）：
@@ -385,6 +394,7 @@ void (async () => {
 })();
 
     cleanup = () => {
+      disposeWorkspaceEvents();
       stopDiagnosticsPolling();
       disconnectEvents();
       for (const [name, listener, options] of docListeners.splice(0)) {

@@ -10,7 +10,7 @@ npm run typecheck
 npm test
 ```
 
-Studio uses `node --test tests/*.test.ts` under `apps/studio`; root has separate `tests/unit/*.test.ts`, `tests/integration/*.test.ts` and `tests/live/*.test.ts` globs. The refactor diagnostics workflow explicitly runs `node --test apps/studio/tests/shared-utils.test.mjs` to gate extracted browser source/view helpers. Nested tests are **not** automatically included. Changes to test locations must expand discovery or retain aggregators and compare scenario IDs.
+Studio uses `node --test tests/*.test.ts` under `apps/studio`; root has separate `tests/unit/*.test.ts`, `tests/integration/*.test.ts` and `tests/live/*.test.ts` globs. The refactor diagnostics workflow explicitly runs `node --test apps/studio/tests/shared-utils.test.mjs` to gate extracted browser source/view helpers. Explicit `.mjs` aggregators, including computed-path fault regressions, are also in the root command. Nested tests are **not** automatically included. Changes to test locations must expand discovery or retain aggregators and compare scenario IDs.
 
 ## Offline acceptance and fault injection
 
@@ -36,8 +36,11 @@ Before moving a file inventory all imports, dynamic paths, scripts, CLI flags, b
 ```sh
 node scripts/audit-refactor-boundaries.mjs --base e427460b31f61722d5e74a6fa4ee24d140abe67b --out /tmp/treeai-boundaries.json
 npm run audit:studio-assets
+npm run audit:computed-paths
 ```
 
 The first report compares physical entrypoint sizes, literal source reverse imports and counts of static `test`/`it` names against the selected commit. It fails for lost static scenarios, unresolved literal imports and production imports of tests/fixtures. It includes untracked source files and labels the report as a working-tree comparison. Dynamic scenario names, individual assertions, computed paths and behavioral parity still require the original suites and runner gates. The diagnostics CI job compares against the PR base SHA.
 
-The eight UI suites share browser event/network types, record conversion, selector traversal and an SSE stub factory. Each suite constructs its own SSE class/registry; DOM/selection and backend-specific behavior remains suite-owned. New controller race regressions are imported by `shared-utils.test.mjs`, retaining root and CI discovery.
+The eight UI suites share browser event/network types, record conversion, selector traversal and an SSE stub factory. Each suite constructs its own SSE class/registry; DOM/selection constructors, storage and common backend models are shared; suite-specific focus, geometry, insertion, seeds and route/error scripts remain suite-owned. New controller race regressions are imported by `shared-utils.test.mjs`, retaining root and CI discovery.
+
+Computed test discovery includes generated event-journal `dist/tests/*.test.js`. Run the audit after `npm test` or `npm run build:deps --workspace @treeai/studio`; CI places it after the Studio suite. An absent generated test glob still fails; the audit does not exempt generated tests or change their denominator. The fresh-build regression record verifies failure before dependency build and success afterward.

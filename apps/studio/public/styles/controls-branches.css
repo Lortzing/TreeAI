@@ -160,7 +160,7 @@ button.panel-close:hover { background: #dcebe0; }
   #branch-column {
     display: flex;
     position: relative;            /* 面板的定位基准 → 列本身 */
-    width: min(440px, 34vw);
+    width: clamp(340px, 28vw, 390px);
     flex-shrink: 0;
     background: var(--surface);
     border-left: 1px solid var(--line);
@@ -188,6 +188,6 @@ button.panel-close:hover { background: #dcebe0; }
   /* D4-2 阅读器同列占满（与 #branch-panel 同宽恰好覆盖）；阅读器在场时
      列空态同样不透出。 */
   #material-reader { width: 100%; }
-  #branch-column:has(#material-reader:not([hidden])) #branch-empty { visibility: hidden; }
+  #main-reading-content:has(#material-reader:not([hidden])) > :not(#material-reader) { visibility: hidden; }
 }
 

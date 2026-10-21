@@ -1,0 +1,61 @@
+{
+  "url": "/",
+  "readyState": "complete",
+  "activeElementId": "new-tree",
+  "sidebar": {
+    "toggleExpanded": "false",
+    "treeCount": 0,
+    "driverNote": ""
+  },
+  "main": {
+    "emptyStateVisible": true,
+    "treeViewVisible": false,
+    "runStatus": "idle",
+    "runDetail": "",
+    "abortVisible": false,
+    "failurePanel": {
+      "hidden": true,
+      "text": ""
+    },
+    "sessionBanner": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "role": "alert",
+      "text": ""
+    }
+  },
+  "panel": {
+    "hidden": true,
+    "title": "",
+    "anchorContext": "",
+    "sessionNote": {
+      "hidden": true,
+      "text": ""
+    },
+    "errorBanner": {
+      "hidden": true,
+      "text": ""
+    }
+  },
+  "conversation": {
+    "turns": []
+  },
+  "panelConversation": {
+    "turns": []
+  },
+  "branchTabs": [],
+  "returnCards": [],
+  "drawer": {
+    "open": false,
+    "toggleExpanded": "false",
+    "text": ""
+  },
+  "composers": {
+    "trunkDisabled": false,
+    "panelDisabled": false,
+    "returnDisabled": false
+  }
+}

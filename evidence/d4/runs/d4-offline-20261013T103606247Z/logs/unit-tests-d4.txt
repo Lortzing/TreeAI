@@ -1,0 +1,50 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --test tests/unit/d4-fixtures-integrity.test.ts tests/unit/d4-7-installer.test.ts
+  [SKIP] 本机无 pwsh（内容断言已另行覆盖；CI 三平台 runner 预装 pwsh）
+✔ dataDirFor: macOS 平台目录（无覆盖时） (0.484541ms)
+✔ dataDirFor: Windows 尊重 APPDATA (0.0755ms)
+✔ dataDirFor: Linux 尊重 XDG_DATA_HOME，默认 ~/.local/share (0.051125ms)
+✔ dataDirFor: TREEAI_DATA_DIR 覆盖一切平台缺省（测试/多实例隔离） (0.048542ms)
+✔ installRootFor: 三平台缺省 + TREEAI_INSTALL_ROOT 覆盖 (0.077541ms)
+✔ parseLauncherConfig: 缺省 echo 配置 + 校验通过 (0.410792ms)
+✔ parseLauncherConfig: 坏 JSON 必须报错并给出恢复路径（绝不静默回落默认） (0.097083ms)
+✔ parseLauncherConfig: unknown driver is rejected instead of silently becoming echo (0.051625ms)
+✔ parseLauncherConfig: driver=pi 缺 provider/model → 可执行恢复信息 (0.097583ms)
+✔ parseLauncherConfig: echo 带 provider 是错误（提示如何转 pi） (0.097125ms)
+✔ parseLauncherConfig: 非法端口被拒（1–65535） (0.05275ms)
+✔ parseLauncherConfig: schemaVersion 不符给出重建指引 (0.06225ms)
+✔ defaultLauncherConfig: 零依赖离线缺省 (0.038958ms)
+✔ buildServerArgs: echo 只带 port/data；pi 带完整模型装配 (0.109583ms)
+✔ portCandidates: 从期望端口连续顺延 (0.053125ms)
+✔ portCandidates: 越界（>65535）截断；非法输入回落默认 (0.033ms)
+✔ browserCommandFor: 平台缺省 + BROWSER/TREEAI_BROWSER 覆盖（含参数） (0.1675ms)
+✔ nodeDistFor: 三平台官方 URL 与包内二进制路径 (0.058541ms)
+✔ ESBUILD_PLATFORM_PACKAGE: 每平台恰好保留自己的二进制包 (0.030125ms)
+✔ validateBundleManifest: 合法清单通过 (0.109583ms)
+✔ validateBundleManifest: 签名状态伪装成已签名必须被拒（如实纪律） (0.06825ms)
+✔ validateBundleManifest: 缺 node SHA256 / 非法平台被拒 (0.042375ms)
+✔ validateBundleLayout: 合成最小产物通过（三平台） (33.664292ms)
+✔ validateBundleLayout: 缺件必须点名报错 (12.598166ms)
+✔ validateBundleLayout: node 缺执行位必须报错（posix） (11.428292ms)
+✔ validateBundleLayout: node_modules 内的符号链接必须报错（Windows zip 不保） (12.251209ms)
+✔ parseRuntimeState: 合法状态与损坏输入 (0.083625ms)
+✔ 常量：API key 环境变量名与 studio CLI 冻结契约一致 (0.025917ms)
+✔ shims/launcher 类型层纳入检查（type-only import） (0.036ms)
+✔ tarExtractArgs: 恒带 --no-same-owner 且按后缀选择解包 flag（rootless 容器回归） (0.042958ms)
+✔ shims: treeai.ps1 参数经 $nodeArgs 数组 splat，调用位不得出现参数拼接 (0.181958ms)
+✔ shims: treeai.ps1 真实 argv（pwsh 可用的执行级回归；Windows 由 packaged-bundle smoke 覆盖） (1.949209ms)
+✔ windowsSelfDeleteScript: robocopy 清场 + 空目录删除 + 路径转义 + 逐尝试日志（长路径回归） (0.100083ms)
+✔ validateBundleLayout: 拆分后的启动器模块缺失必须拒绝 (11.874166ms)
+✔ the real D4 fixture tree is fully consistent (hashes, truth, selections, queries) (30.488083ms)
+✔ tampered fixture content is detected (hash mismatch) (37.410958ms)
+✔ injected stray fixture file is detected (manifest divergence) (33.61ms)
+✔ a selection with a wrong offset is detected even behind a regenerated manifest (33.275ms)
+✔ a no-result query whose text actually exists is detected (31.158667ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 243.04925
+

@@ -19,6 +19,7 @@ export function createPromptController(deps) {
     const input = deps.$(isPanel ? "panel-prompt-input" : "prompt-input");
     const text = input.value;
     if (branchId === null || text.trim() === "") return;
+    deps.sessionUI.followBranchId = branchId;
     if (!deps.studioEventsController.sseHealthy) deps.startDiagnosticsPolling();
     let promptError = null;
     try {
@@ -55,6 +56,7 @@ export function createPromptController(deps) {
     /* 终局渲染（所有收尾路径共用）：清掉流式占位、呈现恢复横幅与最终树态。
        失败路径的诊断面刷新尽力而为——刷新失败不得掩盖原始 prompt 错误。 */
     deps.renderAll({ stick: branchId });
+    deps.sessionUI.followBranchId = null;
     if (promptError === null) {
       await deps.refreshDiagnostics();
       deps.focusComposerWhenSelectable(input);

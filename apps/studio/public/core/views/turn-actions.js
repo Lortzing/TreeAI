@@ -33,7 +33,7 @@ export function createTurnActionsView(deps) {
 
     const branchButton = deps.document.createElement("button");
     branchButton.className = "branch-here";
-    branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+    branchButton.textContent = armedHere ? "⑃ 从选文展开支线" : "⑃ 从这里展开支线";
     branchHereButtons.set(turn.id, branchButton);
     branchButton.addEventListener("click", () => deps.guard(() => deps.branchFromTurn(turn), view));
 
@@ -42,7 +42,7 @@ export function createTurnActionsView(deps) {
        回退）。武装态读 state.armedSelection（与工具条同源）。 */
     const explainButton = deps.document.createElement("button");
     explainButton.className = "term-explain";
-    explainButton.textContent = "⌖ Explain selection";
+    explainButton.textContent = "⌖ 解释选文";
     explainButton.disabled = !armedHere;
     explainButton.title =
       "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
@@ -117,7 +117,7 @@ export function createTurnActionsView(deps) {
 
     const branch = deps.document.createElement("button");
     branch.className = "toolbar-branch";
-    branch.textContent = "⑃ Branch from selection";
+    branch.textContent = "⑃ 从选文展开支线";
     branch.title = "Anchor a brand-new branch on this selection (never reuses an existing exploration)";
     branch.addEventListener("click", () => deps.guard(() => deps.branchFromTurn(turn), view));
     bar.append(branch);
@@ -173,7 +173,7 @@ export function createTurnActionsView(deps) {
     const armedHere = armed !== null && armed.branchId === branchId && armed.turnId === turn.id;
     const branchButton = actions.querySelector(".branch-here");
     if (branchButton !== null) {
-      branchButton.textContent = armedHere ? "⑃ Branch from selection" : "⑃ Branch from here";
+      branchButton.textContent = armedHere ? "⑃ 从选文展开支线" : "⑃ 从这里展开支线";
     }
     const explainButton = actions.querySelector(".term-explain");
     if (explainButton !== null) explainButton.disabled = !armedHere;

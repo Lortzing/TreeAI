@@ -1,0 +1,892 @@
+diagnose	UNKNOWN STEP	﻿2026-10-12T09:43:18.7431331Z Current runner version: '2.337.0'
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7456527Z ##[group]Runner Image Provisioner
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7457370Z Hosted Compute Agent
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7458056Z Version: 20261002.596
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7458738Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7459536Z Build Date: 2026-10-02T22:28:27Z
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7460474Z Worker ID: {3f62e672-24fe-483c-b589-03ef4d4c9600}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7461204Z Region: westus
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7461831Z Cloud: Azure
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7462367Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7463811Z ##[group]Operating System
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7464551Z Ubuntu
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7465075Z 24.04.5
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7465607Z LTS
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7466171Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7466739Z ##[group]Runner Image
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7467401Z Image: ubuntu-24.04
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7467964Z Version: 20261004.327.1
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7469286Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7471096Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7472151Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7473280Z ##[group]GITHUB_TOKEN Permissions
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7475285Z Contents: read
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7475900Z Metadata: read
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7476527Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7478579Z Secret source: Actions
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7479642Z Cache mode: write
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7480587Z Prepare workflow directory
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7841400Z Prepare all required actions
+diagnose	UNKNOWN STEP	2026-10-12T09:43:18.7916179Z Getting action download info
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.1581648Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.2718988Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.4608525Z Complete job name: diagnose
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5460107Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5461232Z with:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5461678Z   repository: Lortzing/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5465754Z   token: ***
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5466185Z   ssh-strict: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5466615Z   ssh-user: git
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5467058Z   persist-credentials: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5467538Z   clean: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5467981Z   sparse-checkout-cone-mode: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5468502Z   fetch-depth: 1
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5468928Z   fetch-tags: false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5469378Z   show-progress: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5469813Z   lfs: false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5470391Z   submodules: false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5470838Z   set-safe-directory: true
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.5471626Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6484451Z Syncing repository: Lortzing/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6486965Z ##[group]Getting Git version info
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6488133Z Working directory is '<home>/work/TreeAI/TreeAI'
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6489711Z [command]/usr/bin/git version
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6570113Z git version 2.55.0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6592759Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6612071Z Temporarily overriding HOME='<home>/work/_temp/b5200748-7642-4a36-8ca7-fda0ddc2bad3' before making global git config changes
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6614453Z Adding repository directory to the temporary git global config as a safe directory
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6620980Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6677656Z Deleting the contents of '<home>/work/TreeAI/TreeAI'
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6681322Z ##[group]Initializing the repository
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6686796Z [command]/usr/bin/git init <home>/work/TreeAI/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6811065Z hint: Using 'master' as the name for the initial branch. This default branch name
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6812882Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6814414Z hint: to use in all of your new repositories, which will suppress this warning,
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6815766Z hint: call:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6816667Z hint:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6817652Z hint: 	git config --global init.defaultBranch <name>
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6818799Z hint:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6820100Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6821938Z hint: 'development'. The just-created branch can be renamed via this command:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6823321Z hint:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6824140Z hint: 	git branch -m <name>
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6825056Z hint:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6826334Z hint: Disable this message with "git config set advice.defaultBranchName false"
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6842218Z Initialized empty Git repository in <home>/work/TreeAI/TreeAI/.git/
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6852235Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6905072Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6906086Z ##[group]Disabling automatic garbage collection
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6909265Z [command]/usr/bin/git config --local gc.auto 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6941259Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6942189Z ##[group]Setting up auth
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6950781Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.6986839Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7434561Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7475344Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7708418Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7751932Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7752815Z ##[group]Fetching the repository
+diagnose	UNKNOWN STEP	2026-10-12T09:43:19.7762737Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2d6120d4d2ba69c287f8a0f51d470ffb3711c443:refs/remotes/pull/27/merge
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6189521Z From https://github.com/Lortzing/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6196362Z  * [new ref]         2d6120d4d2ba69c287f8a0f51d470ffb3711c443 -> pull/27/merge
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6199731Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6201448Z ##[group]Determining the checkout info
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6202951Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6208333Z [command]/usr/bin/git sparse-checkout disable
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6277586Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6313826Z ##[group]Checking out the ref
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.6320824Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/27/merge
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9652898Z Note: switching to 'refs/remotes/pull/27/merge'.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9653863Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9654487Z You are in 'detached HEAD' state. You can look around, make experimental
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9655876Z changes and commit them, and you can discard any commits you make in this
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9657198Z state without impacting any branches by switching back to a branch.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9657976Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9658573Z If you want to create a new branch to retain commits you create, you may
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9660153Z do so (now or later) by using -c with the switch command. Example:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9660989Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9661379Z   git switch -c <new-branch-name>
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9661963Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9662337Z Or undo this operation with:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9662866Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9663208Z   git switch -
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9663676Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9664537Z Turn off this advice by setting config variable advice.detachedHead to false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9665831Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9666952Z HEAD is now at 2d6120d Merge bc8692b5c4be2ae1c2d1173ccd98c60ebdb4e013 into e427460b31f61722d5e74a6fa4ee24d140abe67b
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9719104Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9800755Z [command]/usr/bin/git log -1 --format=%H
+diagnose	UNKNOWN STEP	2026-10-12T09:43:21.9802513Z 2d6120d4d2ba69c287f8a0f51d470ffb3711c443
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0207906Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0209602Z with:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0210737Z   node-version: 24.21.0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0211776Z   cache: npm
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0212712Z   always-auth: false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0213719Z   check-latest: false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0223470Z   token: ***
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.0224435Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.1728378Z (node:2271) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.1732314Z (Use `node --trace-deprecation ...` to show where the warning was created)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.1734520Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.1736969Z ##[group]Environment details
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.6236741Z node: v24.21.0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.6237394Z npm: 11.19.0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.6237936Z yarn: 1.22.22
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.6239539Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.6261978Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+diagnose	UNKNOWN STEP	2026-10-12T09:43:22.7476452Z <home>/.npm
+diagnose	UNKNOWN STEP	2026-10-12T09:43:23.0161127Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+diagnose	UNKNOWN STEP	2026-10-12T09:43:23.0281729Z (node:2271) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:24.2845484Z Received 4194304 of 170878268 (2.5%), 4.0 MBs/sec
+diagnose	UNKNOWN STEP	2026-10-12T09:43:25.2855498Z Received 117440512 of 170878268 (68.7%), 56.0 MBs/sec
+diagnose	UNKNOWN STEP	2026-10-12T09:43:26.2856885Z Received 130023424 of 170878268 (76.1%), 41.3 MBs/sec
+diagnose	UNKNOWN STEP	2026-10-12T09:43:27.2855286Z Received 166683964 of 170878268 (97.5%), 39.7 MBs/sec
+diagnose	UNKNOWN STEP	2026-10-12T09:43:27.7943967Z Received 170878268 of 170878268 (100.0%), 36.1 MBs/sec
+diagnose	UNKNOWN STEP	2026-10-12T09:43:27.7945100Z Cache Size: ~163 MB (170878268 B)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:27.7989823Z [command]/usr/bin/tar -xf <home>/work/_temp/c95f6a25-7e18-42c5-9b6a-7ffc81c662db/cache.tzst -P -C <home>/work/TreeAI/TreeAI --use-compress-program unzstd
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.0640771Z Cache restored successfully
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.0723624Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.0910800Z ##[group]Run npm ci
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.0911125Z ^[[36;1mnpm ci^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.1251407Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:28.1251802Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:32.0662339Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1365280Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1366370Z added 178 packages, and audited 186 packages in 7s
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1366938Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1367515Z 17 packages are looking for funding
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1368309Z   run `npm fund` for details
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1498491Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1499048Z 3 vulnerabilities (1 moderate, 2 high)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1499522Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1500198Z To address issues that do not require attention, run:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1500926Z   npm audit fix
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1501186Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1501653Z To address all issues (including breaking changes), run:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1502448Z   npm audit fix --force
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1504278Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1504648Z Run `npm audit` for details.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1512273Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1513799Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1515504Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1516759Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1517609Z npm warn install-scripts
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.1518808Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.2433356Z ##[group]Run node scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.2434022Z ^[[36;1mnode scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.2435014Z ^[[36;1mnode -e 'const r=require("/tmp/treeai-inventory.json"); if(r.files.length<3000) process.exit(1); console.log("Tracked files:",r.files.length,"Review candidates:",r.files.filter(x=>x.review).length)'^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.2515960Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.2516379Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.4521059Z Inventory written: /tmp/treeai-inventory.json (3167 files, SHA 2d6120d4d2ba69c287f8a0f51d470ffb3711c443)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5021868Z Tracked files: 3167 Review candidates: 81
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5098602Z ##[group]Run node scripts/audit-studio-assets.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5099012Z ^[[36;1mnode scripts/audit-studio-assets.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5164917Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5165214Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5556527Z PASS: 15 native ESM assets + 9 CSS modules and installer/public allowlist accounted for
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5662422Z ##[group]Run node --test apps/studio/tests/shared-utils.test.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5663294Z ^[[36;1mnode --test apps/studio/tests/shared-utils.test.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5743401Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.5743743Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.6982751Z ✔ finder epochs discard superseded listing successes and search failures independently per instance (2.252285ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.6985912Z ✔ finder keeps loaded pages on failure and retries the same cursor without duplicate in-flight requests (0.475568ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7001901Z ✔ blank finder input replaces search and ignores its late continuation (0.408994ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7003813Z ✔ scroll follow keeps the 48px threshold and does not pull users reading above (0.195816ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7005854Z ✔ selection offsets reject source mismatch without creating an incorrect anchor (1.391809ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7008009Z ✔ DOM turn reuse excludes Return cards and requires exact turn text (0.278009ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7009744Z ✔ R1 Markdown view preserves syntax, source offsets and styled text (0.891424ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7011824Z ✔ R1 Markdown view carries fenced-code state between material blocks (0.375802ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7013607Z ✔ R1 material selection snaps surrogate pairs and combining graphemes outwards (0.430133ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7015447Z ✔ R1 material selection keeps a joined emoji grapheme intact (0.35348ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7062515Z ✔ R1 Search view preserves honest idle, loading, failed, empty, and populated states (10.264142ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7070537Z ✔ R1 Return view preserves anchored/fallback source facts and adoption states (2.14261ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7072691Z ✔ R1 diagnostics view preserves run, policy, and failure-panel states (0.925738ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7075037Z ✔ R1 navigation finder view preserves states, paging, and active-tree row behavior (1.302742ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7078564Z ✔ R1 navigation chrome view preserves overview and action state (0.639173ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7199339Z ℹ tests 15
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7199825Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7201686Z ℹ pass 15
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7202069Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7202474Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7202879Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7203260Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7203700Z ℹ duration_ms 105.594584
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7321986Z ##[group]Run node node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7322639Z ^[[36;1mnode node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7386218Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:35.7386527Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:39.9301375Z ##[group]Run npm run typecheck
+diagnose	UNKNOWN STEP	2026-10-12T09:43:39.9301726Z ^[[36;1mnpm run typecheck^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:39.9365317Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:39.9365616Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:40.1583712Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:40.1584202Z > treeai@0.0.0 typecheck
+diagnose	UNKNOWN STEP	2026-10-12T09:43:40.1584779Z > node scripts/typecheck.js
+diagnose	UNKNOWN STEP	2026-10-12T09:43:40.1585097Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:40.1916530Z [typecheck] checking @treeai/runtime-smoke (apps/runtime-smoke)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:42.5031930Z [typecheck] checking @treeai/studio (apps/studio)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:47.1617747Z [typecheck] checking @treeai/contracts (packages/contracts)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:47.8534809Z [typecheck] checking @treeai/event-journal (packages/event-journal)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:48.9569243Z [typecheck] checking @treeai/persistence (packages/persistence)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:50.2676730Z [typecheck] checking @treeai/runtime-pi (packages/runtime-pi)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:52.4693533Z [typecheck] checking @treeai/tool-policy (packages/tool-policy)
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3193450Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3193981Z typecheck summary (Gate 0 scaffold):
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3195903Z   checked: @treeai/runtime-smoke, @treeai/studio, @treeai/contracts, @treeai/event-journal, @treeai/persistence, @treeai/runtime-pi, @treeai/tool-policy
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3198075Z [typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3330986Z ##[group]Run npm test --workspace @treeai/studio
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3331407Z ^[[36;1mnpm test --workspace @treeai/studio^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3394931Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.3395242Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.4753593Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.4754267Z > @treeai/studio@0.0.0 test
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.4755346Z > npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.4755947Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.6087729Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.6088155Z > @treeai/studio@0.0.0 build:deps
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.6088971Z > npm run --workspace @treeai/event-journal build:test
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.6089441Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.7413450Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.7413873Z > @treeai/event-journal@0.0.0 build:test
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.7414408Z > tsc -p tsconfig.build.json
+diagnose	UNKNOWN STEP	2026-10-12T09:43:53.7414674Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:55.0636047Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:43:55.0636802Z > @treeai/studio@0.0.0 typecheck
+diagnose	UNKNOWN STEP	2026-10-12T09:43:55.0637455Z > tsc --noEmit -p tsconfig.json
+diagnose	UNKNOWN STEP	2026-10-12T09:43:55.0637827Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:01.4168575Z ✔ HTTP API serves the UI and the full D3 flow, surviving a restart (231.811848ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:01.4995528Z ✔ return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5) (88.327247ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:01.5662983Z ✔ new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text (62.973657ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:01.6092575Z ✔ HTTP layer rejects malformed bodies and unknown routes predictably (26.784944ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:01.9396508Z ✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (348.184461ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:02.0026982Z ✔ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (59.392419ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:02.0546286Z ✔ response-loss resubmit and double-click converge to exactly one return (67.475124ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2584452Z ✔ b9 dataset: two generations are byte-identical (determinism) with equal manifest hashes (326.918851ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2609413Z ✔ b9 dataset: structure-truth invariants all hold (totals, six special-tree rules, origin discipline) (116.250457ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2631836Z ✔ b9 dataset: loads into a real persistence database with row counts matching the structure truth (7241.818477ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2637156Z ✔ b9 engine probes: all frozen probes pass 100% against the structure truth (locate/origins/pagination/deep/samename/search/empty/shape/tree-list/p95) (1379.086714ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2655208Z ✔ b9 engine: cross-tree locate spot-checks (switch trees by branch id alone) (175.038749ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.2667874Z ✔ b9 cleanup: close repositories and remove the temp data dir (31.80642ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3254761Z ✔ echo defaults are unchanged (offline driver, no agent dir) (2.134423ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3256725Z ✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.411478ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3259007Z ✔ --agent-dir is rejected for the echo driver (0.65935ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3261116Z ✔ --driver pi fails clearly without provider/model (error names the env var too) (0.309347ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3263099Z ✔ empty --provider value still fails the pi boundary check (0.275133ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3265061Z ✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.232594ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3267023Z ✔ --driver pi accepts an explicit absolute agent dir (1.014373ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3268602Z ✔ --driver pi resolves a relative agent dir against the process cwd (0.236261ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3270812Z ✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.39136ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3272522Z ✔ empty or whitespace-only --agent-dir value is a usage error (0.38055ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3274105Z ✔ unknown flags and missing values keep failing with the usage error (0.985639ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3276320Z ✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.27841ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3278001Z ✔ readPiApiKey treats whitespace-only values as missing (1.88657ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3279824Z ✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.117469ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3282300Z ✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (1.034841ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3284262Z ✔ resolvePiDriverWiring fails for non-pi options (0.424763ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3285953Z ✔ no tool flags keeps the defaults at zero tools and no policy roots (echo and pi alike) (0.18221ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3287514Z ✔ --pi-tools is rejected for the echo driver (0.19853ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3289274Z ✔ --pi-tools must list at least one tool (empty or whitespace-only lists are usage errors) (0.204752ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3292789Z ✔ --pi-tools parses a trimmed comma-separated allowlist (order preserved) (0.160309ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3294965Z ✔ --policy-read-roots without --pi-tools is a usage error (echo and pi alike) (0.216694ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3296691Z ✔ --policy-read-roots must list at least one directory when given (0.197939ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3299143Z ✔ --policy-read-roots entries must be absolute (relative entries are boundary errors) (0.223957ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3301607Z ✔ --pi-tools with explicit absolute read roots parses the trimmed list (0.179034ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3303690Z ✔ resolvePiToolWiring is null without --pi-tools (echo and pi alike) (0.198601ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3305587Z ✔ resolvePiToolWiring defaults the read roots to the workspace and marks the default (0.235759ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3307758Z ✔ resolvePiToolWiring keeps explicit read roots and does not mark them defaulted (0.182301ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3309775Z ✔ resolvePiToolWiring probes every effective root and fails closed on a missing directory (0.247653ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3312369Z ✔ the wired policy engine allows in-root reads and denies out-of-root reads, writes, and shell (38.572148ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3314467Z ✔ D4-5: 'export' subcommand parses --out/--include-sessions/--readable and lands in export mode (0.282558ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3317005Z ✔ D4-5: '--import-package DIR' parses into import mode and stays exclusive with 'export' (0.263973ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3320537Z ✔ D4-5: export/import mode-confused and missing-value argvs fail with clear errors (1.469101ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3323703Z ✔ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (181.571507ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3326024Z ✔ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (37.533392ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3328144Z ✔ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (59.026857ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3330766Z ✔ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (127.657217ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3333064Z ✔ process restart: journal and diagnostics converge consistently (host-crash semantics) (43.158063ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3335587Z ✔ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (44.27238ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3337985Z ✔ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (85.133484ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3339809Z ✔ tool-activity events project tool name and phase only (scripted runtime) (35.004034ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3342421Z ✔ session availability derivation: live probe refines the cached assessment honestly (36.612822ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3344449Z ✔ policy request-time gate: denial surfaces provenance, fails the run, and reports honestly (41.285663ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3346790Z ✔ SSE emits the owning tree only, snapshot before events, and disconnects once (2.960023ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3348655Z ✔ ESM and CSS static allowlist serves correct content type (19.731543ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3351134Z ✔ unknown static paths and traversal attempts are rejected, not read from disk (1.280399ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3353215Z ✔ frozen identity constants: parserKind markdown / parserVersion d4-md-v1 (1.914181ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3355369Z ✔ Chinese prose: paragraphs split into blocks, same-block line breaks preserved (2.914008ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3357552Z ✔ English prose: multi-block with same-block continuation lines and a cross-line excerpt (0.46679ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3359417Z ✔ fenced code block with several lines and no blank line stays ONE block (0.636137ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3361536Z ✔ fenced code block between prose: only blank lines split blocks (0.324876ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3363440Z ✔ fenced code block containing a blank line SPLITS into blocks (no fence awareness) (0.379178ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3365369Z ✔ CRLF line endings canonicalize to single LF (never doubled) (0.428099ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3367179Z ✔ lone CR and mixed CRLF/CR/LF endings canonicalize to LF (0.280854ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3368990Z ✔ emoji incl. astral-plane characters: UTF-16 offsets count surrogate pairs as 2 units (0.354842ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3371332Z ✔ combining characters kept verbatim: no NFC normalization anywhere (0.463635ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3373607Z ✔ repeated distinctive words: both occurrences resolved to stable offsets and blocks (0.301993ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3375266Z ✔ links and inline code kept verbatim (6.023379ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3376907Z ✔ single-block document with and without a trailing newline (0.276626ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3378605Z ✔ document without trailing newline: final block keeps no forced terminator (1.665407ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3380873Z ✔ leading and trailing blank lines are dropped entirely (0.247622ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3382826Z ✔ whitespace-only separator lines contribute only their newline (blank-line whitespace dropped) (0.274602ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3385401Z ✔ multi-blank-line runs keep every newline (N blanks yield N+1 newlines) (0.223056ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3387278Z ✔ content lines keep leading/trailing spaces and tabs verbatim (1.738273ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3389063Z ✔ realistic mixed document: zh prose + fenced code + links + emoji, exact block map (0.248072ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3390977Z ✔ rejection: empty (0 bytes) (0.345114ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3392481Z ✔ rejection: invalid-utf8 (truncated / bad continuation / overlong / surrogate) (0.339373ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3394846Z ✔ rejection: nul-byte (embedded U+0000, incl. precedence over whitespace-only) (0.367666ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3396946Z ✔ rejection: whitespace-only (no meaningful content) (0.215131ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3398757Z ✔ rejection precedence: decode failure precedes NUL detection (0.176389ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3400671Z ✔ leading BOM is stripped by the strict decoder; content parses normally (0.211154ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3402941Z ✔ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (252.852892ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3405731Z ✔ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (293.64138ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3408367Z ✔ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (47.807572ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3411155Z ✔ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (117.759321ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3413751Z ✔ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (90.19445ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3416533Z ✔ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (44.246709ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3419028Z ✔ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (132.259936ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3424396Z ✔ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (128.122515ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3426395Z ✔ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (37.316484ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3428082Z ✔ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (137.371136ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3430727Z ✔ material branching: creation lands branch/origin/binding with zero runs/turns; the context view is deterministic and byte-identical at dispatch time (charter §3.3 rule 1/3, ADR-004 §4) (210.977905ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3433294Z ✔ material branching: a text-layer PDF selection branches through the real d4-pdf-v1 pipeline with page-bearing blocks (B1 pdf-01) (145.191385ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3435660Z ✔ material context bounds: a large material truncates the window honestly; an oversized selection is refused with zero dispatch (ADR-003 §4 / ADR-004 §7) (278.546065ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3438445Z ✔ material first question: independent session, audited versionId prefix, composed context enters the model input; replay and post-restart replay are deterministic (ADR-004 §2/§4/§5) (127.277039ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3441446Z ✔ material first question reconciliation: a non-terminal run blocks re-dispatch (unknown, no blind send); an explicit failure allows the retry (ADR-004 §5 rules 3/4) (155.004151ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3444992Z ✔ restore-or-open: same source restores the existing branch, explicit new opens a second one; look-alike selections in other materials/versions are never reused; cross-tree isolation holds (charter §3.3 rule 5/6) (337.384956ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3448667Z ✔ material return: lands on the owning tree's trunk with targetAnchor null, a full material source card, idempotent replay, and adoption attempts recorded after the trunk prompt (charter §3.3 rule 7, ADR-004 §8) (144.047921ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3452477Z ✔ missing session: normal continuation fails closed; explicit new material exploration succeeds with the material context carried; an available session refuses the new exploration (W1 §3.4 + ADR-004 §3c) (176.588138ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3455139Z ✔ non-ready versions refuse branching with the honest reason (charter §3.2 — never disguise unsupported as an empty success) (134.872024ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3457675Z ✔ material branching HTTP API: from-material create/replay/conflict/restore/new + first-question + return + new-exploration + 503 unwired (D4-contracts §3 D4-3 rows) (266.6273ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3460368Z ✔ material branching HTTP API: unwired materials → 503 material-branching-not-wired for every D4-3 route (37.11294ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3462354Z ✔ valid categories resolve exactly: repeat-word-2nd (overlapping occurrences), cross-line, unicode, long-tail, utf16-range (23.774484ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3463966Z ✔ invalid categories are rejected with the correct frozen reason code (11.298509ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3465801Z ✔ stale-version: same range, changed text → stale for the new version; the old version stays readable and the anchor is not migrated (7.061569ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3467644Z ✔ reference errors: unknown version 404s; a version of another material is an input error (4.53238ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3469446Z ✔ grapheme cache is content-addressed: identical canonical texts in different versions never cross-contaminate (4.513624ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3471466Z ✔ reading position GET: empty state, PUT round-trip, upsert replaces, 404/405/503 surfaces (217.752912ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3473306Z ✔ reading positions stay isolated per tree and per material; exploration never clobbers reading (charter §3.2) (234.940752ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3475379Z ✔ resolve-selection over HTTP: 200 exact canonical selection for both locator kinds; sourceHash equals canonicalText SHA-256 (111.487975ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3477359Z ✔ resolve-selection rejection surface: 400 with the frozen reason codes, 409 not-ready, 404/400/405/503 (401.869976ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3479292Z ✔ markdown import: async pending→parsing→ready with chunked reads paginating blocks (158.24029ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3481338Z ✔ version semantics: tree-scoped same-bytes reuse; new bytes append a version; old versions stay readable (210.953257ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3483115Z ✔ limits: frozen defaults; small injected limits reject before parsing with zero persistence (72.449314ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3484978Z ✔ pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination (124.78176ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3486976Z ✔ pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready (124.111697ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3488804Z ✔ pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting (89.842049ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3490818Z ✔ custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence (16.342345ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3492720Z ✔ canonical text over the limit: version fails with text-units-exceeded; the oversized text is never stored (104.505561ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3494675Z ✔ parse cancellation with a gated fake parser: canceled stays canceled; the late result is discarded, never attached (30.681901ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3497553Z ✔ host interruption recovery: a version left parsing converges to failed (parse-interrupted) on the next construction (24.545146ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:09.3499466Z ✔ honest rejections before any persistence: unknown extension, empty input, unknown tree (24.259681ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.2583175Z ✔ nav api: trees listing is paginated scalar summaries with no full-tree payloads (8051.375121ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.5732726Z ✔ nav api: tree overview carries the structure-truth shape of the special trees (315.683669ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.5884505Z ✔ nav api: children pagination pages b9-wide's 220 root children in truth order (15.41298ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.6082358Z ✔ nav api: lazy endpoints enforce bounded limits and reject malformed cursors/params (18.507586ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.7867359Z ✔ nav api: b9-big full tree only ever arrives page-bounded (5000 nodes via subtree pagination, <1MiB pages) (178.370653ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.9048325Z ✔ nav api: deep chain /path returns the complete 100-level chain (118.724292ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:17.9104774Z ✔ nav api: locate switches trees by branch id alone with ancestors and origin (5.369633ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:18.2348192Z ✔ nav api: same-name search disambiguates by full path and paginates in the full-order (324.695481ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:18.2384008Z ✔ nav api: tree search paginates the deterministic order (ids and titles) (3.405777ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:18.2419498Z ✔ nav api: empty tree stays honestly usable (3.630587ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:23.8936324Z ✔ nav api: expand-state round trip, validation, and survival across a simulated restart (59.175656ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.3381513Z ✔ nav api: product tree ≠ run/session trees — session availability sweep leaves nav byte-identical (9026.636242ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.3423133Z ✔ nav api: 503 when nav is not wired (14.501409ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.3424313Z ✔ nav api cleanup: close the shared instance and remove its data dir (0.181358ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4328001Z ✔ children pagination: page through 300 children at multiple page sizes without duplicates or gaps (778.996343ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4330309Z ✔ children pagination: parameter validation and cursor discipline (43.815053ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4332526Z ✔ index invalidation: new branch invisible until invalidate, visible after (33.286987ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4334122Z ✔ subtree expansion: depth limits, node limit truncation and cursor continuation (38.240991ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4335893Z ✔ locate: cross-tree identity, ancestors, sibling position, turn and material origins (42.265804ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4337596Z ✔ branch search: exact/prefix/substring, case folding, matchedOn, tree scope, honest zero (41.652619ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4339780Z ✔ search pagination: deterministic pages without duplicates or gaps; cursor discipline (64.362521ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4341842Z ✔ same-name disambiguation: identical titles under different parents carry distinct full paths (46.480458ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4343371Z ✔ empty tree: honest empty pages, single-node expansion, null title overview (25.401304ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4344830Z ✔ deep chain: 12000-level parent path and locate computed iteratively (no stack overflow) (6360.636294ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4346136Z ✔ tree list: paginated across forests without duplicates or gaps (20.937481ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4347428Z ✔ frozen identity constants: parserKind pdf / parserVersion d4-pdf-v1 / limits (2.363061ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4349102Z ✔ all registry ready fixtures extract to their frozen truth byte-exactly (12 PDF) (124.351463ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4351106Z ✔ all registry negatives reject with their frozen reason (encrypted/corrupt/no-text-layer) (1.250193ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4352531Z ✔ determinism: the same bytes parse to deep-equal results (4.706546ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4354097Z ✔ pages limit: pdf-08 (10 pages) is rejected before content interpretation under a tighter limit (61.878305ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4355774Z ✔ content operators beyond the fixture writer: TJ array, T-star, quote forms, TD, Tm (3.109013ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4357501Z ✔ FlateDecode-compressed content stream round-trips (fixture content streams are uncompressed) (1.662904ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4359058Z ✔ literal string octal escapes and WinAnsi high bytes decode exactly (1.855844ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4360885Z ✔ pinned reading order: left band completes before the right band; same-y ties break by x (1.275892ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4362603Z ✔ page blocks: non-final pages end with a newline; empty pages are skipped with true page numbers kept (5.181592ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4364195Z ✔ rejection: corrupt — not a PDF / truncated / Length mismatch / misplaced startxref (1.168159ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4365946Z ✔ rejection: unsupported — xref stream, DCTDecode, non-WinAnsi Type1, Type0 without ToUnicode (1.185713ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4367509Z ✔ rejection: unsupported — a CID absent from the ToUnicode map refuses to guess text (0.360292ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4368859Z ✔ Identity-H mapping: bfchar and bfrange both decode; surrogate pairs carry through (0.522916ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4370595Z ✔ bfrange array values map code-by-code (an array is never misread as a sequential range) (0.717349ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4372605Z ✔ inline images (BI/ID/EI) are skipped whole; text before and after survives intact (2.356438ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4373961Z ✔ lazy fonts: only a font actually used to show text can fail the page (2.184839ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4375354Z ✔ rejection: encrypted — a trailer carrying /Encrypt is refused without any decryption attempt (0.255077ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4376995Z ✔ rejection: no-text-layer — image-only content (no text operators) is never an empty ready document (0.252561ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4379161Z ✔ export default: versioned package with frozen facts set, content-addressed blobs and per-entry checksums; sessions/credentials/logs excluded (245.222164ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4381566Z ✔ export is byte-deterministic for the same database under an injected clock (206.773187ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4383617Z ✔ export --include-sessions: explicit opt-in copies referenced session files, marks the package sensitive and reports missing files honestly (207.043762ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4385762Z ✔ export --include-sessions refuses colliding session basenames instead of silently overwriting either file (168.477426ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4387376Z ✔ export --readable renders human-readable markdown alongside the data package (217.326889ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4389002Z ✔ export --readable refuses database ids that would escape the package (write-side path traversal guard) (189.192923ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4390795Z ✔ export guards: refuses a non-empty --out directory and a missing database (172.899941ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4392744Z ✔ restore into an empty data directory rebuilds every fact table and blob byte-identically; saved excerpts survive (226.989799ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4394950Z ✔ restore into an existing-but-empty directory works; carried sessions are placed, their references rewritten, missing references kept verbatim (241.351178ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4397178Z ✔ a corrupted package is rejected before anything is placed: checksum mismatch, empty target stays empty, source untouched, no staging residue (213.458674ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4399009Z ✔ restore refuses a non-empty target and leaves the existing files byte-identical (179.647331ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4400919Z ✔ restore rejects path traversal, symlinks, unexpected files, missing entries and oversized declarations (220.542226ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4403369Z ✔ restore rejects adversarial packages whose checksums were re-minted: schema lies, shape drift, dangling foreign keys, duplicate keys, unknown tables, marker mismatches (273.87616ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4405610Z ✔ restore of a sessions package refuses when a session file was dropped after export (checksum honesty) (209.000282ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4407243Z ✔ scoped search returns contract-shaped material hits positioned in the canonical text (173.78667ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4409172Z ✔ annotation hits omit the material-only fields; absent queries return an honest empty list (46.649557ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4410959Z ✔ /api/search spans all trees; a scoped search never leaks another tree's facts (129.405484ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4412050Z ✔ kinds filter passes through to the engine (111.931457ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4413139Z ✔ rejections: blank/wrong-type text, malformed kinds, bad JSON → 400 (40.045278ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4414303Z ✔ unknown tree → 404; non-POST methods → 405; unwired search → 503 (56.126219ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4415738Z ✔ B4 corpus shape: 3 trees, 35 saved-fact documents (12 material / 11 annotation / 6 return / 6 turn) (6.78227ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4417269Z ✔ B4 frozen positives (55): every pre-specified target lands in the engine's top-5 (44.420755ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4418519Z ✔ B4 frozen no-result queries (12): zero hits, nothing fabricated (39.650534ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4419762Z ✔ B4 sample: current-tree vs all-trees scoping changes the hit set exactly (17.067167ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4421341Z ✔ B4 material hits are precisely positioned in the frozen canonical text (23.493162ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4422669Z ✔ zh matching is substring-based: a query inside a longer sentence still hits (0.268831ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4424241Z ✔ en matching is whole-word: 'tree' must not match 'street' or 'trees' (0.254956ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4425534Z ✔ scoping: treeId restricts to one tree; kinds filter restricts source types (0.898737ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4427173Z ✔ old-version labeling: v1-only sentences hit with oldVersion=true; current v2 ranks first on shared text (1.42517ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4428610Z ✔ empty and punctuation-only queries return zero hits honestly (7.153339ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4430448Z ✔ determinism: rebuild, serialize/restore round-trip, and reversed input order all yield identical results (62.600819ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4432392Z ✔ ranking: phrase tier beats kind; kind order annotation<return<turn<material; then matchCount, recency, refId (4.957396ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4434148Z ✔ mixed zh/latin query: contiguous phrase ranks above scattered segment hits, both are returned (0.30529ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4435582Z ✔ invalid documents and query options fail fast with SearchEngineError (1.563148ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4436957Z ✔ repeated CJK grams and Latin words keep original hit offsets and match counts (0.491257ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4438944Z ✔ material versions enter the index per version: chain-derived oldVersion/labels, positioned hits, current version ranks first on shared text (206.154513ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4441381Z ✔ non-ready versions are honestly absent from the index; a failed chain tail still marks the last ready version old (211.827212ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4445375Z ✔ annotations are indexed as explanation+term bodies; explanation-only phrases are findable and annotations outrank turns (28.434024ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4447688Z ✔ returns and turns are indexed (return turns are not double-indexed as turns); display titles follow the frozen convention (29.736686ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4449468Z ✔ tree snapshot preserves branch-order turn documents with batched repository reads (27.963689ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4451549Z ✔ per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only (21.469675ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4453682Z ✔ scoping: a tree snapshot never leaks other trees; unknown trees throw; materials linked to several trees yield one document per tree (95.19261ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4455187Z ✔ kinds filter and limit pass through to the engine (105.005426ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4457218Z ✔ buildSearchDocuments is pure: identical snapshots assemble identically, empty bodies are skipped, note concatenation order holds, unknown trees fail fast (0.829278ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4459279Z ✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (162.377914ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4460958Z ✔ composePromptText prefixes pending returns deterministically (0.514039ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4462297Z ✔ branch anchoring is validated (answer role, slice integrity, bounds) (33.963814ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4463328Z ✔ return and prompt validation errors (55.640941ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4464591Z ✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (29.036599ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4466129Z ✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (33.703551ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4467718Z ✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (305.042236ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4469128Z ✔ concurrent prompt is rejected as a conflict and leaves no phantom run (107.279316ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4471136Z ✔ anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2) (33.417447ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4473600Z ✔ changed anchor (DB-constructed): originStatus reports changed, the excerpt stays readable, reveal refuses without fallback, nothing is silently repaired (W1 §6-3) (62.285531ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4475606Z ✔ return idempotency: same key+content replays the same turn; different content conflicts (42.727004ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4477721Z ✔ return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4) (68.072885ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4479299Z ✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (53.949011ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4481477Z ✔ missing session: submit saves the return first, navigation fails separately; same-key retries replay without duplicates (signed v3 §3.5) (72.718904ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4484051Z ✔ source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1): a deleted session still locates the database original; cursor alignment fails separately (44.940677ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4486883Z ✔ whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2) (71.851064ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4490184Z ✔ new exploration preconditions (v3 §4.4): available session and never-prompted trunks are refused as conflicts; an anchored branch with a lost anchor session explores from the excerpt alone (46.410108ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4493012Z ✔ empty-trunk return: submit persists directly without a session; the first trunk prompt creates the session and delivers it exactly once (W1 §6-7) (48.373561ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4495345Z ✔ failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4) (56.661624ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4496902Z ✔ return persists its target anchor snapshot of the branch origin (33.237901ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4498421Z ✔ repository-level return without a key still round-trips (legacy shape) (18.931026ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4499875Z ✔ published CSS modules preserve ordered cascade and critical responsive rules (5.472214ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4501497Z ✔ terminology eval sets: 180 + 180 items, ids unique within and across files (2.740838ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4503152Z ✔ terminology eval sets: group-based leakage prevention (group ids and source texts never straddle dev/frozen) (1.239774ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4504739Z ✔ terminology eval sets: Chinese >= 240 across 360; negatives >= 25% across 360 (0.304779ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4506284Z ✔ terminology eval sets: all six v2 coverage categories present in both files, with both task kinds (0.480437ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4508133Z ✔ terminology eval sets: homonym-polysemy terms (ambiguity dimension) span >= 2 semantic-context groups per file (0.580163ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4510281Z ✔ terminology eval sets: every explain term resolves mechanically at its occurrence with slice equality (0.549726ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4512756Z ✔ terminology eval sets: extract expectedTerms and negativeTerms verified against sources (expectedTerms outside code/URL spans; full negatives carry negativeTerms) (2.249991ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4514959Z ✔ terminology eval sets: long-answer items are >= 1500 chars with every target term in the final third (0.468846ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4516371Z ✔ terminology eval sets: code-mixed items carry real code fences (1.254792ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4518397Z ✔ reading modes pure helpers: blank-line paragraphs, per-paragraph/per-answer density caps (first-come, hiddenCount), and source-invalid projection (4.814897ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4521182Z ✔ reading mode persistence: default manual-only, enum validation, unknown tree 404, kv round-trip across a restart, corrupt kv degrades to the default (43.952481ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4524218Z ✔ quality gate OFF (production default): modes save and switch, but assistant answer completions dispatch NOTHING — zero term-runtime prompts, zero tasks, zero usage, honest autoSuggestions state (86.52205ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4527342Z ✔ gate ON (test-forced): only an assistant answer completion triggers exactly one extract; browsing adds nothing; failed and aborted runs dispatch nothing; auto-saving never happens (173.876516ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4529555Z ✔ gate ON + assisted reading: v2 per-paragraph 2 / per-answer 6 caps are enforced honestly (34.055748ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4531756Z ✔ gate ON: zero validated candidates surface as no-suggestions; one suggestion set per completed answer (38.466648ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4534119Z ✔ gate ON + exhausted budget: budget-paused with zero dispatch and untouched accounting; the explicit retry stays honestly paused; no annotation is ever written (54.026515ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4536384Z ✔ gate ON + unparseable model answer: the set lands on failed honestly; the explicit retry re-runs and recovers (51.090392ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4538916Z ✔ reading-mode HTTP surface: GET/PUT settings/reading-mode (enum 400 / unknown tree 404), read model carries mode + autoSuggestions, retry 200/404/400(gate)/400(manual-only) (181.971539ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4542058Z ✔ terminology pure helpers: prompts carry the passage and UTF-16 offsets; candidates are validated against the source (slice equality, dedup, density, code/URL exclusion) (3.014196ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4544681Z ✔ terminology explain is isolated: zero tree writes, zero main session files, main cursor untouched; echo task succeeds with the prompt as context (48.620507ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4547191Z ✔ terminology explain dedups against a saved annotation (zero model calls) and enforces UTF-16 slice integrity (emoji / cross-line / duplicate words) (53.487772ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4550322Z ✔ terminology save dedups by range; promotion reuses the Anchor/Branch/Origin machinery, dispatches the first question with composed context, and is idempotent across replays and conflicts (50.353915ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4553612Z ✔ promotion survives a failed first question: the binding and dispatch ledger are durable, and the same-key retry re-dispatches the SAME question without rebuilding the branch (41.986163ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4556236Z ✔ terminology cancel: queued cancels immediately; a late result after a running cancel is discarded (usage still recorded — honest cost) (84.382728ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4559153Z ✔ terminology cache key carries source identity, position and context: the same word at two semantic positions is explained separately (bank repro + 中文 + repeated word), and only the same anchor reuses (47.212127ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4563022Z ✔ terminology cancel accounting: a dispatched request that is aborted keeps its reservation and records UNKNOWN usage (requests >= 1, never zeroed); a timeout likewise; a dirty restart and a failing persistence fail-closed with zero dispatch (72.918889ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4566728Z ✔ terminology budget reserves input+output bounds before dispatch: an insufficient budget means ZERO dispatch (budgetTokens=1), usage settles by real completion, and the persisted state resumes across restarts (57.467463ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4569869Z ✔ terminology context discipline: explain windows oversized passages honestly (remapped offsets) and refuses unbounded stuffing; extract refuses oversized sources with zero dispatch (24.131178ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4572694Z ✔ terminology auto extract: validated JSON candidates (slice equality, dedup, density, code/URL exclusion); an unparseable echo answer fails honestly (45.075102ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4575789Z ✔ terminology promotion is atomic: a promotion key already held by another annotation is a 409 conflict with ZERO new rows, injected crashes at each write point roll the whole promotion back, and a double-click is idempotent (33.158255ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4579476Z ✔ terminology promotion first-question identity: the same key with a different question is a 409 conflict (not a replay); an unknown-result dispatch is reconciled against the ledger evidence and never blind-resent (68.479906ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4583243Z ✔ terminology promotion replay across a process restart: the binding and dispatch ledger are durable — a landed first question is never re-dispatched, and a different question under the same key stays a 409 (33.236767ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4586472Z ✔ terminology HTTP surface: read model, explain, annotations 201/200, promote 201/200/409 (incl. same-key different-question), preferences, cancel, and an honest 503 when unwired (109.701417ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4589836Z ✔ branch entry: the armed capture bar offers branching; the click resolves the canonical selection (server-signed sourceHash) then posts from-material — zero runs/turns, no cursor switch (200.815356ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4593397Z ✔ context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted (96.271919ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4596547Z ✔ context declaration: a truncated window carries the explicit TRUNCATED marker with the truncation note verbatim — the 24,000-unit cap is never silent (charter §3.3 rule 3) (110.138905ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4599242Z ✔ first question: submitting posts material-first-question with the same intent key, lands the turns, closes the reader, and opens the branch panel (332.842085ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4601975Z ✔ no-duplicate discipline: a double-click submits exactly once (in-flight lock); a replay (same key, same content) reconciles without re-sending (322.368865ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4604582Z ✔ dispatch outcomes: 'failed' is shown honestly and a same-key retry is an explicit new attempt; 'unknown' is never auto-retried and is disclosed as not re-sent (396.100909ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4607366Z ✔ resume-or-create hits an existing exploration: the honest choice — open the existing branch (nothing new is created) or explicitly start a new one (fresh key, new branch) (331.175035ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4610352Z ✔ explicit new exploration: from the choice, a fresh intent key posts mode 'new' and the full first-question flow follows on the new branch (352.398955ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4613489Z ✔ pending intent resume: a branch created but never asked resumes straight to the declared scope with the SAME key after a refresh (idempotent continuation — localStorage carries the submission identity) (317.34474ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4616273Z ✔ restored branch navigation/session facts ride along honestly (failed navigation and unavailable session are disclosed, never masked) (85.742057ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4619772Z ✔ first-question conflict (409): after an in-flight dispatch lands unseen, a changed question is refused — the immutability is disclosed and the changed question is offered as a normal continuation (panel opens prefilled; sending stays an explicit action) (368.021178ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4623124Z ✔ branch-intent conflict (409 material-branch-conflict, same key bound to a different selection): the flow fails honestly and offers a retry (96.016578ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4626358Z ✔ material return: the panel return posts material-return with the draft idempotency key; the mainline card renders the material source fields, adoption state, and the source jump opens the reader at the anchored version and block (607.350807ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4629570Z ✔ material return card: a cached source card renders on the mainline at boot; a missing cache degrades honestly (the Return itself is intact, no source details are fabricated) (467.695498ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4632770Z ✔ session-unavailable material branch: the explicit new exploration posts material-new-exploration (material context rides along); an available session is refused with the honest 409 (147.021266ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4635360Z ✔ css lexical locks: the branching flow, the scope card, the truncation marker, and the material return source card have base-layer rules (0.892607ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4637694Z ✔ material list: honest per-state rows (ready / failed-with-reason / parsing / pdf), an honest empty state, a loading state, and a retryable list failure (281.976131ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4640868Z ✔ block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end (142.086567ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4643789Z ✔ keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container) (58.315852ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4646539Z ✔ reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block) (1997.843754ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4648726Z ✔ reading position beyond the first page: the open loop pages forward until the saved block is loaded, then restores onto it (58.203425ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4651357Z ✔ lossless rendering: every rendered block's textContent equals the frozen canonicalText slice byte-for-byte, carrying its absolute range (61.660458ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4653662Z ✔ cross-line selection inside one block: the captured payload is the frozen md-sel-22 range [1015, 1036) over canonicalText (60.625316ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4655993Z ✔ repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19) (65.421786ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4658171Z ✔ cross-block selection: the honest not-anchorable state — no payload, no silent truncation (B2 discipline) (66.910818ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4661004Z ✔ grapheme-safe capture: a boundary inside a surrogate pair or a combining sequence snaps outward — the payload never splits a cluster (md-06 / md-07 fixtures) (99.704876ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4663353Z ✔ copy quote: the clipboard receives the exact canonical slice; the D4-3 anchor payload stays honestly displayed (69.509169ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4666156Z ✔ version awareness: the reader shows which version it renders, an older version is explicitly labeled and readable, and switching is non-destructive with a never-migrates note (123.892941ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4668854Z ✔ a saved reading position on an older version reopens that version (charter §1: return to the original text), with the older-version note and restore (69.812447ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4671452Z ✔ a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment) (69.773081ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4673835Z ✔ a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks (109.310492ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4676313Z ✔ a failed version shows its reason verbatim with no empty-document masquerade; the version strip keeps it honestly unlabeled-readable (67.525395ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4678459Z ✔ honest retry surfaces: a detail failure retries the open; an append-page failure retries the next page (232.041389ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4681411Z ✔ armed selection survives async refreshes and page appends: block elements and their text nodes keep identity while armed (no re-render during selection over the reading view) (213.727572ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4684203Z ✔ capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift) (107.65517ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4686537Z ✔ touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check (87.946805ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4688808Z ✔ Esc closes the reader with focus returned to the material's list button; keyboard affordances are native buttons (317.321715ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.4691108Z ✔ CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically (3.581495ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5215917Z ✔ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (354.949034ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5219837Z ✔ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (230.129158ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5223834Z ✔ children page failures are honest: a first-page failure shows the error with a Retry row, and an auto-paged More failure keeps the loaded page and retries the next page (466.819243ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5227306Z ✔ expand-state persistence: every expansion/selection PUTs the full set, and reopening restores the saved expansion and the deep selection via ancestor paging (354.143808ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5230778Z ✔ keyboard traversal: arrows move row-by-row across the windowed order, → expands / enters the first child, ← collapses / returns to the parent, Enter selects, and the focused row never leaves the DOM (343.198536ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5262987Z ✔ same-name disambiguation: branch search hits carry distinct full paths, rows carry id chips, and the selected node's full parent path is complete (long chains collapse but expand to every level) (1111.813229ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.5268605Z ✔ stale-cursor 409 recovery: a cursor page after index invalidation restarts from the first page (request sequence locked, no duplicate rows) (190.153877ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.7352980Z ✔ nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues (218.749827ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:27.9142145Z ✔ locate current branch: cross-tree locate switches the nav tree and reveals the workbench's current branch through its ancestor chain (178.547376ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.3014693Z ✔ jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin (386.025589ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.5533856Z ✔ jump to source across trees: the workbench first opens the origin's tree (existing openTree behavior), then the existing reveal runs (251.243211ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6693789Z ✔ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (118.615182ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6696467Z ✔ CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically (2.042102ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6865363Z ✔ import entry: the file picker accepts exactly the D4-1 support set and lives in the Materials section (98.46416ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6867255Z ✔ import happy path: a Chinese-and-space filename uploads raw bytes with the percent-encoded header, the parsing state is honest, and ready opens the reader (143.357343ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6869240Z ✔ import dedup: importing the exact same bytes again reports the reused version honestly (no new version, no fake success) (147.441915ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6881959Z ✔ import parse failures surface the reason verbatim (failed / rejected), never an empty-document masquerade (209.54737ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6883293Z ✔ import cancel: canceling an in-flight parse task stops it and reports canceled honestly; a 409 (already terminal) triggers an immediate recheck (183.93496ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6884489Z ✔ import upload failures surface verbatim: unsupported extension (415) and oversize (413) (154.085002ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6885493Z ✔ import state resets on tree switch (the in-flight poll and status never leak across trees) (101.250017ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6886579Z ✔ PDF pages render as real reading surfaces: page identifiers, frozen block text, absolute ranges, and the pdf fetch limit (59.172135ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6887754Z ✔ same-page selections map through the canonical-offset machinery to the frozen B2 payloads (pdf-sel-01 / pdf-sel-02) (63.293836ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6888882Z ✔ double-column PDF (pdf-06): both columns and a cross-line excerpt map to the frozen ranges on the same page (63.356707ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6890236Z ✔ grapheme safety on PDF pages: a boundary inside a surrogate pair snaps outward (pdf-12 payload discipline) (59.233749ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6891578Z ✔ cross-page selection is refused with the select-within-one-page prompt — no payload, no silent truncation (63.883596ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6892830Z ✔ reading positions work per PDF version: scrolling saves page-N via PUT, and reopening restores onto it (forward fill + rendered jump target) (111.507545ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6894501Z ✔ a server-side resolve-selection refusal surfaces verbatim in the branch flow (the backend already refuses — the UI relays it) (93.796404ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6895841Z ✔ lazy page rendering: a 30-page PDF renders a bounded leading batch first, and the scroll window (±1200px) renders/unloads page text layers (121.60347ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.6897043Z ✔ CSS lexicon: PDF page frames, placeholders, and the import row/styles exist lexically (the suite does not execute CSS) (0.5461ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.8769321Z ✔ visual baseline: real index.html skeleton and boot-rendered structure (98.051719ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.8770699Z ✔ journal drawer: failure with retry, honest empty state, Esc focus restore (343.669673ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.8772322Z ✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (479.850945ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.8773452Z ✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (81.59826ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:28.8774485Z ✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (285.231064ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:29.4309118Z ✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (555.185734ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:29.4782218Z ✔ adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer (48.178833ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:29.7657354Z ✔ a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately (287.164903ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:30.0521889Z ✔ Esc on the branch panel closes it and restores focus to the triggering tab (286.528511ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:30.1127656Z ✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (60.236891ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:30.1972336Z ✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (75.823334ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:30.3318047Z ✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (143.207784ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:30.6561191Z ✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (323.511297ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.2083130Z ✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (552.636666ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.5977142Z ✔ Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs (388.638988ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.6921986Z ✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (95.742896ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.7567860Z ✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (63.866572ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.7881026Z ✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (31.873673ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.8715353Z ✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (83.744321ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.9290544Z ✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (56.856704ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:31.9884266Z ✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (59.460883ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.0506308Z ✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (62.251244ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.1097254Z ✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (58.837312ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.1737045Z ✔ A2 cross-line selection: offsets and the revealed text span the line break intact (64.599145ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.4741354Z ✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (300.185979ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.5213904Z ✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (47.407056ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.5719838Z ✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (47.189219ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.5726542Z ✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (1.733776ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.5729057Z ✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (0.836712ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.6628608Z ✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (90.747131ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.7085186Z ✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (45.418174ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8199254Z ✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (111.98694ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8368871Z ✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (102.340614ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8370649Z ✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (66.078485ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8371834Z ✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (387.924616ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8373087Z ✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (301.755504ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8374315Z ✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (59.131836ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8375947Z ✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (284.466668ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8379623Z ✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (279.371428ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8382326Z ✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (65.33245ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8383988Z ✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (282.695971ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8385649Z ✔ a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch (282.287961ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8389313Z ✔ scope: default is the current tree (scoped endpoint, full kinds), an explicit toggle spans all trees, and a scoped search never leaks another tree's facts (159.015485ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8392000Z ✔ type filter: kinds pass through to the engine, and results render in the order returned (annotation → Return → turn → material) (103.462147ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8394011Z ✔ old-version hits are explicitly marked 旧版本 and open the older version's read-only reader at the hit block (101.187307ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8395291Z ✔ a current-version material hit opens the reader on that version and scrolls to the hit block (90.196047ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8397336Z ✔ session-unavailable hits show the explicit new-exploration entry alongside the source jump, and the jump still views the source (118.559899ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8399594Z ✔ a trunk hit in a session-unavailable trunk shows the same entry, and it routes to the trunk composer (no branch panel exists for the trunk) (129.139855ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8402956Z ✔ an annotation hit reveals the anchored answer and opens the saved annotation card (95.047469ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8403676Z ✔ a Return hit reveals the Return card on the trunk (91.510367ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8405635Z ✔ honest gates: blank queries and empty filters are stopped client-side (the server's own rule), and zero hits stay an honest empty state (127.023139ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8408191Z ✔ in-flight is honest, a failed search surfaces its error and is retryable, and unwired search reports 503 verbatim (214.966125ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8411365Z ✔ cross-tree hits open the hit's tree first; searching creates no turns; tree-scoped results clear honestly on tree switch while all-trees results persist (170.069545ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8413420Z ✔ with an empty library the search face stays available, this-tree is honestly disabled, and the honest zero-hit state renders (56.985124ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8415213Z ✔ CSS lexicon: the search form, hit rows, old-version mark, and session note rules are locked in the base layer (0.979749ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8522488Z ✔ layered turn structure: prose is its own layer, textContent stays byte-identical, and an async refresh never replaces the content layer (129.344564ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8524537Z ✔ selection drag window: an overlay-changing re-render is deferred until mouseup — the content layer is never swapped under the cursor (75.724853ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8527738Z ✔ toolbar modes: single-word selections arm term mode, spans arm range mode (exact POST payloads), dblclick arms like mouseup, and Esc closes the card with focus return (64.524997ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8529835Z ✔ Esc layering with the term card: a card inside the open panel closes before the panel; the panel branch keeps its semantics (292.276639ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8531943Z ✔ Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost (62.448391ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8533973Z ✔ explain card states: cached success note, honest failure with a working retry, cancelled with the late-discard note, and idempotent save showing the existing annotation (264.041558ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8535426Z ✔ late explain responses are discarded honestly when the target leaves: no resurrection of a closed card, counted in the drawer usage (62.056979ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8536745Z ✔ unified range overlays: annotation marks and the source highlight share one slice-exact mechanism, survive re-renders, and never alter the text (89.437133ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8538089Z ✔ resume-or-create: an already-promoted annotation surfaces the existing follow-up explicitly — no second promotion form, no silent reuse (58.280659ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8539433Z ✔ promotion outcomes: success opens the branch, a same-key replay is named honestly, and a 409 conflict lands on the card with the same-key retry kept (213.891405ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8541146Z ✔ promotion response loss resolves to the recorded promotion: the card refreshes to the resume affordance instead of pretending nothing happened (87.412672ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8542570Z ✔ narrow window and reduced motion: the ③ CSS rules are locked lexically (toolbar/card full width under 720px; card entrance animation neutralized under reduce) (2.439212ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8543874Z ✔ touch selection: selectionchange arms the toolbar without mouseup, and an emptied selection disarms it after the deferred check (44.852829ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8545701Z ✔ return draft/focus discipline holds under the layered renderer: submit closes the panel to the main input; the term-card first-question draft keeps its value and focus across re-renders (328.398602ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8547230Z ✔ drawer terminology surface: tasks with modes, honest usage counts, cache preference toggle with a retryable failure, and the read-model failure state (134.385501ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8548817Z ✔ P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders (48.474222ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8550911Z ✔ P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths) (89.896553ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8552334Z ✔ P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches (30.096205ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8553739Z ✔ P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations (111.781462ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8554968Z ✔ P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card (73.562854ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8556512Z ✔ reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure (136.844312ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8557952Z ✔ suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips (94.514403ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.8559254Z ✔ suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus (106.758263ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9083225Z ✔ answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path (57.135224ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9238462Z ℹ tests 413
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9239009Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9239497Z ℹ pass 413
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9240497Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9241047Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9241558Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9242033Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9242548Z ℹ duration_ms 33242.309939
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9418162Z ##[group]Run sudo apt-get update -qq
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9418536Z ^[[36;1msudo apt-get update -qq^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9418943Z ^[[36;1msudo apt-get install -y --no-install-recommends fonts-wqy-zenhei^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9419416Z ^[[36;1mtest -r /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9484577Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:44:32.9484851Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:44:37.6317793Z Reading package lists...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:37.8409631Z Building dependency tree...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:37.8417684Z Reading state information...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0171783Z The following NEW packages will be installed:
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0179698Z   fonts-wqy-zenhei
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0358759Z 0 upgraded, 1 newly installed, 0 to remove and 23 not upgraded.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0359540Z Need to get 7472 kB of archives.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0361098Z After this operation, 16.8 MB of additional disk space will be used.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.0362074Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+diagnose	UNKNOWN STEP	2026-10-12T09:44:38.2076580Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0105692Z Fetched 7472 kB in 1s (10.3 MB/s)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0337528Z Selecting previously unselected package fonts-wqy-zenhei.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0672560Z (Reading database ... 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0672982Z (Reading database ... 5%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0673332Z (Reading database ... 10%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0673664Z (Reading database ... 15%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0673990Z (Reading database ... 20%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0674319Z (Reading database ... 25%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0674643Z (Reading database ... 30%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0674961Z (Reading database ... 35%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0675403Z (Reading database ... 40%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0675724Z (Reading database ... 45%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0676046Z (Reading database ... 50%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.0731286Z (Reading database ... 55%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.1950527Z (Reading database ... 60%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.3834111Z (Reading database ... 65%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.5884564Z (Reading database ... 70%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.7878505Z (Reading database ... 75%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:39.9322950Z (Reading database ... 80%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.1284130Z (Reading database ... 85%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.2991989Z (Reading database ... 90%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.4482680Z (Reading database ... 95%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.4483112Z (Reading database ... 100%
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.4483701Z (Reading database ... 203191 files and directories currently installed.)
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.4527900Z Preparing to unpack .../fonts-wqy-zenhei_0.9.45-8_all.deb ...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.4654527Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.9447476Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:40.9577670Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6682710Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6683416Z Running kernel seems to be up-to-date.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6683742Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6683981Z No services need to be restarted.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6684226Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6684421Z No containers need to be restarted.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6684657Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6684883Z No user sessions are running outdated binaries.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6685166Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:41.6685534Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5985691Z ##[group]Run set +e
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5985966Z ^[[36;1mset +e^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5986189Z ^[[36;1mnode scripts/verify-d4.js^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5986449Z ^[[36;1mcode=$?^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5986808Z ^[[36;1mecho "D4 offline verifier exit: $code (3 means NOT_RUN/BLOCKED, not PASS)"^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5987300Z ^[[36;1mif [ "$code" -eq 1 ] || [ "$code" -eq 2 ]; then exit "$code"; fi^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.5987645Z ^[[36;1mexit 0^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.6051178Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.6051534Z env:
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.6051828Z   TREEAI_B6_FONT_PATH: /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
+diagnose	UNKNOWN STEP	2026-10-12T09:44:42.6052207Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.6137873Z verify-d4 0.1.0 — offline acceptance run
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.6139653Z root: <home>/work/TreeAI/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.6140771Z evidence: <home>/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261012T094443612Z
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.6141174Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.9570424Z   [PASS] fixtures-integrity-d4
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.9578458Z   [PASS] docs-integrity-d4
+diagnose	UNKNOWN STEP	2026-10-12T09:44:43.9997006Z   [PASS] entrypoints-d4
+diagnose	UNKNOWN STEP	2026-10-12T09:44:57.5233138Z   [PASS] typecheck
+diagnose	UNKNOWN STEP	2026-10-12T09:45:01.3911570Z   [PASS] tests-typecheck
+diagnose	UNKNOWN STEP	2026-10-12T09:45:07.0514569Z   [PASS] unit-tests-d4
+diagnose	UNKNOWN STEP	2026-10-12T09:45:09.4117802Z   [PASS] b1-import-versions
+diagnose	UNKNOWN STEP	2026-10-12T09:45:11.2580477Z   [PASS] b2-precise-anchors
+diagnose	UNKNOWN STEP	2026-10-12T09:45:12.1316550Z   [PASS] b3-material-exploration
+diagnose	UNKNOWN STEP	2026-10-12T09:45:12.1329752Z   [PASS] b3-real-exploration
+diagnose	UNKNOWN STEP	2026-10-12T09:45:12.1517929Z   [PASS] b4-cross-material-find
+diagnose	UNKNOWN STEP	2026-10-12T09:45:18.4353455Z   [PASS] b5-restore-integrity
+diagnose	UNKNOWN STEP	2026-10-12T09:46:52.0853066Z   [FAIL] b6-scale-performance
+diagnose	UNKNOWN STEP	2026-10-12T09:46:52.0865013Z   [PASS] b6-browser-face
+diagnose	UNKNOWN STEP	2026-10-12T09:46:52.0876819Z   [PASS] b7-beta-usability
+diagnose	UNKNOWN STEP	2026-10-12T09:46:52.0881527Z   [NOT_RUN] b8-install-crossplatform — engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute (owner: D4-7)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4290450Z   [PASS] b9-large-tree-nav
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4299647Z   [PASS] b9-nav-browser-face
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4302901Z   [PASS] exit-codes
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4303569Z   [PASS] evidence-write-hygiene
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4360057Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4360351Z verify-d4 summary:
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4361182Z   18 PASS, 1 FAIL, 0 BLOCKED, 1 NOT_RUN
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4361675Z   verdict: HAS_FAIL (exit 2)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.4362360Z   evidence: <home>/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261012T094443612Z
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5115391Z D4 offline verifier exit: 2 (3 means NOT_RUN/BLOCKED, not PASS)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5132815Z ##[error]Process completed with exit code 2.
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5184311Z ##[group]Run echo "Inspecting latest B6 verifier log (no pass/fail override)"
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5184899Z ^[[36;1mecho "Inspecting latest B6 verifier log (no pass/fail override)"^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5185512Z ^[[36;1mfile=$(find evidence/d4/runs -type f -name '*b6-scale-performance*' 2>/dev/null | sort | tail -n 1)^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5186123Z ^[[36;1mif [ -n "$file" ]; then sed -n '1,120p' "$file"; else echo "No B6 log found"; fi^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5249302Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5249664Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5333407Z Inspecting latest B6 verifier log (no pass/fail override)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5383577Z b6 scale/performance check
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5387275Z environment: node v24.21.0; linux 6.17.0-1022-azure x64; cpu 4× AMD EPYC 7763 64-Core Processor; total memory 15.6 GiB; loadavg at start 2.24/0.99/0.37 — NOTE: parallel D4 wave agents may be building on this machine during this run; loadavg is recorded per probe and any timed probe within 20% of its limit (or over it) is rerun once with BOTH runs recorded
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5389149Z generator CLI run A (with --load-check): exit 0 in 9660ms
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5389626Z generator CLI run B (fresh process): exit 0 in 7528ms
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5391044Z generator determinism: 103/103 artifacts byte-identical across two CLI runs (+ in-process engine reproduces the truth exactly); totals: 100 materials / 1000000 units / 1000 non-trunk branches / 10000 saved facts
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5392807Z load: 100 ready versions (1000000 units exactly) + 1010 branch rows / 10 trees + 6000 qa turns + 2500 annotations + 1500 returns into a real persistence DB in 1662ms (real parsers + repository APIs, deterministic clock; sqlite integrity ok)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5394719Z search cold pass (first-ever queries; doubles as warmup): 50 frozen queries through POST /api/search (per-request rebuild) — p50 474.1ms / p95 550.9ms / max 734.3ms (loadavg 1.97/0.99/0.38 → 1.64/0.99/0.40)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5396261Z search warm pass (verdict): 50 frozen queries through POST /api/search (per-request rebuild) — p50 481.2ms / p95 543.3ms / max 546.0ms (loadavg 1.64/0.99/0.40 → 1.42/1.00/0.42)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5398077Z search warm pass rerun (contention disclosure: first warm pass neared/exceeded the limit; BOTH recorded): 50 frozen queries through POST /api/search (per-request rebuild) — p50 450.4ms / p95 536.6ms / max 543.9ms (loadavg 1.42/1.00/0.42 → 1.60/1.06/0.46)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5399401Z search warm p95 rerun recorded: first 543.3ms, rerun 536.6ms (verdict from the definitive rerun; limit 500ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5401934Z material-open-p95: PASS — 30 cold opens of existing materials (detail + first visible blocks page; 4 long PDFs + 8 long md + 18 shorts) p50 1.6ms / p95 3.4ms / max 4.9ms ≤ 2000ms; hot re-opens p50 1.7ms / p95 4.0ms (cold/hot reported separately); resume-opens deep inside the long PDFs (60% afterBlock): p50 1.3ms / max 1.5ms (evidence)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5404439Z scroll (server-side): 32 consecutive block-page fetches through the long md (limit 5) + long pdf (default limit) — p50 1.2ms / p95 1.5ms / max 1.7ms ≤ 200ms (round-trip budget of the scroll path; browser smoothness stays NOT_RUN)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5406382Z input (server-side evidence): 20 tree-scoped short searches (POST /api/trees/b6-t01/search, as-you-type shape) — p50 45.2ms / p95 48.4ms / max 51.2ms (no offline assert: the charter's freeze criterion is a browser main-thread metric — see NOT_RUN)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5408510Z import-10mib-100p: PASS — 10.33 MiB / 100-page sample (sha256 958dc14686b1b277…) imported through POST /api/trees/:id/materials to parse-ready in 1.66s ≤ 30s (upload + parse, real import pipeline; first-blocks read back: 1 block(s), textUnits 999999)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5410605Z cancel: gated import in parsing state → POST …/parse-tasks/:id/cancel answered 200 (state canceled) in 1.6ms ≤ 200ms (import request itself took 4.0ms; gated markdown parser holds the task open)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5412185Z cancel: late parse result structurally discarded after cancel (task lateResultDiscarded=true, version stays canceled; second cancel answered 409 in 1.0ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5413914Z NOT_RUN: scrolling (browser face): real-browser scroll smoothness with no >200ms main-thread segments while paging the reader — frontend wave / run:d4-browser; server-side block-page fetch timings recorded here as evidence only
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5415839Z NOT_RUN: input (browser face): keydown-to-render latency for search-as-you-type and question input — frontend wave; server-side tree-scoped search timings recorded here as evidence only
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5417358Z NOT_RUN: search hit-list rendering (browser face): render latency of the result list in a real browser — frontend wave; the server-side p95 measured here is the data path only
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5418602Z NOT_RUN: cold app boot (browser face): first application open in a real browser — frontend wave / final candidate-SHA regression
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5448573Z ##[group]Run node --test scripts/d4/browser/cli.test.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5449020Z ^[[36;1mnode --test scripts/d4/browser/cli.test.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5511386Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.5511644Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6492673Z ✔ B3/B9 D4 browser CLI default remains offline selftest without credentials (1.832811ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6497956Z ✔ browser CLI --only repetitions, flags, and order are preserved (0.272168ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6498791Z ✔ browser CLI refuses unknown flags, missing values, inappropriate real-Pi flags (1.479621ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6500271Z ✔ browser CLI accepts --keep-data as a standalone final switch (0.248905ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6501624Z ✔ browser CLI retains positional values and rejects incomplete option pairs (0.328553ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6605802Z ℹ tests 5
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6606271Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6606695Z ℹ pass 5
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6610923Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6631103Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6631620Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6632095Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6632574Z ℹ duration_ms 69.982922
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6717167Z ##[group]Run node --test scripts/d4/browser/scale-measurements.test.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6717711Z ^[[36;1mnode --test scripts/d4/browser/scale-measurements.test.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6780788Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.6781060Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7752674Z ✔ B6 timing statistics keep the original nearest-rank p95 and empty-sample semantics (1.565842ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7757410Z ✔ B6 browser readable predicate keeps PDF text-layer readiness and markdown block readiness distinct (5.785508ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7860588Z ℹ tests 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7861421Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7861876Z ℹ pass 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7862292Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7862746Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7863193Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7863829Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7864574Z ℹ duration_ms 68.831878
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7956041Z ##[group]Run node --test scripts/d4/browser/scale-responsiveness.test.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.7956603Z ^[[36;1mnode --test scripts/d4/browser/scale-responsiveness.test.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.8019720Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.8020383Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9129801Z ✔ B6 responsiveness retains original p95, longtask and minimum typing count (1.653105ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9131805Z ✔ B6 fails a longtask over 200ms even when scroll frames are fast (0.304228ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9133311Z ✔ B6 independently rejects slow scroll frames and too few rendered keystrokes (0.241401ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9134877Z ✔ B6 keeps keystroke-to-render p95 frozen at 200ms, not keydown-to-value (0.191327ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9136182Z ✔ B6 accepts values exactly at the frozen limits (1.048367ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9223120Z ℹ tests 5
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9223522Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9223884Z ℹ pass 5
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9231004Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9251016Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9256293Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9256582Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9256885Z ℹ duration_ms 72.688795
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9323927Z ##[group]Run node scripts/verify-d4-selftest.js
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9324319Z ^[[36;1mnode scripts/verify-d4-selftest.js^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9388134Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:10.9388413Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:11.0359019Z verify-d4-selftest — failure-path injections against the real verifier
+diagnose	UNKNOWN STEP	2026-10-12T09:47:11.0360615Z evidence: <home>/work/TreeAI/TreeAI/evidence/d4/selftest/d4-selftest-20261012T094711032Z
+diagnose	UNKNOWN STEP	2026-10-12T09:47:12.3213686Z   [PASS] control-clean-tree: clean copy → exit 0 (ALL_PASS)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:13.6112792Z   [PASS] inject-tampered-fixture: fixtures-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:14.8969149Z   [PASS] inject-stray-fixture: fixtures-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:16.2231184Z   [PASS] inject-broken-selection-behind-regenerated-manifest: fixtures-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:17.5417249Z   [PASS] inject-fake-no-result-query: fixtures-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:18.8201297Z   [PASS] inject-missing-mirror: docs-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:20.0907395Z   [PASS] inject-missing-adr-004: docs-integrity-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:21.3279595Z   [PASS] inject-unwired-entrypoint: entrypoints-d4 FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6180245Z   [PASS] inject-stripped-b7-sidecar: b7-beta-usability FAIL with exit 2
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6334115Z 
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6334992Z verify-d4-selftest: all injections detected; control clean (exit 0)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6443528Z ##[group]Run node --test scripts/d4/pdf/content.test.mjs
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6444015Z ^[[36;1mnode --test scripts/d4/pdf/content.test.mjs^[[0m
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6508135Z shell: /usr/bin/bash -e {0}
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.6508427Z ##[endgroup]
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7523410Z ✔ B1 frozen PDF fixture registry retains every ID, order, and render routine (1.552928ms)
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7625750Z ℹ tests 1
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7626064Z ℹ suites 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7626309Z ℹ pass 1
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7626713Z ℹ fail 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7627122Z ℹ cancelled 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7627558Z ℹ skipped 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7627879Z ℹ todo 0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7628149Z ℹ duration_ms 71.502221
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.7817304Z Post job cleanup.
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8707873Z [command]/usr/bin/git version
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8753104Z git version 2.55.0
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8795813Z Temporarily overriding HOME='<home>/work/_temp/89e7b9d3-412a-46fd-b4a2-99d5aefc80e1' before making global git config changes
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8797583Z Adding repository directory to the temporary git global config as a safe directory
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8801420Z [command]/usr/bin/git config --global --add safe.directory <home>/work/TreeAI/TreeAI
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8843380Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.8882214Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.9140987Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.9180887Z http.https://github.com/.extraheader
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.9187025Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.9222540Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+diagnose	UNKNOWN STEP	2026-10-12T09:47:22.9682069Z Cleaning up orphan processes
+diagnose	UNKNOWN STEP	2026-10-12T09:47:23.0116419Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

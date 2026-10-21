@@ -124,9 +124,9 @@
 /* 兼容钩子（W1/W2 事件与 UI 探测按词法断言）：宽窗右滑的 enter/exit。
    必须置于窄窗块之前——窄窗块对 #source-drawer.enter/.exit 的自底向上
    变体（drawer-up-*）才能在级联中胜出（后定义者胜）。 */
-#branch-panel.enter { animation: panel-in var(--motion-panel) ease-out; }
+#branch-panel.enter { animation: panel-in var(--motion-panel) var(--ease-grow); }
 #branch-panel.exit { animation: panel-out 150ms ease-in forwards; }
-#source-drawer.enter { animation: panel-in var(--motion-panel) ease-out; }
+#source-drawer.enter { animation: panel-in var(--motion-panel) var(--ease-grow); }
 #source-drawer.exit { animation: panel-out 150ms ease-in forwards; }
 @keyframes panel-in {
   from { opacity: 0; transform: translateX(24px); }
