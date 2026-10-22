@@ -21,7 +21,16 @@ export function createTreeChromeView(deps) {
       button.title = summary ? `${summary}\n${tree.id}` : tree.id;
       const date = deps.document.createElement("span");
       date.className = "tree-date";
-      date.textContent = new Date(tree.createdAt).toLocaleString();
+      /* 列表层只保留日粒度（当年省年份——安静的事实）；精确到秒的完整
+         创建时间收进 tooltip（可溯源不丢，但不上岗当视觉噪音）。 */
+      const created = new Date(tree.createdAt);
+      date.textContent = created.toLocaleDateString(
+        undefined,
+        created.getFullYear() === new Date().getFullYear()
+          ? { month: "short", day: "numeric" }
+          : { year: "numeric", month: "short" },
+      );
+      date.title = created.toLocaleString();
       button.append(name, date);
       button.addEventListener("click", () => {
         deps.closeSidebar(); /* 窄窗：选树后收起侧栏抽屉 */
