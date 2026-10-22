@@ -961,7 +961,7 @@ test("session banner dismissal is durable across re-renders; cleared only by ava
   assert.ok(body !== null);
   assert.equal(body.anchorTurnId, "b2a1", "recovery branches from branch-2's latest answer");
   assert.equal(banner.hidden, false, "choosing the recovery action clears the dismissal — the banner reflects current facts again");
-  assert.equal(world.el("panel-title").textContent, "Branch 3", "the recovered branch's panel is open");
+  assert.equal(world.el("panel-title").textContent, "Branch two answer.", "the recovered branch's panel is open (titled by the anchor answer)");
 });
 
 /* ------------------------------------------------------------------ */

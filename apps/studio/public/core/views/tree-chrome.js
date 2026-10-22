@@ -55,10 +55,15 @@ export function createTreeChromeView(deps) {
       if (isTrunk) button.classList.add("active");
       else if (view.branch.id === deps.state.panelBranchId) button.classList.add("panel-open");
       const label = deps.document.createElement("span");
-      label.textContent = isTrunk ? "思考主线 · Trunk" : deps.branchLabel(view.branch.id);
+      /* 阅读位给意义名（D1）：主线恒为「思考主线」，支线以首个问题/
+         锚定摘录为名；机械序号（branchLabel）收进 title 等身份语境。 */
+      label.textContent = isTrunk ? "思考主线" : deps.branchDisplayName(view.branch.id);
       button.append(label);
       const summary = deps.questionTitle(view) || view.origin?.selection.text || "";
-      if (summary) {
+      /* 摘要行只在与主行不同源时补充（同名重复是噪音，不是信息）；
+         比较前折叠空白——主行名字已折叠，原文里的换行不应造成伪差异。 */
+      const collapseWs = (text) => text.replace(/\s+/g, " ").trim();
+      if (summary && collapseWs(summary) !== label.textContent) {
         const excerpt = deps.document.createElement("span");
         excerpt.className = "branch-summary";
         excerpt.textContent = summary;
@@ -116,9 +121,11 @@ export function createTreeChromeView(deps) {
   }
 
 
-  /* 顶栏位置路径（源设计 §二 顶栏行）：无树 → 空；有树 → `<treeId> / Trunk`；
-     支线面板打开 → 追加当前支线标签。树名与列表一致用 tree.id；路径由
-     renderAll 统一刷新（面板开合、切树、SSE 终态重渲都经过 renderAll）。 */
+  /* 顶栏位置路径（源设计 §二 顶栏行；D1 意义命名层）：无树 → 空；有树 →
+     `<树名> / 思考主线 [ / 支线名 ]`——阅读位一律给意义名（树名与森林
+     列表同源 = readingTitles，无标题树回退 id）；完整身份路径（树 id +
+     机械分支名）收进 tooltip，可溯源不上岗。路径由 renderAll 统一刷新
+     （面板开合、切树、SSE 终态重渲都经过 renderAll）。 */
   function renderTopbarPath() {
     const el = deps.$("topbar-path");
     const st = deps.state.treeState;
@@ -127,10 +134,15 @@ export function createTreeChromeView(deps) {
       el.title = "";
       return;
     }
-    const segments = [deps.state.currentTreeId, deps.branchLabel(st.trunkBranchId)];
-    if (deps.state.panelBranchId !== null) segments.push(deps.branchLabel(deps.state.panelBranchId));
+    const treeName = deps.readingTitles.get(deps.state.currentTreeId) ?? deps.state.currentTreeId;
+    const segments = [treeName, "思考主线"];
+    const identity = [deps.state.currentTreeId, deps.branchLabel(st.trunkBranchId)];
+    if (deps.state.panelBranchId !== null) {
+      segments.push(deps.branchDisplayName(deps.state.panelBranchId));
+      identity.push(deps.branchLabel(deps.state.panelBranchId));
+    }
     el.textContent = segments.join(" / ");
-    el.title = el.textContent;
+    el.title = identity.join(" / ");
   }
 
 

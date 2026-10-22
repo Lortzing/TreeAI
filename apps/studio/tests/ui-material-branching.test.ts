@@ -1809,7 +1809,7 @@ test("first question: submitting posts material-first-question with the same int
   assert.match(conversation, /\[exploration from material v-md01-1\]/, "the audited turn prefix is rendered");
   assert.match(conversation, /这段材料里的递归终止条件是什么？/);
   assert.match(conversation, /（echo 回答）/);
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, "这段材料里的递归终止条件是什么？", "the panel is titled by the exploration's first question (scope tag stripped)");
 
   /* 面板头部：材料来源上下文（缓存自建枝响应）。 */
   const anchor = world.el("panel-anchor-context").textContent!;
@@ -1912,7 +1912,7 @@ test("resume-or-create hits an existing exploration: the honest choice — open 
   await settle(25);
   await sleep(200);
   assert.equal(world.el("branch-panel").hidden, false);
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, "既有探索的首问", "the panel is titled by the existing exploration's first question");
   const conversation = world.el("panel-conversation").textContent!;
   assert.match(conversation, /既有探索的首问/, "the existing branch's saved history is readable in the panel");
   assert.match(conversation, /既有探索的首个回答/);
