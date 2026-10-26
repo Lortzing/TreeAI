@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
 // @ts-expect-error Native browser runner modules have no declaration files.
 import { createBrowserProjections } from '../../scripts/d3/browser-projections.mjs';
+// @ts-expect-error Native browser runner modules have no declaration files.
+import { readConversationRounds } from '../../scripts/d4/browser/reading-rounds.mjs';
 function fixture() {
  const state={round:1,tree:'tree-one',selected:false,clicks:0,pages:[['u1','a1'],['u2','a2']]};
  const body={};
@@ -15,7 +17,7 @@ function fixture() {
   'conversation':{scrollTop:23},'branch-panel':{hidden:true},'run-status':{textContent:'idle'},'tree-list':{children:[branch]},
  };
  const document={body,activeElement:body,readyState:'complete',getElementById:(id:string)=>elements[id]??null,
-  querySelector:(selector:string)=>selector==='#tree-list button.active'?{dataset:{treeId:state.tree}}:null,
+  querySelector:(selector:string)=>selector==='#tree-list button.active'?{dataset:{treeId:state.tree}}:selector==='#conversation'?elements['conversation']:null,
   querySelectorAll:(selector:string)=>{
    if(selector==='#branch-tabs button')return [branch];
    if(selector.includes('#conversation .turn')) {
@@ -26,11 +28,12 @@ function fixture() {
    }
    return [];
   }};
+ Object.assign(elements['conversation'] as object, {querySelectorAll:(selector:string)=>document.querySelectorAll('#conversation '+selector)});
  const context={setTimeout,document,location:{pathname:'/'},window:{getSelection:()=>({toString:()=>state.selected?'selection':''})},getComputedStyle:()=>({display:'block'}),requestAnimationFrame:(callback:()=>void)=>callback()};
  const evalJs=async(expression:string)=>runInNewContext(expression,context);
  const projections=createBrowserProjections({evalJs,assert:(ok:unknown,message:string)=>assert.ok(ok,message)}) as {pageSummaryExpression():string;assistantTurnSelector(container:string,index:number):Promise<string>};
  const summary=async()=>JSON.parse(JSON.stringify(await evalJs(projections.pageSummaryExpression()))) as {conversation:{turns:{turnId:string}[];roundCount:number}};
- return {state,summary,projections};
+ return {state,summary,projections,ctx:{evalJs}};
 }
 test('round probe reads all actual pages in order and restores the selected page',async()=>{
  const f=fixture(); const snapshot=await f.summary();
@@ -50,4 +53,11 @@ test('round probe keeps a native selection intact, refreshes appended pages and 
 test('round probe handles a fresh empty conversation without stale or out-of-scope counters',async()=>{
  const f=fixture(); f.state.pages=[]; f.state.round=0;
  const snapshot=await f.summary(); assert.equal(snapshot.conversation.turns.length,0); assert.equal(snapshot.conversation.roundCount,0);
+});
+test('D4 restart history reads every rendered round and restores the reader without substituting API data',async()=>{
+ const f=fixture();
+ const history=await readConversationRounds(f.ctx,'#conversation');
+ assert.equal(history.text,'u1\na1\nu2\na2');assert.equal(history.pages,2);assert.equal(f.state.round,1);
+ assert.deepEqual(Array.from(history.turnIds),['u1','a1','u2','a2']);
+ f.state.pages=[];f.state.round=0;assert.equal((await readConversationRounds(f.ctx,'#conversation')).text,'');
 });

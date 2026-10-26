@@ -127,7 +127,13 @@ export async function runBetaKeyboard(deps) {
         const recordEscape = async (label, open, closedExpr, verifyFocusExpr, focusTargetLabel) => {
           await open();
           await deps.pressKey(deps.ctx, "Escape", "Escape", 27);
-          await waitFor(deps.ctx, closedExpr, { label: `keyboard: Escape closed the ${label}`, timeoutMs: 10_000 });
+          try {
+            await waitFor(deps.ctx, closedExpr, { label: `keyboard: Escape closed the ${label}`, timeoutMs: 10_000 });
+          } catch (error) {
+            await deps.ctx.screenshot(`beta-keyboard-escape-${label.replaceAll(' ', '-')}`);
+            const context = await deps.ctx.evalJs(`(() => ({ active: document.activeElement?.id, mode: document.getElementById('main')?.dataset.workspaceView, readerHidden: document.getElementById('material-reader')?.hidden, drawerHidden: document.getElementById('source-drawer')?.hidden, flowHidden: document.getElementById('mat-branch-flow')?.hidden, dialogOpen: document.getElementById('api-settings-dialog')?.open }))()`);
+            throw new Error(`${error instanceof Error ? error.message : String(error)}; context ${JSON.stringify(context)}`);
+          }
           const focusState = await deps.ctx.evalJs(
             `(() => { const a = document.activeElement; ` +
               `return { summary: a === null || a === document.body ? null : { id: a.id === "" ? null : a.id, tag: a.tagName, cls: String(a.className).slice(0, 50) }, ` +
