@@ -437,6 +437,8 @@ export function registerApiSettings({ document, fetch }) {
   listen(closeButton, 'click', closeDialog);
   listen(dialog, 'close', abortRequest);
   listen(dialog, 'cancel', abortRequest);
+  // Modal keyboard input must not trigger conversation paging or Escape layers behind it.
+  listen(dialog, 'keydown', (event) => event.stopPropagation());
   listen(form, 'submit', saveSettings);
   listen(addProviderButton, 'click', addProvider);
   listen(addModelButton, 'click', addModel);
