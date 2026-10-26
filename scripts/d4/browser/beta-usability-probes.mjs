@@ -5,6 +5,7 @@ import { runBetaTouch } from "./beta/touch.mjs";
 import { runBetaReducedMotion } from "./beta/reduced-motion.mjs";
 import { runBetaKeyboard } from "./beta/keyboard.mjs";
 import { runBetaFocusDrafts } from "./beta/focus-drafts.mjs";
+import { exposeInputTarget } from "./material/input.mjs";
 /**
  * scripts/d4/browser/beta-usability-probes.mjs — D4 B7 自动部分浏览器探针
  * （issue #8 charter §6 B7「Beta 可用性」的 run:d4-browser 面）。
@@ -146,6 +147,7 @@ async function pressKey(ctx, key, code, vk, { modifiers = 0, text = undefined } 
 
 /** 命中探测：元素中心 elementFromPoint 是否落在元素（或其子元素）内。 */
 async function hitTest(ctx, selector) {
+  await exposeInputTarget(ctx, selector);
   const state = await ctx.evalJs(
     `(() => { const el = document.querySelector(${JSON.stringify(selector)}); ` +
       `if (el === null) return { missing: true }; ` +
@@ -287,11 +289,14 @@ async function touchDragSelect(ctx, placementExpr) {
   // selection: it must be created *during* touch, not before touchStart.
   // Otherwise Chrome can clear it on touchEnd before selectionchange arms
   // the reader, which does not model a user dragging text on a touch screen.
-  const point = await ctx.evalJs(placementExpr);
+  let point = await ctx.evalJs(placementExpr);
   if (point === null || point.error !== undefined) {
     throw new Error(`touch-drag selection could not be placed — ${JSON.stringify(point)}`);
   }
-  await ctx.evalJs(`(() => { window.getSelection().removeAllRanges(); return true; })()`);
+  await ctx.evalJs(`(() => { const selection = window.getSelection(); window.__betaTouchRange = selection.getRangeAt(0).cloneRange(); selection.removeAllRanges(); return true; })()`);
+  await sleep(120);
+  point = await ctx.evalJs(`(() => { const range = window.__betaTouchRange.cloneRange(); const start = range.startContainer; start.parentElement?.scrollIntoView({block:'center',inline:'center'}); if (start.nodeType === Node.TEXT_NODE && range.startOffset < start.textContent.length) range.setEnd(start, range.startOffset + 1); const rect = range.getClientRects()[0] ?? range.getBoundingClientRect(); const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2; const hit = document.elementFromPoint(x, y); return { x, y, inReader: !!hit?.closest('#mat-blocks'), hit: hit?.id || hit?.className || null }; })()`);
+  if (point.inReader !== true) throw new Error(`touch-drag target moved outside the material text after clearing the initial selection: ${JSON.stringify(point)}`);
   await ctx.cdpSend("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: point.x, y: point.y, id: 1 }] });
   await sleep(60);
   const placed = await ctx.evalJs(placementExpr);

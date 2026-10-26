@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { sendJson } from "./responses.ts";
 
 const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
+  "/core/controllers/api-settings.js": { file: "core/controllers/api-settings.js", type: "text/javascript; charset=utf-8" },
   "/": { file: "index.html", type: "text/html; charset=utf-8" },
   "/index.html": { file: "index.html", type: "text/html; charset=utf-8" },
   "/app.js": { file: "app.js", type: "text/javascript; charset=utf-8" },
@@ -66,7 +67,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
-const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css"]);
+const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css"]);
 const PDFJS_ROOT = new URL("../../../../node_modules/pdfjs-dist/", import.meta.url);
 
 export function createStaticResponder(staticDir: string) {

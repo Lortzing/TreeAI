@@ -125,9 +125,24 @@ export function createStudioBasics(deps) {
   }
 
 
+  let indexedBranches = null;
+  const indexedViews = new Map();
+  const indexedOrdinals = new Map();
+  function indexBranches() {
+    const branches = deps.state.treeState?.branches ?? null;
+    if (branches === indexedBranches && indexedViews.size === (branches?.length ?? 0)) return;
+    indexedBranches = branches;
+    indexedViews.clear();
+    indexedOrdinals.clear();
+    for (const [index, view] of (branches ?? []).entries()) {
+      indexedViews.set(view.branch.id, view);
+      indexedOrdinals.set(view.branch.id, index);
+    }
+  }
   function branchView(branchId) {
     if (deps.state.treeState === null || branchId === null) return null;
-    return deps.state.treeState.branches.find((view) => view.branch.id === branchId) ?? null;
+    indexBranches();
+    return indexedViews.get(branchId) ?? null;
   }
 
 
@@ -151,7 +166,8 @@ export function createStudioBasics(deps) {
     const st = deps.state.treeState;
     if (st === null) return branchId;
     if (branchId === st.trunkBranchId) return "Trunk";
-    const index = st.branches.findIndex((view) => view.branch.id === branchId);
+    indexBranches();
+    const index = indexedOrdinals.get(branchId) ?? -1;
     return `Branch ${index}`;
   }
 
@@ -163,8 +179,8 @@ export function createStudioBasics(deps) {
     const st = deps.state.treeState;
     if (st === null) return branchId;
     if (branchId === st.trunkBranchId) return "思考主线";
-    const view = st.branches.find((candidate) => candidate.branch.id === branchId);
-    if (view === undefined) return branchLabel(branchId);
+    const view = branchView(branchId);
+    if (view === null) return branchLabel(branchId);
     const collapse = (text) => (text ?? "").replace(/\s+/g, " ").trim();
     const firstQuestion = view.turns.find((turn) => turn.role === "user");
     /* 材料建枝的首问是组合载荷（`[exploration from material vX] 问题`）：

@@ -63,6 +63,8 @@ import {
   type PiToolWiring,
 } from "./cli.ts";
 import { EchoSdkPort } from "./echo-port.ts";
+import { loadApiConfig, prepareApiConfig } from "./api-config.ts";
+import { ApiSettingsService, readSavedApiSettings } from "./api-settings.ts";
 import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
 import { MaterialImportService } from "./materials/import-service.ts";
@@ -71,11 +73,13 @@ import { NavService } from "./nav/nav-service.ts";
 import { exportPackage, PortabilityError, restorePackage, SESSIONS_SENSITIVE_MARKER } from "./portability/index.ts";
 import { createStudioServer } from "./server.ts";
 
-let piApiKeyValueGuard: string | null = null;
+let piSecretGuards: readonly string[] = [];
 
 function scrubSecret(text: string): string {
-  if (piApiKeyValueGuard === null || piApiKeyValueGuard.length < 8) return text;
-  return text.split(piApiKeyValueGuard).join("[REDACTED]");
+  for (const value of piSecretGuards) {
+    if (value.length > 0) text = text.split(value).join("[REDACTED]");
+  }
+  return text;
 }
 
 /** --policy-read-roots 生效根的存在性探针（目录；缺失/非目录 → false）。 */
@@ -107,7 +111,17 @@ async function loadPiToolPolicy(wiring: PiToolWiring, workspace: string): Promis
 }
 
 async function main(): Promise<void> {
-  const options = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  let options = parseArgs(argv);
+  const savedSettings = options.mode === "server" && !argv.includes("--api-config") && !argv.includes("--agent-dir") && !(argv.includes("--driver") && options.driver === "echo")
+    ? readSavedApiSettings(options.dataDir) : null;
+  if (savedSettings !== null) {
+    const providerId = argv.includes("--provider") ? options.providerId : savedSettings.selection.providerId;
+    const modelId = argv.includes("--model") ? options.modelId : savedSettings.selection.modelId;
+    options = { ...options, driver: "pi", providerId, modelId,
+      terminologyProviderId: argv.includes("--terminology-provider") ? options.terminologyProviderId : providerId,
+      terminologyModelId: argv.includes("--terminology-model") ? options.terminologyModelId : modelId };
+  }
 
   /* -------- D4-5 数据可携带：export / --import-package 模式（issue #8
      契约 §5——CLI 而非 HTTP）。先于一切目录创建执行：恢复目标必须是空
@@ -190,10 +204,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  const piSetup: PiDriverWiring | null =
-    options.driver === "pi" ? resolvePiDriverWiring(options, process.env) : null;
+  const apiConfig = options.apiConfigPath === null ? savedSettings?.config ?? null : loadApiConfig(options.apiConfigPath);
+  const apiSetup = apiConfig === null ? null : prepareApiConfig(apiConfig, options, process.env);
+  const piSetup: PiDriverWiring | null = apiSetup ??
+    (options.driver === "pi" ? resolvePiDriverWiring(options, process.env) : null);
   if (piSetup !== null) {
-    piApiKeyValueGuard = piSetup.credentials.apiKey;
+    piSecretGuards = apiSetup?.secrets ?? [piSetup.credentials.apiKey];
     try {
       mkdirSync(piSetup.agentDir, { recursive: true });
     } catch (err) {
@@ -328,7 +344,9 @@ async function main(): Promise<void> {
   const nav = new NavService({ repository, materialRepository });
 
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
-  const studio = createStudioServer({ service, staticDir, terminology, materials, search, nav });
+  const apiSettings = new ApiSettingsService({ dataDir: options.dataDir, env: process.env,
+    initial: apiConfig === null ? null : { config: apiConfig, selection: { providerId: options.providerId, modelId: options.modelId } } });
+  const studio = createStudioServer({ service, staticDir, terminology, materials, search, nav, apiSettings });
   const port = await studio.listen(options.port);
 
   const banner = [
@@ -339,7 +357,9 @@ async function main(): Promise<void> {
   ];
   if (piSetup !== null) {
     banner.push(`treeai-studio: pi agent-dir=${piSetup.agentDir} (controlled; ~/.pi is not used)`);
-    banner.push(`treeai-studio: pi api key=${PI_API_KEY_ENV} env, in-memory only (value never logged)`);
+    banner.push(apiSetup === null
+      ? `treeai-studio: pi api key=${PI_API_KEY_ENV} env, in-memory only (value never logged)`
+      : "treeai-studio: API profiles active; credentials from configured environment variables, in-memory only");
   }
   if (toolWiring !== null) {
     // 工具集与策略根是本地配置（与 data/agent-dir 同级可见性），经既有

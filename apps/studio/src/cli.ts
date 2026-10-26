@@ -39,6 +39,7 @@ export const PI_API_KEY_ENV = "TREEAI_STUDIO_API_KEY";
 export const DEFAULT_PI_AGENT_DIR_NAME = "pi-agent";
 
 export interface CliOptions {
+  readonly apiConfigPath: string | null;
   readonly port: number;
   readonly dataDir: string;
   readonly driver: "echo" | "pi";
@@ -92,6 +93,7 @@ export interface CliOptions {
 const USAGE =
   "usage: node src/index.ts [--port N] [--data DIR] [--driver echo|pi] " +
   "[--provider ID] [--model ID] [--agent-dir DIR] " +
+  "[--api-config FILE] " +
   "[--pi-tools TOOL,TOOL] [--policy-read-roots DIR,DIR] " +
   "[--terminology-provider ID] [--terminology-model ID] [--terminology-budget N] " +
   "[--import-package DIR]\n" +
@@ -115,6 +117,7 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     providerId?: string;
     modelId?: string;
     agentDir?: string;
+    apiConfigPath?: string;
     piTools?: string;
     policyReadRoots?: string;
     terminologyProvider?: string;
@@ -143,6 +146,7 @@ export function parseArgs(argv: readonly string[]): CliOptions {
     else if (flag === "--provider") options.providerId = value;
     else if (flag === "--model") options.modelId = value;
     else if (flag === "--agent-dir") options.agentDir = value;
+    else if (flag === "--api-config") options.apiConfigPath = value;
     else if (flag === "--pi-tools") options.piTools = value;
     else if (flag === "--policy-read-roots") options.policyReadRoots = value;
     else if (flag === "--terminology-provider") options.terminologyProvider = value;
@@ -193,6 +197,11 @@ export function parseArgs(argv: readonly string[]): CliOptions {
   if (options.agentDir !== undefined && options.agentDir.trim() === "") {
     throw new Error("--agent-dir must be a non-empty directory path");
   }
+  if (options.apiConfigPath !== undefined) {
+    if (driver !== "pi" || mode !== "server") throw new Error("--api-config requires --driver pi in server mode");
+    if (options.apiConfigPath.trim() === "") throw new Error("--api-config requires a file path");
+    if (options.agentDir !== undefined) throw new Error("--api-config owns its controlled agent directory; omit --agent-dir");
+  }
   const piTools = parseList(options.piTools);
   const policyReadRoots = parseList(options.policyReadRoots);
   if (piTools !== null && driver !== "pi") {
@@ -238,6 +247,7 @@ export function parseArgs(argv: readonly string[]): CliOptions {
   }
   const dataDir = resolve(options.dataDir ?? "./treeai-studio-data");
   return {
+    apiConfigPath: options.apiConfigPath === undefined ? null : resolve(options.apiConfigPath),
     port: options.port ?? 8787,
     dataDir,
     driver,

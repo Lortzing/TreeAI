@@ -36,6 +36,23 @@ export function createBrowserInput(deps) {
 
   /** 元素滚入视口并返回其视口坐标矩形（点击/拖选的落点基础）。 */
   async function rectInView(selector) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const reveal = await evalJs(`(() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (!el) return null;
+        for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+          if (parent.tagName !== 'DETAILS' || parent.open) continue;
+          const summary = parent.querySelector(':scope > summary');
+          if (!summary || summary.contains(el)) continue;
+          const parts = []; let node = summary;
+          while (node && !node.id) { parts.unshift(node.tagName.toLowerCase() + ':nth-child(' + ([...node.parentElement.children].indexOf(node) + 1) + ')'); node = node.parentElement; }
+          return (node?.id ? '#' + CSS.escape(node.id) + ' > ' : '') + parts.join(' > ');
+        }
+        return null;
+      })()`);
+      if (reveal === null) break;
+      await click(reveal);
+    }
     await evalJs(
       `(() => { const el = document.querySelector(${JSON.stringify(selector)}); ` +
         "if (el !== null && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'center' }); })()",

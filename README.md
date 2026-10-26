@@ -30,7 +30,17 @@ Saved product facts are in TreeAI storage; Pi sessions provide model continuatio
 
 ## Real Pi (optional)
 
-Supply an approved provider/model and a controlled agent directory. Provide the key via `TREEAI_STUDIO_API_KEY` in the environment, never in flags, code, screenshots or issues.
+For configurable API-key providers, use `--api-config FILE` with `--provider` and
+`--model`. See [API connection profiles](docs/development/api-connections.md)
+for Anthropic Messages, OpenAI Chat Completions/Responses, Gemini and local
+API proxies. This path does not import subscription/token-plan login state.
+The **API 设置** button manages these profiles in Studio, tests a real request,
+and saves the selection for the next startup. Keys are supplied through named
+environment variables; they are never saved in the browser or profile file.
+
+For an existing controlled Pi agent directory, supply its provider/model and
+provide the key via `TREEAI_STUDIO_API_KEY` in the environment, never in flags,
+code, screenshots or issues.
 
 ```sh
 npm run start --workspace @treeai/studio -- \

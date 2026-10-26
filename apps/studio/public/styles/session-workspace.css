@@ -201,6 +201,7 @@
 #composer { width: min(calc(100% - 152px), 888px); margin: 6px auto 0; border-radius: 6px; background: var(--surface); box-shadow: 0 4px 18px #25382005; }
 #branch-panel { width: 100%; max-width: 100%; border: 0; box-shadow: none; background: var(--room); z-index: 20; }
 #reading-area:has(#branch-panel:not([hidden])) #main-pane { visibility: hidden; }
+#reading-area:has(#branch-panel:not([hidden])) #main-pane:has(#material-reader:not([hidden])) { visibility: visible; position: relative; z-index: 21; }
 #panel-header { background: transparent; border: 0; width: min(calc(100% - 152px), 888px); margin: 0 auto; padding: 82px 0 15px; flex-shrink: 0; }
 #panel-title { font-size: 26px; margin: 9px 0 12px; }
 #panel-anchor-context { background: #e5eadd; max-width: 100%; -webkit-line-clamp: 3; }

@@ -567,6 +567,8 @@ button.drawer-toggle:hover { background: var(--surface-dim); border-color: var(-
 
 /* P1 失败面板：持久（不自动消失）直到手动关闭。 */
 #failure-panel {
+  position: relative;
+  z-index: 25;
   display: flex;
   align-items: center;
   gap: 10px;

@@ -13,7 +13,7 @@ import {
 export function activeTreeIdInUiExpr() {
   return `(() => { const row = document.querySelector("#tree-list button.active"); ` +
     `if (row === null) return null; const name = row.querySelector("span"); ` +
-    `return name === null ? null : name.textContent; })()`;
+    `return row.dataset.treeId ?? null; })()`;
 }
 
 export async function switchTreeInUi(ctx, treeId) {
@@ -21,14 +21,14 @@ export async function switchTreeInUi(ctx, treeId) {
   if (active === treeId) return;
   const index = await ctx.evalJs(
     `(() => { const rows = [...document.querySelectorAll("#tree-list button")]; ` +
-      `return rows.findIndex((b) => (b.querySelector("span") === null ? "" : b.querySelector("span").textContent) === ${JSON.stringify(treeId)}); })()`,
+      `return rows.findIndex((b) => b.dataset.treeId === ${JSON.stringify(treeId)}); })()`,
   );
   if (index === null || index < 0) throw new Error(`tree ${treeId} not present in the sidebar tree list`);
   await inputClickAt(ctx, `#tree-list li:nth-child(${String(index + 1)}) button`);
   await waitFor(
     ctx,
     `(() => { const row = document.querySelector("#tree-list button.active"); ` +
-      `return row !== null && (row.querySelector("span") === null ? "" : row.querySelector("span").textContent) === ${JSON.stringify(treeId)}; })()`,
+      `return row !== null && row.dataset.treeId === ${JSON.stringify(treeId)}; })()`,
     { label: `tree ${treeId} active in the sidebar` },
   );
 }

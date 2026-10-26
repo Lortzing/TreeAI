@@ -1,0 +1,13 @@
+#api-settings-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow: auto; padding: 24px; border: 1px solid var(--line, #d7dbd2); border-radius: 16px; background: var(--paper, #faf9f4); color: var(--ink, #243b30); box-shadow: 0 20px 70px #14251d33; }
+#api-settings-dialog::backdrop { background: #18271f66; }
+.api-settings-heading, .api-settings-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.api-settings-heading h2 { margin: 0; }
+.api-settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+.api-settings-grid label { display: flex; flex-direction: column; gap: 5px; }
+.api-settings-grid label:nth-of-type(n+3) { grid-column: 1 / -1; }
+#api-settings-dialog input, #api-settings-dialog select, #api-config-json { width: 100%; min-width: 0; box-sizing: border-box; padding: 9px; border: 1px solid var(--line, #d7dbd2); border-radius: 6px; background: #fff; color: inherit; font: inherit; }
+#api-config-json { display: block; margin: 10px 0; font: 12px/1.5 ui-monospace, monospace; }
+#api-settings-status { min-height: 1.5em; overflow-wrap: anywhere; }
+#api-env-status, #api-settings-dialog > form > p { font-size: 13px; line-height: 1.6; }
+#api-settings-dialog button { min-height: 40px; }
+@media (max-width: 520px) { #api-settings-dialog { padding: 16px; } .api-settings-grid { grid-template-columns: minmax(0, 1fr); } .api-settings-grid label:nth-of-type(n+3) { grid-column: auto; } }

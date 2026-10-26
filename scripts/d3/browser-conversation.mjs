@@ -52,11 +52,13 @@ export function createBrowserConversation(deps) {
         "selectionText: String(window.getSelection()) }; })()",
       );
       deps.assert(state.hasSelection === true, "assistant turn did not enter .has-selection state after real drag selection");
-      deps.assert(state.buttonText === "⑃ Branch from selection", `branch button text is ${String(state.buttonText)}`);
+      deps.assert(state.buttonText === "⑃ 从选文展开支线", `branch button text is ${String(state.buttonText)}`);
       deps.assert(state.selectionText.length > 0, "native selection is empty after drag");
       deps.sc.branchAAnswerExcerpt = state.selectionText;
+      deps.sc.branchAAnchorTurnId = await deps.evalJs(`document.querySelector(${JSON.stringify(selector)})?.dataset.turnId ?? null`);
+      deps.assert(deps.sc.branchAAnchorTurnId !== null, "the first selection has no turn identity");
       await deps.snap("selection-anchoring");
-      return { selector, detail: `real mouse drag produced a native selection (「${deps.truncate(state.selectionText, 40)}」); affordance switched to Branch from selection` };
+      return { selector, detail: `real mouse drag produced a native selection (「${deps.truncate(state.selectionText, 40)}」); affordance switched to ⑃ 从选文展开支线` };
     });
     const firstAnswer = firstAnswerSelector?.selector ?? "#conversation .turn.assistant";
 
@@ -64,12 +66,20 @@ export function createBrowserConversation(deps) {
       await deps.click(`${firstAnswer} .branch-here`);
       await deps.waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, "branch panel open");
       const summary = await deps.snap("branch-a-create");
-      deps.assert(summary.panel.title === "Branch 1", `panel title is ${String(summary.panel.title)} (expected "Branch 1")`);
+      const stateRes = await deps.api("GET", `/api/trees/${encodeURIComponent(deps.sc.treeId)}/state`);
+      deps.assert(stateRes.status === 200, `state fetch ${String(stateRes.status)}`);
+      const anchored = (stateRes.body?.branches ?? []).filter((view) => view.origin?.anchorTurnId === deps.sc.branchAAnchorTurnId);
+      deps.assert(anchored.length === 1, `expected one branch from answer ${String(deps.sc.branchAAnchorTurnId)}, found ${String(anchored.length)}`);
+      deps.assert(anchored[0].origin.sourceBranchId === stateRes.body.trunkBranchId, "branch A origin is not the trunk answer selected in the browser");
+      deps.assert(summary.panel.branchId === anchored[0].branch.id, `panel branch ${String(summary.panel.branchId)} does not match API origin branch ${String(anchored[0].branch.id)}`);
+      const tab = summary.branchTabs.find((item) => item.branchId === anchored[0].branch.id);
+      deps.assert(tab !== undefined && summary.panel.title.length > 0 && tab.text.startsWith(summary.panel.title),
+        `branch A title/tab do not identify API branch ${String(anchored[0].branch.id)}: ${JSON.stringify({ title: summary.panel.title, tab })}`);
       const anchorCtx = summary.panel.anchorContext ?? "";
       deps.assert(anchorCtx.includes(deps.truncate(deps.sc.branchAAnswerExcerpt, 20)) || anchorCtx.includes(deps.sc.branchAAnswerExcerpt.slice(0, 12)),
         `anchor context does not carry the selected excerpt: ${deps.truncate(anchorCtx, 120)}`);
-      deps.assert(summary.branchTabs.some((t) => t.text.includes("Branch 1")), `branch tab missing: ${JSON.stringify(summary.branchTabs)}`);
-      return { detail: `branch A created from the real selection; panel open with anchor excerpt; title "${String(summary.panel.title)}"` };
+      deps.sc.branchAId = anchored[0].branch.id;
+      return { detail: `branch A created from the real selection; panel open with anchor excerpt; title "${String(summary.panel.title)}" identifies the API-verified branch` };
     });
 
     await deps.runCheck("branch-a-followups", async () => {
@@ -91,12 +101,9 @@ export function createBrowserConversation(deps) {
       deps.assert(summary.conversation.turns.length === deps.sc.trunkTurnCount,
         `trunk conversation changed after branch work: ${String(summary.conversation.turns.length)} turns (expected ${String(deps.sc.trunkTurnCount)})`);
       /* 主线 → 支线 A（branch tab），支线内容完整且与主线不串。 */
-      const tabSelector = await deps.evalJs(
-        `(() => { const buttons = [...document.querySelectorAll('#branch-tabs button')]; ` +
-        "const tab = buttons.find((b) => b.textContent.includes('Branch 1')); " +
-        "return tab === undefined ? null : '#branch-tabs button:nth-of-type(' + String(buttons.indexOf(tab) + 1) + ')'; })()",
-      );
-      deps.assert(tabSelector !== null, "Branch 1 tab not found");
+      const tabSelector = `#branch-tabs button[data-branch-id="${deps.sc.branchAId}"]`;
+      const tabExists = await deps.evalJs(`document.querySelector(${JSON.stringify(tabSelector)}) !== null`);
+      deps.assert(tabExists === true, `branch tab for ${String(deps.sc.branchAId)} not found`);
       await deps.click(tabSelector);
       await deps.waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, "branch panel reopened");
       summary = await deps.evalJs(deps.pageSummaryExpression());
@@ -111,6 +118,8 @@ export function createBrowserConversation(deps) {
       await deps.waitForJs("document.getElementById('branch-panel') === null || document.getElementById('branch-panel').hidden", 10_000, "panel closed before branch B");
       /* 第二个锚点：主干第 2 轮答案的不同子区间（.turn.assistant 序号 1）。 */
       const secondAnswer = await deps.assistantTurnSelector("#conversation", 1);
+      deps.sc.branchBAnchorTurnId = await deps.evalJs(`document.querySelector(${JSON.stringify(secondAnswer)})?.dataset.turnId ?? null`);
+      deps.assert(deps.sc.branchBAnchorTurnId !== null, "the second selection has no turn identity");
       await deps.dragSelect(secondAnswer, deps.SELECT_B.from, deps.SELECT_B.to);
       const state = await deps.evalJs(
         `(() => { const el = document.querySelector(${JSON.stringify(secondAnswer)}); ` +
@@ -122,8 +131,17 @@ export function createBrowserConversation(deps) {
       await deps.click(`${secondAnswer} .branch-here`);
       await deps.waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, "branch B panel open");
       const summary = await deps.snap("branch-b-create");
-      deps.assert(summary.panel.title === "Branch 2", `panel title is ${String(summary.panel.title)} (expected "Branch 2")`);
-      return { detail: `branch B from a different anchor on the second trunk answer (「${deps.truncate(state.selectionText, 30)}」)` };
+      const stateRes = await deps.api("GET", `/api/trees/${encodeURIComponent(deps.sc.treeId)}/state`);
+      deps.assert(stateRes.status === 200, `state fetch ${String(stateRes.status)}`);
+      const anchored = (stateRes.body?.branches ?? []).filter((view) => view.origin?.anchorTurnId === deps.sc.branchBAnchorTurnId);
+      deps.assert(anchored.length === 1, `expected one branch from answer ${String(deps.sc.branchBAnchorTurnId)}, found ${String(anchored.length)}`);
+      deps.assert(anchored[0].origin.sourceBranchId === stateRes.body.trunkBranchId, "branch B origin is not the trunk answer selected in the browser");
+      deps.assert(summary.panel.branchId === anchored[0].branch.id, `panel branch ${String(summary.panel.branchId)} does not match API origin branch ${String(anchored[0].branch.id)}`);
+      const tab = summary.branchTabs.find((item) => item.branchId === anchored[0].branch.id);
+      deps.assert(tab !== undefined && summary.panel.title.length > 0 && tab.text.startsWith(summary.panel.title),
+        `branch B title/tab do not identify API branch ${String(anchored[0].branch.id)}: ${JSON.stringify({ title: summary.panel.title, tab })}`);
+      deps.sc.branchBId = anchored[0].branch.id;
+      return { detail: `branch B from a different anchor on the second trunk answer (「${deps.truncate(state.selectionText, 30)}」); panel identity matches the API origin` };
     });
 
     await deps.runCheck("branch-b-followups", async () => {
@@ -156,20 +174,16 @@ export function createBrowserConversation(deps) {
         deps.assert(!bPath.includes("cedar"), "branch B session path leaked branch A codeword cedar");
       }
       /* 切回支线 A：A 只见 cedar + 主干词，绝不见 birch。 */
-      const tabSelector = await deps.evalJs(
-        `(() => { const buttons = [...document.querySelectorAll('#branch-tabs button')]; ` +
-          "const tab = buttons.find((b) => b.textContent.includes('Branch 1')); " +
-          "return tab === undefined ? null : '#branch-tabs button:nth-of-type(' + String(buttons.indexOf(tab) + 1) + ')'; })()",
-      );
+      const tabSelector = `#branch-tabs button[data-branch-id="${deps.sc.branchAId}"]`;
       await deps.click(tabSelector);
-      /* 面板可见 ≠ 面板已切换（上一支线面板本就开着）——以标题证实真的
-         切到了 Branch 1；否则下方文本断言会误读上一支线的内容。 */
       await deps.waitForJs(
-        "(() => { const p = document.getElementById('branch-panel'); const t = document.getElementById('panel-title'); " +
-          "return p !== null && !p.hidden && t !== null && t.textContent.includes('Branch 1'); })()",
+        `(() => { const p = document.getElementById('branch-panel'); const tab = document.querySelector(${JSON.stringify(tabSelector)}); ` +
+          "return p !== null && !p.hidden && tab !== null && tab.classList.contains('panel-open'); })()",
         10_000,
-        "branch A panel actually switched (panel title shows Branch 1)",
+        "branch A panel actually switched by branch identity",
       );
+      const switchedSummary = await deps.evalJs(deps.pageSummaryExpression());
+      deps.assert(switchedSummary.panel.branchId === deps.sc.branchAId, "branch A panel identity differs from the selected branch tab");
       const aText = (await deps.evalJs("document.getElementById('panel-conversation').textContent")).trim();
       deps.assert(aText.includes("cedar"), "branch A panel does not show its own codeword cedar");
       deps.assert(!aText.includes("birch"), "branch A panel leaked branch B codeword birch");
@@ -205,13 +219,16 @@ export function createBrowserConversation(deps) {
       /* 源支线显式断言：A3 场景的 Return 必须发自支线 A——面板若停在其他
          支线（切换被吞等），Return 的锚点/来源会静默漂移而下游断言照常
          通过（20260929T162759Z 复盘）。 */
-      const returnSourceTitle = await deps.evalJs(
-        "document.getElementById('panel-title') === null ? null : document.getElementById('panel-title').textContent",
+      const returnSourceId = await deps.evalJs(
+        "document.querySelector('#branch-tabs button.panel-open')?.dataset.branchId ?? null",
       );
-      deps.assert(
-        typeof returnSourceTitle === "string" && returnSourceTitle.includes("Branch 1"),
-        `the A3 return must be submitted from branch A, but the open panel shows ${JSON.stringify(returnSourceTitle)}`,
-      );
+      deps.assert(returnSourceId === deps.sc.branchAId,
+        `the A3 return must be submitted from branch A ${String(deps.sc.branchAId)}, but the open panel branch is ${String(returnSourceId)}`);
+      const returnState = await deps.api("GET", `/api/trees/${encodeURIComponent(deps.sc.treeId)}/state`);
+      deps.assert(returnState.status === 200, `state fetch ${String(returnState.status)}`);
+      const returnSource = (returnState.body?.branches ?? []).find((view) => view.branch.id === returnSourceId);
+      deps.assert(returnSource?.origin?.anchorTurnId === deps.sc.branchAAnchorTurnId && returnSource.origin.sourceBranchId === returnState.body.trunkBranchId,
+        "the A3 return branch does not match branch A's API-verified trunk origin");
       await deps.typeInto("#return-input", deps.SCENARIO.returnText, { replace: true });
       await deps.click("#submit-return");
       /* 提交后面板收起、主干出现 anchored Return 卡（待送达）。 */
@@ -247,11 +264,8 @@ export function createBrowserConversation(deps) {
       /* 主干第 3 轮：下一次 Trunk prompt 必须采用已送达的 Return。 */
       await deps.sendTrunkPrompt(deps.SCENARIO.t3, { keyboard: false });
       await deps.waitForAnswerMarkers("#conversation", deps.MODE === "selftest" ? ["aspen"] : ["aspen"], deps.CLI.promptTimeoutMs, 3);
-      const cardState = await deps.evalJs(
-        `(() => { const cards = [...document.querySelectorAll('#conversation .turn.return')]; ` +
-        "const card = cards[cards.length - 1]; const delivery = card === undefined ? null : card.querySelector('.delivery'); " +
-        "return { text: card === undefined ? null : card.textContent, delivered: delivery === null ? false : delivery.classList.contains('delivered'), deliveryText: delivery === null ? null : delivery.textContent }; })()",
-      );
+      const deliverySummary = await deps.evalJs(deps.pageSummaryExpression());
+      const cardState = deliverySummary.returnCards.at(-1) ?? { text: null, delivered: false, deliveryText: null };
       deps.assert(cardState.delivered === true, `return card not in delivered state after next trunk run: ${deps.truncate(JSON.stringify(cardState), 200)}`);
       const stateRes = await deps.api("GET", `/api/trees/${encodeURIComponent(deps.sc.treeId)}/state`);
       const returnTurns = (stateRes.body?.branches ?? []).flatMap((view) => (view.turns ?? []).filter((t) => t.role === "return"));

@@ -998,7 +998,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
           branchId,
           "user",
           `[new exploration from saved content — the previous session was not restored]\n\n${text}`,
-          { runId, piEntryId: `pi-ne${backend.promptCounter}u` },
+          { runId, episodeId: `ep-ne${backend.promptCounter}`, piEntryId: `pi-ne${backend.promptCounter}u` },
         ),
       );
       const assistantTurn = makeTurn(
@@ -1006,7 +1006,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         branchId,
         "assistant",
         `echo:[exploration ${text}]`,
-        { runId, piEntryId: `pi-ne${backend.promptCounter}a` },
+        { runId, episodeId: `ep-ne${backend.promptCounter}`, piEntryId: `pi-ne${backend.promptCounter}a` },
       );
       view.turns.push(assistantTurn);
       view.sessionAvailability = "available";
@@ -1416,6 +1416,8 @@ test("Source reveal opens the older round containing the anchor", async () => {
   world.tabButton("branch-1")!.click();
   await settle();
   world.el("panel-view-source").click();
+  await settle();
+  assert.equal(world.el("branch-panel").hidden, true, "the main source is visible before moving keyboard focus into it");
   await settle(250);
   assert.equal(world.el("branch-panel").hidden, true);
   assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
@@ -2839,7 +2841,7 @@ test("A2 cross-line selection: offsets and the revealed text span the line break
 /* 21. 顶栏位置路径（改版后新增）：renderTopbarPath 的诚实状态机          */
 /* ------------------------------------------------------------------ */
 
-test("topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open", async () => {
+test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", async () => {
   /* 无树启动：路径 = 空字符串——诚实状态（renderTopbarPath 无树分支），
      绝不用硬编码面包屑（如 “Forest”）占位；空态可见。 */
   const world = await createWorld({ noTrees: true });

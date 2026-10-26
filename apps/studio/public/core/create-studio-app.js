@@ -1,4 +1,5 @@
 import { registerWorkspaceEvents } from "./controllers/workspace-events.js";
+import { registerApiSettings } from "./controllers/api-settings.js";
 import { createStudioFeatures } from "./compose-features.js";
 
 import { createStudioState } from "./state.js";
@@ -28,6 +29,7 @@ export function createStudioApp(deps) {
   function start() {
     if (started) return;
     started = true;
+    const disposeApiSettings = registerApiSettings({ document, fetch });
 const studioState = createStudioState({
 
 });
@@ -394,6 +396,7 @@ void (async () => {
 })();
 
     cleanup = () => {
+      disposeApiSettings();
       disposeWorkspaceEvents();
       stopDiagnosticsPolling();
       disconnectEvents();

@@ -650,3 +650,17 @@ test("stream follow records native scroll position before delayed scroll events 
   view.updateStreamingPlaceholder();
   assert.equal(positions.get("tree:branch"), 100, "hidden zero-size geometry cannot erase the last reading position");
 });
+
+test("branch display indexes preserve identity and ordinals after state replacement and append", () => {
+  const branch = (id, title) => ({ branch: { id }, origin: null, turns: [{ role: "user", text: title }] });
+  const state = { treeState: { trunkBranchId: "root", branches: [branch("root", "Main"), branch("child", "First question")] } };
+  const basics = createStudioBasics({ state });
+  assert.equal(basics.branchLabel("child"), "Branch 1");
+  assert.equal(basics.branchDisplayName("child"), "First question");
+  state.treeState = { trunkBranchId: "other", branches: [branch("other", "New main"), branch("second", "Second question")] };
+  assert.equal(basics.branchView("child"), null);
+  assert.equal(basics.branchDisplayName("second"), "Second question");
+  state.treeState.branches.push(branch("third", "Third question"));
+  assert.equal(basics.branchLabel("third"), "Branch 2");
+  assert.equal(basics.branchView("third").turns[0].text, "Third question");
+});

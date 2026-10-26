@@ -1,5 +1,14 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-26 API connection update:** The latest local development base is
+`8a947d4a74027379392ea42fc89b25e19f904b09`. The API settings working candidate
+has passed 880 tests, source/root-test typechecks, real Pi API 25/25, native
+Chrome real Pi D3 31/31, and complete D4 Echo 16/16. A working macOS package
+passed 46/46 smoke. See [scope and connection record](api-connections-20261026.md)
+for exact limitations and committed-SHA/remote revalidation. These new live
+results do not close the full real-model quality, historical D1, human or
+physical gates below; older records bind to their own tested commits.
+
 **Last updated:** 2026-10-14. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
 **Integration PR:** [#27](https://github.com/Lortzing/TreeAI/pull/27), branch `refactor/integration-r0-r7`. The current candidate must be read from the PR HEAD; this document does **not** claim that an earlier successful run validates every subsequent commit.
 
