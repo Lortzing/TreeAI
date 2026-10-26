@@ -126,13 +126,14 @@ export async function runBetaKeyboard(deps) {
         const escapeLayers = [];
         const recordEscape = async (label, open, closedExpr, verifyFocusExpr, focusTargetLabel) => {
           await open();
+          await deps.ctx.evalJs(`(() => { window.__betaEscapeTrace = []; window.addEventListener('keydown', event => window.__betaEscapeTrace.push({phase:'capture',key:event.key,target:event.target?.id,prevented:event.defaultPrevented}), {capture:true,once:true}); document.addEventListener('keydown', event => window.__betaEscapeTrace.push({phase:'bubble',key:event.key,target:event.target?.id,prevented:event.defaultPrevented}), {once:true}); return true; })()`);
           await deps.pressKey(deps.ctx, "Escape", "Escape", 27);
           try {
             await waitFor(deps.ctx, closedExpr, { label: `keyboard: Escape closed the ${label}`, timeoutMs: 10_000 });
           } catch (error) {
             await deps.ctx.screenshot(`beta-keyboard-escape-${label.replaceAll(' ', '-')}`);
-            const context = await deps.ctx.evalJs(`(() => ({ active: document.activeElement?.id, mode: document.getElementById('main')?.dataset.workspaceView, readerHidden: document.getElementById('material-reader')?.hidden, drawerHidden: document.getElementById('source-drawer')?.hidden, flowHidden: document.getElementById('mat-branch-flow')?.hidden, dialogOpen: document.getElementById('api-settings-dialog')?.open }))()`);
-            throw new Error(`${error instanceof Error ? error.message : String(error)}; context ${JSON.stringify(context)}`);
+            const context = await deps.ctx.evalJs(`(() => ({ events:window.__betaEscapeTrace, active: document.activeElement?.id, mode: document.getElementById('main')?.dataset.workspaceView, readerHidden: document.getElementById('material-reader')?.hidden, readerClass:document.getElementById('material-reader')?.className, drawerHidden: document.getElementById('source-drawer')?.hidden, flowHidden: document.getElementById('mat-branch-flow')?.hidden, dialogOpen: document.getElementById('api-settings-dialog')?.open }))()`);
+            throw new Error(`${label} Escape evidence ${JSON.stringify(context)}; ${error instanceof Error ? error.message : String(error)}`);
           }
           const focusState = await deps.ctx.evalJs(
             `(() => { const a = document.activeElement; ` +
