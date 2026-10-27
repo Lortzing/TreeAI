@@ -664,3 +664,22 @@ test("branch display indexes preserve identity and ordinals after state replacem
   assert.equal(basics.branchLabel("third"), "Branch 2");
   assert.equal(basics.branchView("third").turns[0].text, "Third question");
 });
+
+
+test("PDF text anchors are positioned while the original page paint is still pending", () => {
+  const element = () => ({ nodeType: 1, dataset: {}, style: {}, children: [], className: "",
+    get classList() { const self=this; return { contains: name=>self.className.split(" ").includes(name), add: name=>{self.className += " "+name;} }; },
+    setAttribute() {}, append(...nodes) { this.children.push(...nodes); }, replaceChildren(...nodes) { this.children=nodes; } });
+  const entry = { block: { blockId: "page-1", start: 0, end: 2, page: 1,
+    geometry: { pageWidth: 600, pageHeight: 800, lines: [{ start: 0, end: 2, x: 60, y: 746, fontSize: 14 }] } }, text: "递归" };
+  const reader = { blocks: [entry], pdfDocument: { getPage: () => new Promise(() => {}) }, pdfRenderTasks: new Map() };
+  const view = createMaterialPdfView({ state: { materialReader: reader }, materialReaderIsPdf: () => true,
+    document: { createElement: element, createTextNode: text => ({ nodeType: 3, textContent: text }) } });
+  const frame = view.createPdfPageFrame(entry);
+  view.renderPdfPageTextIn(frame);
+  const layer = frame.children[2], line = layer.children[0];
+  assert.equal(layer.dataset.rendered, "true");
+  assert.equal(frame.children[1].dataset.rendered, "false", "the original page has not finished painting");
+  assert.equal(line.style.left, "10%"); assert.equal(line.style.top, "5%"); assert.equal(line.style.fontSize, "14px");
+  assert.equal(line.textContent, "递归"); assert.equal(line.dataset.start, "0"); assert.equal(line.dataset.end, "2");
+});
