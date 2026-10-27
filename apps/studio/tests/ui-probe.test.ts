@@ -2841,7 +2841,7 @@ test("A2 cross-line selection: offsets and the revealed text span the line break
 /* 21. 顶栏位置路径（改版后新增）：renderTopbarPath 的诚实状态机          */
 /* ------------------------------------------------------------------ */
 
-test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", async () => {
+test("topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open", async () => {
   /* 无树启动：路径 = 空字符串——诚实状态（renderTopbarPath 无树分支），
      绝不用硬编码面包屑（如 “Forest”）占位；空态可见。 */
   const world = await createWorld({ noTrees: true });
