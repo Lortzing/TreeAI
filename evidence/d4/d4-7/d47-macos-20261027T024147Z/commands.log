@@ -1,0 +1,87 @@
+## sw_vers
+$ sw_vers
+exit=0
+```
+ProductName:		macOS
+ProductVersion:		26.6.2
+BuildVersion:		25G83
+```
+
+## uname -m
+$ uname -m
+exit=0
+```
+arm64
+```
+
+## node --version
+$ node --version
+exit=0
+```
+v24.21.0
+```
+
+## git rev-parse HEAD
+$ git rev-parse HEAD
+exit=0
+```
+be9263ab33f29ac78f9dd803a85814cf63b63491
+```
+
+## 构建产物 A
+$ ~/.local/share/fnm/node-versions/v24.21.0/installation/bin/node scripts/d4/package-installer.mjs --platform darwin-arm64 --version 0.1.0-d47local-a --out-dir /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+exit=2
+```
+package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+  平台          darwin-arm64
+  bundle 版本   0.1.0-d47local-a
+  内置 Node     24.21.0（nodejs.org 官方发行包）
+  git 提交      be9263ab33f29ac78f9dd803a85814cf63b63491（工作区有未提交改动）
+  输出目录      /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz …
+
+(stderr)
+package-installer: 失败：下载 Node 发行包失败：fetch failed
+```
+
+## 构建产物 B
+$ ~/.local/share/fnm/node-versions/v24.21.0/installation/bin/node scripts/d4/package-installer.mjs --platform darwin-arm64 --version 0.1.0-d47local-b --out-dir /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+exit=2
+```
+package-installer: 构建 TreeAI Studio 安装产物（D4-7）
+  平台          darwin-arm64
+  bundle 版本   0.1.0-d47local-b
+  内置 Node     24.21.0（nodejs.org 官方发行包）
+  git 提交      be9263ab33f29ac78f9dd803a85814cf63b63491（工作区有未提交改动）
+  输出目录      /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local
+package-installer: 构建 event-journal（tsc -p tsconfig.build.json）…
+package-installer: 下载 https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz …
+
+(stderr)
+package-installer: 失败：下载 Node 发行包失败：fetch failed
+```
+
+## sha256 A
+$ shasum -a 256 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz
+exit=1
+```
+(stderr)
+shasum: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz: No such file or directory
+```
+
+## sha256 B
+$ shasum -a 256 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz
+exit=1
+```
+(stderr)
+shasum: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-b-darwin-arm64.tar.gz: No such file or directory
+```
+
+## 解压产物 A 到安装目录
+$ tar -xzf /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz -C "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/安装 目录（中文+空格）"
+exit=1
+```
+(stderr)
+tar: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.1.0-d47local-a-darwin-arm64.tar.gz: m: No such file or directory
+```

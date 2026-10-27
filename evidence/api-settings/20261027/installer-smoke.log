@@ -1,0 +1,72 @@
+smoke-bundle: 产物 /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d47-local/treeai-studio-0.0.0-api-39a62bd-b-darwin-arm64.tar.gz
+smoke-bundle: 工作目录 /private/tmp/treeai-39a62bd-smoke
+
+
+== 1. 解压与布局校验
+  [PASS] 解压得到顶层目录
+  [PASS] VERSION.json 清单有效
+  [PASS] 产物布局完整
+  [PASS] 产物平台与当前主机一致（darwin-arm64）
+
+== 2. doctor（全新数据目录）
+  [PASS] doctor 退出码 0
+
+== 3. 首次启动（--no-browser）与离线 API 往返
+  [PASS] start 退出码 0
+  [PASS] 输出可解析实际 URL
+  [PASS] GET /api/health → {ok:true}
+  [PASS] GET / 静态前端可服务
+  [PASS] POST /api/trees 创建树
+  [PASS] GET /api/trees 列出刚创建的树（离线往返闭环）
+
+== 4. 幂等 start（已在运行）
+  [PASS] 重复 start 幂等（不重复起进程）
+
+== 5. stop / restart 与数据持久
+  [PASS] stop 优雅停止
+  [PASS] 停止后端口不再应答
+  [PASS] restart 再次启动
+  [PASS] 重启后已创建的树仍在（状态持久）
+
+== 6. 端口冲突自动顺延
+  [PASS] 先停止实例
+  [PASS] 端口被占时 start 仍成功
+  [PASS] 输出明确提示端口顺延
+  [PASS] 实际使用 8789
+  [PASS] 顺延端口上健康检查通过
+
+== 7. 模型配置错误 → 可执行恢复信息
+  [PASS] 停止后改配置
+  [PASS] doctor 退出码 1（有问题）
+  [PASS] doctor 给出具体修复步骤
+  [PASS] start 拒绝坏配置（不静默）
+  [PASS] 修复配置后可再次启动
+  [PASS] 配置故障期间数据未丢失
+
+== 8. 升级失败自动回滚
+  [PASS] 损坏新包的升级退出非 0
+  [PASS] 输出说明已回滚
+  [PASS] 回滚后旧安装 doctor 全绿
+  [PASS] 回滚后旧版本可启动
+  [PASS] 回滚后数据仍在
+
+== 9. 正常升级（数据保留，旧版备份）
+  [PASS] upgrade 退出码 0
+  [PASS] 输出升级成功
+  [PASS] 输出数据未动说明
+  [PASS] 旧版本备份目录存在
+  [PASS] 升级成功输出含实际 url=
+  [PASS] 升级后数据保留（树仍在）
+
+== 10. 卸载（默认保留数据；显式 --delete-data 删除）
+  [PASS] uninstall 退出码 0
+  [PASS] 输出数据已保留
+  [PASS] 安装目录已删除
+  [PASS] 数据目录仍在（默认保留）
+  [PASS] 数据库文件仍在
+  [PASS] --delete-data 卸载退出码 0
+  [PASS] 输出数据已删除
+  [PASS] 数据目录已按显式 opt-in 删除
+
+smoke-bundle: 结果 PASS 46 / FAIL 0 — 全部通过
+诚实边界：本冒烟是 CI/本机的自动化验证，不等价于负责人目标机的干净安装实测（B8）。

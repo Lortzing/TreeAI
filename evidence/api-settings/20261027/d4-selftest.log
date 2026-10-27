@@ -1,0 +1,13 @@
+verify-d4-selftest — failure-path injections against the real verifier
+evidence: <repo>/evidence/d4/selftest/d4-selftest-20261026T113317420Z
+  [PASS] control-clean-tree: clean copy → exit 0 (ALL_PASS)
+  [PASS] inject-tampered-fixture: fixtures-integrity-d4 FAIL with exit 2
+  [PASS] inject-stray-fixture: fixtures-integrity-d4 FAIL with exit 2
+  [PASS] inject-broken-selection-behind-regenerated-manifest: fixtures-integrity-d4 FAIL with exit 2
+  [PASS] inject-fake-no-result-query: fixtures-integrity-d4 FAIL with exit 2
+  [PASS] inject-missing-mirror: docs-integrity-d4 FAIL with exit 2
+  [PASS] inject-missing-adr-004: docs-integrity-d4 FAIL with exit 2
+  [PASS] inject-unwired-entrypoint: entrypoints-d4 FAIL with exit 2
+  [PASS] inject-stripped-b7-sidecar: b7-beta-usability FAIL with exit 2
+
+verify-d4-selftest: all injections detected; control clean (exit 0)

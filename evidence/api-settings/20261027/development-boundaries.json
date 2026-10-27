@@ -1,0 +1,2149 @@
+{
+  "schema": "treeai-refactor-boundaries-v1",
+  "baseCommit": "8a947d4a74027379392ea42fc89b25e19f904b09",
+  "headCommit": "00237b592d3055263d338ad81d0d979247554b67",
+  "workingTree": true,
+  "sizes": [
+    {
+      "path": "apps/studio/public/app.js",
+      "beforeLines": 20,
+      "afterLines": 20
+    },
+    {
+      "path": "apps/studio/public/core/create-studio-app.js",
+      "beforeLines": 414,
+      "afterLines": 418
+    },
+    {
+      "path": "apps/studio/src/server.ts",
+      "beforeLines": 168,
+      "afterLines": 172
+    },
+    {
+      "path": "scripts/run-d4-browser.mjs",
+      "beforeLines": 607,
+      "afterLines": 607
+    }
+  ],
+  "staticScenarios": {
+    "before": 862,
+    "after": 883,
+    "preserved": true
+  },
+  "reverseImports": {
+    "apps/runtime-smoke/src/scenario.ts": [
+      "apps/runtime-smoke/src/index.ts",
+      "apps/runtime-smoke/src/main.ts",
+      "apps/runtime-smoke/tests/smoke.test.ts"
+    ],
+    "apps/runtime-smoke/src/fake-pi-port.ts": [
+      "apps/runtime-smoke/src/index.ts",
+      "apps/runtime-smoke/src/scenario/flow.ts"
+    ],
+    "apps/runtime-smoke/src/scenario/models.ts": [
+      "apps/runtime-smoke/src/scenario.ts",
+      "apps/runtime-smoke/src/scenario/flow.ts"
+    ],
+    "apps/runtime-smoke/src/scenario/flow.ts": [
+      "apps/runtime-smoke/src/scenario.ts"
+    ],
+    "apps/runtime-smoke/src/scenario/execution.ts": [
+      "apps/runtime-smoke/src/scenario/flow.ts"
+    ],
+    "apps/runtime-smoke/src/scenario/assertions.ts": [
+      "apps/runtime-smoke/src/scenario/flow.ts"
+    ],
+    "apps/studio/public/core/create-studio-app.js": [
+      "apps/studio/public/app.js",
+      "apps/studio/tests/app-factory.test.mjs"
+    ],
+    "apps/studio/public/core/views/session-workspace.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/composition/navigation.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/composition/materials.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/studio-events.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/focus.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/views/tree-chrome.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/views/turn-actions.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/views/conversation.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/views/source-drawer.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/turn-selection.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/terminology.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/basics.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/shared/source/sha256.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/tests/source-sha256.test.mjs"
+    ],
+    "apps/studio/public/core/views/turn-overlays.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/render.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/return.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/tree.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/branch.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/prompt.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/source-drawer.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/views/terminology.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/controllers/search.js": [
+      "apps/studio/public/core/compose-features.js"
+    ],
+    "apps/studio/public/core/views/return.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/views/diagnostics.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/views/search.js": [
+      "apps/studio/public/core/compose-features.js",
+      "apps/studio/public/core/controllers/search.js",
+      "apps/studio/public/core/create-studio-app.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/controllers/material-reader.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/views/material-pdf.js": [
+      "apps/studio/public/core/composition/materials.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/controllers/material-list.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/views/material-reader.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/controllers/material-selection.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/controllers/material-import.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/controllers/material-branch.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/controllers/material-intent-store.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/views/material-branch.js": [
+      "apps/studio/public/core/composition/materials.js"
+    ],
+    "apps/studio/public/core/views/markdown.js": [
+      "apps/studio/public/core/composition/materials.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/controllers/nav-finder.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/tests/nav-finder-controller.test.mjs"
+    ],
+    "apps/studio/public/core/views/nav-path.js": [
+      "apps/studio/public/core/composition/navigation.js"
+    ],
+    "apps/studio/public/core/views/nav-node-results.js": [
+      "apps/studio/public/core/composition/navigation.js"
+    ],
+    "apps/studio/public/core/controllers/nav-node-search.js": [
+      "apps/studio/public/core/composition/navigation.js"
+    ],
+    "apps/studio/public/core/controllers/nav-locate.js": [
+      "apps/studio/public/core/composition/navigation.js"
+    ],
+    "apps/studio/public/core/controllers/nav-persistence.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/tests/nav-session-controller.test.mjs"
+    ],
+    "apps/studio/public/core/controllers/nav-interaction.js": [
+      "apps/studio/public/core/composition/navigation.js"
+    ],
+    "apps/studio/public/core/controllers/nav-session.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/tests/nav-session-controller.test.mjs"
+    ],
+    "apps/studio/public/core/views/nav-finder.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/views/nav-tree.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/public/core/controllers/nav-interaction.js"
+    ],
+    "apps/studio/public/core/views/nav-chrome.js": [
+      "apps/studio/public/core/composition/navigation.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/shared/reading-position/scroll.js": [
+      "apps/studio/public/core/controllers/basics.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/dom.js": [
+      "apps/studio/public/core/controllers/material-reader.js",
+      "apps/studio/public/core/controllers/material-selection.js",
+      "apps/studio/public/core/controllers/turn-selection.js",
+      "apps/studio/public/core/create-studio-app.js",
+      "apps/studio/public/core/views/conversation.js",
+      "apps/studio/public/core/views/material-pdf.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/shared/source/grapheme.js": [
+      "apps/studio/public/core/controllers/material-selection.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/shared/source/selection.js": [
+      "apps/studio/public/core/controllers/turn-selection.js",
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/public/core/controllers/workspace-events.js": [
+      "apps/studio/public/core/create-studio-app.js"
+    ],
+    "apps/studio/public/core/controllers/api-settings.js": [
+      "apps/studio/public/core/create-studio-app.js",
+      "apps/studio/tests/api-settings-ui.test.ts"
+    ],
+    "apps/studio/public/core/compose-features.js": [
+      "apps/studio/public/core/create-studio-app.js"
+    ],
+    "apps/studio/public/core/state.js": [
+      "apps/studio/public/core/create-studio-app.js"
+    ],
+    "apps/studio/src/api-config.ts": [
+      "apps/studio/src/api-settings.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/tests/api-config.test.ts",
+      "apps/studio/tests/api-wire.test.ts"
+    ],
+    "apps/studio/src/service.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/http/routes/terminology.ts",
+      "apps/studio/src/http/routes/trees.ts",
+      "apps/studio/src/http/sse.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/materials/branching/model.ts",
+      "apps/studio/src/materials/branching/service.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/src/terminology/model.ts",
+      "apps/studio/src/terminology/promotion-ledger.ts",
+      "apps/studio/src/terminology/promotion.ts",
+      "apps/studio/src/terminology/service.ts",
+      "apps/studio/tests/helpers.ts",
+      "apps/studio/tests/http-sse.test.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "apps/studio/tests/service.test.ts",
+      "apps/studio/tests/terminology-reading-modes.test.ts",
+      "apps/studio/tests/terminology.test.ts",
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/terminology.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/routes/terminology.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/src/terminology/suggestion-density.ts",
+      "apps/studio/tests/terminology-reading-modes.test.ts",
+      "apps/studio/tests/terminology.test.ts",
+      "apps/studio/tests/ui-search.test.ts"
+    ],
+    "apps/studio/src/materials/import-service.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/requests.ts",
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/materials/branching/service.ts",
+      "apps/studio/src/materials/parse-worker.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/helpers.ts",
+      "apps/studio/tests/materials-api.test.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/materials-service.test.ts",
+      "apps/studio/tests/portability-helpers.ts",
+      "apps/studio/tests/search-service.test.ts",
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/b6-scale/check.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b1-import.ts",
+      "tests/support/verifier/d4-b2-anchors.ts",
+      "tests/support/verifier/d4-b5-restore.ts"
+    ],
+    "apps/studio/src/materials/branching.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/b3/scenarios.ts",
+      "tests/support/verifier/b3/truth.ts"
+    ],
+    "apps/studio/src/nav/nav-engine.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/routes/nav.ts",
+      "apps/studio/src/nav/nav-service.ts",
+      "apps/studio/src/nav/probes/model.ts",
+      "apps/studio/src/nav/probes/runner.ts",
+      "apps/studio/tests/b9-nav.test.ts",
+      "apps/studio/tests/nav-engine.test.ts",
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/http/responses.ts": [
+      "apps/studio/src/http/errors.ts",
+      "apps/studio/src/http/routes/api-settings.ts",
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/http/routes/nav.ts",
+      "apps/studio/src/http/routes/search.ts",
+      "apps/studio/src/http/routes/terminology.ts",
+      "apps/studio/src/http/routes/trees.ts",
+      "apps/studio/src/http/static.ts",
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/search/search-service.ts": [
+      "apps/studio/src/http/requests.ts",
+      "apps/studio/src/http/routes/search.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/search-api.test.ts",
+      "apps/studio/tests/search-service.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b4-search.ts",
+      "tests/support/verifier/d4-b5-restore.ts"
+    ],
+    "apps/studio/src/search/search-engine.ts": [
+      "apps/studio/src/http/requests.ts",
+      "apps/studio/src/search/search-service.ts",
+      "apps/studio/tests/search-engine.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "tests/support/verifier/d4-b4-search.ts"
+    ],
+    "apps/studio/src/api-settings.ts": [
+      "apps/studio/src/http/routes/api-settings.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/api-settings.test.ts",
+      "apps/studio/tests/api-wire.test.ts"
+    ],
+    "apps/studio/src/http/requests.ts": [
+      "apps/studio/src/http/routes/api-settings.ts",
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/http/routes/nav.ts",
+      "apps/studio/src/http/routes/search.ts",
+      "apps/studio/src/http/routes/terminology.ts",
+      "apps/studio/src/http/routes/trees.ts"
+    ],
+    "apps/studio/src/materials/range-resolver.ts": [
+      "apps/studio/src/http/routes/materials.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/materials-range-resolver.test.ts",
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/d4-b2-anchors.ts"
+    ],
+    "apps/studio/src/nav/nav-service.ts": [
+      "apps/studio/src/http/routes/nav.ts",
+      "apps/studio/src/index.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/http/sse.ts": [
+      "apps/studio/src/http/routes/trees.ts",
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/http-sse.test.ts"
+    ],
+    "apps/studio/src/cli.ts": [
+      "apps/studio/src/index.ts",
+      "apps/studio/tests/api-config.test.ts",
+      "apps/studio/tests/cli.test.ts"
+    ],
+    "apps/studio/src/echo-port.ts": [
+      "apps/studio/src/index.ts",
+      "apps/studio/tests/events.test.ts",
+      "apps/studio/tests/helpers.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "apps/studio/tests/service.test.ts",
+      "apps/studio/tests/terminology.test.ts",
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/portability/index.ts": [
+      "apps/studio/src/index.ts",
+      "apps/studio/tests/portability.test.ts"
+    ],
+    "apps/studio/src/server.ts": [
+      "apps/studio/src/index.ts",
+      "apps/studio/tests/api.test.ts",
+      "apps/studio/tests/events.test.ts",
+      "apps/studio/tests/materials-api.test.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/materials-reading-api.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "apps/studio/tests/search-api.test.ts",
+      "apps/studio/tests/terminology-reading-modes.test.ts",
+      "apps/studio/tests/terminology.test.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/materials/branching/policy.ts": [
+      "apps/studio/src/materials/branching.ts",
+      "apps/studio/src/materials/branching/context.ts",
+      "apps/studio/src/materials/branching/service.ts"
+    ],
+    "apps/studio/src/materials/branching/context.ts": [
+      "apps/studio/src/materials/branching.ts",
+      "apps/studio/src/materials/branching/service.ts"
+    ],
+    "apps/studio/src/materials/branching/model.ts": [
+      "apps/studio/src/materials/branching.ts",
+      "apps/studio/src/materials/branching/context.ts",
+      "apps/studio/src/materials/branching/service.ts"
+    ],
+    "apps/studio/src/materials/branching/identity.ts": [
+      "apps/studio/src/materials/branching.ts",
+      "apps/studio/src/materials/branching/service.ts"
+    ],
+    "apps/studio/src/materials/branching/errors.ts": [
+      "apps/studio/src/materials/branching.ts",
+      "apps/studio/src/materials/branching/service.ts"
+    ],
+    "apps/studio/src/materials/branching/service.ts": [
+      "apps/studio/src/materials/branching.ts"
+    ],
+    "apps/studio/src/materials/import/policy.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/service.ts",
+      "apps/studio/src/materials/import/validation.ts"
+    ],
+    "apps/studio/src/materials/import/model.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/executor.ts",
+      "apps/studio/src/materials/import/parsers.ts",
+      "apps/studio/src/materials/import/service.ts"
+    ],
+    "apps/studio/src/materials/import/parsers.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/service.ts"
+    ],
+    "apps/studio/src/materials/import/errors.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/service.ts",
+      "apps/studio/src/materials/import/validation.ts"
+    ],
+    "apps/studio/src/materials/import/validation.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/service.ts"
+    ],
+    "apps/studio/src/materials/import/service.ts": [
+      "apps/studio/src/materials/import-service.ts"
+    ],
+    "apps/studio/src/materials/pdf-parser.ts": [
+      "apps/studio/src/materials/import-service.ts",
+      "apps/studio/src/materials/import/parsers.ts",
+      "apps/studio/src/materials/import/service.ts",
+      "apps/studio/src/materials/parse-worker.ts",
+      "apps/studio/tests/pdf-parser.test.ts",
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "tests/support/verifier/d4-b6-loader.ts"
+    ],
+    "apps/studio/src/materials/markdown-parser.ts": [
+      "apps/studio/src/materials/import/parsers.ts",
+      "apps/studio/src/materials/parse-worker.ts",
+      "apps/studio/src/nav/b9-loader.ts",
+      "apps/studio/src/nav/dataset/materials.ts",
+      "apps/studio/tests/markdown-parser.test.ts",
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "tests/support/verifier/d4-b6-loader.ts"
+    ],
+    "apps/studio/src/materials/import/executor.ts": [
+      "apps/studio/src/materials/import/service.ts"
+    ],
+    "apps/studio/src/materials/pdf/policy.ts": [
+      "apps/studio/src/materials/pdf-parser.ts",
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/model.ts"
+    ],
+    "apps/studio/src/materials/pdf/model.ts": [
+      "apps/studio/src/materials/pdf-parser.ts",
+      "apps/studio/src/materials/pdf/content.ts",
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/layout.ts"
+    ],
+    "apps/studio/src/materials/pdf/layout.ts": [
+      "apps/studio/src/materials/pdf-parser.ts",
+      "apps/studio/src/materials/pdf/document.ts"
+    ],
+    "apps/studio/src/materials/pdf/document.ts": [
+      "apps/studio/src/materials/pdf-parser.ts"
+    ],
+    "apps/studio/src/materials/pdf/decoding.ts": [
+      "apps/studio/src/materials/pdf/content.ts",
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/fonts.ts",
+      "apps/studio/src/materials/pdf/objects.ts",
+      "apps/studio/src/materials/pdf/tokenizer.ts"
+    ],
+    "apps/studio/src/materials/pdf/errors.ts": [
+      "apps/studio/src/materials/pdf/content.ts",
+      "apps/studio/src/materials/pdf/decoding.ts",
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/fonts.ts",
+      "apps/studio/src/materials/pdf/layout.ts",
+      "apps/studio/src/materials/pdf/objects.ts",
+      "apps/studio/src/materials/pdf/tokenizer.ts"
+    ],
+    "apps/studio/src/materials/pdf/fonts.ts": [
+      "apps/studio/src/materials/pdf/content.ts",
+      "apps/studio/src/materials/pdf/document.ts"
+    ],
+    "apps/studio/src/materials/pdf/tokenizer.ts": [
+      "apps/studio/src/materials/pdf/content.ts",
+      "apps/studio/src/materials/pdf/document.ts"
+    ],
+    "apps/studio/src/materials/pdf/values.ts": [
+      "apps/studio/src/materials/pdf/decoding.ts",
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/fonts.ts",
+      "apps/studio/src/materials/pdf/objects.ts"
+    ],
+    "apps/studio/src/materials/pdf/content.ts": [
+      "apps/studio/src/materials/pdf/document.ts"
+    ],
+    "apps/studio/src/materials/pdf/objects.ts": [
+      "apps/studio/src/materials/pdf/document.ts",
+      "apps/studio/src/materials/pdf/fonts.ts"
+    ],
+    "apps/studio/src/nav/dataset/policy.ts": [
+      "apps/studio/src/nav/b9-dataset.ts",
+      "apps/studio/src/nav/dataset/generator.ts",
+      "apps/studio/src/nav/dataset/invariants.ts",
+      "apps/studio/src/nav/dataset/manifest.ts",
+      "apps/studio/src/nav/dataset/text.ts",
+      "apps/studio/src/nav/dataset/trees.ts"
+    ],
+    "apps/studio/src/nav/dataset/model.ts": [
+      "apps/studio/src/nav/b9-dataset.ts",
+      "apps/studio/src/nav/dataset/generator.ts",
+      "apps/studio/src/nav/dataset/invariants.ts",
+      "apps/studio/src/nav/dataset/manifest.ts",
+      "apps/studio/src/nav/dataset/materials.ts",
+      "apps/studio/src/nav/dataset/policy.ts",
+      "apps/studio/src/nav/dataset/trees.ts"
+    ],
+    "apps/studio/src/nav/dataset/generator.ts": [
+      "apps/studio/src/nav/b9-dataset.ts"
+    ],
+    "apps/studio/src/nav/dataset/manifest.ts": [
+      "apps/studio/src/nav/b9-dataset.ts"
+    ],
+    "apps/studio/src/nav/dataset/invariants.ts": [
+      "apps/studio/src/nav/b9-dataset.ts"
+    ],
+    "apps/studio/src/nav/b9-dataset.ts": [
+      "apps/studio/src/nav/b9-loader.ts",
+      "apps/studio/src/nav/probes/correctness.ts",
+      "apps/studio/src/nav/probes/model.ts",
+      "apps/studio/src/nav/probes/performance.ts",
+      "apps/studio/src/nav/probes/runner.ts",
+      "apps/studio/src/nav/probes/shape.ts",
+      "apps/studio/src/nav/probes/truth.ts",
+      "apps/studio/tests/b9-nav.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "scripts/d4/browser/navigation/keyboard.mjs",
+      "scripts/d4/browser/navigation/plan.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/restart.mjs",
+      "scripts/d4/browser/navigation/spot-checks.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs",
+      "scripts/d4/gen-b9-nav-dataset.mjs",
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/nav/probes/model.ts": [
+      "apps/studio/src/nav/b9-probes.ts",
+      "apps/studio/src/nav/probes/correctness.ts",
+      "apps/studio/src/nav/probes/location.ts",
+      "apps/studio/src/nav/probes/observation.ts",
+      "apps/studio/src/nav/probes/performance.ts",
+      "apps/studio/src/nav/probes/runner.ts",
+      "apps/studio/src/nav/probes/shape.ts"
+    ],
+    "apps/studio/src/nav/probes/policy.ts": [
+      "apps/studio/src/nav/b9-probes.ts",
+      "apps/studio/src/nav/probes/runner.ts"
+    ],
+    "apps/studio/src/nav/probes/truth.ts": [
+      "apps/studio/src/nav/b9-probes.ts",
+      "apps/studio/src/nav/probes/correctness.ts",
+      "apps/studio/src/nav/probes/location.ts",
+      "apps/studio/src/nav/probes/performance.ts",
+      "apps/studio/src/nav/probes/shape.ts"
+    ],
+    "apps/studio/src/nav/probes/performance.ts": [
+      "apps/studio/src/nav/b9-probes.ts",
+      "apps/studio/src/nav/probes/runner.ts"
+    ],
+    "apps/studio/src/nav/probes/runner.ts": [
+      "apps/studio/src/nav/b9-probes.ts"
+    ],
+    "apps/studio/src/nav/deterministic-rng.ts": [
+      "apps/studio/src/nav/dataset/generator.ts",
+      "apps/studio/src/nav/dataset/text.ts",
+      "apps/studio/src/nav/dataset/trees.ts",
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/b6-dataset/facts.ts",
+      "tests/support/verifier/b6-dataset/materials.ts",
+      "tests/support/verifier/b6-dataset/text.ts"
+    ],
+    "apps/studio/src/nav/dataset/materials.ts": [
+      "apps/studio/src/nav/dataset/generator.ts",
+      "apps/studio/src/nav/dataset/invariants.ts"
+    ],
+    "apps/studio/src/nav/dataset/text.ts": [
+      "apps/studio/src/nav/dataset/generator.ts",
+      "apps/studio/src/nav/dataset/trees.ts"
+    ],
+    "apps/studio/src/nav/dataset/trees.ts": [
+      "apps/studio/src/nav/dataset/generator.ts"
+    ],
+    "apps/studio/src/nav/engine/errors.ts": [
+      "apps/studio/src/nav/engine/cursor.ts",
+      "apps/studio/src/nav/engine/engine.ts",
+      "apps/studio/src/nav/engine/validation.ts",
+      "apps/studio/src/nav/nav-engine.ts"
+    ],
+    "apps/studio/src/nav/engine/model.ts": [
+      "apps/studio/src/nav/engine/cursor.ts",
+      "apps/studio/src/nav/engine/engine.ts",
+      "apps/studio/src/nav/engine/errors.ts",
+      "apps/studio/src/nav/engine/validation.ts",
+      "apps/studio/src/nav/nav-engine.ts"
+    ],
+    "apps/studio/src/nav/engine/cursor.ts": [
+      "apps/studio/src/nav/engine/engine.ts"
+    ],
+    "apps/studio/src/nav/engine/policy.ts": [
+      "apps/studio/src/nav/engine/engine.ts",
+      "apps/studio/src/nav/nav-engine.ts"
+    ],
+    "apps/studio/src/nav/engine/validation.ts": [
+      "apps/studio/src/nav/engine/engine.ts"
+    ],
+    "apps/studio/src/nav/engine/engine.ts": [
+      "apps/studio/src/nav/nav-engine.ts"
+    ],
+    "apps/studio/src/nav/probes/location.ts": [
+      "apps/studio/src/nav/probes/correctness.ts"
+    ],
+    "apps/studio/src/nav/probes/observation.ts": [
+      "apps/studio/src/nav/probes/correctness.ts",
+      "apps/studio/src/nav/probes/shape.ts"
+    ],
+    "apps/studio/src/nav/probes/correctness.ts": [
+      "apps/studio/src/nav/probes/runner.ts"
+    ],
+    "apps/studio/src/nav/probes/shape.ts": [
+      "apps/studio/src/nav/probes/runner.ts"
+    ],
+    "apps/studio/src/portability/package-format.ts": [
+      "apps/studio/src/portability/export-service.ts",
+      "apps/studio/src/portability/index.ts",
+      "apps/studio/src/portability/readable-export.ts",
+      "apps/studio/src/portability/restore/fact-validation.ts",
+      "apps/studio/src/portability/restore/fact-writer.ts",
+      "apps/studio/src/portability/restore/model.ts",
+      "apps/studio/src/portability/restore/package-reader.ts",
+      "apps/studio/src/portability/restore/service.ts",
+      "apps/studio/tests/portability-helpers.ts",
+      "tests/support/verifier/d4-b5-restore.ts"
+    ],
+    "apps/studio/src/portability/readable-export.ts": [
+      "apps/studio/src/portability/export-service.ts",
+      "apps/studio/src/portability/index.ts"
+    ],
+    "apps/studio/src/portability/export-service.ts": [
+      "apps/studio/src/portability/index.ts"
+    ],
+    "apps/studio/src/portability/restore-service.ts": [
+      "apps/studio/src/portability/index.ts"
+    ],
+    "apps/studio/src/portability/restore/model.ts": [
+      "apps/studio/src/portability/restore-service.ts",
+      "apps/studio/src/portability/restore/fact-validation.ts",
+      "apps/studio/src/portability/restore/fact-writer.ts",
+      "apps/studio/src/portability/restore/package-reader.ts",
+      "apps/studio/src/portability/restore/service.ts"
+    ],
+    "apps/studio/src/portability/restore/service.ts": [
+      "apps/studio/src/portability/restore-service.ts"
+    ],
+    "apps/studio/src/portability/restore/fact-validation.ts": [
+      "apps/studio/src/portability/restore/service.ts"
+    ],
+    "apps/studio/src/portability/restore/fact-writer.ts": [
+      "apps/studio/src/portability/restore/service.ts"
+    ],
+    "apps/studio/src/portability/restore/package-reader.ts": [
+      "apps/studio/src/portability/restore/service.ts"
+    ],
+    "apps/studio/src/http/routes/trees.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/http/routes/search.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/http/routes/api-settings.ts": [
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/api-settings.test.ts"
+    ],
+    "apps/studio/src/http/errors.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/http/static.ts": [
+      "apps/studio/src/server.ts",
+      "apps/studio/tests/http-static.test.ts"
+    ],
+    "apps/studio/src/http/routes/nav.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/http/routes/terminology.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/http/routes/materials.ts": [
+      "apps/studio/src/server.ts"
+    ],
+    "apps/studio/src/studio/model.ts": [
+      "apps/studio/src/service.ts",
+      "apps/studio/src/studio/event-observer.ts",
+      "apps/studio/src/studio/read-models.ts",
+      "apps/studio/src/studio/return-coordinator.ts",
+      "apps/studio/src/studio/session-coordinator.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/policy.ts": [
+      "apps/studio/src/service.ts",
+      "apps/studio/src/studio/read-models.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/errors.ts": [
+      "apps/studio/src/service.ts",
+      "apps/studio/src/studio/return-coordinator.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/tree-studio-service.ts": [
+      "apps/studio/src/service.ts"
+    ],
+    "apps/studio/src/studio/event-summary.ts": [
+      "apps/studio/src/service.ts",
+      "apps/studio/src/studio/event-observer.ts",
+      "apps/studio/src/studio/read-models.ts"
+    ],
+    "apps/studio/src/studio/prompt-text.ts": [
+      "apps/studio/src/service.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/session-coordinator.ts": [
+      "apps/studio/src/studio/read-models.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/event-observer.ts": [
+      "apps/studio/src/studio/read-models.ts",
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/read-models.ts": [
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/studio/return-coordinator.ts": [
+      "apps/studio/src/studio/tree-studio-service.ts"
+    ],
+    "apps/studio/src/terminology/policy.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/executor.ts",
+      "apps/studio/src/terminology/model.ts",
+      "apps/studio/src/terminology/prompts.ts",
+      "apps/studio/src/terminology/service.ts",
+      "apps/studio/src/terminology/usage.ts"
+    ],
+    "apps/studio/src/terminology/model.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/candidates.ts",
+      "apps/studio/src/terminology/executor.ts",
+      "apps/studio/src/terminology/policy.ts",
+      "apps/studio/src/terminology/promotion-ledger.ts",
+      "apps/studio/src/terminology/promotion.ts",
+      "apps/studio/src/terminology/prompts.ts",
+      "apps/studio/src/terminology/service.ts",
+      "apps/studio/src/terminology/suggestion-projection.ts",
+      "apps/studio/src/terminology/usage.ts"
+    ],
+    "apps/studio/src/terminology/suggestion-projection.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/service.ts"
+    ],
+    "apps/studio/src/terminology/usage.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/executor.ts",
+      "apps/studio/src/terminology/promotion-ledger.ts"
+    ],
+    "apps/studio/src/terminology/prompts.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/executor.ts",
+      "apps/studio/src/terminology/promotion-ledger.ts",
+      "apps/studio/src/terminology/promotion.ts",
+      "apps/studio/src/terminology/service.ts",
+      "apps/studio/src/terminology/suggestion-projection.ts"
+    ],
+    "apps/studio/src/terminology/candidates.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/executor.ts"
+    ],
+    "apps/studio/src/terminology/executor.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/model.ts",
+      "apps/studio/src/terminology/service.ts"
+    ],
+    "apps/studio/src/terminology/errors.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/promotion-ledger.ts",
+      "apps/studio/src/terminology/promotion.ts"
+    ],
+    "apps/studio/src/terminology/service.ts": [
+      "apps/studio/src/terminology.ts"
+    ],
+    "apps/studio/src/terminology/suggestion-density.ts": [
+      "apps/studio/src/terminology.ts",
+      "apps/studio/src/terminology/service.ts"
+    ],
+    "apps/studio/src/terminology/promotion-ledger.ts": [
+      "apps/studio/src/terminology/promotion.ts"
+    ],
+    "apps/studio/src/terminology/promotion.ts": [
+      "apps/studio/src/terminology/service.ts"
+    ],
+    "apps/studio/tests/helpers.ts": [
+      "apps/studio/tests/api.test.ts",
+      "apps/studio/tests/events.test.ts",
+      "apps/studio/tests/materials-api.test.ts",
+      "apps/studio/tests/materials-branching.test.ts",
+      "apps/studio/tests/materials-reading-api.test.ts",
+      "apps/studio/tests/materials-service.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "apps/studio/tests/search-api.test.ts",
+      "apps/studio/tests/search-service.test.ts",
+      "apps/studio/tests/service.test.ts",
+      "apps/studio/tests/terminology-reading-modes.test.ts",
+      "apps/studio/tests/terminology.test.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/nav/b9-loader.ts": [
+      "apps/studio/tests/b9-nav.test.ts",
+      "apps/studio/tests/nav-api.test.ts",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/gen-b9-nav-dataset.mjs",
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/src/nav/b9-probes.ts": [
+      "apps/studio/tests/b9-nav.test.ts",
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "tests/support/verifier/d4-b9-nav.ts"
+    ],
+    "apps/studio/tests/support/dom-primitives.ts": [
+      "apps/studio/tests/browser-stubs.test.ts",
+      "apps/studio/tests/ui-material-branching.test.ts",
+      "apps/studio/tests/ui-material-reader.test.ts",
+      "apps/studio/tests/ui-nav.test.ts",
+      "apps/studio/tests/ui-pdf-reader.test.ts",
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-regressions.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "apps/studio/tests/support/selection-stubs.ts": [
+      "apps/studio/tests/browser-stubs.test.ts",
+      "apps/studio/tests/ui-material-branching.test.ts",
+      "apps/studio/tests/ui-material-reader.test.ts",
+      "apps/studio/tests/ui-pdf-reader.test.ts",
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "apps/studio/tests/support/browser-stubs.ts": [
+      "apps/studio/tests/browser-stubs.test.ts",
+      "apps/studio/tests/support/dom-primitives.ts",
+      "apps/studio/tests/ui-material-branching.test.ts",
+      "apps/studio/tests/ui-material-reader.test.ts",
+      "apps/studio/tests/ui-nav.test.ts",
+      "apps/studio/tests/ui-pdf-reader.test.ts",
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-regressions.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "apps/studio/tests/portability-helpers.ts": [
+      "apps/studio/tests/portability.test.ts",
+      "tests/support/verifier/d4-b5-restore.ts"
+    ],
+    "apps/studio/tests/nav-session-controller.test.mjs": [
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/tests/nav-finder-controller.test.mjs": [
+      "apps/studio/tests/shared-utils.test.mjs"
+    ],
+    "apps/studio/tests/support/styles.ts": [
+      "apps/studio/tests/styles.test.ts",
+      "apps/studio/tests/ui-material-branching.test.ts",
+      "apps/studio/tests/ui-material-reader.test.ts",
+      "apps/studio/tests/ui-nav.test.ts",
+      "apps/studio/tests/ui-pdf-reader.test.ts",
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "apps/studio/tests/support/app-harness.ts": [
+      "apps/studio/tests/ui-material-branching.test.ts",
+      "apps/studio/tests/ui-material-reader.test.ts",
+      "apps/studio/tests/ui-nav.test.ts",
+      "apps/studio/tests/ui-pdf-reader.test.ts",
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-regressions.test.ts",
+      "apps/studio/tests/ui-search.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "apps/studio/tests/support/backend-models.ts": [
+      "apps/studio/tests/ui-probe.test.ts",
+      "apps/studio/tests/ui-regressions.test.ts",
+      "apps/studio/tests/ui-terminology.test.ts"
+    ],
+    "packages/contracts/src/json.ts": [
+      "packages/contracts/src/errors.ts",
+      "packages/contracts/src/events.ts",
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/identifiers.ts": [
+      "packages/contracts/src/events.ts",
+      "packages/contracts/src/index.ts",
+      "packages/contracts/src/material.ts",
+      "packages/contracts/src/product.ts"
+    ],
+    "packages/contracts/src/branding.ts": [
+      "packages/contracts/src/identifiers.ts",
+      "packages/contracts/src/index.ts",
+      "packages/contracts/src/material.ts",
+      "packages/contracts/src/product.ts",
+      "packages/contracts/src/session-reference.ts"
+    ],
+    "packages/contracts/src/errors.ts": [
+      "packages/contracts/src/identifiers.ts",
+      "packages/contracts/src/index.ts",
+      "packages/contracts/src/product.ts"
+    ],
+    "packages/contracts/src/session-reference.ts": [
+      "packages/contracts/src/identifiers.ts",
+      "packages/contracts/src/index.ts",
+      "packages/contracts/src/pi-runtime.ts",
+      "packages/contracts/src/product.ts"
+    ],
+    "packages/contracts/src/run-state.ts": [
+      "packages/contracts/src/identifiers.ts",
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/events.ts": [
+      "packages/contracts/src/index.ts",
+      "packages/contracts/src/pi-runtime.ts"
+    ],
+    "packages/contracts/src/tool-decision.ts": [
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/pi-runtime.ts": [
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/product.ts": [
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/material.ts": [
+      "packages/contracts/src/index.ts"
+    ],
+    "packages/contracts/src/index.ts": [
+      "packages/contracts/tests/negatives/brand-ids-not-interchangeable/index.must-fail.ts",
+      "packages/contracts/tests/negatives/error-code-not-in-enum/index.must-fail.ts",
+      "packages/contracts/tests/negatives/pinned-pi-version-drift/index.must-fail.ts",
+      "packages/contracts/tests/negatives/run-state-illegal-transition/index.must-fail.ts",
+      "packages/contracts/tests/negatives/run-state-illegal-via-helper/index.must-fail.ts",
+      "packages/contracts/tests/negatives/session-reference-missing-entry-id/index.must-fail.ts",
+      "packages/contracts/tests/negatives/tool-decision-invalid-outcome/index.must-fail.ts",
+      "packages/contracts/tests/type-tests.ts",
+      "packages/contracts/tests/usage-examples.ts"
+    ],
+    "packages/contracts/tests/type-test-utils.ts": [
+      "packages/contracts/tests/negatives/run-state-illegal-transition/index.must-fail.ts",
+      "packages/contracts/tests/type-tests.ts"
+    ],
+    "packages/event-journal/src/util.ts": [
+      "packages/event-journal/src/audit.ts",
+      "packages/event-journal/src/journal.ts",
+      "packages/event-journal/src/projector.ts"
+    ],
+    "packages/event-journal/src/projector.ts": [
+      "packages/event-journal/src/audit.ts",
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/src/journal.ts",
+      "packages/event-journal/tests/projector.test.ts"
+    ],
+    "packages/event-journal/src/errors.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/src/journal.ts",
+      "packages/event-journal/tests/journal.test.ts"
+    ],
+    "packages/event-journal/src/journal.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/src/recorder.ts",
+      "packages/event-journal/tests/journal.test.ts",
+      "packages/event-journal/tests/recorder.test.ts",
+      "packages/event-journal/tests/recovery.test.ts"
+    ],
+    "packages/event-journal/src/redact.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/src/journal.ts",
+      "packages/event-journal/tests/redact.test.ts"
+    ],
+    "packages/event-journal/src/recovery.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/src/journal.ts",
+      "packages/event-journal/tests/recovery.test.ts"
+    ],
+    "packages/event-journal/src/recorder.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/tests/recorder.test.ts"
+    ],
+    "packages/event-journal/src/audit.ts": [
+      "packages/event-journal/src/index.ts",
+      "packages/event-journal/tests/recorder.test.ts"
+    ],
+    "packages/event-journal/tests/helpers.ts": [
+      "packages/event-journal/tests/journal.test.ts",
+      "packages/event-journal/tests/projector.test.ts",
+      "packages/event-journal/tests/recorder.test.ts",
+      "packages/event-journal/tests/recovery.test.ts",
+      "packages/event-journal/tests/redact.test.ts"
+    ],
+    "packages/persistence/src/errors.ts": [
+      "packages/persistence/src/database.ts",
+      "packages/persistence/src/index.ts",
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/intents.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/validation.ts",
+      "packages/persistence/src/material/versions.ts",
+      "packages/persistence/src/migrations/index.ts",
+      "packages/persistence/src/serialization.ts",
+      "packages/persistence/src/tree/entities.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/repository.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/terminology.ts",
+      "packages/persistence/src/tree/turns.ts",
+      "packages/persistence/src/tree/validation.ts"
+    ],
+    "packages/persistence/src/migrations/index.ts": [
+      "packages/persistence/src/database.ts",
+      "packages/persistence/src/index.ts",
+      "packages/persistence/src/migrations/0001-initial-schema.ts",
+      "packages/persistence/src/migrations/0002-product-state.ts",
+      "packages/persistence/src/migrations/0003-navigation-state.ts",
+      "packages/persistence/src/migrations/0004-return-idempotency.ts",
+      "packages/persistence/src/migrations/0005-return-idempotency-tree-scope.ts",
+      "packages/persistence/src/migrations/0006-return-adoption-attempts.ts",
+      "packages/persistence/src/migrations/0007-terminology.ts",
+      "packages/persistence/src/migrations/0008-material-core.ts",
+      "packages/persistence/src/migrations/0009-terminology-dispatch-ledger.ts",
+      "packages/persistence/src/migrations/0010-nav-tree-expand-state.ts"
+    ],
+    "packages/persistence/src/tree-repository.ts": [
+      "packages/persistence/src/index.ts"
+    ],
+    "packages/persistence/src/material-repository.ts": [
+      "packages/persistence/src/index.ts"
+    ],
+    "packages/persistence/src/database.ts": [
+      "packages/persistence/src/index.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/material/model.ts": [
+      "packages/persistence/src/material-repository.ts",
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/context.ts",
+      "packages/persistence/src/material/intents.ts",
+      "packages/persistence/src/material/policy.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/material/serialization.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/validation.ts",
+      "packages/persistence/src/material/versions.ts"
+    ],
+    "packages/persistence/src/material/repository.ts": [
+      "packages/persistence/src/material-repository.ts",
+      "packages/persistence/src/material/context.ts"
+    ],
+    "packages/persistence/src/material/policy.ts": [
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/validation.ts",
+      "packages/persistence/src/material/versions.ts"
+    ],
+    "packages/persistence/src/material/serialization.ts": [
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/intents.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/versions.ts"
+    ],
+    "packages/persistence/src/material/validation.ts": [
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/intents.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/material/serialization.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/versions.ts"
+    ],
+    "packages/persistence/src/material/context.ts": [
+      "packages/persistence/src/material/catalog.ts",
+      "packages/persistence/src/material/intents.ts",
+      "packages/persistence/src/material/repository.ts",
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/material/versions.ts"
+    ],
+    "packages/persistence/src/material/catalog.ts": [
+      "packages/persistence/src/material/repository.ts"
+    ],
+    "packages/persistence/src/material/versions.ts": [
+      "packages/persistence/src/material/repository.ts"
+    ],
+    "packages/persistence/src/material/sources.ts": [
+      "packages/persistence/src/material/repository.ts"
+    ],
+    "packages/persistence/src/material/intents.ts": [
+      "packages/persistence/src/material/repository.ts"
+    ],
+    "packages/persistence/src/serialization.ts": [
+      "packages/persistence/src/material/sources.ts",
+      "packages/persistence/src/tree/entities.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/terminology.ts",
+      "packages/persistence/src/tree/turns.ts"
+    ],
+    "packages/persistence/src/migrations/0001-initial-schema.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0002-product-state.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0003-navigation-state.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0004-return-idempotency.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0005-return-idempotency-tree-scope.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0006-return-adoption-attempts.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0007-terminology.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0008-material-core.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0009-terminology-dispatch-ledger.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/migrations/0010-nav-tree-expand-state.ts": [
+      "packages/persistence/src/migrations/index.ts"
+    ],
+    "packages/persistence/src/tree/policy.ts": [
+      "packages/persistence/src/tree-repository.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/turns.ts",
+      "packages/persistence/src/tree/validation.ts"
+    ],
+    "packages/persistence/src/tree/model.ts": [
+      "packages/persistence/src/tree-repository.ts",
+      "packages/persistence/src/tree/entities.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/repository.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/terminology.ts",
+      "packages/persistence/src/tree/turns.ts",
+      "packages/persistence/src/tree/validation.ts"
+    ],
+    "packages/persistence/src/tree/repository.ts": [
+      "packages/persistence/src/tree-repository.ts",
+      "packages/persistence/src/tree/context.ts"
+    ],
+    "packages/persistence/src/tree/validation.ts": [
+      "packages/persistence/src/tree/entities.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/repository.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/terminology.ts",
+      "packages/persistence/src/tree/turns.ts"
+    ],
+    "packages/persistence/src/tree/context.ts": [
+      "packages/persistence/src/tree/entities.ts",
+      "packages/persistence/src/tree/navigation.ts",
+      "packages/persistence/src/tree/repository.ts",
+      "packages/persistence/src/tree/runs.ts",
+      "packages/persistence/src/tree/terminology.ts",
+      "packages/persistence/src/tree/turns.ts"
+    ],
+    "packages/persistence/src/tree/entities.ts": [
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/tree/runs.ts": [
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/tree/turns.ts": [
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/tree/terminology.ts": [
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/tree/navigation.ts": [
+      "packages/persistence/src/tree/repository.ts"
+    ],
+    "packages/persistence/src/index.ts": [
+      "packages/persistence/tests/backup.test.ts",
+      "packages/persistence/tests/concurrency-worker.ts",
+      "packages/persistence/tests/concurrency.test.ts",
+      "packages/persistence/tests/material-store.test.ts",
+      "packages/persistence/tests/migration.test.ts",
+      "packages/persistence/tests/product-store.test.ts",
+      "packages/persistence/tests/recovery.test.ts",
+      "packages/persistence/tests/repository-crud.test.ts",
+      "packages/persistence/tests/run-state.test.ts",
+      "packages/persistence/tests/session-reference.test.ts",
+      "packages/persistence/tests/transactions.test.ts"
+    ],
+    "packages/persistence/tests/helpers.ts": [
+      "packages/persistence/tests/backup.test.ts",
+      "packages/persistence/tests/concurrency.test.ts",
+      "packages/persistence/tests/material-store.test.ts",
+      "packages/persistence/tests/migration.test.ts",
+      "packages/persistence/tests/product-store.test.ts",
+      "packages/persistence/tests/recovery.test.ts",
+      "packages/persistence/tests/repository-crud.test.ts",
+      "packages/persistence/tests/run-state.test.ts",
+      "packages/persistence/tests/session-reference.test.ts",
+      "packages/persistence/tests/transactions.test.ts"
+    ],
+    "packages/runtime-pi/src/redact.ts": [
+      "packages/runtime-pi/src/errors.ts",
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/src/session-coordinator.ts",
+      "packages/runtime-pi/tests/unit/classification.test.ts"
+    ],
+    "packages/runtime-pi/src/pi-sdk-port.ts": [
+      "packages/runtime-pi/src/events.ts",
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/src/pi-real-port.ts",
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/src/runtime-state.ts",
+      "packages/runtime-pi/src/session-coordinator.ts",
+      "packages/runtime-pi/src/session-inspection.ts",
+      "packages/runtime-pi/src/tool-policy.ts",
+      "packages/runtime-pi/tests/helpers.ts",
+      "packages/runtime-pi/tests/real-port/offline-child.ts"
+    ],
+    "packages/runtime-pi/src/pi-runtime.ts": [
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/tests/unit/create-restore.test.ts",
+      "packages/runtime-pi/tests/unit/navigate-tree.test.ts",
+      "packages/runtime-pi/tests/unit/prompt-errors.test.ts",
+      "packages/runtime-pi/tests/unit/steer-abort-dispose.test.ts",
+      "packages/runtime-pi/tests/unit/subscribe-events.test.ts",
+      "packages/runtime-pi/tests/unit/tool-policy-gating.test.ts",
+      "packages/runtime-pi/tests/unit/version.test.ts"
+    ],
+    "packages/runtime-pi/src/errors.ts": [
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/src/session-coordinator.ts",
+      "packages/runtime-pi/tests/unit/classification.test.ts"
+    ],
+    "packages/runtime-pi/src/tool-policy.ts": [
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/tests/unit/tool-policy-gating.test.ts"
+    ],
+    "packages/runtime-pi/src/pi-real-port.ts": [
+      "packages/runtime-pi/src/index.ts",
+      "packages/runtime-pi/tests/real-port/offline-child.ts"
+    ],
+    "packages/runtime-pi/src/session-coordinator.ts": [
+      "packages/runtime-pi/src/pi-runtime.ts"
+    ],
+    "packages/runtime-pi/src/runtime-state.ts": [
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/src/session-coordinator.ts"
+    ],
+    "packages/runtime-pi/src/version.ts": [
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/src/session-coordinator.ts"
+    ],
+    "packages/runtime-pi/src/session-inspection.ts": [
+      "packages/runtime-pi/src/pi-runtime.ts",
+      "packages/runtime-pi/src/session-coordinator.ts"
+    ],
+    "packages/runtime-pi/src/events.ts": [
+      "packages/runtime-pi/src/pi-runtime.ts"
+    ],
+    "packages/runtime-pi/src/index.ts": [
+      "packages/runtime-pi/tests/real-port/offline-child.ts"
+    ],
+    "packages/runtime-pi/tests/helpers.ts": [
+      "packages/runtime-pi/tests/unit/create-restore.test.ts",
+      "packages/runtime-pi/tests/unit/navigate-tree.test.ts",
+      "packages/runtime-pi/tests/unit/prompt-errors.test.ts",
+      "packages/runtime-pi/tests/unit/steer-abort-dispose.test.ts",
+      "packages/runtime-pi/tests/unit/subscribe-events.test.ts",
+      "packages/runtime-pi/tests/unit/tool-policy-gating.test.ts",
+      "packages/runtime-pi/tests/unit/version.test.ts"
+    ],
+    "packages/tool-policy/src/audit.ts": [
+      "packages/tool-policy/src/authorization.ts",
+      "packages/tool-policy/src/engine.ts",
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/paths.ts": [
+      "packages/tool-policy/src/authorization.ts",
+      "packages/tool-policy/src/config.ts",
+      "packages/tool-policy/src/engine.ts",
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/authorization.ts": [
+      "packages/tool-policy/src/engine.ts",
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/config.ts": [
+      "packages/tool-policy/src/engine.ts",
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/decisions.ts": [
+      "packages/tool-policy/src/engine.ts",
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/engine.ts": [
+      "packages/tool-policy/src/index.ts"
+    ],
+    "packages/tool-policy/src/index.ts": [
+      "packages/tool-policy/tests/audit.test.ts",
+      "packages/tool-policy/tests/authorization.test.ts",
+      "packages/tool-policy/tests/paths.test.ts",
+      "packages/tool-policy/tests/policy.test.ts"
+    ],
+    "scripts/d3/browser-tool-setup.mjs": [
+      "scripts/d3/browser-probes.mjs"
+    ],
+    "scripts/d3/browser-tool-deny.mjs": [
+      "scripts/d3/browser-probes.mjs"
+    ],
+    "scripts/d3/browser-model-error.mjs": [
+      "scripts/d3/browser-probes.mjs"
+    ],
+    "scripts/d3/browser-deep-selection.mjs": [
+      "scripts/d3/browser-probes.mjs"
+    ],
+    "scripts/d4/browser/b3/branch.mjs": [
+      "scripts/d4/browser/b3-probes.mjs"
+    ],
+    "scripts/d4/browser/b3/return.mjs": [
+      "scripts/d4/browser/b3-probes.mjs"
+    ],
+    "scripts/d4/browser/material-probes.mjs": [
+      "scripts/d4/browser/b3/branch.mjs",
+      "scripts/d4/browser/b3/input.mjs",
+      "scripts/d4/browser/b3/return.mjs",
+      "scripts/d4/browser/b3/setup.mjs",
+      "scripts/d4/browser/beta-usability-probes.mjs",
+      "scripts/d4/browser/beta/clean-boot.mjs",
+      "scripts/d4/browser/beta/focus-drafts.mjs",
+      "scripts/d4/browser/beta/keyboard.mjs",
+      "scripts/d4/browser/beta/layout.mjs",
+      "scripts/d4/browser/beta/materials-branch.mjs",
+      "scripts/d4/browser/beta/reduced-motion.mjs",
+      "scripts/d4/browser/beta/touch.mjs",
+      "scripts/d4/browser/navigation/input.mjs",
+      "scripts/d4/browser/navigation/keyboard.mjs",
+      "scripts/d4/browser/navigation/operations.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/restart.mjs",
+      "scripts/d4/browser/navigation/settlement.mjs",
+      "scripts/d4/browser/navigation/spot-checks.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs",
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/d4/browser/scale-responsiveness.mjs",
+      "scripts/d4/browser/terminology/clean-boot.mjs",
+      "scripts/d4/browser/terminology/conversation.mjs",
+      "scripts/d4/browser/terminology/copy-overlay.mjs",
+      "scripts/d4/browser/terminology/drawer.mjs",
+      "scripts/d4/browser/terminology/exploration-recovery.mjs",
+      "scripts/d4/browser/terminology/input.mjs",
+      "scripts/d4/browser/terminology/layout.mjs",
+      "scripts/d4/browser/terminology/manual-extract.mjs",
+      "scripts/d4/browser/terminology/probe.mjs",
+      "scripts/d4/browser/terminology/range-entry.mjs",
+      "scripts/d4/browser/terminology/reading-modes.mjs",
+      "scripts/d4/browser/terminology/restart.mjs",
+      "scripts/d4/browser/terminology/selection.mjs",
+      "scripts/d4/browser/terminology/term-entry.mjs",
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/b3/input.mjs": [
+      "scripts/d4/browser/b3/branch.mjs",
+      "scripts/d4/browser/b3/return.mjs",
+      "scripts/d4/browser/b3/setup.mjs"
+    ],
+    "scripts/d4/browser/b3/policy.mjs": [
+      "scripts/d4/browser/b3/branch.mjs",
+      "scripts/d4/browser/b3/input.mjs",
+      "scripts/d4/browser/b3/return.mjs",
+      "scripts/d4/browser/b3/setup.mjs"
+    ],
+    "scripts/d4/browser/b3/selection.mjs": [
+      "scripts/d4/browser/b3/branch.mjs",
+      "scripts/d4/browser/b3/setup.mjs"
+    ],
+    "scripts/d4/browser/b3/setup.mjs": [
+      "scripts/d4/browser/b3/branch.mjs"
+    ],
+    "scripts/d4/browser/beta/clean-boot.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/materials-branch.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/layout.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/touch.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/reduced-motion.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/keyboard.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/beta/focus-drafts.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs"
+    ],
+    "scripts/d4/browser/material/input.mjs": [
+      "scripts/d4/browser/beta-usability-probes.mjs",
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/fixture-api.mjs",
+      "scripts/d4/browser/material/import-probe.mjs",
+      "scripts/d4/browser/material/markdown-reader.mjs",
+      "scripts/d4/browser/material/pdf-reader.mjs",
+      "scripts/d4/browser/material/restart.mjs",
+      "scripts/d4/browser/material/restore.mjs",
+      "scripts/d4/browser/material/search.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs",
+      "scripts/d4/browser/material/selection.mjs"
+    ],
+    "scripts/d4/browser/cli.mjs": [
+      "scripts/d4/browser/chrome-host.mjs",
+      "scripts/d4/browser/cli.test.mjs",
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/material/fixtures.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/fixture-api.mjs",
+      "scripts/d4/browser/material/import-probe.mjs",
+      "scripts/d4/browser/material/restart.mjs",
+      "scripts/d4/browser/material/restore.mjs",
+      "scripts/d4/browser/material/search.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs",
+      "scripts/d4/browser/material/selection.mjs"
+    ],
+    "scripts/d4/browser/material/selection.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/import-probe.mjs",
+      "scripts/d4/browser/material/markdown-reader.mjs",
+      "scripts/d4/browser/material/pdf-reader.mjs",
+      "scripts/d4/browser/material/restart.mjs",
+      "scripts/d4/browser/material/restore.mjs",
+      "scripts/d4/browser/material/search.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs"
+    ],
+    "scripts/d4/browser/material/fixture-api.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/import-api.mjs",
+      "scripts/d4/browser/material/restart.mjs",
+      "scripts/d4/browser/material/search.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs"
+    ],
+    "scripts/d4/browser/material/markdown-reader.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/restore.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs"
+    ],
+    "scripts/d4/browser/material/pdf-reader.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs"
+    ],
+    "scripts/d4/browser/material/import-api.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/denominator.mjs",
+      "scripts/d4/browser/material/import-probe.mjs",
+      "scripts/d4/browser/material/search.mjs",
+      "scripts/d4/browser/material/selection-probe.mjs"
+    ],
+    "scripts/d4/browser/material/import-probe.mjs": [
+      "scripts/d4/browser/material-probes.mjs"
+    ],
+    "scripts/d4/browser/material/selection-probe.mjs": [
+      "scripts/d4/browser/material-probes.mjs"
+    ],
+    "scripts/d4/browser/material/restart.mjs": [
+      "scripts/d4/browser/material-probes.mjs"
+    ],
+    "scripts/d4/browser/material/search.mjs": [
+      "scripts/d4/browser/material-probes.mjs",
+      "scripts/d4/browser/material/restore.mjs"
+    ],
+    "scripts/d4/browser/material/denominator.mjs": [
+      "scripts/d4/browser/material-probes.mjs"
+    ],
+    "scripts/d4/browser/material/restore.mjs": [
+      "scripts/d4/browser/material-probes.mjs"
+    ],
+    "scripts/d4/browser/navigation/settlement.mjs": [
+      "scripts/d4/browser/nav-probes.mjs",
+      "scripts/d4/browser/navigation/keyboard.mjs",
+      "scripts/d4/browser/navigation/operations.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/restart.mjs",
+      "scripts/d4/browser/navigation/spot-checks.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs"
+    ],
+    "scripts/d4/browser/navigation/probe.mjs": [
+      "scripts/d4/browser/nav-probes.mjs"
+    ],
+    "scripts/d4/browser/navigation/policy.mjs": [
+      "scripts/d4/browser/navigation/input.mjs",
+      "scripts/d4/browser/navigation/operations.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs"
+    ],
+    "scripts/d4/browser/navigation/operations.mjs": [
+      "scripts/d4/browser/navigation/keyboard.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/restart.mjs",
+      "scripts/d4/browser/navigation/spot-checks.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs"
+    ],
+    "scripts/d4/browser/navigation/input.mjs": [
+      "scripts/d4/browser/navigation/operations.mjs",
+      "scripts/d4/browser/navigation/probe.mjs",
+      "scripts/d4/browser/navigation/restart.mjs",
+      "scripts/d4/browser/navigation/settlement.mjs",
+      "scripts/d4/browser/navigation/spot-checks.mjs",
+      "scripts/d4/browser/navigation/virtualization.mjs"
+    ],
+    "scripts/d4/browser/navigation/virtualization.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/navigation/keyboard.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/navigation/restart.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/navigation/spot-checks.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/navigation/plan.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/navigation/timing.mjs": [
+      "scripts/d4/browser/navigation/probe.mjs"
+    ],
+    "scripts/d4/browser/scale-measurements.mjs": [
+      "scripts/d4/browser/scale-measurements.test.mjs",
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/d4/browser/scale-responsiveness.mjs"
+    ],
+    "tests/support/verifier/d4-b6-dataset.ts": [
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "tests/support/verifier/b6-scale/check.ts",
+      "tests/support/verifier/d4-b6-loader.ts"
+    ],
+    "tests/support/verifier/d4-b6-loader.ts": [
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "tests/support/verifier/b6-scale/check.ts"
+    ],
+    "scripts/d4/browser/nav-probes.mjs": [
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/scale-responsiveness.mjs": [
+      "scripts/d4/browser/scale-probes.mjs",
+      "scripts/d4/browser/scale-responsiveness.test.mjs"
+    ],
+    "scripts/d4/browser/terminology/probe.mjs": [
+      "scripts/d4/browser/terminology-probes.mjs"
+    ],
+    "scripts/d4/browser/terminology/facts.mjs": [
+      "scripts/d4/browser/terminology/conversation.mjs",
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/selection.mjs": [
+      "scripts/d4/browser/terminology/conversation.mjs",
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/policy.mjs": [
+      "scripts/d4/browser/terminology/drawer.mjs",
+      "scripts/d4/browser/terminology/probe.mjs",
+      "scripts/d4/browser/terminology/selection.mjs"
+    ],
+    "scripts/d4/browser/terminology/clean-boot.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/conversation.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/copy-overlay.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/drawer.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/exploration-recovery.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/first-answer.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/input.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/layout.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/manual-extract.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/range-entry.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/reading-modes.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/restart.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/term-entry.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/terminology/transport.mjs": [
+      "scripts/d4/browser/terminology/probe.mjs"
+    ],
+    "scripts/d4/browser/reading-rounds.mjs": [
+      "scripts/d4/browser/terminology/restart.mjs",
+      "tests/unit/d3-round-projection.test.ts"
+    ],
+    "scripts/d4/pdf/font.mjs": [
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "scripts/d4/gen-pdf-fixtures.mjs"
+    ],
+    "scripts/d4/pdf/layout.mjs": [
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "scripts/d4/gen-pdf-fixtures.mjs",
+      "scripts/d4/pdf/extract.mjs"
+    ],
+    "scripts/d4/pdf/pdfwriter.mjs": [
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "scripts/d4/gen-pdf-fixtures.mjs",
+      "scripts/d4/pdf/negatives.mjs"
+    ],
+    "scripts/d4/pdf/util.mjs": [
+      "scripts/d4/gen-b6-scale-dataset.mjs",
+      "scripts/d4/gen-pdf-fixtures.mjs",
+      "scripts/d4/pdf/extract.mjs",
+      "scripts/d4/pdf/font.mjs",
+      "scripts/d4/pdf/layout.mjs",
+      "scripts/d4/pdf/negatives.mjs",
+      "scripts/d4/pdf/pdfwriter.mjs",
+      "scripts/d4/pdf/render-smoke.mjs"
+    ],
+    "scripts/d4/pdf/textenc.mjs": [
+      "scripts/d4/gen-pdf-fixtures.mjs",
+      "scripts/d4/pdf/extract.mjs",
+      "scripts/d4/pdf/layout.mjs",
+      "scripts/d4/pdf/negatives.mjs"
+    ],
+    "scripts/d4/pdf/extract.mjs": [
+      "scripts/d4/gen-pdf-fixtures.mjs"
+    ],
+    "scripts/d4/pdf/content.mjs": [
+      "scripts/d4/gen-pdf-fixtures.mjs",
+      "scripts/d4/pdf/content.test.mjs"
+    ],
+    "scripts/d4/pdf/negatives.mjs": [
+      "scripts/d4/gen-pdf-fixtures.mjs"
+    ],
+    "scripts/d4/pdf/render-smoke.mjs": [
+      "scripts/d4/gen-pdf-fixtures.mjs"
+    ],
+    "scripts/d4/installer/core.ts": [
+      "scripts/d4/installer/commands/diagnostics.ts",
+      "scripts/d4/installer/commands/maintenance.ts",
+      "scripts/d4/installer/launcher.ts",
+      "scripts/d4/installer/shims.ts",
+      "scripts/d4/installer/smoke-bundle.mjs",
+      "scripts/d4/installer/smoke-support.mjs",
+      "scripts/d4/package-installer.mjs",
+      "tests/unit/d4-7-installer.test.ts"
+    ],
+    "scripts/d4/installer/core/model.ts": [
+      "scripts/d4/installer/core.ts",
+      "scripts/d4/installer/core/bundle.ts",
+      "scripts/d4/installer/core/configuration.ts",
+      "scripts/d4/installer/core/platform.ts",
+      "scripts/d4/installer/core/policy.ts",
+      "scripts/d4/installer/core/runtime.ts"
+    ],
+    "scripts/d4/installer/core/policy.ts": [
+      "scripts/d4/installer/core.ts",
+      "scripts/d4/installer/core/bundle.ts",
+      "scripts/d4/installer/core/configuration.ts",
+      "scripts/d4/installer/core/platform.ts",
+      "scripts/d4/installer/core/shell.ts"
+    ],
+    "scripts/d4/installer/core/platform.ts": [
+      "scripts/d4/installer/core.ts"
+    ],
+    "scripts/d4/installer/core/configuration.ts": [
+      "scripts/d4/installer/core.ts"
+    ],
+    "scripts/d4/installer/core/shell.ts": [
+      "scripts/d4/installer/core.ts"
+    ],
+    "scripts/d4/installer/core/bundle.ts": [
+      "scripts/d4/installer/core.ts"
+    ],
+    "scripts/d4/installer/core/runtime.ts": [
+      "scripts/d4/installer/core.ts"
+    ],
+    "scripts/d4/installer/commands/maintenance.ts": [
+      "scripts/d4/installer/launcher.ts"
+    ],
+    "scripts/d4/installer/commands/diagnostics.ts": [
+      "scripts/d4/installer/launcher.ts"
+    ],
+    "scripts/d4/installer/smoke-support.mjs": [
+      "scripts/d4/installer/smoke-bundle.mjs"
+    ],
+    "tests/support/verifier/secret-scanner.ts": [
+      "scripts/d4/installer/test-macos-local.mjs",
+      "scripts/d4/package-installer.mjs",
+      "scripts/record-d3-evidence.mjs",
+      "scripts/verification/d2-checks.mjs",
+      "scripts/verify-d2-live.js",
+      "scripts/verify-d4-selftest.js",
+      "tests/support/verifier/d4-probes.ts",
+      "tests/support/verifier/evidence.ts",
+      "tests/support/verifier/fixtures/manifest.ts",
+      "tests/support/verifier/probes.ts",
+      "tests/unit/d4-fixtures-integrity.test.ts",
+      "tests/unit/secret-scanner.test.ts"
+    ],
+    "scripts/d4/installer/shims.ts": [
+      "scripts/d4/package-installer.mjs",
+      "tests/unit/d4-7-installer.test.ts"
+    ],
+    "scripts/d4/pdf/content/fixtures-01-03.mjs": [
+      "scripts/d4/pdf/content.mjs",
+      "scripts/d4/pdf/content.test.mjs"
+    ],
+    "scripts/d4/pdf/content/fixtures-04-06.mjs": [
+      "scripts/d4/pdf/content.mjs",
+      "scripts/d4/pdf/content.test.mjs"
+    ],
+    "scripts/d4/pdf/content/fixtures-07-09.mjs": [
+      "scripts/d4/pdf/content.mjs",
+      "scripts/d4/pdf/content.test.mjs"
+    ],
+    "scripts/d4/pdf/content/fixtures-10-12.mjs": [
+      "scripts/d4/pdf/content.mjs",
+      "scripts/d4/pdf/content.test.mjs"
+    ],
+    "scripts/d4/pdf/content/typography.mjs": [
+      "scripts/d4/pdf/content/fixtures-01-03.mjs",
+      "scripts/d4/pdf/content/fixtures-04-06.mjs",
+      "scripts/d4/pdf/content/fixtures-07-09.mjs",
+      "scripts/d4/pdf/content/fixtures-10-12.mjs"
+    ],
+    "tests/support/verifier/evidence.ts": [
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "scripts/verify-d2-live.js",
+      "scripts/verify-d2-selftest.js",
+      "scripts/verify-d2.js",
+      "scripts/verify-d4.js",
+      "tests/integration/scenarios.test.ts"
+    ],
+    "tests/support/verifier/util.ts": [
+      "scripts/d4/run-b9-nav-engine-check.mjs",
+      "scripts/verification/d2-checks.mjs",
+      "scripts/verification/d4-browser-owner.mjs",
+      "scripts/verification/d4-evidence.mjs",
+      "scripts/verification/d4-foundation.mjs",
+      "scripts/verification/d4-material.mjs",
+      "scripts/verify-d2-live.js",
+      "scripts/verify-d2-selftest.js",
+      "scripts/verify-d2.js",
+      "scripts/verify-d4-selftest.js",
+      "scripts/verify-d4.js",
+      "tests/support/verifier/b3/scenarios.ts",
+      "tests/support/verifier/b6-scale/check.ts",
+      "tests/support/verifier/d4-b5-restore.ts",
+      "tests/support/verifier/d4-b9-nav.ts",
+      "tests/support/verifier/evidence.ts"
+    ],
+    "scripts/d3/browser-reporting.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-results.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-probes.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-fixtures.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-session-probes.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-projections.mjs": [
+      "scripts/run-d3-browser.mjs",
+      "tests/unit/d3-round-projection.test.ts"
+    ],
+    "scripts/d3/browser-cli.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-accessibility.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-recovery.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-conversation.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-host.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-input.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/browser-chrome.mjs": [
+      "scripts/run-d3-browser.mjs"
+    ],
+    "scripts/d3/api-fixtures.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-projections.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-cli.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-host.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-exploration.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-observation.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-tool-deny.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-tool-setup.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-model-error.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d3/api-conversation.mjs": [
+      "scripts/run-d3-real-pi.mjs"
+    ],
+    "scripts/d4/browser/reporting.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/chrome-host.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/b3-probes.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/scale-probes.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/beta-usability-probes.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/d4/browser/terminology-probes.mjs": [
+      "scripts/run-d4-browser.mjs"
+    ],
+    "scripts/terminology-eval/reporting.mjs": [
+      "scripts/run-terminology-eval.mjs"
+    ],
+    "scripts/terminology-eval/echo.mjs": [
+      "scripts/run-terminology-eval.mjs"
+    ],
+    "scripts/terminology-eval/metrics.mjs": [
+      "scripts/run-terminology-eval.mjs"
+    ],
+    "scripts/terminology-eval/set-integrity.mjs": [
+      "scripts/run-terminology-eval.mjs"
+    ],
+    "scripts/terminology-eval/cli.mjs": [
+      "scripts/run-terminology-eval.mjs"
+    ],
+    "tests/support/verifier/probes.ts": [
+      "scripts/verification/d2-checks.mjs",
+      "tests/unit/fixtures-integrity.test.ts"
+    ],
+    "tests/support/verifier/schema-validator.ts": [
+      "scripts/verification/d2-checks.mjs",
+      "scripts/verify-d2-live.js",
+      "scripts/verify-d2.js",
+      "tests/integration/scenarios.test.ts",
+      "tests/live/selftest.test.ts",
+      "tests/support/verifier/probes.ts",
+      "tests/unit/schema-validator.test.ts"
+    ],
+    "tests/support/verifier/d4-b6-scale.ts": [
+      "scripts/verification/d4-browser-owner.mjs"
+    ],
+    "tests/support/verifier/d4-b9-nav.ts": [
+      "scripts/verification/d4-browser-owner.mjs"
+    ],
+    "tests/support/verifier/d4-probes.ts": [
+      "scripts/verification/d4-foundation.mjs",
+      "tests/unit/d4-fixtures-integrity.test.ts"
+    ],
+    "tests/support/verifier/d4-b1-import.ts": [
+      "scripts/verification/d4-material.mjs"
+    ],
+    "tests/support/verifier/d4-b2-anchors.ts": [
+      "scripts/verification/d4-material.mjs"
+    ],
+    "tests/support/verifier/d4-b3-exploration.ts": [
+      "scripts/verification/d4-material.mjs"
+    ],
+    "tests/support/verifier/d4-b4-search.ts": [
+      "scripts/verification/d4-material.mjs"
+    ],
+    "tests/support/verifier/d4-b5-restore.ts": [
+      "scripts/verification/d4-material.mjs"
+    ],
+    "tests/support/verifier/verdict.ts": [
+      "scripts/verify-d2-live.js",
+      "scripts/verify-d2.js",
+      "scripts/verify-d4.js",
+      "tests/unit/verdict.test.ts"
+    ],
+    "tests/live/framework.ts": [
+      "scripts/verify-d2-live.js",
+      "tests/live/selftest.test.ts"
+    ],
+    "scripts/verification/d2-checks.mjs": [
+      "scripts/verify-d2.js"
+    ],
+    "scripts/verification/d4-evidence.mjs": [
+      "scripts/verify-d4.js"
+    ],
+    "scripts/verification/d4-browser-owner.mjs": [
+      "scripts/verify-d4.js"
+    ],
+    "scripts/verification/d4-material.mjs": [
+      "scripts/verify-d4.js"
+    ],
+    "scripts/verification/d4-foundation.mjs": [
+      "scripts/verify-d4.js"
+    ],
+    "tests/support/fake-pi-runtime.ts": [
+      "tests/integration/scenarios.test.ts",
+      "tests/live/framework.ts",
+      "tests/unit/fake-runtime.test.ts"
+    ],
+    "tests/support/harness.ts": [
+      "tests/integration/scenarios.test.ts",
+      "tests/live/framework.ts",
+      "tests/unit/fake-runtime.test.ts",
+      "tests/unit/harness.test.ts"
+    ],
+    "tests/support/verifier/b3/truth.ts": [
+      "tests/support/verifier/b3/harness.ts",
+      "tests/support/verifier/b3/scenarios.ts"
+    ],
+    "tests/support/verifier/b3/models.ts": [
+      "tests/support/verifier/b3/scenarios.ts",
+      "tests/support/verifier/d4-b3-exploration.ts"
+    ],
+    "tests/support/verifier/b3/harness.ts": [
+      "tests/support/verifier/b3/scenarios.ts"
+    ],
+    "tests/support/verifier/b6-dataset/models.ts": [
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/b6-dataset/facts.ts",
+      "tests/support/verifier/b6-dataset/invariants.ts",
+      "tests/support/verifier/b6-dataset/materials.ts",
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-dataset/policy.ts": [
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/b6-dataset/facts.ts",
+      "tests/support/verifier/b6-dataset/invariants.ts",
+      "tests/support/verifier/b6-dataset/materials.ts",
+      "tests/support/verifier/b6-dataset/models.ts",
+      "tests/support/verifier/b6-dataset/text.ts",
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-dataset/materials.ts": [
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-dataset/facts.ts": [
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/b6-dataset/invariants.ts"
+    ],
+    "tests/support/verifier/b6-dataset/text.ts": [
+      "tests/support/verifier/b6-dataset/dataset.ts",
+      "tests/support/verifier/b6-dataset/facts.ts",
+      "tests/support/verifier/b6-dataset/materials.ts",
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-dataset/dataset.ts": [
+      "tests/support/verifier/b6-dataset/facts.ts",
+      "tests/support/verifier/b6-dataset/invariants.ts",
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-scale/models.ts": [
+      "tests/support/verifier/b6-scale/check.ts",
+      "tests/support/verifier/b6-scale/harness.ts",
+      "tests/support/verifier/d4-b6-scale.ts"
+    ],
+    "tests/support/verifier/b6-scale/harness.ts": [
+      "tests/support/verifier/b6-scale/check.ts"
+    ],
+    "tests/support/verifier/b3/scenarios.ts": [
+      "tests/support/verifier/d4-b3-exploration.ts"
+    ],
+    "tests/support/verifier/b6-dataset/invariants.ts": [
+      "tests/support/verifier/d4-b6-dataset.ts"
+    ],
+    "tests/support/verifier/b6-scale/check.ts": [
+      "tests/support/verifier/d4-b6-scale.ts"
+    ],
+    "tests/support/verifier/fixtures/truth.ts": [
+      "tests/support/verifier/d4-probes.ts",
+      "tests/support/verifier/fixtures/manifest.ts",
+      "tests/support/verifier/fixtures/registry.ts",
+      "tests/support/verifier/fixtures/scale.ts",
+      "tests/support/verifier/fixtures/search.ts",
+      "tests/support/verifier/fixtures/selections.ts"
+    ],
+    "tests/support/verifier/fixtures/manifest.ts": [
+      "tests/support/verifier/d4-probes.ts"
+    ],
+    "tests/support/verifier/fixtures/registry.ts": [
+      "tests/support/verifier/d4-probes.ts"
+    ],
+    "tests/support/verifier/fixtures/selections.ts": [
+      "tests/support/verifier/d4-probes.ts"
+    ],
+    "tests/support/verifier/fixtures/search.ts": [
+      "tests/support/verifier/d4-probes.ts"
+    ],
+    "tests/support/verifier/fixtures/scale.ts": [
+      "tests/support/verifier/d4-probes.ts"
+    ],
+    "scripts/audit-computed-paths.mjs": [
+      "tests/unit/computed-paths.test.mjs"
+    ],
+    "scripts/d4/installer/launcher.ts": [
+      "tests/unit/d4-7-installer.test.ts"
+    ],
+    "scripts/evidence-index.mjs": [
+      "tests/unit/evidence-index.test.mjs"
+    ]
+  },
+  "errors": [],
+  "limitations": [
+    "Literal source imports and static test/it names only; computed names, nested subtests and assertions require existing suites.",
+    "This comparison does not prove behavioral parity or native/physical/human acceptance.",
+    "HTTP ESM/CSS/installer inclusion is audited separately by audit-studio-assets; test entrypoints remain in package scripts and CI.",
+    "Current paths include untracked source files; the working-tree report is not a clean-commit acceptance record."
+  ]
+}

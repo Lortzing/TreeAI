@@ -1,13 +1,18 @@
 # TreeAI refactor acceptance — live candidate matrix
 
-**2026-10-26 API connection update:** The latest local development base is
-`8a947d4a74027379392ea42fc89b25e19f904b09`. The API settings working candidate
-has passed 880 tests, source/root-test typechecks, real Pi API 25/25, native
-Chrome real Pi D3 31/31, and complete D4 Echo 16/16. A working macOS package
-passed 46/46 smoke. See [scope and connection record](api-connections-20261026.md)
-for exact limitations and committed-SHA/remote revalidation. These new live
-results do not close the full real-model quality, historical D1, human or
-physical gates below; older records bind to their own tested commits.
+**2026-10-27 API integration update:** Production code
+`39a62bd00956324d47ba37f8967c431c5c1ebfa9`, test-only successor
+`00237b592d3055263d338ad81d0d979247554b67`, [PR #28](https://github.com/Lortzing/TreeAI/pull/28).
+Full typechecks and 884 tests pass; real Pi API 25/25, native D3 31/31, complete
+real Pi D4 16/16 and macOS installer engineering 55/55 pass. Linux browser
+Escape/PDF drag failures are fixed; exact CI, package status and failed records
+are in [the final connection record](api-connections-20261026.md) and
+[bound evidence](../../evidence/api-settings/20261027/README.md).
+Vendor certification beyond the chosen local API, historical D1 opt-in repro,
+frozen quality evaluation, two-person annotation/arbitration, target-device
+signoff and participant trials remain separate gates. Offline D2/D4 exit 3
+remains INCOMPLETE. The matrix below is historical refactor evidence and does
+not override this API integration update.
 
 **Last updated:** 2026-10-14. **Main baseline:** `e427460b31f61722d5e74a6fa4ee24d140abe67b`.
 **Integration PR:** [#27](https://github.com/Lortzing/TreeAI/pull/27), branch `refactor/integration-r0-r7`. The current candidate must be read from the PR HEAD; this document does **not** claim that an earlier successful run validates every subsequent commit.

@@ -6,6 +6,42 @@ to a working candidate; committed-SHA revalidation and remote CI are recorded
 in the final evidence record when available. No historical successful commit is
 claimed to validate a later implementation.
 
+## Final code and verification — 2026-10-27
+
+Production code: `39a62bd00956324d47ba37f8967c431c5c1ebfa9`.
+Test-only successor: `00237b592d3055263d338ad81d0d979247554b67` preserves both
+historical topbar scenario names from main and the development line, executing
+the same complete current assertions under both identities. No product code
+changed after 39a62bd. [PR #28](https://github.com/Lortzing/TreeAI/pull/28).
+
+- Full source and root-test typechecks passed; **884 tests passed**, no failures,
+  cancellations or skips at the test-only successor.
+- Final production code: real Pi API **25/25**, native real Pi D3 **31/31**,
+  complete native real Pi D4 **16/16**; each has zero FAIL/BLOCKED/NOT_RUN.
+- Final production code: macOS installation/upgrade engineering automation
+  **55/55**. This zero-credential engineering test is separate from the real-Pi
+  source runs and the owner's experience signoff.
+- Static audits preserve all **862 baseline scenarios**, with **883 current
+  static names**. Main and development-line baselines are both retained.
+- [Linux browser CI](https://github.com/Lortzing/TreeAI/actions/runs/40440199130)
+  and [D2 CI](https://github.com/Lortzing/TreeAI/actions/runs/40440199092) pass on
+  final production code. The successor revalidates the static-name correction;
+  its latest status is on the PR. [Final production-code installer run](https://github.com/Lortzing/TreeAI/actions/runs/40440262671)
+  records the three target-platform results separately.
+
+Linux failures are resolved: Escape now ignores a pending branching flow from
+another material while preserving that material's draft and the visible-flow
+first/reader-second ordering. PDF text geometry is applied before asynchronous
+PDF.js paint; native drag anchors no longer move when a slower page finishes
+painting. Regression tests cover both. Diagnostic failures and the first
+baseline-name conflict are preserved, without threshold/fixture changes.
+
+[Bound commands, logs, failures and exclusions](../../evidence/api-settings/20261027/README.md)
+are the final record; the earlier working and morning snapshots below remain
+historical and do not override it. Local real runs report a dirty tree because
+acceptance docs/generated evidence and then a test-only alias were pending;
+no uncommitted production changes are claimed as a clean-commit run.
+
 ## Result
 
 Studio's **API 设置** dialog manages API provider/model profiles, endpoint format,
@@ -74,6 +110,33 @@ Code tasks implemented the isolated UI controller/probe adaptation; their
 results were independently reviewed, repaired and verified by the main agent.
 
 ## Remaining independent gates
+
+### Morning status verified 2026-10-27 (Asia/Shanghai)
+
+Draft [PR #28](https://github.com/Lortzing/TreeAI/pull/28) is open at
+`a2ac87fb9709ea1dd25affa3dfa359475fed97e3`. Latest remote D2 and diagnostics
+checks succeed. [Browser CI](https://github.com/Lortzing/TreeAI/actions/runs/40319475193)
+fails in Linux Beta keyboard acceptance: Escape reaches the material reader and
+is prevented, but the reader remains visible. This is an unresolved engineering
+blocker, not a request for the owner to waive the assertion. Keep the PR draft.
+
+The three-platform installer workflow at
+`bc3fa941ad64bca799b82f9744d66e611c600b06` completed successfully for macOS arm64,
+Linux x64 and Windows x64, including bundle smoke and artifact checksums
+([run](https://github.com/Lortzing/TreeAI/actions/runs/40316141746)). It does not
+validate later commits or substitute for physical-device acceptance.
+
+Local committed-code validation at
+`101564d77cddd37aa66f6b03e42f5132472057d3` completed real-Pi D3 **31/31**, real-Pi
+D4 **16/16**, and macOS packaged smoke **46/46**. Original logs are retained at
+`/private/tmp/treeai-101564d-{d3-real,d4-real,installer-smoke}.log`.
+The later a2ac87f commit adds browser failure diagnostics only. Local offline D2
+and D4 remain **21 PASS + 1 NOT_RUN** and **19 PASS + 1 NOT_RUN**, exit 3;
+their independent failure-injection selftests succeeded. No whole-project PASS.
+
+The morning check found the previous local service stopped; it was restarted
+using `treeai-studio-data/start-real-pi.sh`, preserving the isolated data directory
+and saved API selection. Entry: `http://127.0.0.1:8787`.
 
 Actual vendor credentials were not supplied for OpenAI/Gemini certification;
 only the chosen local endpoint was tested live. Frozen one-shot real quality

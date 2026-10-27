@@ -1,0 +1,15 @@
+2026-10-27T02:44:14.649Z start ok pid=13910 port=8788 bundle=0.0.0-api-be9263a-a
+2026-10-27T02:44:16.494Z stop (stop) pid=13910 port=8788 clean=true
+2026-10-27T02:44:18.982Z start ok pid=13976 port=8788 bundle=0.0.0-api-be9263a-a
+2026-10-27T02:44:20.721Z stop (stop) pid=13976 port=8788 clean=true
+2026-10-27T02:44:23.283Z start ok pid=14041 port=8788 bundle=0.0.0-api-be9263a-a
+2026-10-27T02:44:24.232Z stop (stop) pid=14041 port=8788 clean=true
+2026-10-27T02:44:26.738Z start ok pid=14098 port=8789 bundle=0.0.0-api-be9263a-a
+2026-10-27T02:44:28.155Z stop (stop) pid=14098 port=8789 clean=true
+2026-10-27T02:44:30.427Z start ok pid=14191 port=8788 bundle=0.0.0-api-be9263a-a
+2026-10-27T02:44:31.210Z stop (stop) pid=14191 port=8788 clean=true
+2026-10-27T02:44:59.332Z start ok pid=14456 port=8788 bundle=0.0.0-api-be9263a-b
+2026-10-27T02:44:59.347Z upgrade 0.0.0-api-be9263a-a -> 0.0.0-api-be9263a-b ok
+2026-10-27T02:45:02.896Z stop (stop) pid=14456 port=8788 clean=true
+2026-10-27T02:45:27.989Z start ok pid=14733 port=8788 bundle=0.0.0-api-be9263a-b
+2026-10-27T02:45:28.440Z stop (stop) pid=14733 port=8788 clean=true

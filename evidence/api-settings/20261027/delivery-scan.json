@@ -1,0 +1,24 @@
+{
+  "scanner": "treeai-d2-check-secrets",
+  "scannerVersion": "d2-v1.1",
+  "scannedRoots": [
+    "evidence/api-settings/20261027",
+    "evidence/d2/selftest/d2-selftest-20261026T113316655Z",
+    "evidence/d4/selftest/d4-selftest-20261026T113317420Z",
+    "evidence/d4/d4-7/d47-macos-20261027T024147Z",
+    "evidence/d4/d4-7/d47-macos-20261027T024215Z",
+    "evidence/d4/d4-7/d47-macos-20261027T024748Z",
+    "docs/acceptance/api-connections-20261026.md",
+    "docs/acceptance/api-settings-morning-decisions.md",
+    "docs/acceptance/status.md"
+  ],
+  "ruleCount": 23,
+  "stats": {
+    "filesScanned": 118,
+    "filesSkippedBinary": 0,
+    "filesSkippedLarge": 0,
+    "filesUnreadable": 0
+  },
+  "findingCount": 0,
+  "findings": []
+}

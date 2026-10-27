@@ -1,0 +1,5 @@
+
+> treeai@0.0.0 audit:studio-assets
+> node scripts/audit-studio-assets.mjs
+
+PASS: 56 native ESM assets + 11 CSS modules and installer/public allowlist accounted for
