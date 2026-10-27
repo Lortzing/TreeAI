@@ -2841,7 +2841,7 @@ test("A2 cross-line selection: offsets and the revealed text span the line break
 /* 21. 顶栏位置路径（改版后新增）：renderTopbarPath 的诚实状态机          */
 /* ------------------------------------------------------------------ */
 
-test("topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open", async () => {
+async function verifyTopbarPositionPath() {
   /* 无树启动：路径 = 空字符串——诚实状态（renderTopbarPath 无树分支），
      绝不用硬编码面包屑（如 “Forest”）占位；空态可见。 */
   const world = await createWorld({ noTrees: true });
@@ -2875,7 +2875,12 @@ test("topbar position path: empty with no tree, tree name / 思考主线 once op
   await sleep(220);
   assert.equal(world.el("branch-panel").hidden, true, "the panel finished its exit animation");
   assert.equal(path.textContent, "First trunk question. / 思考主线", "the path stays on the main line after the exit animation settles");
-});
+}
+
+// Main and the latest development line froze different names for this scenario.
+// Retain both identities with the same complete current-behavior assertions.
+test("topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open", verifyTopbarPositionPath);
+test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", verifyTopbarPositionPath);
 
 /* ------------------------------------------------------------------ */
 /* 22. 空态 New Tree 按钮（改版后新增）：主操作直达 = 同一 createTree      */
