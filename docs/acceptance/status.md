@@ -1,5 +1,7 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-28 Studio compact shell:** Code `c03b19e70b4ae0a53b250de6e562227b72046856` adds a persistent collapsible sidebar, one-row icon toolbar, search popover and floating attachments opening a right-hand reader. Clean-commit typechecks, 905 tests and complete Chrome Echo D4 16/16 pass. [Exact evidence, retained failures and exclusions](../../evidence/studio-compact/20261028/README.md). Local only; real-Pi, human and target-platform gates remain separate.
+
 **2026-10-28 Studio experience redesign:** Final code `8a3890c9a938fb44360c6716742a2501c09d07d0` simplifies navigation with warm surfaces and a separate settings page; fixes hidden navigation, source-overlay and selection/focus regressions. Final typechecks and 904 tests pass. Complete working-candidate Chrome Echo D4 passes 16/16; final icon adjustment has scoped usability 5/5 plus direct browser verification. [Exact source/run identities, retained failures and exclusions](../../evidence/studio-experience/20261028/README.md); [next-stage priorities](../development/studio-experience-next.md). Local commits only. Participant trials remain owner-deferred; prior human/physical/quality gates remain open.
 
 **2026-10-28 Studio consistency / Keychain:** Local code commit

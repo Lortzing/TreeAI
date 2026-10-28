@@ -1,0 +1,109 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T104753-65652",
+  "mode": "selftest",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "scoped": [
+    "d4-import-material",
+    "d4-import-denominator",
+    "terminology-path"
+  ],
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "c03b19e70b4ae0a53b250de6e562227b72046856",
+  "gitDirty": false,
+  "generatedAt": "2026-10-28T10:48:23.968Z",
+  "git": {
+    "head": "c03b19e70b4ae0a53b250de6e562227b72046856",
+    "dirty": false
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-02",
+      "md-03",
+      "md-04",
+      "md-05",
+      "md-06",
+      "md-07",
+      "md-08",
+      "md-09",
+      "md-10",
+      "md-11",
+      "md-12",
+      "neg-md-empty",
+      "neg-md-invalid-utf8",
+      "neg-md-nul-byte",
+      "neg-md-whitespace-only",
+      "neg-pdf-corrupt",
+      "neg-pdf-encrypted",
+      "neg-pdf-image-only",
+      "neg-pdf-zero-text",
+      "pdf-01",
+      "pdf-02",
+      "pdf-03",
+      "pdf-04",
+      "pdf-05",
+      "pdf-06",
+      "pdf-07",
+      "pdf-08",
+      "pdf-09",
+      "pdf-10",
+      "pdf-11",
+      "pdf-12"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:62674",
+      "durationMs": 871
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:62694/",
+      "durationMs": 770
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 669
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 1294
+    },
+    {
+      "id": "d4-import-denominator",
+      "status": "PASS",
+      "detail": "24 ready fixtures (12 markdown + 12 text-layer PDF) imported via the real HTTP API into a UI-created tree, each byte-equal to the frozen canonicalText + block map via the paginated blocks API; 11 negatives honestly rejected (2 at the import gate with zero persistence: empty→400, >20MiB→413; 9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, reads refused 409 material-not-ready); the real sidebar lists all 33 entries with honest ready/failed status",
+      "durationMs": 6418
+    },
+    {
+      "id": "terminology-path",
+      "status": "PASS",
+      "detail": "reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (echo — NOT real-Pi evidence), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested",
+      "durationMs": 19823
+    }
+  ],
+  "pageErrors": []
+}

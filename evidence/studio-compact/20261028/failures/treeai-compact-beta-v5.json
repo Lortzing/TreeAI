@@ -1,0 +1,59 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T103839-61108",
+  "mode": "selftest",
+  "verdict": "HAS_FAIL",
+  "exitCode": 2,
+  "scoped": [
+    "d4-beta-usability"
+  ],
+  "counts": {
+    "pass": 4,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+  "gitDirty": true,
+  "generatedAt": "2026-10-28T10:38:41.491Z",
+  "git": {
+    "head": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+    "dirty": true
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:53291",
+      "durationMs": 636
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:53312/",
+      "durationMs": 773
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 645
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "FAIL",
+      "error": {
+        "message": "The requested module '../material-probes.mjs' does not provide an export named 'exposeInputTarget'"
+      },
+      "durationMs": 6
+    }
+  ],
+  "pageErrors": []
+}
