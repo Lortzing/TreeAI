@@ -228,7 +228,12 @@ export function createStudioBasics(deps) {
   function closeSidebar({ keepLibrary = false } = {}) {
     if (!keepLibrary && $("workspace-library")) $("workspace-library").open = false;
     deps.document.body.classList.remove("sidebar-open");
-    $("sidebar-toggle").setAttribute("aria-expanded", "false");
+    const narrow = deps.window?.matchMedia?.("(max-width: 719px)")?.matches ?? true;
+    const open = !narrow && !deps.document.body.classList.contains("sidebar-collapsed");
+    $("sidebar-toggle").setAttribute("aria-expanded", String(open));
+    $("sidebar-toggle").setAttribute("aria-label", open ? "收起侧栏" : "展开侧栏");
+    if ($("search-section")) $("search-section").open = false;
+    $("search-shortcut")?.setAttribute("aria-expanded", "false");
   }
 
   return {

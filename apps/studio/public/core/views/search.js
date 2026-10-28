@@ -49,7 +49,7 @@ export function createSearchView({
       }
       return `${String(search.hits.length)} hit(s) for “${search.resultQuery ?? ""}” ${scopeLabel} — only saved facts are searched; unsubmitted drafts are never indexed${noteSuffix}`;
     }
-    return `search saved facts — 材料 / 批注 / Return / 对话; unsubmitted drafts and explain caches are never indexed${noteSuffix}`;
+    return `搜索已保存的对话、材料、批注与收获。未提交草稿和解释缓存不参与搜索。${noteSuffix}`;
   }
 
   function buildSearchHitMeta(hit) {

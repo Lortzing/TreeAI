@@ -134,11 +134,6 @@ $("nav-locate-current").addEventListener("click", () => void navLocateCurrent())
 $("nav-source-selected").addEventListener("click", () => void navJumpToSource());
 $("nav-close-tree").addEventListener("click", () => closeNavTree());
 
-$("sidebar-toggle").addEventListener("click", () => {
-  if ($("workspace-library")) $("workspace-library").open = false;
-  const open = document.body.classList.toggle("sidebar-open");
-  $("sidebar-toggle").setAttribute("aria-expanded", open ? "true" : "false");
-});
 
 /* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
 
@@ -244,6 +239,19 @@ registerDocumentListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   // Native settings dialog owns Escape; do not also navigate the workspace below it.
   if ($("api-settings-dialog")?.open) return;
+  if ($("search-section").open) {
+    event.preventDefault();
+    $("search-section").open = false;
+    $("search-shortcut").setAttribute("aria-expanded", "false");
+    $("search-shortcut").focus();
+    return;
+  }
+  if ($("materials-section").open && $("materials-section").contains(event.target)) {
+    event.preventDefault();
+    $("materials-section").open = false;
+    $("reading-materials").focus();
+    return;
+  }
   if ($("workspace-library")?.open) {
     event.preventDefault();
     $("workspace-library").open = false;
@@ -305,13 +313,6 @@ registerDocumentListener("keydown", (event) => {
   if (termCard !== null) {
     event.preventDefault();
     closeTermExplain();
-    return;
-  }
-  if ($("search-section").open) {
-    event.preventDefault();
-    $("search-section").open = false;
-    $("search-shortcut").setAttribute("aria-expanded", "false");
-    $("search-shortcut").focus();
     return;
   }
   if (document.body.classList.contains("sidebar-open")) {

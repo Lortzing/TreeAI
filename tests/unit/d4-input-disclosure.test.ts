@@ -8,7 +8,7 @@ for (const identified of [true,false]) test(`native disclosure targeting handles
  const summary={tagName:'SUMMARY',id:identified?'search-shortcut':'',parentElement:details,contains:(el:unknown)=>el===summary,closest:(selector:string)=>selector==='#sidebar'?null:summary,getBoundingClientRect:()=>({left:10,top:10,width:100,height:40}),scrollIntoView:()=>{}};
  const input={tagName:'INPUT',parentElement:details,closest:(selector:string)=>selector==='#sidebar'?null:input,getBoundingClientRect:()=>({left:10,top:60,width:100,height:40}),scrollIntoView:()=>{}};
  details.children=[summary,input];const selectors:string[]=[];let target:unknown;
- const document={getElementById:()=>null,querySelector:(selector:string)=>{
+ const document={body:{classList:{contains:()=>false}},getElementById:()=>null,querySelector:(selector:string)=>{
   selectors.push(selector);assert.ok(!selector.endsWith(' > '),'the selector is complete');
   target=selector==='#search-input'?input:summary;return target;
  },elementFromPoint:()=>target};

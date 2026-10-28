@@ -84,7 +84,12 @@ export async function runBetaMaterialsBranch(deps) {
         };
         await followUp(deps.BETA_MARKERS.f1, "这个论点在原文中的依据是哪一句");
         await inputClickAt(deps.ctx, "#panel-close");
-        await waitFor(deps.ctx, `(() => { const p = document.getElementById("branch-panel"); return p === null || p.hidden; })()`, { label: "panel closed after the branch setup" });
+        try {
+          await waitFor(deps.ctx, `(() => { const p = document.getElementById("branch-panel"); return p === null || p.hidden; })()`, { label: "panel closed after the branch setup" });
+        } catch (error) {
+          await deps.ctx.screenshot("beta-panel-close-failure");
+          throw error;
+        }
         deps.scenarioSetup.branchId = branchId;
         deps.scenarioSetup.firstQuestion = deps.BETA_MARKERS.q1;
         deps.scenarioSetup.followUps = [deps.BETA_MARKERS.f1];

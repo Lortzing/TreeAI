@@ -3,52 +3,76 @@ export function registerWorkspaceEvents(deps) {
   const { $, state, document, window, sessionUI, scrollBehavior, openMaterial, closeMaterialReader, setWorkspaceView, moveSessionRound } = deps;
   const listeners = [];
   const listen = (target, name, handler) => {
-    if (!target) return;
+    if (!target?.addEventListener) return;
     target.addEventListener(name, handler);
     listeners.push([target, name, handler]);
   };
-/* 真实搜索表单仍在原位；只展开 disclosure，不复制表单或重置筛选。 */
+const narrowScreen = window.matchMedia?.("(max-width: 719px)");
+const isNarrow = () => narrowScreen?.matches ?? true;
+const closeHistoryDrawer = () => {
+  document.body.classList.remove("sidebar-open");
+  syncSidebarToggle();
+};
+function syncSidebarToggle() {
+  const open = isNarrow()
+    ? document.body.classList.contains("sidebar-open")
+    : !document.body.classList.contains("sidebar-collapsed");
+  const label = open ? "收起侧栏" : "展开侧栏";
+  $("sidebar-toggle").setAttribute("aria-expanded", String(open));
+  $("sidebar-toggle").setAttribute("aria-label", label);
+  $("sidebar-toggle").title = label;
+}
+try {
+  if (window.localStorage?.getItem("treeai.sidebar-collapsed") === "true") document.body.classList.add("sidebar-collapsed");
+} catch { /* Storage can be unavailable; the current page still works. */ }
+syncSidebarToggle();
+listen(narrowScreen, "change", syncSidebarToggle);
+listen($("sidebar-toggle"), "click", () => {
+  if ($("workspace-library")) $("workspace-library").open = false;
+  $("materials-section").open = false;
+  closeSearch(false);
+  const name = isNarrow() ? "sidebar-open" : "sidebar-collapsed";
+  const enabled = document.body.classList.toggle(name);
+  if (!isNarrow()) {
+    try { window.localStorage?.setItem("treeai.sidebar-collapsed", String(enabled)); } catch { /* optional preference */ }
+  }
+  syncSidebarToggle();
+});
+function closeSearch(restoreFocus = true) {
+  $("search-section").open = false;
+  $("search-shortcut")?.setAttribute("aria-expanded", "false");
+  if (restoreFocus) $("search-shortcut").focus();
+}
 function focusThoughtSearch() {
   if ($("workspace-library")) $("workspace-library").open = false;
-  const section = $("search-section");
-  section.open = true;
+  $("materials-section").open = false;
+  $("search-section").open = true;
   $("search-shortcut")?.setAttribute("aria-expanded", "true");
-  document.body.classList.add("sidebar-open");
-  $("sidebar-toggle").setAttribute("aria-expanded", "true");
+  if (isNarrow()) document.body.classList.add("sidebar-open");
+  syncSidebarToggle();
   $("search-input").focus();
-  section.scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
 }
 listen($("search-shortcut"), "click", (event) => {
   event.preventDefault?.();
-  const section = $("search-section");
-  if (section.open) {
-    section.open = false;
-    $("search-shortcut").setAttribute("aria-expanded", "false");
-  } else focusThoughtSearch();
+  if ($("search-section").open) closeSearch();
+  else focusThoughtSearch();
 });
+listen($("search-close"), "click", () => closeSearch());
 listen($("search-section"), "toggle", () => {
   $("search-shortcut")?.setAttribute("aria-expanded", $("search-section").open ? "true" : "false");
 });
 listen($("reading-materials"), "click", () => {
-  if (state.materialReader !== null) {
-    $("material-reader").focus();
-    return;
-  }
-  if (state.materials?.ok && state.materials.materials.length === 1) {
-    void openMaterial(state.materials.materials[0].material.id, {
-      trigger: { kind: "element", element: $("reading-materials") },
-    });
-    return;
-  }
-  if ($("workspace-library")) $("workspace-library").open = true;
-  /* 材料段默认折叠：回退路径（多份材料或无材料）要把列表/导入入口
-     如实亮出来，先展开再聚焦。 */
-  $("materials-section").open = true;
-  $("material-import").focus();
-  $("materials-section").scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
+  // Native details activation owns expansion, including keyboard Enter/Space.
+  if ($("workspace-library")) $("workspace-library").open = false;
+  closeSearch(false);
+  closeHistoryDrawer();
+});
+listen($("materials-section"), "toggle", () => {
+  $("reading-materials")?.setAttribute("aria-expanded", String($("materials-section").open));
 });
 listen($("reading-trunk"), "click", () => {
   closeMaterialReader();
+  setWorkspaceView("chat");
   $("prompt-input").focus();
 });
 listen(document, "keydown", (event) => {
@@ -57,15 +81,13 @@ listen(document, "keydown", (event) => {
     focusThoughtSearch();
   }
 });
-
-/* Secondary tree tools share their original controls; opening never resets domain state. */
 listen($("workspace-library-toggle"), "mousedown", (event) => {
-  // Opening the path controls must not collapse the answer selection they act on.
   if (state.armedSelection != null) event.preventDefault();
 });
 listen($("workspace-library-toggle"), "click", () => {
-  document.body.classList.remove("sidebar-open");
-  $("sidebar-toggle").setAttribute("aria-expanded", "false");
+  closeHistoryDrawer();
+  closeSearch(false);
+  $("materials-section").open = false;
 });
 listen($("workspace-library"), "toggle", () => {
   $("workspace-library-toggle")?.setAttribute("aria-expanded", $("workspace-library").open ? "true" : "false");
@@ -76,15 +98,18 @@ listen($("workspace-library-close"), "click", () => {
 });
 listen(document, "pointerdown", (event) => {
   const library = $("workspace-library");
-  if (library?.open && event.target && !library.contains(event.target) && !$("reading-materials").contains(event.target)) {
-    library.open = false;
-  }
+  if (library?.open && event.target && !library.contains(event.target)) library.open = false;
+  const search = $("search-section");
+  if (search.open && event.target && !search.contains(event.target)) closeSearch(false);
 });
 
 /* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
 
 for (const mode of ["chat", "map"]) {
-  listen($("mode-" + mode), "click", () => setWorkspaceView(mode));
+  listen($("mode-" + mode), "click", () => {
+    closeMaterialReader();
+    setWorkspaceView(mode);
+  });
 }
 listen($("round-previous"), "click", () => moveSessionRound(-1));
 listen($("round-next"), "click", () => moveSessionRound(1));

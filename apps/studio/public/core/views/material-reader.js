@@ -310,10 +310,14 @@ export function createMaterialReaderView(deps) {
     blocksEl.setAttribute("tabindex", "0");
     /* ③ 同族：正文按下开启拖拽窗口——窗口内 chrome 重渲延后（块追加是纯
        增量的，不触碰既有节点，无需延后）。 */
-    blocksEl.addEventListener("mousedown", () => {
+    blocksEl.addEventListener("mousedown", (event) => {
+      // Touch selection is owned by selectionchange. Chrome's compatibility
+      // mouse events after release must not start another drag or clear it.
+      if (event.sourceCapabilities?.firesTouchEvents) return;
       deps.state.selectionDragActive = true;
     });
-    const armFromEvent = () => {
+    const armFromEvent = (event) => {
+      if (event.sourceCapabilities?.firesTouchEvents) return;
       if (deps.state.selectionDragActive) {
         deps.state.selectionDragActive = false;
         deps.window.setTimeout(deps.flushPendingRerender, 0);

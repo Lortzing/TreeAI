@@ -718,6 +718,7 @@ interface World {
 }
 
 interface WorldOptions {
+  narrowViewport?: boolean;
   journalMode?: Backend["journalMode"];
   returnMode?: Backend["returnMode"];
   /** /return 响应的 navigation 字段脚本（保存后导航失败场景）。 */
@@ -769,7 +770,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     matchMedia: (query) => ({
       /* reduce 场景命中（app.js 的 prefersReducedMotion 每次调用现读
          matches——无需 change 事件）。 */
-      matches: options.reducedMotion === true && query.includes("prefers-reduced-motion"),
+      matches: (options.reducedMotion === true && query.includes("prefers-reduced-motion")) || (options.narrowViewport === true && query.includes("max-width: 719px")),
       media: query,
       addEventListener(): void {},
       removeEventListener(): void {},
@@ -2363,7 +2364,7 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
   );
 
   /* JS 行为（scripted DOM）：开关状态 + aria、选树自动收起、Esc 分层。 */
-  const world = await createWorld();
+  const world = await createWorld({ narrowViewport: true });
   const body = world.document.body;
   assert.ok(body !== null, "the document body exists");
   const toggle = world.el("sidebar-toggle");
@@ -3321,4 +3322,29 @@ test("terminology minimal UI: selection arms Explain, the card shows the isolate
   assert.ok(drawer.textContent.includes("“Secon” (term) from Trunk"), "the annotation lists with its term and source branch");
   assert.ok(drawer.textContent.includes("promoted to"), "the promotion destination is listed");
   assert.ok(drawer.textContent.includes("chars/4 estimate"), "the usage note labels its estimate honestly");
+});
+
+test("desktop sidebar collapses to a persistent rail without losing the current tree or prompt", async () => {
+  const world = await createWorld();
+  const body = world.document.body!;
+  const toggle = world.el("sidebar-toggle");
+  const conversation = world.el("conversation");
+  const nodes = [...conversation.children];
+  world.el("prompt-input").value = "Keep my draft";
+  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  toggle.click();
+  assert.equal(body.classList.contains("sidebar-collapsed"), true);
+  assert.equal(body.classList.contains("sidebar-open"), false);
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+  assert.equal(world.localStorageStore.get("treeai.sidebar-collapsed"), "true");
+  world.el("search-shortcut").click();
+  assert.equal(world.document.activeElement, world.el("search-input"));
+  assert.equal(body.classList.contains("sidebar-collapsed"), true, "search does not force open the history sidebar");
+  world.el("search-close").click();
+  assert.equal(world.document.activeElement, world.el("search-shortcut"));
+  toggle.click();
+  assert.equal(body.classList.contains("sidebar-collapsed"), false);
+  assert.equal(world.localStorageStore.get("treeai.sidebar-collapsed"), "false");
+  assert.deepEqual([...conversation.children], nodes);
+  assert.equal(world.el("prompt-input").value, "Keep my draft");
 });

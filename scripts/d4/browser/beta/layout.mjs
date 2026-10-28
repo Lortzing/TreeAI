@@ -13,6 +13,22 @@ export async function runBetaLayout(deps) {
         await deps.setViewport(deps.ctx, deps.WIDE_VIEWPORT);
         const wideViewport = await deps.ctx.evalJs(`(() => ({ w: window.innerWidth, h: window.innerHeight }))()`);
         if (wideViewport.w < 1440) throw new Error(`wide viewport is ${String(wideViewport.w)}px (< 1440 required)`);
+        await inputClickAt(deps.ctx, "#sidebar-toggle");
+        await waitFor(deps.ctx, `document.body.classList.contains("sidebar-collapsed")`, { label: "desktop sidebar collapses to its icon rail" });
+        await inputClickAt(deps.ctx, "#search-shortcut");
+        const compactShell = await deps.ctx.evalJs(`(() => ({
+          railWidth: document.getElementById("sidebar").getBoundingClientRect().width,
+          headerHeight: document.getElementById("branch-bar").getBoundingClientRect().height,
+          queryFocused: document.activeElement === document.getElementById("search-input"),
+          railRetained: document.body.classList.contains("sidebar-collapsed"),
+          searchOpen: document.getElementById("search-section").open,
+          attachmentIndependent: !document.getElementById("workspace-library").contains(document.getElementById("materials-section"))
+        }))()`);
+        if (compactShell.railWidth !== 64 || compactShell.headerHeight !== 60 || !compactShell.queryFocused || !compactShell.railRetained || !compactShell.searchOpen || !compactShell.attachmentIndependent) {
+          throw new Error(`compact shell interaction mismatch: ${JSON.stringify(compactShell)}`);
+        }
+        await inputClickAt(deps.ctx, "#search-close");
+        await inputClickAt(deps.ctx, "#sidebar-toggle");
         const wideOverflow = await deps.assertNoHorizontalOverflow(deps.ctx, "wide viewport");
         const wideHits = await deps.assertHits(
           deps.ctx,
@@ -34,6 +50,11 @@ export async function runBetaLayout(deps) {
           { label: "md-11 reader usable at the wide viewport", timeoutMs: 20_000 },
         );
         await deps.assertNoHorizontalOverflow(deps.ctx, "wide viewport with the reader open");
+        const readerBesideConversation = await deps.ctx.evalJs(`(() => {
+          const reader = document.getElementById("material-reader"), tree = document.getElementById("tree-view");
+          return reader.parentElement.id === "main" && tree.getBoundingClientRect().right <= reader.getBoundingClientRect().left && !document.getElementById("materials-section").open;
+        })()`);
+        if (!readerBesideConversation) throw new Error("wide viewport: attachment selection must collapse the card and open a reader beside the conversation");
         /* 捕获条可达：武装选区 → 捕获条按钮 elementFromPoint 命中。 */
         const placedWide = await deps.ctx.evalJs(pageSelectCanonical(deps.mdRange.blockId, deps.mdRange.start, deps.mdRange.end));
         if (placedWide?.selectedText !== deps.mdRange.excerpt) {
@@ -60,6 +81,8 @@ export async function runBetaLayout(deps) {
         await inputClickAt(deps.ctx, "#panel-close");
         await waitFor(deps.ctx, `(() => { const p = document.getElementById("branch-panel"); return p === null || p.hidden; })()`, { label: "panel closed (wide)" });
         deps.wideNarrow.wide = {
+          compactShell,
+          readerBesideConversation,
           widthPx: wideViewport.w,
           heightPx: wideViewport.h,
           overflowX: wideOverflow,

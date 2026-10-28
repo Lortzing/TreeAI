@@ -154,7 +154,7 @@ test("R1 Search view preserves honest idle, loading, failed, empty, and populate
 
   view.renderSearchSection();
   assert.equal(nodes.get("search-scope-tree").disabled, true);
-  assert.match(nodes.get("search-status").textContent, /saved facts/);
+  assert.match(nodes.get("search-status").textContent, /搜索已保存/);
   assert.equal(nodes.get("search-results").children.length, 0);
 
   state.search.phase = "loading";
@@ -731,16 +731,18 @@ test("material tools open outside history and close without clearing domain stat
   };
   const classes = new Set();
   const document = { ...get("document"), body: { classList: {
-    add: (v) => classes.add(v), remove: (v) => classes.delete(v),
+    add: (v) => classes.add(v), remove: (v) => classes.delete(v), contains: (v) => classes.has(v),
+    toggle(v) { if (classes.has(v)) { classes.delete(v); return false; } classes.add(v); return true; },
   } } };
   const state = { materialReader: null, materials: { ok: true, materials: [] }, returnDraft: { text: "keep this" } };
   const dispose = registerWorkspaceEvents({ $: get, state, document, window: {}, sessionUI: { mode: "chat" }, scrollBehavior: () => "auto" });
   const click = (id) => { for (const handler of get(id).handlers.click ?? []) handler({}); };
+  get("materials-section").open = true; // native details activation
   click("reading-materials");
-  assert.equal(get("workspace-library").open, true);
+  assert.equal(get("workspace-library").open, false);
   assert.equal(get("materials-section").open, true);
-  assert.equal(focused, "material-import");
   assert.equal(classes.has("sidebar-open"), false);
+  get("workspace-library").open = true;
   click("workspace-library-close");
   assert.equal(get("workspace-library").open, false);
   assert.equal(focused, "workspace-library-toggle");

@@ -9,7 +9,14 @@ export async function runBetaTouch(deps) {
 
   // Materials moved out of history navigation. Exercise the actual secondary entry by touch.
   async function openMaterialToolsByTouch() {
-    for (const selector of ["#workspace-library-toggle", "#materials-section > summary"]) {
+    // Dismiss the history drawer before reaching the independent attachment card.
+    const drawerOpen = await deps.ctx.evalJs(`document.body.classList.contains("sidebar-open")`);
+    if (drawerOpen) {
+      const point = await deps.ctx.evalJs(`(() => { const r = document.getElementById("sidebar-toggle").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`);
+      await deps.tapAt(point.x, point.y);
+      await deps.waitForDrawerDismissed(deps.ctx);
+    }
+    for (const selector of ["#materials-section > summary"]) {
       const point = await deps.ctx.evalJs(`(() => {
         const el = document.querySelector(${JSON.stringify(selector)});
         if (el.parentElement.open) return null;
@@ -20,7 +27,7 @@ export async function runBetaTouch(deps) {
       })()`);
       if (point) await deps.tapAt(point.x, point.y);
     }
-    await waitFor(deps.ctx, `document.getElementById("workspace-library").open && document.getElementById("materials-section").open && !document.body.classList.contains("sidebar-open")`, { label: "touch: material tools replace the history drawer" });
+    await waitFor(deps.ctx, `!document.getElementById("workspace-library").open && document.getElementById("materials-section").open && !document.body.classList.contains("sidebar-open")`, { label: "touch: attachment card opens independently of navigation" });
   }
 
       {

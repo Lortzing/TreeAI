@@ -1216,7 +1216,7 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
 /* 2. 打开 + 分块懒加载 + 阅读位置（保存/恢复/跨页前补）                  */
 /* ------------------------------------------------------------------ */
 
-test("central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material", async () => {
+test("attachment selection preserves the trunk nodes, draft and scroll while opening and closing the right reader", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT], pageSize: 5 });
   const conversation = world.el("conversation");
   const nodes = [...conversation.children];
@@ -1224,7 +1224,9 @@ test("central reading navigation preserves the trunk nodes, draft and scroll whi
   world.el("prompt-input").value = "Keep this unfinished thought";
   world.el("reading-materials").click();
   await settle(30);
-  assert.equal(world.el("material-reader").hidden, false, "the header opens the single material directly");
+  assert.equal(world.el("material-reader").hidden, true, "expanding the attachment card does not navigate immediately");
+  await world.openMaterial("mat-md01");
+  assert.equal(world.el("material-reader").hidden, false, "selecting an attachment opens the right reader");
   assert.ok(world.matBlocks().querySelectorAll(".material-block").length > 0, "the real reader loads canonical blocks");
   assert.equal(world.requestsOf("/switch").length, 0, "reading does not change the live conversation cursor");
   world.el("reading-trunk").click();
@@ -1810,7 +1812,7 @@ test("capture bar freezes during the selection drag window: a mid-drag selection
   );
 });
 
-test("touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check", async () => {
+test("touch arming: compatibility mouse events preserve the captured quote; a later explicit clear disarms it", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT] });
   await world.openMaterial("mat-md01");
   const block = world.blockElement("blk-1");
@@ -1827,6 +1829,11 @@ test("touch arming: selectionchange arms the capture bar without mouseup, and an
 
   /* 空选区：延迟解除（捕获条回提示态）。 */
   world.setSelection(null);
+  const compatibilityEvent = { sourceCapabilities: { firesTouchEvents: true } } as StubEventInit;
+  world.matBlocks().dispatchEvent("mousedown", compatibilityEvent);
+  world.matBlocks().dispatchEvent("mouseup", compatibilityEvent);
+  assert.match(selectionBar(world).querySelector(".mat-payload")!.textContent!, /UTF-16 \[13, 15\)/,
+    "the touch release's compatibility mouse events cannot erase the captured quote");
   world.document.dispatchEvent("selectionchange", {});
   await settle(10);
   assert.match(

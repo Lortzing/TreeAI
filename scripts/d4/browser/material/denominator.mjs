@@ -247,7 +247,7 @@ export async function probeImportDenominator(ctx) {
   );
   const sidebar = await ctx.evalJs(
     `(() => [...document.querySelectorAll("#material-list button[data-material-id]")].map((btn) => ({ ` +
-      `id: btn.dataset.materialId, name: btn.querySelector("span") === null ? null : btn.querySelector("span").textContent, ` +
+      `id: btn.dataset.materialId, name: btn.querySelector(".material-name") === null ? null : btn.querySelector(".material-name").textContent, ` +
       `meta: btn.querySelector(".material-meta") === null ? null : btn.querySelector(".material-meta").textContent, ` +
       `statusText: btn.querySelector(".material-status") === null ? null : btn.querySelector(".material-status").textContent, ` +
       `statusClass: btn.querySelector(".material-status") === null ? null : btn.querySelector(".material-status").className, ` +
