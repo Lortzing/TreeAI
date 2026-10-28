@@ -9,25 +9,37 @@
  */
 
 :root {
-  --canvas: #fbfaf7;        /* 暖纸阅读面 */
-  --surface: #fffefa;
-  --surface-dim: #f1f2eb;
-  --ink: #29392e;
-  --ink-soft: #596551;
-  --muted: #737d6c;
-  --green: #34583e;
-  --green-deep: #25432e;
-  --green-wash: #e8eee3;
-  --green-line: #cedac6;
+  --canvas: #f8f8f3;        /* 暖纸阅读面（净化：去黄浊，明度节奏化） */
+  --surface: #fdfdf9;
+  --surface-dim: #eef0e7;
+  --ink: #233026;
+  --ink-soft: #4f5a4b;
+  --muted: #6f7a67;
+  --green: #2e5b3d;
+  --green-deep: #1f4029;
+  --green-wash: #e5eee4;
+  --green-line: #c7d7c6;
   --gold: #9a7428;          /* 暖金 Return */
   --gold-deep: #7c5d1e;
   --gold-wash: #fbf3e0;
   --gold-line: #e5d3a4;
-  --line: #e4e6dc;
-  --line-strong: #cdd5c5;
+  --line: #e5e7dd;
+  --line-strong: #c6cfbd;
   --danger: #a33b2e;
   --danger-wash: #fbece8;
   --highlight: #dfeace;
+  /* Session 工作台室景（session-workspace.css）：主区阅读室底、室内浮面
+     与支线概念列底——同一暖灰绿族的三档明度。侧栏再深半档（--room-sunken），
+     与主区形成安静的左右分区。 */
+  --room: #f1f2eb;
+  --room-raised: #fdfef9;
+  --room-column: #f4f5ee;
+  --room-sunken: #e9ebe2;
+  /* 发丝线与柔影：卡片/浮件从硬边框转向影调分层（细节工艺）。 */
+  --hairline: rgb(43 62 48 / .12);
+  --shadow-card: 0 1px 2px rgb(35 48 38 / .05), 0 18px 44px -18px rgb(35 48 38 / .18);
+  --shadow-pop: 0 2px 6px rgb(35 48 38 / .06), 0 12px 32px -12px rgb(35 48 38 / .22);
+  --shadow-inset-top: inset 0 1px 0 rgb(255 255 255 / .55);
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   --font-read: "Songti SC", "STSong", "Noto Serif SC", "Iowan Old Style", Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -64,6 +76,7 @@ body {
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--muted); border: 3px solid transparent; background-clip: content-box; }
 
 .muted { color: var(--muted); font-size: 12px; }
 

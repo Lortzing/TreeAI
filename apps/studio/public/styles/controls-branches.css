@@ -28,6 +28,7 @@ textarea {
   border-radius: var(--radius);
   background: var(--surface-dim);
   color: var(--ink);
+  transition: border-color var(--motion-state) ease-out;
 }
 textarea:focus { outline: 2px solid var(--green-wash); border-color: var(--green); }
 textarea::placeholder { color: var(--muted); }
@@ -51,8 +52,10 @@ button.primary, button.accent {
   background: var(--green);
   color: #fff;
   cursor: pointer;
+  box-shadow: var(--shadow-inset-top), 0 1px 3px rgb(31 64 41 / .22);
+  transition: background-color var(--motion-state) ease-out, border-color var(--motion-state) ease-out, box-shadow var(--motion-state) ease-out;
 }
-button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); }
+button.primary:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); box-shadow: var(--shadow-inset-top), 0 3px 10px -2px rgb(31 64 41 / .32); }
 button.accent { background: var(--gold); border-color: var(--gold); }
 button.accent:hover:not(:disabled) { background: var(--gold-deep); border-color: var(--gold-deep); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -65,6 +68,7 @@ button.danger {
   background: none;
   color: var(--danger);
   cursor: pointer;
+  transition: background-color var(--motion-state) ease-out;
 }
 button.danger:hover:not(:disabled) { background: var(--danger-wash); }
 
@@ -82,14 +86,14 @@ button.danger:hover:not(:disabled) { background: var(--danger-wash); }
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--hairline);
   box-shadow: -18px 0 44px -26px rgba(35, 40, 31, 0.35);
   z-index: 10;
 }
 
 #panel-header {
   padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--hairline);
   background: var(--surface);
 }
 #panel-heading { outline: none; margin: 0 0 10px; }
@@ -124,6 +128,7 @@ button.source-button {
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink-soft);
+  transition: background-color var(--motion-state) ease-out;
 }
 button.source-button:hover:not(:disabled) { background: var(--surface-dim); }
 button.panel-close {
@@ -131,6 +136,7 @@ button.panel-close {
   background: var(--green-wash);
   color: var(--green-deep);
   font-weight: 600;
+  transition: background-color var(--motion-state) ease-out;
 }
 button.panel-close:hover { background: #dcebe0; }
 
@@ -180,9 +186,7 @@ button.panel-close:hover { background: #dcebe0; }
   }
   /* 面板打开时列空态不透出（enter 渐入期间亦然）。 */
   #branch-column:has(#branch-panel:not([hidden])) #branch-empty { visibility: hidden; }
-  /* 列空态：安静的指引面（装饰字符 + 标题 + 说明）。 */
-  .branch-empty-orn { font-size: 20px; color: var(--line-strong); }
-  .branch-empty-orn::before { content: "⑂"; }
+  /* 列空态：安静的指引面（标题 + 说明）。 */
   .branch-empty-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
   #branch-empty .muted { margin: 0; font-size: 12.5px; line-height: 1.55; max-width: 30ch; }
   /* D4-2 阅读器同列占满（与 #branch-panel 同宽恰好覆盖）；阅读器在场时

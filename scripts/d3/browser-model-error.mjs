@@ -65,6 +65,41 @@ export function createBrowserModelError(deps) {
     return `/api/trees/${encodeURIComponent(me.probeTreeId)}${action === undefined ? "" : `/${action}`}`;
   }
 
+  async function renderedTurnCounts() {
+    return deps.evalJs(
+      `(async () => {
+        const position = () => Number((document.getElementById('round-position')?.textContent ?? '').split('/')[0].trim()) || 0;
+        const previous = document.getElementById('round-previous');
+        const next = document.getElementById('round-next');
+        const nav = document.getElementById('round-navigation');
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+        const original = position();
+        const all = new Set();
+        const assistants = new Set();
+        const addPage = () => {
+          for (const turn of document.querySelectorAll('#conversation .turn:not(#streaming-turn)')) {
+            const id = turn.dataset.turnId ?? String(position()) + ':' + String(all.size);
+            all.add(id);
+            if (turn.classList.contains('assistant')) assistants.add(id);
+          }
+        };
+        if (nav !== null && !nav.hidden && previous !== null && next !== null && position() > 0) {
+          while (!previous.disabled) { previous.click(); await settle(); }
+          for (;;) {
+            addPage();
+            if (next.disabled) break;
+            next.click();
+            await settle();
+          }
+          while (position() > original && !previous.disabled) { previous.click(); await settle(); }
+        } else {
+          addPage();
+        }
+        return { all: all.size, assistants: assistants.size };
+      })()`,
+    );
+  }
+
   /** 真实侧栏点击选中指定树。整页刷新后 app.js 引导逻辑自动打开 trees[0]
    *  （repository 按创建序返回 = 最旧的主剧本树）——模型错误相的恢复
    *  prompt 必须落在探针树上，故先以真实点击切换（app.js renderTrees：
@@ -244,7 +279,7 @@ export function createBrowserModelError(deps) {
       `failure panel does not show 'Run … failed — ${errorCode}:': ${deps.truncate(deps.sanitizeText(panelText), 160)}`,
     );
     const renderedAssistant = await deps.probeAssistantTurnCount();
-    const renderedAll = await deps.evalJs("document.querySelectorAll('#conversation .turn:not(#streaming-turn)').length");
+    const renderedAll = (await renderedTurnCounts()).all;
     deps.assert(renderedAssistant === 0 && renderedAll === 0, `a failed prompt must render no turns (assistant ${String(renderedAssistant)}, all ${String(renderedAll)})`);
     const composerEnabled = await deps.evalJs("document.getElementById('prompt-input').disabled === false");
     deps.assert(composerEnabled === true, "trunk composer did not re-enable after the failed run converged");
@@ -308,7 +343,7 @@ export function createBrowserModelError(deps) {
       new RegExp(`failed — ${errorCode}:`).test(reconstructedPanel),
       `the reconstructed failure panel lost the code '${errorCode}': ${deps.truncate(deps.sanitizeText(reconstructedPanel), 160)}`,
     );
-    const renderedAfterRestart = await deps.evalJs("document.querySelectorAll('#conversation .turn:not(#streaming-turn)').length");
+    const renderedAfterRestart = (await renderedTurnCounts()).all;
     deps.assert(renderedAfterRestart === 0, `rendered turns after restart+reload is ${String(renderedAfterRestart)} (expected 0)`);
 
     /* 同一探针树、同一 prompt：配置修复 + 重启后成功（failed → succeeded）。
@@ -332,7 +367,7 @@ export function createBrowserModelError(deps) {
 
     /* 页面终局：2 渲染回合（1 user + 1 assistant）、run-status idle；
        服务器侧：同树 2 回合落库、run 序列 failed(code) → succeeded。 */
-    const renderedFinal = await deps.evalJs("document.querySelectorAll('#conversation .turn:not(#streaming-turn)').length");
+    const renderedFinal = (await renderedTurnCounts()).all;
     deps.assert(renderedFinal === 2, `rendered turns after recovery is ${String(renderedFinal)} (expected 2: user + assistant)`);
     await deps.waitForJs(
       "document.getElementById('run-status') !== null && document.getElementById('run-status').textContent === 'idle'",

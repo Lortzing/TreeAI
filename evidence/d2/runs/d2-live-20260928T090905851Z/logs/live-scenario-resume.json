@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-resume",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "resume",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "session reference has no session file (in-memory sessions cannot be restored)",
+    "code": "session-corrupt"
+  },
+  "durationMs": 856
+}

@@ -84,6 +84,9 @@ export function createMaterialImportController(deps) {
       error: null,
       uploadTreeId: treeId,
     };
+    /* 材料段默认折叠（渐进披露）；导入一旦开始，状态面必须如实可见——
+       自动展开，绝不让在途/终态状态藏在折叠面板后。 */
+    deps.$("materials-section").open = true;
     updateMaterialImportStatus();
     let bytes = null;
     try {

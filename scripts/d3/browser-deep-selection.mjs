@@ -97,8 +97,28 @@ export function createBrowserDeepSelection(deps) {
       "streaming placeholder cleared before the deep-selection drag",
     );
     const turnId = await deps.evalJs(
-      "(() => { const turns = [...document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)')]; " +
-        "return turns.length === 0 ? null : turns[turns.length - 1].dataset.turnId ?? null; })()",
+      `(async () => {
+        const position = () => Number((document.getElementById('round-position')?.textContent ?? '').split('/')[0].trim()) || 0;
+        const previous = document.getElementById('round-previous');
+        const next = document.getElementById('round-next');
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+        while (previous !== null && !previous.disabled) { previous.click(); await settle(); }
+        let lastTurnId = null;
+        let lastRound = 0;
+        for (;;) {
+          const turns = [...document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)')];
+          if (turns.length > 0) {
+            lastTurnId = turns[turns.length - 1].dataset.turnId ?? null;
+            lastRound = position();
+          }
+          if (next === null || next.disabled) break;
+          next.click();
+          await settle();
+        }
+        while (position() < lastRound && next !== null && !next.disabled) { next.click(); await settle(); }
+        while (position() > lastRound && previous !== null && !previous.disabled) { previous.click(); await settle(); }
+        return lastTurnId;
+      })()`,
     );
     deps.assert(turnId !== null, "no completed assistant answer found in the probe tree trunk");
     return { selector: `#conversation .turn.assistant[data-turn-id="${turnId}"]`, turnId };
@@ -245,7 +265,7 @@ export function createBrowserDeepSelection(deps) {
       selState !== null && selState.hasSelection === true,
       `${label}: the answer did not enter .has-selection after the real drag; drag points ${JSON.stringify(dragPoints)}; page selection state ${JSON.stringify(selState)}`,
     );
-    deps.assert(selState.buttonText === "⑃ Branch from selection", `${label}: branch button text is ${String(selState.buttonText)}`);
+    deps.assert(selState.buttonText === "⑃ 从选文展开支线", `${label}: branch button text is ${String(selState.buttonText)}`);
     deps.assert(selState.offsets !== null, `${label}: the native selection is empty or not contained in the answer turn`);
     deps.assert(
       selState.offsets.start === expectation.start && selState.offsets.end === expectation.end && selState.offsets.text === expectation.text,
@@ -262,7 +282,6 @@ export function createBrowserDeepSelection(deps) {
       `${label} branch panel open`,
     );
     const branchSummary = await deps.snap(`${label}-branch`);
-    deps.assert(branchSummary.panel.title === "Branch 1", `${label}: panel title is ${String(branchSummary.panel.title)} (expected "Branch 1")`);
     const anchorCtx = branchSummary.panel.anchorContext ?? "";
     deps.assert(
       anchorCtx.includes(`“${expectation.text}”`),
@@ -277,6 +296,11 @@ export function createBrowserDeepSelection(deps) {
     deps.assert(views.length === 2, `${label}: probe tree has ${String(views.length)} branch views (expected trunk + the anchored branch)`);
     const anchored = views.filter((view) => view.origin !== null && view.origin.anchorTurnId === turnId);
     deps.assert(anchored.length === 1, `${label}: expected exactly one branch anchored on the probed answer turn, found ${String(anchored.length)}`);
+    deps.assert(anchored[0].origin.sourceBranchId === probe.trunkBranchId, `${label}: API origin source is not the selected probe trunk`);
+    deps.assert(branchSummary.panel.branchId === anchored[0].branch.id, `${label}: panel branch ${String(branchSummary.panel.branchId)} does not match API origin branch ${String(anchored[0].branch.id)}`);
+    const branchTab = branchSummary.branchTabs.find((tab) => tab.branchId === anchored[0].branch.id);
+    deps.assert(branchTab !== undefined && branchSummary.panel.title.length > 0 && branchTab.text.startsWith(branchSummary.panel.title),
+      `${label}: panel title/tab do not identify API origin branch ${String(anchored[0].branch.id)}: ${JSON.stringify({ title: branchSummary.panel.title, branchTab })}`);
     const origin = anchored[0].origin;
     deps.assert(
       origin.selection.start === expectation.start && origin.selection.end === expectation.end && origin.selection.text === expectation.text,
@@ -309,6 +333,8 @@ export function createBrowserDeepSelection(deps) {
 
     /* 锚定支线可续聊：一条短 follow-up + 标记等待（echo 面答案 = 支线谱系
        用户文本的精确回声，必含标记；real-pi 依「Reply with exactly」指令）。 */
+    await deps.click(`#branch-tabs button[data-branch-id="${anchored[0].branch.id}"]`);
+    await deps.waitForJs("document.getElementById('branch-panel') !== null && !document.getElementById('branch-panel').hidden", 10_000, `${label} anchored branch reopened after source reading`);
     await deps.sendPanelPrompt(followUp.prompt, { keyboard: false });
     await deps.waitForAnswerMarkers("#panel-conversation", [followUp.marker], deps.CLI.promptTimeoutMs, 1);
     const panelSummary = await deps.snap(`${label}-followup`);

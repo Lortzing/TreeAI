@@ -1,0 +1,18 @@
+$ [HOME]/.local/share/fnm/node-versions/v24.21.0/installation/bin/node --test tests/integration/*.test.ts
+✔ e2e dual-branch: one session tree, two sibling branches, append-only (13.691ms)
+✔ e2e switch-back: navigateTree to the branch point, context rebuilt, fork continues (12.904583ms)
+✔ e2e restart-recovery: dispose, restore, continue; I6 host-crash convergence (10.648667ms)
+✔ e2e session-missing: deleted file -> session-corrupt, availability degraded, domain data intact (6.039125ms)
+✔ e2e policy-overreach: default denials, approval is not allow, decisions journaled (3.731791ms)
+✔ e2e error-convergence: model error, user abort, dispose, host crash each reach the right terminal (321.547625ms)
+✔ evidence writer: guarded writes mask injected secrets and record leaks (4.052542ms)
+✔ scenario records written by every e2e test conform to the scenarioResult schema shape (0.482709ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 455.229791
+

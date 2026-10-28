@@ -1,5 +1,6 @@
 /** terminology restart phase; the public probe retains original cleanup and output order Instance-owned state and dependencies. */
 import { waitFor } from "../material-probes.mjs";
+import { waitForConversationHistory } from "../reading-rounds.mjs";
 
 export async function runTerminologyRestart(deps) {
 
@@ -76,12 +77,8 @@ export async function runTerminologyRestart(deps) {
 
         /* 支线历史可读 + 继续追问落地。 */
         await deps.openBranchPanelViaTab(deps.ctx, deps.termBranchId, "term branch after restart");
-        await waitFor(
-          deps.ctx,
-          `(() => { const text = document.getElementById("panel-conversation").textContent ?? ""; ` +
-            `return text.includes(${JSON.stringify(deps.TERM_MARKERS.termQ1)}) && text.includes(${JSON.stringify(deps.TERM_MARKERS.termF2)}); })()`,
-          { label: "term exploration history readable after the restart" },
-        );
+        await waitForConversationHistory(deps.ctx, "#panel-conversation", [deps.TERM_MARKERS.termQ1, deps.TERM_MARKERS.termF2],
+          { label: "term exploration history readable after the restart" });
         await deps.panelFollowUp(deps.ctx, deps.TERM_MARKERS.restartF, `重启后的续走追问：之前的结论还成立吗？（${deps.TERM_MARKERS.restartF}）`, deps.answerTimeoutMs, "term branch after restart");
         deps.record.restart.historyAndContinuation = {
           port: `${String(deps.oldPort)}→${String(deps.ctx.studioPort())}`,

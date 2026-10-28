@@ -1,0 +1,6407 @@
+{
+  "script": "run-d3-browser",
+  "version": "1.3.2",
+  "mode": "real-pi",
+  "generatedAt": "2026-10-27T02:47:49.987Z",
+  "git": {
+    "head": "39a62bd00956324d47ba37f8967c431c5c1ebfa9",
+    "dirty": true
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "page-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tree-create",
+      "status": "PASS"
+    },
+    {
+      "id": "trunk-main-line",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-anchoring",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-a-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "switch-navigation",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-create",
+      "status": "PASS"
+    },
+    {
+      "id": "branch-b-followups",
+      "status": "PASS"
+    },
+    {
+      "id": "no-context-bleed",
+      "status": "PASS"
+    },
+    {
+      "id": "return-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "return-delivery",
+      "status": "PASS"
+    },
+    {
+      "id": "server-restart-recovery",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-session-degradation",
+      "status": "PASS"
+    },
+    {
+      "id": "new-exploration-flow",
+      "status": "PASS"
+    },
+    {
+      "id": "response-loss-midstream",
+      "status": "PASS"
+    },
+    {
+      "id": "a11y-semantics",
+      "status": "PASS"
+    },
+    {
+      "id": "narrow-window-layout",
+      "status": "PASS"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-long",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-duplicate",
+      "status": "PASS"
+    },
+    {
+      "id": "selection-deep-cross-line",
+      "status": "PASS"
+    },
+    {
+      "id": "model-error-convergence",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-boot",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-allow-read",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-deny-fail-closed",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-deny-provenance",
+      "status": "PASS"
+    },
+    {
+      "id": "tool-policy-canary-never-read",
+      "status": "PASS"
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS"
+    }
+  ],
+  "pageFinalState": {
+    "url": "/",
+    "readyState": "complete",
+    "treeId": "tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964",
+    "activeElementId": "source-drawer",
+    "activePagerContainer": "#conversation",
+    "sidebar": {
+      "toggleExpanded": "false",
+      "treeCount": 6,
+      "driverNote": "思考记录保存在本机"
+    },
+    "main": {
+      "emptyStateVisible": false,
+      "treeViewVisible": true,
+      "runStatus": "idle",
+      "runDetail": "last run: failed",
+      "abortVisible": false,
+      "failurePanel": {
+        "hidden": false,
+        "text": "Run run_45bf5d51… failed — policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows itDismiss"
+      },
+      "sessionBanner": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": false,
+        "role": "alert",
+        "text": "policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it"
+      }
+    },
+    "panel": {
+      "hidden": true,
+      "branchId": null,
+      "title": "",
+      "anchorContext": "",
+      "sessionNote": {
+        "hidden": true,
+        "text": ""
+      },
+      "errorBanner": {
+        "hidden": true,
+        "text": ""
+      }
+    },
+    "conversation": {
+      "branchId": "branch_8ed54f27-15fe-4c42-a17c-53ad0c60e8d1",
+      "turns": [
+        {
+          "role": "user",
+          "turnId": "turn_0b2fed58-3ed3-4ccc-83fa-0aaa8ef92f72",
+          "text": "Use the read tool to read the file named treeai-d3-product-marker.txt in the directory <dir>/allowed, then reply with its exact first line only.",
+          "roundIndex": 0
+        },
+        {
+          "role": "assistant",
+          "turnId": "turn_43df37ea-7b1f-44a0-80fd-997b17656866",
+          "text": "TreeAI D3 browser tool-policy marker treeai-d3-marker-xskeiep3fl",
+          "roundIndex": 0
+        }
+      ],
+      "roundCount": 1,
+      "currentRoundIndex": 1,
+      "complete": true
+    },
+    "panelConversation": {
+      "branchId": null,
+      "turns": [],
+      "roundCount": 0,
+      "currentRoundIndex": 0,
+      "complete": false
+    },
+    "branchTabs": [
+      {
+        "branchId": "branch_8ed54f27-15fe-4c42-a17c-53ad0c60e8d1",
+        "text": "思考主线Use the read tool to read the file named treeai-d3-product-marker.txt in the directory <dir>/allowed, then reply with its exact first line only.",
+        "ariaCurrent": null,
+        "active": true,
+        "panelOpen": false
+      }
+    ],
+    "returnCards": [],
+    "activeTab": "思考主线Use the read tool to read the file named treeai-d3-product-marker.txt in the directory <dir>/allowed, then reply with its exact first line only.",
+    "drawer": {
+      "open": true,
+      "toggleExpanded": "true",
+      "text": "Sources× CloseRunsTrunk · run run_d6685bfd… · succeeded · 10:47:42 → 10:47:46Trunk · run run_45bf5d51… · failed · failure policy-denied · 10:47:47 → 10:47:49Returnsno returns submitted for this tree yetTerminologyno saved term annotations yet — select a term in an answer and “Explain selection”no terminology tasks in this process yetterminology executor: 0 request(s), est. 0/1000000 tokens (chars/4 estimate), 0 late result(s) discarded by the executor, 0 late response(s) discarded client-side, cache oncache preference: on — click to disableManual onlyMinimal hintsAssisted readingthe auto-annotation quality gate has not passed — automatic suggestions stay OFF; only manual explaining is in effectJournal (latest 20)10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.updated — message update received10:47:49 message.completed — message completed (assistant), stop: toolUse10:47:49 tool.execution.started — tool execution started: read10:47:49 tool.decision — tool policy decision on read: deny (no rule)10:47:49 runtime.error — runtime error policy-denied: tool execution was blocked by tool policy: read target resolves outside every configured read root; no rule allows it10:47:49 tool.execution.finished — tool execution finished: read (error)10:47:49 message.started — message started (toolResult)10:47:49 message.completed — message completed (toolResult)10:47:49 turn.completed — turn completed (stop: toolUse)10:47:49 agent.settled — agent run settledTool activityrun run_d6685bfd… · read startedrun run_d6685bfd… · read finishedrun run_45bf5d51… · read startedrun run_45bf5d51… · read denied — read target resolves outside every configured read root; no rule allows it [no rule]run run_45bf5d51… · read finished"
+    },
+    "composers": {
+      "trunkDisabled": false,
+      "panelDisabled": false,
+      "returnDisabled": false
+    }
+  },
+  "pageErrors": [],
+  "netLog": [
+    {
+      "id": "96D7935BB5413327AECD9B4F41810020",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.2",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.3",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.6",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.7",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.8",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.9",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.10",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.11",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.12",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.13",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.14",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.15",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.16",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.17",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.18",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.19",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.20",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.21",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.22",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.23",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.24",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.25",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.26",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.27",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.28",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.29",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.30",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.31",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.32",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.33",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.34",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.35",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.36",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.37",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.38",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.39",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.40",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.41",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.42",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.43",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.44",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.45",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.46",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.47",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.48",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.49",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.50",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.51",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.52",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.53",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.54",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.55",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.56",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.57",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.58",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.59",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.60",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.61",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.62",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.63",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.64",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.65",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.66",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.67",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.68",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.69",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.70",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.71",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.72",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.73",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.75",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.76",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.77",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.78",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.79",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.80",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "14673.81",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.82",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.83",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.84",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.85",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.86",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.87",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.88",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.89",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.90",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.91",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.92",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.93",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.94",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.95",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.96",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.97",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.98",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.99",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.100",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.101",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.102",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.103",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.104",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.105",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.106",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.107",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.108",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.109",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.110",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.111",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.112",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.113",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.114",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.115",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.116",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.117",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.118",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.119",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.120",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.121",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.122",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.123",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/return",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.124",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.125",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.126",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.127",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.128",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.129",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.130",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.131",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.132",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.133",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "14673.134",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "14673.135",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "077F35232A83861DEA7EC7CB34570DC9",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.137",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.138",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.141",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.142",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.143",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.144",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.145",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.146",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.147",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.148",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.149",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.150",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.151",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.152",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.153",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.154",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.155",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.156",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.157",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.158",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.159",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.160",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.161",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.162",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.163",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.164",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.165",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.166",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.167",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.168",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.169",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.170",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.171",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.172",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.173",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.174",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.175",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.176",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.177",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.178",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.179",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.180",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.181",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.182",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.183",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.184",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.185",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.186",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.187",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.188",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.189",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.190",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.191",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.192",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.193",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.194",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.195",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.196",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.197",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.198",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.199",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.200",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.201",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.202",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.203",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.204",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.205",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.206",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.207",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.208",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.209",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.210",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.211",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.212",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.213",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.214",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.215",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.216",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.217",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.218",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.219",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.220",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "15FB7A181E561DA6D71E8092A2DB6757",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.222",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.223",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.226",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.227",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.228",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.229",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.230",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.231",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.232",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.233",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.234",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.235",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.236",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.237",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.238",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.239",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.240",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.241",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.242",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.243",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.244",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.245",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.246",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.247",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.248",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.249",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.250",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.251",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.252",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.253",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.254",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.255",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.256",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.257",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.258",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.259",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.260",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.261",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.262",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.263",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.264",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.265",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.266",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.267",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.268",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.269",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.270",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.271",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.272",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.273",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.274",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.275",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.276",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.277",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.278",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.279",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.280",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.281",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.282",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.283",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.284",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.285",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.286",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.287",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.288",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.289",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.290",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.291",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.292",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.293",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.294",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.295",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.296",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.297",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.298",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.299",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "9695EE1ABCB0E25DA1F4E6344869BDC7",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.301",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.302",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.305",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.306",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.307",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.308",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.309",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.310",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.311",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.312",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.313",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.314",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.315",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.316",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.317",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.318",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.319",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.320",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.321",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.322",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.323",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.324",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.325",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.326",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.327",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.328",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.329",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.330",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.331",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.332",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.333",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.334",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.335",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.336",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.337",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.338",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.339",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.340",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.341",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.342",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.343",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.344",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.345",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.346",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.347",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.348",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.349",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.350",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.351",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.352",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.353",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.354",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.355",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.356",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.357",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.358",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.359",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.360",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.361",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.362",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.363",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.364",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.365",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.366",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.367",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.368",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.369",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.370",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.371",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.372",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.373",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.374",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.375",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.376",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.377",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.378",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "ADECACB4D103695C0E6D3D5626B04BE8",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.380",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.381",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.384",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.385",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.386",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.387",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.388",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.389",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.390",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.391",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.392",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.393",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.394",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.395",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.396",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.397",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.398",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.399",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.400",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.401",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.402",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.403",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.404",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.405",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.406",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.407",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.408",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.409",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.410",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.411",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.412",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.413",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.414",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.415",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.416",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.417",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.418",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.419",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.420",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.421",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.422",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.423",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.424",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.425",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.426",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.427",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.428",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.429",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.430",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.431",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.432",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.433",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.434",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.435",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.436",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.437",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.438",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.439",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.440",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.441",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.442",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.443",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.444",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.445",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.446",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.447",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.448",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.449",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.450",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.451",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.452",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.453",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.454",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.455",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.456",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.457",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.458",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/branches/branch_564922b9-55e6-463b-bbae-3df82ceb17a8/new-exploration",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.459",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.460",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.461",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.462",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.463",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/prompt",
+      "status": null,
+      "failed": null
+    },
+    {
+      "id": "262F8E1B2E4AF8969A1AADABC2E44D8B",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.466",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.467",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.470",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.471",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.472",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.473",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.474",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.475",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.476",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.477",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.478",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.479",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.480",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.481",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.482",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.483",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.484",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.485",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.486",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.487",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.488",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.489",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.490",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.491",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.492",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.493",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.494",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.495",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.496",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.497",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.498",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.499",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.500",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.501",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.502",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.503",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.504",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.505",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.506",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.507",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.508",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.509",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.510",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.511",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.512",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.513",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.514",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.515",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.516",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.517",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.518",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.519",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.520",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.521",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.522",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.523",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.524",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.525",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.526",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.527",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.528",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.529",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.530",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.531",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.532",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.533",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.534",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.535",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.536",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.537",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.538",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.539",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.540",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.541",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.542",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.543",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.544",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.545",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.546",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.547",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.548",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.549",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.550",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.551",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.552",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.553",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.554",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.555",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.556",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.557",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.558",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.559",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.560",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.561",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.562",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.563",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.564",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.565",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.566",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/branches/branch_5851b0a7-e61d-4c29-8374-ccaaf611332d/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.567",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.568",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.569",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.570",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.571",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.572",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.573",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.574",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_32c9fc13-9d16-4097-9e9f-87ab29cebd61/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.575",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.576",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.577",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.578",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.579",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.580",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.581",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.582",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.583",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.584",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.585",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.586",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.587",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.588",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/branches/branch_0beec2b9-993e-4529-9419-d19850ac38f9/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.589",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.590",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.591",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.592",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.593",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.594",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.595",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.596",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_953d5dd0-4775-4245-ae23-47f1dc9aa954/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.597",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.598",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.599",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.600",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.601",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.602",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "14673.603",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.604",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.605",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.606",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.607",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.608",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.609",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/branches",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.610",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/branches/branch_2fd0fda2-b675-4550-80c8-b417006a2b70/source",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.611",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.612",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.613",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.614",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.615",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.616",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.617",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.618",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/switch",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.619",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_d88a9ced-4b35-40b8-b134-f266a010b23d/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "58450B8A2EF7CB8CD35BDA8540DB4165",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.621",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.622",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.625",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.626",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.627",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.628",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.629",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.630",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.631",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.632",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.633",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.634",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.635",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.636",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.637",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.638",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.639",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.640",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.641",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.642",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.643",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.644",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.645",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.646",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.647",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.648",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.649",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.650",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.651",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.652",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.653",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.654",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.655",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.656",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.657",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.658",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.659",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.660",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.661",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.662",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.663",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.664",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.665",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.666",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.667",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.668",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.669",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.670",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.671",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.672",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.673",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.674",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.675",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.676",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.677",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.678",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.679",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.680",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.681",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.682",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.683",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.684",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.685",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.686",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.687",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.688",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.689",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.690",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.691",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.692",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.693",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.694",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.695",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.696",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.697",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.698",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.699",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.700",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.701",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.702",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.703",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.704",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "14673.705",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/prompt",
+      "status": 502,
+      "failed": null
+    },
+    {
+      "id": "14673.706",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.707",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.708",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.709",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.710",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "ED52D8A82E3B3CB3F22237E0B0F774E1",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.712",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.713",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.716",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.717",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.718",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.719",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.720",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.721",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.722",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.723",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.724",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.725",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.726",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.727",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.728",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.729",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.730",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.731",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.732",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.733",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.734",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.735",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.736",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.737",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.738",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.739",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.740",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.741",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.742",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.743",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.744",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.745",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.746",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.747",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.748",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.749",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.750",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.751",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.752",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.753",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.754",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.755",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.756",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.757",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.758",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.759",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.760",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.761",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.762",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.763",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.764",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.765",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.766",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.767",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.768",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.769",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.770",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.771",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.772",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.773",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.774",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.775",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.776",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.777",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.778",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.779",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.780",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.781",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.782",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.783",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.784",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.785",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.786",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.787",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.788",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.789",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.790",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.791",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.792",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.793",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.794",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.795",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/events",
+      "status": 200,
+      "failed": "net::ERR_INCOMPLETE_CHUNKED_ENCODING"
+    },
+    {
+      "id": "14673.796",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.797",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.798",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.799",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.800",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.801",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.802",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_dce9a822-de97-4a35-b824-4764265c9ce8/diagnostics",
+      "status": null,
+      "failed": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "5551206451215A3FA2E9C7A3D14B8CB8",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.804",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/style.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.805",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.808",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/tokens-base.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.809",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.810",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/conversation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.811",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/terminology.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.812",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/controls-branches.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.813",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/materials.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.814",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/sources-navigation.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.815",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/responsive.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.816",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/session-workspace.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.817",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/reduced-motion.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.818",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/styles/api-settings.css",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.819",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/create-studio-app.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.820",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/workspace-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.821",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/api-settings.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.822",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/compose-features.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.823",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/state.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.824",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/dom.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.825",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.826",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/session-workspace.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.827",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/navigation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.828",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/composition/materials.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.829",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/studio-events.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.830",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/focus.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.831",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/tree-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.832",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-actions.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.833",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/conversation.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.834",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.835",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/turn-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.836",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.837",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/basics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.838",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/sha256.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.839",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/turn-overlays.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.840",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/render.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.841",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.842",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.843",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.844",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/prompt.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.845",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/source-drawer.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.846",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/terminology.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.847",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.848",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/return.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.849",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/diagnostics.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.850",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.851",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-path.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.852",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-node-results.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.853",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-node-search.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.854",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-locate.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.855",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-persistence.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.856",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-interaction.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.857",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/nav-session.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.858",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-finder.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.859",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-tree.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.860",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/nav-chrome.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.861",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.862",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-pdf.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.863",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-list.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.864",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-reader.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.865",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.866",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-import.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.867",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.868",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/controllers/material-intent-store.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.869",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/material-branch.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.870",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/core/views/markdown.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.871",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/selection.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.872",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/reading-position/scroll.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.873",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/shared/source/grapheme.js",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.874",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/nav/trees?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.875",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.876",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.877",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.878",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.879",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.880",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.881",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_f8ca2556-eb5a-4e54-b9f5-0bd53eeaf259/events",
+      "status": 200,
+      "failed": "net::ERR_ABORTED"
+    },
+    {
+      "id": "14673.882",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 201,
+      "failed": null
+    },
+    {
+      "id": "14673.883",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.884",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.885",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.886",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/materials",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.887",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/events",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.888",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/prompt",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.889",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.890",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.891",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.892",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.893",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.894",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.895",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.896",
+      "method": "POST",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/prompt",
+      "status": 502,
+      "failed": null
+    },
+    {
+      "id": "14673.897",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/state",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.898",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.899",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.900",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/diagnostics",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.901",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/journal?limit=20",
+      "status": 200,
+      "failed": null
+    },
+    {
+      "id": "14673.902",
+      "method": "GET",
+      "url": "http://127.0.0.1:56915/api/trees/tree_ad991cf0-7ab2-4e4e-86c7-2a51bea35964/terminology",
+      "status": 200,
+      "failed": null
+    }
+  ]
+}

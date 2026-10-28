@@ -1,5 +1,7 @@
 import { handleTreeEntryRoute, handleTreeRoute } from "./http/routes/trees.ts";
 import { handleSearchRoute } from "./http/routes/search.ts";
+import { handleApiSettingsRoute } from "./http/routes/api-settings.ts";
+import type { ApiSettingsService } from "./api-settings.ts";
 /** TreeAI HTTP adapter; endpoint/error details: docs/architecture/http-implementation-notes.md. */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -19,6 +21,7 @@ import type { SearchService } from "./search/search-service.ts";
 import type { NavService } from "./nav/nav-service.ts";
 
 export interface StudioServerOptions {
+  readonly apiSettings?: ApiSettingsService | null;
   readonly service: TreeStudioService;
   /** 静态文件目录（public/）。 */
   readonly staticDir: string;
@@ -102,6 +105,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
     const method = req.method ?? "GET";
 
     try {
+      if (await handleApiSettingsRoute(req, res, pathname, options.apiSettings ?? null)) return;
       if (method === "GET" && (await serveStatic(res, pathname))) return;
 
       if (await handleTreeEntryRoute(req, res, method, pathname, service)) return;

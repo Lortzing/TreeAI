@@ -76,6 +76,7 @@ export interface TreeState {
 }
 
 export interface TurnExtra {
+  episodeId?: string;
   runId?: string | null;
   piEntryId?: string | null;
   fromBranchId?: string | null;
@@ -90,7 +91,7 @@ function makeTurn(id: string, branchId: string, role: Turn["role"], text: string
     id,
     treeId: TREE,
     branchId,
-    episodeId: "ep-1",
+    episodeId: extra.episodeId ?? "ep-1",
     runId: extra.runId !== undefined ? extra.runId : `run-${id}`,
     role,
     text,

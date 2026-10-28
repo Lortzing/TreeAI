@@ -320,7 +320,8 @@ export function createConversationView(deps) {
     if (deps.state.panelBranchId === null) return;
     const view = deps.branchView(deps.state.panelBranchId);
     if (view === null) return;
-    deps.$("panel-title").textContent = deps.branchLabel(view.branch.id);
+    /* 面板标题走意义名（D1）；机械序号在锚点上下文与 title 身份语境。 */
+    deps.$("panel-title").textContent = deps.branchDisplayName(view.branch.id);
     renderPanelAnchorContext(view);
     renderPanelSessionNote(view);
     renderTurnsInto(deps.$("panel-conversation"), view, view.branch.id, stick);

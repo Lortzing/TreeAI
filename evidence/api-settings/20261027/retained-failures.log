@@ -1,0 +1,31 @@
+treeai-ci-39a62bd-diagnostics-failure.log
+diagnose	Refactor import boundaries and original static scenarios	2026-10-27T02:45:00.3592283Z Static scenario lost (1 -> 0): topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open
+
+treeai-ci-53f851c-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-27T02:37:00.8749698Z   [FAIL] d4-read-and-select — pdf-sel-01 (real drag): the native selection during the drag does not reproduce the frozen excerpt (got "", want "递归"); points={"from":{"x":335,"y":530.4375},"to":{"x":356.34375,"y":530.4375}}; hit={"from":{"tag":"DIV","cls":"material-block pdf-page-text pdf-geometry-text","text":"递归学习笔记\n递归是一种把大问题分解成同构小问题的思考方式。写递归函数时，最重要"},"to":{"tag":"DIV","cls":"material-block pdf-page-text pdf-geometry-text","…
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-27T02:37:36.5266965Z   [FAIL] d4-beta-usability — material reader Escape evidence {"changes":["Error\n    at reader.replaceChildren (<anonymous>:1:221)\n    at Object.renderMaterialReader (http://127.0.0.1:41447/core/views/material-reader.js:40:10)\n    at closeMaterialBranchFlow (http://127.0.0.1:41447/core/controllers/material-branch.js:353:10)\n    at HTMLDocument.<anonymous> (http://127.0.0.1:41447/core/create-studio-app.js:259:7)"],"route":"…
+
+treeai-ci-8dc9fc7-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-27T02:34:27.0990833Z   [FAIL] d4-beta-usability — material reader Escape evidence {"route":"Error\n    at event.preventDefault (<anonymous>:1:687)\n    at HTMLDocument.<anonymous> (http://127.0.0.1:42099/core/create-studio-app.js:255:11)","before":{"mode":"chat","drawerHidden":true},"errors":[],"events":[{"phase":"capture","key":"Escape","target":"material-reader","prevented":false},{"phase":"prevent","stack":"Error\n    at event.preventDefault (…
+
+treeai-ci-a2ac87f-failure.log
+chromium	UNKNOWN STEP	2026-10-26T12:03:47.9140937Z   [FAIL] d4-beta-usability — material reader Escape evidence {"events":[{"phase":"capture","key":"Escape","target":"material-reader","prevented":false},{"phase":"bubble","key":"Escape","target":"material-reader","prevented":true}],"active":"material-reader","mode":"chat","readerHidden":false,"readerClass":"","drawerHidden":true,"dialogOpen":false}; timeout (10000ms) waiting for: keyboard: Escape closed the material reader
+
+treeai-ci-be9263a-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-27T02:40:30.9547602Z   [FAIL] d4-read-and-select — pdf-sel-01 (real drag): the native selection during the drag does not reproduce the frozen excerpt (got "递归学习笔记", want "递归"); points={"from":{"x":335,"y":530.4375},"to":{"x":356.34375,"y":530.4375}}; hit={"from":{"tag":"DIV","cls":"material-block pdf-page-text pdf-geometry-text","text":"递归学习笔记\n递归是一种把大问题分解成同构小问题的思考方式。写递归函数时，最重要"},"to":{"tag":"DIV","cls":"material-block pdf-page-text pdf-geometry-t…
+
+treeai-ci-browser-context-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-26T11:53:29.0988073Z   [FAIL] d4-beta-usability — timeout (10000ms) waiting for: keyboard: Escape closed the material reader; context {"active":"material-reader","mode":"chat","readerHidden":false,"drawerHidden":true,"dialogOpen":false}
+
+treeai-ci-browser-first-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-26T11:35:50.2532625Z   [FAIL] d4-beta-usability — timeout (10000ms) waiting for: keyboard: Escape closed the material reader
+
+treeai-ci-cc29998-failure.log
+chromium	Real Chrome boot, materials, and Beta usability (offline Echo)	2026-10-27T02:31:29.1207775Z   [FAIL] d4-beta-usability — material reader Escape evidence {"before":{"mode":"chat","drawerHidden":true},"errors":[],"events":[{"phase":"capture","key":"Escape","target":"material-reader","prevented":false},{"phase":"bubble","key":"Escape","target":"material-reader","prevented":true}],"active":"material-reader","mode":"chat","readerHidden":false,"readerClass":"","drawerHidden":true,"dialogOpen":false}; timeout (10000ms) wai…
+
+Local D3 setup failure (be9263a): allowed read root overlapped the synthetic canary directory; corrected to an isolated allowed directory, without changing policy assertions.
+  [FAIL] tool-policy-boot — canary file is inside read root <dir>/workspace — the overreach layout is broken (choose read roots that do not contain the canary's directory)
+  [FAIL] tool-policy-allow-read — scenario wiring: tool-policy layout missing (see tool-policy-boot)
+  [FAIL] tool-policy-deny-fail-closed — scenario wiring: tool-policy probe tree missing (see tool-policy-boot)
+  [FAIL] tool-policy-deny-provenance — scenario wiring: deny run id missing (see tool-policy-deny-fail-closed)
+  [FAIL] tool-policy-canary-never-read — scenario wiring: controlled agent dir missing (see tool-policy-boot)

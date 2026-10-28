@@ -35,6 +35,7 @@ export function createBrowserAccessibility(deps) {
     });
 
     await deps.runCheck("narrow-window-layout", async () => {
+      try {
       await deps.chrome.cdp.send("Emulation.setDeviceMetricsOverride", {
         width: deps.NARROW_VIEWPORT.width,
         height: deps.NARROW_VIEWPORT.height,
@@ -46,11 +47,12 @@ export function createBrowserAccessibility(deps) {
         "(() => { const el = document.getElementById('sidebar-toggle'); const cs = getComputedStyle(el); " +
           "const mql = window.matchMedia('(max-width: 719px)'); " +
           "const detail = getComputedStyle(document.getElementById('run-detail')); " +
-          "return { display: cs.display, narrow: mql.matches, runDetailDisplay: detail.display }; })()",
+          "const detailElement = document.getElementById('run-detail'); const disclosure = detailElement.closest('details'); " +
+          "return { display: cs.display, narrow: mql.matches, runDetailDisplay: detail.display, runDetailVisible: (!disclosure || disclosure.open) && detailElement.getClientRects().length > 0 }; })()",
       );
       deps.assert(toggleVisible.narrow === true, "viewport 480px did not match the narrow media query (max-width 719px)");
       deps.assert(toggleVisible.display !== "none", `sidebar toggle hidden in narrow viewport (display ${String(toggleVisible.display)})`);
-      deps.assert(toggleVisible.runDetailDisplay === "none", `#run-detail not hidden in narrow viewport (display ${String(toggleVisible.runDetailDisplay)})`);
+      deps.assert(toggleVisible.runDetailVisible === false, `#run-detail not hidden in narrow viewport (display ${String(toggleVisible.runDetailDisplay)})`);
       /* 侧栏开合（aria 语义 + body class）。 */
       await deps.click("#sidebar-toggle");
       const openState = await deps.evalJs(
@@ -98,6 +100,12 @@ export function createBrowserAccessibility(deps) {
       deps.assert(wideWidth < deps.VIEWPORT.width * 0.6, `wide drawer unexpectedly near-full-width: ${JSON.stringify(wideDrawer)}`);
       deps.assert(!/drawer-up/i.test(String(wideDrawer.animationName)), `wide drawer uses the bottom-up form: ${JSON.stringify(wideDrawer)}`);
       return { detail: `480px viewport: toggle visible, #run-detail hidden, sidebar open/close aria ok; drawer full-width ${String(narrowDrawer.width)}${narrowDrawer.animationName === "none" ? "" : ` (${String(narrowDrawer.animationName)})`} in narrow vs right-side ${String(wideDrawer.width)} in wide` };
+      } finally {
+        await deps.chrome.cdp.send("Emulation.setDeviceMetricsOverride", {
+          width: deps.VIEWPORT.width, height: deps.VIEWPORT.height, deviceScaleFactor: 1, mobile: false,
+        });
+        await deps.pressKey("Escape", "Escape", 27);
+      }
     });
 
     await deps.runCheck("reduced-motion", async () => {

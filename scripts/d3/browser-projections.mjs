@@ -3,26 +3,131 @@ import { writeFileSync } from "node:fs";
 /** browser-projections original runner scenarios/helpers Instance-owned state and dependencies. */
 
 export function createBrowserProjections(deps) {
+  const pageProbeCacheName = `__treeaiD3TurnProbe_${Math.random().toString(36).slice(2)}`;
 
   /** 结构化 DOM 摘要（证据 JSON 的来源；写盘前统一脱敏）。 */
   function pageSummaryExpression() {
-    return `(() => {
+    return `(async () => {
       const $ = (id) => document.getElementById(id);
       const visible = (id) => { const el = $(id); return el !== null && !el.hidden && getComputedStyle(el).display !== 'none'; };
       const text = (id) => { const el = $(id); return el === null ? null : el.textContent; };
-      const activeTab = (() => { const el = document.querySelector('#branch-tabs [aria-current], #branch-tabs .active, #branch-tabs button[style*="font-weight"]');
-        return el === null ? null : el.textContent; })();
+      const cache = window[${JSON.stringify(pageProbeCacheName)}] ?? (window[${JSON.stringify(pageProbeCacheName)}] = Object.create(null));
+      const treeId = document.querySelector('#tree-list button.active')?.dataset.treeId ?? null;
+      const tabs = [...document.querySelectorAll('#branch-tabs button')];
+      const trunkBranchId = tabs.find((button) => button.classList.contains('active'))?.dataset.branchId ?? null;
+      const panelVisible = $('branch-panel') !== null && !$('branch-panel').hidden;
+      const panelBranchId = tabs.find((button) => button.classList.contains('panel-open'))?.dataset.branchId ?? null;
+      const activeBranchId = panelVisible ? panelBranchId : trunkBranchId;
+      const activeContainer = panelVisible ? '#panel-conversation' : '#conversation';
+      const cacheKey = (branchId) => treeId === null || branchId === null ? null : String(treeId) + ':' + String(branchId);
+      const readPosition = () => {
+        const match = /([0-9]+)\\s*\\/\\s*([0-9]+)/.exec(text('round-position') ?? '');
+        return match === null ? { index: 0, count: 0 } : { index: Number(match[1]), count: Number(match[2]) };
+      };
+      const readTurns = (containerId, roundIndex) => [...document.querySelectorAll(containerId + ' .turn:not(#streaming-turn)')].map((turn) => ({
+        role: turn.classList.contains('user') ? 'user' : turn.classList.contains('assistant') ? 'assistant' : 'return',
+        turnId: turn.dataset.turnId ?? null,
+        text: turn.dataset.turnText ?? null,
+        roundIndex,
+      }));
+      const readReturnCards = (roundIndex) => [...document.querySelectorAll('#conversation .turn.return')].map((card, index) => ({
+        turnId: card.dataset.turnId ?? null,
+        text: card.textContent,
+        delivered: card.querySelector('.delivery') !== null && card.querySelector('.delivery').classList.contains('delivered'),
+        deliveryText: card.querySelector('.delivery') === null ? null : card.querySelector('.delivery').textContent,
+        roundIndex,
+        index,
+      }));
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+      const pager = $('round-navigation');
+      const previous = $('round-previous');
+      const next = $('round-next');
+      const originalPosition = readPosition();
+      let scannedRoundCount = originalPosition.count;
+      const activeConversation = $(panelVisible ? 'panel-conversation' : 'conversation');
+      const originalScrollTop = activeConversation?.scrollTop ?? 0;
+      const originalFocus = document.activeElement;
+      const key = cacheKey(activeBranchId);
+      if (key !== null && activeContainer === (panelVisible ? '#panel-conversation' : '#conversation')) {
+        const turns = new Map();
+        const returnCards = new Map();
+        const addPage = (roundIndex) => {
+          readTurns(activeContainer, roundIndex).forEach((turn, index) => turns.set(turn.turnId ?? [roundIndex, 'turn', index].join(':'), turn));
+          readReturnCards(roundIndex).forEach((card) => returnCards.set(card.turnId ?? [roundIndex, 'return', card.index].join(':'), card));
+        };
+        const selectionActive = (window.getSelection()?.toString() ?? "").length > 0;
+        let complete = pager !== null && !pager.hidden && previous !== null && next !== null && !selectionActive;
+        if (complete && originalPosition.count > 0) {
+          while (!previous.disabled) {
+            previous.click();
+            await settle();
+          }
+          let roundIndex = Math.max(0, readPosition().index - 1);
+          for (;;) {
+            addPage(roundIndex);
+            if (next.disabled) break;
+            next.click();
+            await settle();
+            roundIndex = Math.max(0, readPosition().index - 1);
+          }
+          scannedRoundCount = readPosition().count;
+          const targetPosition = Math.min(originalPosition.index, scannedRoundCount);
+          while (readPosition().index < targetPosition && !next.disabled) {
+            next.click();
+            await settle();
+          }
+          while (readPosition().index > targetPosition && !previous.disabled) {
+            previous.click();
+            await settle();
+          }
+          if (activeConversation !== null) activeConversation.scrollTop = originalScrollTop;
+          if (originalFocus !== document.body && originalFocus?.isConnected && document.activeElement !== originalFocus) {
+            originalFocus.focus({ preventScroll: true });
+          }
+        } else if (complete) {
+          complete = true;
+        } else if (selectionActive || originalPosition.count <= 1) {
+          addPage(Math.max(0, originalPosition.index - 1));
+        }
+        if (complete) {
+          cache[key] = {
+            turns: [...turns.values()],
+            returnCards: [...returnCards.values()],
+            roundCount: scannedRoundCount,
+            currentRoundIndex: Math.min(originalPosition.index, scannedRoundCount),
+            complete: true,
+          };
+        } else if (cache[key] === undefined) {
+          cache[key] = {
+            turns: [...turns.values()],
+            returnCards: [...returnCards.values()],
+            roundCount: originalPosition.count,
+            currentRoundIndex: originalPosition.index,
+            complete: false,
+          };
+        }
+      }
+      const entryFor = (branchId) => {
+        const entryKey = cacheKey(branchId);
+        return entryKey === null ? null : cache[entryKey] ?? null;
+      };
+      const trunkEntry = entryFor(trunkBranchId);
+      const panelEntry = entryFor(panelBranchId);
+      const activeTab = tabs.find((el) => el.classList.contains('panel-open')) ?? tabs.find((el) => el.classList.contains('active'));
       return {
         url: location.pathname,
         readyState: document.readyState,
+        treeId,
         activeElementId: document.activeElement === null ? null : document.activeElement.id,
+        activePagerContainer: activeContainer,
         sidebar: { toggleExpanded: $('sidebar-toggle') === null ? null : $('sidebar-toggle').getAttribute('aria-expanded'), treeCount: $('tree-list') === null ? 0 : $('tree-list').children.length, driverNote: text('driver-note') },
         main: { emptyStateVisible: visible('empty-state'), treeViewVisible: visible('tree-view'), runStatus: text('run-status'), runDetail: text('run-detail'), abortVisible: visible('abort-run'), failurePanel: { hidden: $('failure-panel') === null ? null : $('failure-panel').hidden, text: text('failure-panel') }, sessionBanner: { hidden: $('session-banner') === null ? null : $('session-banner').hidden, text: text('session-banner') }, errorBanner: { hidden: $('error-banner') === null ? null : $('error-banner').hidden, role: $('error-banner') === null ? null : $('error-banner').getAttribute('role'), text: text('error-banner') } },
-        panel: { hidden: $('branch-panel') === null ? null : $('branch-panel').hidden, title: text('panel-title'), anchorContext: text('panel-anchor-context'), sessionNote: { hidden: $('panel-session-note') === null ? null : $('panel-session-note').hidden, text: text('panel-session-note') }, errorBanner: { hidden: $('panel-error-banner') === null ? null : $('panel-error-banner').hidden, text: text('panel-error-banner') } },
-        conversation: { turns: [...document.querySelectorAll('#conversation .turn')].map((t) => ({ role: t.classList.contains('user') ? 'user' : t.classList.contains('assistant') ? 'assistant' : 'return', turnId: t.dataset.turnId ?? null, text: t.dataset.turnText ?? null })) },
-        panelConversation: { turns: [...document.querySelectorAll('#panel-conversation .turn')].map((t) => ({ role: t.classList.contains('user') ? 'user' : t.classList.contains('assistant') ? 'assistant' : 'return', turnId: t.dataset.turnId ?? null, text: t.dataset.turnText ?? null })) },
-        branchTabs: [...document.querySelectorAll('#branch-tabs button')].map((b) => ({ text: b.textContent, ariaCurrent: b.getAttribute('aria-current') })),
-        returnCards: [...document.querySelectorAll('#conversation .turn.return')].map((c) => ({ text: c.textContent, delivered: c.querySelector('.delivery') !== null && c.querySelector('.delivery').classList.contains('delivered'), deliveryText: c.querySelector('.delivery') === null ? null : c.querySelector('.delivery').textContent })),
+        panel: { hidden: $('branch-panel') === null ? null : $('branch-panel').hidden, branchId: panelBranchId, title: text('panel-title'), anchorContext: text('panel-anchor-context'), sessionNote: { hidden: $('panel-session-note') === null ? null : $('panel-session-note').hidden, text: text('panel-session-note') }, errorBanner: { hidden: $('panel-error-banner') === null ? null : $('panel-error-banner').hidden, text: text('panel-error-banner') } },
+        conversation: { branchId: trunkBranchId, turns: trunkEntry?.turns ?? [], roundCount: trunkEntry?.roundCount ?? 0, currentRoundIndex: trunkEntry?.currentRoundIndex ?? 0, complete: trunkEntry?.complete ?? false },
+        panelConversation: { branchId: panelBranchId, turns: panelEntry?.turns ?? [], roundCount: panelEntry?.roundCount ?? 0, currentRoundIndex: panelEntry?.currentRoundIndex ?? 0, complete: panelEntry?.complete ?? false },
+        branchTabs: tabs.map((button) => ({ branchId: button.dataset.branchId ?? null, text: button.textContent, ariaCurrent: button.getAttribute('aria-current'), active: button.classList.contains('active'), panelOpen: button.classList.contains('panel-open') })),
+        returnCards: trunkEntry?.returnCards ?? [],
+        activeTab: activeTab === undefined ? null : activeTab.textContent,
         drawer: { open: $('source-drawer') !== null && !$('source-drawer').hidden, toggleExpanded: $('source-drawer-toggle') === null ? null : $('source-drawer-toggle').getAttribute('aria-expanded'), text: text('source-drawer') },
         composers: { trunkDisabled: $('prompt-input') === null ? null : $('prompt-input').disabled, panelDisabled: $('panel-prompt-input') === null ? null : $('panel-prompt-input').disabled, returnDisabled: $('return-input') === null ? null : $('return-input').disabled },
       };
@@ -51,13 +156,28 @@ export function createBrowserProjections(deps) {
    * 响应重渲窗口里被吞）。超时诊断附带当前页面事实（末轮答案/输入框
    * 残留/run 状态）。 */
   async function waitForAnswerMarkers(containerSelector, needles, timeoutMs, minAssistantTurns = 1) {
-    const expr =
-      `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant:not(#streaming-turn)')]; ` +
-      `if (turns.length < ${String(minAssistantTurns)}) return false; ` +
-      "const text = turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent; " +
-      `return ${JSON.stringify(needles)}.every((n) => text.includes(n)) ? text : false; })()`;
+    const deadline = Date.now() + timeoutMs;
     try {
-      return await deps.waitForJs(expr, timeoutMs, `assistant answer #${String(minAssistantTurns)} containing ${needles.join(",")}`);
+      for (;;) {
+        const composerId = containerSelector === "#panel-conversation" ? "panel-prompt-input" : "prompt-input";
+        const settled = await deps.evalJs(
+          `(() => { const input = document.getElementById(${JSON.stringify(composerId)}); const status = document.getElementById('run-status'); ` +
+            "return input !== null && !input.disabled && status !== null && status.textContent === 'idle'; })()",
+        );
+        if (settled) {
+          const summary = await deps.evalJs(pageSummaryExpression());
+          if (summary.activePagerContainer === containerSelector) {
+            const answers = summary[containerSelector === "#panel-conversation" ? "panelConversation" : "conversation"].turns
+              .filter((turn) => turn.role === "assistant");
+            const lastAnswer = answers.at(-1)?.text ?? "";
+            if (answers.length >= minAssistantTurns && needles.every((needle) => lastAnswer.includes(needle))) return lastAnswer;
+          }
+        }
+        if (Date.now() >= deadline) {
+          throw new Error(`timeout (${String(timeoutMs)}ms) waiting for: assistant answer #${String(minAssistantTurns)} containing ${needles.join(",")}`);
+        }
+        await deps.sleep(80);
+      }
     } catch (err) {
       const context = await deps.evalJs(
         `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(containerSelector)} + ' .turn.assistant')]; ` +
@@ -101,11 +221,28 @@ export function createBrowserProjections(deps) {
   /** 按序号取渲染内 assistant turn 的稳定选择器（data-turn-id 跨重渲稳定；
    *  nth-of-type 会把 user turn 一并计数，这里显式按 .turn.assistant 序）。 */
   async function assistantTurnSelector(container, index) {
+    const summary = await deps.evalJs(pageSummaryExpression());
+    deps.assert(summary.activePagerContainer === container, `cannot select a turn in inactive pager ${container}`);
+    const conversation = container === "#panel-conversation" ? summary.panelConversation : summary.conversation;
+    const target = conversation.turns.filter((turn) => turn.role === "assistant")[index];
+    deps.assert(target !== undefined && target.turnId !== null, `assistant turn #${String(index)} not found in ${container}`);
     const turnId = await deps.evalJs(
-      `(() => { const turns = [...document.querySelectorAll(${JSON.stringify(container)} + ' .turn.assistant')]; ` +
-        `return turns.length > ${String(index)} ? (turns[${String(index)}].dataset.turnId ?? null) : null; })()`,
+      `(async () => {
+        const container = ${JSON.stringify(container)};
+        const targetPosition = ${String(target.roundIndex + 1)};
+        const position = () => Number((document.getElementById('round-position')?.textContent ?? '').split('/')[0].trim()) || 0;
+        const previous = document.getElementById('round-previous');
+        const next = document.getElementById('round-next');
+        const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+        while (position() < targetPosition && next !== null && !next.disabled) { next.click(); await settle(); }
+        while (position() > targetPosition && previous !== null && !previous.disabled) { previous.click(); await settle(); }
+        await Promise.race([Promise.all((document.getAnimations?.() ?? []).filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => {}))), new Promise((resolve) => setTimeout(resolve, 600))]);
+        const turn = [...document.querySelectorAll(container + ' .turn.assistant:not(#streaming-turn)')]
+          .find((candidate) => candidate.dataset.turnId === ${JSON.stringify(target.turnId)});
+        return turn?.dataset.turnId ?? null;
+      })()`,
     );
-    deps.assert(turnId !== null, `assistant turn #${String(index)} not found in ${container}`);
+    deps.assert(turnId === target.turnId, `assistant turn #${String(index)} is not visible in its pager round`);
     return `${container} .turn.assistant[data-turn-id="${turnId}"]`;
   }
 
@@ -139,13 +276,14 @@ export function createBrowserProjections(deps) {
     return `/api/trees/${encodeURIComponent(tp.probeTreeId)}${action === undefined ? "" : `/${action}`}`;
   }
 
-  /** 探针树当前渲染的 assistant 回合数（探针树自动打开在主线视图）。
+  /** 探针树主线分页 DOM 采集到的 assistant 回合数（探针树自动打开在主线视图）。
    * 流式占位（#streaming-turn，瞬态 .turn.assistant 元素）不是已完成回合：
    * 真实模型首录（20260929T160209Z）证明把它计入会让结局检测在占位刚挂载
    * 时就误读「新回答」（空文本）并误判 escape——本函数与 waitForProbeOutcome
    * 只数已完成回合。 */
   async function probeAssistantTurnCount() {
-    return deps.evalJs("document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)').length");
+    const summary = await deps.evalJs(pageSummaryExpression());
+    return summary.conversation.turns.filter((turn) => turn.role === "assistant").length;
   }
 
   /** 探针干线回合数：页面侧（#conversation 已完成 .turn 总数——流式占位
@@ -153,7 +291,8 @@ export function createBrowserProjections(deps) {
    *  把它数进去）+ 服务器侧（state 的 trunk turns）——policy-denied 的
    *  「零回合落库」两侧同时核对。 */
   async function probeTurnCounts() {
-    const pageTurns = await deps.evalJs("document.querySelectorAll('#conversation .turn:not(#streaming-turn)').length");
+    const summary = await deps.evalJs(pageSummaryExpression());
+    const pageTurns = summary.conversation.turns.length;
     const state = await deps.api("GET", tpPath("state"));
     deps.assert(state.status === 200, `probe tree state fetch failed: ${String(state.status)}`);
     const trunkView = (state.body?.branches ?? []).find((view) => view.branch.id === deps.sc.toolPolicy.probeTrunkId);
@@ -214,6 +353,8 @@ export function createBrowserProjections(deps) {
           const bannerVisible = banner !== null && !banner.hidden && banner.textContent.length > 0;
           const panel = document.getElementById('failure-panel');
           const panelVisible = panel !== null && !panel.hidden && panel.textContent.length > 0;
+          const input = document.getElementById('prompt-input');
+          const status = document.getElementById('run-status');
           const turns = [...document.querySelectorAll('#conversation .turn.assistant:not(#streaming-turn)')];
           return {
             bannerVisible,
@@ -222,13 +363,18 @@ export function createBrowserProjections(deps) {
             panelText: panelVisible ? panel.textContent : null,
             assistantCount: turns.length,
             lastAnswer: turns.length === 0 ? null : (turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent),
+            settled: input !== null && !input.disabled && status !== null && status.textContent === 'idle',
           };
         })()`,
       );
       if (pageState.bannerVisible === true || pageState.panelVisible === true) {
         return { kind: "error", bannerText: pageState.bannerText, panelText: pageState.panelText };
       }
-      if (pageState.assistantCount > assistantBefore) return { kind: "answer", text: pageState.lastAnswer };
+      if (pageState.settled === true) {
+        const summary = await deps.evalJs(pageSummaryExpression());
+        const answers = summary.conversation.turns.filter((turn) => turn.role === "assistant");
+        if (answers.length > assistantBefore) return { kind: "answer", text: answers.at(-1)?.text ?? null };
+      }
       if (Date.now() >= deadline) {
         const context = await deps.evalJs(
           "(() => JSON.stringify({ runStatus: document.getElementById('run-status') === null ? null : document.getElementById('run-status').textContent, " +

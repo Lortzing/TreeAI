@@ -1,0 +1,83 @@
+
+== 0. 环境与前置
+  [PASS] 记录 macOS 版本
+  [PASS] 主机架构 arm64
+  [PASS] 构建机 Node 24.21.0
+
+== 1. 构建安装产物 A/B（package-installer.mjs）
+  [PASS] A/B 构建退出码 0
+  [PASS] 记录产物 SHA256
+
+== 2. 安装到含中文与空格的目录 → 首次运行（真实 open）
+  [PASS] 安装目录就绪（中文+空格路径）
+  [PASS] start.command 退出码 0
+  [PASS] 首启生成默认离线配置
+  [PASS] 真实 open 唤起系统浏览器
+  [PASS] 首启输出实际 URL
+  [PASS] 真实平台数据目录已创建
+  [PASS] GET /api/health → {ok:true}
+  [PASS] GET / 静态前端可服务
+  [PASS] POST /api/trees 创建树（离线闭环）
+  [PASS] GET /api/trees 树在列
+
+== 3. 浏览器 URL 精确性（BROWSER 记录器，不再开新标签）
+  [PASS] 记录器模式 start 退出码 0
+  [PASS] 记录器捕获的 URL 与实际监听端口一致
+  [PASS] 第二次启动：数据仍持久
+
+== 4. 停止 → 重启 → 状态持久
+  [PASS] stop 优雅停止
+  [PASS] restart 退出码 0
+  [PASS] 重启后树仍在（跨重启持久）
+
+== 5. 端口冲突自动顺延
+  [PASS] 端口冲突下 start 成功
+  [PASS] 输出端口顺延提示
+  [PASS] 实际端口已顺延（8788 → 8789）
+  [PASS] 顺延端口健康检查通过
+  [PASS] 顺延端口上数据仍在
+
+== 6. doctor（健康安装）
+  [PASS] doctor 退出码 0
+  [PASS] doctor 确认真实数据目录可写
+  [PASS] 默认安装目录解析为 ~/Applications/TreeAI
+  [PASS] 数据目录解析为真实平台路径
+
+== 7. 模型配置错误 → 可执行恢复
+  [PASS] doctor 退出码 1
+  [PASS] doctor 给出修复步骤
+  [PASS] start 拒绝坏配置
+  [PASS] 修复配置后可启动
+  [PASS] 配置故障期间数据未丢失
+
+== 8. 正常升级 A→B（数据保留）
+  [PASS] upgrade 退出码 0
+  [PASS] 输出升级成功
+  [PASS] 输出数据未动
+  [PASS] 安装目录已替换为 B
+  [PASS] 旧版本 A 已完整备份
+  [PASS] 升级后树仍在（数据保留）
+
+== 9. 损坏新包升级 → 自动回滚
+  [PASS] 损坏升级退出非 0
+  [PASS] 输出已回滚
+  [PASS] 回滚恢复到升级前版本（B）
+  [PASS] 回滚后可正常启动
+  [PASS] 回滚后数据仍在
+
+== 10. 卸载：默认保留数据
+  [PASS] uninstall 退出码 0
+  [PASS] 输出数据已保留
+  [PASS] 安装目录已删除
+  [PASS] 真实数据目录与数据库仍在（默认保留）
+
+== 11. 卸载：显式 --delete-data
+  [PASS] --delete-data 卸载退出码 0
+  [PASS] 输出数据已删除
+  [PASS] 真实数据目录已按显式 opt-in 删除
+
+== 12. 证据落盘与密钥复扫
+  [PASS] 证据密钥扫描零发现
+  [PASS] 收尾：真实数据目录恢复不存在
+
+test-macos-local: 证据目录 ~/.codex/worktrees/354c/TreeAI/evidence/d4/d4-7/d47-macos-20261027T024748Z

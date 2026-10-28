@@ -217,6 +217,9 @@ export function createMaterialPdfView(deps) {
         if (i < lines.length - 1) textLayer.append(deps.document.createTextNode("\n"));
       }
     }
+    // Selectable text must have its geometry before async PDF.js paint completes.
+    // Otherwise native pointer anchors move when a slower canvas render finishes.
+    layoutPdfGeometryTextLayer(frame, entry);
     textLayer.dataset.rendered = "true";
     const reader = deps.state.materialReader;
     if (reader !== null) void renderPdfOriginalPage(frame, entry, reader);

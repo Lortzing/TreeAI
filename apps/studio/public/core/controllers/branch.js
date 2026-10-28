@@ -59,7 +59,7 @@ export function createBranchController(deps) {
     if (deps.state.materialReader !== null) deps.closeMaterialReader();
     deps.state.panelBranchId = null;
     deps.state.forcePanelSessionNote = false;
-    deps.hidePanel();
+    deps.hidePanel({ instant: opts.instant === true });
     /* 回主线：对齐游标到 Trunk（失败不阻断收起——错误交由 guard 呈现，
        树照常可读；游标以服务端状态为准）。 */
     const trunk = deps.trunkBranchId();
@@ -145,7 +145,7 @@ export function createBranchController(deps) {
         ? `${navigation.code}: ${navigation.message}`
         : null;
     if (payload.source.sourceBranchId === deps.trunkBranchId()) {
-      if (deps.state.panelBranchId !== null) await closePanel({ focus: "none", skipSwitch: true });
+      if (deps.state.panelBranchId !== null) await closePanel({ focus: "none", skipSwitch: true, instant: true });
       else deps.renderAll();
       deps.revealAnchorTurn(payload.source.anchorTurnId);
       if (navigationFailed !== null) {

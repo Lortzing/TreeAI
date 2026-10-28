@@ -157,7 +157,7 @@ function renderSessionWorkspace() {
   }
   const alternate = sessionUI.mode !== "chat";
   if (alternate && treeId) {
-    const context = "Session 关系";
+    const context = "关系图";
     deps.$("topbar-path").textContent = `${readingTitles.get(treeId) || treeId} / ${context}`;
     deps.$("topbar-path").title = `${treeId} / ${context}`;
   } else {
@@ -206,7 +206,7 @@ function sessionViewHeading(root, eyebrow, title, description) {
 }
 
 function renderSessionMap(root, st, savedScroll) {
-  const heading = sessionViewHeading(root, "", "Session 关系", "");
+  const heading = sessionViewHeading(root, "", "关系图", "");
   const tools = workspaceElement("div", "session-map-tools");
   tools.append(workspaceElement("span", "", `${st.branches.length} 个 Session · 当前思考树`));
   const zoomGroup = workspaceElement("div", "map-zoom");
@@ -216,11 +216,11 @@ function renderSessionMap(root, st, savedScroll) {
   };
   const zoomOut = workspaceButton("−", "", () => zoom(-.15));
   zoomOut.id = "session-zoom-out";
-  zoomOut.setAttribute("aria-label", "缩小 Session 关系图");
+  zoomOut.setAttribute("aria-label", "缩小关系图");
   zoomOut.disabled = sessionUI.zoom <= .5;
   const zoomIn = workspaceButton("＋", "", () => zoom(.15));
   zoomIn.id = "session-zoom-in";
-  zoomIn.setAttribute("aria-label", "放大 Session 关系图");
+  zoomIn.setAttribute("aria-label", "放大关系图");
   zoomIn.disabled = sessionUI.zoom >= 1.25;
   const reset = workspaceButton("重置", "", () => { sessionUI.zoom = 1; renderSessionWorkspace(); });
   reset.id = "session-zoom-reset";
@@ -255,7 +255,7 @@ function renderSessionMap(root, st, savedScroll) {
   const width = Math.max(650, 360 + maxDepth * 310);
   const height = Math.max(460, row * 220 + 80);
   const scroller = workspaceElement("div", "session-map-scroll");
-  scroller.setAttribute("aria-label", "Session 关系图；滚动查看，点击卡片组进入轮次");
+  scroller.setAttribute("aria-label", "关系图；滚动查看，点击卡片组进入轮次");
   const canvas = workspaceElement("div", "session-map-canvas");
   canvas.setAttribute("style", `width:${width * sessionUI.zoom}px;height:${height * sessionUI.zoom}px`);
   const layer = workspaceElement("div", "session-map-layer");

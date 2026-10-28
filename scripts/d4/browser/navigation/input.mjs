@@ -114,7 +114,7 @@ export async function navRowDomClickWithFallback(ctx, selector, { rowIndex = nul
         `if (r.width <= 0 || r.height <= 0) return { hidden: true }; ` +
         `const x = r.left + r.width / 2, y = r.top + r.height / 2; ` +
         `const hit = document.elementFromPoint(x, y); ` +
-        `return { x, y, hit: hit !== null && hit.closest(${JSON.stringify(selector)}) !== null }; })()`,
+        `return { x, y, branchId: el.closest('[data-branch-id]')?.dataset.branchId ?? null, expanded: el.closest('.nav-item')?.getAttribute('aria-expanded') ?? null, hit: hit !== null && hit.closest(${JSON.stringify(selector)}) !== null }; })()`,
     );
     if (state?.missing === true) {
       if (attempt >= 2) throw new Error(`nav click target not found: ${selector}`);
@@ -126,7 +126,9 @@ export async function navRowDomClickWithFallback(ctx, selector, { rowIndex = nul
   if (state?.hit === true) {
     await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mousePressed", x: state.x, y: state.y, button: "left", buttons: 1, clickCount: 1 });
     await ctx.cdpSend("Input.dispatchMouseEvent", { type: "mouseReleased", x: state.x, y: state.y, button: "left", buttons: 0, clickCount: 1 });
-    return "input-click";
+    const selected = !selector.includes('.nav-label') || state.branchId === null || await ctx.evalJs(`document.querySelector('#nav-tree .nav-item.active')?.dataset.branchId === ${JSON.stringify(state.branchId)}`);
+    const toggled = !selector.includes('.nav-toggle') || await ctx.evalJs(`document.querySelector(${JSON.stringify(selector)})?.closest('.nav-item')?.getAttribute('aria-expanded') !== ${JSON.stringify(state.expanded)}`);
+    if (selected && toggled) return "input-click";
   }
   /* DOM dispatch：行可在两次求值间被重渲逐出窗口（按需续页/窗口重划）——
      有限重试（重滚入 + 重发）。 */

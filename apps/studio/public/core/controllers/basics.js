@@ -125,9 +125,24 @@ export function createStudioBasics(deps) {
   }
 
 
+  let indexedBranches = null;
+  const indexedViews = new Map();
+  const indexedOrdinals = new Map();
+  function indexBranches() {
+    const branches = deps.state.treeState?.branches ?? null;
+    if (branches === indexedBranches && indexedViews.size === (branches?.length ?? 0)) return;
+    indexedBranches = branches;
+    indexedViews.clear();
+    indexedOrdinals.clear();
+    for (const [index, view] of (branches ?? []).entries()) {
+      indexedViews.set(view.branch.id, view);
+      indexedOrdinals.set(view.branch.id, index);
+    }
+  }
   function branchView(branchId) {
     if (deps.state.treeState === null || branchId === null) return null;
-    return deps.state.treeState.branches.find((view) => view.branch.id === branchId) ?? null;
+    indexBranches();
+    return indexedViews.get(branchId) ?? null;
   }
 
 
@@ -151,8 +166,27 @@ export function createStudioBasics(deps) {
     const st = deps.state.treeState;
     if (st === null) return branchId;
     if (branchId === st.trunkBranchId) return "Trunk";
-    const index = st.branches.findIndex((view) => view.branch.id === branchId);
+    indexBranches();
+    const index = indexedOrdinals.get(branchId) ?? -1;
     return `Branch ${index}`;
+  }
+
+  /** 阅读位的分支显示名（D1 意义命名层）：支线首个问题（与
+      questionTitle 同一取法）→ 锚定选区摘录 → branchLabel 机械序号的
+      回退链；身份语境（tooltip / 来源注记 / 恢复入口 / 游标注记）继续用
+      branchLabel 的稳定机械名——两套名字各归其位，可溯源性不丢。 */
+  function branchDisplayName(branchId) {
+    const st = deps.state.treeState;
+    if (st === null) return branchId;
+    if (branchId === st.trunkBranchId) return "思考主线";
+    const view = branchView(branchId);
+    if (view === null) return branchLabel(branchId);
+    const collapse = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    const firstQuestion = view.turns.find((turn) => turn.role === "user");
+    /* 材料建枝的首问是组合载荷（`[exploration from material vX] 问题`）：
+       显示名剥掉前导范围标记——完整原文仍在对话正文，名字只承担指认。 */
+    const title = collapse(firstQuestion?.text).replace(/^\[[^\]]*\]\s*/, "");
+    return title || collapse(view.origin?.selection.text) || branchLabel(branchId);
   }
    /* `${treeId}:${turnId}` → epoch ms */
 
@@ -205,6 +239,7 @@ export function createStudioBasics(deps) {
     closeSidebar,
     guard,
     branchLabel,
+    branchDisplayName,
     isAtBottom,
     returnAttemptsFor,
     scrollKey,

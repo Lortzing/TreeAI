@@ -31,7 +31,27 @@
         <button id="abort-run" class="danger" hidden>Abort run</button>
       </div>
       <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ 来源</button>
+      <button id="api-settings-open" type="button">API 设置</button>
     </header>
+    <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
+      <form id="api-settings-form">
+        <div class="api-settings-heading"><h2 id="api-settings-title">API 与模型</h2><button id="api-settings-close" type="button" aria-label="关闭 API 设置">关闭</button></div>
+        <p>配置 API 接口与模型。保存后重启 TreeAI 生效；已有对话保留原模型身份。</p>
+        <div class="api-settings-grid">
+          <label>Provider<select id="api-provider"></select></label><button id="api-provider-add" type="button">新增 Provider</button>
+          <label>模型<select id="api-model"></select></label><button id="api-model-add" type="button">新增模型</button>
+          <label>接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
+          <label>API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
+          <label>API key 环境变量名<input id="api-key-env" required placeholder="MY_API_KEY" autocomplete="off" spellcheck="false"></label>
+          <label>上下文上限<input id="api-context-window" type="number" min="1" step="1" required></label>
+          <label>最大输出 token<input id="api-max-tokens" type="number" min="1" step="1" required></label>
+        </div>
+        <p id="api-env-status"></p>
+        <details><summary>高级配置：多个 Provider、模型与请求头</summary><label for="api-config-json">JSON（仅存环境变量名，不接受 key 或登录 token）</label><textarea id="api-config-json" rows="12" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON 到表单</button></details>
+        <p id="api-settings-status" role="status" aria-live="polite"></p>
+        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button type="submit">保存设置</button></div>
+      </form>
+    </dialog>
 
     <!-- 左右分栏工作区：左栏 Forest/Branches 导航 + 主区；高度受限使
          #conversation 成为真实滚动容器（修复文档级整页滚动缺陷）。 -->
@@ -53,7 +73,7 @@
             <button id="list-retry">Retry</button>
           </div>
         </section>
-        <section class="sidebar-section" id="branch-section">
+        <section class="sidebar-section" id="branch-section" hidden>
           <h2 class="sidebar-heading">这棵树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
@@ -103,16 +123,18 @@
              选择器（.md/.markdown/.pdf——D4-1 支持面）经真实导入端点上传
              （原始字节 + 百分号编码文件名头），pending/parsing/ready/
              failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
-             在途解析可取消（parse-tasks cancel 端点）。 -->
-        <section class="sidebar-section" id="materials-section" hidden>
-          <h2 class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></h2>
+             在途解析可取消（parse-tasks cancel 端点）。渐进披露：本段默认
+             折叠（与导航/搜索同形态）；导入开始或阅读导航回退路径会自动
+             展开——在途状态面绝不藏在折叠面板后。 -->
+        <details class="sidebar-section sidebar-disclosure" id="materials-section" hidden>
+          <summary class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></summary>
           <div class="material-import-row">
             <button id="material-import" type="button">＋ 导入阅读材料</button>
             <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
           </div>
           <p id="material-import-status" role="status" aria-live="polite"></p>
           <ul id="material-list" aria-label="Materials"></ul>
-        </section>
+        </details>
         <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：
              跨已保存产品事实的检索入口（材料版本×树链接 / 术语批注 / Return /
              对话 Turn）。默认范围 = 当前树，显式切换全部树；来源类型筛选按
@@ -148,9 +170,8 @@
       <main id="main" data-workspace-view="chat">
         <nav id="workspace-modes" aria-label="工作区视图">
           <button id="mode-chat" type="button" class="workspace-mode active" aria-pressed="true">对话</button>
-          <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">Session 关系</button>
+          <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">关系图</button>
         </nav>
-        <button id="view-map-entry" class="view-edge view-edge-left" type="button" aria-label="E：打开 Session 关系视图"><span aria-hidden="true">⑂</span><small>关系</small></button>
         <nav id="round-navigation" aria-label="切换对话轮次" hidden>
           <button id="round-previous" type="button" aria-label="上一轮">←</button>
           <span id="round-position" role="status" aria-live="polite">00 / 00</span>

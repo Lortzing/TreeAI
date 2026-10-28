@@ -998,7 +998,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
           branchId,
           "user",
           `[new exploration from saved content — the previous session was not restored]\n\n${text}`,
-          { runId, piEntryId: `pi-ne${backend.promptCounter}u` },
+          { runId, episodeId: `ep-ne${backend.promptCounter}`, piEntryId: `pi-ne${backend.promptCounter}u` },
         ),
       );
       const assistantTurn = makeTurn(
@@ -1006,7 +1006,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
         branchId,
         "assistant",
         `echo:[exploration ${text}]`,
-        { runId, piEntryId: `pi-ne${backend.promptCounter}a` },
+        { runId, episodeId: `ep-ne${backend.promptCounter}`, piEntryId: `pi-ne${backend.promptCounter}a` },
       );
       view.turns.push(assistantTurn);
       view.sessionAvailability = "available";
@@ -1312,9 +1312,9 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   const tabs = world.el("branch-tabs").querySelectorAll("button");
   assert.equal(tabs.length, 2, "one tab per branch (Trunk + Branch 1)");
   assert.equal(tabs[0]!.dataset.branchId, "trunk-1");
-  assert.ok(tabs[0]!.textContent.includes("Trunk"));
+  assert.ok(tabs[0]!.textContent.includes("思考主线"));
   assert.equal(tabs[1]!.dataset.branchId, "branch-1");
-  assert.ok(tabs[1]!.textContent.includes("Branch 1"));
+  assert.ok(tabs[1]!.textContent.includes("Branch one question."));
 
   /* turn 角色与 Return 卡锚点定位：u/a 交替，锚定 Return 紧随锚点答案。 */
   const turns = world.el("conversation").querySelectorAll(".turn");
@@ -1416,6 +1416,8 @@ test("Source reveal opens the older round containing the anchor", async () => {
   world.tabButton("branch-1")!.click();
   await settle();
   world.el("panel-view-source").click();
+  await settle();
+  assert.equal(world.el("branch-panel").hidden, true, "the main source is visible before moving keyboard focus into it");
   await settle(250);
   assert.equal(world.el("branch-panel").hidden, true);
   assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
@@ -1593,7 +1595,7 @@ test("branch panel degradation: recovery action posts an exact whole-answer /bra
   tab.click();
   await settle();
   assert.equal(world.el("branch-panel").hidden, false, "branch-1 panel opens via tab");
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, "Branch one question.");
   assert.equal(world.el("panel-session-note").hidden, true, "available branch shows no degraded note");
   assert.equal(world.backend.switchCount, switchBefore + 1, "tab open aligns the cursor via POST /switch");
   assert.equal(world.document.activeElement, world.el("panel-prompt-input"), "panel open focuses the panel input");
@@ -1639,7 +1641,11 @@ test("branch panel degradation: recovery action posts an exact whole-answer /bra
     switchBeforeRecovery,
     "recovery does NOT POST /switch (alignCursor:false, prompt-driven navigation)",
   );
-  assert.equal(world.el("panel-title").textContent, "Branch 2", "recovery opens the new branch's panel");
+  assert.equal(
+    world.el("panel-title").textContent,
+    A2_TEXT,
+    "recovery opens the new branch's panel (title = the anchor answer it grew from)",
+  );
   assert.equal(
     world.el("panel-session-note").hidden,
     true,
@@ -1983,7 +1989,7 @@ test("trunk session banner: disabled with reason when nothing is available; cros
   assert.equal(selection.text, BA1_TEXT);
   assert.equal(world.backend.switchCount, switchBefore, "banner recovery also skips POST /switch (alignCursor:false)");
   assert.equal(world.el("branch-panel").hidden, false, "banner recovery opens the new branch's panel");
-  assert.equal(world.el("panel-title").textContent, "Branch 2", "panel shows the newly created branch");
+  assert.equal(world.el("panel-title").textContent, BA1_TEXT, "panel shows the newly created branch (title = the anchor answer)");
   assert.equal(world.el("panel-send").disabled, false, "recovered branch composer enabled");
   assert.equal(world.document.activeElement, world.el("panel-prompt-input"), "focus moves into the recovered branch's composer");
   assert.equal(world.el("send").disabled, true, "recovery does NOT unlock the fail-closed trunk composer");
@@ -2018,7 +2024,7 @@ test("two-branch cross-switching: alternating panels keep lineage, context, and 
   world.tabButton("branch-1")!.click();
   await settle();
   assert.equal(world.el("branch-panel").hidden, false, "branch-1 panel opens via tab");
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, B1_R1_TEXT);
   const anchorContext1 = world.el("panel-anchor-context").textContent;
   assert.ok(anchorContext1.includes("Branched from Trunk"), "the anchor card names the source branch");
   assert.ok(anchorContext1.includes("“First”"), "branch-1 anchors on the a1 selection excerpt");
@@ -2050,7 +2056,7 @@ test("two-branch cross-switching: alternating panels keep lineage, context, and 
   /* 切到 branch-2：面板整体换谱系；主线不动。 */
   world.tabButton("branch-2")!.click();
   await settle();
-  assert.equal(world.el("panel-title").textContent, "Branch 2");
+  assert.equal(world.el("panel-title").textContent, B2_R1_TEXT);
   const anchorContext2 = world.el("panel-anchor-context").textContent;
   assert.ok(anchorContext2.includes("“Second”"), "branch-2 anchors on the a2 selection excerpt");
   assert.ok(!anchorContext2.includes("“First”"), "no branch-1 anchor bleed into branch-2's card");
@@ -2077,7 +2083,7 @@ test("two-branch cross-switching: alternating panels keep lineage, context, and 
   /* 回 branch-1：恢复它自己的阅读位置（不串到 branch-2 的 800）。 */
   world.tabButton("branch-1")!.click();
   await settle();
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, B1_R1_TEXT);
   assert.deepEqual(
     panelConversation.querySelectorAll(".turn").map((t) => t.dataset.turnId),
     ["b1u1", "b1a1"],
@@ -2186,7 +2192,7 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   assert.equal(wholeSelection.end, A1_TEXT.length, "no selection falls back to the whole answer");
   assert.equal(wholeSelection.text, A1_TEXT);
   assert.equal(world.el("branch-panel").hidden, false, "the new branch opens as a local panel");
-  assert.equal(world.el("panel-title").textContent, "Branch 2");
+  assert.equal(world.el("panel-title").textContent, A1_TEXT, "the fresh branch is titled by the answer it grew from");
   assert.ok(
     world.el("panel-anchor-context").textContent.includes(`“${A1_TEXT}”`),
     "the anchor card carries the whole-answer excerpt",
@@ -2229,7 +2235,7 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   assert.equal(selSelection.start, selStart, "the selection start is the absolute offset within the answer");
   assert.equal(selSelection.end, selEnd);
   assert.equal(selSelection.text, "latest");
-  assert.equal(world.el("panel-title").textContent, "Branch 3");
+  assert.equal(world.el("panel-title").textContent, "latest", "the selection branch is titled by its selected excerpt");
   const anchorCard = world.el("panel-anchor-context").textContent;
   assert.ok(anchorCard.includes("Branched from Trunk"));
   assert.ok(anchorCard.includes("“latest”"), "the anchor card carries the selection excerpt");
@@ -2835,7 +2841,7 @@ test("A2 cross-line selection: offsets and the revealed text span the line break
 /* 21. 顶栏位置路径（改版后新增）：renderTopbarPath 的诚实状态机          */
 /* ------------------------------------------------------------------ */
 
-test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", async () => {
+async function verifyTopbarPositionPath() {
   /* 无树启动：路径 = 空字符串——诚实状态（renderTopbarPath 无树分支），
      绝不用硬编码面包屑（如 “Forest”）占位；空态可见。 */
   const world = await createWorld({ noTrees: true });
@@ -2844,31 +2850,37 @@ test("topbar position path: empty with no tree, treeId / Trunk once open, the br
   assert.ok(!path.textContent.includes("Forest"), "no hardcoded breadcrumb stands in for missing tree state");
   assert.equal(world.el("empty-state").hidden, false, "the empty state is visible with no tree open");
 
-  /* 建树（侧栏「新建」）→ 树打开：路径 = `<treeId> / Trunk`。 */
+  /* 建树（侧栏「新建」）→ 树打开：路径 = `<树名> / 思考主线`（树名 = 主线首问，
+     原始 treeId 收进 tooltip）。 */
   world.el("new-tree").click();
   await settle();
-  assert.equal(path.textContent, `${TREE} / Trunk`, "tree open: the path names the tree id and Trunk");
+  assert.equal(path.textContent, "First trunk question. / 思考主线", "tree open: the path names the tree and the main line");
 
-  /* 支线面板打开（tab 点击——最轻的既有模式）→ 路径追加支线标签。 */
+  /* 支线面板打开（tab 点击——最轻的既有模式）→ 路径追加支线名（首问）。 */
   const tab = world.tabButton("branch-1");
   assert.ok(tab !== null);
   tab.click();
   await settle();
   assert.equal(
     path.textContent,
-    `${TREE} / Trunk / Branch 1`,
-    "panel open: the path ends with the open branch's label",
+    "First trunk question. / 思考主线 / Branch one question.",
+    "panel open: the path ends with the open branch's name",
   );
 
-  /* 收起面板（↩ Back to Trunk）→ 路径回到 `<treeId> / Trunk`（renderAll
+  /* 收起面板（↩ Back to Trunk）→ 路径回到 `<树名> / 思考主线`（renderAll
      先于 170ms 退场动效收尾刷新路径；收尾后路径不再变化）。 */
   world.el("panel-close").click();
   await settle();
-  assert.equal(path.textContent, `${TREE} / Trunk`, "panel closed: the path drops the branch label");
+  assert.equal(path.textContent, "First trunk question. / 思考主线", "panel closed: the path drops the branch name");
   await sleep(220);
   assert.equal(world.el("branch-panel").hidden, true, "the panel finished its exit animation");
-  assert.equal(path.textContent, `${TREE} / Trunk`, "the path stays on the Trunk after the exit animation settles");
-});
+  assert.equal(path.textContent, "First trunk question. / 思考主线", "the path stays on the main line after the exit animation settles");
+}
+
+// Main and the latest development line froze different names for this scenario.
+// Retain both identities with the same complete current-behavior assertions.
+test("topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open", verifyTopbarPositionPath);
+test("topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open", verifyTopbarPositionPath);
 
 /* ------------------------------------------------------------------ */
 /* 22. 空态 New Tree 按钮（改版后新增）：主操作直达 = 同一 createTree      */
@@ -2899,7 +2911,7 @@ test("empty-state New Tree: the button creates a tree via POST /api/trees and op
     2,
     "branch tabs render for the created tree (Trunk + Branch 1)",
   );
-  assert.equal(world.el("topbar-path").textContent, `${TREE} / Trunk`, "the topbar path renders for the created tree");
+  assert.equal(world.el("topbar-path").textContent, "First trunk question. / 思考主线", "the topbar path renders for the created tree");
 });
 
 /* ------------------------------------------------------------------ */

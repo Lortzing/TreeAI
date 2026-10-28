@@ -1,0 +1,117 @@
+{
+  "runId": "d2-live-20260928T085148177Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "live",
+  "driver": "pi",
+  "startedAt": "2026-09-28T08:51:48.177Z",
+  "endedAt": "2026-09-28T08:51:48.827Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 3,
+    "fail": 6,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "id": "live-scenario-basic",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "basic",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 18
+    },
+    {
+      "id": "live-scenario-tool-policy",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "tool-policy",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 4
+    },
+    {
+      "id": "live-scenario-steer",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "steer",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 3
+    },
+    {
+      "id": "live-scenario-abort",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "abort",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 4
+    },
+    {
+      "id": "live-scenario-resume",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "resume",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 4
+    },
+    {
+      "id": "live-scenario-tree-navigation",
+      "status": "FAIL",
+      "exitCode": 1,
+      "scenario": "tree-navigation",
+      "driver": "pi",
+      "piVersion": "0.85.1",
+      "error": {
+        "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+        "code": "model-unavailable"
+      },
+      "durationMs": 5
+    },
+    {
+      "id": "scenario-results-schema",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all 6 records conform to $defs/scenarioResult"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all records follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ],
+  "notes": [
+    "real-driver run; credentials via controlled env injection only"
+  ]
+}

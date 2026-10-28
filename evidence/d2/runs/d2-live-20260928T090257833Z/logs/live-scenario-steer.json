@@ -1,0 +1,12 @@
+{
+  "id": "live-scenario-steer",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "steer",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "prompt did not emit a streaming update before steer"
+  },
+  "durationMs": 15018
+}

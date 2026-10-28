@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-steer",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "steer",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "model not found in the loaded Pi provider registry: deepseek/deepseek-v4.1-flash",
+    "code": "model-unavailable"
+  },
+  "durationMs": 3
+}

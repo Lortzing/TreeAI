@@ -25,6 +25,9 @@ export function createStudioRenderer(deps) {
     /* 无树打开 → 无源可溯：来源抽屉入口（顶栏）直接隐藏，优于必然为空的
        诚实空态；有树后随 renderAll 恢复。 */
     deps.$("source-drawer-toggle").hidden = !hasTree;
+    /* 无树 → 分支段同样无事实可呈现：整段隐藏（与材料段同一纪律），
+       侧栏只留森林与找回入口。 */
+    deps.$("branch-section").hidden = !hasTree;
     deps.renderReadingHeading();
     deps.renderTopbarPath();
     if (hasTree) {

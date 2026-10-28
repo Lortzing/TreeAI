@@ -1,0 +1,122 @@
+{
+  "runId": "d4-offline-20260930T134004734Z",
+  "checks": [
+    {
+      "durationMs": 21,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "79 files hashed; B1 12 md + 12 pdf + 8 negatives + 1 version pair(s); B2 75 valid / 17 invalid; B4 55 positive / 12 no-result",
+      "id": "fixtures-integrity-d4"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "project mirror, status matrix, ADR-003 and contracts design all present and structurally complete",
+      "id": "docs-integrity-d4"
+    },
+    {
+      "durationMs": 24,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "verify:d4 / verify:d4:selftest / run:d4-browser wired; runner help renders",
+      "id": "entrypoints-d4"
+    },
+    {
+      "durationMs": 3742,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 487,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 260,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 234.440417",
+      "id": "unit-tests-d4"
+    },
+    {
+      "durationMs": 106,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "24/24 ready fixtures round-trip byte-exact (markdown 12 + pdf 12); 8/8 negatives rejected with the frozen reason (emptyx1, invalid-utf8x1, nul-bytex1, whitespace-onlyx1, encryptedx1, corruptx1, no-text-layerx2); same-bytes reuse 24/24; version pairs 1 executed / 1 registered; oversize probes: 3/3 probes rejected correctly (3 registered)",
+      "id": "b1-import-versions"
+    },
+    {
+      "durationMs": 76,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "75/75 valid selections resolved exactly through the product range layer (repeat-word-2nd x10, cross-line x11, unicode-family x12, long-tail x9); 17/17 invalid selections rejected with the frozen category reason (out-of-boundsx2, zero-lengthx1, reversedx1, surrogate-splitx1, combining-splitx1, emoji-splitx1, cross-pagex2, block-mismatchx2, excerpt-mismatchx2, stale-versionx2, unsupported-materialx2); mis-locations 0 (charter B2 requires 0)",
+      "id": "b2-precise-anchors"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "material exploration loop not implemented; real-Pi evidence is produced by run:d4-browser --mode real-pi, not offline (owner: D4-3)",
+      "id": "b3-real-exploration"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "local full-text search not implemented; B4 executes against tests/fixtures/d4/b4-search once D4-4 lands (owner: D4-4)",
+      "id": "b4-cross-material-find"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "export/restore not implemented (owner: D4-5)",
+      "id": "b5-restore-integrity"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "scale dataset generator + performance measurement not implemented (spec frozen at tests/fixtures/d4/b6-scale) (owner: D4-6)",
+      "id": "b6-scale-performance"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "beta closeout pending; automated part runs via run:d4-browser, manual part belongs to the D4-G3 human sequence (owner: D4-6)",
+      "id": "b7-beta-usability"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "installers/cross-platform not implemented; requires clean-environment installs on macOS/Windows/Ubuntu (owner: D4-7)",
+      "id": "b8-install-crossplatform"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "large-scale tree navigation not implemented (spec frozen at tests/fixtures/d4/b9-nav) (owner: D4-8)",
+      "id": "b9-large-tree-nav"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    }
+  ]
+}

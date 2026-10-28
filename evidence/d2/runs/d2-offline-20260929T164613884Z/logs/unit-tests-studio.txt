@@ -1,0 +1,116 @@
+$ npm test -w @treeai/studio
+
+> @treeai/studio@0.0.0 test
+> npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/studio@0.0.0 build:deps
+> tsc -p tsconfig.tool-policy-build.json && npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+
+> @treeai/studio@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ HTTP API serves the UI and the full D3 flow, surviving a restart (75.587209ms)
+✔ return with a missing Pi session file: 502 before any write; retry creates no duplicate Return (27.601333ms)
+✔ HTTP layer rejects malformed bodies and unknown routes predictably (5.754709ms)
+✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (286.035625ms)
+✔ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (20.762542ms)
+✔ response-loss resubmit and double-click converge to exactly one return (20.244375ms)
+✔ echo defaults are unchanged (offline driver, no agent dir) (1.905709ms)
+✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.081584ms)
+✔ --agent-dir is rejected for the echo driver (0.184583ms)
+✔ --driver pi fails clearly without provider/model (error names the env var too) (0.082583ms)
+✔ empty --provider value still fails the pi boundary check (0.056291ms)
+✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.052708ms)
+✔ --driver pi accepts an explicit absolute agent dir (0.045292ms)
+✔ --driver pi resolves a relative agent dir against the process cwd (0.051917ms)
+✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.048875ms)
+✔ empty or whitespace-only --agent-dir value is a usage error (0.093334ms)
+✔ unknown flags and missing values keep failing with the usage error (0.066292ms)
+✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.065416ms)
+✔ readPiApiKey treats whitespace-only values as missing (0.040917ms)
+✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.038083ms)
+✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (0.360875ms)
+✔ resolvePiDriverWiring fails for non-pi options (0.063791ms)
+✔ no tool flags keeps the defaults at zero tools and no policy roots (echo and pi alike) (0.05975ms)
+✔ --pi-tools is rejected for the echo driver (0.064708ms)
+✔ --pi-tools must list at least one tool (empty or whitespace-only lists are usage errors) (0.057958ms)
+✔ --pi-tools parses a trimmed comma-separated allowlist (order preserved) (0.049542ms)
+✔ --policy-read-roots without --pi-tools is a usage error (echo and pi alike) (0.052042ms)
+✔ --policy-read-roots must list at least one directory when given (0.04275ms)
+✔ --policy-read-roots entries must be absolute (relative entries are boundary errors) (0.056917ms)
+✔ --pi-tools with explicit absolute read roots parses the trimmed list (0.061125ms)
+✔ resolvePiToolWiring is null without --pi-tools (echo and pi alike) (0.059167ms)
+✔ resolvePiToolWiring defaults the read roots to the workspace and marks the default (0.06025ms)
+✔ resolvePiToolWiring keeps explicit read roots and does not mark them defaulted (0.047125ms)
+✔ resolvePiToolWiring probes every effective root and fails closed on a missing directory (0.061ms)
+✔ the wired policy engine allows in-root reads and denies out-of-root reads, writes, and shell (26.434166ms)
+✔ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (101.736542ms)
+✔ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (12.054625ms)
+✔ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (34.178167ms)
+✔ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (76.9935ms)
+✔ process restart: journal and diagnostics converge consistently (host-crash semantics) (12.687916ms)
+✔ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (11.254083ms)
+✔ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (25.3335ms)
+✔ tool-activity events project tool name and phase only (scripted runtime) (5.6195ms)
+✔ session availability derivation: live probe refines the cached assessment honestly (9.83425ms)
+✔ policy request-time gate: denial surfaces provenance, fails the run, and reports honestly (11.215209ms)
+✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (52.829333ms)
+✔ composePromptText prefixes pending returns deterministically (0.163292ms)
+✔ branch anchoring is validated (answer role, slice integrity, bounds) (7.949667ms)
+✔ return and prompt validation errors (14.162ms)
+✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (3.9775ms)
+✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (8.890541ms)
+✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (273.286792ms)
+✔ concurrent prompt is rejected as a conflict and leaves no phantom run (85.219792ms)
+✔ anchor status preserves duplicate and cross-line selections and degrades when source is unavailable (9.729792ms)
+✔ return idempotency: same key+content replays the same turn; different content conflicts (14.195292ms)
+✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (14.814666ms)
+✔ missing session: submit rejects with no return persisted; restore + same-key retry lands exactly once (14.92125ms)
+✔ failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4) (25.444417ms)
+✔ return persists its target anchor snapshot of the branch origin (14.878041ms)
+✔ repository-level return without a key still round-trips (legacy shape) (3.736208ms)
+✔ visual baseline: real index.html skeleton and boot-rendered structure (62.545417ms)
+✔ journal drawer: failure with retry, honest empty state, Esc focus restore (351.156708ms)
+✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (478.108125ms)
+✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (82.863708ms)
+✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (290.093041ms)
+✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (566.554084ms)
+✔ Esc on the branch panel closes it and restores focus to the triggering tab (296.976833ms)
+✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (77.099ms)
+✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (84.839917ms)
+✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (153.392209ms)
+✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (340.490583ms)
+✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (563.886333ms)
+✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (114.812334ms)
+✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (81.027709ms)
+✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (42.656333ms)
+✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (105.035458ms)
+✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (71.30225ms)
+✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (72.489416ms)
+✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (71.469667ms)
+✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (72.26275ms)
+✔ A2 cross-line selection: offsets and the revealed text span the line break intact (74.217959ms)
+✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (63.771833ms)
+✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (66.8485ms)
+✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (389.029333ms)
+✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (302.708291ms)
+✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (64.686ms)
+✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (286.914417ms)
+✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (299.999708ms)
+✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (71.541041ms)
+✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (298.334584ms)
+ℹ tests 90
+ℹ suites 0
+ℹ pass 90
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4171.562417
+

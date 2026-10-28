@@ -1,4 +1,5 @@
 import { registerWorkspaceEvents } from "./controllers/workspace-events.js";
+import { registerApiSettings } from "./controllers/api-settings.js";
 import { createStudioFeatures } from "./compose-features.js";
 
 import { createStudioState } from "./state.js";
@@ -28,6 +29,7 @@ export function createStudioApp(deps) {
   function start() {
     if (started) return;
     started = true;
+    const disposeApiSettings = registerApiSettings({ document, fetch });
 const studioState = createStudioState({
 
 });
@@ -253,7 +255,8 @@ registerDocumentListener("keydown", (event) => {
     event.preventDefault();
     /* D4-3 建枝流程面是阅读器的内层面（材料范围声明/首问在提交前不丢）：
        Esc 先收流程面，再关阅读器（分层关卡同解释卡之于面板）。 */
-    if (state.materialBranching !== null) {
+    if (state.materialBranching !== null &&
+        state.materialBranching.selection.materialId === state.materialReader.materialId) {
       closeMaterialBranchFlow();
       return;
     }
@@ -394,6 +397,7 @@ void (async () => {
 })();
 
     cleanup = () => {
+      disposeApiSettings();
       disposeWorkspaceEvents();
       stopDiagnosticsPolling();
       disconnectEvents();

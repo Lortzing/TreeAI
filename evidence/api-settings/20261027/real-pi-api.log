@@ -1,0 +1,79 @@
+run-d3-real-pi 1.2.0 — D3 real-Pi scenario runner
+root: <repo>
+mode: real-pi (real Pi driver)
+bound commit: 39a62bd00956 (gitDirty: true)
+environment: Node v24.21.0 / npm 11.19.0 / darwin arm64
+
+tool gate: --pi-tools read --policy-read-roots /private/tmp/treeai-39a62bd-api-allowed — A5 product tool-policy phase ACTIVE
+
+credentials: TREEAI_STUDIO_API_KEY present (in-memory only; the value is never logged)
+
+data dir: /private/tmp/treeai-39a62bd-api-core
+
+  [PASS] studio-boot — pi driver on 127.0.0.1:61220, /api/health ok
+    studio banner (sanitized):
+      treeai-studio: listening http://127.0.0.1:61220
+      treeai-studio: driver=pi model=local-api/claude-haiku-4-5
+      treeai-studio: data=/private/tmp/treeai-39a62bd-api-core (schema v10)
+      treeai-studio: journal=/private/tmp/treeai-39a62bd-api-core/journal.jsonl (0 events loaded)
+      treeai-studio: pi agent-dir=<repo>/treeai-studio-data/api-live/api-agent (controlled; ~/.pi is not used)
+      treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+      treeai-studio: terminology executor isolated (model=local-api/claude-haiku-4-5, budget=1000000 est tokens, thinking=off)
+      treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)
+      treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+  [PASS] tree-create — tree + trunk created; SSE stream attached before any prompt
+  [PASS] trunk-main-line — two trunk prompts succeeded; cursor on trunk; 4 turns persisted
+  [PASS] branch-a-create — branch A forked from the trunk turn-1 answer anchor (origin + selection recorded)
+  [PASS] branch-a-followups — two branch-A follow-ups succeeded (>= 2 turns per branch)
+  [PASS] switch-navigation — explicit switch back to the trunk (session leaf re-navigated)
+  [PASS] branch-b-create — branch B forked from the trunk turn-2 answer anchor (different anchor from branch A)
+  [PASS] branch-b-followups — two branch-B follow-ups succeeded (>= 2 turns per branch)
+  [PASS] no-context-bleed — branch A sees cedar+maple only; branch B sees birch+maple+4127 only (session entry path proof — model wording decoupled); no cross-branch or post-anchor trunk leakage
+  [PASS] anchor-reveal — branch A origin revealed: anchor available, selection intact, cursor re-aligned
+  [PASS] return-submit — return submitted (201) with targetAnchor snapshot; deliveredRunId null (confirmed, not delivered)
+  [PASS] return-idempotency — replay 200 (same turn), same-key different-content 409 return-conflict, exactly one return row
+  [PASS] return-delivery — return delivered exactly once with the next trunk prompt (deliveredRunId set)
+  [PASS] sse-event-surface — 7 run-started / 7 run-terminal (mix {"succeeded":7}) / 29 message-delta / 0 abort
+  [PASS] diagnostics-projection — safe projection verified for 7 runs; policy note honest for this wiring
+  [PASS] journal-no-leak — 122 journal events, whitelist key set exact, no scenario canary leakage
+  [PASS] restart-persistence — SIGKILL + same-data restart: tree/branches/turns/cursor intact; trunk continuation works
+  [PASS] new-exploration — v3 §4.4 on a probe tree: session deleted → normal continuation fail-closed (502 session-corrupt) → explicit new exploration 200 (first question succeeds, honest not-restored marker, old history readable, availability recovers) → healthy re-exploration 409 → normal continuation works again; main tree untouched
+  [PASS] mid-flight-abort — in-flight run run_87fd8e2b… aborted (409 user-abort, no turns); trunk usable again afterwards
+    studio banner (sanitized, misconfigured boot):
+      treeai-studio: listening http://127.0.0.1:61838
+      treeai-studio: driver=pi model=local-api/claude-haiku-4-5
+      treeai-studio: data=/private/tmp/treeai-39a62bd-api-core (schema v10)
+      treeai-studio: journal=/private/tmp/treeai-39a62bd-api-core/journal.jsonl (286 events loaded)
+      treeai-studio: pi agent-dir=/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d3-misconfig-agent-A4cLGl (controlled; ~/.pi is not used)
+      treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+      treeai-studio: terminology executor isolated (model=local-api/claude-haiku-4-5, budget=1000000 est tokens, thinking=off)
+      treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)
+      treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+  [PASS] model-error-convergence — misconfigured registry (unroutable baseUrl) converged failed (502 unknown, no turns) on a fresh probe tree; original-registry restart recovered the same tree (failed → succeeded)
+    studio banner (sanitized, tools boot):
+      treeai-studio: listening http://127.0.0.1:62129
+      treeai-studio: driver=pi model=local-api/claude-haiku-4-5
+      treeai-studio: data=/private/tmp/treeai-39a62bd-api-core (schema v10)
+      treeai-studio: journal=/private/tmp/treeai-39a62bd-api-core/journal.jsonl (329 events loaded)
+      treeai-studio: pi agent-dir=<repo>/treeai-studio-data/api-live/api-agent (controlled; ~/.pi is not used)
+      treeai-studio: pi api key=TREEAI_STUDIO_API_KEY env, in-memory only (value never logged)
+      treeai-studio: pi tools=read (allowlist; every tool call is policy-gated before execution)
+      treeai-studio: pi policy read-roots=/private/tmp/treeai-39a62bd-api-allowed (--policy-read-roots); writes/shell/network denied (fail closed)
+      treeai-studio: terminology executor isolated (model=local-api/claude-haiku-4-5, budget=1000000 est tokens, thinking=off)
+      treeai-studio: materials import ready (markdown d4-md-v1; pdf d4-pdf-v1; original bytes served through an authorized local route)
+      treeai-studio: search ready (local deterministic full-text; index rebuilt from product facts per request)
+  [PASS] A5-product-tool-policy
+  [PASS] A5-product-tool-policy-allow-read — allowed read executed end-to-end (run run_349e7daf…): marker content reached the conversation and the session file
+  [PASS] A5-product-tool-policy-deny-fail-closed — overreach read denied BEFORE execution: run run_8647b227… converged failed(policy-denied) (fail closed), no turns persisted
+  [PASS] A5-product-tool-policy-deny-provenance — denial provenance visible across the product surface: SSE denied phase (locked key set) + journal tool.decision/runtime.error rows + diagnostics observed decisions; no paths/params leaked
+  [PASS] A5-product-tool-policy-canary-never-read — 13 files scanned (controlled agent dir + data dir incl. sessions/journal/DB): canary content never materialized
+data dir kept for inspection: /private/tmp/treeai-39a62bd-api-core
+misconfigured agent-dir copy kept for inspection: /var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d3-misconfig-agent-A4cLGl
+canary kept for inspection: /private/tmp/treeai-39a62bd-api-core/workspace/team-notes.txt
+
+run-d3-real-pi summary:
+  mode: real-pi
+  checks: 25 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN
+  verdict: PASS (exit 0)
+  next (owner): record this run in evidence/d3/real-pi/ using
+    evidence/d3/templates/run-record.md (environment + bound SHA above; sanitized ids only)

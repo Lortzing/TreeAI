@@ -1,0 +1,12 @@
+{
+  "id": "live-scenario-basic",
+  "status": "PASS",
+  "exitCode": 0,
+  "scenario": "basic",
+  "driver": "fake",
+  "piVersion": "0.85.1",
+  "meta": {
+    "messageLength": 17
+  },
+  "durationMs": 28
+}

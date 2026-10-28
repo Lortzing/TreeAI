@@ -124,7 +124,9 @@ export function createPromptController(deps) {
     /* 用户执行了换轨动作：清除横幅 dismiss 记录（横幅按当前事实重新呈现）。 */
     const trunk = deps.trunkBranchId();
     if (trunk !== null) deps.state.dismissedSessionBannerTrunks.delete(trunk);
+    deps.sessionUI.followBranchId = branchId;
     deps.renderAll({ stick: branchId });
+    deps.sessionUI.followBranchId = null;
     await deps.refreshDiagnostics();
     deps.focusComposerWhenSelectable(input);
   }

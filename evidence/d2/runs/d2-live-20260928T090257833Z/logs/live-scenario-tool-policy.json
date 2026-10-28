@@ -1,0 +1,13 @@
+{
+  "id": "live-scenario-tool-policy",
+  "status": "FAIL",
+  "exitCode": 1,
+  "scenario": "tool-policy",
+  "driver": "pi",
+  "piVersion": "0.85.1",
+  "error": {
+    "message": "Error: Cannot read properties of undefined (reading 'includes')",
+    "code": "unknown"
+  },
+  "durationMs": 5
+}

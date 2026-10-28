@@ -1717,6 +1717,29 @@ test("branch entry: the armed capture bar offers branching; the click resolves t
 /* 2. 材料范围声明（提交前）：窗口/块/上限/截断标记/组合文本核对          */
 /* ------------------------------------------------------------------ */
 
+test("Escape closes the current reader when a pending flow belongs to another material, retaining that flow for its own reader", async () => {
+  const other = { ...MD01_SCRIPT, id: "mat-other", title: "Other notes.md", versions: [{ ...MD01_SCRIPT.versions[0]!, id: "v-other-1" }] };
+  const world = await createWorld({ materials: [MD01_SCRIPT, other] });
+  await armRecursionSelection(world);
+  await clickBranchButton(world);
+  typeFirstQuestion(world, "Keep this pending question");
+  world.el("mat-close").click();
+  await settle(200);
+  await world.openMaterial("mat-other");
+  assert.equal(world.byId("mat-branch-flow"), null, "the pending flow is not a surface in the other reader");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  await settle(200);
+  assert.equal(world.el("material-reader").hidden, true, "one Escape closes the visible reader");
+  await world.openMaterial("mat-md01");
+  assert.equal(world.el("mat-branch-first-question").value, "Keep this pending question", "the other material's draft survives");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.byId("mat-branch-flow"), null, "the visible inner flow closes first");
+  assert.equal(world.el("material-reader").hidden, false);
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  await settle(200);
+  assert.equal(world.el("material-reader").hidden, true);
+});
+
 test("context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT] });
   const selection = await armRecursionSelection(world);
@@ -1809,7 +1832,7 @@ test("first question: submitting posts material-first-question with the same int
   assert.match(conversation, /\[exploration from material v-md01-1\]/, "the audited turn prefix is rendered");
   assert.match(conversation, /这段材料里的递归终止条件是什么？/);
   assert.match(conversation, /（echo 回答）/);
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, "这段材料里的递归终止条件是什么？", "the panel is titled by the exploration's first question (scope tag stripped)");
 
   /* 面板头部：材料来源上下文（缓存自建枝响应）。 */
   const anchor = world.el("panel-anchor-context").textContent!;
@@ -1912,7 +1935,7 @@ test("resume-or-create hits an existing exploration: the honest choice — open 
   await settle(25);
   await sleep(200);
   assert.equal(world.el("branch-panel").hidden, false);
-  assert.equal(world.el("panel-title").textContent, "Branch 1");
+  assert.equal(world.el("panel-title").textContent, "既有探索的首问", "the panel is titled by the existing exploration's first question");
   const conversation = world.el("panel-conversation").textContent!;
   assert.match(conversation, /既有探索的首问/, "the existing branch's saved history is readable in the panel");
   assert.match(conversation, /既有探索的首个回答/);

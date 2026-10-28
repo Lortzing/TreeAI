@@ -1,0 +1,5 @@
+{"type":"session","version":3,"id":"01a0e746-6820-74e7-a52b-828ffcc45945","timestamp":"2026-09-28T09:09:06.208Z","cwd":"[HOME]/Projects/TreeAI"}
+{"type":"model_change","id":"e5927a85","parentId":null,"timestamp":"2026-09-28T09:09:06.209Z","provider":"deepseek","modelId":"deepseek-flash"}
+{"type":"thinking_level_change","id":"4bae18f0","parentId":"e5927a85","timestamp":"2026-09-28T09:09:06.209Z","thinkingLevel":"off"}
+{"type":"message","id":"54d13e52","parentId":"4bae18f0","timestamp":"2026-09-28T09:09:06.211Z","message":{"role":"user","content":[{"type":"text","text":"Reply with the single word: ready"}],"timestamp":1790586546210}}
+{"type":"message","id":"bc9de42e","parentId":"54d13e52","timestamp":"2026-09-28T09:09:06.767Z","message":{"role":"assistant","content":[{"type":"text","text":"ready"}],"api":"openai-completions","provider":"deepseek","model":"deepseek-flash","usage":{"input":193,"output":2,"cacheRead":640,"cacheWrite":0,"reasoning":0,"totalTokens":835,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"stop","timestamp":1790586546244,"responseId":"ce7bf12b-ba34-4598-9f62-9d8bf4803eb3","rawStopReason":"stop"}}

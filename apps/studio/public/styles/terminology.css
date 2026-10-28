@@ -46,7 +46,7 @@
 .term-explain-card {
   margin: 6px 0 10px;
   padding: 10px 12px;
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--gold-line);
   border-left: 3px solid var(--gold);
   border-radius: 8px;
@@ -154,7 +154,7 @@
   cursor: pointer;
 }
 .term-explain-card .term-explain-close:hover,
-.term-explain-card .term-explain-retry:hover { background: var(--wash); }
+.term-explain-card .term-explain-retry:hover { background: var(--gold-wash); }
 /* 解释卡进场（③）：只在新卡打开的那一次渲染播放（.enter 由 app.js 置一
    次即止，重建不重播）；reduced-motion 下即时化（文件末尾全局降级块 +
    显式规则）。 */
