@@ -1870,7 +1870,7 @@ test("CSS lexicon: PDF page frames, placeholders, and the import row/styles exis
   /* 导入行/状态行在 index.html 静态存在（Materials 段内）。 */
   const materialsSection = INDEX_HTML.slice(
     INDEX_HTML.indexOf('id="materials-section"'),
-    INDEX_HTML.indexOf('id="search-section"'),
+    INDEX_HTML.indexOf('</details>', INDEX_HTML.indexOf('id="materials-section"')),
   );
   assert.match(materialsSection, /id="material-import"/);
   assert.match(materialsSection, /id="material-import-input"/);

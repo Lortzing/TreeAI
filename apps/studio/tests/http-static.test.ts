@@ -25,7 +25,7 @@ test("ESM and CSS static allowlist serves correct content type", async () => {
     assert.equal(r.status,200,path);
     assert.equal(r.headers?.["content-type"],"text/javascript; charset=utf-8",path);
   }
-  for (const path of ["/styles/responsive.css", "/styles/session-workspace.css", "/styles/api-settings.css"]) {
+  for (const path of ["/styles/responsive.css", "/styles/session-workspace.css", "/styles/api-settings.css", "/styles/studio-system.css"]) {
     const css=await call(path);
     assert.equal(css.status,200);
     assert.equal(css.headers?.["content-type"],"text/css; charset=utf-8");

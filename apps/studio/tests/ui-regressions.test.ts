@@ -853,7 +853,7 @@ test("trunk prompt failure: streaming placeholder cleared, recovery banner rende
   assert.equal(world.el("new-exploration").hidden, false, "v3 §4.4: the new-exploration entry appears after session-corrupt");
 
   /* 诊断面终局：失败 run 呈现（不停留在 streaming 中间态）。 */
-  assert.equal(world.el("run-status").textContent, "idle", "runtime state returns to idle");
+  assert.equal(world.el("run-status").textContent, "已就绪", "runtime state returns to idle");
   assert.ok(
     world.el("failure-panel").textContent.includes("session-corrupt"),
     "the failed run is rendered in the failure panel",

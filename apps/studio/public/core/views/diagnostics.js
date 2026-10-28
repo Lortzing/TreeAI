@@ -12,7 +12,7 @@ export function createDiagnosticsView({ document, getElement, getState, branchLa
     label.textContent = `Run ${run.runId.slice(0, 12)}… failed — ${run.failure.code}: ${run.failure.message}`;
     const dismiss = document.createElement("button");
     dismiss.className = "failure-panel-dismiss";
-    dismiss.textContent = "Dismiss";
+    dismiss.textContent = "关闭提示";
     dismiss.addEventListener("click", () => {
       state.dismissedFailureRunIds.add(run.runId);
       renderFailurePanel(run);
@@ -33,7 +33,7 @@ export function createDiagnosticsView({ document, getElement, getState, branchLa
     bar.hidden = false;
 
     const status = getElement("run-status");
-    status.textContent = diag.runtimeState;
+    status.textContent = { idle: "已就绪", streaming: "正在生成", aborting: "正在停止" }[diag.runtimeState] ?? diag.runtimeState;
     status.className = `run-status ${diag.runtimeState}`;
 
     const parts = [];
@@ -61,7 +61,7 @@ export function createDiagnosticsView({ document, getElement, getState, branchLa
     const abortButton = getElement("abort-run");
     const isActive = diag.activeRun !== null;
     abortButton.hidden = !isActive;
-    abortButton.textContent = diag.runtimeState === "aborting" ? "Aborting…" : "Abort run";
+    abortButton.textContent = diag.runtimeState === "aborting" ? "正在停止…" : "停止生成";
     abortButton.disabled = diag.runtimeState === "aborting";
 
     const policy = diag.policyDecisions;

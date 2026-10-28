@@ -48,8 +48,8 @@ export function createMaterialReaderView(deps) {
     const close = deps.document.createElement("button");
     close.id = "mat-close";
     close.className = "mat-close";
-    close.textContent = "× Close";
-    close.title = "Close the material reader (Esc) — your reading position is saved";
+    close.textContent = "关闭";
+    close.title = "关闭阅读器（Esc），阅读位置会保留";
     close.addEventListener("click", () => deps.closeMaterialReader());
     head.append(title, close);
     root.append(head);

@@ -23,33 +23,52 @@
         <span id="cursor-note" class="muted"></span>
       </div>
       <div id="diagnostics-bar" hidden>
-        <span id="run-status" class="run-status idle" aria-live="polite">idle</span>
+        <span id="run-status" class="run-status idle" aria-live="polite">已就绪</span>
         <details class="runtime-details">
           <summary>运行详情</summary>
           <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
         </details>
-        <button id="abort-run" class="danger" hidden>Abort run</button>
+        <button id="abort-run" class="danger" hidden>停止生成</button>
       </div>
-      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">⑂ 来源</button>
-      <button id="api-settings-open" type="button">API 设置</button>
+      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">来源记录</button>
+      <button id="api-settings-open" type="button">模型设置</button>
     </header>
     <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
       <form id="api-settings-form">
-        <div class="api-settings-heading"><h2 id="api-settings-title">API 与模型</h2><button id="api-settings-close" type="button" aria-label="关闭 API 设置">关闭</button></div>
-        <p>配置 API 接口与模型。保存后重启 TreeAI 生效；已有对话保留原模型身份。</p>
-        <div class="api-settings-grid">
-          <label>Provider<select id="api-provider"></select></label><button id="api-provider-add" type="button">新增 Provider</button>
-          <label>模型<select id="api-model"></select></label><button id="api-model-add" type="button">新增模型</button>
-          <label>接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
-          <label>API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
-          <label>API key 环境变量名<input id="api-key-env" required placeholder="MY_API_KEY" autocomplete="off" spellcheck="false"></label>
-          <label>上下文上限<input id="api-context-window" type="number" min="1" step="1" required></label>
-          <label>最大输出 token<input id="api-max-tokens" type="number" min="1" step="1" required></label>
-        </div>
-        <p id="api-env-status"></p>
-        <details><summary>高级配置：多个 Provider、模型与请求头</summary><label for="api-config-json">JSON（仅存环境变量名，不接受 key 或登录 token）</label><textarea id="api-config-json" rows="12" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON 到表单</button></details>
+        <div class="api-settings-heading"><div><p class="settings-eyebrow">工作区设置</p><h2 id="api-settings-title">模型与连接</h2></div><button id="api-settings-close" type="button" aria-label="关闭 API 设置">关闭</button></div>
+        <p class="settings-intro">选择 API 服务和模型。保存后重启生效，已有思考记录会保留。</p>
+        <section class="settings-section" aria-labelledby="api-connection-heading">
+          <h3 id="api-connection-heading">API 连接</h3>
+          <div class="api-settings-grid">
+            <label>提供方<select id="api-provider"></select></label><button id="api-provider-add" type="button">添加提供方</button>
+            <label class="settings-wide">接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
+            <label class="settings-wide">API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
+          </div>
+          <details id="api-keychain-controls" class="credential-controls" hidden><summary>API key <span id="api-key-summary">未配置</span></summary>
+            <label for="api-key-value">API key</label>
+            <input id="api-key-value" type="password" placeholder="输入新的 API key，已保存的密钥不会显示" autocomplete="new-password" spellcheck="false">
+            <p id="api-keychain-status" class="settings-help" role="status">密钥保存在本机系统钥匙串，不写入配置文件。</p>
+            <div class="credential-actions"><button id="api-key-save" type="button">保存到钥匙串</button><button id="api-key-remove" type="button">移除已存密钥</button></div>
+          </details>
+          <p id="api-env-status" class="settings-help"></p>
+        </section>
+        <section class="settings-section" aria-labelledby="api-model-heading">
+          <h3 id="api-model-heading">使用的模型</h3>
+          <div class="api-settings-grid">
+            <label>模型<select id="api-model"></select></label><button id="api-model-add" type="button">添加模型</button>
+            <label class="settings-wide">模型 ID<input id="api-model-id" placeholder="填写服务商提供的模型 ID" autocomplete="off" spellcheck="false"></label>
+          </div>
+        </section>
+        <details class="settings-advanced"><summary>高级设置</summary>
+          <div class="api-settings-grid settings-limits">
+            <label class="settings-wide">密钥环境变量名<input id="api-key-env" required placeholder="MY_API_KEY" autocomplete="off" spellcheck="false"><span class="settings-help">已配置的环境变量优先；也可以直接使用上方的系统钥匙串。</span></label>
+            <label>上下文上限<input id="api-context-window" type="number" min="1" step="1" required></label>
+            <label>最大输出 token<input id="api-max-tokens" type="number" min="1" step="1" required></label>
+          </div>
+          <label for="api-config-json">多个提供方、模型与请求头（JSON）</label><textarea id="api-config-json" rows="9" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON</button>
+        </details>
         <p id="api-settings-status" role="status" aria-live="polite"></p>
-        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button type="submit">保存设置</button></div>
+        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button class="primary" type="submit">保存设置</button></div>
       </form>
     </dialog>
 
@@ -62,19 +81,35 @@
       <aside id="sidebar" aria-label="Trees">
         <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
 
-        <button id="new-tree" class="primary">＋ 种下一棵思考树</button>
-        <button id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><span aria-hidden="true">⌕</span> 找回思考 <kbd>⌘ K</kbd></button>
+        <button id="new-tree" class="primary">＋ 新建思考树</button>
+        <details class="sidebar-section sidebar-disclosure" id="search-section">
+          <summary id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><span aria-hidden="true">⌕</span> 搜索思考 <kbd>⌘ K</kbd></summary>
+          <input id="search-input" type="search" placeholder="搜索材料、对话或收获…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
+          <div class="search-scope" role="group" aria-label="Search scope">
+            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
+            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">全部树</button>
+          </div>
+          <div class="search-kinds" role="group" aria-label="Filter results by source type">
+            <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
+            <button type="button" id="search-kind-annotation" class="search-kind-toggle" aria-pressed="true">批注</button>
+            <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">Return</button>
+            <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
+          </div>
+          <button type="button" id="search-run" class="primary">查找已保存的思考</button>
+          <p id="search-status" class="muted" role="status"></p>
+          <ul id="search-results" aria-label="Search results"></ul>
+        </details>
         <section class="sidebar-section" id="forest-section">
-          <h2 class="sidebar-heading">我的森林 <span id="forest-count"></span></h2>
+          <h2 class="sidebar-heading">思考树 <span id="forest-count"></span></h2>
           <ul id="tree-list" aria-label="Trees"></ul>
           <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
           <div id="list-load-error" hidden>
             <p id="list-load-message"></p>
-            <button id="list-retry">Retry</button>
+            <button id="list-retry">重试</button>
           </div>
         </section>
         <section class="sidebar-section" id="branch-section" hidden>
-          <h2 class="sidebar-heading">这棵树的路径 <span id="branch-count"></span></h2>
+          <h2 class="sidebar-heading">当前树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
         <!-- D4-8 大规模树导航面（issue #8 工作包 D4-8，charter §5）：侧栏第
@@ -85,10 +120,10 @@
              的虚拟化纪律）。静态骨架由 app.js 注册一次；动态列表（查找结果/
              树行/路径）由 D4-8 渲染函数独占管理，renderAll 不重建。 -->
         <details class="sidebar-section sidebar-disclosure" id="nav-section" aria-label="Navigate trees">
-          <summary class="sidebar-heading">深度导航 <span>查找与定位</span></summary>
-          <input id="nav-tree-search" type="search" placeholder="Find a tree…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
+          <summary class="sidebar-heading">更多导航 <span>全部路径</span></summary>
+          <input id="nav-tree-search" type="search" placeholder="搜索思考树…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
           <div class="nav-find-row">
-            <button type="button" id="nav-tree-find">Find</button>
+            <button type="button" id="nav-tree-find">查找</button>
             <span id="nav-tree-find-note" class="muted" role="status"></span>
           </div>
           <ul id="nav-tree-results" aria-label="Tree finder results"></ul>
@@ -96,13 +131,13 @@
             <p id="nav-tree-title"></p>
             <p id="nav-tree-meta" class="muted"></p>
             <div id="nav-tree-actions">
-              <button type="button" id="nav-locate-current" class="source-button">⌖ Locate current branch</button>
-              <button type="button" id="nav-source-selected" class="source-button">⌖ Source of selected</button>
-              <button type="button" id="nav-close-tree" class="panel-close">Close</button>
+              <button type="button" id="nav-locate-current" class="source-button">定位当前支线</button>
+              <button type="button" id="nav-source-selected" class="source-button">查看所选支线的来源</button>
+              <button type="button" id="nav-close-tree" class="panel-close">关闭</button>
             </div>
-            <input id="nav-node-search" type="search" placeholder="Find a branch in this tree…" aria-label="Find a branch by title or id in the open tree" />
+            <input id="nav-node-search" type="search" placeholder="在当前树中查找支线…" aria-label="Find a branch by title or id in the open tree" />
             <div class="nav-find-row">
-              <button type="button" id="nav-node-find">Find</button>
+              <button type="button" id="nav-node-find">查找</button>
               <span id="nav-node-note" class="muted" role="status"></span>
             </div>
             <ul id="nav-node-results" aria-label="Branch search results (each hit carries its full path)"></ul>
@@ -144,23 +179,7 @@
              Turn → 对应事实的既有视图）。搜索纯只读（不创建 Turn）；只索引
              已保存产品事实——未提交草稿结构性不入索引（服务端已裁决），本
              面如实声明、绝不暗示草稿可搜。 -->
-        <details class="sidebar-section sidebar-disclosure" id="search-section">
-          <summary class="sidebar-heading">找回思考 <span>已保存内容</span></summary>
-          <input id="search-input" type="search" placeholder="Search saved thoughts…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
-          <div class="search-scope" role="group" aria-label="Search scope">
-            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
-            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">全部树</button>
-          </div>
-          <div class="search-kinds" role="group" aria-label="Filter results by source type">
-            <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
-            <button type="button" id="search-kind-annotation" class="search-kind-toggle" aria-pressed="true">批注</button>
-            <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">Return</button>
-            <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
-          </div>
-          <button type="button" id="search-run" class="primary">查找已保存的思考</button>
-          <p id="search-status" class="muted" role="status"></p>
-          <ul id="search-results" aria-label="Search results"></ul>
-        </details>
+
         <div id="sidebar-foot">
           <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
           <p id="driver-note" class="muted">思考记录保存在本机</p>
@@ -182,7 +201,7 @@
         <div id="empty-state" hidden>
           <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
 
-          <h1 class="empty-title">暂无对话</h1>
+          <h1 class="empty-title">从一个问题开始</h1><p class="empty-description">新建一棵思考树，与 AI 对话；遇到想深入的地方，展开支线，再把收获带回主线。</p>
 
           <button id="empty-new-tree" class="primary">＋ 新建思考树</button>
         </div>
@@ -199,7 +218,7 @@
 
                 <h1 id="reading-title">一个问题，无限可能。</h1>
 
-                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">⑂ 思考主线</button><button id="reading-materials" type="button" aria-controls="materials-section">▤ 阅读材料 <span id="reading-material-count">0</span></button></div>
+                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">主线对话</button><button id="reading-materials" type="button" aria-controls="materials-section">阅读材料 <span id="reading-material-count">0</span></button></div>
               </header>
               <div id="main-reading-content">
               <!-- A4 缺失 session 横幅（主线视角，可关闭、不自动消失）。 -->
@@ -208,12 +227,12 @@
               <!-- 错误横幅朗读语义（W2 §2.4）：role=alert（隐式 aria-live）+ 可 Tab 触达。 -->
               <div id="error-banner" role="alert" tabindex="0" hidden></div>
               <div id="composer">
-                <textarea id="prompt-input" rows="2" aria-label="Ask on the Trunk" placeholder="继续对话…"></textarea>
+                <textarea id="prompt-input" rows="2" aria-label="在主线上提问" placeholder="输入问题，继续探索…"></textarea>
                 <div class="composer-actions">
                   <span class="composer-context">⑂ 在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
                   <button id="send" class="primary" aria-label="发送到主线">发送 ↗</button>
                   <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
-                  <button id="new-exploration" class="accent" hidden>⑃ Start new exploration</button>
+                  <button id="new-exploration" class="accent" hidden>开始新的探索</button>
                 </div>
               </div>
 
@@ -251,18 +270,18 @@
                 <div id="panel-conversation" aria-live="polite" aria-label="Branch conversation"></div>
                 <div id="panel-error-banner" role="alert" tabindex="0" hidden></div>
                 <div id="panel-composer">
-                  <textarea id="panel-prompt-input" rows="2" aria-label="Continue this branch" placeholder="继续对话…"></textarea>
+                  <textarea id="panel-prompt-input" rows="2" aria-label="在当前支线继续提问" placeholder="输入问题，继续探索…"></textarea>
                   <div class="composer-actions">
                     <button id="panel-send" class="primary">发送 ↗</button>
                     <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
-                    <button id="panel-new-exploration" class="accent" hidden>⑃ Start new exploration</button>
+                    <button id="panel-new-exploration" class="accent" hidden>开始新的探索</button>
                   </div>
                 </div>
                 <details id="return-panel">
                   <summary>↩ 把收获带回主线 </summary>
 
                   <p class="muted">编辑并确认这次收获。草稿只保留在当前浏览器；确认后保存到主线，下次主线讨论时采用。也可以直接返回，继续保留草稿。</p>
-                  <textarea id="return-input" rows="4" aria-label="Return draft"></textarea>
+                  <textarea id="return-input" rows="4" aria-label="带回主线的收获草稿"></textarea>
                   <div class="composer-actions">
                     <button id="submit-return" class="accent">↩ 确认收获，带回主线</button>
                   </div>

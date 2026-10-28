@@ -1,0 +1,152 @@
+/* Shared visual system. Layout/state/selection behavior stays in its domain owner. */
+:root {
+  --canvas: #f4f6f8; --surface: #ffffff; --surface-dim: #f0f3f5;
+  --room: var(--canvas); --room-raised: var(--surface); --room-column: var(--canvas); --room-sunken: #f8f9fb;
+  --ink: #202d37; --ink-soft: #495a68; --muted: #667785;
+  --green: #286453; --green-deep: #1d4c40; --green-wash: #e9f3ef; --green-line: #b4d1c6;
+  --line: #e2e7eb; --line-strong: #c8d1d9; --hairline: var(--line);
+  --font-read: var(--font-ui); --radius: 10px;
+  --shadow-card: 0 2px 10px rgb(25 42 55 / .04); --shadow-pop: 0 12px 40px rgb(25 42 55 / .14);
+}
+body { font-size: 14px; line-height: 1.6; }
+button, input, textarea, select, summary { font-family: var(--font-ui); }
+button { min-height: 36px; padding: 7px 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink-soft); font-size: 13px; line-height: 1.4; cursor: pointer; box-shadow: none; }
+button:hover:not(:disabled) { background: var(--surface-dim); color: var(--ink); border-color: var(--line-strong); }
+button.primary, button.accent { min-height: 38px; font-size: 13px; font-weight: 600; padding: 9px 16px; background: var(--green); border-color: var(--green); color: white; box-shadow: none; }
+button.primary:hover:not(:disabled), button.accent:hover:not(:disabled) { background: var(--green-deep); border-color: var(--green-deep); color: white; box-shadow: none; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+button.danger { min-height: 36px; font-size: 13px; }
+input, select, textarea { font: inherit; color: var(--ink); border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); padding: 10px 12px; min-width: 0; }
+input, select { min-height: 40px; }
+textarea { font-size: 15px; line-height: 1.65; }
+:where(input,select,textarea):focus { border-color: var(--green); outline: 2px solid var(--green-wash); }
+.muted { color: var(--muted); font-size: 12px; line-height: 1.6; }
+#app { grid-template-columns: 248px minmax(0, 1fr); grid-template-rows: 64px minmax(0, 1fr); }
+#sidebar { width: 248px; padding: 24px 16px 16px; gap: 12px; background: var(--room-sunken); }
+.sidebar-brand { gap: 10px; font-size: 23px; letter-spacing: -.6px; padding: 0 8px 10px; }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; font-size: 24px; box-shadow: none; }
+.brand-period { color: var(--green); }
+#new-tree { min-height: 42px; padding: 10px 14px; font-size: 14px; box-shadow: none; }
+.search-shortcut { min-height: 38px; padding: 8px 10px; color: var(--ink-soft); font-size: 13px; border: 1px solid var(--line); background: var(--surface); }
+.search-shortcut kbd { font-size: 11px; border: 0; background: var(--surface-dim); }
+.sidebar-heading { font-size: 12px; font-weight: 600; letter-spacing: 0; margin: 10px 8px 6px; }
+.sidebar-heading > span { font-size: 11px; letter-spacing: 0; }
+#tree-list button, #branch-tabs button { min-height: 40px; font-size: 13px; padding: 10px 10px 10px 24px; border-radius: 8px; box-shadow: none; }
+#tree-list button.active, #branch-tabs button.active, #branch-tabs button.panel-open { background: var(--green-wash); color: var(--green-deep); box-shadow: none; }
+#tree-list .tree-date, .branch-summary { font-size: 11px; line-height: 1.5; margin-top: 4px; }
+.sidebar-disclosure { border-top: 1px solid var(--line); padding-top: 4px; }
+.sidebar-disclosure > summary { min-height: 40px; margin: 0; padding: 10px 8px; }
+.sidebar-disclosure > summary:hover { background: var(--surface-dim); }
+#material-import { min-height: 38px; font-size: 13px; border-style: solid; background: var(--surface); }
+#sidebar-foot { padding-top: 14px; }
+#sidebar-foot .subtitle, #driver-note { font-size: 12px; }
+#branch-bar { padding: 12px 24px; gap: 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
+#topbar-path { font: 500 14px/1.5 var(--font-ui); color: var(--ink); }
+#branch-bar .drawer-toggle, #api-settings-open { min-height: 36px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13px; white-space: nowrap; }
+#branch-bar .drawer-toggle:hover, #api-settings-open:hover { background: var(--surface-dim); }
+#diagnostics-bar { gap: 10px; }
+.run-status { font-size: 12px; padding: 4px 9px; border-radius: 6px; }
+.runtime-details > summary { font-size: 12px; padding: 8px; }
+.runtime-popover { font-size: 13px; }
+#workspace-modes { top: 16px; right: 24px; padding: 3px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); box-shadow: none; }
+.workspace-mode { min-height: 34px; padding: 7px 13px; font-size: 13px; border-radius: 6px; }
+#reading-heading { height: 68px; padding: 14px 220px 0 24px; gap: 16px; }
+#reading-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.reading-navigation { gap: 18px; }
+.reading-navigation button, #reading-trunk, #reading-materials { min-height: 38px; font-size: 13px; padding: 8px 2px; border-radius: 0; }
+#reading-material-count { font-size: 11px; padding: 2px 5px; }
+#main-reading-content { margin: 12px 24px 66px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden; }
+#main-reading-content.has-history::before, #main-reading-content.has-more-history::after,
+#branch-panel.has-history::before, #branch-panel.has-more-history::after { content: none; }
+#conversation, #panel-conversation { padding: 28px clamp(20px, 4vw, 56px); gap: 28px; border-radius: 0; background: var(--surface); }
+#conversation .turn.user, #panel-conversation .turn.user { max-width: min(84%, 72ch); background: var(--surface-dim); padding: 12px 16px; border-radius: 12px; font: 400 15px/1.8 var(--font-ui); }
+#conversation .turn.assistant, #panel-conversation .turn.assistant { max-width: 82ch; padding: 8px 0 20px; font: 400 16px/1.85 var(--font-ui); color: var(--ink); }
+.turn.assistant::before, .turn.user::before { font: 500 12px/1.5 var(--font-ui); letter-spacing: 0; margin-bottom: 8px; }
+.turn.assistant::before { content: 'TreeAI'; }
+.turn .turn-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.turn .branch-here, .turn .term-explain { min-height: 34px; font-size: 12px; padding: 7px 10px; margin: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink-soft); }
+.turn .branch-here:hover:not(:disabled), .turn .term-explain:hover:not(:disabled) { color: var(--green); background: var(--green-wash); border-color: var(--green-line); }
+#conversation .turn.return, #panel-conversation .turn.return { background: var(--green-wash); color: var(--green-deep); font: 400 14px/1.8 var(--font-ui); border: 1px solid var(--green-line); border-radius: 10px; padding: 16px; }
+#composer, #panel-composer { margin: 0 20px 20px; padding: 14px 16px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); box-shadow: none; }
+#composer:focus-within, #panel-composer:focus-within { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-wash); }
+#composer textarea, #panel-prompt-input { font-size: 15px; min-height: 48px; line-height: 1.65; border: 0; padding: 0; background: transparent; }
+.composer-context { font-size: 12px; color: var(--muted); }
+#send, #panel-send { min-height: 36px; padding: 8px 16px; font-size: 13px; }
+#branch-panel { top: 80px; bottom: 66px; left: 24px; right: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-card); }
+#panel-header { padding: 16px 24px 14px; border-bottom: 1px solid var(--line); }
+#panel-title { font: 600 16px/1.6 var(--font-ui); margin-bottom: 6px; }
+#panel-anchor-context { font-size: 12px; line-height: 1.6; color: var(--muted); }
+#panel-fixed-actions { gap: 8px; margin-top: 12px; }
+#panel-fixed-actions button { min-height: 34px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font-size: 12px; }
+#return-panel { margin: 0 20px 16px; background: var(--green-wash); border: 1px solid var(--green-line); border-radius: 10px; }
+#return-panel > summary { padding: 12px 14px; min-height: 42px; font-size: 13px; color: var(--green-deep); }
+#return-panel .muted { font-size: 12px; line-height: 1.7; color: var(--ink-soft); }
+#return-input { font-size: 14px; background: var(--surface); }
+#submit-return { font-size: 13px; min-height: 38px; }
+#round-navigation { bottom: 14px; gap: 12px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+#round-navigation button { width: 38px; height: 34px; min-height: 34px; border: 0; border-radius: 7px; font-size: 18px; backdrop-filter: none; background: transparent; }
+#round-navigation button:hover:enabled { transform: none; }
+#round-position { font-size: 12px; letter-spacing: 0; }
+.mat-head, .term-explain-head { font-family: var(--font-ui); }
+.mat-head .mat-title { font: 600 18px/1.5 var(--font-ui); }
+.material-block { font: 400 16px/1.85 var(--font-ui); }
+.material-block.pdf-page-text { font-family: var(--font-ui); }
+.mat-selection-bar { font-size: 13px; }
+#source-drawer { background: var(--surface); font-size: 13px; }
+#source-drawer h2 { font-size: 18px; }
+.term-explain-card { background: var(--surface); border-radius: 10px; }
+.session-view-heading { padding: 24px 28px 0; }
+.session-view-heading h1, .session-view-empty h1, .empty-title { font-family: var(--font-ui); font-weight: 600; }
+.session-map-tools { margin: 18px 28px 0; font-size: 13px; }
+.map-zoom > button { min-height: 34px; font-size: 13px; }
+.stack-kind, .stack-meta { font-size: 12px; }
+.stack-title { font: 500 15px/1.6 var(--font-ui); }
+.session-view-foot { font-size: 12px; }
+.empty-title { font-size: 26px; }
+.empty-description { max-width: 36ch; color: var(--muted); font-size: 14px; line-height: 1.8; margin: 0 0 24px; }
+@media (max-width: 1000px) {
+  #reading-heading { padding-left: 20px; padding-right: 180px; }
+  #main-reading-content { margin-left: 20px; margin-right: 20px; }
+  #branch-panel { left: 20px; right: 20px; }
+}
+@media (max-width: 719px) {
+  #app { grid-template-columns: minmax(0,1fr); grid-template-rows: 60px minmax(0,1fr); }
+  #sidebar { width: min(288px, 88vw); padding: 22px 16px; }
+  #branch-bar { padding: 10px 12px 10px 54px; gap: 6px; }
+  #topbar-path { font-size: 13px; }
+  #branch-bar .drawer-toggle, #api-settings-open { min-height: 36px; padding: 7px 9px; font-size: 12px; }
+  #diagnostics-bar { gap: 4px; }
+  #diagnostics-bar .runtime-details { display: none; }
+  #diagnostics-bar .run-status.idle { display: none; }
+  #workspace-modes { left: auto; right: 12px; top: 12px; }
+  .workspace-mode { min-height: 34px; padding: 7px 10px; font-size: 12px; }
+  #reading-heading { height: 68px; padding: 10px 150px 0 12px; }
+  .reading-navigation { gap: 10px; }
+  .reading-navigation button { font-size: 12px; padding: 8px 0; }
+  #main-reading-content { margin: 6px 10px 66px; }
+  #branch-panel { top: 74px; bottom: 66px; left: 10px; right: 10px; }
+  #conversation, #panel-conversation { padding: 20px 16px; gap: 22px; }
+  #conversation .turn.assistant, #panel-conversation .turn.assistant { font-size: 15px; }
+  #conversation .turn.user, #panel-conversation .turn.user { max-width: 94%; font-size: 15px; }
+  #composer, #panel-composer { margin: 0 10px 10px; padding: 12px; }
+  #composer textarea, #panel-prompt-input { font-size: 16px; }
+  .composer-context { font-size: 11px; }
+  .composer-context > span { display: none; }
+  #panel-header { padding: 14px 16px; }
+  #return-panel { margin: 0 10px 10px; }
+  #round-navigation button { width: 40px; height: 38px; }
+  .session-view-heading { padding: 70px 20px 0; }
+  .session-map-tools { margin-left: 20px; margin-right: 20px; }
+}
+@media (pointer: coarse) {
+  button, .turn .branch-here, .turn .term-explain, #panel-fixed-actions button { min-height: 44px; }
+}
+
+/* Search has one entry, in the same disclosure that owns its controls. */
+#search-section { order: 0; border-top: 0; padding-top: 0; }
+#search-section > summary { margin: 0; padding: 9px 10px; }
+#search-section > summary::after { content: none; }
+#search-section[open] { padding-bottom: 12px; }
+#search-section input { width: 100%; }
+/* Virtual tree rows keep the geometry shared with the navigation windowing engine. */
+.nav-row button { min-height: 0; }

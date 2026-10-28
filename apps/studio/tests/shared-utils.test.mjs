@@ -356,7 +356,7 @@ test("R1 diagnostics view preserves run, policy, and failure-panel states", () =
   };
   view.renderDiagnostics();
   assert.equal(nodes.get("diagnostics-bar").hidden, false);
-  assert.equal(nodes.get("run-status").textContent, "idle");
+  assert.equal(nodes.get("run-status").textContent, "已就绪");
   assert.equal(nodes.get("run-detail").textContent, "no runs yet");
   assert.equal(nodes.get("abort-run").hidden, true);
   assert.equal(nodes.get("policy-note").textContent, "policy: no decisions observed — offline");
@@ -374,14 +374,14 @@ test("R1 diagnostics view preserves run, policy, and failure-panel states", () =
   assert.equal(nodes.get("run-status").className, "run-status streaming");
   assert.match(nodes.get("run-detail").textContent, /active run on Branch 1/);
   assert.match(nodes.get("run-detail").textContent, /last run: aborted/);
-  assert.equal(nodes.get("abort-run").textContent, "Abort run");
+  assert.equal(nodes.get("abort-run").textContent, "停止生成");
   assert.equal(nodes.get("abort-run").disabled, false);
   assert.match(nodes.get("policy-note").textContent, /1 decision\(s\) observed/);
   assert.match(nodes.get("policy-note").textContent, /latest: read allow \(rule-1\)/);
 
   state.diagnostics.runtimeState = "aborting";
   view.renderDiagnostics();
-  assert.equal(nodes.get("abort-run").textContent, "Aborting…");
+  assert.equal(nodes.get("abort-run").textContent, "正在停止…");
   assert.equal(nodes.get("abort-run").disabled, true);
 
   state.diagnostics = {
