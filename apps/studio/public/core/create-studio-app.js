@@ -135,6 +135,7 @@ $("nav-source-selected").addEventListener("click", () => void navJumpToSource())
 $("nav-close-tree").addEventListener("click", () => closeNavTree());
 
 $("sidebar-toggle").addEventListener("click", () => {
+  if ($("workspace-library")) $("workspace-library").open = false;
   const open = document.body.classList.toggle("sidebar-open");
   $("sidebar-toggle").setAttribute("aria-expanded", open ? "true" : "false");
 });
@@ -241,6 +242,17 @@ $("panel-view-source").addEventListener("click", () => {
    z-index 在支线面板之上——它是当前注意面，先于面板收起）。 */
 registerDocumentListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  // Native settings dialog owns Escape; do not also navigate the workspace below it.
+  if ($("api-settings-dialog")?.open) return;
+  if ($("workspace-library")?.open) {
+    event.preventDefault();
+    $("workspace-library").open = false;
+    if (document.body.classList.contains("sidebar-open")) {
+      closeSidebar();
+      $("sidebar-toggle").focus();
+    } else $("workspace-library-toggle").focus();
+    return;
+  }
   if (state.drawerOpen) {
     event.preventDefault();
     closeDrawer();
@@ -293,6 +305,13 @@ registerDocumentListener("keydown", (event) => {
   if (termCard !== null) {
     event.preventDefault();
     closeTermExplain();
+    return;
+  }
+  if ($("search-section").open) {
+    event.preventDefault();
+    $("search-section").open = false;
+    $("search-shortcut").setAttribute("aria-expanded", "false");
+    $("search-shortcut").focus();
     return;
   }
   if (document.body.classList.contains("sidebar-open")) {

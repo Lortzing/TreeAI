@@ -7,6 +7,22 @@ import { inputClickAt } from "../material-probes.mjs";
 
 export async function runBetaTouch(deps) {
 
+  // Materials moved out of history navigation. Exercise the actual secondary entry by touch.
+  async function openMaterialToolsByTouch() {
+    for (const selector of ["#workspace-library-toggle", "#materials-section > summary"]) {
+      const point = await deps.ctx.evalJs(`(() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (el.parentElement.open) return null;
+        const r = el.getBoundingClientRect();
+        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+        if (!r.width || !r.height || !el.contains(document.elementFromPoint(x, y))) throw new Error("touch tools entry is covered");
+        return { x, y };
+      })()`);
+      if (point) await deps.tapAt(point.x, point.y);
+    }
+    await waitFor(deps.ctx, `document.getElementById("workspace-library").open && document.getElementById("materials-section").open && !document.body.classList.contains("sidebar-open")`, { label: "touch: material tools replace the history drawer" });
+  }
+
       {
         await deps.setViewport(deps.ctx, deps.NARROW_VIEWPORT);
         /* tap 开侧栏抽屉。 */
@@ -20,6 +36,7 @@ export async function runBetaTouch(deps) {
           { label: "touch: tap opens the sidebar drawer", timeoutMs: 10_000 },
         );
         await deps.waitForDrawerSettled(deps.ctx);
+        await openMaterialToolsByTouch();
         /* tap 打开材料阅读（md-11）。 */
         const mdBtn = await deps.ctx.evalJs(
           `(() => { const b = document.querySelector(${JSON.stringify(materialButtonSelector(deps.scenarioSetup.materialBranchOrigin.materialId))}); ` +
@@ -48,6 +65,7 @@ export async function runBetaTouch(deps) {
         await deps.tapAt(toggleRect.x, toggleRect.y);
         await waitFor(deps.ctx, `(() => document.body.classList.contains("sidebar-open"))()`, { label: "touch: drawer reopens (pdf phase)" });
         await deps.waitForDrawerSettled(deps.ctx);
+        await openMaterialToolsByTouch();
         const pdfMaterialId = await deps.ctx.evalJs(
           `(() => { for (const b of document.querySelectorAll("#material-list button[data-material-id]")) { ` +
             `if ((b.querySelector(".material-meta")?.textContent ?? "").includes("pdf")) return b.dataset.materialId; } return null; })()`,

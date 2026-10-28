@@ -40,7 +40,8 @@ export function createNavFinderView({
           ? `${tree.title} · ${tree.treeId}`
           : `${tree.treeId} — untitled (no first question on the trunk)`;
       button.addEventListener("click", () => {
-        closeSidebar();
+        // The selected tree is rendered inside this tool panel, so keep it visible.
+        closeSidebar({ keepLibrary: true });
         void openNavTree(tree.treeId);
       });
       navFinderButtons.set(tree.treeId, button);

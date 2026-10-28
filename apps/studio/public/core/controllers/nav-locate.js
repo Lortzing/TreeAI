@@ -136,6 +136,8 @@ export function createNavLocateController(deps) {
       }
       session.locateNote = null;
       renderNavTree();
+      // The source is displayed outside the tools; release the overlay before arrival.
+      if ($("workspace-library")) $("workspace-library").open = false;
       if (origin.kind === "turn") {
         await revealOrigin(branchId);
       } else {

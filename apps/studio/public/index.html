@@ -25,17 +25,16 @@
       <div id="diagnostics-bar" hidden>
         <span id="run-status" class="run-status idle" aria-live="polite">已就绪</span>
         <details class="runtime-details">
-          <summary>运行详情</summary>
+          <summary title="运行详情" aria-label="运行详情"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7h.01"></path></svg><span class="sr-only">运行详情</span></summary>
           <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
         </details>
         <button id="abort-run" class="danger" hidden>停止生成</button>
       </div>
-      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">来源记录</button>
-      <button id="api-settings-open" type="button">模型设置</button>
+      <button id="source-drawer-toggle" class="drawer-toggle icon-button" aria-expanded="false" aria-label="来源记录" title="来源记录"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span class="sr-only">来源记录</span></button>
     </header>
     <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
       <form id="api-settings-form">
-        <div class="api-settings-heading"><div><p class="settings-eyebrow">工作区设置</p><h2 id="api-settings-title">模型与连接</h2></div><button id="api-settings-close" type="button" aria-label="关闭 API 设置">关闭</button></div>
+        <div class="api-settings-heading"><div><p class="settings-eyebrow">工作区设置</p><h2 id="api-settings-title">设置</h2></div><button id="api-settings-close" type="button" aria-label="关闭 API 设置">← 返回工作区</button></div>
         <p class="settings-intro">选择 API 服务和模型。保存后重启生效，已有思考记录会保留。</p>
         <section class="settings-section" aria-labelledby="api-connection-heading">
           <h3 id="api-connection-heading">API 连接</h3>
@@ -81,9 +80,9 @@
       <aside id="sidebar" aria-label="Trees">
         <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
 
-        <button id="new-tree" class="primary">＋ 新建思考树</button>
+        <button id="new-tree" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>新建思考</span></button>
         <details class="sidebar-section sidebar-disclosure" id="search-section">
-          <summary id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><span aria-hidden="true">⌕</span> 搜索思考 <kbd>⌘ K</kbd></summary>
+          <summary id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>搜索思考</span> <kbd>⌘ K</kbd></summary>
           <input id="search-input" type="search" placeholder="搜索材料、对话或收获…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
           <div class="search-scope" role="group" aria-label="Search scope">
             <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
@@ -108,17 +107,31 @@
             <button id="list-retry">重试</button>
           </div>
         </section>
+        <div id="sidebar-foot">
+          <button id="api-settings-open" type="button" title="设置 · 模型与连接"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 1-2h4l1 2 2 1 2-.2 2 3-1 2v4l1 2-2 3-2-.2-2 1-1 2h-4l-1-2-2-1-2 .2-2-3 1-2v-4l-1-2 2-3L7 5Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>设置</span></button>
+          <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
+          <p id="driver-note" class="muted">思考记录保存在本机</p>
+        </div>
+      </aside>
+
+      <main id="main" data-workspace-view="chat">
+        <details id="workspace-library" class="workspace-library">
+          <summary id="workspace-library-toggle" class="icon-button" aria-label="资料与路径" title="资料与路径" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v12a4 4 0 0 0 4 4h6M7 12h6a4 4 0 0 0 4-4V4"></path><circle cx="7" cy="3" r="2"></circle><circle cx="17" cy="3" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg></summary>
+          <div class="workspace-library-panel" role="region" aria-label="资料与路径">
+            <div class="library-heading"><h2>资料与路径</h2><button id="workspace-library-close" type="button" class="icon-button" aria-label="关闭资料与路径" title="关闭"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
         <section class="sidebar-section" id="branch-section" hidden>
           <h2 class="sidebar-heading">当前树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
-        <!-- D4-8 大规模树导航面（issue #8 工作包 D4-8，charter §5）：侧栏第
-             三段——树查找（分页森林列表 + 标题/标识搜索）+ 层级树视图（按需
-             分页加载子节点、折叠展开、展开状态服务端持久化、完整父路径、
-             定位当前分支、跳回来源）。只读产品事实（/api/nav/*），绝不渲染
-             run/session 可用性；DOM 有界（可视窗口渲染——见 app.js D4-8 段
-             的虚拟化纪律）。静态骨架由 app.js 注册一次；动态列表（查找结果/
-             树行/路径）由 D4-8 渲染函数独占管理，renderAll 不重建。 -->
+        <details class="sidebar-section sidebar-disclosure" id="materials-section" hidden>
+          <summary class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></summary>
+          <div class="material-import-row">
+            <button id="material-import" type="button">＋ 导入阅读材料</button>
+            <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
+          </div>
+          <p id="material-import-status" role="status" aria-live="polite"></p>
+          <ul id="material-list" aria-label="Materials"></ul>
+        </details>
         <details class="sidebar-section sidebar-disclosure" id="nav-section" aria-label="Navigate trees">
           <summary class="sidebar-heading">更多导航 <span>全部路径</span></summary>
           <input id="nav-tree-search" type="search" placeholder="搜索思考树…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
@@ -151,42 +164,9 @@
             <p id="nav-tree-status" class="muted" role="status"></p>
           </div>
         </details>
-        <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
-             （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
-             不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
-             已载含如实空态/失败 + 重试）；导入入口（owner P1）：真实文件
-             选择器（.md/.markdown/.pdf——D4-1 支持面）经真实导入端点上传
-             （原始字节 + 百分号编码文件名头），pending/parsing/ready/
-             failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
-             在途解析可取消（parse-tasks cancel 端点）。渐进披露：本段默认
-             折叠（与导航/搜索同形态）；导入开始或阅读导航回退路径会自动
-             展开——在途状态面绝不藏在折叠面板后。 -->
-        <details class="sidebar-section sidebar-disclosure" id="materials-section" hidden>
-          <summary class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></summary>
-          <div class="material-import-row">
-            <button id="material-import" type="button">＋ 导入阅读材料</button>
-            <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
           </div>
-          <p id="material-import-status" role="status" aria-live="polite"></p>
-          <ul id="material-list" aria-label="Materials"></ul>
         </details>
-        <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：
-             跨已保存产品事实的检索入口（材料版本×树链接 / 术语批注 / Return /
-             对话 Turn）。默认范围 = 当前树，显式切换全部树；来源类型筛选按
-             契约 kinds 透传服务端；结果按服务端返回序确定性呈现（命中说明
-             来源类型/标题/版本/摘录/时间，旧版本显式标注「旧版本」），命中
-             点击跳既有视图（材料 → D4-2 阅读器按版本+块定位；批注/Return/
-             Turn → 对应事实的既有视图）。搜索纯只读（不创建 Turn）；只索引
-             已保存产品事实——未提交草稿结构性不入索引（服务端已裁决），本
-             面如实声明、绝不暗示草稿可搜。 -->
 
-        <div id="sidebar-foot">
-          <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
-          <p id="driver-note" class="muted">思考记录保存在本机</p>
-        </div>
-      </aside>
-
-      <main id="main" data-workspace-view="chat">
         <nav id="workspace-modes" aria-label="工作区视图">
           <button id="mode-chat" type="button" class="workspace-mode active" aria-pressed="true">对话</button>
           <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">关系图</button>
@@ -201,9 +181,10 @@
         <div id="empty-state" hidden>
           <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
 
-          <h1 class="empty-title">从一个问题开始</h1><p class="empty-description">新建一棵思考树，与 AI 对话；遇到想深入的地方，展开支线，再把收获带回主线。</p>
+          <h1 class="empty-title">给思考，留一点生长的空间。</h1><p class="empty-description">从一个问题开始。沿着好奇深入，再把新的理解带回这里。</p>
 
-          <button id="empty-new-tree" class="primary">＋ 新建思考树</button>
+          <button id="empty-new-tree" class="primary">开始第一次思考 ↗</button>
+          <div class="welcome-steps"><div><b>01 · 提出问题</b><p>把想弄明白的事写下来。</p></div><div><b>02 · 展开支线</b><p>选中回答，深入感兴趣的部分。</p></div><div><b>03 · 带回收获</b><p>确认新的理解，保存到主线。</p></div></div>
         </div>
         <section id="tree-view" hidden>
           <!-- P1 失败面板（持久、不自动消失）：树级警示条，置于阅读区之上。 -->
@@ -218,7 +199,7 @@
 
                 <h1 id="reading-title">一个问题，无限可能。</h1>
 
-                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">主线对话</button><button id="reading-materials" type="button" aria-controls="materials-section">阅读材料 <span id="reading-material-count">0</span></button></div>
+                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">主线对话</button><button id="reading-materials" type="button" class="icon-button" aria-controls="materials-section" aria-label="阅读材料" title="阅读材料"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 13 7-7a3 3 0 0 1 4 4l-9 9a5 5 0 0 1-7-7l9-9M6 15l9-9"></path></svg><span class="sr-only">阅读材料</span><span id="reading-material-count">0</span></button></div>
               </header>
               <div id="main-reading-content">
               <!-- A4 缺失 session 横幅（主线视角，可关闭、不自动消失）。 -->
@@ -245,7 +226,7 @@
                    隐藏，见 style.css ≥1180px 块），收起后如实呈现指引。 -->
               <div id="branch-empty">
                 <p class="panel-kicker">思考的另一种可能</p>
-                <svg class="growth-illustration" viewBox="0 0 280 250" aria-hidden="true"><circle class="growth-halo" cx="147" cy="112" r="88"/><path class="quiet-line" d="M112 225V38M112 124C112 96 57 105 57 65"/><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"/><circle class="growth-node" cx="112" cy="175" r="5"/><circle class="growth-node" cx="199" cy="62" r="7"/><circle class="small-node" cx="57" cy="65" r="4"/><circle class="small-node" cx="112" cy="38" r="4"/><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg>
+                <svg class="growth-illustration" viewBox="0 0 280 250" aria-hidden="true"><circle class="growth-halo" cx="147" cy="112" r="88"></circle><path class="quiet-line" d="M112 225V38M112 124C112 96 57 105 57 65"></path><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"></path><circle class="growth-node" cx="112" cy="175" r="5"></circle><circle class="growth-node" cx="199" cy="62" r="7"></circle><circle class="small-node" cx="57" cy="65" r="4"></circle><circle class="small-node" cx="112" cy="38" r="4"></circle><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg>
                 <h2 class="branch-empty-title">好奇，可以走远一点。</h2>
                 <p class="muted">选中回答中的一个词或一段话，<br>从那里展开支线，再把新的理解<br>带回正在生长的思考。</p>
                 <div class="growth-steps"><span><b>01</b>找到起点</span><i></i><span><b>02</b>深入探索</span><i></i><span><b>03</b>带回收获</span></div>

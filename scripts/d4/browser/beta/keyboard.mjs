@@ -44,6 +44,11 @@ export async function runBetaKeyboard(deps) {
           }
           const key = active.id ?? `${active.tag}.${active.cls}`;
           seen.set(key, (seen.get(key) ?? 0) + 1);
+          // Open secondary controls with the keyboard; all original reachability assertions remain.
+          if (active.id === "workspace-library-toggle") {
+            const open = await deps.ctx.evalJs(`document.getElementById("workspace-library").open`);
+            if (!open) await deps.pressKey(deps.ctx, "Enter", "Enter", 13, { text: "\r" });
+          }
           if (active.id === "mat-blocks") { reachedBlocks = true; break; }
         }
         if (!reachedBlocks) {

@@ -447,7 +447,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
     getState: () => state,
     mutedListItem: (text) => { const item = element("li"); item.textContent = text; return item; },
     formatProductTime: () => "formatted-time",
-    closeSidebar: () => calls.push("close"),
+    closeSidebar: (options) => { assert.equal(options.keepLibrary, true); calls.push("close"); },
     openNavTree: (id) => calls.push(`open:${id}`),
     runNavTreeFind: () => calls.push("search-retry"),
     refreshNavForestListing: () => calls.push("listing-retry"),
@@ -682,4 +682,94 @@ test("PDF text anchors are positioned while the original page paint is still pen
   assert.equal(frame.children[1].dataset.rendered, "false", "the original page has not finished painting");
   assert.equal(line.style.left, "10%"); assert.equal(line.style.top, "5%"); assert.equal(line.style.fontSize, "14px");
   assert.equal(line.textContent, "递归"); assert.equal(line.dataset.start, "0"); assert.equal(line.dataset.end, "2");
+});
+
+test("empty-tree starters focus an editable draft without submitting or overwriting existing input", () => {
+  let focused = false;
+  const input = { value: "", focus() { focused = true; } };
+  function element(tag) {
+    return { tag, children: [], dataset: {}, className: "", listeners: {}, clientHeight: 0,
+      append(...nodes) { this.children.push(...nodes); },
+      appendChild(node) { this.children.push(node); },
+      addEventListener(name, handler) { this.listeners[name] = handler; },
+      scrollTo() {},
+    };
+  }
+  const container = element("div");
+  const state = { treeState: { trunkBranchId: "trunk" }, streaming: null, scrollPositions: new Map() };
+  const view = createConversationView({ state, document: { createElement: element },
+    $: (id) => id === "prompt-input" ? input : container,
+    trunkBranchId: () => "trunk", branchView: () => ({ turns: [] }),
+    currentSessionRound: () => ({ round: null, unattached: [] }),
+    isAtBottom: () => true, termCardFocusTargetId: () => null, preserveTermCardFocus() {},
+    scrollKey: () => "trunk", scrollBehavior: () => "auto",
+  });
+  view.renderMainConversation(false);
+  const starters = container.children[0].children[3].children;
+  assert.equal(starters.length, 3);
+  starters[0].listeners.click();
+  assert.equal(input.value, "我想理解一个概念：");
+  assert.equal(focused, true);
+  input.value = "我的未发送问题";
+  starters[1].listeners.click();
+  assert.equal(input.value, "我的未发送问题");
+  assert.equal(state.streaming, null);
+});
+
+test("material tools open outside history and close without clearing domain state", async () => {
+  const { registerWorkspaceEvents } = await import("../public/core/controllers/workspace-events.js");
+  let focused = null;
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, { id, open: false, attrs: {}, handlers: {},
+      addEventListener(name, fn) { (this.handlers[name] ??= new Set()).add(fn); },
+      removeEventListener(name, fn) { this.handlers[name]?.delete(fn); },
+      setAttribute(name, value) { this.attrs[name] = value; },
+      focus() { focused = id; }, contains(target) { return target === this; }, scrollIntoView() {},
+    });
+    return elements.get(id);
+  };
+  const classes = new Set();
+  const document = { ...get("document"), body: { classList: {
+    add: (v) => classes.add(v), remove: (v) => classes.delete(v),
+  } } };
+  const state = { materialReader: null, materials: { ok: true, materials: [] }, returnDraft: { text: "keep this" } };
+  const dispose = registerWorkspaceEvents({ $: get, state, document, window: {}, sessionUI: { mode: "chat" }, scrollBehavior: () => "auto" });
+  const click = (id) => { for (const handler of get(id).handlers.click ?? []) handler({}); };
+  click("reading-materials");
+  assert.equal(get("workspace-library").open, true);
+  assert.equal(get("materials-section").open, true);
+  assert.equal(focused, "material-import");
+  assert.equal(classes.has("sidebar-open"), false);
+  click("workspace-library-close");
+  assert.equal(get("workspace-library").open, false);
+  assert.equal(focused, "workspace-library-toggle");
+  assert.equal(state.returnDraft.text, "keep this");
+  state.armedSelection = { text: "selected answer" };
+  let prevented = false;
+  for (const handler of get("workspace-library-toggle").handlers.mousedown) {
+    handler({ preventDefault() { prevented = true; } });
+  }
+  assert.equal(prevented, true);
+  get("workspace-library").open = true;
+  click("search-shortcut");
+  assert.equal(get("workspace-library").open, false);
+  assert.equal(classes.has("sidebar-open"), true);
+  dispose();
+  assert.equal(get("reading-materials").handlers.click.size, 0);
+});
+
+test("return focus reveals nested secondary tools before focusing a material or branch", async () => {
+  const { createStudioFocusController } = await import("../public/core/controllers/focus.js");
+  const library = { tagName: "DETAILS", open: false, parentElement: null };
+  const materials = { tagName: "DETAILS", open: false, parentElement: library };
+  let focused = false;
+  const target = { parentElement: materials, focus() {
+    assert.equal(library.open, true);
+    assert.equal(materials.open, true);
+    focused = true;
+  } };
+  const controller = createStudioFocusController({ materialListButtons: new Map([["m1", target]]) });
+  controller.restoreFocusRef({ kind: "material-button", materialId: "m1" });
+  assert.equal(focused, true);
 });
