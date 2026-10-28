@@ -15,7 +15,10 @@ export function createSourceDrawerView(deps) {
   function renderDrawer() {
     const drawer = deps.$("source-drawer");
     const toggle = deps.$("source-drawer-toggle");
-    toggle.textContent = deps.state.drawerOpen ? "× Close sources" : "⑂ Sources";
+    // Preserve the shared SVG icon across drawer refreshes.
+    const label = deps.state.drawerOpen ? "关闭来源记录" : "来源记录";
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
     toggle.setAttribute("aria-expanded", deps.state.drawerOpen ? "true" : "false");
     if (!deps.state.drawerOpen) return;
 

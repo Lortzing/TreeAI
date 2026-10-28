@@ -1500,7 +1500,7 @@ test("journal drawer: failure with retry, honest empty state, Esc focus restore"
      读屏器不得持续播报已展开（浏览器面跑批器发现的陈旧态缺陷）。 */
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "Esc close flips the toggle aria-expanded immediately (no stale expanded announcement)");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources", "toggle label restored on close");
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录", "toggle label restored on close");
 
   /* 重试路径：再开仍失败 → 后端恢复 → Retry 回到加载中 → 列表渲染。 */
   world.el("source-drawer-toggle").click();
@@ -1564,7 +1564,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   assert.equal(drawer.hidden, true, "clicking #drawer-close hides the drawer");
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "toggle aria-expanded flips to false on button close");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录",
     "toggle label restored on button close");
 
   /* Esc 路径不回归（附-4 只增不改）：再开后 Esc 仍关闭并还原焦点。 */
@@ -1577,7 +1577,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   assert.equal(drawer.hidden, true, "Esc still closes the drawer");
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "Esc close still flips the toggle aria-expanded");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录",
     "Esc close still restores the toggle label");
 });
 
