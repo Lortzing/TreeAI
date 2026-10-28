@@ -152,8 +152,8 @@ export function createConversationView(deps) {
       empty.className = "muted";
       empty.textContent =
         branchId === st.trunkBranchId
-          ? "Empty Trunk — send the first prompt."
-          : "Empty branch — continue it with a prompt.";
+          ? "在下方输入你的第一个问题。"
+          : "在下方提问，继续探索这条支线。";
       desired.push(empty);
     }
     for (const turn of view.turns) {

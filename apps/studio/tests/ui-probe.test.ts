@@ -1291,9 +1291,9 @@ test("visual baseline: real index.html skeleton and boot-rendered structure", as
   }
 
   /* 输入面契约：placeholder / aria-label。 */
-  assert.equal(world.el("prompt-input").getAttribute("placeholder"), "继续对话…");
-  assert.equal(world.el("panel-prompt-input").getAttribute("placeholder"), "继续对话…");
-  assert.equal(world.el("return-input").getAttribute("aria-label"), "Return draft");
+  assert.equal(world.el("prompt-input").getAttribute("placeholder"), "输入问题，继续探索…");
+  assert.equal(world.el("panel-prompt-input").getAttribute("placeholder"), "输入问题，继续探索…");
+  assert.equal(world.el("return-input").getAttribute("aria-label"), "带回主线的收获草稿");
 
   /* §2.4 冲突/失败提示可 Tab 触达并朗读（issue #6 P1）：两横幅 role=alert
      （隐式 aria-live）+ tabindex=0；§2.6 降级说明区（面板锚点上下文）可
@@ -2198,7 +2198,7 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
     "the anchor card carries the whole-answer excerpt",
   );
   assert.ok(
-    world.el("panel-conversation").textContent.includes("Empty branch — continue it with a prompt."),
+    world.el("panel-conversation").textContent.includes("在下方提问，继续探索这条支线。"),
     "the fresh branch shows the honest empty state",
   );
   assert.equal(world.requestsOf("/switch").length, 0, "branching does not align the cursor (prompt-driven navigation)");

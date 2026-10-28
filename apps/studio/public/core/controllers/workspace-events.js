@@ -17,7 +17,14 @@ function focusThoughtSearch() {
   $("search-input").focus();
   section.scrollIntoView?.({ block: "nearest", behavior: scrollBehavior() });
 }
-listen($("search-shortcut"), "click", focusThoughtSearch);
+listen($("search-shortcut"), "click", (event) => {
+  event.preventDefault?.();
+  const section = $("search-section");
+  if (section.open) {
+    section.open = false;
+    $("search-shortcut").setAttribute("aria-expanded", "false");
+  } else focusThoughtSearch();
+});
 listen($("search-section"), "toggle", () => {
   $("search-shortcut")?.setAttribute("aria-expanded", $("search-section").open ? "true" : "false");
 });

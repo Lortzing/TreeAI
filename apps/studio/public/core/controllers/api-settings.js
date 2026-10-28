@@ -15,6 +15,17 @@ export function registerApiSettings({ document, fetch }) {
   const closeButton = document.getElementById('api-settings-close');
   const providerSelect = document.getElementById('api-provider');
   const modelSelect = document.getElementById('api-model');
+  const modelIdInput = document.getElementById('api-model-id');
+  const keyInput = document.getElementById('api-key-value');
+  const keyControls = document.getElementById('api-keychain-controls');
+  const keySave = document.getElementById('api-key-save');
+  const keyRemove = document.getElementById('api-key-remove');
+  const keyStatus = document.getElementById('api-keychain-status');
+  const keySummary = document.getElementById('api-key-summary');
+  let credentialProviderId = '';
+  let keychainSupported = false;
+  const storedNames = new Set();
+  const environmentNames = new Set();
   const formatSelect = document.getElementById('api-format');
   const baseUrlInput = document.getElementById('api-base-url');
   const keyEnvInput = document.getElementById('api-key-env');
@@ -122,6 +133,11 @@ export function registerApiSettings({ document, fetch }) {
     }
     const model = currentModel();
     if (model) {
+      if (modelIdInput?.value.trim()) {
+        const id = modelIdInput.value.trim();
+        if (model.name === model.id) model.name = id;
+        model.id = id; activeModelId = id; draft.selection.modelId = id;
+      }
       for (const [input, key] of [[contextWindowInput, 'contextWindow'], [maxTokensInput, 'maxTokens']]) {
         if (!input) continue;
         const value = numericValue(input);
@@ -132,17 +148,24 @@ export function registerApiSettings({ document, fetch }) {
   }
 
   function updateEnvironmentStatus(value) {
+    keychainSupported = value?.credentialStore?.supported === true;
+    storedNames.clear(); environmentNames.clear();
+    for (const item of value?.environment ?? []) {
+      if (item.stored || item.source === 'keychain') storedNames.add(item.name);
+      if (item.source === 'environment') environmentNames.add(item.name);
+    }
     if (!environmentStatus) return;
     const environment = Array.isArray(value?.environment) ? value.environment : [];
     const missing = [...new Set(environment
       .filter((item) => item && item.present === false && typeof item.name === 'string')
       .map((item) => item.name))];
     const messages = [];
-    if (missing.length) messages.push(`缺少环境变量：${missing.join('、')}。密钥值不会显示。`);
-    else if (environment.length) messages.push('所需环境变量均已设置（值不会显示）。');
+    if (missing.length) messages.push(`尚未配置密钥：${missing.join('、')}。${keychainSupported ? '可保存到系统钥匙串，或在高级设置中使用环境变量。' : '请通过高级设置指定的环境变量提供密钥。'}`);
+    else if (environment.length) messages.push('认证信息已配置，密钥值不会显示。');
     else messages.push('暂无环境变量状态。');
     if (value?.enabled === false) messages.push('API 设置当前未启用。');
     environmentStatus.textContent = messages.join(' ');
+    environmentStatus.hidden = keychainSupported && missing.length === 0;
   }
 
   function syncJson() {
@@ -162,7 +185,8 @@ export function registerApiSettings({ document, fetch }) {
     if (providerSelect) providerSelect.value = activeProviderId;
 
     const provider = currentProvider();
-    const formats = API_FORMATS.map((format) => [format, format]);
+    const labels = ['Anthropic Messages', 'OpenAI Chat Completions', 'OpenAI Responses', 'Gemini API'];
+    const formats = API_FORMATS.map((format, i) => [format, labels[i]]);
     replaceOptions(formatSelect, formats, '选择 API 格式');
     if (formatSelect) formatSelect.value = API_FORMATS.includes(provider?.api) ? provider.api : '';
 
@@ -176,8 +200,8 @@ export function registerApiSettings({ document, fetch }) {
     if (keyEnvInput) keyEnvInput.value = String(provider?.apiKeyEnv ?? '');
 
     const model = currentModel();
-    if (contextWindowInput) contextWindowInput.value = model?.contextWindow == null ? '' : String(model.contextWindow);
-    if (maxTokensInput) maxTokensInput.value = model?.maxTokens == null ? '' : String(model.maxTokens);
+    if (contextWindowInput) contextWindowInput.value = model ? String(model.contextWindow ?? 32768) : '';
+    if (maxTokensInput) maxTokensInput.value = model ? String(model.maxTokens ?? 4096) : '';
 
     if (formatSelect) formatSelect.disabled = !provider;
     if (baseUrlInput) baseUrlInput.disabled = !provider;
@@ -186,6 +210,19 @@ export function registerApiSettings({ document, fetch }) {
     if (contextWindowInput) contextWindowInput.disabled = !model;
     if (maxTokensInput) maxTokensInput.disabled = !model;
     if (addModelButton) addModelButton.disabled = !provider;
+    if (modelIdInput) { modelIdInput.value = String(model?.id ?? ''); modelIdInput.disabled = !model; }
+    const hasCredential = provider && (storedNames.has(provider.apiKeyEnv) || environmentNames.has(provider.apiKeyEnv));
+    if (keyControls) {
+      keyControls.hidden = !keychainSupported;
+      if (credentialProviderId !== activeProviderId) keyControls.open = !hasCredential;
+    }
+    credentialProviderId = activeProviderId;
+    if (keySummary) keySummary.textContent = hasCredential ? '已配置 · 点击更换' : '尚未配置';
+    if (keySave) keySave.disabled = !provider || !keychainSupported;
+    if (keyRemove) keyRemove.disabled = !provider || !storedNames.has(provider.apiKeyEnv);
+    if (keyStatus) keyStatus.textContent = !provider ? '先添加 API 提供方。' : storedNames.has(provider.apiKeyEnv)
+      ? environmentNames.has(provider.apiKeyEnv) ? '系统钥匙串已有密钥；当前环境变量优先。' : '已保存在系统钥匙串。无需再次输入，替换时填写新的密钥。'
+      : environmentNames.has(provider.apiKeyEnv) ? '当前使用环境变量中的密钥；可在此保存备用密钥。' : '密钥保存在本机系统钥匙串，不写入配置文件。';
   }
 
   function updateProviderField(key, value) {
@@ -213,11 +250,11 @@ export function registerApiSettings({ document, fetch }) {
     flushEditor();
     const providers = providersOf(draft.config);
     const id = nextId('provider', providers);
-    providers[id] = { api: API_FORMATS[0], baseUrl: '', apiKeyEnv: '', models: [] };
-    draft.selection = { providerId: id, modelId: '' };
+    providers[id] = { api: API_FORMATS[0], baseUrl: '', apiKeyEnv: `TREEAI_${id.replaceAll('-', '_').toUpperCase()}_API_KEY`, models: [{ id: 'model-1', name: 'model-1' }] };
+    draft.selection = { providerId: id, modelId: 'model-1' };
     renderEditor();
     syncJson();
-    setStatus('已新增提供方；可在高级 JSON 中调整 ID。');
+    setStatus('请填写 API 地址和模型 ID，再配置密钥并测试连接。');
   }
 
   function addModel(event) {
@@ -237,7 +274,7 @@ export function registerApiSettings({ document, fetch }) {
     draft.selection.modelId = id;
     renderEditor();
     syncJson();
-    setStatus('已新增模型；可在高级 JSON 中调整 ID。');
+    setStatus('请在模型 ID 中填写服务商提供的标识。');
   }
 
   function applyJson(event) {
@@ -306,6 +343,8 @@ export function registerApiSettings({ document, fetch }) {
     if (!response.ok) {
       const body = await response.json().catch(() => null);
       const messages = {
+        'credential-store-failed': '无法访问系统钥匙串，请确认已解锁后重试。',
+        'credential-store-unavailable': '当前系统未启用密钥库，请使用环境变量。',
         'settings-conflict': '设置已被其他窗口修改，请关闭后重新打开设置页。',
         'probe-busy': '另一个连接测试正在运行，请稍后重试。',
         'invalid-settings': '配置无效，请检查接口格式、地址、模型和环境变量名称。',
@@ -333,6 +372,7 @@ export function registerApiSettings({ document, fetch }) {
       revision: typeof value.revision === 'string' ? value.revision : '',
     };
     updateEnvironmentStatus(value);
+    credentialProviderId = '';
     renderEditor();
     syncJson();
   }
@@ -418,10 +458,33 @@ export function registerApiSettings({ document, fetch }) {
     });
   }
 
+  async function saveCredential(event, remove = false) {
+    event?.preventDefault();
+    if (!draft || requestController || !keychainSupported) return;
+    const value = keyInput?.value ?? '';
+    if (!remove && !value.trim()) { setStatus('请先输入 API key。'); return; }
+    const payload = selectionPayload();
+    if (!remove) payload.value = value;
+    if (keyInput) keyInput.value = '';
+    await runRequest(remove ? '移除密钥' : '保存密钥', async (signal) => {
+      const result = await requestJson(API_SETTINGS_URL + '/credentials', {
+        method: remove ? 'DELETE' : 'POST', headers: { 'Content-Type': 'application/json', 'X-TreeAI-Settings': '1' },
+        body: JSON.stringify(payload), signal,
+      }, '密钥操作');
+      if (signal.aborted || disposed) return;
+      const name = currentProvider()?.apiKeyEnv;
+      if (name) { if (result.stored) storedNames.add(name); else storedNames.delete(name); }
+      if (environmentStatus) environmentStatus.textContent = remove ? '已移除系统钥匙串中的密钥。' : '当前提供方的密钥已保存到本机。';
+      setStatus(remove ? '已移除钥匙串中的密钥。环境变量不受影响。' : result.environmentOverride
+        ? '已保存到钥匙串；当前环境变量优先。' : '密钥已保存。可以测试连接；连接配置需保存设置后生效。');
+    });
+  }
+
   function openDialog() {
     if (dialog.open || dialog.hasAttribute('open')) return;
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
+    dialog.scrollTop = 0;
     setStatus('正在读取设置…');
     void loadSettings();
   }
@@ -429,23 +492,27 @@ export function registerApiSettings({ document, fetch }) {
   function closeDialog(event) {
     event?.preventDefault();
     abortRequest();
+    if (keyInput) keyInput.value = '';
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
   }
 
   listen(openButton, 'click', openDialog);
   listen(closeButton, 'click', closeDialog);
-  listen(dialog, 'close', abortRequest);
-  listen(dialog, 'cancel', abortRequest);
+  listen(dialog, 'close', () => { abortRequest(); if (keyInput) keyInput.value = ''; openButton.focus?.(); });
+  listen(dialog, 'cancel', () => { abortRequest(); if (keyInput) keyInput.value = ''; });
   // Modal keyboard input must not trigger conversation paging or Escape layers behind it.
   listen(dialog, 'keydown', (event) => event.stopPropagation());
   listen(form, 'submit', saveSettings);
   listen(addProviderButton, 'click', addProvider);
   listen(addModelButton, 'click', addModel);
   listen(testButton, 'click', testConnection);
+  listen(keySave, 'click', event => { void saveCredential(event); });
+  listen(keyRemove, 'click', event => { void saveCredential(event, true); });
   listen(jsonApplyButton, 'click', applyJson);
 
   listen(providerSelect, 'change', () => {
+    if (keyInput) keyInput.value = '';
     flushEditor();
     const providerId = providerSelect.value;
     const provider = providersOf(draft?.config)[providerId];
@@ -473,6 +540,7 @@ export function registerApiSettings({ document, fetch }) {
   return () => {
     if (disposed) return;
     disposed = true;
+    if (keyInput) keyInput.value = '';
     abortRequest();
     for (const disposeListener of disposers.splice(0)) disposeListener();
     setBusy(false);

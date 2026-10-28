@@ -4,20 +4,32 @@ Studio accepts API-key connections through `--api-config FILE`. Configure provid
 
 ## Studio settings
 
-Open **API 设置** in the top bar. Choose or add a provider/model, edit its API format,
-URL, key environment variable and token limits. The advanced JSON editor also
-supports headers and multiple profiles; IDs can be renamed there. **测试连接**
+Open **模型设置** in the top bar. Choose or add a provider/model, edit its API format,
+URL and model ID, then configure the API key. On macOS, **保存到钥匙串** stores it in
+the system Keychain; **移除已存密钥** removes that local record. Advanced settings
+contain environment variable names, token limits, custom headers and multiple
+profiles in JSON. **测试连接**
 sends a small fixed request through the actual Pi SDK in a temporary session. It
 does not send saved conversations or change the active model. Tests are bounded
 to 25 seconds and their temporary files are removed. Closing the dialog cancels
 the browser request; the server probe still has its bounded cleanup deadline.
 
 **保存设置** writes only profile metadata and environment references to
-`<data>/api-settings.json`. Changes apply after restart. Supply any required key
-environment variables to that process first. Missing variables are shown by name;
-there is no browser key storage, token-plan login, or system keychain integration.
-Saving profiles is allowed while a key is missing so they can be prepared before
-the environment is set; startup and connection tests still fail explicitly.
+`<data>/api-settings.json`. Changes apply after restart. Saving or replacing a
+Keychain record is separate from saving the profile; connection tests use the new
+key immediately, while the active runtime loads it on restart. Environment
+variables take precedence over Keychain records. Windows and Linux use environment
+variables; there is no plaintext credential fallback. Saving profiles is allowed
+while a key is missing; startup and connection tests still fail explicitly.
+
+Keychain records are scoped to the resolved data-directory path and credential
+environment name. Moving a data directory requires saving its keys again. Profile
+exports and backups contain no Keychain records. Custom header values still use
+the environment names declared in advanced JSON. Keys are resolved in memory for
+all configured providers, including a separate terminology provider; the process
+environment is not changed. A locked or denied Keychain fails explicitly. The
+settings page reports presence without returning key values or storing them in
+browser storage.
 
 Restart with the same data directory to use the saved selection:
 
@@ -48,7 +60,7 @@ The repository's [local proxy example](../../examples/api-providers.example.json
 export TREEAI_LOCAL_API_KEY=local-proxy-client
 ```
 
-For a service that authenticates API keys, populate the named environment variable from your secret manager or a hidden shell prompt before starting Studio. Never paste keys into JSON, flags, commits or logs. Studio stores environment references in the generated Pi configuration; key values stay in process memory. No credentials are imported from `~/.pi` or another application's settings.
+For a service that authenticates API keys, save the key in **模型设置** on macOS, or populate the named environment variable from your secret manager or a hidden shell prompt before starting Studio. Never paste keys into JSON, flags, commits or logs. Studio stores environment references in the generated Pi configuration; key values stay in process memory. No credentials are imported from `~/.pi` or another application's settings.
 
 ## Formats and profiles
 

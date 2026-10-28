@@ -34,9 +34,10 @@ For configurable API-key providers, use `--api-config FILE` with `--provider` an
 `--model`. See [API connection profiles](docs/development/api-connections.md)
 for Anthropic Messages, OpenAI Chat Completions/Responses, Gemini and local
 API proxies. This path does not import subscription/token-plan login state.
-The **API 设置** button manages these profiles in Studio, tests a real request,
-and saves the selection for the next startup. Keys are supplied through named
-environment variables; they are never saved in the browser or profile file.
+The **模型设置** button manages these profiles in Studio, tests a real request,
+and saves the selection for the next startup. On macOS, keys can be saved in the system Keychain from the settings dialog.
+Named environment variables take precedence. Keys are never saved in the browser
+or profile file; other platforms continue to use environment variables.
 
 For an existing controlled Pi agent directory, supply its provider/model and
 provide the key via `TREEAI_STUDIO_API_KEY` in the environment, never in flags,

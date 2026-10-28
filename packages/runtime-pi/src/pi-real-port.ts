@@ -138,6 +138,8 @@ export function adaptSession(session: PiSession): PiPortSession {
 export interface PiRuntimeCredentials {
   readonly providerId: string;
   readonly apiKey: string;
+  readonly providerKeys?: Readonly<Record<string, string>>;
+  readonly providerHeaders?: Readonly<Record<string, Readonly<Record<string, string>>>>;
 }
 
 export interface PiRealSdkPortOptions {
@@ -165,6 +167,18 @@ export function createRealPiSdkPort(options: PiRealSdkPortOptions = {}): PiSdkPo
             }),
       });
       if (credentials !== undefined) {
+        for (const [providerId, headers] of Object.entries(credentials.providerHeaders ?? {})) {
+          if (Object.keys(headers).length === 0) continue;
+          // The SDK config grammar expands $ variables and ! commands. Escape
+          // literal in-memory values before using its public provider override.
+          const literal = (value: string) => value.replace(/\$/g, () => "$$").replace(/!/g, () => "$!");
+          services.modelRuntime.registerProvider(providerId, { headers: Object.fromEntries(
+            Object.entries(headers).map(([name, value]) => [name, literal(value)]),
+          ) });
+        }
+        for (const [providerId, apiKey] of Object.entries(credentials.providerKeys ?? {})) {
+          await services.modelRuntime.setRuntimeApiKey(providerId, apiKey);
+        }
         await services.modelRuntime.setRuntimeApiKey(credentials.providerId, credentials.apiKey);
       }
       return {

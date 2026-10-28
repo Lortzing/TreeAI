@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createPiRuntime } from "@treeai/runtime-pi";
 import { parseApiConfig, prepareApiConfig, validateApiSelection, type ApiConfig } from "./api-config.ts";
+import { createCredentialStore, resolveCredentialEnvironment, type CredentialStore } from "./credential-store.ts";
 export interface ApiSelection { readonly providerId: string; readonly modelId: string }
 export interface SavedApiSettings { readonly config: ApiConfig; readonly selection: ApiSelection }
 export function parseApiSettings(value: unknown): SavedApiSettings {
@@ -51,13 +52,16 @@ export async function probeApiConnection(settings: SavedApiSettings, env: Readon
   }
 }
 export class ApiSettingsService {
-  private readonly options: { dataDir: string; initial: SavedApiSettings | null; env: Readonly<Record<string, string | undefined>>; probe?: typeof probeApiConnection };
+  private readonly options: { dataDir: string; initial: SavedApiSettings | null; env: Readonly<Record<string, string | undefined>>; probe?: typeof probeApiConnection; credentialStore?: CredentialStore };
   private current: SavedApiSettings | null;
   private readonly initialRevision: string;
   private probing = false;
   private configurationWarning = false;
-  constructor(options: { dataDir: string; initial: SavedApiSettings | null; env: Readonly<Record<string, string | undefined>>; probe?: typeof probeApiConnection }) {
+  private readonly store: CredentialStore;
+  private storedNames = new Set<string>();
+  constructor(options: { dataDir: string; initial: SavedApiSettings | null; env: Readonly<Record<string, string | undefined>>; probe?: typeof probeApiConnection; credentialStore?: CredentialStore }) {
     this.options = options;
+    this.store = options.credentialStore ?? createCredentialStore(options.dataDir);
     try { this.current = readSavedApiSettings(options.dataDir) ?? options.initial; }
     catch { this.current = options.initial; this.configurationWarning = true; }
     this.initialRevision = revision(options.initial);
@@ -70,8 +74,31 @@ export class ApiSettingsService {
     }
     return { enabled: true, configured: this.current !== null, configurationWarning: this.configurationWarning,
       config: this.current?.config ?? { providers: {} }, selection: this.current?.selection ?? { providerId: "", modelId: "" },
+      credentialStore: { supported: this.store.supported, backend: this.store.backend },
       revision: revision(this.current), restartRequired: revision(this.current) !== this.initialRevision,
-      environment: [...names].map((name) => ({ name, present: !!this.options.env[name]?.trim() })) };
+      environment: [...names].map((name) => ({ name, present: !!this.options.env[name]?.trim() || this.storedNames.has(name), stored: this.storedNames.has(name), source: this.options.env[name]?.trim() ? "environment" : this.storedNames.has(name) ? "keychain" : "missing" })) };
+  }
+  async refreshCredentials() {
+    this.storedNames.clear();
+    if (!this.store.supported || this.current === null) return;
+    for (const provider of Object.values(this.current.config.providers)) {
+      try {
+        const present = this.store.has ? await this.store.has(provider.apiKeyEnv) : await this.store.get(provider.apiKeyEnv) !== null;
+        if (present) this.storedNames.add(provider.apiKeyEnv);
+      }
+      catch { /* A locked keychain remains unavailable; API use fails honestly. */ }
+    }
+  }
+  async credential(value: unknown, remove = false) {
+    const settings = parseApiSettings(value);
+    const name = settings.config.providers[settings.selection.providerId]!.apiKeyEnv;
+    if (remove) { await this.store.remove(name); this.storedNames.delete(name); }
+    else {
+      const secret = (value as Record<string, unknown>).value;
+      if (typeof secret !== "string") throw new Error("invalid-credential");
+      await this.store.set(name, secret); this.storedNames.add(name);
+    }
+    return { ok: true, stored: !remove, environmentOverride: !!this.options.env[name]?.trim(), backend: this.store.backend };
   }
   save(value: unknown) {
     const input = value as Record<string, unknown> | null;
@@ -91,7 +118,12 @@ export class ApiSettingsService {
     if (this.probing) throw new Error("probe-busy");
     const next = parseApiSettings(value);
     this.probing = true;
-    try { return await (this.options.probe ?? probeApiConnection)(next, this.options.env); }
+    try {
+      const names = Object.values(next.config.providers).flatMap(p => [p.apiKeyEnv, ...Object.values(p.headerEnv)]);
+      const env = !this.store.supported || names.every(name => this.options.env[name]?.trim()) ? this.options.env
+        : await resolveCredentialEnvironment(next.config, this.options.env, this.store);
+      return await (this.options.probe ?? probeApiConnection)(next, env);
+    }
     finally { this.probing = false; }
   }
 }

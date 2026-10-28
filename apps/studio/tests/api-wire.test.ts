@@ -2,7 +2,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { parseApiConfig, API_FORMATS } from "../src/api-config.ts";
+import { parseApiConfig, prepareApiConfig, API_FORMATS } from "../src/api-config.ts";
+import { createPiRuntime } from "@treeai/runtime-pi";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { probeApiConnection } from "../src/api-settings.ts";
 function anthropic() {
   const message = { id: "msg_fixture", type: "message", role: "assistant", model: "fixture", content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 4, output_tokens: 0 } };
@@ -42,3 +46,28 @@ for (const api of API_FORMATS) {
     }
   });
 }
+
+
+test("stored multi-provider keys and custom headers reach the real SDK only in memory", async () => {
+  const seen: { auth: string | undefined; header: string | undefined }[] = [];
+  const server = createServer(async (req,res) => {
+    for await (const _chunk of req) { /* drain fixture input */ }
+    seen.push({auth: req.headers['x-api-key'] as string | undefined, header: req.headers['x-memory-header'] as string | undefined});
+    res.writeHead(200, {'Content-Type':'text/event-stream'}); res.end(anthropic());
+  });
+  await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const dir=mkdtempSync(join(tmpdir(),'treeai-memory-wire-'));
+  const provider=(name:string)=>({api:'anthropic-messages',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}`,apiKeyEnv:name,headerEnv:{'X-Memory-Header':'TREEAI_MEMORY_HEADER'},models:[{id:'fixture'}]});
+  const config=parseApiConfig({providers:{first:provider('TREEAI_MEMORY_FIRST'),second:provider('TREEAI_MEMORY_SECOND')}});
+  const prepared=prepareApiConfig(config,{dataDir:dir,providerId:'first',modelId:'fixture',terminologyProviderId:'second',terminologyModelId:'fixture'},
+    {TREEAI_MEMORY_FIRST:'first-memory-canary',TREEAI_MEMORY_SECOND:'second-memory-canary',TREEAI_MEMORY_HEADER:'!literal-$TREEAI_MUST_NOT_EXPAND'});
+  const runtime=createPiRuntime({agentDir:prepared.agentDir,defaultCwd:dir,credentials:prepared.credentials});
+  try{
+    assert.equal(process.env.TREEAI_MEMORY_SECOND,undefined);
+    await runtime.createSession({model:{providerId:'second',modelId:'fixture'},cwd:dir,sessionDir:join(dir,'sessions')});
+    const answer=await runtime.prompt({text:'Reply OK'});assert.equal(answer.message,'OK');
+    assert.deepEqual(seen,[{auth:'second-memory-canary',header:'!literal-$TREEAI_MUST_NOT_EXPAND'}]);
+    const disk=readFileSync(join(prepared.agentDir,'models.json'),'utf8');
+    for(const value of ['first-memory-canary','second-memory-canary','!literal-$TREEAI_MUST_NOT_EXPAND'])assert.ok(!disk.includes(value));
+  }finally{await runtime.dispose();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));rmSync(dir,{recursive:true,force:true});}
+});

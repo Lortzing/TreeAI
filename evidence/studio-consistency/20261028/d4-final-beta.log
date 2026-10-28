@@ -1,0 +1,12 @@
+run-d4-browser 0.6.0 — mode selftest
+data: <tmp>/treeai-d4-data-Pl7O19
+artifacts: /private/tmp/treeai-resume-final-beta
+  [PASS] chrome-boot — /Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:57238
+  [PASS] studio-boot — studio healthy on http://127.0.0.1:57257/
+  [PASS] page-load — studio shell rendered in headless Chromium
+  [PASS] console-clean — no console/log errors on the studio shell
+scoped to: d4-beta-usability (boot checks always run)
+  [PASS] d4-beta-usability — README-documented start path booted a clean temp data dir (argv/entry/flags reconciled with README + package.json; honest empty state: no trees/materials, create-tree flow used for real); wide 1600px + narrow 390px (mobile) viewports: sidebar/reader/branch panel usable, no horizontal overflow, capture bar reachable, key controls hit-testable; keyboard: Tab traversal reached new-tree/import/search/reader-text in 30 steps with visible focus outlines, Enter+Space activations, Escape layering with focus restoration, reader arrows scroll; touch: 5 taps + 1 swipes + 1 in-gesture drag-select (drawer open, reader open, swipe scrolled 405px, pdf text-layer selection armed via selectionchange with zero mouse events, copy tap verified clipboard read-back byte-equal); reduced-motion: matchMedia honored, View-source jump + stick-to-bottom landed immediately (no in-transit frames); draft round trip: draft preserved + focus restored to #panel-view-source + panel scroll kept + reader reopened at the saved block (in-session); echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior — automated part only, the Mac sign-off and 3–5 person trials remain the owner's D4-G3 human sequence
+
+run-d4-browser: 5 PASS / 0 FAIL / 0 BLOCKED / 0 NOT_RUN (mode selftest)
+note: selftest uses the offline echo driver — these results are never real-Pi evidence

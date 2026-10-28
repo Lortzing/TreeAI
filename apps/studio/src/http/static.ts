@@ -67,7 +67,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
-const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css"]);
+const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css","studio-system.css"]);
 const PDFJS_ROOT = new URL("../../../../node_modules/pdfjs-dist/", import.meta.url);
 
 export function createStaticResponder(staticDir: string) {

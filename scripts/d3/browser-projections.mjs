@@ -162,7 +162,7 @@ export function createBrowserProjections(deps) {
         const composerId = containerSelector === "#panel-conversation" ? "panel-prompt-input" : "prompt-input";
         const settled = await deps.evalJs(
           `(() => { const input = document.getElementById(${JSON.stringify(composerId)}); const status = document.getElementById('run-status'); ` +
-            "return input !== null && !input.disabled && status !== null && status.textContent === 'idle'; })()",
+            "return input !== null && !input.disabled && status !== null && status.classList.contains('idle'); })()",
         );
         if (settled) {
           const summary = await deps.evalJs(pageSummaryExpression());
@@ -363,7 +363,7 @@ export function createBrowserProjections(deps) {
             panelText: panelVisible ? panel.textContent : null,
             assistantCount: turns.length,
             lastAnswer: turns.length === 0 ? null : (turns[turns.length - 1].dataset.turnText ?? turns[turns.length - 1].textContent),
-            settled: input !== null && !input.disabled && status !== null && status.textContent === 'idle',
+            settled: input !== null && !input.disabled && status !== null && status.classList.contains('idle'),
           };
         })()`,
       );

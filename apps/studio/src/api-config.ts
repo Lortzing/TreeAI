@@ -1,3 +1,4 @@
+import type { PiRuntimeCredentials } from "@treeai/runtime-pi";
 /** API-only connection profiles. No SDK imports, login state or credential files. */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -101,7 +102,7 @@ export function prepareApiConfig(config: ApiConfig, options: {
   readonly terminologyModelId: string;
 }, env: Readonly<Record<string, string | undefined>>): {
   readonly agentDir: string;
-  readonly credentials: { readonly providerId: string; readonly apiKey: string };
+  readonly credentials: PiRuntimeCredentials;
   readonly secrets: readonly string[];
 } {
   for (const [providerId, modelId] of [[options.providerId, options.modelId], [options.terminologyProviderId, options.terminologyModelId]]) {
@@ -109,12 +110,16 @@ export function prepareApiConfig(config: ApiConfig, options: {
   }
   const providers: Record<string, unknown> = Object.create(null);
   const secrets: string[] = [];
+  const providerKeys: Record<string, string> = Object.create(null);
+  const providerHeaders: Record<string, Record<string, string>> = Object.create(null);
   for (const [id, p] of Object.entries(config.providers)) {
     for (const name of [p.apiKeyEnv, ...Object.values(p.headerEnv)]) {
       const value = env[name];
       if (typeof value !== "string" || value.trim() === "" || /[\r\n\x00]/.test(value)) throw new Error(`API configuration requires environment variable ${name}`);
       secrets.push(value);
     }
+    providerKeys[id] = env[p.apiKeyEnv]!;
+    providerHeaders[id] = Object.fromEntries(Object.entries(p.headerEnv).map(([header, name]) => [header, env[name]!]));
     providers[id] = { api: p.api, baseUrl: p.baseUrl, apiKey: '${' + p.apiKeyEnv + '}',
       headers: Object.fromEntries(Object.entries(p.headerEnv).map(([header, name]) => [header, '${' + name + '}'])), models: p.models };
   }
@@ -122,5 +127,5 @@ export function prepareApiConfig(config: ApiConfig, options: {
   mkdirSync(agentDir, { recursive: true });
   writeFileSync(join(agentDir, "models.json"), JSON.stringify({ providers }, null, 2) + "\n", { mode: 0o600 });
   writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ packages: [], extensions: [], skills: [], prompts: [] }) + "\n", { mode: 0o600 });
-  return { agentDir, credentials: { providerId: options.providerId, apiKey: env[config.providers[options.providerId]!.apiKeyEnv]! }, secrets };
+  return { agentDir, credentials: { providerId: options.providerId, apiKey: env[config.providers[options.providerId]!.apiKeyEnv]!, providerKeys, providerHeaders }, secrets };
 }

@@ -17,7 +17,7 @@ class Element extends EventTarget {
 const tick=async()=>{await new Promise(resolve=>setImmediate(resolve));};
 const snapshot=()=>({enabled:true,configured:true,revision:'first',restartRequired:false,config:{providers:{local:{api:'anthropic-messages',baseUrl:'http://127.0.0.1:15722',apiKeyEnv:'LOCAL_API_KEY',models:[{id:'one',contextWindow:10000,maxTokens:1000},{id:'two',contextWindow:20000,maxTokens:2000}]}}},selection:{providerId:'local',modelId:'one'},environment:[{name:'LOCAL_API_KEY',present:true}]});
 function setup(fetch:(path:string,options?:{body?:string;signal?:AbortSignal;headers?:Record<string,string>;method?:string})=>Promise<unknown>){
- const ids=['api-settings-open','api-settings-dialog','api-settings-form','api-settings-close','api-provider','api-model','api-format','api-base-url','api-key-env','api-context-window','api-max-tokens','api-provider-add','api-model-add','api-connection-test','api-settings-status','api-config-json','api-json-apply','api-env-status'];
+ const ids=['api-settings-open','api-settings-dialog','api-settings-form','api-settings-close','api-provider','api-model','api-format','api-base-url','api-key-env','api-context-window','api-max-tokens','api-provider-add','api-model-add','api-connection-test','api-settings-status','api-config-json','api-json-apply','api-env-status','api-model-id','api-key-value','api-keychain-controls','api-keychain-status','api-key-save','api-key-remove'];
  const nodes=new Map(ids.map(id=>[id,new Element()]));nodes.get('api-settings-form')!.elements=[...nodes.values()];
  const defaultView=Object.assign(new EventTarget(),{AbortController});
  const document={getElementById:(id:string)=>nodes.get(id)??null,createElement:()=>new Element(),defaultView};
@@ -64,4 +64,33 @@ test('API settings UI aborts an in-flight test on close and removes listeners on
  ui.el('api-settings-open').click();await tick();ui.el('api-connection-test').click();assert.equal(ui.el('api-connection-test').disabled,true);
  ui.el('api-settings-close').click();await tick();assert.equal(aborted,true);assert.equal(ui.el('api-connection-test').disabled,false);
  ui.dispose();ui.el('api-settings-open').click();await tick();assert.equal(requests,2);
+});
+
+test('API key input is sent only to the guarded credential endpoint and cleared before the request completes',async()=>{
+ const requests:{path:string;body:Record<string,unknown>|null}[]=[];
+ const ui=setup(async(path,options)=>{
+  const body=options?.body?JSON.parse(options.body):null;requests.push({path,body});
+  if(path.endsWith('/credentials')){assert.equal(options!.headers!['X-TreeAI-Settings'],'1');return {ok:true,json:async()=>({ok:true,stored:true})};}
+  return {ok:true,json:async()=>({...snapshot(),credentialStore:{supported:true,backend:'macos-keychain'},environment:[{name:'LOCAL_API_KEY',present:false,stored:false}]})};
+ });
+ try{
+  ui.el('api-settings-open').click();await tick();
+  ui.el('api-key-value').value='synthetic-ui-credential';ui.el('api-key-save').click();
+  assert.equal(ui.el('api-key-value').value,'');await tick();
+  assert.equal(requests[1]!.path,'/api/settings/api/credentials');assert.equal(requests[1]!.body!.value,'synthetic-ui-credential');
+  assert.ok(!ui.el('api-config-json').value.includes('synthetic-ui-credential'));assert.ok(!ui.el('api-settings-status').textContent.includes('synthetic-ui-credential'));
+  ui.el('api-key-value').value='discard-on-close';ui.el('api-settings-close').click();assert.equal(ui.el('api-key-value').value,'');
+ }finally{ui.dispose();}
+});
+test('model ID can be edited directly and the selected identity is saved without editing JSON',async()=>{
+ let saved:ReturnType<typeof snapshot>|undefined;
+ const ui=setup(async(_path,options)=>{
+  if(options?.method==='PUT')saved=JSON.parse(options.body!);
+  return {ok:true,json:async()=>saved??snapshot()};
+ });
+ try{
+  ui.el('api-settings-open').click();await tick();ui.el('api-model-id').value='custom-model';
+  ui.el('api-settings-form').dispatchEvent(new Event('submit',{cancelable:true}));await tick();
+  assert.equal(saved!.selection.modelId,'custom-model');assert.equal(saved!.config.providers.local.models[0]!.id,'custom-model');
+ }finally{ui.dispose();}
 });
