@@ -1,0 +1,66 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T094818-41913",
+  "mode": "selftest",
+  "verdict": "HAS_FAIL",
+  "exitCode": 2,
+  "scoped": [
+    "d4-nav-browser",
+    "terminology-path"
+  ],
+  "counts": {
+    "pass": 5,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "35ae4a012fd6beea0b66b9bb773dbe858dfedc45",
+  "gitDirty": true,
+  "generatedAt": "2026-10-28T09:49:27.471Z",
+  "git": {
+    "head": "35ae4a012fd6beea0b66b9bb773dbe858dfedc45",
+    "dirty": true
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:54731",
+      "durationMs": 1222
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:54751/",
+      "durationMs": 1558
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 675
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-nav-browser",
+      "status": "FAIL",
+      "error": {
+        "message": "click target never settled at its coordinates (covered or moving): #mat-close"
+      },
+      "durationMs": 45055
+    },
+    {
+      "id": "terminology-path",
+      "status": "PASS",
+      "detail": "reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (echo — NOT real-Pi evidence), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested",
+      "durationMs": 19888
+    }
+  ],
+  "pageErrors": []
+}

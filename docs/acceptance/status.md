@@ -1,5 +1,7 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-28 Studio experience redesign:** Final code `8a3890c9a938fb44360c6716742a2501c09d07d0` simplifies navigation with warm surfaces and a separate settings page; fixes hidden navigation, source-overlay and selection/focus regressions. Final typechecks and 904 tests pass. Complete working-candidate Chrome Echo D4 passes 16/16; final icon adjustment has scoped usability 5/5 plus direct browser verification. [Exact source/run identities, retained failures and exclusions](../../evidence/studio-experience/20261028/README.md); [next-stage priorities](../development/studio-experience-next.md). Local commits only. Participant trials remain owner-deferred; prior human/physical/quality gates remain open.
+
 **2026-10-28 Studio consistency / Keychain:** Local code commit
 `550eda4c253f8662b7fe3079bd33688c9857cf04` unifies the Studio controls/settings
 and adds macOS Keychain credentials. Typechecks and 901 tests pass; D3 Echo has

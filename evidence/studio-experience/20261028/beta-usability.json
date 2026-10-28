@@ -1,0 +1,922 @@
+{
+  "check": "d4-beta-usability",
+  "mode": "selftest",
+  "modeNote": "echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin 25.6.0 arm64",
+    "cpu": "10× Apple M4",
+    "totalMemoryGiB": 16,
+    "loadavgAtStart": [
+      4.91,
+      6.81,
+      8.09
+    ],
+    "honestyNote": "automated part of charter B7 only (clean-boot/wide-narrow/keyboard/touch/reduced-motion/focus-scroll-draft); the Mac sign-off and the 3–5 person trials remain the owner's D4-G3 human sequence — this probe passing is NOT B7 complete",
+    "loadavgAtEnd": [
+      11.32,
+      8.04,
+      8.48
+    ]
+  },
+  "limits": {
+    "wideViewportMinPx": 1440,
+    "narrowViewport": "390×844 (mobile)",
+    "overflowXTolerancePx": 1,
+    "immediateArrivalTolerancePx": 2
+  },
+  "betaUsability": {
+    "cleanBoot": {
+      "readmeStartCommand": "npm run start --workspace @treeai/studio",
+      "readmeOptionsLine": "npm run start --workspace @treeai/studio -- --data \"/absolute/path/treeai-data\" --port 8787",
+      "packageStartScript": "node src/index.ts",
+      "actualArgv": [
+        "/Users/tal/.codex/worktrees/7939/TreeAI/apps/studio/src/index.ts",
+        "--port",
+        "60459",
+        "--data",
+        "/var/folders/h4/5vf7cdk17gn80ym2tdpg7tvr0000gn/T/treeai-d4-beta-browser-s2VD8X"
+      ],
+      "entryConsistentWithReadme": true,
+      "flagsConsistentWithReadme": true,
+      "emptyStateHonest": {
+        "emptyStateVisible": true,
+        "treeViewHidden": true,
+        "forestTreeButtons": 0,
+        "navForestTreeButtons": 0,
+        "materialsSectionHidden": true,
+        "newTreeButton": true,
+        "sourceDrawerToggleHidden": true
+      },
+      "serverTreeCountOnBoot": 0,
+      "treeCreatedViaEmptyState": "tree_89df7ccd-e1a3-49cb-8622-c342290eec77"
+    },
+    "wideNarrow": {
+      "wide": {
+        "widthPx": 1600,
+        "heightPx": 900,
+        "overflowX": {
+          "documentElement": 0,
+          "body": 0,
+          "innerWidth": 1600
+        },
+        "hits": {
+          "newTree": true,
+          "materialImport": true,
+          "searchInput": true,
+          "treeRow": true,
+          "branchTab": true
+        },
+        "captureBarHits": {
+          "copy": true,
+          "branch": true
+        },
+        "readerUsable": true,
+        "panelUsable": true
+      },
+      "narrow": {
+        "widthPx": 390,
+        "heightPx": 844,
+        "mobileViewport": true,
+        "drawerOpensViaToggle": true,
+        "overflowX": {
+          "documentElement": 0,
+          "body": 0,
+          "innerWidth": 390
+        },
+        "hits": {
+          "newTree": true,
+          "materialImport": true,
+          "searchInput": true,
+          "treeRow": true,
+          "branchTab": true
+        },
+        "captureBarHits": {
+          "copy": true
+        },
+        "readerUsable": true,
+        "panelUsable": true
+      }
+    },
+    "keyboard": {
+      "tabSteps": 32,
+      "reached": {
+        "newTree": true,
+        "materialImport": true,
+        "searchInput": true,
+        "readerContent": true
+      },
+      "focusStyleVisible": {
+        "readerBlocks": {
+          "selector": "#mat-blocks",
+          "outlineStyle": "solid",
+          "outlineWidth": "2px",
+          "outlineColor": "rgb(73, 102, 83)",
+          "focusVisible": true
+        },
+        "searchInput": {
+          "selector": "#search-input",
+          "outlineStyle": "solid",
+          "outlineWidth": "2px",
+          "outlineColor": "rgb(233, 238, 230)",
+          "focusVisible": true
+        }
+      },
+      "arrowScroll": {
+        "before": 790,
+        "afterDown": 1016,
+        "afterUp": 923
+      },
+      "enterActivation": "reader close button (Enter) closed the reader",
+      "spaceActivation": "search-scope toggle (Space) flipped aria-pressed false → true → false",
+      "escapeLayers": [
+        {
+          "layer": "source drawer",
+          "focusRestoredTo": "#source-drawer-toggle",
+          "active": {
+            "id": "source-drawer-toggle",
+            "tag": "BUTTON",
+            "cls": "drawer-toggle icon-button"
+          },
+          "ok": true
+        },
+        {
+          "layer": "material reader",
+          "focusRestoredTo": "the material-list button that opened the reader",
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": ""
+          },
+          "ok": true
+        },
+        {
+          "layer": "branch panel",
+          "focusRestoredTo": "the branch tab that opened the panel",
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": ""
+          },
+          "ok": true
+        }
+      ],
+      "noFocusTrap": true,
+      "focusRetainedThroughTraversal": true,
+      "focusRetainedAfterArrowScroll": true,
+      "traversalSequence": [
+        {
+          "step": 1,
+          "active": {
+            "id": null,
+            "tag": "SUMMARY",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 2,
+          "active": {
+            "id": "source-drawer-toggle",
+            "tag": "BUTTON",
+            "cls": "drawer-toggle icon-button",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 3,
+          "active": {
+            "id": "new-tree",
+            "tag": "BUTTON",
+            "cls": "primary",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 4,
+          "active": {
+            "id": "search-shortcut",
+            "tag": "SUMMARY",
+            "cls": "search-shortcut",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 5,
+          "active": {
+            "id": "search-input",
+            "tag": "INPUT",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 6,
+          "active": {
+            "id": "search-scope-tree",
+            "tag": "BUTTON",
+            "cls": "search-scope-toggle active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 7,
+          "active": {
+            "id": "search-scope-all",
+            "tag": "BUTTON",
+            "cls": "search-scope-toggle",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 8,
+          "active": {
+            "id": "search-kind-material",
+            "tag": "BUTTON",
+            "cls": "search-kind-toggle active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 9,
+          "active": {
+            "id": "search-kind-annotation",
+            "tag": "BUTTON",
+            "cls": "search-kind-toggle active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 10,
+          "active": {
+            "id": "search-kind-return",
+            "tag": "BUTTON",
+            "cls": "search-kind-toggle active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 11,
+          "active": {
+            "id": "search-kind-turn",
+            "tag": "BUTTON",
+            "cls": "search-kind-toggle active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 12,
+          "active": {
+            "id": "search-run",
+            "tag": "BUTTON",
+            "cls": "primary",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 13,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 14,
+          "active": {
+            "id": "api-settings-open",
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 15,
+          "active": {
+            "id": "workspace-library-toggle",
+            "tag": "SUMMARY",
+            "cls": "icon-button",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 16,
+          "active": {
+            "id": "workspace-library-close",
+            "tag": "BUTTON",
+            "cls": "icon-button",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 17,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 18,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "panel-open",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 19,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 20,
+          "active": {
+            "id": null,
+            "tag": "SUMMARY",
+            "cls": "sidebar-heading",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 21,
+          "active": {
+            "id": "material-import",
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 22,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 23,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 24,
+          "active": {
+            "id": null,
+            "tag": "SUMMARY",
+            "cls": "sidebar-heading",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 25,
+          "active": {
+            "id": "mode-chat",
+            "tag": "BUTTON",
+            "cls": "workspace-mode active",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 26,
+          "active": {
+            "id": "mode-map",
+            "tag": "BUTTON",
+            "cls": "workspace-mode",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 27,
+          "active": {
+            "id": "round-previous",
+            "tag": "BUTTON",
+            "cls": "",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 28,
+          "active": {
+            "id": "reading-trunk",
+            "tag": "BUTTON",
+            "cls": "reading-current",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 29,
+          "active": {
+            "id": "reading-materials",
+            "tag": "BUTTON",
+            "cls": "icon-button",
+            "insideReader": false
+          }
+        },
+        {
+          "step": 30,
+          "active": {
+            "id": "mat-close",
+            "tag": "BUTTON",
+            "cls": "mat-close",
+            "insideReader": true
+          }
+        },
+        {
+          "step": 31,
+          "active": {
+            "id": null,
+            "tag": "BUTTON",
+            "cls": "mat-version-chip active",
+            "insideReader": true
+          }
+        },
+        {
+          "step": 32,
+          "active": {
+            "id": "mat-blocks",
+            "tag": "DIV",
+            "cls": "mat-blocks",
+            "insideReader": true
+          }
+        }
+      ]
+    },
+    "touch": {
+      "taps": 7,
+      "swipes": 1,
+      "dragSelects": 1,
+      "tapOpenedReader": true,
+      "swipeScrolledPx": 405,
+      "longPressProbe": {
+        "target": {
+          "x": 161,
+          "y": 419
+        },
+        "result": {
+          "selectionChangeEvents": 1,
+          "selectionText": ""
+        },
+        "synthesizedPersistedSelection": false
+      },
+      "selectionArmedViaTouch": true,
+      "armedPayload": "material material_d77b6edd-cc3e-45e0-b3ef-41cbeb302eb6 · version matver_3577a8a5-98fb-4622-9731-00f30dc38b39 · block page-2 · page 2 · UTF-16 [824, 848) · 24 units",
+      "armedDuringGesture": {
+        "zeroMouseEvents": true,
+        "path": "selectionchange arming (the app's touch path)"
+      },
+      "toolbarButtonTapped": true,
+      "copyVerification": "clipboard read-back byte-equal",
+      "copyLabel": "Copied ✓"
+    },
+    "reducedMotion": {
+      "controlStickToBottom": {
+        "atMutation": {
+          "scrollTop": 6133,
+          "bottom": 6245,
+          "t": 12960.5
+        },
+        "frames": [
+          {
+            "t": 12806.5,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12823,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12839.7,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12856.1,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12873,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12889.6,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12906.4,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12922.7,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12939.6,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12956.4,
+            "top": 6133,
+            "bottom": 6133
+          },
+          {
+            "t": 12973.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 12989.5,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13006.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13022.9,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13039.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13056.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13073.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13089.7,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13106.5,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13122.9,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13139.8,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13156.5,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13173.2,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13189.7,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13206.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13223.2,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13239.9,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13256.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13273.2,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13289.8,
+            "top": 6163,
+            "bottom": 6163
+          }
+        ],
+        "settledTop": 6163,
+        "settledBottom": 6163
+      },
+      "matched": true,
+      "stickToBottomUnderReduce": {
+        "atMutation": {
+          "scrollTop": 6274,
+          "bottom": 6274,
+          "t": 14030.6
+        },
+        "frames": [
+          {
+            "t": 13859.8,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13873.2,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13889.8,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13906.5,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13923.1,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13939.9,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13956.5,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13973.1,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 13989.9,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14006.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14023.1,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14041.1,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14056.7,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14073,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14089.7,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14106.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14123.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14139.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14156.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14173,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14189.7,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14206.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14223,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14240.8,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14256.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14273,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14289.6,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14306.3,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14323,
+            "top": 6163,
+            "bottom": 6163
+          },
+          {
+            "t": 14339.6,
+            "top": 6163,
+            "bottom": 6163
+          }
+        ],
+        "settledTop": 6163,
+        "settledBottom": 6163,
+        "transitFrameCount": 0,
+        "maxConsecutiveTransitFrames": 0
+      },
+      "immediateArrival": true,
+      "viewSourceJump": {
+        "anchoredBlock": "blk-8",
+        "arrival": {
+          "t": 14684.2,
+          "scrollTop": 790
+        },
+        "finalTop": 790,
+        "blockTop": 790,
+        "diffPx": 0,
+        "frames": [
+          {
+            "t": 14673.2,
+            "top": 0,
+            "blockPresent": false
+          },
+          {
+            "t": 14690.6,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14706.5,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14723.1,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14739.9,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14756.3,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14773,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14789.6,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14806.3,
+            "top": 790,
+            "blockPresent": true
+          },
+          {
+            "t": 14822.9,
+            "top": 790,
+            "blockPresent": true
+          }
+        ]
+      },
+      "emulationResetVerified": true
+    },
+    "focusScrollDraft": {
+      "draftPreserved": true,
+      "draftMarker": "TreeAI-B7-探针-草稿-d6e4",
+      "focusRestoredTo": "#panel-view-source",
+      "panelScrollPreserved": {
+        "before": 3081,
+        "after": 3081
+      },
+      "readerScrollPreserved": {
+        "topBlockAtClose": "blk-27",
+        "scrollTopAtClose": 2830,
+        "savedPosition": {
+          "treeId": "tree_89df7ccd-e1a3-49cb-8622-c342290eec77",
+          "materialId": "material_a065e4d8-e289-4ec7-8061-93e09d263a03",
+          "versionId": "matver_6ebe9758-5409-4305-9130-5ce777616e59",
+          "blockId": "blk-27",
+          "focusStart": null,
+          "updatedAt": "2026-10-28T09:54:19.319Z"
+        },
+        "restoredToBlock": "blk-27",
+        "restoredDiffPx": 0,
+        "note": "in-session round trip via the app's own reading-position save/restore path (the cross-restart scenario belongs to d4-restart-continue)"
+      }
+    }
+  },
+  "scenarioSetup": {
+    "treeId": "tree_89df7ccd-e1a3-49cb-8622-c342290eec77",
+    "branchId": "branch_4f2dc611-8ac6-4d6b-86d2-55bf19fd5fcf",
+    "firstQuestion": "TreeAI-B7-探针-首问-3f8a",
+    "followUps": [
+      "TreeAI-B7-探针-追问一-c41d"
+    ],
+    "modeNote": "echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior",
+    "materialBranchOrigin": {
+      "materialId": "material_a065e4d8-e289-4ec7-8061-93e09d263a03",
+      "blockId": "blk-8",
+      "range": {
+        "blockId": "blk-8",
+        "start": 659,
+        "end": 683,
+        "excerpt": "用于懒删除：标记删除而不真正搬动数据，让真正的搬"
+      }
+    }
+  },
+  "pageErrorsExcluded": 0,
+  "honestyNote": "automated part of charter B7 (clean boot per README, wide/narrow, keyboard, touch, reduced-motion, focus/scroll/draft round trip) — the Mac sign-off and the 3–5 person trials remain the owner's D4-G3 human sequence; this PASS is NOT B7 complete. Touch note: raw long-press/drag in headless Chrome 153 does not synthesize a persistent text selection (probed live and recorded); the drag-select scenario places the selection via the platform Selection API during an in-progress touch gesture — the app's own touch arming path (selectionchange, zero mouse events) is what the assertion exercises."
+}
