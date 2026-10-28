@@ -1,0 +1,38 @@
+run-d3-browser v1.3.2 — mode selftest
+  workspace HEAD: 550eda4c253f8662b7fe3079bd33688c9857cf04
+  data dir: <dir> (temp; pass --data/--keep-data to keep)
+  artifacts: <dir>
+  [PASS] chrome-boot — /Applications/Google Chrome.app/Contents/MacOS/Google Chrome — Chromium Chrome/153.0.8010.37 (CDP on 127.0.0.1:56777)
+  [PASS] studio-boot — studio on :56806 (driver echo), /api/health ok
+  [PASS] page-boot — rendered; empty state visible; zero trees; initial focus on 新建 (new-tree)
+  [PASS] tree-create — tree created via real click; trunk view open; branch tabs: 思考主线
+  [PASS] trunk-main-line — two trunk prompts (t2 via ⌘+Enter keyboard path); 4 turns rendered; API state agrees (4 turns server-side)
+  [PASS] selection-anchoring — real mouse drag produced a native selection (「ine, turn one. The trunk top」); affordance switched to ⑃ 从选文展开支线
+  [PASS] branch-a-create — branch A created from the real selection; panel open with anchor excerpt; title "ine, turn one. The trunk top" identifies the API-verified branch
+  [PASS] branch-a-followups — branch A two follow-up rounds (a2 via Ctrl+Enter); 4 turns rendered in panel
+  [PASS] switch-navigation — panel→trunk→panel navigation via real clicks; trunk untouched by branch turns; branch A content intact
+  [PASS] branch-b-create — branch B from a different anchor on the second trunk answer (「urn one. The trunk topic is ap…」); panel identity matches the API origin
+  [PASS] branch-b-followups — branch B two follow-up rounds; 6 turns rendered in panel
+  [PASS] no-context-bleed — rendered branch panels carry no cross-branch codewords (cedar/birch probe on both sides)
+  [PASS] return-flow — return submitted from branch A panel (draft prefilled → select-all overwrite); anchored card on trunk in confirmed/pending state; drawer shows "not yet delivered"; server agrees (1 return, deliveredRunId null)
+  [PASS] return-delivery — return adopted by the next trunk run; card badge → delivered; deliveredRunId === the t3 run (server-verified)
+  [PASS] model-error-convergence — /fail converged as a failed run (banner role=alert text upstream, persistent failure panel, composer re-enabled); follow-up prompt succeeded; server shows the failed run (upstream)
+  [PASS] server-restart-recovery — server SIGKILL → page showed an honest error banner on the next prompt; same-data restart + reload kept the trunk turns and all 3 branches; continuation works
+  [PASS] missing-session-degradation — session file(s) moved away → banner + fail-closed send + typed-in input + new-exploration entry (v3 §4.4) + recovery affordance; restored → full recovery on reload (1 file(s))
+  [PASS] new-exploration-flow — v3 §4.4 browser face: session moved away → banner + fail-closed; typed first question → confirm cancel (zero POST, dialog states NOT restored) → confirm accept → POST /new-exploration → banner clears, composer unlocks, honest marker turn renders (page + server), trunk +2 turns, branch set unchanged
+  [NOT_RUN] response-loss-midstream — the echo driver's ~1ms turn delay leaves no deterministic in-flight window for a mid-stream page reload; the server-down-between-prompts half is covered by server-restart-recovery in both modes
+  [PASS] a11y-semantics — error banner role=alert + Tab-reachable; drawer aria-expanded both ways + Esc closes; panel anchor context programmatically focusable
+  [PASS] narrow-window-layout — 480px viewport: toggle visible, #run-detail hidden, sidebar open/close aria ok; drawer full-width 480px (drawer-up-in) in narrow vs right-side 380px in wide
+  [PASS] reduced-motion — prefers-reduced-motion honored in the real browser (computed animation/transition-duration collapse to 0.01ms; reset back to 0s)
+  [PASS] selection-deep-long — late-tail selection on a 14080-char answer anchored at exact offsets 14053–14078 (depth 0.998, excerpt 25 chars ≪ answer — no whole-answer fallback): browser selection === panel excerpt === server origin.selection; reveal slices exact; anchored branch conversable
+  [PASS] selection-deep-duplicate — second occurrence of "alpha" anchored at exact offsets 12935–12940 (first occurrence at 4813 — no first-match substitution): browser selection === panel excerpt === server origin.selection; reveal slices exact; anchored branch conversable
+  [PASS] selection-deep-cross-line — cross-line selection anchored at exact offsets 7870–7973 (spans exactly 1 line break, excerpt keeps the newline intact; multi-rect native selection with endpoints on different rendered lines): browser selection === panel excerpt === server origin.selection; reveal slices exact; anchored branch conversable; main choreography tree unchanged across the phase (3 branches / 13 trunk turns before and after)
+  [NOT_RUN] tool-policy-boot — the browser tool-policy phase needs the real Pi request-time gate booted with --pi-tools read through the studio CLI (--driver pi); the echo driver has no tool executor and --pi-tools is rejected in echo mode — the offline lock-ins are apps/studio/tests/events.test.ts + cli.test.ts and the API-level product-path recording is evidence/d3/real-pi/20260929T124851Z-product-loop-tools.md
+  [NOT_RUN] tool-policy-allow-read — part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] tool-policy-deny-fail-closed — part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] tool-policy-deny-provenance — part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)
+  [NOT_RUN] tool-policy-canary-never-read — part of the browser tool-policy phase — see tool-policy-boot (needs --mode real-pi with --pi-tools read)
+  [PASS] console-clean — zero unexpected page console/Log errors across the whole run
+  artifacts kept: <dir>
+
+run-d3-browser: 25 PASS / 0 FAIL / 0 BLOCKED / 6 NOT_RUN (mode selftest)

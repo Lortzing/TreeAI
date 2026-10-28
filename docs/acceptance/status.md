@@ -1,5 +1,12 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-28 Studio consistency / Keychain:** Local code commit
+`550eda4c253f8662b7fe3079bd33688c9857cf04` unifies the Studio controls/settings
+and adds macOS Keychain credentials. Typechecks and 901 tests pass; D3 Echo has
+25 PASS / 6 NOT_RUN, and recovered-candidate D4 Echo has 16/16 PASS. See the
+[scoped record and exact source identities](../../evidence/studio-consistency/20261028/README.md).
+Actual acceptance remains owner-deferred; prior human/physical/quality gates stay open.
+
 **2026-10-27 API integration update:** Production code
 `39a62bd00956324d47ba37f8967c431c5c1ebfa9`, test-only successor
 `00237b592d3055263d338ad81d0d979247554b67`, [PR #28](https://github.com/Lortzing/TreeAI/pull/28).
