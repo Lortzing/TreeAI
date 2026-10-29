@@ -1,0 +1,169 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261029T103153-67157",
+  "mode": "selftest",
+  "verdict": "HAS_FAIL",
+  "exitCode": 2,
+  "counts": {
+    "pass": 10,
+    "fail": 5,
+    "blocked": 0,
+    "notRun": 1
+  },
+  "gitCommit": "195d2bfceffcfcc4e62b785b4e82104b14bf11ff",
+  "gitDirty": true,
+  "generatedAt": "2026-10-29T10:36:48.254Z",
+  "git": {
+    "head": "195d2bfceffcfcc4e62b785b4e82104b14bf11ff",
+    "dirty": true
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-01",
+      "md-02",
+      "md-03",
+      "md-04",
+      "md-05",
+      "md-06",
+      "md-07",
+      "md-08",
+      "md-09",
+      "md-10",
+      "md-11",
+      "md-12",
+      "md-vpair-v1",
+      "md-vpair-v2",
+      "neg-md-empty",
+      "neg-md-invalid-utf8",
+      "neg-md-nul-byte",
+      "neg-md-whitespace-only",
+      "neg-pdf-corrupt",
+      "neg-pdf-encrypted",
+      "neg-pdf-image-only",
+      "neg-pdf-zero-text",
+      "pdf-01",
+      "pdf-02",
+      "pdf-03",
+      "pdf-04",
+      "pdf-05",
+      "pdf-06",
+      "pdf-07",
+      "pdf-08",
+      "pdf-09",
+      "pdf-10",
+      "pdf-11",
+      "pdf-12"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:62770",
+      "durationMs": 1405
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:62792/",
+      "durationMs": 775
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 637
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-import-material",
+      "status": "PASS",
+      "detail": "3 frozen B1 fixtures imported via the real HTTP API (echo studio) and listed ready in the real sidebar (markdown · v1 · ready); server textUnits match the frozen truth",
+      "durationMs": 1298
+    },
+    {
+      "id": "d4-import-denominator",
+      "status": "PASS",
+      "detail": "24 ready fixtures (12 markdown + 12 text-layer PDF) imported via the real HTTP API into a UI-created tree, each byte-equal to the frozen canonicalText + block map via the paginated blocks API; 11 negatives honestly rejected (2 at the import gate with zero persistence: empty→400, >20MiB→413; 9 terminal failed versions carrying the frozen reason: invalid-utf8/nul-byte/whitespace-only/encrypted/corrupt/no-text-layer×2/pages-exceeded/text-units-exceeded, reads refused 409 material-not-ready); the real sidebar lists all 33 entries with honest ready/failed status",
+      "durationMs": 6308
+    },
+    {
+      "id": "d4-read-and-select",
+      "status": "FAIL",
+      "error": {
+        "message": "timeout (20000ms) waiting for: pdf-01 reader (2 page(s))"
+      },
+      "durationMs": 29436
+    },
+    {
+      "id": "d4-branch-from-material",
+      "status": "FAIL",
+      "error": {
+        "message": "timeout (20000ms) waiting for: pdf-01 reader (2 pages)"
+      },
+      "durationMs": 21072
+    },
+    {
+      "id": "d4-return-from-material",
+      "status": "NOT_RUN",
+      "reason": "材料 Branch 未就位（见 d4-branch-from-material 的结果）——材料 Return 探针级联跳过"
+    },
+    {
+      "id": "d4-restart-continue",
+      "status": "PASS",
+      "detail": "reading position saved at blk-52 via the reader's own save path (close-button flush) → studio SIGTERM → new process on the same data dir → reopened with the restore note and blk-52 loaded (59 blocks after forward paging; persisted row verified on the new process; visual scroll alignment asserted ≤2px: scrollTop 8152 vs block top 8151)",
+      "durationMs": 3399
+    },
+    {
+      "id": "d4-search-recover",
+      "status": "PASS",
+      "detail": "5 类命中（材料·旧版本/批注/Return/对话）+ 无结果诚实 + 当前树/全部树范围，语料 md-01 + md-vpair + tree-2 探针自产跨树语料",
+      "durationMs": 3281
+    },
+    {
+      "id": "d4-export-restore-recover",
+      "status": "FAIL",
+      "error": {
+        "message": "timeout (15000ms) waiting for: branching flow reaches the restore-vs-new choice (existing exploration found)"
+      },
+      "durationMs": 22308
+    },
+    {
+      "id": "d4-nav-browser",
+      "status": "FAIL",
+      "error": {
+        "message": "nav op settle timeout (30000ms): first-open:b9-big — snapshot: {\"statusLine\":\"显示详情rendering 1/1 visible rows (virtualized window) · 5000 nodes · max depth 7\",\"activeBranch\":null,\"pathHeading\":\"\",\"lastStepTitle\":null,\"domRows\":1,\"scrollTop\":0,\"scrollHeight\":130,\"clientHeight\":130}; CDP send timeout (30000ms): Runtime.evaluate"
+      },
+      "durationMs": 34858
+    },
+    {
+      "id": "d4-b6-scale-browser",
+      "status": "FAIL",
+      "error": {
+        "message": "page console/log errors (d4-b6-scale-browser): Failed to load resource: the server responded with a status of 502 (Bad Gateway) (http://127.0.0.1:63705/api/trees/tree_2373bdb7-7c1d-4b61-a39f-034d363ee099/diagnostics) | Failed to load resource: net::ERR_CONNECTION_REFUSED (http://127.0.0.1:63705/api/trees/tree_2373bdb7-7c1d-4b61-a39f-034d363ee099/terminology) | Failed to load resource: net::ERR_CONNECTION_REFUSED (http://127.0.0.1:63705/api/trees/tree_2373bdb7-7c1d-4b61-a39f-034d363ee099/diagnostics)"
+      },
+      "durationMs": 56851
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "PASS",
+      "detail": "README-documented start path booted a clean temp data dir (argv/entry/flags reconciled with README + package.json; honest empty state: no trees/materials, create-tree flow used for real); wide 1600px + narrow 390px (mobile) viewports: sidebar/reader/branch panel usable, no horizontal overflow, capture bar reachable, key controls hit-testable; keyboard: Tab traversal reached new-tree/import/search/reader-text in 33 steps with visible focus outlines, Enter+Space activations, Escape layering with focus restoration, reader arrows scroll; touch: 9 taps + 1 swipes + 1 in-gesture drag-select (drawer open, reader open, swipe scrolled 405px, pdf text-layer selection armed via selectionchange with zero mouse events, copy tap verified clipboard read-back byte-equal); reduced-motion: matchMedia honored, View-source jump + stick-to-bottom landed immediately (no in-transit frames); draft round trip: draft preserved + focus restored to #panel-view-source + panel scroll kept + reader reopened at the saved block (in-session); echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior — automated part only, the Mac sign-off and 3–5 person trials remain the owner's D4-G3 human sequence",
+      "durationMs": 32350
+    },
+    {
+      "id": "terminology-path",
+      "status": "PASS",
+      "detail": "reading modes: 3-way drawer selector switched for real with PUT payloads observed at the transport layer and read back from the server; gate-off honest note present; manual-only AND minimal-hints answers produced ZERO auto dispatch (no tasks/usage/suggestion sets, no strip, zero isolated-executor session files — the production gate-off semantics); term + range entries via real mouse drags armed the toolbar (term/span labels), explain cards landed (echo — NOT real-Pi evidence), annotations saved with live overlays; term promotion via double-click dispatched exactly once, range promotion survived a dropped response honestly (refresh reveals the promotion → resume, exactly 1 first-question user turn, +1 branch); ≥2 follow-ups per branch; Returns landed on the Trunk with the terminology source cards (excerpt + saved time + from-branch); SIGTERM restart → new process → annotations/overlays/histories readable + continuation follow-up landed; existing exploration resumed (branch count unchanged) and the generic branch entry opened a separate exploration with the promotion binding unchanged; frontend invariants: whole-answer copy byte-equal via browser copy command (execCommand) + clipboard read-back byte-equal, armed selection stable across a real renderAll (node identities kept), draft+focus round trip, reading-position no-force-to-bottom on re-render, Esc focus restore, wide 1600 / narrow 390 hit-tested",
+      "durationMs": 80391
+    }
+  ],
+  "pageErrors": []
+}
