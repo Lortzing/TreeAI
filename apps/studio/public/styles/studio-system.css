@@ -376,3 +376,17 @@ body:has(#material-reader:not([hidden])) #reading-trunk { display: inline-flex; 
   .search-popover { top: 68px; max-height: calc(100dvh - 84px); padding: 14px; }
   #abort-run { min-width: 32px; font-size: 11px; padding: 6px; }
 }
+
+/* Secondary pages prioritize saved content; diagnostics are opt-in. */
+.technical-details { margin: 8px 0; color: var(--muted); font-size: 12px; }
+.technical-details > summary { cursor: pointer; padding: 6px 0; }
+.technical-details > :not(summary) { margin: 8px 0; }
+.technical-details:not([open]) > :not(summary) { display: none; }
+#material-reader > .technical-details { margin: 0; padding: 4px 16px; border-bottom: 1px solid var(--line); max-height: 28vh; overflow-y: auto; flex-shrink: 0; }
+#material-reader .mat-reading-status { padding: 8px 16px; color: var(--muted); font-size: 12px; }
+#material-reader > .mat-note-action { align-self: flex-start; margin: 4px 16px; }
+#mat-selection-bar > .technical-details { margin-bottom: 0; }
+#mat-tail .technical-details { display: inline-block; margin: 0 0 0 12px; }
+#source-drawer > .technical-details { border-top: 1px solid var(--line); padding-top: 10px; }
+#source-drawer blockquote { margin: 8px 0; color: var(--ink-soft); }
+#source-drawer .drawer-list p { margin: 4px 0; }

@@ -175,8 +175,8 @@ export async function runBetaTouch(deps) {
         const copyState = await waitFor(
           deps.ctx,
           `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); ` +
-            `return btn !== null && btn.textContent === "Copied ✓" ? { label: btn.textContent } : false; })()`,
-          { label: "touch: tap on Copy shows the Copied ✓ confirmation", timeoutMs: 5000 },
+            `return btn !== null && btn.textContent === "已复制 ✓" ? { label: btn.textContent } : false; })()`,
+          { label: "touch: tap on Copy shows the 已复制 ✓ confirmation", timeoutMs: 5000 },
         );
         const clip = await deps.ctx.evalJs(
           `(async () => { try { return { ok: true, text: await navigator.clipboard.readText() }; } ` +
@@ -191,7 +191,7 @@ export async function runBetaTouch(deps) {
         } else {
           /* 诚实降级：确认态已验证 + 摘录与冻结真值一致（剪贴板读回不可用）。 */
           deps.touch.toolbarButtonTapped = true;
-          deps.touch.copyVerification = `copy-confirmed (Copied ✓ shown; clipboard read-back unavailable: ${String(clip.error)})`;
+          deps.touch.copyVerification = `copy-confirmed (已复制 ✓ shown; clipboard read-back unavailable: ${String(clip.error)})`;
         }
         deps.touch.copyLabel = copyState.label;
         /* 收尾：解除选区、关阅读器、还原视口。 */

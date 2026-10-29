@@ -11,6 +11,8 @@ export function createBranchController(deps) {
   async function openBranchPanel(branchId, opts = {}) {
     const st = deps.state.treeState;
     if (st === null || branchId === null || branchId === st.trunkBranchId) return;
+    deps.$("materials-section").open = false;
+    deps.$("reading-materials").setAttribute("aria-expanded", "false");
     const wasOpen = deps.state.panelBranchId !== null;
     const switching = deps.state.panelBranchId !== branchId;
     let switchFailed = false;

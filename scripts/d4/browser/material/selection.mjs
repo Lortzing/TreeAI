@@ -150,7 +150,7 @@ export function pageClickPoints(blockId, start, end) {
 export function pageReaderLoadedExpr(expectedBlocks, tail) {
   const tailCheck =
     tail === "end"
-      ? `if (!text.includes("end of material")) return false;`
+      ? `if (!text.includes("已读到末尾")) return false;`
       : tail === "more"
         ? `if (tail.querySelector(".mat-load-more") === null) return false;`
         : "";

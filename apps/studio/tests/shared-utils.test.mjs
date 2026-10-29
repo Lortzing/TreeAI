@@ -484,13 +484,13 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
   state.nav.finder.phase = "loaded";
   state.nav.finder.listing = { trees: [], nextCursor: null, totalTrees: 0 };
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").textContent, /no trees in this forest yet/);
+  assert.match(nodes.get("nav-tree-results").textContent, /还没有思考树/);
 
   state.nav.finder.mode = "search";
   state.nav.finder.hits = [];
   state.nav.finder.query = "missing";
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").textContent, /no tree matches “missing”/);
+  assert.match(nodes.get("nav-tree-results").textContent, /没有找到“missing”/);
 
   state.nav.session = { treeId: "tree-1" };
   state.nav.finder.mode = "listing";
@@ -520,7 +520,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
   state.nav.finder.moreLoading = false;
   state.nav.finder.moreError = "timeout";
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").children[0].children[0].children[1].textContent, /matched on id/);
+  assert.match(nodes.get("nav-tree-results").children[0].children[0].children[1].textContent, /formatted-time/);
   assert.match(nodes.get("nav-tree-find-note").textContent, /loading more failed — timeout/);
   const searchMore = nodes.get("nav-tree-results").children[1].children[0];
   assert.match(searchMore.textContent, /More tree hits \(1 loaded\)/);
@@ -532,7 +532,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
 test("R1 navigation chrome view preserves overview and action state", () => {
   function element(tag) {
     const node = {
-      tag, className: "", title: "", hidden: false, disabled: false, children: [], listeners: {},
+      tag, className: "", title: "", hidden: false, disabled: false, children: [], listeners: {}, dataset: {},
       append(...nodes) { this.children.push(...nodes); },
       replaceChildren(...nodes) { this.children = [...nodes]; },
       addEventListener(name, listener) { this.listeners[name] = listener; },
@@ -565,8 +565,8 @@ test("R1 navigation chrome view preserves overview and action state", () => {
     treeId: "tree-1", overviewState: "loading", overview: null, selectedBranchId: null,
   };
   view.renderNavSurfaceChrome();
-  assert.equal(nodes.get("nav-tree-title").textContent, "tree-1");
-  assert.equal(nodes.get("nav-tree-meta").textContent, "loading the tree overview…");
+  assert.equal(nodes.get("nav-tree-title").textContent, "思考树");
+  assert.equal(nodes.get("nav-tree-meta").textContent, "正在加载…");
   assert.equal(nodes.get("nav-locate-current").disabled, false);
   assert.equal(nodes.get("nav-source-selected").disabled, true);
 
@@ -581,9 +581,9 @@ test("R1 navigation chrome view preserves overview and action state", () => {
   state.nav.session.selectedBranchId = "branch-1";
   state.nav.session.overview = { treeId: "tree-1", title: null, nodeCount: 1, maxDepth: 0 };
   view.renderNavSurfaceChrome();
-  assert.match(nodes.get("nav-tree-title").textContent, /tree-1 — untitled/);
-  assert.match(nodes.get("nav-tree-meta").textContent, /1 nodes · max depth 0/);
-  assert.match(nodes.get("nav-tree-meta").textContent, /no branches yet/);
+  assert.match(nodes.get("nav-tree-title").textContent, /新的思考/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /1 条路径/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /选中回答可以展开支线/);
   assert.equal(nodes.get("nav-source-selected").disabled, false);
 });
 
@@ -771,7 +771,7 @@ test("return focus reveals nested secondary tools before focusing a material or 
     assert.equal(materials.open, true);
     focused = true;
   } };
-  const controller = createStudioFocusController({ materialListButtons: new Map([["m1", target]]) });
+  const controller = createStudioFocusController({ $: () => null, materialListButtons: new Map([["m1", target]]) });
   controller.restoreFocusRef({ kind: "material-button", materialId: "m1" });
   assert.equal(focused, true);
 });

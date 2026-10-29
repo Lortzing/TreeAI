@@ -9,6 +9,16 @@ export function isElementNode(node) {
   );
 }
 
+/** Secondary implementation details are available without occupying the reading surface. */
+export function createDisclosure(document, label, ...content) {
+  const details = document.createElement("details");
+  details.className = "technical-details";
+  const summary = document.createElement("summary");
+  summary.textContent = label;
+  details.append(summary, ...content);
+  return details;
+}
+
 
 export function findReusableTurnElement(container, turn) {
   for (const child of container.children) {

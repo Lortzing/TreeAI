@@ -1,5 +1,5 @@
 /** Reconciled conversation/Return ordering, source anchor context, selection-preserving DOM reuse and reading position. Instance-owned state and dependencies. */
-import { findReusableTurnElement } from "../dom.js";
+import { findReusableTurnElement, createDisclosure } from "../dom.js";
 
 export function createConversationView(deps) {
 
@@ -285,13 +285,13 @@ export function createConversationView(deps) {
     if (deps.isMaterialBranchView(view)) {
       const origin = deps.recallMaterialBranchOrigin(deps.state.currentTreeId, view.branch.id);
       if (origin === null) {
-        el.textContent = "Branched from a material selection (source details not cached in this browser)";
+        el.textContent = "来自材料选文，来源详情暂时不可用。";
         return;
       }
       const selection = origin.selection;
       el.append(
         deps.document.createTextNode(
-          `From material “${String(origin.materialTitle)}” — version ${String(selection.versionId)}, anchored selection: `,
+          `来自材料“${String(origin.materialTitle)}”：`,
         ),
       );
       const sel = deps.document.createElement("span");
@@ -300,23 +300,23 @@ export function createConversationView(deps) {
       const statusSpan = deps.document.createElement("span");
       statusSpan.className = "origin-status available";
       statusSpan.textContent = ` · block ${selection.blockId} · material source`;
-      el.append(sel, statusSpan);
+      el.append(sel, createDisclosure(deps.document, "引用详情", statusSpan));
       return;
     }
     if (view.origin === null) {
-      el.textContent = "no anchor recorded for this branch";
+      el.textContent = "这条支线没有保存来源摘录。";
       return;
     }
     const status = view.originStatus ?? "unavailable";
     el.append(
-      deps.document.createTextNode(`Branched from ${deps.branchLabel(view.origin.sourceBranchId)} — anchored selection: `),
+      deps.document.createTextNode(`来自${deps.branchLabel(view.origin.sourceBranchId)}：`),
     );
     const sel = deps.document.createElement("span");
     sel.className = "sel";
     sel.textContent = `“${view.origin.selection.text}”`;
     const statusSpan = deps.document.createElement("span");
     statusSpan.className = `origin-status ${status}`;
-    statusSpan.textContent = ` · source ${status}`;
+    statusSpan.textContent = status === "available" ? "原文可查看" : status === "changed" ? " · 原文已变化，显示保存时的摘录" : " · 原文暂时不可用，摘录仍已保存";
     el.append(sel, statusSpan);
   }
 

@@ -29,16 +29,16 @@ export function createNavFinderView({
       if (session !== null && session.treeId === tree.treeId) button.classList.add("active");
       const name = document.createElement("span");
       name.className = "nav-finder-name";
-      name.textContent = tree.title !== null ? tree.title : tree.treeId;
+      name.textContent = tree.title !== null ? tree.title : "新的思考";
       const meta = document.createElement("span");
       meta.className = "nav-finder-meta";
       const matchedNote = matchedOn === "id" ? " · matched on id" : "";
-      meta.textContent = `${tree.treeId} · ${formatProductTime(tree.createdAt)}${matchedNote}`;
+      meta.textContent = formatProductTime(tree.createdAt);
       button.append(name, meta);
       button.title =
         tree.title !== null
-          ? `${tree.title} · ${tree.treeId}`
-          : `${tree.treeId} — untitled (no first question on the trunk)`;
+          ? tree.title
+          : "尚未提出第一个问题";
       button.addEventListener("click", () => {
         // The selected tree is rendered inside this tool panel, so keep it visible.
         closeSidebar({ keepLibrary: true });
@@ -64,12 +64,12 @@ export function createNavFinderView({
       );
       li.append(retry);
       items.push(li);
-      note.textContent = "the failure stays visible with a retry — it never collapses into an empty list";
+      note.textContent = "加载失败，请重试。";
     } else if (finder.mode === "search") {
       if (finder.hits.length === 0) {
         items.push(
           mutedListItem(
-            `no tree matches “${finder.query}” by title or id — nothing is fabricated (blank the input and press Find to go back to the forest listing)`,
+            `没有找到“${finder.query}”。清空搜索可查看全部思考树。`,
           ),
         );
       } else {
@@ -87,13 +87,13 @@ export function createNavFinderView({
           items.push(li);
         }
       }
-      note.textContent = `${String(finder.hits.length)} tree hit(s) for “${finder.query}”`;
+      note.textContent = `找到 ${String(finder.hits.length)} 棵思考树`;
     } else {
       const listing = finder.listing;
       if (listing.totalTrees === 0 && listing.trees.length === 0) {
         items.push(
           mutedListItem(
-            "no trees in this forest yet — create one (＋ New Tree) to start; trees you create appear in both Forest and here",
+            "还没有思考树，可以先创建一个新的思考。",
           ),
         );
       } else {
@@ -112,7 +112,7 @@ export function createNavFinderView({
         }
       }
       note.textContent =
-        listing.totalTrees > 0 ? `${String(listing.trees.length)} of ${String(listing.totalTrees)} tree(s) listed` : "";
+        listing.totalTrees > 0 ? `已显示 ${String(listing.trees.length)} / ${String(listing.totalTrees)} 棵思考树` : "";
     }
     if (finder.moreError !== null) {
       note.textContent = `${note.textContent === "" ? "" : `${note.textContent} · `}loading more failed — ${finder.moreError}`;

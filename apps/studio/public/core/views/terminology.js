@@ -1,3 +1,4 @@
+import { createDisclosure } from "../dom.js";
 /** Suggestion strips and explanation/annotation/promotion cards; no automatic product writes. Instance-owned state and dependencies. */
 
 export function createTerminologyView(deps) {
@@ -210,9 +211,11 @@ export function createTerminologyView(deps) {
     head.className = "term-explain-head";
     const modeNote = card.mode === "term" ? "term" : "span";
     head.textContent = `⌖ Explain — “${card.selection.text}” (${modeNote}, offsets ${String(card.selection.start)}..${String(card.selection.end)})`;
-    div.append(head);
+    const location = createDisclosure(deps.document, "引用详情", deps.document.createTextNode(head.textContent));
+    head.textContent = `解释“${card.selection.text}”`;
+    div.append(head, location);
     if (card.state === "loading") {
-      div.append(deps.mutedLine("explaining (isolated terminology task)…"));
+      div.append(deps.mutedLine("正在解释…"));
       const actions = deps.document.createElement("div");
       actions.className = "term-explain-actions";
       const dismiss = deps.document.createElement("button");
@@ -249,7 +252,7 @@ export function createTerminologyView(deps) {
     body.textContent = card.explanation ?? "";
     div.append(body);
     if (card.state === "explained" && card.cached) {
-      div.append(deps.mutedLine("(served from the executor cache — no new request)"));
+      location.append(deps.mutedLine("(served from the executor cache — no new request)"));
     }
     /* P0 降级显示（issue #7 增量验收）：已保存批注的卡在锚定失效时明确标注
        来源状态——卡面展示的是保存快照（批注自带的摘录/解释），活覆盖不在
@@ -341,7 +344,7 @@ export function createTerminologyView(deps) {
           deps.mutedLine(`the recorded promotion is on ${deps.branchLabel(card.annotation.promotedBranchId)} — use “Open the follow-up branch” above`),
         );
       }
-      actions.append(deps.mutedLine("the idempotency key stays for a same-key retry; a different follow-up needs a different promotion by design"));
+      actions.append(deps.mutedLine("可以重试当前问题，或修改问题后另开支线。"));
     }
     actions.append(termCloseButton());
     div.append(actions);

@@ -28,6 +28,14 @@ export async function runBetaMaterialsBranch(deps) {
             `return (document.getElementById("mat-tail").textContent ?? "").includes("50 block(s) in view"); })()`,
           { label: `md-11 reader opened (first 50 of ${String(deps.mdBlocks.length)} blocks, lazy tail)`, timeoutMs: 25_000 },
         );
+        const readerSurface = await deps.ctx.evalJs(`(() => ({
+          floatingOpen: document.getElementById("materials-section").open,
+          fileDetailsOpen: document.getElementById("mat-file-details").open,
+          text: document.getElementById("material-reader").innerText
+        }))()`);
+        if (readerSurface.floatingOpen || readerSurface.fileDetailsOpen || /d4-md-v1|UTF-16|text units total/.test(readerSurface.text)) {
+          throw new Error(`reader exposes implementation details or leaves attachments open: ${JSON.stringify(readerSurface)}`);
+        }
         /* 武装选区（selectionchange 路径）→ 建枝 → 提交前材料范围声明 → 首问。 */
         const placed = await deps.ctx.evalJs(pageSelectCanonical(deps.mdRange.blockId, deps.mdRange.start, deps.mdRange.end));
         if (placed === null || placed.error !== undefined || placed.selectedText !== deps.mdRange.excerpt) {
@@ -39,7 +47,7 @@ export async function runBetaMaterialsBranch(deps) {
           deps.ctx,
           `(() => { const flow = document.getElementById("mat-branch-flow"); ` +
             `return flow !== null && document.getElementById("mat-branch-first-question") !== null ` +
-            `&& (flow.textContent ?? "").includes("Material scope for this exploration — declared before your first question"); })()`,
+            `&& (flow.textContent ?? "").includes("本次提问会参考以下材料"); })()`,
           { label: "branch flow with the pre-submit material scope declaration", timeoutMs: 20_000 },
         );
         const scopeOk = await deps.ctx.evalJs(

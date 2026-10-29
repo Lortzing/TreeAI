@@ -313,8 +313,8 @@ export async function probeExportRestoreRecover(ctx) {
 
     /* 9) session 未存活分支的面板打开（D4-3 材料建枝/恢复流——真实 UI 且
           对齐失败如实分离的路径）：阅读器内重建同一选区 → 捕获条 →
-          「⑃ Branch from material」→ 恢复二选（既有探索 + session 不可用
-          注记）→「↩ Open the existing exploration」→ 面板以
+          「⑃ 展开支线」→ 恢复二选（既有探索 + session 不可用
+          注记）→「↩ 继续已有支线」→ 面板以
           alignCursor:false 打开（不重放注定失败的 /switch）。 */
     const placed = await ctx.evalJs(pageSelectCanonical(b5Range.blockId, b5Range.start, b5Range.end));
     if (placed === null || placed.error !== undefined) {
@@ -332,10 +332,10 @@ export async function probeExportRestoreRecover(ctx) {
       ctx,
       `(() => { const flow = document.getElementById("mat-branch-flow"); ` +
         `if (flow === null) return false; const text = flow.textContent ?? ""; ` +
-        `return text.includes("Open the existing exploration") ? { text } : false; })()`,
+        `return text.includes("继续已有支线") ? { text } : false; })()`,
       { label: "branching flow reaches the restore-vs-new choice (existing exploration found)", timeoutMs: 15_000 },
     );
-    if (!(choice.text ?? "").includes("the session at this branch's continuation point is unavailable")) {
+    if (!(choice.text ?? "").includes("原会话暂时不可用")) {
       throw new Error(`B5 choice card must state the session-unavailable honesty note (got ${JSON.stringify(choice.text)})`);
     }
     await ctx.evalJs(

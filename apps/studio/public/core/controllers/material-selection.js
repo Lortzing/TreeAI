@@ -1,5 +1,5 @@
 /** Canonical Markdown/PDF selection, capture-bar freezing and explicit quote/branch actions. Instance-owned state and dependencies. */
-import { isElementNode } from "../dom.js";
+import { createDisclosure, isElementNode } from "../dom.js";
 import { clampToGraphemeBoundaries } from "../../shared/source/grapheme.js";
 
 export function createMaterialSelectionController(deps) {
@@ -141,7 +141,7 @@ export function createMaterialSelectionController(deps) {
       const hint = deps.document.createElement("span");
       hint.className = "muted";
       hint.textContent =
-        "(select text in the material to capture a quote — a captured selection can branch into an exploration)";
+        "选中文字，复制摘录或展开支线。";
       bar.append(hint);
       return;
     }
@@ -157,7 +157,9 @@ export function createMaterialSelectionController(deps) {
               "(select within a page; segmented selection across pages is the discipline — never a silent truncation); " +
               "no quote payload is produced"
             : "the selection could not be mapped to canonical offsets — no quote payload is shown";
-      bar.append(note);
+      const guidance = deps.document.createElement("span");
+      guidance.textContent = selection.reason === "cross-block" ? "请在同一段落内选择文字。" : selection.reason === "cross-page" ? "请在同一页内选择文字。" : "无法定位这段选文，请重新选择。";
+      bar.append(guidance, createDisclosure(deps.document, "选区详情", note));
       return;
     }
     const quote = deps.document.createElement("span");
@@ -170,32 +172,33 @@ export function createMaterialSelectionController(deps) {
     payload.textContent =
       `material ${selection.materialId} · version ${selection.versionId} · block ${selection.blockId}${pagePart}` +
       ` · UTF-16 [${String(selection.start)}, ${String(selection.end)}) · ${String(selection.excerpt.length)} units`;
-    bar.append(quote, payload);
+    bar.append(quote);
+    const location = createDisclosure(deps.document, "引用位置", payload);
     if (selection.snapped) {
       const snap = deps.document.createElement("span");
       snap.className = "mat-snap-note";
       snap.textContent =
         "(a selection boundary fell inside a grapheme cluster — it was snapped outward so the quote never " +
           "splits a surrogate pair, combining sequence, or emoji)";
-      bar.append(snap);
+      location.append(snap);
     }
     const actions = deps.document.createElement("span");
     actions.className = "mat-selection-actions";
     const copy = deps.document.createElement("button");
     copy.className = "mat-copy";
-    copy.textContent = "⧉ Copy quote";
-    copy.title = "Copy the exact canonical text of this selection";
+    copy.textContent = "复制摘录";
+    copy.title = "复制选中的原文";
     copy.addEventListener("click", () => void copyMaterialQuote(copy, selection));
     const branch = deps.document.createElement("button");
     branch.className = "mat-branch-d43";
-    branch.textContent = "⑃ Branch from material";
+    branch.textContent = "展开支线";
     branch.title =
-      "Open the exploration flow anchored on this exact selection — the material scope is declared for you to review before the first question is submitted";
+      "围绕这段文字提问，发送前可以确认引用范围";
     branch.addEventListener("click", () => {
       void deps.guard(() => deps.startMaterialBranchFlow(selection), "main");
     });
     actions.append(copy, branch);
-    bar.append(actions);
+    bar.append(actions, location);
   }
 
 
@@ -212,15 +215,15 @@ export function createMaterialSelectionController(deps) {
         ? deps.navigator.clipboard
         : null;
     if (clipboard === null) {
-      button.textContent = "Copy unavailable";
+      button.textContent = "无法自动复制";
       button.title = "Clipboard API unavailable — select the quote above and copy it manually";
       return;
     }
     try {
       await clipboard.writeText(selection.excerpt);
-      button.textContent = "Copied ✓";
+      button.textContent = "已复制 ✓";
       deps.window.setTimeout(() => {
-        button.textContent = "⧉ Copy quote";
+        button.textContent = "复制摘录";
       }, 1500);
     } catch (err) {
       deps.showError(

@@ -18,6 +18,8 @@ export function createSourceDrawerController(deps) {
    * 到该 run 的出处条目）。打开时拉取 journal 尾部（保守摘要）。
    */
   async function openDrawer(opts = {}) {
+    deps.$("materials-section").open = false;
+    deps.$("reading-materials").setAttribute("aria-expanded", "false");
     if (deps.state.drawerOpen) {
       /* 已开（如 delivered 卡点击时抽屉已开）：只更新定位目标。 */
       deps.state.drawerFocusRunId = opts.focusRunId ?? null;

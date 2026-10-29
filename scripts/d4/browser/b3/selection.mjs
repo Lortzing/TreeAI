@@ -63,7 +63,7 @@ export function pageSelectPdfLayer(blockId, start, end) {
 /* 场景准备（幂等）：pdf fixture 导入 + 选区确定                         */
 /* ------------------------------------------------------------------ */
 
-/** PDF 阅读器就位（页框数 + 尾部「N page(s) in view · end of material (last page)」）。 */
+/** PDF 阅读器就位（页框数 + 尾部「N page(s) in view · 已到最后一页」）。 */
 export function pdfReaderLoadedExpr(pages) {
   return `(() => { const reader = document.getElementById("material-reader"); ` +
     `if (reader === null || reader.hidden) return false; ` +
@@ -73,6 +73,6 @@ export function pdfReaderLoadedExpr(pages) {
     `if (tail === null) return false; ` +
     `const text = tail.textContent ?? ""; ` +
     `if (!text.includes(${JSON.stringify(`${String(pages)} page(s) in view`)})) return false; ` +
-    `if (!text.includes("end of material (last page)")) return false; ` +
+    `if (!text.includes("已到最后一页")) return false; ` +
     `return { frames, tail: text }; })()`;
 }

@@ -7,17 +7,27 @@ export async function runTerminologyReadingModes(deps) {
 
       /* ============ 1) ① 阅读模式面 ============ */
       {
+        await inputClickAt(deps.ctx, "#reading-materials");
         await deps.openDrawer(deps.ctx);
+        const simplified = await deps.ctx.evalJs(`(() => ({
+          floatingOpen: document.getElementById("materials-section").open,
+          diagnosticsOpen: document.getElementById("source-diagnostics").open,
+          preferencesOpen: document.getElementById("source-reading-preferences").open,
+          text: document.getElementById("source-drawer").innerText
+        }))()`);
+        if (simplified.floatingOpen || simplified.diagnosticsOpen || simplified.preferencesOpen || /chars\/4|no runs recorded|Tool activity/.test(simplified.text)) {
+          throw new Error(`source drawer exposes implementation details or leaves attachments open: ${JSON.stringify(simplified)}`);
+        }
         const drawerInfo = await deps.ctx.evalJs(
           `(() => { const drawer = document.getElementById("source-drawer"); ` +
             `const buttons = [...drawer.querySelectorAll(".term-mode-row .term-mode-toggle")]; ` +
             `return { labels: buttons.map((b) => b.textContent), pressed: buttons.map((b) => b.getAttribute("aria-pressed")), ` +
               `gateNote: [...drawer.querySelectorAll("p.muted")].some((p) => p.textContent.includes(${JSON.stringify(deps.GATE_NOTE_SNIPPET)})), ` +
               `usageLine: (drawer.querySelector(".term-cache-line") !== null), ` +
-              `annotationsNote: drawer.textContent.includes("no saved term annotations yet") }; })()`,
+              `annotationsNote: drawer.textContent.includes("还没有保存批注") }; })()`,
         );
         const problems = [];
-        if (JSON.stringify(drawerInfo.labels) !== JSON.stringify(["Manual only", "Minimal hints", "Assisted reading"])) {
+        if (JSON.stringify(drawerInfo.labels) !== JSON.stringify(["手动解释", "少量提示", "辅助阅读"])) {
           problems.push(`mode buttons: ${JSON.stringify(drawerInfo.labels)}`);
         }
         if (drawerInfo.pressed[0] !== "true" || drawerInfo.pressed[1] !== "false" || drawerInfo.pressed[2] !== "false") {

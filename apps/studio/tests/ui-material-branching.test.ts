@@ -53,7 +53,7 @@ import {
  *
  * 覆盖（D4-3 前端交付面的逐项锁定）：
  *  1. 建枝入口（charter §3.3 规则一）：武装选区的捕获条给出可点击的
- *     「⑃ Branch from material」；点击先经 resolve-selection 把捕获载荷
+ *     「⑃ 展开支线」；点击先经 resolve-selection 把捕获载荷
  *     换成规范 MaterialSelection（服务端复核 + sourceHash 签发——阅读器
  *     窗口可能被裁剪，客户端绝不自行伪造 sourceHash），再 POST
  *     from-material {selection, intentKey, mode:"resume-or-create"}；
@@ -1670,7 +1670,7 @@ test("branch entry: the armed capture bar offers branching; the click resolves t
   const bar = selectionBar(world);
   const branchButton = bar.querySelector(".mat-branch-d43")!;
   assert.equal(branchButton.disabled, false, "the branch entry is offered (enabled) on the armed bar");
-  assert.match(branchButton.textContent!, /Branch from material/);
+  assert.match(branchButton.textContent!, /展开支线/);
 
   await clickBranchButton(world);
 
@@ -1705,7 +1705,7 @@ test("branch entry: the armed capture bar offers branching; the click resolves t
   assert.equal(world.requestsOf("/material-first-question").length, 0, "the first question is a separate explicit submit");
   assert.equal(world.requestsOf("/material-return").length, 0, "no return is submitted");
   const flow = world.branchFlow();
-  assert.match(flow.textContent!, /Material scope for this exploration/, "the declared phase renders the scope card");
+  assert.match(flow.textContent!, /本次提问会参考以下材料/, "the declared phase renders the scope card");
   assert.match(
     flow.textContent!,
     /zero runs\/turns/,
@@ -1760,7 +1760,7 @@ test("context declaration: the scope card shows the exact selection, the bounded
   assert.match(text, new RegExp(`window: UTF-16 \\[0, ${String(MD01.canonicalText.length)}\\)`));
   assert.match(text, /blocks fully covered: blk-0, blk-1/);
   assert.match(text, /composed context: \d+ \/ 24000 UTF-16 units/);
-  assert.match(text, /the window covers the whole material — nothing is omitted/);
+  assert.match(text, /本次会参考整份材料/);
 
   /* 组合文本全文可核对（<details>——与派发时逐字节相同）。 */
   const details = card.querySelector(".mat-branch-composed")!;
@@ -1784,10 +1784,12 @@ test("context declaration: a truncated window carries the explicit TRUNCATED mar
   const card = flow.querySelector(".mat-branch-context")!;
   const marker = card.querySelector(".mat-branch-truncated")!;
   assert.ok(marker !== null, "an explicit truncation marker is rendered");
-  assert.match(marker.textContent!, /^TRUNCATED — \[Context truncated: /);
+  assert.equal(marker.textContent, "材料较长，本次只参考选文及附近内容。");
+  const truncationDetail = card.querySelector(".technical-details")!.textContent!;
+  assert.match(truncationDetail, /TRUNCATED — \[Context truncated: /);
   assert.match(
-    marker.textContent!,
-    /the composed context is capped at 24000 UTF-16 units\]$/,
+    truncationDetail,
+    /the composed context is capped at 24000 UTF-16 units\]/,
     "the truncation note is shown verbatim (the same text enters the model input)",
   );
   /* 有界窗：窗口区间显式呈现在范围行（非整份材料）。 */
@@ -1836,7 +1838,7 @@ test("first question: submitting posts material-first-question with the same int
 
   /* 面板头部：材料来源上下文（缓存自建枝响应）。 */
   const anchor = world.el("panel-anchor-context").textContent!;
-  assert.match(anchor, /From material “递归与分治学习笔记\.md”/);
+  assert.match(anchor, /来自材料“递归与分治学习笔记\.md”/);
   assert.match(anchor, /“递归”/);
   assert.match(anchor, /material source/);
 
@@ -1885,7 +1887,7 @@ test("dispatch outcomes: 'failed' is shown honestly and a same-key retry is an e
   await settle(25);
   let flow = world.branchFlow();
   assert.match(flow.textContent!, /dispatch failed — upstream: /, "the failed dispatch is disclosed");
-  assert.match(flow.textContent!, /retry with the same key is an explicit new attempt/);
+  assert.match(flow.textContent!, /重试会先确认发送结果，避免重复发送/);
   assert.equal(world.el("material-reader").hidden, false, "the flow stays in the reader after a failure");
 
   /* 重试（同键显式新尝试）→ 脚本给 unknown：如实呈现「未重发」。 */
@@ -1924,7 +1926,7 @@ test("resume-or-create hits an existing exploration: the honest choice — open 
 
   /* 恢复响应 → 二选面（既有分支信息 + 两个明确去向）。 */
   let flow = world.branchFlow();
-  assert.match(flow.textContent!, /already has an exploration in this tree/);
+  assert.match(flow.textContent!, /这段材料已有一条支线/);
   const resume = flow.querySelector(".mat-branch-resume")!;
   const fresh = flow.querySelector(".mat-branch-new")!;
   assert.ok(resume !== null && fresh !== null, "both explicit choices are offered");
@@ -1961,7 +1963,7 @@ test("explicit new exploration: from the choice, a fresh intent key posts mode '
   const firstKey = (world.requestsOf("/branches/from-material")[0]!.body as Record<string, unknown>)["intentKey"];
   assert.notEqual((newRequest.body as Record<string, unknown>)["intentKey"], firstKey);
   const declared = world.branchFlow();
-  assert.match(declared.textContent!, /Material scope for this exploration/);
+  assert.match(declared.textContent!, /本次提问会参考以下材料/);
 
   /* 首问落在**新**分支（树态的第二个材料分支）。 */
   typeFirstQuestion(world, "另开后的首问");
@@ -1993,7 +1995,7 @@ test("pending intent resume: a branch created but never asked resumes straight t
   await clickBranchButton(world);
 
   const flow = world.branchFlow();
-  assert.match(flow.textContent!, /Material scope for this exploration/);
+  assert.match(flow.textContent!, /本次提问会参考以下材料/);
   assert.match(flow.textContent!, /reopened the branch this pending intent key created/, "the resumed path is disclosed honestly");
   /* 键入文本跨「刷新」保留（草稿随挂起意图持久化）。 */
   const input = world.byId("mat-branch-first-question")!;
@@ -2029,9 +2031,9 @@ test("restored branch navigation/session facts ride along honestly (failed navig
 
   const flow = world.branchFlow();
   assert.match(flow.textContent!, /aligning the live session failed \(session-corrupt: the scripted restore refused\)/);
-  assert.match(flow.textContent!, /the session at this branch's continuation point is unavailable/);
+  assert.match(flow.textContent!, /原会话暂时不可用/);
   /* 来源跳转的恢复本身不被掩盖（既有分支与二选仍呈现）。 */
-  assert.match(flow.textContent!, /already has an exploration in this tree/);
+  assert.match(flow.textContent!, /这段材料已有一条支线/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -2065,7 +2067,7 @@ test("first-question conflict (409): after an in-flight dispatch lands unseen, a
   flow = world.branchFlow();
   assert.match(flow.textContent!, /first-question conflict — /, "the conflict is disclosed in the flow");
   assert.match(flow.textContent!, /immutable for this branch/);
-  assert.match(flow.textContent!, /a changed question is a normal continuation/);
+  assert.match(flow.textContent!, /修改后的问题可以作为追问继续/);
   const cont = flow.querySelector(".mat-branch-continue")!;
   assert.ok(cont !== null, "the normal-continuation path is offered");
 
@@ -2114,7 +2116,7 @@ test("branch-intent conflict (409 material-branch-conflict, same key bound to a 
   await settle(25);
 
   const flow = world.branchFlow();
-  assert.match(flow.textContent!, /the flow failed/);
+  assert.match(flow.textContent!, /暂时无法展开支线/);
   assert.match(flow.textContent!, /material-branch-conflict: .*different selection/);
   const retry = flow.querySelector(".mat-branch-retry")!;
   assert.ok(retry !== null, "the failed flow offers a retry");

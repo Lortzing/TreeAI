@@ -468,6 +468,7 @@ class StubElement {
   children: StubNode[] = [];
   parentElement: StubElement | null = null;
   hidden = false;
+  open = false;
   disabled = false;
   private readonly listeners = new Map<string, Set<StubListener>>();
   _scrollTop = 0;
@@ -1547,7 +1548,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   const close = drawer.querySelector("#drawer-close");
   assert.ok(close !== null, "the drawer header renders #drawer-close");
   assert.equal(close.tagName, "BUTTON", "#drawer-close is a real button element");
-  assert.ok(close.textContent.startsWith("× Close"), "the close button text starts with '× Close'");
+  assert.ok(close.textContent.startsWith("关闭"), "the close button text starts with '× Close'");
   /* 抽屉内的可交互元素只有按钮（关闭 + journal 失败重试）——逐标签确认
      #drawer-close 是文档序首个可交互元素。 */
   for (const tag of ["a", "input", "textarea", "select"]) {
@@ -2022,14 +2023,16 @@ test("two-branch cross-switching: alternating panels keep lineage, context, and 
   const panelConversation = world.el("panel-conversation");
   panelConversation.scrollHeight = 1500;
   panelConversation.clientHeight = 400;
+  world.el("materials-section").open = true;
   world.tabButton("branch-1")!.click();
   await settle();
   assert.equal(world.el("branch-panel").hidden, false, "branch-1 panel opens via tab");
+  assert.equal(world.el("materials-section").open, false, "branch panels collapse attachments");
   assert.equal(world.el("panel-title").textContent, B1_R1_TEXT);
   const anchorContext1 = world.el("panel-anchor-context").textContent;
-  assert.ok(anchorContext1.includes("Branched from Trunk"), "the anchor card names the source branch");
+  assert.ok(anchorContext1.includes("来自Trunk"), "the anchor card names the source branch");
   assert.ok(anchorContext1.includes("“First”"), "branch-1 anchors on the a1 selection excerpt");
-  assert.ok(anchorContext1.includes("source available"), "originStatus renders");
+  assert.ok(anchorContext1.includes("原文可查看"), "originStatus renders");
   assert.deepEqual(
     panelConversation.querySelectorAll(".turn").map((t) => t.dataset.turnId),
     ["b1u1", "b1a1"],
@@ -2238,9 +2241,9 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   assert.equal(selSelection.text, "latest");
   assert.equal(world.el("panel-title").textContent, "latest", "the selection branch is titled by its selected excerpt");
   const anchorCard = world.el("panel-anchor-context").textContent;
-  assert.ok(anchorCard.includes("Branched from Trunk"));
+  assert.ok(anchorCard.includes("来自Trunk"));
   assert.ok(anchorCard.includes("“latest”"), "the anchor card carries the selection excerpt");
-  assert.ok(anchorCard.includes("source available"));
+  assert.ok(anchorCard.includes("原文可查看"));
   /* 新支线 tab：锚点圆点 + 出处 tooltip。 */
   const newTab = world.tabButton("branch-recovered-2");
   assert.ok(newTab !== null, "the new branch gets its own tab");
@@ -3318,7 +3321,7 @@ test("terminology minimal UI: selection arms Explain, the card shows the isolate
   world.el("source-drawer-toggle").click();
   await settle();
   const drawer = world.el("source-drawer");
-  assert.ok(drawer.textContent.includes("Terminology"), "the drawer has a Terminology section");
+  assert.ok(drawer.textContent.includes("已保存的批注"), "the drawer has a Terminology section");
   assert.ok(drawer.textContent.includes("“Secon” (term) from Trunk"), "the annotation lists with its term and source branch");
   assert.ok(drawer.textContent.includes("promoted to"), "the promotion destination is listed");
   assert.ok(drawer.textContent.includes("chars/4 estimate"), "the usage note labels its estimate honestly");

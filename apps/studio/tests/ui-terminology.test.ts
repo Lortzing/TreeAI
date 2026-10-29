@@ -374,6 +374,7 @@ class StubElement {
   children: StubNode[] = [];
   parentElement: StubElement | null = null;
   hidden = false;
+  open = false;
   disabled = false;
   private readonly listeners = new Map<string, Set<StubListener>>();
   _scrollTop = 0;
@@ -1527,7 +1528,7 @@ test("late explain responses are discarded honestly when the target leaves: no r
   a2.querySelector(".selection-toolbar")!.querySelector(".toolbar-explain")!.click();
   const loadingCard = world.byId("term-explain-card");
   assert.ok(loadingCard !== null, "the loading card renders immediately");
-  assert.ok(loadingCard.textContent.includes("explaining (isolated terminology task)…"), "the in-flight state is shown");
+  assert.ok(loadingCard.textContent.includes("正在解释…"), "the in-flight state is shown");
   /* 用户在响应到达前关闭卡（Dismiss 不经 guard——在途可关）。 */
   loadingCard.querySelector(".term-explain-close")!.click();
   assert.equal(world.byId("term-explain-card"), null, "the card is dismissed while the request is in flight");
@@ -1541,7 +1542,7 @@ test("late explain responses are discarded honestly when the target leaves: no r
   world.el("source-drawer-toggle").click();
   await settle();
   const drawer = world.el("source-drawer");
-  assert.ok(drawer.textContent.includes("Terminology"), "the drawer has the Terminology section");
+  assert.ok(drawer.textContent.includes("已保存的批注"), "the drawer has the Terminology section");
   assert.ok(
     drawer.textContent.includes("1 late response(s) discarded client-side"),
     "the client-side late discard is counted in the usage line",
@@ -1754,7 +1755,7 @@ test("promotion outcomes: success opens the branch, a same-key replay is named h
     const retryInput = conflicted.querySelector("#term-first-question");
     assert.ok(retryInput !== null, "the same-key retry path stays available");
     assert.equal(retryInput.value, "A question that will conflict.", "the first-question draft survives the conflict");
-    assert.ok(conflicted.textContent.includes("the idempotency key stays for a same-key retry"),
+    assert.ok(conflicted.textContent.includes("可以重试当前问题"),
       "the same-key retry guidance is shown");
     assert.equal(world.el("branch-panel").hidden, true, "no branch was created by the conflicted attempt");
   }
@@ -1954,9 +1955,14 @@ test("drawer terminology surface: tasks with modes, honest usage counts, cache p
       },
     ],
   });
+  world.el("materials-section").open = true;
   world.el("source-drawer-toggle").click();
   await settle();
   const drawer = world.el("source-drawer");
+  assert.equal(world.el("materials-section").open, false, "opening sources collapses attachments");
+  assert.equal(world.el("reading-materials").getAttribute("aria-expanded"), "false");
+  assert.equal(Boolean(world.el("source-diagnostics").open), false, "run and task internals start collapsed");
+  assert.equal(Boolean(world.el("source-reading-preferences").open), false, "reading preferences are secondary");
 
   /* 批注出处（既有形状保持）。 */
   assert.ok(drawer.textContent.includes("“Lasso” (term) from Trunk"), "annotations list with term and source branch");
@@ -1973,14 +1979,14 @@ test("drawer terminology surface: tasks with modes, honest usage counts, cache p
 
   /* 缓存偏好：切换（PUT 载荷精确）→ 行内状态更新。 */
   const toggle = drawer.querySelector(".term-cache-toggle")!;
-  assert.ok(toggle.textContent.includes("cache preference: on"), "the current preference is shown");
+  assert.ok(toggle.textContent.includes("重复解释：复用已保存的结果"), "the current preference is shown");
   toggle.click();
   await settle();
   const put = world.lastRequest("/terminology/preferences");
   assert.ok(put !== null && put.method === "PUT", "the toggle PUTs the preference");
   assert.deepEqual(asRecord(put!.body), { cacheEnabled: false }, "the PUT body is exact");
   const toggleAfter = world.el("source-drawer").querySelector(".term-cache-toggle")!;
-  assert.ok(toggleAfter.textContent.includes("cache preference: off"), "the preference line updates in place");
+  assert.ok(toggleAfter.textContent.includes("重复解释：每次重新生成"), "the preference line updates in place");
   assert.ok(world.el("source-drawer").textContent.includes("cache off"), "the usage line reflects the preference");
 
   /* 失败态：如实 + 可重试。 */
@@ -2004,7 +2010,7 @@ test("drawer terminology surface: tasks with modes, honest usage counts, cache p
     failWorld.el("source-drawer-toggle").click();
     await settle();
     const failDrawer = failWorld.el("source-drawer");
-    assert.ok(failDrawer.textContent.includes("terminology failed to load"), "the read-model failure is shown");
+    assert.ok(failDrawer.textContent.includes("批注加载失败"), "the read-model failure is shown");
     const retry = failDrawer.querySelector(".drawer-retry");
     assert.ok(retry !== null, "the failure state offers a retry");
     failWorld.backend.terminologyGetFail = false;
@@ -2109,20 +2115,20 @@ test("P0 joint anchor validation: equal-length replacement, a moved word, an out
   for (const term of ["oldish", "moved-lasso", "hash-stale-lasso", "deleted-tail"]) {
     const li = drawerAnnotationLi(drawer, term);
     assert.ok(
-      li.textContent.includes("source changed — the answer text drifted since saving (snapshot only, no live underline)"),
+      li.textContent.includes("原文已变化，保留的是保存时的摘录。"),
       `“${term}” is degraded with the explicit source-changed note`,
     );
   }
   const ghost = drawerAnnotationLi(drawer, "ghost-anchor");
   assert.ok(
-    ghost.textContent.includes("source missing — the anchored answer is not in this tree (snapshot only)"),
+    ghost.textContent.includes("原文暂时不可用，已保存的摘录仍可查看。"),
     "the missing anchor is named explicitly",
   );
   const valid = drawerAnnotationLi(drawer, "Lasso");
   assert.ok(!valid.textContent.includes("source changed"), "the intact annotation carries no drift note");
   assert.ok(!valid.textContent.includes("source missing"), "the intact annotation carries no missing note");
   /* 快照可读性：失效批注的落库摘录仍在列表可读（不是隐藏或伪造）。 */
-  assert.ok(drawerAnnotationLi(drawer, "oldish").textContent.includes("“old”"), "the saved excerpt stays readable");
+  assert.ok(drawerAnnotationLi(drawer, "oldish").textContent.includes("old"), "the saved excerpt stays readable");
 });
 
 test("P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths)", async () => {
@@ -2308,7 +2314,7 @@ test("P1 stale read-model race: tree A's late terminology response never lands w
   await settle();
   const drawer = world.el("source-drawer");
   assert.ok(
-    drawer.textContent.includes("no saved term annotations yet"),
+    drawer.textContent.includes("还没有保存批注"),
     "the drawer on tree B never lists tree A's annotation",
   );
   assert.ok(
@@ -2391,15 +2397,15 @@ test("reading mode selector: three modes with honest pressed state, the quality-
   );
   assert.deepEqual(
     modeButtons.map((b) => b.textContent),
-    ["Manual only", "Minimal hints", "Assisted reading"],
+    ["手动解释", "少量提示", "辅助阅读"],
   );
   /* gate 未过旁注（诚实披露：模式可保存切换，但自动建议保持关闭）。 */
   assert.ok(
-    drawer.textContent.includes("the auto-annotation quality gate has not passed"),
+    drawer.textContent.includes("自动提示暂未开放"),
     "the gate-pending note is shown while suggestions are off",
   );
   assert.ok(
-    drawer.textContent.includes("automatic suggestions stay OFF; only manual explaining is in effect"),
+    drawer.textContent.includes("你仍可选中文字进行解释"),
     "the note states manual-only effect honestly",
   );
 
@@ -2435,18 +2441,18 @@ test("reading mode selector: three modes with honest pressed state, the quality-
   manualWorld.el("source-drawer-toggle").click();
   await settle();
   assert.ok(
-    manualWorld.el("source-drawer").textContent.includes("reading mode is manual-only"),
+    manualWorld.el("source-drawer").textContent.includes("当前仅在你选中文字后提供解释"),
     "manual-only surfaces its own reason (no gate mention)",
   );
   manualWorld.el("source-drawer").querySelectorAll(".term-mode-toggle")[1]!.click();
   await settle();
   const switchedDrawer = manualWorld.el("source-drawer");
   assert.ok(
-    !switchedDrawer.textContent.includes("reading mode is manual-only"),
+    !switchedDrawer.textContent.includes("当前仅在你选中文字后提供解释"),
     "switching away from manual-only clears the stale reason in place",
   );
   assert.ok(
-    !switchedDrawer.textContent.includes("the auto-annotation quality gate has not passed"),
+    !switchedDrawer.textContent.includes("自动提示暂未开放"),
     "no gate note is fabricated for a gate-open tree",
   );
 });

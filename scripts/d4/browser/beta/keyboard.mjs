@@ -189,8 +189,8 @@ export async function runBetaKeyboard(deps) {
             );
           },
           `(() => { const r = document.getElementById("material-reader"); return r === null || r.hidden; })()`,
-          `(() => { const a = document.activeElement; return a !== null && a.closest("#material-list") !== null; })()`,
-          "the material-list button that opened the reader",
+          `(() => { const a = document.activeElement; return a === document.getElementById("reading-materials") && !document.getElementById("materials-section").open; })()`,
+          "the collapsed attachments summary",
         );
         /* 面板的 Esc 还原目标是打开它的分支 tab（panelFocusReturn 的 tab 引用——
            动态按钮无 id，以落在该 tab 上断言）。 */

@@ -56,18 +56,17 @@ export async function runNavSpotChecks(deps) {
             { label: `branch-search hit for ${node.id}`, timeoutMs: 15_000 },
           );
           const problems = [];
-          if (!hit.meta.includes(`depth ${String(node.depth)}`)) problems.push(`hit depth mismatch: ${JSON.stringify(hit.meta)}`);
-          if (!hit.meta.includes(node.originKind)) problems.push(`hit originKind mismatch: ${JSON.stringify(hit.meta)}`);
+          if (!hit.meta.includes(`第 ${String(node.depth)} 层`)) problems.push(`hit depth mismatch: ${JSON.stringify(hit.meta)}`);
+          if (!hit.meta.includes(node.originKind === "material" ? "来自材料" : node.originKind === "none" ? "起点" : "来自对话")) problems.push(`hit originKind mismatch: ${JSON.stringify(hit.meta)}`);
           const nodeById = new Map(deps.dataset.trees.flatMap((tree) => tree.nodes.map((candidate) => [candidate.id, candidate])));
           const expectedPathTitles = [...node.parentPath, node.id].map((id) => {
             const ancestor = nodeById.get(id);
             if (ancestor === undefined || ancestor.title !== null) {
-              return ancestor?.title ?? "(no first question yet)";
+              return ancestor?.title ?? "未命名支线";
             }
-            return ancestor.depth === 0 ? "Trunk" : "(no first question yet)";
+            return ancestor.depth === 0 ? "思考主线" : "未命名支线";
           });
-          const prefix = `${node.id} · `;
-          const pathTitles = hit.path.startsWith(prefix) ? hit.path.slice(prefix.length) : null;
+          const pathTitles = hit.path;
           const expectedPathText = expectedPathTitles.join(" / ");
           if (pathTitles !== expectedPathText) {
             problems.push(`hit full path diverges from truth (got ${JSON.stringify(pathTitles)}, want ${JSON.stringify(expectedPathText)})`);
@@ -93,14 +92,14 @@ export async function runNavSpotChecks(deps) {
           await waitFor(
             deps.ctx,
             `(() => { const more = document.querySelector("#nav-path .nav-path-more"); ` +
-              `if (more !== null && (more.textContent ?? "").includes("show full path")) { more.click(); return false; } ` +
+              `if (more !== null && (more.textContent ?? "").includes("展开中间")) { more.click(); return false; } ` +
               `return document.querySelectorAll("#nav-path .nav-path-step").length > 0; })()`,
             { label: "full path expanded for the spot-check", timeoutMs: 10_000 },
           );
           const steps = await deps.ctx.evalJs(
-            `(() => [...document.querySelectorAll("#nav-path .nav-path-step")].map((button) => button.title ?? ""))()`,
+            `(() => [...document.querySelectorAll("#nav-path .nav-path-step")].map((button) => button.dataset.branchId ?? null))()`,
           );
-          const gotIds = steps.map((title) => /^select (.+?) \(depth \d+\)$/.exec(title)?.[1] ?? null);
+          const gotIds = steps;
           const wantIds = [...target.parentPath, target.id];
           if (JSON.stringify(gotIds) !== JSON.stringify(wantIds)) {
             throw new Error(

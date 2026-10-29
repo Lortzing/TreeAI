@@ -14,7 +14,7 @@ export function createNavNodeResultsView(deps) {
   const state = getState();
 
   function navStepLabel(step) {
-    return step.title !== null ? step.title : step.depth === 0 ? "Trunk" : step.id;
+    return step.title !== null ? step.title : step.depth === 0 ? "思考主线" : "未命名支线";
   }
 
   /** 命中路径摘要（长链首末收拢显示，完整路径在 title 属性——同名消歧的
@@ -41,7 +41,7 @@ export function createNavNodeResultsView(deps) {
     const items = [];
     if (search.phase === "idle") {
       list.replaceChildren();
-      note.textContent = "find branches by title or id — every hit carries its full path (same-name branches stay distinguishable)";
+      note.textContent = "搜索支线，查看它所在的完整路径。";
       return;
     }
     if (search.phase === "loading") {
@@ -57,11 +57,11 @@ export function createNavNodeResultsView(deps) {
       retry.addEventListener("click", () => void runNavNodeSearch());
       li.append(retry);
       items.push(li);
-      note.textContent = "the failure stays visible with a retry";
+      note.textContent = "搜索失败，请重试。";
     } else {
       if (search.hits.length === 0) {
         items.push(
-          mutedListItem(`no branch in this tree matches “${search.query}” by title or id — nothing is fabricated`),
+          mutedListItem(`没有找到与“${search.query}”相关的支线。`),
         );
       } else {
         for (const hit of search.hits) {
@@ -72,16 +72,15 @@ export function createNavNodeResultsView(deps) {
           const name = document.createElement("span");
           name.className = "nav-finder-name";
           name.textContent =
-            (hit.title !== null ? hit.title : "(no first question yet)") +
-            (hit.matchedOn === "id" ? " (matched on id)" : "");
+            hit.title !== null ? hit.title : hit.depth === 0 ? "思考主线" : "未命名支线";
           const meta = document.createElement("span");
           meta.className = "nav-finder-meta";
-          meta.textContent = `${hit.branchId} · depth ${String(hit.depth)} · ${hit.originKind}`;
+          meta.textContent = `第 ${String(hit.depth)} 层 · ${hit.originKind === "material" ? "来自材料" : hit.originKind === "none" ? "起点" : "来自对话"}`;
           const pathEl = document.createElement("span");
           pathEl.className = "nav-hit-path";
           pathEl.textContent = navHitPathText(hit.path);
           button.append(name, meta, pathEl);
-          button.title = `${hit.branchId} · ${hit.path.map((step) => navStepLabel(step)).join(" / ")}`;
+          button.title = hit.path.map((step) => navStepLabel(step)).join(" / ");
           button.addEventListener("click", () => {
             void navRevealBranch(session, hit.branchId, hit.path);
           });
@@ -99,7 +98,7 @@ export function createNavNodeResultsView(deps) {
           items.push(li);
         }
       }
-      note.textContent = `${String(search.hits.length)} branch hit(s) for “${search.query}” in this tree`;
+      note.textContent = `找到 ${String(search.hits.length)} 条支线`;
     }
     navReplaceList(list, items, navNodeHitButtons);
   }

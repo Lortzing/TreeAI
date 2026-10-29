@@ -47,6 +47,8 @@ export function createMaterialReaderController(deps) {
       （版本行不可变，正常不可能）时如实回落默认选择并注记，不伪装。 */
   async function openMaterial(materialId, opts = {}) {
     if (deps.state.currentTreeId === null) return;
+    deps.$("materials-section").open = false;
+    deps.$("reading-materials").setAttribute("aria-expanded", "false");
     if (
       deps.state.materialReader !== null &&
       deps.state.materialReader.materialId === materialId &&
