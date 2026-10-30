@@ -1947,3 +1947,16 @@ test("CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and 
   assert.ok(/\.mat-selection-bar\s+\.mat-quote\s*\{[^{}]*white-space:\s*pre-wrap/.test(base), "quotes preserve their whitespace");
   assert.ok(/#material-reader\.enter\s*\{[^{}]*animation:\s*panel-in/.test(base), "the reader enters with the shared panel animation");
 });
+
+
+test("Harvest continue-reading restores the database version and block and returns focus to the harvest entry", async () => {
+  const world = await createWorld({ materials: [{ ...VERSIONED_SCRIPT, readingPosition: { versionId: "v-old", blockId: "blk-2", focusStart: null, updatedAt: ISO } }] });
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelector(".harvest-material")!.click();
+  await settle(40);
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+  assert.match(world.el("material-reader").querySelector(".mat-meta")!.textContent!, /v1 \(older — v2 is current\)/);
+  assert.equal((world.blockElement("blk-2").lastScrollIntoView as { block?: string })?.block, "start");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.document.activeElement, world.el("mode-harvest"));
+});

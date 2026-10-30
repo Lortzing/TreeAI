@@ -901,6 +901,12 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     const p = url.pathname;
     const respond = stubResponse;
 
+    const locate = /^\/api\/nav\/branches\/([^/]+)\/locate$/.exec(p);
+    if (locate && method === "GET") {
+      const record = records.find((item) => item.branchId === decodeURIComponent(locate[1]!));
+      if (!record) return respond(404, { error: { code: "not-found", message: "branch not found" } });
+      return respond(200, { treeId: TREE, origin: { kind: "material", ...record.selection } });
+    }
     /* ---- 材料面（D4 契约 §3 已落地形状 + D4-3 四端点的脚本镜像） ---- */
     if (p === "/api/trees" && method === "GET") {
       return respond(200, { trees: [{ id: TREE, createdAt: ISO, forestId: "forest-1" }] });
@@ -2375,4 +2381,26 @@ test("css lexical locks: the branching flow, the scope card, the truncation mark
   assert.ok(hasRule(".turn.return .mat-return-source"), "the material return source card has a rule");
   assert.ok(hasRule(".turn.return .mat-return-source .mat-return-jump"), "the source-jump button has a rule");
   assert.ok(hasRule("#branch-tabs .material-badge"), "the material branch tab badge has a rule");
+});
+
+
+test("Harvest material source uses persisted locate facts with an empty browser source cache", async () => {
+  const world = await createWorld({
+    materials: [MD01_SCRIPT],
+    explorations: [seededExploration({ hasTurns: true })],
+    seededReturns: [{ turnId: "turn-ret-seeded", fromBranchId: "branch-seed-1", text: "My saved understanding", idempotencyKey: "seeded-ret-key" }],
+  });
+  assert.equal([...world.localStorageStore.keys()].filter((key) => key.startsWith("treeai-material-branch-origin:")).length, 0);
+  world.el("mode-harvest").click();
+  const button = world.el("session-workspace").querySelectorAll("button").find((item) => item.textContent === "查看原始出处")!;
+  button.click();
+  await settle(40);
+  assert.equal(world.requestsOf("/locate").length, 1);
+  assert.equal(world.el("material-reader").hidden, false);
+  const request = world.backend.requests.find((item) => item.path.includes("/versions/"));
+  assert.ok(request);
+  assert.ok(request.path.includes(world.backend.records[0]!.selection.versionId));
+  assert.equal((world.blockElement(world.backend.records[0]!.selection.blockId).lastScrollIntoView as { block?: string })?.block, "start");
+  assert.equal(world.requestsOf("/material-return").length, 0);
+  assert.equal(world.requestsOf("/prompt").length, 0);
 });

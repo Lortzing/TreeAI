@@ -132,6 +132,7 @@ export function createMaterialListController(deps) {
       deps.state.materials = { ok: false, error: String(err && err.message ? err.message : err) };
     }
     renderMaterialsSection();
+    deps.renderSessionWorkspace?.();
   }
 
   return {

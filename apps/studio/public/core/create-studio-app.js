@@ -399,7 +399,9 @@ void (async () => {
   try {
     await refreshTrees();
     if (state.trees.length > 0) {
-      await openTree(state.trees[0].id);
+      let rememberedTree = null;
+      try { rememberedTree = window.localStorage?.getItem("treeai:last-tree"); } catch { /* Optional browser cursor. */ }
+      await openTree(state.trees.find((tree) => tree.id === rememberedTree)?.id || state.trees[0].id);
     } else {
       renderAll();
     }

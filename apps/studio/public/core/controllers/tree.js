@@ -139,6 +139,7 @@ export function createTreeController(deps) {
     const treeState = await deps.api(`/api/trees/${encodeURIComponent(treeId)}/state`);
     if (epoch !== treeOpenEpoch) return; /* 已被更新的开树/建树取代：迟到丢弃 */
     deps.state.currentTreeId = treeId;
+    try { deps.window.localStorage?.setItem("treeai:last-tree", treeId); } catch { /* Optional browser cursor. */ }
     deps.state.treeState = treeState;
     /* 树切换：面板/抽屉收起、草稿回到会话外（持久草稿仍在 localStorage，
        面板重开时恢复）。阅读位置按 tree:branch 记忆，切回可恢复。 */
@@ -170,6 +171,7 @@ export function createTreeController(deps) {
     treeOpenEpoch += 1; /* 建树即新的当前树：作废在途的旧 openTree（P1 同族） */
     const payload = await deps.api("/api/trees", "POST", {});
     deps.state.currentTreeId = payload.tree.id;
+    try { deps.window.localStorage?.setItem("treeai:last-tree", payload.tree.id); } catch { /* Optional browser cursor. */ }
     deps.state.treeState = payload.state;
     deps.state.panelBranchId = null;
     deps.state.returnDraft = null;

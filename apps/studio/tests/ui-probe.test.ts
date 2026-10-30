@@ -720,6 +720,9 @@ interface World {
 
 interface WorldOptions {
   narrowViewport?: boolean;
+  storage?: Map<string, string>;
+  roundHistory?: boolean;
+  storageUnavailable?: boolean;
   journalMode?: Backend["journalMode"];
   returnMode?: Backend["returnMode"];
   /** /return 响应的 navigation 字段脚本（保存后导航失败场景）。 */
@@ -755,7 +758,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 
   /* ---------------- window / localStorage 桩 ---------------- */
 
-  const localStorageStore = new Map<string, string>();
+  const localStorageStore = options.storage ?? new Map<string, string>();
   /* 脚本化选区（null = 无选区 → app.js 的 selectionOffsetsWithin 回退整条
      答案语义；StubTextRange = 文本节点上的选区 → 绝对偏移语义）。 */
   let scriptedSelection: StubTextRange | null = null;
@@ -1177,6 +1180,13 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.document = documentStub;
   globals.window = windowStub;
   globals.EventSource = StubEventSource;
+  if (options.roundHistory) {
+    for (const turn of backend.treeState.branches[0]!.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  }
+  if (options.storageUnavailable) {
+    windowStub.localStorage.getItem = () => { throw new Error("storage unavailable"); };
+    windowStub.localStorage.setItem = () => { throw new Error("storage unavailable"); };
+  }
   globals.fetch = fetchStub;
 
   /* file: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
@@ -3351,4 +3361,105 @@ test("desktop sidebar collapses to a persistent rail without losing the current 
   assert.equal(world.localStorageStore.get("treeai.sidebar-collapsed"), "false");
   assert.deepEqual([...conversation.children], nodes);
   assert.equal(world.el("prompt-input").value, "Keep my draft");
+});
+
+
+test("Harvest overview preserves full saved text and source identity, and browsing dispatches no model run", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  const before = world.backend.requests.filter((request) => request.method === "POST").length;
+  world.el("mode-harvest").click();
+  const root = world.el("session-workspace");
+  assert.equal(world.el("main").dataset.workspaceView, "harvest");
+  assert.equal(world.el("tree-view").getAttribute("inert"), "");
+  const card = root.querySelector(".harvest-card")!;
+  const saved = world.backend.treeState.branches.flatMap((view) => view.turns).find((turn) => turn.id === "r0")!;
+  assert.ok(card.textContent.includes(saved.text));
+  assert.ok(card.textContent.includes("已保存 · 待下次主线讨论采用"));
+  assert.ok(card.textContent.includes(saved.targetAnchor!.anchorTurnId));
+  assert.ok(card.textContent.includes(saved.targetAnchor!.anchorEntryId));
+  assert.equal(world.backend.requests.filter((request) => request.method === "POST").length, before);
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+});
+
+test("Harvest overview updates attempted and delivered independently and stays readable without Pi", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  world.el("mode-harvest").click();
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  trunk.returnAttempts.push({ turnId: "r0", runId: "failed-adoption", runState: "failed", failure: null, attemptedAt: ISO, terminalAt: ISO });
+  world.liveSse().emit("run-terminal", { runId: "failed-adoption" });
+  await settle(30);
+  assert.ok(world.el("session-workspace").textContent.includes("已尝试采用 1 次 · 仍待采用"));
+  trunk.turns.find((turn) => turn.id === "r0")!.deliveredRunId = "successful-adoption";
+  world.setAvailability("trunk-1", "unavailable");
+  world.liveSse().emit("run-terminal", { runId: "successful-adoption" });
+  await settle(30);
+  assert.ok(world.el("session-workspace").textContent.includes("已进入一次成功主线运行的上下文"));
+  assert.ok(world.el("session-workspace").textContent.includes("保存内容仍可读"));
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 1);
+});
+
+test("Harvest opens the saved Return round and its exact source instead of the latest round", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  for (const turn of trunk.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  world.liveSse().emit("run-terminal", { runId: "later" });
+  await settle(30);
+  world.el("round-next").click();
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent === "查看收获所在轮次")!.click();
+  await settle();
+  assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
+  assert.ok(world.turnElement("conversation", "r0"));
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent === "查看原始出处")!.click();
+  await settle(300);
+  assert.ok(world.turnElement("conversation", "a1").querySelector(".source-highlight"));
+});
+
+test("Round cursors survive a new Studio instance, validate stale IDs, and remain scoped to each branch", async () => {
+  const storage = new Map<string, string>([[`treeai:round:${TREE}:trunk-1`, "ep-1"], [`treeai:round:${TREE}:branch-1`, "stale-round"]]);
+  const world = await createWorld({ storage });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  for (const turn of trunk.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  world.liveSse().emit("run-terminal", { runId: "later" });
+  await settle(30);
+  world.el("round-next").click();
+  assert.equal(storage.get(`treeai:round:${TREE}:trunk-1`), "later");
+  world.tabButton("branch-1")!.click();
+  await settle();
+  assert.notEqual(storage.get(`treeai:round:${TREE}:branch-1`), "stale-round");
+  assert.equal(storage.get(`treeai:round:${TREE}:trunk-1`), "later");
+  // A fresh instance with the same database and browser storage restores the older explicit cursor.
+  storage.set(`treeai:round:${TREE}:trunk-1`, "ep-1");
+  const reopened = await createWorld({ storage, roundHistory: true });
+  assert.equal(reopened.el("conversation").dataset.episodeId, "ep-1");
+});
+
+test("Harvest empty state is honest and saved cards page without losing older harvests", async () => {
+  const empty = await createWorld();
+  empty.el("mode-harvest").click();
+  assert.ok(empty.el("session-workspace").textContent.includes("还没有保存的收获"));
+  const world = await createWorld({ initialTrunkReturn: true });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  const original = trunk.turns.find((turn) => turn.id === "r0")!;
+  for (let i = 0; i < 25; i += 1) trunk.turns.push({ ...original, id: `harvest-${i}`, text: `Saved harvest ${i}` });
+  world.liveSse().emit("run-terminal", { runId: "page" });
+  await settle(30);
+  world.el("mode-harvest").click();
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 20);
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent.startsWith("继续显示收获"))!.click();
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 26);
+});
+
+
+test("Unavailable browser storage and stale tree/round cursors preserve database reading", async () => {
+  const stale = await createWorld({ storage: new Map([["treeai:last-tree", "deleted-tree"], [`treeai:round:${TREE}:trunk-1`, "deleted-round"]]), roundHistory: true });
+  assert.equal(stale.el("conversation").dataset.episodeId, "later");
+  const blocked = await createWorld({ storageUnavailable: true, roundHistory: true });
+  assert.equal(blocked.el("conversation").dataset.episodeId, "later");
+  blocked.el("round-previous").click();
+  assert.equal(blocked.el("conversation").dataset.episodeId, "ep-1");
+  blocked.el("mode-harvest").click();
+  assert.ok(blocked.el("session-workspace").textContent.includes("继续讨论"));
 });

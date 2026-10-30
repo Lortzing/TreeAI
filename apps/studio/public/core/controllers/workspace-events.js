@@ -105,7 +105,7 @@ listen(document, "pointerdown", (event) => {
 
 /* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
 
-for (const mode of ["chat", "map"]) {
+for (const mode of ["chat", "map", "harvest"]) {
   listen($("mode-" + mode), "click", () => {
     closeMaterialReader();
     setWorkspaceView(mode);

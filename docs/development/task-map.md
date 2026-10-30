@@ -4,6 +4,7 @@ Start from the narrowest owner and its tests; expand only when crossing a public
 
 | Task | Start here | Broaden when necessary | Verification |
 | --- | --- | --- | --- |
+| 收获概览 / 隔天继续 | `public/core/views/session-workspace.js`, `controllers/{workspace-events,tree,material-list}.js` | `create-studio-app.js` boot, materials composition, existing nav locate/material reader; [scope and trial script](harvest-continuity.md) | UI probe/material suites, root types/tests, real browser Echo; human gates separate |
 | Studio startup/UI state | `apps/studio/public/app.js`, `public/core/{create-studio-app,compose-features,state}.js` | ESM/static/installer wiring | Studio scripted DOM + native Chrome |
 | API profiles/settings | `apps/studio/src/{api-config,api-settings,cli}.ts`, `src/http/routes/api-settings.ts`, `public/core/controllers/api-settings.js` | Startup precedence, credentials via environment, pinned Pi SDK protocols and installer source inclusion | API profile/service/UI/wire tests + real API/browser connection |
 | Studio diagnostics/status | `public/core/views/diagnostics.js`, `public/core/controllers/studio-events.js` | diagnostics refresh/polling/SSE and abort controller | diagnostics/failure UI + Studio suite |

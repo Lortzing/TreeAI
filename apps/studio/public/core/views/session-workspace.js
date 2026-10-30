@@ -21,6 +21,17 @@ function renderReadingHeading() {
 
 const sessionUI = { mode: "chat", treeId: null, branchId: null, zoom: 1, signature: "", rounds: new Map(), followBranchId: null };
 const SESSION_GRAPH_LIMIT = 120;
+let harvestLimit = 20;
+// Convenience cursor only: saved turns remain authoritative and every restored ID is validated.
+function storedRound(view) {
+  try { return deps.window.localStorage?.getItem(`treeai:round:${roundKey(view)}`); } catch { return null; }
+}
+function rememberRound(view, round) {
+  if (!round) return;
+  if (sessionUI.rounds.get(roundKey(view)) === round.id) return;
+  sessionUI.rounds.set(roundKey(view), round.id);
+  try { deps.window.localStorage?.setItem(`treeai:round:${roundKey(view)}`, round.id); } catch { /* Reading works without storage. */ }
+}
 
 function sessionRounds(view) {
   const rounds = [];
@@ -87,9 +98,10 @@ function roundKey(view) { return `${deps.state.currentTreeId}:${view.branch.id}`
 function currentSessionRound(view) {
   const model = sessionRounds(view);
   const key = roundKey(view);
-  let round = model.rounds.find((item) => item.id === sessionUI.rounds.get(key));
+  const selectedId = sessionUI.rounds.get(key) || storedRound(view);
+  let round = model.rounds.find((item) => item.id === selectedId);
   if (!round || sessionUI.followBranchId === view.branch.id) round = model.rounds[model.rounds.length - 1];
-  if (round) sessionUI.rounds.set(key, round.id);
+  rememberRound(view, round);
   return { ...model, round, index: model.rounds.indexOf(round) };
 }
 
@@ -98,14 +110,14 @@ function selectRoundForTurn(turnId) {
   if (!found) return;
   const round = sessionRounds(found.view).rounds.find((item) => [...item.turns, ...item.returns].some((turn) => turn.id === turnId));
   if (round && sessionUI.rounds.get(roundKey(found.view)) !== round.id) {
-    sessionUI.rounds.set(roundKey(found.view), round.id);
+    rememberRound(found.view, round);
     return true;
   }
   return false;
 }
 
 function setWorkspaceView(mode, branchId, originRect, focus = true) {
-  if (!["chat", "map"].includes(mode)) return;
+  if (!["chat", "map", "harvest"].includes(mode)) return;
   if (deps.state.drawerOpen) deps.closeDrawer();
   deps.closeSidebar();
   sessionUI.branchId = branchId || deps.state.panelBranchId || deps.trunkBranchId();
@@ -166,19 +178,20 @@ function renderSessionWorkspace() {
     sessionUI.branchId = st?.trunkBranchId ?? null;
     sessionUI.signature = "";
     sessionUI.zoom = 1;
+    harvestLimit = 20;
   }
   if (st && !st.branches.some((view) => view.branch.id === sessionUI.branchId)) {
     sessionUI.branchId = st.trunkBranchId;
   }
   deps.$("main").dataset.workspaceView = sessionUI.mode;
-  for (const mode of ["chat", "map"]) {
+  for (const mode of ["chat", "map", "harvest"]) {
     const button = deps.$("mode-" + mode);
     button?.classList.toggle("active", sessionUI.mode === mode);
     button?.setAttribute("aria-pressed", String(sessionUI.mode === mode));
   }
   const alternate = sessionUI.mode !== "chat";
   if (alternate && treeId) {
-    const context = "关系图";
+    const context = sessionUI.mode === "harvest" ? "收获与继续" : "关系图";
     deps.$("topbar-path").textContent = `${readingTitles.get(treeId) || "新的思考"} / ${context}`;
     deps.$("topbar-path").title = `${treeId} / ${context}`;
   } else {
@@ -198,20 +211,22 @@ function renderSessionWorkspace() {
   renderRoundNavigation();
   if (!alternate) return;
   const signature = JSON.stringify([sessionUI.mode, treeId, sessionUI.branchId, sessionUI.zoom,
-    st?.branches.map((view) => [view.branch.id, view.branch.parentBranchId, view.sessionAvailability,
-      view.origin, view.turns.map((turn) => [turn.id, turn.episodeId, turn.role, turn.text, turn.deliveredRunId])])]);
+    harvestLimit, deps.state.materials, st?.branches.map((view) => [view.branch.id, view.branch.parentBranchId, view.sessionAvailability,
+      view.origin, view.turns.map((turn) => [turn.id, turn.episodeId, turn.role, turn.text, turn.deliveredRunId, turn.targetAnchor]), view.returnAttempts])]);
   if (signature === sessionUI.signature) return;
   sessionUI.signature = signature;
   const focused = deps.document.activeElement;
   const focusId = focused?.id;
-  const previousScroll = root.querySelector(".session-map-scroll");
+  const previousScroll = root.querySelector(sessionUI.mode === "harvest" ? ".harvest-content" : ".session-map-scroll");
   const savedScroll = previousScroll ? { top: previousScroll.scrollTop, left: previousScroll.scrollLeft } : null;
   root.replaceChildren();
   if (!st) {
     const empty = workspaceElement("div", "session-view-empty");
     empty.append(workspaceElement("h1", "", "暂无 Session"), workspaceButton("＋ 新建思考树", "primary", () => deps.guard(deps.createTree)));
     root.append(empty);
-  } else renderSessionMap(root, st, savedScroll);
+  } else if (sessionUI.mode === "harvest") renderHarvest(root, st);
+  else renderSessionMap(root, st, savedScroll);
+  if (sessionUI.mode === "harvest" && savedScroll) root.querySelector(".harvest-content").scrollTop = savedScroll.top;
   if (focusId && focused !== deps.document.body && !deps.document.body.contains?.(focused)) {
     const replacement = deps.$(focusId);
     if (replacement) replacement.focus({ preventScroll: true });
@@ -224,6 +239,90 @@ function sessionViewHeading(root, eyebrow, title, description) {
   heading.append(workspaceElement("h1", "", title));
   root.append(heading);
   return heading;
+}
+
+
+function renderHarvest(root, st) {
+  sessionViewHeading(root, "", "收获与继续", "");
+  const content = workspaceElement("div", "harvest-content");
+  content.append(workspaceElement("p", "harvest-note", "保存你认可的收获，回到出处继续思考。采用状态仅表示是否进入主线运行上下文。"));
+  const recent = workspaceElement("section", "harvest-section");
+  recent.append(workspaceElement("h2", "", "继续讨论"));
+  const active = st.branches.map((view) => ({ view, latest: view.turns.filter((turn) => turn.role !== "return").at(-1) }))
+    .filter((item) => item.latest).sort((a, b) => b.latest.createdAt.localeCompare(a.latest.createdAt) || a.view.branch.id.localeCompare(b.view.branch.id));
+  for (const { view, latest } of active.slice(0, 5)) {
+    const row = workspaceElement("div", "harvest-resume");
+    row.append(workspaceButton(sessionName(view), "harvest-resume-button", () => void deps.guard(() => openSessionRound(view.branch.id))),
+      workspaceElement("span", "harvest-note", `最近讨论 ${new Date(latest.createdAt).toLocaleString()}${view.sessionAvailability === "unavailable" ? " · 执行会话不可用，保存内容仍可读" : ""}`));
+    recent.append(row);
+  }
+  if (!active.length) recent.append(workspaceElement("p", "harvest-note", "还没有讨论。带着一个问题开始阅读材料。"));
+  content.append(recent);
+  const materials = workspaceElement("section", "harvest-section");
+  materials.append(workspaceElement("h2", "", "继续阅读"), workspaceElement("p", "harvest-note", "打开材料会恢复数据库中保存的阅读版本和位置。"));
+  const loaded = deps.state.materials;
+  if (!loaded) materials.append(workspaceElement("p", "harvest-note", "正在加载材料…"));
+  else if (!loaded.ok) materials.append(workspaceElement("p", "", loaded.error), workspaceButton("重试加载材料", "", () => void deps.refreshMaterials()));
+  else if (!loaded.materials.length) materials.append(workspaceElement("p", "harvest-note", "还没有材料，可从侧栏导入。"));
+  else for (const { material } of loaded.materials) {
+    materials.append(workspaceButton(material.title, "harvest-material", () => void deps.guard(async () => {
+      setWorkspaceView("chat", undefined, undefined, false);
+      await deps.openMaterial(material.id, { trigger: { kind: "element", element: deps.$("mode-harvest") } });
+    })));
+  }
+  content.append(materials);
+  const returns = st.branches.flatMap((view) => view.turns.filter((turn) => turn.role === "return").map((turn) => ({ turn, view })))
+    .sort((a, b) => b.turn.createdAt.localeCompare(a.turn.createdAt) || a.turn.id.localeCompare(b.turn.id));
+  const saved = workspaceElement("section", "harvest-section");
+  saved.append(workspaceElement("h2", "", `已保存的收获 · ${returns.length}`));
+  if (!returns.length) saved.append(workspaceElement("p", "harvest-note", "还没有保存的收获。探索后可编辑 Return 草稿，确认保存到主线。"));
+  for (const { turn, view } of returns.slice(0, harvestLimit)) {
+    const card = workspaceElement("article", "harvest-card");
+    card.dataset.harvestId = turn.id;
+    const attempts = view.returnAttempts.filter((attempt) => attempt.turnId === turn.id);
+    const status = turn.deliveredRunId ? "已进入一次成功主线运行的上下文" : attempts.length ? `已尝试采用 ${attempts.length} 次 · 仍待采用` : "已保存 · 待下次主线讨论采用";
+    card.append(workspaceElement("p", "harvest-note", `${new Date(turn.createdAt).toLocaleString()} · ${status}`), workspaceElement("p", "harvest-text", turn.text));
+    const from = st.branches.find((item) => item.branch.id === turn.fromBranchId);
+    card.append(workspaceElement("p", "harvest-note", `来自：${from ? sessionName(from) : turn.fromBranchId || "来源分支不可用"}`));
+    if (turn.targetAnchor) {
+      card.append(workspaceElement("blockquote", "harvest-quote", turn.targetAnchor.selection.text));
+      const identity = workspaceElement("details", "harvest-identity");
+      identity.append(workspaceElement("summary", "", "来源身份"), workspaceElement("p", "", `${turn.targetAnchor.sourceBranchId} / ${turn.targetAnchor.anchorTurnId} / ${turn.targetAnchor.anchorEntryId} · ${turn.targetAnchor.selection.start}–${turn.targetAnchor.selection.end}`));
+      card.append(identity);
+    }
+    const actions = workspaceElement("div", "harvest-actions");
+    actions.append(workspaceButton("查看收获所在轮次", "", () => void deps.guard(async () => {
+      selectRoundForTurn(turn.id);
+      sessionUI.followBranchId = null;
+      await openSessionRound(view.branch.id);
+    })));
+    if (from) actions.append(workspaceButton("查看原始出处", "", () => void deps.guard(async () => {
+      const treeId = deps.state.currentTreeId;
+      if (from.origin) {
+        await openSessionRound(from.branch.id);
+        await deps.revealOrigin(from.branch.id);
+      } else {
+        // Database-backed locate survives a fresh browser with no material-origin cache.
+        const location = await deps.api(`/api/nav/branches/${encodeURIComponent(from.branch.id)}/locate`);
+        if (deps.state.currentTreeId !== treeId) return;
+        if (location.treeId !== treeId || location.origin?.kind !== "material") throw new Error("原始出处不可用；已保存的收获仍然保留。");
+        setWorkspaceView("chat", undefined, undefined, false);
+        await deps.openMaterial(location.origin.materialId, {
+          versionId: location.origin.versionId, focusBlockId: location.origin.blockId, arrival: "return-source",
+          trigger: { kind: "element", element: deps.$("mode-harvest") },
+        });
+      }
+    })));
+    card.append(actions);
+    [...actions.children].forEach((button, index) => { button.id = `harvest-action-${turn.id}-${index}`; });
+    saved.append(card);
+  }
+  if (returns.length > harvestLimit) saved.append(workspaceButton(`继续显示收获（还有 ${returns.length - harvestLimit} 条）`, "", () => {
+    harvestLimit += 20;
+    renderSessionWorkspace();
+  }));
+  content.append(saved);
+  root.append(content);
 }
 
 function renderSessionMap(root, st, savedScroll) {
@@ -345,7 +444,7 @@ function moveSessionRound(delta) {
   const index = Math.max(0, Math.min(rounds.length - 1, current + delta));
   if (!rounds[index] || index === current) return;
   sessionUI.followBranchId = null;
-  sessionUI.rounds.set(roundKey(view), rounds[index].id);
+  rememberRound(view, rounds[index]);
   deps.renderAll();
   const container = deps.$(deps.state.panelBranchId ? "panel-conversation" : "conversation");
   container.scrollTop = 0;
