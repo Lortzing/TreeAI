@@ -1,3 +1,4 @@
+import { createGenerativeUiController } from "./controllers/generative-ui.js";
 import { createSessionWorkspace } from "./views/session-workspace.js";
 import { createNavigationFeatures } from "./composition/navigation.js";
 import { createMaterialFeatures } from "./composition/materials.js";
@@ -128,8 +129,19 @@ const findTurnById = (turnId) => {
     });
 
 
+    const generativeUi = createGenerativeUiController({
+      document: deps.document, window: deps.window, fetch: deps.fetch, crypto: deps.crypto, state: deps.state,
+      appendDraft: (branchId, text) => returnController.appendReturnDraft(branchId, text),
+      locateSource: (branchId, turnId, source) => guard(async () => {
+        if (source.kind === "turn" && source.turnId === turnId) studioFocusController.revealAnchorTurn(turnId);
+        else if (source.kind === "material") await materialSourceJump(branchId);
+        else await revealOrigin(branchId);
+      }, "panel"),
+    });
+
     const conversationView = createConversationView({
       get openMaterial() { return openMaterial; },
+      comparisonCard: (turn, branchId) => generativeUi.card(turn, branchId),
       get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get assistantTurns() { return assistantTurns; },
@@ -635,6 +647,7 @@ const {
   });
 
   return {
+    disposeGenerativeUi: () => generativeUi.dispose(),
     sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial, refreshMaterials,
     $,
     persistReturnDraft,

@@ -125,16 +125,16 @@ function importMarkdown(
 
 /* ------------------------------ 迁移 ------------------------------ */
 
-test("fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state)", () => {
-  assert.equal(LATEST_SCHEMA_VERSION, 10, "migration 0010 must be registered as the latest (0008 material-core + 0009 terminology-dispatch-ledger + 0010 nav-tree-expand-state, issue #8 D4-8)");
+test("fresh database migrates to schema version 11 (material core + terminology dispatch ledger + nav expand state + generated comparisons)", () => {
+  assert.equal(LATEST_SCHEMA_VERSION, 11, "migration 0011 adds generated comparisons after the material/navigation migrations");
   const dir = makeTempDir();
   try {
     const path = dbPath(dir);
     const mat = MaterialRepository.open({ path });
-    assert.equal(mat.schemaVersion, 10);
+    assert.equal(mat.schemaVersion, 11);
     mat.close();
     const mem = MaterialRepository.open({ path: ":memory:" });
-    assert.equal(mem.schemaVersion, 10);
+    assert.equal(mem.schemaVersion, 11);
     mem.close();
 
     const raw = new DatabaseSync(path, { readOnly: true });
@@ -145,7 +145,7 @@ test("fresh database migrates to schema version 10 (material core + terminology 
     assert.equal(Number(registered.version), 8);
     assert.equal(registered.name, "material-core");
     const uv = raw.prepare("PRAGMA user_version").get() as { user_version: number };
-    assert.equal(Number(uv.user_version), 10);
+    assert.equal(Number(uv.user_version), 11);
     const navTable = raw
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'nav_tree_expand_state'")
       .get() as { name: string } | undefined;
@@ -233,7 +233,7 @@ test("pre-0008 database upgrades: rows preserved, origin_kind backfilled (turn/n
 
     // 打开（应用 0008 + 0009 + 0010）：版本 10，数据保留，origin_kind 回填。
     const mat = MaterialRepository.open({ path });
-    assert.equal(mat.schemaVersion, 10);
+    assert.equal(mat.schemaVersion, 11);
     assert.equal(mat.getBranchOriginKind("branch-a" as BranchId), "turn", "origin branch backfilled to 'turn'");
     assert.equal(mat.getBranchOriginKind("branch-b" as BranchId), "none", "branch without origin stays 'none'");
     assert.equal(mat.getBranchOriginKind("branch-trunk" as BranchId), "none", "trunk stays 'none'");
@@ -260,7 +260,7 @@ test("pre-0008 database upgrades: rows preserved, origin_kind backfilled (turn/n
       .all() as Array<{ version: number }>;
     assert.deepEqual(
       versions.map((v) => Number(v.version)),
-      Array.from({ length: 10 }, (_, i) => i + 1),
+      Array.from({ length: 11 }, (_, i) => i + 1),
     );
     raw2.close();
   } finally {

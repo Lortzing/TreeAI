@@ -47,6 +47,7 @@ const studioFeatures = createStudioFeatures({
   get navigator() { return navigator; },
 });
 const {
+  disposeGenerativeUi,
   sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
   $,
   persistReturnDraft,
@@ -415,6 +416,7 @@ void (async () => {
 })();
 
     cleanup = () => {
+      disposeGenerativeUi();
       disposeApiSettings();
       disposeWorkspaceEvents();
       disposeAppearance();

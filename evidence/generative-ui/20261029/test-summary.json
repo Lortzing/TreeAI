@@ -1,0 +1,10 @@
+{
+  "command": "npm run typecheck && npm test",
+  "exitCode": 0,
+  "tests": 924,
+  "pass": 924,
+  "fail": 0,
+  "skipped": 0,
+  "newGenerativeUiTests": 23,
+  "scope": "offline automated checks; not real-Pi model quality"
+}

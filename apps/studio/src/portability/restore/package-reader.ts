@@ -70,12 +70,12 @@ export function readAndValidateManifest(packageDir: string): ExportManifest {
       `package format '${String(manifest.packageFormat)}' is not '${EXPORT_PACKAGE_FORMAT}'`,
     );
   }
-  if (manifest.productSchemaVersion !== FACTS_LAYOUT_SCHEMA_VERSION) {
+  if (manifest.productSchemaVersion !== FACTS_LAYOUT_SCHEMA_VERSION && manifest.productSchemaVersion !== 10) {
     throw new PortabilityError(
       "schema-unsupported",
       `package product schema version ${String(manifest.productSchemaVersion)} does not match this build's facts layout ` +
-        `${FACTS_LAYOUT_SCHEMA_VERSION}; packages are only portable between identical fact layouts ` +
-        "(re-export from an up-to-date studio)",
+        `${FACTS_LAYOUT_SCHEMA_VERSION}; this build also accepts schema 10 packages without generated comparisons ` +
+        "(re-export older layouts from an up-to-date studio)",
     );
   }
   if (typeof manifest.exportedAt !== "string" || manifest.exportedAt.length === 0) {
@@ -319,7 +319,7 @@ export function validateEntriesAndRead(
   }
 
   /* facts 文件集必须是冻结全集（多/少都拒绝）。 */
-  const expectedTables = new Set(FACT_TABLES.map((spec) => spec.table));
+  const expectedTables = new Set(FACT_TABLES.filter(spec => manifest.productSchemaVersion !== 10 || spec.table !== "generative_ui_tasks").map((spec) => spec.table));
   const actualTables = new Set(factsByPath.keys());
   for (const table of expectedTables) {
     if (!actualTables.has(table)) {
@@ -352,7 +352,7 @@ export function validateEntriesAndRead(
   /* 解析全部 facts 文件 + 清单 counts 与实际行数交叉复核（篡改清单即失败）。 */
   const facts = new Map<string, FactsFileShape>();
   for (const spec of FACT_TABLES) {
-    facts.set(spec.table, parseFactsFile(spec.table, packageDir));
+    facts.set(spec.table, expectedTables.has(spec.table) ? parseFactsFile(spec.table, packageDir) : { table: spec.table, columns: spec.columns.map(c => c.name), rows: [] });
   }
   for (const table of expectedTables) {
     const declared = manifest.counts[table];

@@ -9,7 +9,7 @@ const publicDir = fileURLToPath(new URL("../public/", import.meta.url));
 
 test("published CSS modules preserve ordered cascade and critical responsive rules", () => {
   const modules = studioCssModuleNames(publicDir);
-  assert.deepEqual(modules, ["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css","studio-system.css"]);
+  assert.deepEqual(modules, ["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css","studio-system.css","comparison.css"]);
   const merged = readStudioCss(publicDir);
   assert.ok(merged.length > 55_000, "all original CSS sections are present");
   assert.match(merged, /@media \(max-width: 719px\)/);

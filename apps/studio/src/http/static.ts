@@ -62,6 +62,8 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
   "/core/controllers/composer-tools.js": { file: "core/controllers/composer-tools.js", type: "text/javascript; charset=utf-8" },
   "/core/controllers/region-selection.js": { file: "core/controllers/region-selection.js", type: "text/javascript; charset=utf-8" },
   "/core/controllers/appearance.js": { file: "core/controllers/appearance.js", type: "text/javascript; charset=utf-8" },
+  "/core/controllers/generative-ui.js": { file: "core/controllers/generative-ui.js", type: "text/javascript; charset=utf-8" },
+  "/core/views/comparison.js": { file: "core/views/comparison.js", type: "text/javascript; charset=utf-8" },
   "/core/controllers/api-settings.js": { file: "core/controllers/api-settings.js", type: "text/javascript; charset=utf-8" },
   "/": { file: "index.html", type: "text/html; charset=utf-8" },
   "/index.html": { file: "index.html", type: "text/html; charset=utf-8" },
@@ -124,7 +126,7 @@ const STATIC_FILES: Readonly<Record<string, { file: string; type: string }>> = {
 };
 
 /** Exact CSS asset allowlist: never resolve arbitrary URL paths under public/. */
-const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css","studio-system.css"]);
+const CSS_MODULE_FILES = new Set(["tokens-base.css","workspace.css","conversation.css","terminology.css","controls-branches.css","materials.css","sources-navigation.css","responsive.css","session-workspace.css","reduced-motion.css","api-settings.css","studio-system.css","comparison.css"]);
 const PDFJS_ROOT = new URL("../../../../node_modules/pdfjs-dist/", import.meta.url);
 
 export function createStaticResponder(staticDir: string) {

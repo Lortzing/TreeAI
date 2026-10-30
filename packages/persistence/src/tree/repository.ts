@@ -1,6 +1,7 @@
 import type {
   TreeDomainContext,
 } from "./context.ts";
+import { TreeGenerativeUiRepository } from "./generative-ui.ts";
 import {
   TreeEntitiesRepository,
 } from "./entities.ts";
@@ -98,6 +99,7 @@ export class TreeRepository {
   readonly #turns: TreeTurnsRepository;
   readonly #terminology: TreeTerminologyRepository;
   readonly #navigation: TreeNavigationRepository;
+  readonly generativeUi: TreeGenerativeUiRepository;
 
   private constructor(options: TreeRepositoryOptions, db: DatabaseSync) {
     this.path = options.path;
@@ -118,6 +120,7 @@ export class TreeRepository {
     this.#turns = new TreeTurnsRepository(domainContext);
     this.#terminology = new TreeTerminologyRepository(domainContext);
     this.#navigation = new TreeNavigationRepository(domainContext);
+    this.generativeUi = new TreeGenerativeUiRepository(domainContext);
   }
 
   /**

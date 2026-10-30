@@ -62,6 +62,8 @@ import {
   type PiDriverWiring,
   type PiToolWiring,
 } from "./cli.ts";
+import { GenerativeUiService } from "./generative-ui/service.ts";
+import { offlineComparisonAnswer } from "./generative-ui/offline.ts";
 import { EchoSdkPort } from "./echo-port.ts";
 import { loadApiConfig, prepareApiConfig } from "./api-config.ts";
 import { createCredentialStore, resolveCredentialEnvironment } from "./credential-store.ts";
@@ -332,6 +334,19 @@ async function main(): Promise<void> {
      由受 Tree/Material/Version 作用域校验的本地路由提供给阅读器。 */
   const materialRepository = MaterialRepository.open({ path: join(options.dataDir, "treeai.db") });
   const materials = new MaterialImportService({ repository: materialRepository });
+  const comparisonDir = join(options.dataDir, "generative-ui");
+  const comparisonWorkspace = join(comparisonDir, "workspace");
+  const comparisonSessions = join(comparisonDir, "sessions");
+  mkdirSync(comparisonWorkspace, { recursive: true });
+  mkdirSync(comparisonSessions, { recursive: true });
+  const comparisonModel = { providerId: options.providerId, modelId: options.modelId };
+  const comparisonRuntime = piSetup === null
+    ? createPiRuntimeFromConfig({ port: new EchoSdkPort({ model: comparisonModel, answer: offlineComparisonAnswer }), defaultCwd: comparisonWorkspace, thinkingLevel: "off" })
+    : createPiRuntime({ agentDir: piSetup.agentDir, defaultCwd: comparisonWorkspace, credentials: piSetup.credentials, thinkingLevel: "off" });
+  const generativeUi = new GenerativeUiService({ repository, materials: materialRepository, runtime: comparisonRuntime,
+    model: comparisonModel, sessionDir: comparisonSessions, cwd: comparisonWorkspace, offline: piSetup === null,
+    dailyBudgetChars: Number(process.env.TREEAI_COMPARISON_DAILY_CHARS ?? 250_000) });
+
 
   /* 搜索（issue #8 D4-4 找回既有思考）：同一产品库两仓储上的文档装配 +
      确定性检索（材料版本×树链接、批注、Return、Turn——只索引已保存产品
@@ -348,7 +363,7 @@ async function main(): Promise<void> {
   const staticDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
   const apiSettings = new ApiSettingsService({ dataDir: options.dataDir, env: process.env,
     initial: apiConfig === null ? null : { config: apiConfig, selection: { providerId: options.providerId, modelId: options.modelId } } });
-  const studio = createStudioServer({ service, staticDir, terminology, materials, search, nav, apiSettings });
+  const studio = createStudioServer({ service, staticDir, terminology, materials, search, nav, apiSettings, generativeUi });
   const port = await studio.listen(options.port);
 
   const banner = [
@@ -399,6 +414,7 @@ async function main(): Promise<void> {
       try {
         await service.dispose();
         await terminologyExecutor.dispose();
+        await generativeUi.dispose();
         materialRepository.close();
         repository.close();
         // journal close 排空内部写入队列后落盘（追加式文件，重启续用）。

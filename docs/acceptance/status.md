@@ -6,6 +6,16 @@
 
 **2026-10-28 Studio experience redesign:** Final code `8a3890c9a938fb44360c6716742a2501c09d07d0` simplifies navigation with warm surfaces and a separate settings page; fixes hidden navigation, source-overlay and selection/focus regressions. Final typechecks and 904 tests pass. Complete working-candidate Chrome Echo D4 passes 16/16; final icon adjustment has scoped usability 5/5 plus direct browser verification. [Exact source/run identities, retained failures and exclusions](../../evidence/studio-experience/20261028/README.md); [next-stage priorities](../development/studio-experience-next.md). Local commits only. Participant trials remain owner-deferred; prior human/physical/quality gates remain open.
 
+**2026-10-29 Generative comparisons:** First ComparisonCard slice implemented on
+baseline `35ae4a012fd6beea0b66b9bb773dbe858dfedc45` (uncommitted working tree).
+Final typechecks and 924 tests pass, including 23 new comparison tests; native IAB
+Echo covers generation, sources, local draft handoff, reading dialog/Escape and
+actual process restart. The [scoped evidence record](../../evidence/generative-ui/20261029/README.md)
+binds the changed source/test hashes and records all exclusions. Offline D2 has
+21 PASS / 1 NOT_RUN and D4 has 19 PASS / 1 NOT_RUN (both exit 3: INCOMPLETE).
+Both verifier selftests pass. Real model quality, D1 live repro and original
+physical/human gates remain open. See the [implementation and usage notes](../design/GENERATIVE-UI-IMPLEMENTATION-20261029.md).
+
 **2026-10-28 Studio consistency / Keychain:** Local code commit
 `550eda4c253f8662b7fe3079bd33688c9857cf04` unifies the Studio controls/settings
 and adds macOS Keychain credentials. Typechecks and 901 tests pass; D3 Echo has
