@@ -1,3 +1,4 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** navigation feature composition for one Studio instance. Instance-owned state and dependencies. */
 import { createNavFinderController } from "../controllers/nav-finder.js";
 import { createNavPathView } from "../views/nav-path.js";
@@ -156,7 +157,8 @@ export function createNavigationFeatures(deps) {
       rememberTreeTitles: (trees) => {
         let changed = false;
         for (const tree of trees) {
-          if (tree.title && deps.readingTitles.get(tree.treeId) !== tree.title) { deps.readingTitles.set(tree.treeId, tree.title); changed = true; }
+          const title = attachedQuestion(tree.title ?? "").text.replace(/\s+/g, " ").trim();
+          if (title && deps.readingTitles.get(tree.treeId) !== title) { deps.readingTitles.set(tree.treeId, title); changed = true; }
         }
         if (changed) deps.renderTrees();
       },

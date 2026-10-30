@@ -259,8 +259,8 @@ export async function probeReadAndSelect(ctx) {
         );
         await waitFor(
           ctx,
-          `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); return btn !== null && btn.textContent === "Copied ✓"; })()`,
-          { label: "copy-quote confirmation (Copied ✓)", timeoutMs: 4000 },
+          `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); return btn !== null && btn.textContent === "已复制 ✓"; })()`,
+          { label: "copy-quote confirmation (已复制 ✓)", timeoutMs: 4000 },
         );
         try {
           await ctx.cdpSend("Browser.grantPermissions", { origin: ctx.studioOrigin(), permissions: ["clipboardReadWrite", "clipboardSanitizedWrite"] });
@@ -280,7 +280,7 @@ export async function probeReadAndSelect(ctx) {
           }
           copyMode = "clipboard read-back byte-equal";
         } else {
-          /* 诚实降级：复制确认态（Copied ✓）已验证 + 摘录与冻结 canonicalText
+          /* 诚实降级：复制确认态（已复制 ✓）已验证 + 摘录与冻结 canonicalText
              切片字节相等（复制的就是该切片）。 */
           if (truth.canonicalText.slice(expected.start, expected.end) !== expected.excerpt) {
             throw new Error("frozen excerpt is not the canonicalText slice (fixture inconsistency)");

@@ -1,0 +1,5 @@
+
+> treeai@0.0.0 audit:computed-paths
+> node scripts/audit-computed-paths.mjs
+
+PASS: 132 resolved resources, 20 test globs; 12 computed expressions require runtime gates

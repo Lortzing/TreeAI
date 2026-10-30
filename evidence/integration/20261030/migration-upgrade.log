@@ -1,0 +1,39 @@
+✖ fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state) (7.490084ms)
+✔ fresh database migrates to schema version 11 (material core + terminology dispatch ledger + nav expand state + generated comparisons) (5.661875ms)
+✔ pre-0008 database upgrades: rows preserved, origin_kind backfilled (turn/none) (9.365458ms)
+✔ storeBlob is content-addressed and idempotent by hash (5.541042ms)
+✔ re-importing identical bytes reuses the version row; different bytes create a new version (6.354792ms)
+✔ insertVersion validates parse status, block coverage and failure reasons (4.652792ms)
+✔ material branch origin enforces the slice/excerpt/sourceHash discipline (7.989292ms)
+✔ old anchors stay readable after a new version is imported (immutable versions) (7.568792ms)
+✔ a branch cannot carry both a turn origin and a material origin; origin_kind stays consistent (8.042625ms)
+✔ material first questions are idempotent by (tree_id, intent_key) (5.6145ms)
+✔ tree material links: link, idempotent re-link preserves linked_at, unlink (5.506417ms)
+✔ reading positions upsert by (tree_id, material_id) with block discipline (5.108333ms)
+✔ parse-result transitions: pending→parsing→terminal; terminal rows structurally refuse late updates (late-result discard backstop) (6.343333ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 12
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 178.61125
+
+✖ failing tests:
+
+test at packages/persistence/tests/material-store.test.ts:130:1
+✖ fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state) (7.490084ms)
+  AssertionError [ERR_ASSERTION]: v10 table preserved: tree_materials
+      at TestContext.<anonymous> (file:///Users/tal/.codex/worktrees/7586/TreeAI/packages/persistence/tests/material-store.test.ts:141:14)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

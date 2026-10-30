@@ -1,3 +1,4 @@
+import { createGenerativeUiController } from "./controllers/generative-ui.js";
 import { createSessionWorkspace } from "./views/session-workspace.js";
 import { createNavigationFeatures } from "./composition/navigation.js";
 import { createMaterialFeatures } from "./composition/materials.js";
@@ -30,6 +31,11 @@ import { createSearchView } from "./views/search.js";
 export function createStudioFeatures(deps) {
 
 const sessionWorkspace = createSessionWorkspace({
+  get window() { return deps.window; },
+  get api() { return api; },
+  get openMaterial() { return openMaterial; },
+  get refreshMaterials() { return refreshMaterials; },
+  get revealOrigin() { return revealOrigin; },
   get $() { return $; },
   get trunkBranchId() { return trunkBranchId; },
   get branchView() { return branchView; },
@@ -128,7 +134,19 @@ const findTurnById = (turnId) => {
     });
 
 
+    const generativeUi = createGenerativeUiController({
+      document: deps.document, window: deps.window, fetch: deps.fetch, crypto: deps.crypto, state: deps.state,
+      appendDraft: (branchId, text) => returnController.appendReturnDraft(branchId, text),
+      locateSource: (branchId, turnId, source) => guard(async () => {
+        if (source.kind === "turn" && source.turnId === turnId) studioFocusController.revealAnchorTurn(turnId);
+        else if (source.kind === "material") await materialSourceJump(branchId);
+        else await revealOrigin(branchId);
+      }, "panel"),
+    });
+
     const conversationView = createConversationView({
+      get openMaterial() { return openMaterial; },
+      comparisonCard: (turn, branchId) => generativeUi.card(turn, branchId),
       get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get assistantTurns() { return assistantTurns; },
@@ -349,6 +367,7 @@ const findTurnById = (turnId) => {
 
 
     const promptController = createPromptController({
+      get document() { return deps.document; },
       get sessionUI() { return sessionUI; },
       get state() { return deps.state; },
       get trunkBranchId() { return trunkBranchId; },
@@ -399,6 +418,7 @@ const findTurnById = (turnId) => {
       get openBranchPanel() { return openBranchPanel; },
     });
 const materialsFeatures = createMaterialFeatures({
+  get renderSessionWorkspace() { return renderSessionWorkspace; },
       get sessionUI() { return sessionUI; },
       get setWorkspaceView() { return setWorkspaceView; },
   get environment() { return deps; },
@@ -633,7 +653,8 @@ const {
   });
 
   return {
-    sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
+    disposeGenerativeUi: () => generativeUi.dispose(),
+    sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial, refreshMaterials,
     $,
     persistReturnDraft,
     runNavTreeFind,

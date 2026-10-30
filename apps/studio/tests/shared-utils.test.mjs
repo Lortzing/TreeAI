@@ -154,7 +154,7 @@ test("R1 Search view preserves honest idle, loading, failed, empty, and populate
 
   view.renderSearchSection();
   assert.equal(nodes.get("search-scope-tree").disabled, true);
-  assert.match(nodes.get("search-status").textContent, /saved facts/);
+  assert.match(nodes.get("search-status").textContent, /搜索已保存/);
   assert.equal(nodes.get("search-results").children.length, 0);
 
   state.search.phase = "loading";
@@ -447,7 +447,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
     getState: () => state,
     mutedListItem: (text) => { const item = element("li"); item.textContent = text; return item; },
     formatProductTime: () => "formatted-time",
-    closeSidebar: () => calls.push("close"),
+    closeSidebar: (options) => { assert.equal(options.keepLibrary, true); calls.push("close"); },
     openNavTree: (id) => calls.push(`open:${id}`),
     runNavTreeFind: () => calls.push("search-retry"),
     refreshNavForestListing: () => calls.push("listing-retry"),
@@ -484,13 +484,13 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
   state.nav.finder.phase = "loaded";
   state.nav.finder.listing = { trees: [], nextCursor: null, totalTrees: 0 };
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").textContent, /no trees in this forest yet/);
+  assert.match(nodes.get("nav-tree-results").textContent, /还没有思考树/);
 
   state.nav.finder.mode = "search";
   state.nav.finder.hits = [];
   state.nav.finder.query = "missing";
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").textContent, /no tree matches “missing”/);
+  assert.match(nodes.get("nav-tree-results").textContent, /没有找到“missing”/);
 
   state.nav.session = { treeId: "tree-1" };
   state.nav.finder.mode = "listing";
@@ -520,7 +520,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
   state.nav.finder.moreLoading = false;
   state.nav.finder.moreError = "timeout";
   view.renderNavFinder();
-  assert.match(nodes.get("nav-tree-results").children[0].children[0].children[1].textContent, /matched on id/);
+  assert.match(nodes.get("nav-tree-results").children[0].children[0].children[1].textContent, /formatted-time/);
   assert.match(nodes.get("nav-tree-find-note").textContent, /loading more failed — timeout/);
   const searchMore = nodes.get("nav-tree-results").children[1].children[0];
   assert.match(searchMore.textContent, /More tree hits \(1 loaded\)/);
@@ -532,7 +532,7 @@ test("R1 navigation finder view preserves states, paging, and active-tree row be
 test("R1 navigation chrome view preserves overview and action state", () => {
   function element(tag) {
     const node = {
-      tag, className: "", title: "", hidden: false, disabled: false, children: [], listeners: {},
+      tag, className: "", title: "", hidden: false, disabled: false, children: [], listeners: {}, dataset: {},
       append(...nodes) { this.children.push(...nodes); },
       replaceChildren(...nodes) { this.children = [...nodes]; },
       addEventListener(name, listener) { this.listeners[name] = listener; },
@@ -565,8 +565,8 @@ test("R1 navigation chrome view preserves overview and action state", () => {
     treeId: "tree-1", overviewState: "loading", overview: null, selectedBranchId: null,
   };
   view.renderNavSurfaceChrome();
-  assert.equal(nodes.get("nav-tree-title").textContent, "tree-1");
-  assert.equal(nodes.get("nav-tree-meta").textContent, "loading the tree overview…");
+  assert.equal(nodes.get("nav-tree-title").textContent, "思考树");
+  assert.equal(nodes.get("nav-tree-meta").textContent, "正在加载…");
   assert.equal(nodes.get("nav-locate-current").disabled, false);
   assert.equal(nodes.get("nav-source-selected").disabled, true);
 
@@ -581,9 +581,9 @@ test("R1 navigation chrome view preserves overview and action state", () => {
   state.nav.session.selectedBranchId = "branch-1";
   state.nav.session.overview = { treeId: "tree-1", title: null, nodeCount: 1, maxDepth: 0 };
   view.renderNavSurfaceChrome();
-  assert.match(nodes.get("nav-tree-title").textContent, /tree-1 — untitled/);
-  assert.match(nodes.get("nav-tree-meta").textContent, /1 nodes · max depth 0/);
-  assert.match(nodes.get("nav-tree-meta").textContent, /no branches yet/);
+  assert.match(nodes.get("nav-tree-title").textContent, /新的思考/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /1 条路径/);
+  assert.match(nodes.get("nav-tree-meta").textContent, /选中回答可以展开支线/);
   assert.equal(nodes.get("nav-source-selected").disabled, false);
 });
 
@@ -682,4 +682,96 @@ test("PDF text anchors are positioned while the original page paint is still pen
   assert.equal(frame.children[1].dataset.rendered, "false", "the original page has not finished painting");
   assert.equal(line.style.left, "10%"); assert.equal(line.style.top, "5%"); assert.equal(line.style.fontSize, "14px");
   assert.equal(line.textContent, "递归"); assert.equal(line.dataset.start, "0"); assert.equal(line.dataset.end, "2");
+});
+
+test("empty-tree starters focus an editable draft without submitting or overwriting existing input", () => {
+  let focused = false;
+  const input = { value: "", focus() { focused = true; } };
+  function element(tag) {
+    return { tag, children: [], dataset: {}, className: "", listeners: {}, clientHeight: 0,
+      append(...nodes) { this.children.push(...nodes); },
+      appendChild(node) { this.children.push(node); },
+      addEventListener(name, handler) { this.listeners[name] = handler; },
+      scrollTo() {},
+    };
+  }
+  const container = element("div");
+  const state = { treeState: { trunkBranchId: "trunk" }, streaming: null, scrollPositions: new Map() };
+  const view = createConversationView({ state, document: { createElement: element },
+    $: (id) => id === "prompt-input" ? input : container,
+    trunkBranchId: () => "trunk", branchView: () => ({ turns: [] }),
+    currentSessionRound: () => ({ round: null, unattached: [] }),
+    isAtBottom: () => true, termCardFocusTargetId: () => null, preserveTermCardFocus() {},
+    scrollKey: () => "trunk", scrollBehavior: () => "auto",
+  });
+  view.renderMainConversation(false);
+  const starters = container.children[0].children[3].children;
+  assert.equal(starters.length, 3);
+  starters[0].listeners.click();
+  assert.equal(input.value, "我想理解一个概念：");
+  assert.equal(focused, true);
+  input.value = "我的未发送问题";
+  starters[1].listeners.click();
+  assert.equal(input.value, "我的未发送问题");
+  assert.equal(state.streaming, null);
+});
+
+test("material tools open outside history and close without clearing domain state", async () => {
+  const { registerWorkspaceEvents } = await import("../public/core/controllers/workspace-events.js");
+  let focused = null;
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, { id, open: false, attrs: {}, handlers: {},
+      addEventListener(name, fn) { (this.handlers[name] ??= new Set()).add(fn); },
+      removeEventListener(name, fn) { this.handlers[name]?.delete(fn); },
+      setAttribute(name, value) { this.attrs[name] = value; },
+      focus() { focused = id; }, contains(target) { return target === this; }, scrollIntoView() {},
+    });
+    return elements.get(id);
+  };
+  const classes = new Set();
+  const document = { ...get("document"), body: { classList: {
+    add: (v) => classes.add(v), remove: (v) => classes.delete(v), contains: (v) => classes.has(v),
+    toggle(v) { if (classes.has(v)) { classes.delete(v); return false; } classes.add(v); return true; },
+  } } };
+  const state = { materialReader: null, materials: { ok: true, materials: [] }, returnDraft: { text: "keep this" } };
+  const dispose = registerWorkspaceEvents({ $: get, state, document, window: {}, sessionUI: { mode: "chat" }, scrollBehavior: () => "auto" });
+  const click = (id) => { for (const handler of get(id).handlers.click ?? []) handler({}); };
+  get("materials-section").open = true; // native details activation
+  click("reading-materials");
+  assert.equal(get("workspace-library").open, false);
+  assert.equal(get("materials-section").open, true);
+  assert.equal(classes.has("sidebar-open"), false);
+  get("workspace-library").open = true;
+  click("workspace-library-close");
+  assert.equal(get("workspace-library").open, false);
+  assert.equal(focused, "workspace-library-toggle");
+  assert.equal(state.returnDraft.text, "keep this");
+  state.armedSelection = { text: "selected answer" };
+  let prevented = false;
+  for (const handler of get("workspace-library-toggle").handlers.mousedown) {
+    handler({ preventDefault() { prevented = true; } });
+  }
+  assert.equal(prevented, true);
+  get("workspace-library").open = true;
+  click("search-shortcut");
+  assert.equal(get("workspace-library").open, false);
+  assert.equal(classes.has("sidebar-open"), true);
+  dispose();
+  assert.equal(get("reading-materials").handlers.click.size, 0);
+});
+
+test("return focus reveals nested secondary tools before focusing a material or branch", async () => {
+  const { createStudioFocusController } = await import("../public/core/controllers/focus.js");
+  const library = { tagName: "DETAILS", open: false, parentElement: null };
+  const materials = { tagName: "DETAILS", open: false, parentElement: library };
+  let focused = false;
+  const target = { parentElement: materials, focus() {
+    assert.equal(library.open, true);
+    assert.equal(materials.open, true);
+    focused = true;
+  } };
+  const controller = createStudioFocusController({ $: () => null, materialListButtons: new Map([["m1", target]]) });
+  controller.restoreFocusRef({ kind: "material-button", materialId: "m1" });
+  assert.equal(focused, true);
 });

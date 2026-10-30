@@ -1,0 +1,67 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T103954-61303",
+  "mode": "selftest",
+  "verdict": "HAS_FAIL",
+  "exitCode": 2,
+  "scoped": [
+    "d4-beta-usability"
+  ],
+  "counts": {
+    "pass": 4,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+  "gitDirty": true,
+  "generatedAt": "2026-10-28T10:40:19.196Z",
+  "git": {
+    "head": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+    "dirty": true
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-11",
+      "pdf-01"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:54554",
+      "durationMs": 701
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:54573/",
+      "durationMs": 774
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 638
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "FAIL",
+      "error": {
+        "message": "touch pdf-01 selection: duringArmed=true, afterReleaseLen=0, heldLen=24, placedLen=24; Error: touch pdf-01 selection: the reader's capture bar never armed (selectionchange path; bar={\"quote\":null,\"payload\":null,\"snapNote\":null,\"invalidNote\":null,\"hint\":\"(select text in the material to capture a quote — a captured selection can branch into an exploration)\",\"copyLabel\":null,\"branchDisabled\":null}); native diagnostic {\"selectionText\":\"\",\"rangeText\":\"\",\"collapsed\":true,\"anchor\":\"material-block pdf-page-text pdf-geometry-text\",\"focus\":\"material-block pdf-page-text pdf-geometry-text\",\"readerOpen\":true,\"pdfFrames\":2}"
+      },
+      "durationMs": 22665
+    }
+  ],
+  "pageErrors": []
+}

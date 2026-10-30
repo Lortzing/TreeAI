@@ -60,10 +60,16 @@ export function createMaterialListController(deps) {
         button.classList.add("active");
       }
       const name = deps.document.createElement("span");
+      name.className = "material-name";
       name.textContent = entry.material.title;
-      button.append(name, materialStatusMeta(entry.versions));
+      const icon = deps.document.createElement("span");
+      icon.className = "material-file-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = entry.versions.at(-1)?.parserKind === "pdf" ? "PDF" : "MD";
+      button.append(icon, name, materialStatusMeta(entry.versions));
       button.title = `open ${entry.material.title} in the material reader`;
       button.addEventListener("click", () => {
+        section.open = false;
         deps.closeSidebar(); /* 窄窗：选材料后收起侧栏抽屉（与树选择同一纪律） */
         if (deps.sessionUI.mode !== "chat") deps.setWorkspaceView("chat");
         void deps.openMaterial(entry.material.id, {
@@ -126,6 +132,7 @@ export function createMaterialListController(deps) {
       deps.state.materials = { ok: false, error: String(err && err.message ? err.message : err) };
     }
     renderMaterialsSection();
+    deps.renderSessionWorkspace?.();
   }
 
   return {

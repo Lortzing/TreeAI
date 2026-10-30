@@ -1,0 +1,42 @@
+[
+  {
+    "id": "growth",
+    "name": "生长",
+    "en": "GROWTH",
+    "tag": "有机 · 温和 · 向上",
+    "desc": "以两片错落的叶，构成生长中的主干。",
+    "note": "最贴合现有阅读空间",
+    "shape": "<path d=\"M46 59C24 59 15 44 17 27C36 26 49 38 46 59Z\" fill=\"currentColor\"/><path d=\"M53 46C51 27 64 15 83 17C84 35 72 49 53 46Z\" fill=\"currentColor\"/><path d=\"M49 81V61C49 47 59 36 67 31M49 65C44 52 36 45 29 40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+    "micro": "<path d=\"M46 60C24 60 15 44 17 27C36 26 49 38 46 60ZM53 46C51 27 64 15 83 17C84 35 72 49 53 46Z\" fill=\"currentColor\"/><path d=\"M49 82V60C49 47 59 36 67 31M49 65L29 40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"10\" stroke-linecap=\"round\"/>"
+  },
+  {
+    "id": "return",
+    "name": "回响",
+    "en": "RETURN",
+    "tag": "探索 · 回流 · 连接",
+    "desc": "一条支线向外展开，再回到共同的主干。",
+    "note": "最能表达 TreeAI 的独特机制",
+    "shape": "<path d=\"M47 81V49C47 37 39 29 27 29M47 63C66 63 77 52 77 38C77 25 66 18 55 21\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"27\" cy=\"29\" r=\"7\" fill=\"currentColor\"/><circle cx=\"54\" cy=\"21\" r=\"5\" fill=\"var(--seed,currentColor)\"/>",
+    "micro": "<path d=\"M47 81V49C47 37 39 29 26 29M47 63C66 63 77 52 77 38C77 25 66 18 54 21\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"11\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+  },
+  {
+    "id": "canopy",
+    "name": "林冠",
+    "en": "CANOPY",
+    "tag": "几何 · 秩序 · 精准",
+    "desc": "三枚几何叶冠，留出清晰的主干与分叉。",
+    "note": "最适合应用图标与小尺寸",
+    "shape": "<path d=\"M48 16Q50 14 52 16L66 30Q68 32 66 34L52 48Q50 50 48 48L34 34Q32 32 34 30Z\" fill=\"currentColor\"/><path d=\"M18 37Q16 36 16 39V55Q16 57 18 58L42 72V53Z\" fill=\"currentColor\"/><path d=\"M82 37Q84 36 84 39V55Q84 57 82 58L58 72V53Z\" fill=\"currentColor\"/><rect x=\"46\" y=\"57\" width=\"8\" height=\"27\" rx=\"2\" fill=\"currentColor\"/>",
+    "micro": "<path d=\"M50 14L68 32L50 50L32 32Z M16 36L42 52V72L16 57Z M84 36L58 52V72L84 57Z M45 57H55V84H45Z\" fill=\"currentColor\"/>"
+  },
+  {
+    "id": "folio",
+    "name": "知页",
+    "en": "FOLIO",
+    "tag": "阅读 · 思考 · 沉淀",
+    "desc": "翻开的书页，也是一株向两侧伸展的树。",
+    "note": "最适合阅读与知识品牌",
+    "shape": "<path d=\"M18 24C30 23 40 28 46 36V78C38 70 28 65 18 66Z M54 36C62 28 73 23 84 24V66C72 65 62 70 54 78Z\" fill=\"currentColor\"/><path d=\"M47 62L29 44M53 58L73 38\" fill=\"none\" stroke=\"var(--cutout,#2e5b3d)\" stroke-width=\"5\" stroke-linecap=\"round\"/>",
+    "micro": "<path d=\"M16 23C30 23 40 29 46 37V79C38 71 28 66 16 67Z M54 37C62 29 73 23 84 23V67C72 66 62 71 54 79Z\" fill=\"currentColor\"/>"
+  }
+]

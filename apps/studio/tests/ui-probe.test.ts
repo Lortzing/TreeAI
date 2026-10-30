@@ -468,6 +468,7 @@ class StubElement {
   children: StubNode[] = [];
   parentElement: StubElement | null = null;
   hidden = false;
+  open = false;
   disabled = false;
   private readonly listeners = new Map<string, Set<StubListener>>();
   _scrollTop = 0;
@@ -718,6 +719,10 @@ interface World {
 }
 
 interface WorldOptions {
+  narrowViewport?: boolean;
+  storage?: Map<string, string>;
+  roundHistory?: boolean;
+  storageUnavailable?: boolean;
   journalMode?: Backend["journalMode"];
   returnMode?: Backend["returnMode"];
   /** /return 响应的 navigation 字段脚本（保存后导航失败场景）。 */
@@ -753,7 +758,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
 
   /* ---------------- window / localStorage 桩 ---------------- */
 
-  const localStorageStore = new Map<string, string>();
+  const localStorageStore = options.storage ?? new Map<string, string>();
   /* 脚本化选区（null = 无选区 → app.js 的 selectionOffsetsWithin 回退整条
      答案语义；StubTextRange = 文本节点上的选区 → 绝对偏移语义）。 */
   let scriptedSelection: StubTextRange | null = null;
@@ -769,7 +774,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     matchMedia: (query) => ({
       /* reduce 场景命中（app.js 的 prefersReducedMotion 每次调用现读
          matches——无需 change 事件）。 */
-      matches: options.reducedMotion === true && query.includes("prefers-reduced-motion"),
+      matches: (options.reducedMotion === true && query.includes("prefers-reduced-motion")) || (options.narrowViewport === true && query.includes("max-width: 719px")),
       media: query,
       addEventListener(): void {},
       removeEventListener(): void {},
@@ -1175,6 +1180,13 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
   globals.document = documentStub;
   globals.window = windowStub;
   globals.EventSource = StubEventSource;
+  if (options.roundHistory) {
+    for (const turn of backend.treeState.branches[0]!.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  }
+  if (options.storageUnavailable) {
+    windowStub.localStorage.getItem = () => { throw new Error("storage unavailable"); };
+    windowStub.localStorage.setItem = () => { throw new Error("storage unavailable"); };
+  }
   globals.fetch = fetchStub;
 
   /* file: URL 的 fragment 不进入模块源码（只区分模块身份），据此绕过 ES
@@ -1500,7 +1512,7 @@ test("journal drawer: failure with retry, honest empty state, Esc focus restore"
      读屏器不得持续播报已展开（浏览器面跑批器发现的陈旧态缺陷）。 */
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "Esc close flips the toggle aria-expanded immediately (no stale expanded announcement)");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources", "toggle label restored on close");
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录", "toggle label restored on close");
 
   /* 重试路径：再开仍失败 → 后端恢复 → Retry 回到加载中 → 列表渲染。 */
   world.el("source-drawer-toggle").click();
@@ -1546,7 +1558,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   const close = drawer.querySelector("#drawer-close");
   assert.ok(close !== null, "the drawer header renders #drawer-close");
   assert.equal(close.tagName, "BUTTON", "#drawer-close is a real button element");
-  assert.ok(close.textContent.startsWith("× Close"), "the close button text starts with '× Close'");
+  assert.ok(close.textContent.startsWith("关闭"), "the close button text starts with '× Close'");
   /* 抽屉内的可交互元素只有按钮（关闭 + journal 失败重试）——逐标签确认
      #drawer-close 是文档序首个可交互元素。 */
   for (const tag of ["a", "input", "textarea", "select"]) {
@@ -1564,7 +1576,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   assert.equal(drawer.hidden, true, "clicking #drawer-close hides the drawer");
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "toggle aria-expanded flips to false on button close");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录",
     "toggle label restored on button close");
 
   /* Esc 路径不回归（附-4 只增不改）：再开后 Esc 仍关闭并还原焦点。 */
@@ -1577,7 +1589,7 @@ test("sources drawer close button: visible while the overlay covers Send and the
   assert.equal(drawer.hidden, true, "Esc still closes the drawer");
   assert.equal(world.el("source-drawer-toggle").getAttribute("aria-expanded"), "false",
     "Esc close still flips the toggle aria-expanded");
-  assert.equal(world.el("source-drawer-toggle").textContent, "⑂ Sources",
+  assert.equal(world.el("source-drawer-toggle").getAttribute("aria-label"), "来源记录",
     "Esc close still restores the toggle label");
 });
 
@@ -2021,14 +2033,16 @@ test("two-branch cross-switching: alternating panels keep lineage, context, and 
   const panelConversation = world.el("panel-conversation");
   panelConversation.scrollHeight = 1500;
   panelConversation.clientHeight = 400;
+  world.el("materials-section").open = true;
   world.tabButton("branch-1")!.click();
   await settle();
   assert.equal(world.el("branch-panel").hidden, false, "branch-1 panel opens via tab");
+  assert.equal(world.el("materials-section").open, false, "branch panels collapse attachments");
   assert.equal(world.el("panel-title").textContent, B1_R1_TEXT);
   const anchorContext1 = world.el("panel-anchor-context").textContent;
-  assert.ok(anchorContext1.includes("Branched from Trunk"), "the anchor card names the source branch");
+  assert.ok(anchorContext1.includes("来自Trunk"), "the anchor card names the source branch");
   assert.ok(anchorContext1.includes("“First”"), "branch-1 anchors on the a1 selection excerpt");
-  assert.ok(anchorContext1.includes("source available"), "originStatus renders");
+  assert.ok(anchorContext1.includes("原文可查看"), "originStatus renders");
   assert.deepEqual(
     panelConversation.querySelectorAll(".turn").map((t) => t.dataset.turnId),
     ["b1u1", "b1a1"],
@@ -2237,9 +2251,9 @@ test("selection to anchor: selection arms the branch affordance, exact offsets a
   assert.equal(selSelection.text, "latest");
   assert.equal(world.el("panel-title").textContent, "latest", "the selection branch is titled by its selected excerpt");
   const anchorCard = world.el("panel-anchor-context").textContent;
-  assert.ok(anchorCard.includes("Branched from Trunk"));
+  assert.ok(anchorCard.includes("来自Trunk"));
   assert.ok(anchorCard.includes("“latest”"), "the anchor card carries the selection excerpt");
-  assert.ok(anchorCard.includes("source available"));
+  assert.ok(anchorCard.includes("原文可查看"));
   /* 新支线 tab：锚点圆点 + 出处 tooltip。 */
   const newTab = world.tabButton("branch-recovered-2");
   assert.ok(newTab !== null, "the new branch gets its own tab");
@@ -2363,7 +2377,7 @@ test("narrow window: <720px rules exist in style.css and the sidebar-drawer JS b
   );
 
   /* JS 行为（scripted DOM）：开关状态 + aria、选树自动收起、Esc 分层。 */
-  const world = await createWorld();
+  const world = await createWorld({ narrowViewport: true });
   const body = world.document.body;
   assert.ok(body !== null, "the document body exists");
   const toggle = world.el("sidebar-toggle");
@@ -2592,6 +2606,7 @@ test("scroll follow threshold: a delta within 47px of the bottom follows; at 49p
 
 test("keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not", async () => {
   const world = await createWorld();
+  world.document.body!.dataset.sendKey = "control-enter";
 
   /* 普通 Enter：多行输入留给换行，不提交。 */
   const promptInput = world.el("prompt-input");
@@ -3317,8 +3332,134 @@ test("terminology minimal UI: selection arms Explain, the card shows the isolate
   world.el("source-drawer-toggle").click();
   await settle();
   const drawer = world.el("source-drawer");
-  assert.ok(drawer.textContent.includes("Terminology"), "the drawer has a Terminology section");
+  assert.ok(drawer.textContent.includes("已保存的批注"), "the drawer has a Terminology section");
   assert.ok(drawer.textContent.includes("“Secon” (term) from Trunk"), "the annotation lists with its term and source branch");
   assert.ok(drawer.textContent.includes("promoted to"), "the promotion destination is listed");
   assert.ok(drawer.textContent.includes("chars/4 estimate"), "the usage note labels its estimate honestly");
+});
+
+test("desktop sidebar collapses to a persistent rail without losing the current tree or prompt", async () => {
+  const world = await createWorld();
+  const body = world.document.body!;
+  const toggle = world.el("sidebar-toggle");
+  const conversation = world.el("conversation");
+  const nodes = [...conversation.children];
+  world.el("prompt-input").value = "Keep my draft";
+  assert.equal(toggle.getAttribute("aria-expanded"), "true");
+  toggle.click();
+  assert.equal(body.classList.contains("sidebar-collapsed"), true);
+  assert.equal(body.classList.contains("sidebar-open"), false);
+  assert.equal(toggle.getAttribute("aria-expanded"), "false");
+  assert.equal(world.localStorageStore.get("treeai.sidebar-collapsed"), "true");
+  world.el("search-shortcut").click();
+  assert.equal(world.document.activeElement, world.el("search-input"));
+  assert.equal(body.classList.contains("sidebar-collapsed"), true, "search does not force open the history sidebar");
+  world.el("search-close").click();
+  assert.equal(world.document.activeElement, world.el("search-shortcut"));
+  toggle.click();
+  assert.equal(body.classList.contains("sidebar-collapsed"), false);
+  assert.equal(world.localStorageStore.get("treeai.sidebar-collapsed"), "false");
+  assert.deepEqual([...conversation.children], nodes);
+  assert.equal(world.el("prompt-input").value, "Keep my draft");
+});
+
+
+test("Harvest overview preserves full saved text and source identity, and browsing dispatches no model run", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  const before = world.backend.requests.filter((request) => request.method === "POST").length;
+  world.el("mode-harvest").click();
+  const root = world.el("session-workspace");
+  assert.equal(world.el("main").dataset.workspaceView, "harvest");
+  assert.equal(world.el("tree-view").getAttribute("inert"), "");
+  const card = root.querySelector(".harvest-card")!;
+  const saved = world.backend.treeState.branches.flatMap((view) => view.turns).find((turn) => turn.id === "r0")!;
+  assert.ok(card.textContent.includes(saved.text));
+  assert.ok(card.textContent.includes("已保存 · 待下次主线讨论采用"));
+  assert.ok(card.textContent.includes(saved.targetAnchor!.anchorTurnId));
+  assert.ok(card.textContent.includes(saved.targetAnchor!.anchorEntryId));
+  assert.equal(world.backend.requests.filter((request) => request.method === "POST").length, before);
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+});
+
+test("Harvest overview updates attempted and delivered independently and stays readable without Pi", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  world.el("mode-harvest").click();
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  trunk.returnAttempts.push({ turnId: "r0", runId: "failed-adoption", runState: "failed", failure: null, attemptedAt: ISO, terminalAt: ISO });
+  world.liveSse().emit("run-terminal", { runId: "failed-adoption" });
+  await settle(30);
+  assert.ok(world.el("session-workspace").textContent.includes("已尝试采用 1 次 · 仍待采用"));
+  trunk.turns.find((turn) => turn.id === "r0")!.deliveredRunId = "successful-adoption";
+  world.setAvailability("trunk-1", "unavailable");
+  world.liveSse().emit("run-terminal", { runId: "successful-adoption" });
+  await settle(30);
+  assert.ok(world.el("session-workspace").textContent.includes("已进入一次成功主线运行的上下文"));
+  assert.ok(world.el("session-workspace").textContent.includes("保存内容仍可读"));
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 1);
+});
+
+test("Harvest opens the saved Return round and its exact source instead of the latest round", async () => {
+  const world = await createWorld({ initialTrunkReturn: true });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  for (const turn of trunk.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  world.liveSse().emit("run-terminal", { runId: "later" });
+  await settle(30);
+  world.el("round-next").click();
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent === "查看收获所在轮次")!.click();
+  await settle();
+  assert.equal(world.el("conversation").dataset.episodeId, "ep-1");
+  assert.ok(world.turnElement("conversation", "r0"));
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent === "查看原始出处")!.click();
+  await settle(300);
+  assert.ok(world.turnElement("conversation", "a1").querySelector(".source-highlight"));
+});
+
+test("Round cursors survive a new Studio instance, validate stale IDs, and remain scoped to each branch", async () => {
+  const storage = new Map<string, string>([[`treeai:round:${TREE}:trunk-1`, "ep-1"], [`treeai:round:${TREE}:branch-1`, "stale-round"]]);
+  const world = await createWorld({ storage });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  for (const turn of trunk.turns.filter((turn) => turn.id === "u2" || turn.id === "a2")) turn.episodeId = "later";
+  world.liveSse().emit("run-terminal", { runId: "later" });
+  await settle(30);
+  world.el("round-next").click();
+  assert.equal(storage.get(`treeai:round:${TREE}:trunk-1`), "later");
+  world.tabButton("branch-1")!.click();
+  await settle();
+  assert.notEqual(storage.get(`treeai:round:${TREE}:branch-1`), "stale-round");
+  assert.equal(storage.get(`treeai:round:${TREE}:trunk-1`), "later");
+  // A fresh instance with the same database and browser storage restores the older explicit cursor.
+  storage.set(`treeai:round:${TREE}:trunk-1`, "ep-1");
+  const reopened = await createWorld({ storage, roundHistory: true });
+  assert.equal(reopened.el("conversation").dataset.episodeId, "ep-1");
+});
+
+test("Harvest empty state is honest and saved cards page without losing older harvests", async () => {
+  const empty = await createWorld();
+  empty.el("mode-harvest").click();
+  assert.ok(empty.el("session-workspace").textContent.includes("还没有保存的收获"));
+  const world = await createWorld({ initialTrunkReturn: true });
+  const trunk = world.backend.treeState.branches.find((view) => view.branch.id === "trunk-1")!;
+  const original = trunk.turns.find((turn) => turn.id === "r0")!;
+  for (let i = 0; i < 25; i += 1) trunk.turns.push({ ...original, id: `harvest-${i}`, text: `Saved harvest ${i}` });
+  world.liveSse().emit("run-terminal", { runId: "page" });
+  await settle(30);
+  world.el("mode-harvest").click();
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 20);
+  world.el("session-workspace").querySelectorAll("button").find((button) => button.textContent.startsWith("继续显示收获"))!.click();
+  assert.equal(world.el("session-workspace").querySelectorAll(".harvest-card").length, 26);
+});
+
+
+test("Unavailable browser storage and stale tree/round cursors preserve database reading", async () => {
+  const stale = await createWorld({ storage: new Map([["treeai:last-tree", "deleted-tree"], [`treeai:round:${TREE}:trunk-1`, "deleted-round"]]), roundHistory: true });
+  assert.equal(stale.el("conversation").dataset.episodeId, "later");
+  const blocked = await createWorld({ storageUnavailable: true, roundHistory: true });
+  assert.equal(blocked.el("conversation").dataset.episodeId, "later");
+  blocked.el("round-previous").click();
+  assert.equal(blocked.el("conversation").dataset.episodeId, "ep-1");
+  blocked.el("mode-harvest").click();
+  assert.ok(blocked.el("session-workspace").textContent.includes("继续讨论"));
 });

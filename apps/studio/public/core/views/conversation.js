@@ -1,5 +1,6 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** Reconciled conversation/Return ordering, source anchor context, selection-preserving DOM reuse and reading position. Instance-owned state and dependencies. */
-import { findReusableTurnElement } from "../dom.js";
+import { findReusableTurnElement, createDisclosure } from "../dom.js";
 
 export function createConversationView(deps) {
 
@@ -44,7 +45,19 @@ export function createConversationView(deps) {
       deps.attachTurnSelectionListeners(div, turn, branchId);
       updateAssistantTurnLayer(div, turn, branchId);
     } else {
-      div.textContent = turn.text;
+      const question = turn.role === "user" ? attachedQuestion(turn.text) : { text: turn.text, files: [] };
+      if (question.files.length) {
+        const files = deps.document.createElement("div"); files.className = "turn-attachments";
+        for (const file of question.files) {
+          const button = deps.document.createElement("button"); button.type = "button";
+          button.textContent = file.title; button.title = `${file.title} · ${file.scope}`;
+          button.addEventListener("click", () => {
+            if (file.treeId === deps.state.currentTreeId) void deps.openMaterial(file.materialId, { versionId: file.versionId, arrival: "attachment" });
+          });
+          files.append(button);
+        }
+        div.append(files, deps.document.createTextNode(question.text.trimStart()));
+      } else div.textContent = turn.text;
     }
     return div;
   }
@@ -154,6 +167,37 @@ export function createConversationView(deps) {
         branchId === st.trunkBranchId
           ? "在下方输入你的第一个问题。"
           : "在下方提问，继续探索这条支线。";
+      if (branchId === st.trunkBranchId) {
+        const welcome = deps.document.createElement("section");
+        welcome.className = "conversation-welcome";
+        const eyebrow = deps.document.createElement("div");
+        eyebrow.className = "welcome-eyebrow";
+        eyebrow.textContent = "一段新的思考";
+        const title = deps.document.createElement("h2");
+        title.textContent = "今天，想弄明白什么？";
+        const description = deps.document.createElement("p");
+        description.textContent = "先聊一个问题。回答里值得深究的地方，随时可以展开支线。";
+        const starters = deps.document.createElement("div");
+        starters.className = "starter-prompts";
+        for (const [label, prompt] of [
+          ["理解一个概念 ↗", "我想理解一个概念："],
+          ["比较不同选择 ↗", "帮我比较这几个选择的优缺点："],
+          ["梳理一个想法 ↗", "我有一个想法，想请你帮我梳理："],
+        ]) {
+          const button = deps.document.createElement("button");
+          button.type = "button";
+          button.textContent = label;
+          button.addEventListener("click", () => {
+            const input = deps.$("prompt-input");
+            // Suggestions are editable drafts; never replace what the user has written.
+            if (!input.value.trim()) input.value = prompt;
+            input.focus();
+          });
+          starters.append(button);
+        }
+        welcome.append(eyebrow, title, description, starters);
+        desired.push(welcome);
+      }
       desired.push(empty);
     }
     for (const turn of view.turns) {
@@ -174,6 +218,8 @@ export function createConversationView(deps) {
       }
       desired.push(ensureTurnElement(container, turn, branchId));
       if (turn.role === "assistant") {
+        const comparison = deps.comparisonCard?.(turn, branchId);
+        if (comparison) desired.push(comparison);
         /* 术语建议条（①阅读模式）：渲染在该条答案之后、其 Return 卡之前
            ——建议附着在回答区，正文层（textContent 字节不变）不受影响。 */
         const suggestStrip = deps.termSuggestionStrip(branchId, turn);
@@ -254,13 +300,13 @@ export function createConversationView(deps) {
     if (deps.isMaterialBranchView(view)) {
       const origin = deps.recallMaterialBranchOrigin(deps.state.currentTreeId, view.branch.id);
       if (origin === null) {
-        el.textContent = "Branched from a material selection (source details not cached in this browser)";
+        el.textContent = "来自材料选文，来源详情暂时不可用。";
         return;
       }
       const selection = origin.selection;
       el.append(
         deps.document.createTextNode(
-          `From material “${String(origin.materialTitle)}” — version ${String(selection.versionId)}, anchored selection: `,
+          `来自材料“${String(origin.materialTitle)}”：`,
         ),
       );
       const sel = deps.document.createElement("span");
@@ -269,23 +315,23 @@ export function createConversationView(deps) {
       const statusSpan = deps.document.createElement("span");
       statusSpan.className = "origin-status available";
       statusSpan.textContent = ` · block ${selection.blockId} · material source`;
-      el.append(sel, statusSpan);
+      el.append(sel, createDisclosure(deps.document, "引用详情", statusSpan));
       return;
     }
     if (view.origin === null) {
-      el.textContent = "no anchor recorded for this branch";
+      el.textContent = "这条支线没有保存来源摘录。";
       return;
     }
     const status = view.originStatus ?? "unavailable";
     el.append(
-      deps.document.createTextNode(`Branched from ${deps.branchLabel(view.origin.sourceBranchId)} — anchored selection: `),
+      deps.document.createTextNode(`来自${deps.branchLabel(view.origin.sourceBranchId)}：`),
     );
     const sel = deps.document.createElement("span");
     sel.className = "sel";
     sel.textContent = `“${view.origin.selection.text}”`;
     const statusSpan = deps.document.createElement("span");
     statusSpan.className = `origin-status ${status}`;
-    statusSpan.textContent = ` · source ${status}`;
+    statusSpan.textContent = status === "available" ? "原文可查看" : status === "changed" ? " · 原文已变化，显示保存时的摘录" : " · 原文暂时不可用，摘录仍已保存";
     el.append(sel, statusSpan);
   }
 

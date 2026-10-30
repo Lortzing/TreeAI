@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TreeAI Studio</title>
+  <link rel="stylesheet" href="/vendor/webawesome/styles/themes/default.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div id="app">
-    <!-- 窄窗（<720px）侧栏开关：桌面隐藏。 -->
-    <button id="sidebar-toggle" aria-label="打开思考导航" aria-expanded="false" aria-controls="sidebar">☰</button>
 
     <!-- 顶栏（目标视觉：58px 白条）。品牌 + Forest/Tree/主干路径（主阅读面
          恒为 Trunk，W2 §2.2；路径由 app.js renderTopbarPath 渲染）；诊断面
@@ -17,108 +17,36 @@
          Abort）；来源抽屉入口。无树打开时诊断面与来源入口的 hidden 均由
          app.js（renderAll）统一管理。 -->
     <header id="branch-bar">
+      <button id="sidebar-toggle" class="icon-button" aria-label="收起侧栏" title="收起侧栏" aria-expanded="true" aria-controls="sidebar"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9 4v16"></path></svg></button>
       <span id="topbar-brand">TreeAI<span class="brand-period">.</span></span>
+      <button id="reading-trunk" type="button" class="icon-button" aria-label="返回主线对话" title="返回主线对话"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5-7 7 7 7M2 12h19"></path></svg></button>
       <div id="topbar-path-wrap">
         <div id="topbar-path"></div>
         <span id="cursor-note" class="muted"></span>
       </div>
       <div id="diagnostics-bar" hidden>
         <span id="run-status" class="run-status idle" aria-live="polite">已就绪</span>
-        <details class="runtime-details">
-          <summary>运行详情</summary>
-          <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
-        </details>
+
         <button id="abort-run" class="danger" hidden>停止生成</button>
       </div>
-      <button id="source-drawer-toggle" class="drawer-toggle" aria-expanded="false">来源记录</button>
-      <button id="api-settings-open" type="button">模型设置</button>
-    </header>
-    <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
-      <form id="api-settings-form">
-        <div class="api-settings-heading"><div><p class="settings-eyebrow">工作区设置</p><h2 id="api-settings-title">模型与连接</h2></div><button id="api-settings-close" type="button" aria-label="关闭 API 设置">关闭</button></div>
-        <p class="settings-intro">选择 API 服务和模型。保存后重启生效，已有思考记录会保留。</p>
-        <section class="settings-section" aria-labelledby="api-connection-heading">
-          <h3 id="api-connection-heading">API 连接</h3>
-          <div class="api-settings-grid">
-            <label>提供方<select id="api-provider"></select></label><button id="api-provider-add" type="button">添加提供方</button>
-            <label class="settings-wide">接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
-            <label class="settings-wide">API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
-          </div>
-          <details id="api-keychain-controls" class="credential-controls" hidden><summary>API key <span id="api-key-summary">未配置</span></summary>
-            <label for="api-key-value">API key</label>
-            <input id="api-key-value" type="password" placeholder="输入新的 API key，已保存的密钥不会显示" autocomplete="new-password" spellcheck="false">
-            <p id="api-keychain-status" class="settings-help" role="status">密钥保存在本机系统钥匙串，不写入配置文件。</p>
-            <div class="credential-actions"><button id="api-key-save" type="button">保存到钥匙串</button><button id="api-key-remove" type="button">移除已存密钥</button></div>
-          </details>
-          <p id="api-env-status" class="settings-help"></p>
-        </section>
-        <section class="settings-section" aria-labelledby="api-model-heading">
-          <h3 id="api-model-heading">使用的模型</h3>
-          <div class="api-settings-grid">
-            <label>模型<select id="api-model"></select></label><button id="api-model-add" type="button">添加模型</button>
-            <label class="settings-wide">模型 ID<input id="api-model-id" placeholder="填写服务商提供的模型 ID" autocomplete="off" spellcheck="false"></label>
-          </div>
-        </section>
-        <details class="settings-advanced"><summary>高级设置</summary>
-          <div class="api-settings-grid settings-limits">
-            <label class="settings-wide">密钥环境变量名<input id="api-key-env" required placeholder="MY_API_KEY" autocomplete="off" spellcheck="false"><span class="settings-help">已配置的环境变量优先；也可以直接使用上方的系统钥匙串。</span></label>
-            <label>上下文上限<input id="api-context-window" type="number" min="1" step="1" required></label>
-            <label>最大输出 token<input id="api-max-tokens" type="number" min="1" step="1" required></label>
-          </div>
-          <label for="api-config-json">多个提供方、模型与请求头（JSON）</label><textarea id="api-config-json" rows="9" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON</button>
+      <button id="source-drawer-toggle" class="drawer-toggle icon-button" aria-expanded="false" aria-label="来源记录" title="来源记录"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span class="sr-only">来源记录</span></button>
+        <nav id="workspace-modes" aria-label="工作区视图">
+          <button id="mode-chat" type="button" class="workspace-mode active icon-button" aria-label="对话" title="对话" aria-pressed="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H6l-4 3V11a9 9 0 0 1 19 0Z"></path><path d="M7 10h10M7 14h6"></path></svg></button>
+          <button id="mode-harvest" type="button" class="workspace-mode icon-button" aria-label="收获" title="收获与继续" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4Z"></path><path d="m9 9 2 2 4-4"></path></svg></button>
+          <button id="mode-map" type="button" class="workspace-mode icon-button" aria-label="关系图" title="关系图" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v12a4 4 0 0 0 4 4h6M7 12h6a4 4 0 0 0 4-4V4"></path><circle cx="7" cy="3" r="2"></circle><circle cx="17" cy="3" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg></button>
+        </nav>
+        <details id="workspace-library" class="workspace-library">
+          <summary id="workspace-library-toggle" class="icon-button" aria-label="路径导航" title="路径导航" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></summary>
+          <div class="workspace-library-panel" role="region" aria-label="路径导航">
+            <div class="library-heading"><h2>路径导航</h2><button id="workspace-library-close" type="button" class="icon-button" aria-label="关闭路径导航" title="关闭"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
+        <details class="runtime-details">
+          <summary title="运行详情" aria-label="运行详情"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7h.01"></path></svg><span class="sr-only">运行详情</span></summary>
+          <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
         </details>
-        <p id="api-settings-status" role="status" aria-live="polite"></p>
-        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button class="primary" type="submit">保存设置</button></div>
-      </form>
-    </dialog>
-
-    <!-- 左右分栏工作区：左栏 Forest/Branches 导航 + 主区；高度受限使
-         #conversation 成为真实滚动容器（修复文档级整页滚动缺陷）。 -->
-    <div id="workspace">
-      <!-- 左栏（目标视觉：~240px 白面）。Forest（树列表）与 Branches（当前树
-           分支导航，即既有 branch-tabs——点击语义不变：支线开局部面板 /
-           Trunk 收面板回主线）同栏；New Tree 置顶为主操作。 -->
-      <aside id="sidebar" aria-label="Trees">
-        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
-
-        <button id="new-tree" class="primary">＋ 新建思考树</button>
-        <details class="sidebar-section sidebar-disclosure" id="search-section">
-          <summary id="search-shortcut" class="search-shortcut" aria-controls="search-section" aria-expanded="false"><span aria-hidden="true">⌕</span> 搜索思考 <kbd>⌘ K</kbd></summary>
-          <input id="search-input" type="search" placeholder="搜索材料、对话或收获…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
-          <div class="search-scope" role="group" aria-label="Search scope">
-            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
-            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">全部树</button>
-          </div>
-          <div class="search-kinds" role="group" aria-label="Filter results by source type">
-            <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
-            <button type="button" id="search-kind-annotation" class="search-kind-toggle" aria-pressed="true">批注</button>
-            <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">Return</button>
-            <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
-          </div>
-          <button type="button" id="search-run" class="primary">查找已保存的思考</button>
-          <p id="search-status" class="muted" role="status"></p>
-          <ul id="search-results" aria-label="Search results"></ul>
-        </details>
-        <section class="sidebar-section" id="forest-section">
-          <h2 class="sidebar-heading">思考树 <span id="forest-count"></span></h2>
-          <ul id="tree-list" aria-label="Trees"></ul>
-          <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
-          <div id="list-load-error" hidden>
-            <p id="list-load-message"></p>
-            <button id="list-retry">重试</button>
-          </div>
-        </section>
         <section class="sidebar-section" id="branch-section" hidden>
           <h2 class="sidebar-heading">当前树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
         </section>
-        <!-- D4-8 大规模树导航面（issue #8 工作包 D4-8，charter §5）：侧栏第
-             三段——树查找（分页森林列表 + 标题/标识搜索）+ 层级树视图（按需
-             分页加载子节点、折叠展开、展开状态服务端持久化、完整父路径、
-             定位当前分支、跳回来源）。只读产品事实（/api/nav/*），绝不渲染
-             run/session 可用性；DOM 有界（可视窗口渲染——见 app.js D4-8 段
-             的虚拟化纪律）。静态骨架由 app.js 注册一次；动态列表（查找结果/
-             树行/路径）由 D4-8 渲染函数独占管理，renderAll 不重建。 -->
         <details class="sidebar-section sidebar-disclosure" id="nav-section" aria-label="Navigate trees">
           <summary class="sidebar-heading">更多导航 <span>全部路径</span></summary>
           <input id="nav-tree-search" type="search" placeholder="搜索思考树…" aria-label="Find a tree by title or id (blank refreshes the forest listing)" />
@@ -151,46 +79,138 @@
             <p id="nav-tree-status" class="muted" role="status"></p>
           </div>
         </details>
-        <!-- D4-2 材料列表（issue #8 工作包 D4-2）：当前树关联的材料导航
-             （Forest/Branches/Materials 三段同栏——材料是树的导航面事实，
-             不把文件目录做成产品中心）。列表由 app.js 按三态渲染（加载中/
-             已载含如实空态/失败 + 重试）；导入入口（owner P1）：真实文件
-             选择器（.md/.markdown/.pdf——D4-1 支持面）经真实导入端点上传
-             （原始字节 + 百分号编码文件名头），pending/parsing/ready/
-             failed/rejected/canceled/同字节去重各状态如实呈现（原因逐字），
-             在途解析可取消（parse-tasks cancel 端点）。渐进披露：本段默认
-             折叠（与导航/搜索同形态）；导入开始或阅读导航回退路径会自动
-             展开——在途状态面绝不藏在折叠面板后。 -->
-        <details class="sidebar-section sidebar-disclosure" id="materials-section" hidden>
-          <summary class="sidebar-heading">阅读材料 <span>PDF / Markdown</span></summary>
+          </div>
+        </details>
+
+    </header>
+    <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
+      <form id="api-settings-form">
+        <div class="api-settings-heading"><h2 id="api-settings-title">设置</h2><button id="api-settings-close" type="button" class="icon-button" aria-label="关闭设置" title="关闭设置">×</button></div>
+        <wa-tab-group id="settings-tabs" active="appearance" aria-label="设置分类">
+          <wa-tab panel="appearance">外观</wa-tab>
+          <wa-tab panel="input">输入</wa-tab>
+          <wa-tab panel="connection">模型与连接</wa-tab>
+          <wa-tab-panel name="appearance">
+            <section class="settings-section" aria-labelledby="appearance-heading">
+              <h3 id="appearance-heading">主题</h3>
+              <p class="settings-description">选择让你阅读更舒服的底色。</p>
+              <div class="theme-options" role="group" aria-label="主题">
+                <button type="button" class="theme-choice" data-theme-choice="warm" aria-pressed="true"><span class="theme-preview theme-preview-warm" aria-hidden="true"><i></i><b></b><em></em></span><span>暖白<span class="theme-choice-check" aria-hidden="true">✓</span></span></button>
+                <button type="button" class="theme-choice" data-theme-choice="sage" aria-pressed="false"><span class="theme-preview theme-preview-sage" aria-hidden="true"><i></i><b></b><em></em></span><span>浅灰绿<span class="theme-choice-check" aria-hidden="true">✓</span></span></button>
+              </div>
+              <select id="appearance-theme" hidden aria-label="主题值"><option value="warm">暖白</option><option value="sage">浅灰绿</option></select>
+              <p id="appearance-status" class="settings-help" role="status">更改会自动保存。</p>
+            </section>
+          </wa-tab-panel>
+          <wa-tab-panel name="input">
+            <section class="settings-section" aria-labelledby="input-heading">
+              <h3 id="input-heading">发送与换行</h3>
+              <p class="settings-description">按你的习惯设置提问快捷键。</p>
+              <label class="settings-row"><span>发送消息</span><select id="composer-send-key"><option value="enter">Enter</option><option value="control-enter">Ctrl / ⌘ + Enter</option><option value="shift-enter">Shift + Enter</option></select></label>
+              <p id="input-preference-status" class="settings-help" role="status"></p>
+              <p class="settings-help" id="input-shortcut-hint" role="status">Ctrl + Enter 或 Shift + Enter 换行</p>
+              <div class="settings-note">输入中文时，确认候选文字不会发送消息。</div>
+            </section>
+          </wa-tab-panel>
+          <wa-tab-panel name="connection">
+        <p class="settings-intro">连接配置保存后，重启应用生效。</p>
+        <section class="settings-section" aria-labelledby="api-connection-heading">
+          <h3 id="api-connection-heading">API 连接</h3>
+          <p class="settings-connection-empty settings-description">添加模型服务，开始与你的材料对话。</p>
+          <div class="api-settings-grid">
+            <label>提供方<select id="api-provider"></select></label><button id="api-provider-add" type="button">添加提供方</button>
+            <label class="settings-wide">接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
+            <label class="settings-wide">API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
+          </div>
+          <details id="api-keychain-controls" class="credential-controls" hidden><summary>API key <span id="api-key-summary">未配置</span></summary>
+            <label class="sr-only" for="api-key-value">API key</label>
+            <input id="api-key-value" type="password" placeholder="输入新的 API key，已保存的密钥不会显示" autocomplete="new-password" spellcheck="false">
+            <p id="api-keychain-status" class="settings-help" role="status">密钥保存在本机系统钥匙串，不写入配置文件。</p>
+            <div class="credential-actions"><button id="api-key-save" type="button">保存到钥匙串</button><button id="api-key-remove" type="button">移除已存密钥</button></div>
+          </details>
+          <p id="api-env-status" class="settings-help"></p>
+        </section>
+        <section class="settings-section" aria-labelledby="api-model-heading">
+          <h3 id="api-model-heading">使用的模型</h3>
+          <div class="api-settings-grid">
+            <label>模型<select id="api-model"></select></label><button id="api-model-add" type="button">添加模型</button>
+            <label class="settings-wide">模型 ID<input id="api-model-id" placeholder="填写服务商提供的模型 ID" autocomplete="off" spellcheck="false"></label>
+          </div>
+        </section>
+        <details class="settings-advanced"><summary>高级设置</summary>
+          <div class="api-settings-grid settings-limits">
+            <label class="settings-wide">密钥环境变量名<input id="api-key-env" required placeholder="MY_API_KEY" autocomplete="off" spellcheck="false"><span class="settings-help">已配置的环境变量优先；也可以直接使用上方的系统钥匙串。</span></label>
+            <label>上下文上限<input id="api-context-window" type="number" min="1" step="1" required></label>
+            <label>最大输出 token<input id="api-max-tokens" type="number" min="1" step="1" required></label>
+          </div>
+          <label for="api-config-json">多个提供方、模型与请求头（JSON）</label><textarea id="api-config-json" rows="9" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON</button>
+        </details>
+        <p id="api-settings-status" role="status" aria-live="polite"></p>
+        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button class="primary" type="submit">保存连接配置</button></div>
+          </wa-tab-panel>
+        </wa-tab-group>
+      </form>
+    </dialog>
+
+    <!-- 左右分栏工作区：左栏 Forest/Branches 导航 + 主区；高度受限使
+         #conversation 成为真实滚动容器（修复文档级整页滚动缺陷）。 -->
+    <div id="workspace">
+      <!-- 左栏保留新建、搜索、思考树与设置；桌面可收为图标栏，窄屏为抽屉。 -->
+      <aside id="sidebar" aria-label="Trees">
+        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="/assets/treeai-icon.svg" width="32" height="32" alt="" /></span><span>TreeAI<span class="brand-period">.</span></span></div>
+
+        <button id="new-tree" class="primary" aria-label="新建思考" title="新建思考"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>新建思考</span></button>
+        <details class="sidebar-section sidebar-disclosure" id="search-section">
+          <summary id="search-shortcut" class="search-shortcut" aria-label="搜索思考" title="搜索思考 · ⌘ / Ctrl K" aria-controls="search-section" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>搜索思考</span> <kbd>⌘ K</kbd></summary>
+          <div class="search-popover" role="region" aria-label="搜索已保存的思考">
+            <div class="search-query-row"><input id="search-input" type="search" placeholder="搜索对话、材料或收获…" aria-label="Search saved facts (materials, annotations, Returns, turns)" />
+              <button id="search-run" type="button" class="icon-button" aria-label="执行搜索" title="搜索 · Enter"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path></svg></button>
+              <button id="search-close" type="button" class="icon-button" aria-label="关闭搜索" title="关闭 · Esc"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
+            <details id="search-filters"><summary>搜索范围与类型</summary>
+          <div class="search-scope" role="group" aria-label="Search scope">
+            <button type="button" id="search-scope-tree" class="search-scope-toggle" aria-pressed="false">当前树</button>
+            <button type="button" id="search-scope-all" class="search-scope-toggle" aria-pressed="false">全部树</button>
+          </div>
+          <div class="search-kinds" role="group" aria-label="Filter results by source type">
+            <button type="button" id="search-kind-material" class="search-kind-toggle" aria-pressed="true">材料</button>
+            <button type="button" id="search-kind-annotation" class="search-kind-toggle" aria-pressed="true">批注</button>
+            <button type="button" id="search-kind-return" class="search-kind-toggle" aria-pressed="true">收获</button>
+            <button type="button" id="search-kind-turn" class="search-kind-toggle" aria-pressed="true">对话</button>
+          </div>
+            </details>
+            <p id="search-status" class="muted" role="status"></p>
+            <ul id="search-results" aria-label="Search results"></ul>
+          </div>
+        </details>
+        <section class="sidebar-section" id="forest-section">
+          <h2 class="sidebar-heading">思考树 <span id="forest-count"></span></h2>
+          <ul id="tree-list" aria-label="Trees"></ul>
+          <!-- 列表加载失败态（W2 §2.1）：常驻错误 + 重试（非 8 秒自动隐藏横幅）。 -->
+          <div id="list-load-error" hidden>
+            <p id="list-load-message"></p>
+            <button id="list-retry">重试</button>
+          </div>
+        </section>
+        <div id="sidebar-foot">
+          <button id="api-settings-open" type="button" aria-label="设置" title="设置 · 模型与连接"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 1-2h4l1 2 2 1 2-.2 2 3-1 2v4l1 2-2 3-2-.2-2 1-1 2h-4l-1-2-2-1-2 .2-2-3 1-2v-4l-1-2 2-3L7 5Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>设置</span></button>
+
+
+        </div>
+      </aside>
+
+      <main id="main" data-workspace-view="chat">
+        <details class="attachments-card" id="materials-section" hidden>
+          <summary id="reading-materials" aria-label="附件" title="展开或收起附件" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 13 7-7a3 3 0 0 1 4 4l-9 9a5 5 0 0 1-7-7l9-9M6 15l9-9"></path></svg><span>附件</span><span id="reading-material-count">0</span><span class="attachment-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="attachments-content"><p class="attachments-caption">当前思考的材料</p>
           <div class="material-import-row">
             <button id="material-import" type="button">＋ 导入阅读材料</button>
             <input id="material-import-input" type="file" accept=".md,.markdown,.pdf" hidden />
           </div>
           <p id="material-import-status" role="status" aria-live="polite"></p>
           <ul id="material-list" aria-label="Materials"></ul>
+          </div>
         </details>
-        <!-- D4-4 找回既有思考 —— 搜索面（issue #8 工作包 D4-4，charter §5）：
-             跨已保存产品事实的检索入口（材料版本×树链接 / 术语批注 / Return /
-             对话 Turn）。默认范围 = 当前树，显式切换全部树；来源类型筛选按
-             契约 kinds 透传服务端；结果按服务端返回序确定性呈现（命中说明
-             来源类型/标题/版本/摘录/时间，旧版本显式标注「旧版本」），命中
-             点击跳既有视图（材料 → D4-2 阅读器按版本+块定位；批注/Return/
-             Turn → 对应事实的既有视图）。搜索纯只读（不创建 Turn）；只索引
-             已保存产品事实——未提交草稿结构性不入索引（服务端已裁决），本
-             面如实声明、绝不暗示草稿可搜。 -->
 
-        <div id="sidebar-foot">
-          <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
-          <p id="driver-note" class="muted">思考记录保存在本机</p>
-        </div>
-      </aside>
-
-      <main id="main" data-workspace-view="chat">
-        <nav id="workspace-modes" aria-label="工作区视图">
-          <button id="mode-chat" type="button" class="workspace-mode active" aria-pressed="true">对话</button>
-          <button id="mode-map" type="button" class="workspace-mode" aria-pressed="false">关系图</button>
-        </nav>
         <nav id="round-navigation" aria-label="切换对话轮次" hidden>
           <button id="round-previous" type="button" aria-label="上一轮">←</button>
           <span id="round-position" role="status" aria-live="polite">00 / 00</span>
@@ -199,11 +219,12 @@
         <section id="session-workspace" hidden aria-label="Session 工作区" tabindex="-1"></section>
         <!-- 空态：无树打开。主操作直达（窄窗侧栏在抽屉后，不在首屏）。 -->
         <div id="empty-state" hidden>
-          <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
+          <img class="empty-tree-symbol" src="/assets/treeai-mark.svg" width="58" height="58" alt="" aria-hidden="true" />
 
-          <h1 class="empty-title">从一个问题开始</h1><p class="empty-description">新建一棵思考树，与 AI 对话；遇到想深入的地方，展开支线，再把收获带回主线。</p>
+          <h1 class="empty-title">给思考，留一点生长的空间。</h1><p class="empty-description">从一个问题开始。沿着好奇深入，再把新的理解带回这里。</p>
 
-          <button id="empty-new-tree" class="primary">＋ 新建思考树</button>
+          <button id="empty-new-tree" class="primary">开始第一次思考 ↗</button>
+          <div class="welcome-steps"><div><b>01 · 提出问题</b><p>把想弄明白的事写下来。</p></div><div><b>02 · 展开支线</b><p>选中回答，深入感兴趣的部分。</p></div><div><b>03 · 带回收获</b><p>确认新的理解，保存到主线。</p></div></div>
         </div>
         <section id="tree-view" hidden>
           <!-- P1 失败面板（持久、不自动消失）：树级警示条，置于阅读区之上。 -->
@@ -214,12 +235,7 @@
                W2 §2.2/§2.3 开合期间主线阅读位置不动）。 -->
           <div id="reading-area">
             <div id="main-pane">
-              <header id="reading-heading">
-
-                <h1 id="reading-title">一个问题，无限可能。</h1>
-
-                <div class="reading-navigation"><button id="reading-trunk" type="button" class="reading-current" aria-controls="conversation">主线对话</button><button id="reading-materials" type="button" aria-controls="materials-section">阅读材料 <span id="reading-material-count">0</span></button></div>
-              </header>
+              <h1 id="reading-title" class="sr-only">一个问题，无限可能。</h1>
               <div id="main-reading-content">
               <!-- A4 缺失 session 横幅（主线视角，可关闭、不自动消失）。 -->
               <div id="session-banner" hidden></div>
@@ -229,15 +245,13 @@
               <div id="composer">
                 <textarea id="prompt-input" rows="2" aria-label="在主线上提问" placeholder="输入问题，继续探索…"></textarea>
                 <div class="composer-actions">
-                  <span class="composer-context">⑂ 在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
-                  <button id="send" class="primary" aria-label="发送到主线">发送 ↗</button>
+                  <span class="composer-context sr-only">⑂ 在主线上继续 <span>· Enter 发送 · Ctrl + Enter 换行</span></span>
+                  <button id="send" class="primary" aria-label="发送到主线">↑</button>
                   <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                   <button id="new-exploration" class="accent" hidden>开始新的探索</button>
                 </div>
               </div>
 
-              <!-- 材料使用中央阅读面；覆盖而不替换主线，保留正文节点与滚动位置。 -->
-              <aside id="material-reader" hidden aria-label="Material reader" tabindex="-1"></aside>
               </div>
             </div>
             <div id="branch-column">
@@ -245,7 +259,7 @@
                    隐藏，见 style.css ≥1180px 块），收起后如实呈现指引。 -->
               <div id="branch-empty">
                 <p class="panel-kicker">思考的另一种可能</p>
-                <svg class="growth-illustration" viewBox="0 0 280 250" aria-hidden="true"><circle class="growth-halo" cx="147" cy="112" r="88"/><path class="quiet-line" d="M112 225V38M112 124C112 96 57 105 57 65"/><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"/><circle class="growth-node" cx="112" cy="175" r="5"/><circle class="growth-node" cx="199" cy="62" r="7"/><circle class="small-node" cx="57" cy="65" r="4"/><circle class="small-node" cx="112" cy="38" r="4"/><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg>
+                <svg class="growth-illustration" viewBox="0 0 280 250" aria-hidden="true"><circle class="growth-halo" cx="147" cy="112" r="88"></circle><path class="quiet-line" d="M112 225V38M112 124C112 96 57 105 57 65"></path><path class="growth-line" d="M112 175C112 129 199 155 199 90V62"></path><circle class="growth-node" cx="112" cy="175" r="5"></circle><circle class="growth-node" cx="199" cy="62" r="7"></circle><circle class="small-node" cx="57" cy="65" r="4"></circle><circle class="small-node" cx="112" cy="38" r="4"></circle><text x="129" y="220">主线</text><text x="211" y="67">探索</text></svg>
                 <h2 class="branch-empty-title">好奇，可以走远一点。</h2>
                 <p class="muted">选中回答中的一个词或一段话，<br>从那里展开支线，再把新的理解<br>带回正在生长的思考。</p>
                 <div class="growth-steps"><span><b>01</b>找到起点</span><i></i><span><b>02</b>深入探索</span><i></i><span><b>03</b>带回收获</span></div>
@@ -272,7 +286,7 @@
                 <div id="panel-composer">
                   <textarea id="panel-prompt-input" rows="2" aria-label="在当前支线继续提问" placeholder="输入问题，继续探索…"></textarea>
                   <div class="composer-actions">
-                    <button id="panel-send" class="primary">发送 ↗</button>
+                    <button id="panel-send" class="primary">↑</button>
                     <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                     <button id="panel-new-exploration" class="accent" hidden>开始新的探索</button>
                   </div>
@@ -290,6 +304,8 @@
             </div>
           </div>
         </section>
+        <!-- 右侧阅读器复用版本、来源和阅读位置控制器。 -->
+        <aside id="material-reader" hidden aria-label="Material reader" tabindex="-1"></aside>
       </main>
     </div>
 

@@ -50,4 +50,4 @@ export const SCROLL_TOLERANCE_PX = 2;
 export const MODE_BUTTON_INDEX = { "manual-only": 1, "minimal-hints": 2, "assisted-reading": 3 };
 
 
-export const GATE_NOTE_SNIPPET = "quality gate has not passed — automatic suggestions stay OFF";
+export const GATE_NOTE_SNIPPET = "自动提示暂未开放，你仍可选中文字进行解释";

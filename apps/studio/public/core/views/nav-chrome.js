@@ -10,13 +10,13 @@ export function createNavChromeView({ document, getElement, getState, openNavTre
     locate.disabled = session === null || workbenchBranch === null;
     locate.title =
       workbenchBranch === null
-        ? "no tree is open in the workbench — open one (Forest) to locate its current branch here"
-        : `locate the workbench's current branch (${workbenchBranch}) in this navigation view`;
+        ? "请先打开一棵思考树"
+        : "定位当前讨论所在的路径";
     source.disabled = session === null || session.selectedBranchId === null;
     source.title =
       session === null || session.selectedBranchId === null
-        ? "select a branch first (click a row or press Enter)"
-        : `reveal the saved origin of ${session.selectedBranchId} (turn → source reveal; material → the reader)`;
+        ? "请先选择一条路径"
+        : "打开这条路径的来源";
   }
 
   function renderNavSurfaceChrome() {
@@ -24,6 +24,7 @@ export function createNavChromeView({ document, getElement, getState, openNavTre
     const session = state.nav.session;
     const title = getElement("nav-tree-title");
     const meta = getElement("nav-tree-meta");
+    title.dataset.treeId = session?.treeId ?? "";
     if (session === null) {
       getElement("nav-surface").hidden = true;
       title.textContent = "";
@@ -32,10 +33,10 @@ export function createNavChromeView({ document, getElement, getState, openNavTre
       return;
     }
     if (session.overviewState === "loading") {
-      title.textContent = session.treeId;
-      meta.textContent = "loading the tree overview…";
+      title.textContent = "思考树";
+      meta.textContent = "正在加载…";
     } else if (session.overviewState === "failed") {
-      title.textContent = session.treeId;
+      title.textContent = "思考树";
       meta.replaceChildren();
       meta.append(document.createTextNode(`tree overview failed — ${session.overviewError} `));
       const retry = document.createElement("button");
@@ -47,13 +48,13 @@ export function createNavChromeView({ document, getElement, getState, openNavTre
       const overview = session.overview;
       title.textContent =
         overview.title !== null
-          ? `${overview.title} (${overview.treeId})`
-          : `${overview.treeId} — untitled (no first question on the trunk)`;
+          ? overview.title
+          : "新的思考";
       title.title = title.textContent;
-      meta.textContent = `${String(overview.nodeCount)} nodes · max depth ${String(overview.maxDepth)}`;
+      meta.textContent = `${String(overview.nodeCount)} 条路径`;
       if (overview.nodeCount <= 1) {
         meta.append(
-          document.createTextNode(" · this tree has no branches yet — branch from any answer to grow it"),
+          document.createTextNode(" · 选中回答可以展开支线"),
         );
       }
     }

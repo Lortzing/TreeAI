@@ -71,6 +71,8 @@ export interface PiSessionSnapshot {
 /** prompt 输入。 */
 export interface PiPromptInput {
   readonly text: string;
+  /** Explicit model for this request; source/session identities stay unchanged. */
+  readonly model?: PiModelSelector;
 }
 
 /** prompt 的归一化最终结果。 */

@@ -7,6 +7,29 @@ import { inputClickAt } from "../material-probes.mjs";
 
 export async function runBetaTouch(deps) {
 
+  // Materials moved out of history navigation. Exercise the actual secondary entry by touch.
+  async function openMaterialToolsByTouch() {
+    // Dismiss the history drawer before reaching the independent attachment card.
+    const drawerOpen = await deps.ctx.evalJs(`document.body.classList.contains("sidebar-open")`);
+    if (drawerOpen) {
+      const point = await deps.ctx.evalJs(`(() => { const r = document.getElementById("sidebar-toggle").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`);
+      await deps.tapAt(point.x, point.y);
+      await deps.waitForDrawerDismissed(deps.ctx);
+    }
+    for (const selector of ["#materials-section > summary"]) {
+      const point = await deps.ctx.evalJs(`(() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (el.parentElement.open) return null;
+        const r = el.getBoundingClientRect();
+        const x = r.left + r.width / 2, y = r.top + r.height / 2;
+        if (!r.width || !r.height || !el.contains(document.elementFromPoint(x, y))) throw new Error("touch tools entry is covered");
+        return { x, y };
+      })()`);
+      if (point) await deps.tapAt(point.x, point.y);
+    }
+    await waitFor(deps.ctx, `!document.getElementById("workspace-library").open && document.getElementById("materials-section").open && !document.body.classList.contains("sidebar-open")`, { label: "touch: attachment card opens independently of navigation" });
+  }
+
       {
         await deps.setViewport(deps.ctx, deps.NARROW_VIEWPORT);
         /* tap 开侧栏抽屉。 */
@@ -20,6 +43,7 @@ export async function runBetaTouch(deps) {
           { label: "touch: tap opens the sidebar drawer", timeoutMs: 10_000 },
         );
         await deps.waitForDrawerSettled(deps.ctx);
+        await openMaterialToolsByTouch();
         /* tap 打开材料阅读（md-11）。 */
         const mdBtn = await deps.ctx.evalJs(
           `(() => { const b = document.querySelector(${JSON.stringify(materialButtonSelector(deps.scenarioSetup.materialBranchOrigin.materialId))}); ` +
@@ -48,6 +72,7 @@ export async function runBetaTouch(deps) {
         await deps.tapAt(toggleRect.x, toggleRect.y);
         await waitFor(deps.ctx, `(() => document.body.classList.contains("sidebar-open"))()`, { label: "touch: drawer reopens (pdf phase)" });
         await deps.waitForDrawerSettled(deps.ctx);
+        await openMaterialToolsByTouch();
         const pdfMaterialId = await deps.ctx.evalJs(
           `(() => { for (const b of document.querySelectorAll("#material-list button[data-material-id]")) { ` +
             `if ((b.querySelector(".material-meta")?.textContent ?? "").includes("pdf")) return b.dataset.materialId; } return null; })()`,
@@ -150,8 +175,8 @@ export async function runBetaTouch(deps) {
         const copyState = await waitFor(
           deps.ctx,
           `(() => { const btn = document.querySelector("#mat-selection-bar .mat-copy"); ` +
-            `return btn !== null && btn.textContent === "Copied ✓" ? { label: btn.textContent } : false; })()`,
-          { label: "touch: tap on Copy shows the Copied ✓ confirmation", timeoutMs: 5000 },
+            `return btn !== null && btn.textContent === "已复制 ✓" ? { label: btn.textContent } : false; })()`,
+          { label: "touch: tap on Copy shows the 已复制 ✓ confirmation", timeoutMs: 5000 },
         );
         const clip = await deps.ctx.evalJs(
           `(async () => { try { return { ok: true, text: await navigator.clipboard.readText() }; } ` +
@@ -166,7 +191,7 @@ export async function runBetaTouch(deps) {
         } else {
           /* 诚实降级：确认态已验证 + 摘录与冻结真值一致（剪贴板读回不可用）。 */
           deps.touch.toolbarButtonTapped = true;
-          deps.touch.copyVerification = `copy-confirmed (Copied ✓ shown; clipboard read-back unavailable: ${String(clip.error)})`;
+          deps.touch.copyVerification = `copy-confirmed (已复制 ✓ shown; clipboard read-back unavailable: ${String(clip.error)})`;
         }
         deps.touch.copyLabel = copyState.label;
         /* 收尾：解除选区、关阅读器、还原视口。 */

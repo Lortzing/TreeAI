@@ -89,10 +89,10 @@ export function settleCollapse(nodeId, firstChildId) {
  * 见 frontendBugs「selected-row-outside-window」——路径行正确、树内无活动行）。 */
 export function settleSelect(nodeId) {
   return `(() => { const heading = document.getElementById("nav-path-heading").textContent ?? ""; ` +
-    `if (!heading.includes("full path")) return false; ` +
+    `if (!heading.includes("完整路径")) return false; ` +
     `const steps = document.querySelectorAll("#nav-path .nav-path-step"); ` +
     `if (steps.length === 0) return false; ` +
-    `return (steps[steps.length - 1].title ?? "").includes(${JSON.stringify(`select ${nodeId} (`)}); })()`;
+    `return steps[steps.length - 1].dataset.branchId === ${JSON.stringify(nodeId)}; })()`;
 }
 
 /** 选中行的渲染断言（抽样）：滚入窗口后 .active 在场（精确行索引）。 */
@@ -110,8 +110,8 @@ export async function assertSelectedRowRendered(ctx, nodeId, mirror, treeId) {
 export function settleTreeOpen(treeId) {
   return `(() => { const surface = document.getElementById("nav-surface"); ` +
     `if (surface === null || surface.hidden) return false; ` +
-    `const title = document.getElementById("nav-tree-title").textContent ?? ""; ` +
-    `if (!title.includes(${JSON.stringify(treeId)})) return false; ` +
+    `const treeId = document.getElementById("nav-tree-title").dataset.treeId; ` +
+    `if (treeId !== ${JSON.stringify(treeId)}) return false; ` +
     `const status = document.getElementById("nav-tree-status").textContent ?? ""; ` +
     `if (!status.includes("rendering ")) return false; ` +
     `return document.querySelectorAll("#nav-tree .nav-item").length > 0; })()`;

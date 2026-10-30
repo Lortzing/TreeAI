@@ -10,6 +10,9 @@ export async function mountStudioApp(): Promise<{ start(): void; dispose(): void
     createStudioApp(deps: Record<string, unknown>): { start(): void; dispose(): void };
   };
   const env = globalThis as unknown as Record<string, unknown>;
+  // SVG is decorative here; native-browser probes verify rendering and namespaces.
+  const document = env["document"] as { createElement(name: string): unknown; createElementNS?: (namespace: string, name: string) => unknown };
+  if (!document.createElementNS) document.createElementNS = (_namespace, name) => document.createElement(name);
   const app = factory.createStudioApp({
     window: env["window"],
     document: env["document"],

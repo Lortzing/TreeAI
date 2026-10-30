@@ -324,6 +324,7 @@ class StubElement {
   children: StubNode[] = [];
   parentElement: StubElement | null = null;
   hidden = false;
+  open = false;
   disabled = false;
   /* 阅读位置几何（脚本可设；默认 0——确定性回落见 app.js 注释）。 */
   offsetTop = 0;
@@ -1224,7 +1225,18 @@ test("central reading navigation preserves the trunk nodes, draft and scroll whi
   world.el("prompt-input").value = "Keep this unfinished thought";
   world.el("reading-materials").click();
   await settle(30);
-  assert.equal(world.el("material-reader").hidden, false, "the header opens the single material directly");
+  assert.equal(world.el("material-reader").hidden, true, "expanding the attachment card does not navigate immediately");
+  world.el("materials-section").open = true;
+  await world.openMaterial("mat-md01");
+  assert.equal(world.el("materials-section").open, false, "every reader entry collapses attachments");
+  world.el("materials-section").open = true;
+  await world.openMaterial("mat-md01");
+  assert.equal(world.el("materials-section").open, false, "reopening the active material also collapses attachments");
+  assert.equal(world.el("reading-materials").getAttribute("aria-expanded"), "false");
+  const fileDetails = world.el("mat-file-details");
+  assert.equal(Boolean(fileDetails.open), false, "parser and version metadata start collapsed");
+  assert.match(fileDetails.textContent!, /d4-md-v1/, "exact parser provenance remains available on demand");
+  assert.equal(world.el("material-reader").hidden, false, "selecting an attachment opens the right reader");
   assert.ok(world.matBlocks().querySelectorAll(".material-block").length > 0, "the real reader loads canonical blocks");
   assert.equal(world.requestsOf("/switch").length, 0, "reading does not change the live conversation cursor");
   world.el("reading-trunk").click();
@@ -1274,7 +1286,7 @@ test("block-chunked reading: pages arrive via the afterBlock cursor, Load more i
   await settle(25);
   const thirdPage = world.lastRequest("/versions/v-md01-1")!;
   assert.match(thirdPage.path, /afterBlock=blk-9/, "scrolling near the bottom prefetches the next page");
-  assert.match(world.el("mat-tail").textContent!, /end of material/);
+  assert.match(world.el("mat-tail").textContent!, /已读到末尾/);
   const fetchCountAfterEnd = world.requestsOf("/versions/v-md01-1").length;
   world.matBlocks().scrollTop = 0;
   world.matBlocks().scrollTop = 50000;
@@ -1428,7 +1440,7 @@ test("cross-line selection inside one block: the captured payload is the frozen 
      诚实占位；入口的完整流程由 ui-material-branching.test.ts 锁定）。 */
   const d43 = bar.querySelector(".mat-branch-d43")!;
   assert.equal(d43.disabled, false, "the D4-3 branch entry is offered (enabled) on the armed bar");
-  assert.match(d43.textContent!, /Branch from material/);
+  assert.match(d43.textContent!, /选文提问/);
 });
 
 test("repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19)", async () => {
@@ -1541,7 +1553,7 @@ test("copy quote: the clipboard receives the exact canonical slice; the D4-3 anc
   copy.click();
   await settle(5);
   assert.deepEqual(world.backend.copied, ["递归"], "the clipboard stub receives the canonical excerpt");
-  assert.equal(copy.textContent, "Copied ✓", "the button confirms the copy");
+  assert.equal(copy.textContent, "已复制 ✓", "the button confirms the copy");
   assert.equal(
     selectionBar(world).querySelector(".mat-payload")!.textContent!.includes("material mat-md01"),
     true,
@@ -1797,7 +1809,7 @@ test("capture bar freezes during the selection drag window: a mid-drag selection
   );
   assert.match(
     selectionBar(world).textContent!,
-    /select text in the material/,
+    /选中文字/,
     "the idle hint stays in place during the drag window",
   );
 
@@ -1827,11 +1839,16 @@ test("touch arming: selectionchange arms the capture bar without mouseup, and an
 
   /* 空选区：延迟解除（捕获条回提示态）。 */
   world.setSelection(null);
+  const compatibilityEvent = { sourceCapabilities: { firesTouchEvents: true } } as StubEventInit;
+  world.matBlocks().dispatchEvent("mousedown", compatibilityEvent);
+  world.matBlocks().dispatchEvent("mouseup", compatibilityEvent);
+  assert.match(selectionBar(world).querySelector(".mat-payload")!.textContent!, /UTF-16 \[13, 15\)/,
+    "the touch release's compatibility mouse events cannot erase the captured quote");
   world.document.dispatchEvent("selectionchange", {});
   await settle(10);
   assert.match(
     selectionBar(world).textContent!,
-    /select text in the material to capture a quote/,
+    /选中文字，复制摘录或展开支线/,
     "the capture bar disarms after the deferred check",
   );
 });
@@ -1850,7 +1867,8 @@ test("Esc closes the reader with focus returned to the material's list button; k
   assert.equal(world.el("material-reader").hidden, true, "Esc closes the reader");
   /* 关闭后列表重渲（active 态回落）——焦点还原目标是**重渲后的新按钮**
      （注册表语义，同 termExplainButtons 模式），不比对陈旧元素引用。 */
-  const listButtonAfterClose = world.materialButton("mat-md01");
+  const listButtonAfterClose = world.el("reading-materials");
+  assert.equal(world.el("materials-section").open, false, "focus restoration must not reopen the floating card");
   assert.equal(
     world.document.activeElement,
     listButtonAfterClose,
@@ -1864,9 +1882,9 @@ test("Esc closes the reader with focus returned to the material's list button; k
   /* 键盘可达性：列表/加载更多/复制是原生 button（Tab 顺序即 DOM 顺序）。 */
   await world.openMaterial("mat-md01");
   assert.equal(world.el("mat-close").tagName, "BUTTON");
-  /* 该世界整料一页读完（尾态为 end of material）；Load more 按钮的键盘
+  /* 该世界整料一页读完（尾态为 已读到末尾）；Load more 按钮的键盘
      可达性在分页场景中锁定（原生 button）。 */
-  assert.match(world.el("mat-tail").textContent!, /end of material/);
+  assert.match(world.el("mat-tail").textContent!, /已读到末尾/);
   const block = world.blockElement("blk-1");
   const line = firstLineNode(block);
   armBlockSelection(world, "blk-1", line, 0, line, 2);
@@ -1928,4 +1946,17 @@ test("CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and 
   );
   assert.ok(/\.mat-selection-bar\s+\.mat-quote\s*\{[^{}]*white-space:\s*pre-wrap/.test(base), "quotes preserve their whitespace");
   assert.ok(/#material-reader\.enter\s*\{[^{}]*animation:\s*panel-in/.test(base), "the reader enters with the shared panel animation");
+});
+
+
+test("Harvest continue-reading restores the database version and block and returns focus to the harvest entry", async () => {
+  const world = await createWorld({ materials: [{ ...VERSIONED_SCRIPT, readingPosition: { versionId: "v-old", blockId: "blk-2", focusStart: null, updatedAt: ISO } }] });
+  world.el("mode-harvest").click();
+  world.el("session-workspace").querySelector(".harvest-material")!.click();
+  await settle(40);
+  assert.equal(world.el("main").dataset.workspaceView, "chat");
+  assert.match(world.el("material-reader").querySelector(".mat-meta")!.textContent!, /v1 \(older — v2 is current\)/);
+  assert.equal((world.blockElement("blk-2").lastScrollIntoView as { block?: string })?.block, "start");
+  world.document.dispatchEvent("keydown", { key: "Escape" });
+  assert.equal(world.document.activeElement, world.el("mode-harvest"));
 });

@@ -1169,7 +1169,7 @@ test("scope: default is the current tree (scoped endpoint, full kinds), an expli
   assert.ok(!world.el("search-scope-all").classList.contains("active"));
   assert.match(
     world.el("search-status").textContent!,
-    /unsubmitted drafts and explain caches are never indexed/,
+    /未提交草稿和解释缓存不参与搜索/,
     "the idle state discloses the indexing discipline honestly",
   );
 
@@ -1617,7 +1617,7 @@ test("cross-tree hits open the hit's tree first; searching creates no turns; tre
   await settle(25);
   assert.match(
     world.el("search-status").textContent!,
-    /search saved facts — 材料 \/ 批注 \/ Return \/ 对话/,
+    /搜索已保存的对话、材料、批注与收获/,
     "tree-scoped results clear on tree switch (back to the idle disclosure)",
   );
   assert.equal(world.hitRows().length, 0);

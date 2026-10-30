@@ -31,7 +31,12 @@ export async function exposeInputTarget(ctx, selector) {
       `(() => { const el = document.querySelector(${JSON.stringify(selector)}); ` +
         `if (el === null) return { missing: true }; ` +
         `const toggle = document.getElementById('sidebar-toggle'); ` +
-        `if (el.closest('#sidebar') && toggle && getComputedStyle(toggle).display !== 'none' && !document.body.classList.contains('sidebar-open')) return { reveal: '#sidebar-toggle' }; ` +
+        `const library = document.getElementById('workspace-library'); ` +
+        `if (library?.open && !el.closest('#workspace-library')) return { reveal: '#workspace-library-close' }; ` +
+        `const search = document.getElementById('search-section'); ` +
+        `if (search?.open && !el.closest('#search-section')) return { reveal: '#search-close' }; ` +
+        `if (!el.closest('#sidebar') && el !== toggle && document.body.classList.contains('sidebar-open')) return { reveal: '#sidebar-toggle' }; ` +
+        `if (el.closest('#sidebar') && toggle && matchMedia('(max-width: 719px)').matches && !document.body.classList.contains('sidebar-open')) return { reveal: '#sidebar-toggle' }; ` +
         `for (let parent = el.parentElement; parent; parent = parent.parentElement) { ` +
         `if (parent.tagName !== 'DETAILS' || parent.open) continue; const summary = parent.querySelector(':scope > summary'); ` +
         `if (!summary || summary.contains(el)) continue; ` +
@@ -42,7 +47,7 @@ export async function exposeInputTarget(ctx, selector) {
         `if (r.width <= 0 || r.height <= 0) return { hidden: true }; ` +
         `const x = r.left + r.width / 2, y = r.top + r.height / 2; ` +
         `const hit = document.elementFromPoint(x, y); ` +
-        `return { x: x, y: y, hit: hit !== null && hit.closest(${JSON.stringify(selector)}) !== null }; })()`,
+        `return { x: x, y: y, hit: hit !== null && hit.closest(${JSON.stringify(selector)}) !== null, coveredBy: hit?.id || hit?.className || hit?.tagName }; })()`,
     );
     if (lastState?.missing === true) throw new Error(`click target not found: ${selector}`);
     if (lastState?.reveal) {
@@ -67,7 +72,7 @@ export async function inputClickAt(ctx, selector) {
       return;
     }
     if (attempt >= 6) {
-      throw new Error(`click target never settled at its coordinates (covered or moving): ${selector}`);
+      throw new Error(`click target never settled at its coordinates (covered or moving): ${selector}; ${JSON.stringify(lastState)}`);
     }
     await sleep(150);
   }

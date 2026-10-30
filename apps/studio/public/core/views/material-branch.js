@@ -1,3 +1,5 @@
+import { handleComposerKey } from "../controllers/appearance.js";
+import { createDisclosure } from "../dom.js";
 /** Declared material context, existing-intent choices, dispatch/retry notes and material Return cards. Instance-owned state and dependencies. */
 
 export function createMaterialBranchView(deps) {
@@ -24,12 +26,10 @@ export function createMaterialBranchView(deps) {
     if (flow.phase === "creating") {
       const head = deps.document.createElement("p");
       head.className = "mat-branch-head";
-      head.textContent = "⑃ Branch from material — resolving the selection…";
+      head.textContent = "正在准备支线…";
       div.append(head);
       div.append(
-        deps.mutedLine(
-          "creating the branch records zero runs/turns (browsing and searching create none) — the first question is a separate explicit submit",
-        ),
+        deps.mutedLine("正在准备引用，确认后再发送问题。"),
       );
       div.append(materialBranchCancelButton());
       return div;
@@ -38,14 +38,14 @@ export function createMaterialBranchView(deps) {
     if (flow.phase === "failed") {
       const head = deps.document.createElement("p");
       head.className = "mat-branch-head danger";
-      head.textContent = "⑃ Branch from material — the flow failed";
+      head.textContent = "暂时无法展开支线";
       div.append(head);
-      div.append(deps.mutedLine(`error — ${String(flow.error)}`));
+      div.append(createDisclosure(deps.document, "错误详情", deps.mutedLine(`error — ${String(flow.error)}`)));
       const actions = deps.document.createElement("div");
       actions.className = "mat-branch-actions";
       const retry = deps.document.createElement("button");
       retry.className = "mat-branch-retry";
-      retry.textContent = "Retry";
+      retry.textContent = "重试";
       retry.title = "Resolve the selection and open the branching flow again";
       retry.addEventListener("click", () => void deps.guard(() => deps.startMaterialBranchFlow(flow.selection), "main"));
       actions.append(retry, materialBranchCancelButton());
@@ -60,12 +60,12 @@ export function createMaterialBranchView(deps) {
       actions.className = "mat-branch-actions";
       const resume = deps.document.createElement("button");
       resume.className = "mat-branch-resume";
-      resume.textContent = "↩ Open the existing exploration";
+      resume.textContent = "继续已有支线";
       resume.title = "Resume the exploration anchored on this exact selection (its session continues where it left off)";
       resume.addEventListener("click", () => void deps.guard(() => deps.materialBranchResumeExisting(), "main"));
       const fresh = deps.document.createElement("button");
       fresh.className = "mat-branch-new";
-      fresh.textContent = "⑃ Start a new exploration from this selection";
+      fresh.textContent = "另开一条支线";
       fresh.title = "Explicitly open a second exploration from the same source — a new branch and a new session (a new submission)";
       fresh.addEventListener("click", () => void deps.guard(() => deps.materialBranchStartNew(), "main"));
       actions.append(resume, fresh, materialBranchCancelButton());
@@ -73,24 +73,22 @@ export function createMaterialBranchView(deps) {
       if (restore !== null && restore.navigation !== null && restore.navigation.status === "failed") {
         div.append(
           deps.mutedLine(
-            `aligning the live session failed (${String(restore.navigation.code)}: ${String(restore.navigation.message)}) — ` +
-              "the branch stays fully readable; opening it shows the saved history, prompts navigate on their own",
+            "暂时无法继续会话，已保存的讨论仍可查看。",
           ),
+          createDisclosure(deps.document, "错误详情", deps.mutedLine(`aligning the live session failed (${String(restore.navigation.code)}: ${String(restore.navigation.message)})`)),
         );
       }
       if (restore !== null && restore.sessionAvailability === "unavailable") {
         div.append(
           deps.mutedLine(
-            "the session at this branch's continuation point is unavailable — opening it shows the recovery entries " +
-              "(including starting a new exploration from saved content)",
+            "原会话暂时不可用，打开支线后可从已保存的内容恢复讨论。",
           ),
         );
       }
       if (restore !== null && !restore.hasTurns) {
         div.append(
           deps.mutedLine(
-            "the existing branch has no first question yet — continuing it there sends a normal prompt without the composed " +
-              "material context; starting a new exploration below gives the full first-question flow",
+            "已有支线尚未提问。如需带上这里的引用内容，请选择另开一条支线。",
           ),
         );
       }
@@ -103,12 +101,12 @@ export function createMaterialBranchView(deps) {
     form.className = "mat-branch-question";
     const label = deps.document.createElement("span");
     label.className = "muted";
-    label.textContent = "first question for the new exploration:";
-    const input = deps.document.createElement("input");
+    label.textContent = "想围绕这段材料了解什么？";
+    const input = deps.document.createElement("textarea");
     input.id = "mat-branch-first-question";
-    input.type = "text";
+    input.rows = 2;
     input.value = flow.firstQuestion;
-    input.placeholder = "Ask the first question — it enters the new session together with the declared material scope…";
+    input.placeholder = "输入你的问题…";
     input.disabled = flow.submitting;
     input.addEventListener("input", () => {
       const current = deps.state.materialBranching;
@@ -125,44 +123,38 @@ export function createMaterialBranchView(deps) {
         }
       }
     });
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        void deps.guard(deps.submitMaterialFirstQuestion, "main");
-      }
-    });
+    input.addEventListener("keydown", (event) => handleComposerKey(event, input, () => void deps.guard(deps.submitMaterialFirstQuestion, "main"), deps.document));
     const submit = deps.document.createElement("button");
     submit.className = "primary mat-branch-submit";
-    submit.textContent = flow.submitting ? "Dispatching…" : "Submit first question";
+    submit.textContent = flow.submitting ? "发送中…" : "发送问题";
     submit.disabled = flow.submitting;
-    submit.title =
-      "Dispatch the first question with the declared material scope into a new, independent session (idempotent by intent key)";
+    submit.title = "将问题和上方引用材料一起发送";
     submit.addEventListener("click", () => void deps.guard(deps.submitMaterialFirstQuestion, "main"));
     form.append(label, input, submit);
     div.append(form);
     if (flow.mode === "restored") {
       div.append(
         deps.mutedLine(
-          "this branch was created earlier from the same selection and has no first question yet — submitting resumes it with the pending intent key",
+          "已恢复尚未发送的问题，可以继续编辑后发送。",
         ),
       );
     } else if (flow.created === false) {
       div.append(
-        deps.mutedLine("this intent key already has its branch — the existing one is reopened (no duplicate is created)"),
+        deps.mutedLine("已回到先前创建的支线。"),
       );
     }
     if (flow.submitting) {
-      div.append(deps.mutedLine("dispatching the first question… (it is not re-sent while a dispatch is pending)"));
+      div.append(deps.mutedLine("正在发送问题，请稍候…"));
     }
     if (flow.dispatchNote !== null) {
       const note = deps.document.createElement("p");
       note.className = `mat-branch-dispatch${flow.dispatchNote.startsWith("dispatch failed") || flow.dispatchNote.startsWith("the first question for this branch") ? " danger" : ""}`;
       note.textContent = flow.dispatchNote;
-      div.append(note);
+      div.append(deps.mutedLine(flow.dispatchNote.startsWith("dispatch failed") ? "问题发送失败，可以重试。" : flow.dispatchNote.startsWith("the first question for this branch") ? "暂时无法确认发送结果，尚未重复发送。请先查看支线记录，再决定是否重试。" : "已恢复尚未发送的问题，可以继续编辑。"), createDisclosure(deps.document, "发送详情", note));
       if (flow.dispatchNote.startsWith("dispatch failed")) {
         div.append(
           deps.mutedLine(
-            "a retry with the same key is an explicit new attempt (the backend reconciles first — a landed question is never re-sent)",
+            "重试会先确认发送结果，避免重复发送。",
           ),
         );
       }
@@ -171,15 +163,15 @@ export function createMaterialBranchView(deps) {
       const conflict = deps.document.createElement("p");
       conflict.className = "mat-branch-conflict";
       conflict.textContent = `first-question conflict — ${flow.conflict}`;
-      div.append(conflict);
+      div.append(createDisclosure(deps.document, "发送详情", conflict));
       div.append(
-        deps.mutedLine("the first question is immutable for this branch — a changed question is a normal continuation, not a first-question retry"),
+        deps.mutedLine("首个问题已经发送。修改后的问题可以作为追问继续。"),
       );
       const actions = deps.document.createElement("div");
       actions.className = "mat-branch-actions";
       const cont = deps.document.createElement("button");
       cont.className = "accent mat-branch-continue";
-      cont.textContent = "Continue on the branch with this question";
+      cont.textContent = "将修改后的问题作为追问";
       cont.title = "Open the branch panel with the changed question in its composer — sending it there is a normal continuation";
       cont.addEventListener("click", () => void deps.guard(() => deps.materialBranchContinueWithQuestion(), "main"));
       actions.append(cont, materialBranchCancelButton());
@@ -195,7 +187,7 @@ export function createMaterialBranchView(deps) {
   function materialBranchCancelButton() {
     const cancel = deps.document.createElement("button");
     cancel.className = "mat-branch-cancel";
-    cancel.textContent = "Cancel";
+    cancel.textContent = "取消";
     cancel.title = "Close this flow and keep reading — nothing is dispatched without your explicit first question";
     cancel.addEventListener("click", deps.closeMaterialBranchFlow);
     return cancel;
@@ -214,12 +206,16 @@ export function createMaterialBranchView(deps) {
     card.className = "mat-branch-context";
     const head = deps.document.createElement("p");
     head.className = "mat-branch-context-head";
-    head.textContent = "Material scope for this exploration — declared before your first question";
+    head.textContent = "本次提问会参考以下材料";
     card.append(head);
     if (context === null) {
-      card.append(deps.mutedLine("the scope view is unavailable — do not submit until it is shown"));
+      card.append(deps.mutedLine("引用内容暂时无法显示，请等待内容恢复后再发送。"));
       return card;
     }
+    const scopeDetails = createDisclosure(deps.document, "引用详情");
+    const materialName = deps.document.createElement("p");
+    materialName.textContent = context.materialTitle;
+    card.append(materialName);
     const lines = [];
     lines.push(
       `material “${context.materialTitle}” · version ${context.versionId} (${context.parserKind} ${context.parserVersion})`,
@@ -238,29 +234,30 @@ export function createMaterialBranchView(deps) {
       const line = deps.document.createElement("p");
       line.className = "mat-branch-scope-line";
       line.textContent = text;
-      card.append(line);
+      scopeDetails.append(line);
     }
     const quote = deps.document.createElement("blockquote");
     quote.className = "mat-branch-excerpt";
     quote.textContent = context.selection.excerpt;
-    card.append(quote);
+    card.append(quote, scopeDetails);
     if (context.truncated) {
       const marker = deps.document.createElement("p");
       marker.className = "mat-branch-truncated";
-      marker.textContent = `TRUNCATED — ${String(context.truncationNote)}`;
+      marker.textContent = "材料较长，本次只参考选文及附近内容。";
+      scopeDetails.append(deps.mutedLine(`TRUNCATED — ${String(context.truncationNote)}`));
       card.append(marker);
     } else {
-      card.append(deps.mutedLine("the window covers the whole material — nothing is omitted"));
+      card.append(deps.mutedLine("本次会参考整份材料。"));
     }
     const details = deps.document.createElement("details");
     details.className = "mat-branch-composed collapsible";
     const summary = deps.document.createElement("summary");
-    summary.textContent = "the exact composed context that will enter the model input";
+    summary.textContent = "查看完整引用内容";
     const pre = deps.document.createElement("pre");
     pre.textContent = context.composed;
     details.append(summary, pre);
     card.append(details);
-    card.append(
+    scopeDetails.append(
       deps.mutedLine(
         "creating the branch recorded zero runs/turns; submitting the first question dispatches it with exactly this scope into a new, independent session (the same bytes — the scope is deterministic)",
       ),
@@ -275,7 +272,7 @@ export function createMaterialBranchView(deps) {
     card.className = "mat-branch-context";
     const head = deps.document.createElement("p");
     head.className = "mat-branch-context-head";
-    head.textContent = "This exact material source already has an exploration in this tree";
+    head.textContent = "这段材料已有一条支线";
     card.append(head);
     const line = deps.document.createElement("p");
     line.className = "mat-branch-scope-line";
@@ -283,10 +280,10 @@ export function createMaterialBranchView(deps) {
       `source: material “${String(flow.context?.materialTitle ?? "")}” · version ${String(flow.selection.versionId)} · ` +
       `block ${flow.selection.blockId} · UTF-16 [${String(flow.selection.start)}, ${String(flow.selection.end)}) — ` +
       `selection identity is exact (material × version × block × range); look-alike excerpts elsewhere are never reused`;
-    card.append(line);
+    card.append(createDisclosure(deps.document, "引用详情", line));
     card.append(
       deps.mutedLine(
-        "you can resume the existing exploration, or explicitly start a new one from this same selection — both are honest continuations, nothing is silently reused",
+        "可以继续已有讨论，也可以围绕这段材料另开一条支线。",
       ),
     );
     return card;
@@ -366,7 +363,9 @@ export function createMaterialBranchView(deps) {
         `material “${String(card.materialTitle)}” · version ${String(card.versionId)}` +
         ` (${String(card.parserKind)} ${String(card.parserVersion)}) · block ${String(card.blockId)}${pageNote}` +
         ` · confirmed ${deps.formatProductTime(card.confirmTime)}`;
-      source.append(fields);
+      const sourceLabel = deps.document.createElement("p");
+      sourceLabel.textContent = String(card.materialTitle) + (card.page !== null ? ` · 第 ${String(card.page)} 页` : "");
+      source.append(sourceLabel, createDisclosure(deps.document, "引用详情", fields));
       const quote = deps.document.createElement("blockquote");
       quote.className = "mat-return-excerpt";
       quote.textContent = String(card.excerpt);

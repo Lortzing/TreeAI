@@ -66,6 +66,11 @@ export class ApiSettingsService {
     catch { this.current = options.initial; this.configurationWarning = true; }
     this.initialRevision = revision(options.initial);
   }
+  activeModels() {
+    return { selection: this.options.initial?.selection ?? null,
+      models: Object.entries(this.options.initial?.config.providers ?? {}).flatMap(([providerId, provider]) =>
+        provider.models.map(model => ({ providerId, modelId: model.id, label: model.name || model.id }))) };
+  }
   snapshot() {
     const names = new Set<string>();
     for (const provider of Object.values(this.current?.config.providers ?? {})) {

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import type { ServerResponse } from "node:http";
+import { readFile } from "node:fs/promises";
 import { createStaticResponder } from "../src/http/static.ts";
 
 const publicDir = fileURLToPath(new URL("../public/", import.meta.url));
@@ -30,9 +31,16 @@ test("ESM and CSS static allowlist serves correct content type", async () => {
     assert.equal(css.status,200);
     assert.equal(css.headers?.["content-type"],"text/css; charset=utf-8");
   }
+  for (const path of ["/favicon.svg", "/assets/treeai-icon.svg", "/assets/treeai-mark.svg"]) {
+    const image=await call(path);
+    assert.equal(image.handled,true,path);
+    assert.equal(image.status,200,path);
+    assert.equal(image.headers?.["content-type"],"image/svg+xml",path);
+    assert.deepEqual(image.body,await readFile(`${publicDir}${path.slice(1)}`),path);
+  }
 });
 test("unknown static paths and traversal attempts are rejected, not read from disk", async () => {
-  for (const path of ["/.env","/styles/../app.js","/styles/secret.css","/core/nope.js","/package.json"]) {
+  for (const path of ["/.env","/styles/../app.js","/styles/secret.css","/core/nope.js","/package.json","/assets/secret.svg","/assets/../index.html"]) {
     const r=await call(path);
     assert.equal(r.handled,false,path);
     assert.equal(r.status,null,path);

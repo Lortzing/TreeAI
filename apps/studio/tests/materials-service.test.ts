@@ -602,3 +602,24 @@ test("honest rejections before any persistence: unknown extension, empty input, 
     cleanupDir(dir);
   }
 });
+
+test("composer attachments are tree/version scoped, bounded without splitting emoji, and retain readable source links", async () => {
+  const dir = makeTempDataDir();
+  const studio = makeStudioInstance(dir);
+  try {
+    const { tree } = studio.service.createTree();
+    const other = studio.service.createTree().tree;
+    const result = await studio.materials.importMaterial(tree.id, { filename: "attached.md", bytes: utf8("a".repeat(19999) + "😀tail") });
+    await until(() => studio.materials.getMaterialDetail(tree.id, result.material.id).versions[0]!.parseStatus === "ready", "attachment ready");
+    const items = [{ materialId: result.material.id, versionId: result.version.id }];
+    const context = studio.materials.composeAttachments(tree.id, items);
+    assert.match(context.composedPrefix, /前 19999 字，后续未包含/);
+    assert.ok(!context.composedPrefix.includes("😀"));
+    assert.match(context.turnPrefix, /attached.md/);
+    assert.ok(context.turnPrefix.includes(encodeURIComponent(result.version.id)));
+    assert.throws(() => studio.materials.composeAttachments(other.id, items), EntityNotFoundError);
+    assert.throws(() => studio.materials.composeAttachments(tree.id, Array(5).fill(items[0])), InvalidArgumentError);
+    assert.throws(() => studio.materials.composeAttachments(tree.id, [{ materialId: result.material.id, versionId: "missing" }]), EntityNotFoundError);
+    assert.deepEqual(studio.materials.composeAttachments(tree.id, []), { composedPrefix: "", turnPrefix: "" });
+  } finally { await studio.shutdown(); cleanupDir(dir); }
+});

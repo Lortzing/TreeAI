@@ -1,0 +1,35 @@
+✔ send shortcuts distinguish every modifier and suppress IME/held Enter (0.445042ms)
+✔ modified newline replaces selection, emits draft update and never sends (0.372666ms)
+✔ appearance defaults to warm, validates storage and applies even when storage is blocked (0.739458ms)
+✔ attachment presentation hides internal URLs while preserving source identity and malformed user text (0.393583ms)
+✔ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (99.498417ms)
+✔ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (87.780625ms)
+✔ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (16.120083ms)
+✔ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (44.033542ms)
+✔ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (12.870084ms)
+✔ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (12.28025ms)
+✔ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (52.770791ms)
+✔ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (53.317417ms)
+✔ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (10.161917ms)
+✔ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (39.756042ms)
+✔ prompt attachments use saved version text and reject cross-tree references before writing turns (54.612708ms)
+✔ markdown import: async pending→parsing→ready with chunked reads paginating blocks (59.035083ms)
+✔ version semantics: tree-scoped same-bytes reuse; new bytes append a version; old versions stay readable (83.051083ms)
+✔ limits: frozen defaults; small injected limits reject before parsing with zero persistence (9.834458ms)
+✔ pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination (47.299292ms)
+✔ pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready (49.22225ms)
+✔ pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting (50.5375ms)
+✔ custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence (4.856666ms)
+✔ canonical text over the limit: version fails with text-units-exceeded; the oversized text is never stored (48.084ms)
+✔ parse cancellation with a gated fake parser: canceled stays canceled; the late result is discarded, never attached (11.974375ms)
+✔ host interruption recovery: a version left parsing converges to failed (parse-interrupted) on the next construction (7.867666ms)
+✔ honest rejections before any persistence: unknown extension, empty input, unknown tree (4.458166ms)
+✔ composer attachments are tree/version scoped, bounded without splitting emoji, and retain readable source links (49.744166ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1082.165875

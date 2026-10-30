@@ -12,7 +12,7 @@ import {
 
 export function activeTreeIdInUiExpr() {
   return `(() => { const row = document.querySelector("#tree-list button.active"); ` +
-    `if (row === null) return null; const name = row.querySelector("span"); ` +
+    `if (row === null) return null; const name = row.querySelector(".material-name"); ` +
     `return row.dataset.treeId ?? null; })()`;
 }
 

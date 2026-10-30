@@ -1,3 +1,4 @@
+import { createDisclosure } from "../dom.js";
 /** Shared row geometry for virtual rendering and keyboard scroll positioning. */
 export const NAV_ROW_HEIGHT_PX = 34;
 const NAV_WINDOW_OVERSCAN = 10;
@@ -153,10 +154,11 @@ export function createNavTreeView({
     const title = document.createElement("span");
     title.className = "nav-title";
     title.textContent =
-      node.title !== null ? node.title : node.parentBranchId === null ? "Trunk" : "(no first question yet)";
+      node.title !== null ? node.title : node.parentBranchId === null ? "思考主线" : "未命名支线";
     const idChip = document.createElement("span");
     idChip.className = "nav-id";
     idChip.textContent = node.id;
+    idChip.hidden = true;
     label.append(title, idChip);
     if (node.childCount > 0) {
       const count = document.createElement("span");
@@ -165,7 +167,7 @@ export function createNavTreeView({
       label.append(count);
     }
     const depthNote = node.parentBranchId === null ? "trunk" : `depth ${String(node.depth)} · parent ${node.parentBranchId}`;
-    label.title = `${node.title ?? "(no first question yet)"} · ${node.id} · ${depthNote}`;
+    label.title = node.title ?? "未命名支线";
     label.addEventListener("click", () => {
       session.focusBranchId = node.id;
       void selectNavNode(node.id);
@@ -236,7 +238,13 @@ export function createNavTreeView({
     }
     if (session.persistError !== null) text += ` · expand state not saved — ${session.persistError}`;
     if (session.locateNote !== null) text += ` · ${session.locateNote}`;
-    el.textContent = text;
+    el.replaceChildren();
+    if (session.persistError !== null) el.append(document.createTextNode("路径展开状态暂未保存，请稍后再试。"));
+    if (session.locateNote !== null) {
+      const pending = session.locateNote.endsWith("…");
+      el.append(document.createTextNode(pending ? "正在定位…" : "暂时无法定位这条路径，请查看详情。"));
+    }
+    if (text) el.append(createDisclosure(document, "显示详情", document.createTextNode(text)));
   }
 
   /** 窗口内按需加载泵：展开未载节点 → 首页；more 行（非在途/失败）→ 续页。

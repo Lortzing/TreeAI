@@ -1,3 +1,5 @@
+import type { MaterialImportService } from "../../materials/import-service.ts";
+import type { ApiSettingsService } from "../../api-settings.ts";
 /** Tree conversation HTTP routes. Product writes and error mapping remain in their existing owners. */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { BranchId, RunId } from "@treeai/contracts";
@@ -69,7 +71,7 @@ export async function handleTreeEntryRoute(
 /** Tree state, conversation, Return, journal, events and run cancellation. */
 export async function handleTreeRoute(
   req: IncomingMessage, res: ServerResponse, url: URL, method: string, pathname: string,
-  service: TreeStudioService, startSseStream: ReturnType<typeof createSseStream>,
+  service: TreeStudioService, startSseStream: ReturnType<typeof createSseStream>, apiSettings?: ApiSettingsService, materials?: MaterialImportService | null,
 ): Promise<boolean> {
   const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics|events|journal))?$/.exec(pathname);
   if (treeMatch !== null) {
@@ -120,10 +122,20 @@ export async function handleTreeRoute(
     }
     if (action === "prompt" && method === "POST") {
       const body = await readJsonBody(req);
+      let model: { providerId: string; modelId: string } | undefined;
+      if (body["model"] !== undefined) {
+        const requested = body["model"] as { providerId?: unknown; modelId?: unknown } | null;
+        const available = apiSettings?.activeModels().models.find(candidate => candidate.providerId === requested?.providerId && candidate.modelId === requested?.modelId);
+        if (!available) throw new InvalidArgumentError("所选模型尚未在当前进程启用，请检查设置或重启后重试。");
+        model = { providerId: available.providerId, modelId: available.modelId };
+      }
+      if (body["attachments"] !== undefined && !materials) throw new InvalidArgumentError("当前实例未启用材料服务。");
+      const attachmentContext = body["attachments"] === undefined ? {} : materials!.composeAttachments(treeId, body["attachments"]);
       const outcome = await service.prompt(
         treeId,
         requireString(body, "branchId") as BranchId,
         requireString(body, "text"),
+        { ...attachmentContext, ...(model ? { model } : {}) },
       );
       sendJson(res, 200, { outcome, state: service.getTreeState(treeId) });
       return true;

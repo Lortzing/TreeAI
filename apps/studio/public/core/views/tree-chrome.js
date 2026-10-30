@@ -17,8 +17,8 @@ export function createTreeChromeView(deps) {
       const name = deps.document.createElement("span");
       button.dataset.treeId = tree.id;
       const summary = deps.readingTitles.get(tree.id);
-      name.textContent = summary || tree.id;
-      button.title = summary ? `${summary}\n${tree.id}` : tree.id;
+      name.textContent = summary || "新的思考";
+      button.title = summary || "新的思考";
       const date = deps.document.createElement("span");
       date.className = "tree-date";
       /* 列表层只保留日粒度（当年省年份——安静的事实）；精确到秒的完整
@@ -123,7 +123,7 @@ export function createTreeChromeView(deps) {
 
   /* 顶栏位置路径（源设计 §二 顶栏行；D1 意义命名层）：无树 → 空；有树 →
      `<树名> / 思考主线 [ / 支线名 ]`——阅读位一律给意义名（树名与森林
-     列表同源 = readingTitles，无标题树回退 id）；完整身份路径（树 id +
+     列表同源 = readingTitles，无标题树显示「新的思考」）；完整身份路径（树 id +
      机械分支名）收进 tooltip，可溯源不上岗。路径由 renderAll 统一刷新
      （面板开合、切树、SSE 终态重渲都经过 renderAll）。 */
   function renderTopbarPath() {
@@ -134,7 +134,7 @@ export function createTreeChromeView(deps) {
       el.title = "";
       return;
     }
-    const treeName = deps.readingTitles.get(deps.state.currentTreeId) ?? deps.state.currentTreeId;
+    const treeName = deps.readingTitles.get(deps.state.currentTreeId) || "新的思考";
     const segments = [treeName, "思考主线"];
     const identity = [deps.state.currentTreeId, deps.branchLabel(st.trunkBranchId)];
     if (deps.state.panelBranchId !== null) {

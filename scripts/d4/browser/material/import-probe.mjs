@@ -87,7 +87,7 @@ export async function probeImportMaterial(ctx) {
     const info = await ctx.evalJs(
       `(() => { const btn = document.querySelector(${JSON.stringify(materialButtonSelector(entry.materialId))}); ` +
         `if (btn === null) return null; ` +
-        `const name = btn.querySelector("span"); const meta = btn.querySelector(".material-meta"); ` +
+        `const name = btn.querySelector(".material-name"); const meta = btn.querySelector(".material-meta"); ` +
         `const status = btn.querySelector(".material-status"); ` +
         `return { name: name === null ? null : name.textContent, meta: meta === null ? null : meta.textContent, ` +
         `status: status === null ? null : status.textContent, statusClass: status === null ? null : status.className }; })()`,

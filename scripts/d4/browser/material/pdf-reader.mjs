@@ -22,7 +22,7 @@ export const MATERIAL_FETCH_BLOCK_STEP = 50;
 export function pdfReaderLoadedExpr(pages, tail) {
   const tailCheck =
     tail === "end"
-      ? `if (!text.includes("end of material (last page)")) return false;`
+      ? `if (!text.includes("已到最后一页")) return false;`
       : tail === "more"
         ? `if (tail.querySelector(".mat-load-more") === null) return false;`
         : "";

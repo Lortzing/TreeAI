@@ -1,0 +1,31 @@
+.comparison-card { margin: 14px 0 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; }
+.comparison-card > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
+.comparison-content { padding: 0 16px 16px; display: grid; gap: 12px; }
+.comparison-content > label { display: grid; gap: 6px; }
+.comparison-content input[type="text"] { box-sizing: border-box; width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; font: inherit; }
+.comparison-status, .comparison-message { margin: 0; line-height: 1.6; }
+.comparison-content small, .comparison-status { color: var(--muted); }
+.comparison-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.comparison-card button { border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.comparison-card button:disabled { opacity: .5; cursor: default; }
+.comparison-card :focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.comparison-card [hidden] { display: none; }
+.comparison-card pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.6; max-height: 260px; overflow: auto; }
+.comparison-sources section { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.comparison-table-frame { overflow-x: auto; margin: 12px 0; }
+.comparison-result table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 350px; }
+.comparison-result th, .comparison-result td { border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; padding: 10px 8px; overflow-wrap: anywhere; line-height: 1.6; }
+.comparison-result thead th { font-size: 12px; }
+.comparison-result th:first-child { width: 23%; }
+.comparison-result th small { display: block; font-size: 10px; font-weight: normal; margin-top: 4px; }
+.comparison-result td p { margin: 0 0 6px; }
+.comparison-result .comparison-source-link { padding: 2px 5px; font-size: 11px; margin-right: 4px; }
+.comparison-takeaway { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.comparison-takeaway input[type="checkbox"] { flex-shrink: 0; width: 16px; height: 16px; min-height: 0; padding: 0; margin: 4px 0 0; accent-color: var(--green); }
+.comparison-result > details { margin-top: 12px; }
+
+.comparison-dialog { width: min(960px, calc(100vw - 48px)); max-height: calc(100dvh - 64px); padding: 20px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); overflow: auto; }
+.comparison-dialog::backdrop { background: rgb(20 35 28 / .35); }
+.comparison-reading-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.comparison-content > button { justify-self: start; }
+@media (max-width: 600px) { .comparison-dialog { width: calc(100vw - 24px); padding: 12px; } }

@@ -1,0 +1,65 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T095619-46331",
+  "mode": "selftest",
+  "verdict": "PASS",
+  "exitCode": 0,
+  "scoped": [
+    "d4-beta-usability"
+  ],
+  "counts": {
+    "pass": 5,
+    "fail": 0,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "62eef75b2b2f643475b3f35d6dd935039b6d30de",
+  "gitDirty": true,
+  "generatedAt": "2026-10-28T09:56:51.856Z",
+  "git": {
+    "head": "62eef75b2b2f643475b3f35d6dd935039b6d30de",
+    "dirty": true
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-11",
+      "pdf-01"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:62970",
+      "durationMs": 799
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:62987/",
+      "durationMs": 779
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 630
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "PASS",
+      "detail": "README-documented start path booted a clean temp data dir (argv/entry/flags reconciled with README + package.json; honest empty state: no trees/materials, create-tree flow used for real); wide 1600px + narrow 390px (mobile) viewports: sidebar/reader/branch panel usable, no horizontal overflow, capture bar reachable, key controls hit-testable; keyboard: Tab traversal reached new-tree/import/search/reader-text in 32 steps with visible focus outlines, Enter+Space activations, Escape layering with focus restoration, reader arrows scroll; touch: 7 taps + 1 swipes + 1 in-gesture drag-select (drawer open, reader open, swipe scrolled 405px, pdf text-layer selection armed via selectionchange with zero mouse events, copy tap verified clipboard read-back byte-equal); reduced-motion: matchMedia honored, View-source jump + stick-to-bottom landed immediately (no in-transit frames); draft round trip: draft preserved + focus restored to #panel-view-source + panel scroll kept + reader reopened at the saved block (in-session); echo driver (deterministic answers) — mechanism evidence, not real-Pi behavior — automated part only, the Mac sign-off and 3–5 person trials remain the owner's D4-G3 human sequence",
+      "durationMs": 29993
+    }
+  ],
+  "pageErrors": []
+}

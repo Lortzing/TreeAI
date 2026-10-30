@@ -18,7 +18,7 @@ export async function openDrawer(ctx) {
   await waitFor(
     ctx,
     `(() => { const d = document.getElementById("source-drawer"); ` +
-      `return d !== null && !d.hidden && d.querySelector(".term-mode-row") !== null && d.textContent.includes("Terminology"); })()`,
+      `return d !== null && !d.hidden && d.querySelector(".term-mode-row") !== null && d.textContent.includes("已保存的批注"); })()`,
     { label: "sources drawer open with the terminology section rendered" },
   );
 }

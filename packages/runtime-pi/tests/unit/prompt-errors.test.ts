@@ -176,3 +176,21 @@ test("steer without in-flight run: TypeError", async () => {
   await assert.rejects(runtime.steer({ text: "hi" }), TypeError);
   await runtime.dispose();
 });
+
+test("explicit model selection is applied before prompting, rejects unknown models, and keeps the session", async () => {
+  const { runtime, port } = await makeReadyRuntime();
+  const session = port.createdSessions[0]!;
+  const calls: string[] = [];
+  Object.assign(session, { setModel: async (model: { id: string }) => { calls.push(`model:${model.id}`); } });
+  const original = session.prompt.bind(session);
+  session.prompt = async (text: string) => { calls.push(`prompt:${text}`); await original(text); };
+  try {
+    await runtime.prompt({ text: "changed", model: { providerId: "fake-provider", modelId: "fake-model-2" } });
+    assert.deepEqual(calls, ["model:fake-model-2", "prompt:changed"]);
+    assert.equal(port.createdSessions.length, 1);
+    await assert.rejects(runtime.prompt({ text: "must not send", model: { providerId: "fake-provider", modelId: "unknown" } }));
+    assert.equal(calls.length, 2, "unknown model cannot silently use the previous model");
+    await runtime.prompt({ text: "recover" });
+    assert.equal(calls.at(-1), "prompt:recover");
+  } finally { await runtime.dispose(); }
+});

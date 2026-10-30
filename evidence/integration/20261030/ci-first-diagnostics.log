@@ -1,0 +1,1075 @@
+﻿2026-10-30T10:15:54.6954942Z Current runner version: '2.338.0'
+2026-10-30T10:15:54.6981563Z ##[group]Runner Image Provisioner
+2026-10-30T10:15:54.6982498Z Hosted Compute Agent
+2026-10-30T10:15:54.6983145Z Version: 20261021.618
+2026-10-30T10:15:54.6983794Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T10:15:54.6984592Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T10:15:54.6985336Z Worker ID: {4a670377-214a-47e0-b97b-e8c8f3dbaf4b}
+2026-10-30T10:15:54.6986043Z Region: centralus
+2026-10-30T10:15:54.6986762Z Cloud: Azure
+2026-10-30T10:15:54.6987317Z ##[endgroup]
+2026-10-30T10:15:54.6988929Z ##[group]Operating System
+2026-10-30T10:15:54.6989973Z Ubuntu
+2026-10-30T10:15:54.6990568Z 24.04.5
+2026-10-30T10:15:54.6991193Z LTS
+2026-10-30T10:15:54.6991728Z ##[endgroup]
+2026-10-30T10:15:54.6992395Z ##[group]Runner Image
+2026-10-30T10:15:54.6993083Z Image: ubuntu-24.04
+2026-10-30T10:15:54.6993662Z Version: 20261025.353.1
+2026-10-30T10:15:54.6995009Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-30T10:15:54.6996580Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-30T10:15:54.6997615Z ##[endgroup]
+2026-10-30T10:15:54.6998829Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T10:15:54.7001496Z Contents: read
+2026-10-30T10:15:54.7002126Z Metadata: read
+2026-10-30T10:15:54.7002928Z ##[endgroup]
+2026-10-30T10:15:54.7004980Z Secret source: Actions
+2026-10-30T10:15:54.7006114Z Cache mode: write
+2026-10-30T10:15:54.7006824Z Prepare workflow directory
+2026-10-30T10:15:54.7350675Z Prepare all required actions
+2026-10-30T10:15:54.7400285Z Getting action download info
+2026-10-30T10:15:55.0095680Z Download action repository 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' (SHA:11bd71901bbe5b1630ceea73d27597364c9af683)
+2026-10-30T10:15:55.2398657Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-10-30T10:15:55.4861553Z Complete job name: diagnose
+2026-10-30T10:15:55.5855568Z ##[group]Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+2026-10-30T10:15:55.5856638Z with:
+2026-10-30T10:15:55.5857063Z   fetch-depth: 0
+2026-10-30T10:15:55.5857528Z   repository: Lortzing/TreeAI
+2026-10-30T10:15:55.5861927Z   token: ***
+2026-10-30T10:15:55.5862374Z   ssh-strict: true
+2026-10-30T10:15:55.5862810Z   ssh-user: git
+2026-10-30T10:15:55.5863251Z   persist-credentials: true
+2026-10-30T10:15:55.5863739Z   clean: true
+2026-10-30T10:15:55.5864187Z   sparse-checkout-cone-mode: true
+2026-10-30T10:15:55.5864707Z   fetch-tags: false
+2026-10-30T10:15:55.5865160Z   show-progress: true
+2026-10-30T10:15:55.5865604Z   lfs: false
+2026-10-30T10:15:55.5866015Z   submodules: false
+2026-10-30T10:15:55.5866463Z   set-safe-directory: true
+2026-10-30T10:15:55.5867253Z ##[endgroup]
+2026-10-30T10:15:55.8723096Z Syncing repository: Lortzing/TreeAI
+2026-10-30T10:15:55.8725109Z ##[group]Getting Git version info
+2026-10-30T10:15:55.8726214Z Working directory is '/home/runner/work/TreeAI/TreeAI'
+2026-10-30T10:15:55.8727260Z [command]/usr/bin/git version
+2026-10-30T10:15:55.8823218Z git version 2.56.0
+2026-10-30T10:15:55.8849146Z ##[endgroup]
+2026-10-30T10:15:55.8866154Z Temporarily overriding HOME='/home/runner/work/_temp/e25971a1-8010-46a2-b965-8ab90c7efc8e' before making global git config changes
+2026-10-30T10:15:55.8867849Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T10:15:55.8871592Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/TreeAI/TreeAI
+2026-10-30T10:15:55.8925887Z Deleting the contents of '/home/runner/work/TreeAI/TreeAI'
+2026-10-30T10:15:55.8930669Z ##[group]Initializing the repository
+2026-10-30T10:15:55.8936395Z [command]/usr/bin/git init /home/runner/work/TreeAI/TreeAI
+2026-10-30T10:15:55.9067609Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T10:15:55.9070811Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T10:15:55.9073149Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T10:15:55.9074825Z hint: call:
+2026-10-30T10:15:55.9075526Z hint:
+2026-10-30T10:15:55.9076173Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T10:15:55.9077089Z hint:
+2026-10-30T10:15:55.9078142Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T10:15:55.9080058Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T10:15:55.9081121Z hint:
+2026-10-30T10:15:55.9081574Z hint: 	git branch -m <name>
+2026-10-30T10:15:55.9082054Z hint:
+2026-10-30T10:15:55.9082691Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T10:15:55.9083690Z Initialized empty Git repository in /home/runner/work/TreeAI/TreeAI/.git/
+2026-10-30T10:15:55.9089914Z [command]/usr/bin/git remote add origin https://github.com/Lortzing/TreeAI
+2026-10-30T10:15:55.9141661Z ##[endgroup]
+2026-10-30T10:15:55.9142518Z ##[group]Disabling automatic garbage collection
+2026-10-30T10:15:55.9146805Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T10:15:55.9194965Z ##[endgroup]
+2026-10-30T10:15:55.9196537Z ##[group]Setting up auth
+2026-10-30T10:15:55.9198063Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T10:15:55.9243945Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T10:15:55.9707854Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T10:15:55.9755591Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T10:15:56.0019877Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T10:15:56.0085373Z ##[endgroup]
+2026-10-30T10:15:56.0086464Z ##[group]Fetching the repository
+2026-10-30T10:15:56.0099853Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +672852246d977538afd07b2226076fab72e59e37:refs/remotes/pull/30/merge
+2026-10-30T10:15:57.9357146Z From https://github.com/Lortzing/TreeAI
+2026-10-30T10:15:57.9362571Z  * [new branch]      codex/integrate-development-20261030     -> origin/codex/integrate-development-20261030
+2026-10-30T10:15:57.9364589Z  * [new branch]      codex/latest-real-pi                     -> origin/codex/latest-real-pi
+2026-10-30T10:15:57.9366819Z  * [new branch]      codex/session-round-ui                   -> origin/codex/session-round-ui
+2026-10-30T10:15:57.9369704Z  * [new branch]      codex/studio-consistency-keychain-resume -> origin/codex/studio-consistency-keychain-resume
+2026-10-30T10:15:57.9371974Z  * [new branch]      main                                     -> origin/main
+2026-10-30T10:15:57.9374138Z  * [new branch]      refactor/b6-linux-font-portability-r6    -> origin/refactor/b6-linux-font-portability-r6
+2026-10-30T10:15:57.9378352Z  * [new branch]      refactor/chromium-browser-gate-r7        -> origin/refactor/chromium-browser-gate-r7
+2026-10-30T10:15:57.9381134Z  * [new branch]      refactor/d3-status-history-r5            -> origin/refactor/d3-status-history-r5
+2026-10-30T10:15:57.9383581Z  * [new branch]      refactor/d4-pdf-fixture-groups-r4        -> origin/refactor/d4-pdf-fixture-groups-r4
+2026-10-30T10:15:57.9386354Z  * [new branch]      refactor/http-request-validation-r3      -> origin/refactor/http-request-validation-r3
+2026-10-30T10:15:57.9389660Z  * [new branch]      refactor/http-runtime-boundaries-r3      -> origin/refactor/http-runtime-boundaries-r3
+2026-10-30T10:15:57.9392738Z  * [new branch]      refactor/http-static-adapter-r3          -> origin/refactor/http-static-adapter-r3
+2026-10-30T10:15:57.9396334Z  * [new branch]      refactor/implementation-commentary-r5    -> origin/refactor/implementation-commentary-r5
+2026-10-30T10:15:57.9399740Z  * [new branch]      refactor/integration-r0-r7               -> origin/refactor/integration-r0-r7
+2026-10-30T10:15:57.9402782Z  * [new branch]      refactor/repository-foundation-r0        -> origin/refactor/repository-foundation-r0
+2026-10-30T10:15:57.9406085Z  * [new branch]      refactor/return-source-presentation-r1   -> origin/refactor/return-source-presentation-r1
+2026-10-30T10:15:57.9409367Z  * [new branch]      refactor/studio-app-state-factory-r1     -> origin/refactor/studio-app-state-factory-r1
+2026-10-30T10:15:57.9412628Z  * [new branch]      refactor/studio-css-modules-r1           -> origin/refactor/studio-css-modules-r1
+2026-10-30T10:15:57.9415630Z  * [new branch]      refactor/studio-esm-test-bootstrap-r1    -> origin/refactor/studio-esm-test-bootstrap-r1
+2026-10-30T10:15:57.9418781Z  * [new branch]      refactor/studio-event-projection-r3      -> origin/refactor/studio-event-projection-r3
+2026-10-30T10:15:57.9422314Z  * [new branch]      refactor/studio-selection-scroll-dom-r1  -> origin/refactor/studio-selection-scroll-dom-r1
+2026-10-30T10:15:57.9425869Z  * [new branch]      refactor/studio-sha256-source-module-r1  -> origin/refactor/studio-sha256-source-module-r1
+2026-10-30T10:15:57.9429149Z  * [new branch]      refactor/terminology-density-r3          -> origin/refactor/terminology-density-r3
+2026-10-30T10:15:57.9432559Z  * [new branch]      refactor/ui-test-instance-harness-r2     -> origin/refactor/ui-test-instance-harness-r2
+2026-10-30T10:15:57.9437237Z  * [new branch]      wip/d4-1-pdf-parser                      -> origin/wip/d4-1-pdf-parser
+2026-10-30T10:15:57.9441043Z  * [new branch]      wip/d4-2-pdf                             -> origin/wip/d4-2-pdf
+2026-10-30T10:15:57.9444422Z  * [new branch]      wip/d4-3-backend                         -> origin/wip/d4-3-backend
+2026-10-30T10:15:57.9447138Z  * [new branch]      wip/d4-3-frontend                        -> origin/wip/d4-3-frontend
+2026-10-30T10:15:57.9450023Z  * [new branch]      wip/d4-4-frontend                        -> origin/wip/d4-4-frontend
+2026-10-30T10:15:57.9452681Z  * [new branch]      wip/d4-4-search-core                     -> origin/wip/d4-4-search-core
+2026-10-30T10:15:57.9455787Z  * [new branch]      wip/d4-5-export                          -> origin/wip/d4-5-export
+2026-10-30T10:15:57.9458599Z  * [new branch]      wip/d4-6-perf                            -> origin/wip/d4-6-perf
+2026-10-30T10:15:57.9461641Z  * [new branch]      wip/d4-8-frontend                        -> origin/wip/d4-8-frontend
+2026-10-30T10:15:57.9464093Z  * [new branch]      wip/d4-8-nav                             -> origin/wip/d4-8-nav
+2026-10-30T10:15:57.9466553Z  * [new branch]      wip/d4-browser-ev                        -> origin/wip/d4-browser-ev
+2026-10-30T10:15:57.9469163Z  * [new branch]      wip/d4-browser-face                      -> origin/wip/d4-browser-face
+2026-10-30T10:15:57.9472069Z  * [new branch]      wip/d4-browser-probes                    -> origin/wip/d4-browser-probes
+2026-10-30T10:15:57.9474585Z  * [new ref]         672852246d977538afd07b2226076fab72e59e37 -> pull/30/merge
+2026-10-30T10:15:57.9478832Z ##[endgroup]
+2026-10-30T10:15:57.9480913Z ##[group]Determining the checkout info
+2026-10-30T10:15:57.9482994Z ##[endgroup]
+2026-10-30T10:15:57.9484667Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T10:15:57.9488294Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T10:15:57.9493389Z ##[group]Checking out the ref
+2026-10-30T10:15:57.9495187Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/30/merge
+2026-10-30T10:15:58.6310931Z Note: switching to 'refs/remotes/pull/30/merge'.
+2026-10-30T10:15:58.6311661Z 
+2026-10-30T10:15:58.6311948Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-30T10:15:58.6312542Z changes and commit them, and you can discard any commits you make in this
+2026-10-30T10:15:58.6313490Z state without impacting any branches by switching back to a branch.
+2026-10-30T10:15:58.6313820Z 
+2026-10-30T10:15:58.6314048Z If you want to create a new branch to retain commits you create, you may
+2026-10-30T10:15:58.6314594Z do so (now or later) by using -c with the switch command. Example:
+2026-10-30T10:15:58.6314894Z 
+2026-10-30T10:15:58.6315040Z   git switch -c <new-branch-name>
+2026-10-30T10:15:58.6315247Z 
+2026-10-30T10:15:58.6315408Z Or undo this operation with:
+2026-10-30T10:15:58.6315599Z 
+2026-10-30T10:15:58.6315725Z   git switch -
+2026-10-30T10:15:58.6315893Z 
+2026-10-30T10:15:58.6316215Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-30T10:15:58.6316571Z 
+2026-10-30T10:15:58.6316963Z HEAD is now at 6728522 Merge 44eb27bb667400259034c6ef9f3a31df29ecf1d3 into 35ae4a012fd6beea0b66b9bb773dbe858dfedc45
+2026-10-30T10:15:58.6363470Z ##[endgroup]
+2026-10-30T10:15:58.6431159Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T10:15:58.6465909Z 672852246d977538afd07b2226076fab72e59e37
+2026-10-30T10:15:58.6808834Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+2026-10-30T10:15:58.6809332Z with:
+2026-10-30T10:15:58.6809962Z   node-version: 24.21.0
+2026-10-30T10:15:58.6810249Z   cache: npm
+2026-10-30T10:15:58.6810498Z   always-auth: false
+2026-10-30T10:15:58.6810770Z   check-latest: false
+2026-10-30T10:15:58.6813653Z   token: ***
+2026-10-30T10:15:58.6813913Z ##[endgroup]
+2026-10-30T10:15:58.8291334Z Attempting to download 24.21.0...
+2026-10-30T10:15:58.8495090Z (node:2282) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-30T10:15:58.8496005Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-30T10:15:59.6613511Z Acquiring 24.21.0 - x64 from https://github.com/actions/node-versions/releases/download/24.21.0-34304089047/node-24.21.0-linux-x64.tar.gz
+2026-10-30T10:16:00.1580490Z Extracting ...
+2026-10-30T10:16:00.1723326Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/2cddf38d-2828-436f-8758-8261a3cf4aa4 -f /home/runner/work/_temp/76576762-fec9-48e6-aa36-a9203e56240b
+2026-10-30T10:16:01.3965008Z Adding to the cache ...
+2026-10-30T10:16:03.1427305Z ##[group]Environment details
+2026-10-30T10:16:03.3882304Z node: v24.21.0
+2026-10-30T10:16:03.3882777Z npm: 11.19.0
+2026-10-30T10:16:03.3883151Z yarn: 1.22.22
+2026-10-30T10:16:03.3905886Z ##[endgroup]
+2026-10-30T10:16:03.3906488Z [command]/opt/hostedtoolcache/node/24.21.0/x64/bin/npm config get cache
+2026-10-30T10:16:03.4883976Z /home/runner/.npm
+2026-10-30T10:16:03.6365822Z Cache hit for: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+2026-10-30T10:16:03.6476787Z (node:2282) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-30T10:16:04.7716247Z Received 121634816 of 170857196 (71.2%), 115.9 MBs/sec
+2026-10-30T10:16:05.1426509Z Received 170857196 of 170857196 (100.0%), 118.8 MBs/sec
+2026-10-30T10:16:05.1427606Z Cache Size: ~163 MB (170857196 B)
+2026-10-30T10:16:05.1575337Z [command]/usr/bin/tar -xf /home/runner/work/_temp/6f235c2e-82d6-4bef-a6e7-b9fdb2224afd/cache.tzst -P -C /home/runner/work/TreeAI/TreeAI --use-compress-program unzstd
+2026-10-30T10:16:05.4212008Z Cache restored successfully
+2026-10-30T10:16:05.4289109Z Cache restored from key: node-cache-Linux-x64-npm-609b07c30e43990561bdcf0957751b165889f7f33815d924ea7927912fe862db
+2026-10-30T10:16:05.4532106Z ##[group]Run npm ci
+2026-10-30T10:16:05.4532415Z [36;1mnpm ci[0m
+2026-10-30T10:16:05.4557840Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:05.4558112Z ##[endgroup]
+2026-10-30T10:16:09.0000071Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-10-30T10:16:11.8715078Z 
+2026-10-30T10:16:11.8716294Z added 178 packages, and audited 186 packages in 6s
+2026-10-30T10:16:11.8717446Z 
+2026-10-30T10:16:11.8720232Z 17 packages are looking for funding
+2026-10-30T10:16:11.8721002Z   run `npm fund` for details
+2026-10-30T10:16:11.8836030Z 
+2026-10-30T10:16:11.8836586Z 3 vulnerabilities (1 moderate, 2 high)
+2026-10-30T10:16:11.8836886Z 
+2026-10-30T10:16:11.8837185Z To address issues that do not require attention, run:
+2026-10-30T10:16:11.8837597Z   npm audit fix
+2026-10-30T10:16:11.8837756Z 
+2026-10-30T10:16:11.8838030Z To address all issues (including breaking changes), run:
+2026-10-30T10:16:11.8838454Z   npm audit fix --force
+2026-10-30T10:16:11.8838697Z 
+2026-10-30T10:16:11.8838848Z Run `npm audit` for details.
+2026-10-30T10:16:11.8848981Z npm warn install-scripts 3 packages have install scripts not yet covered by allowScripts:
+2026-10-30T10:16:11.8850479Z npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+2026-10-30T10:16:11.8851352Z npm warn install-scripts   esbuild@0.28.1 (postinstall: node install.js)
+2026-10-30T10:16:11.8852223Z npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)
+2026-10-30T10:16:11.8852858Z npm warn install-scripts
+2026-10-30T10:16:11.8853685Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+2026-10-30T10:16:11.9803636Z ##[group]Run node scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json
+2026-10-30T10:16:11.9804304Z [36;1mnode scripts/repo-inventory.mjs --out /tmp/treeai-inventory.json[0m
+2026-10-30T10:16:11.9805358Z [36;1mnode -e 'const r=require("/tmp/treeai-inventory.json"); if(r.files.length<3000) process.exit(1); console.log("Tracked files:",r.files.length,"Review candidates:",r.files.filter(x=>x.review).length)'[0m
+2026-10-30T10:16:11.9827974Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:11.9828247Z ##[endgroup]
+2026-10-30T10:16:12.3337976Z Inventory written: /tmp/treeai-inventory.json (7957 files, SHA 672852246d977538afd07b2226076fab72e59e37)
+2026-10-30T10:16:12.3911387Z Tracked files: 7957 Review candidates: 62
+2026-10-30T10:16:12.4004360Z ##[group]Run node scripts/audit-refactor-boundaries.mjs --base "$REFACTOR_BASE_SHA" --out /tmp/treeai-boundaries.json
+2026-10-30T10:16:12.4005313Z [36;1mnode scripts/audit-refactor-boundaries.mjs --base "$REFACTOR_BASE_SHA" --out /tmp/treeai-boundaries.json[0m
+2026-10-30T10:16:12.4026029Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:12.4026282Z env:
+2026-10-30T10:16:12.4026565Z   REFACTOR_BASE_SHA: 35ae4a012fd6beea0b66b9bb773dbe858dfedc45
+2026-10-30T10:16:12.4026922Z ##[endgroup]
+2026-10-30T10:16:14.7820862Z PASS: 898 baseline static scenarios / 942 current; 0 boundary violations
+2026-10-30T10:16:14.8164094Z ##[group]Run node scripts/audit-studio-assets.mjs
+2026-10-30T10:16:14.8164573Z [36;1mnode scripts/audit-studio-assets.mjs[0m
+2026-10-30T10:16:14.8184825Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:14.8185093Z ##[endgroup]
+2026-10-30T10:16:14.8677291Z PASS: 105 native ESM assets + 13 CSS modules and installer/public allowlist accounted for
+2026-10-30T10:16:14.8747825Z ##[group]Run node --test apps/studio/tests/shared-utils.test.mjs
+2026-10-30T10:16:14.8748349Z [36;1mnode --test apps/studio/tests/shared-utils.test.mjs[0m
+2026-10-30T10:16:14.8768877Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:14.8769141Z ##[endgroup]
+2026-10-30T10:16:14.9892849Z ✔ navigation sessions ignore obsolete overview failures and closed-tree responses independently (7.060074ms)
+2026-10-30T10:16:14.9902503Z ✔ restoring shallow and deep selection stays read-only and preserves the full expanded set (1.724509ms)
+2026-10-30T10:16:14.9915200Z ✔ child paging merges in-flight requests and recovers stale cursors from the first page (1.102742ms)
+2026-10-30T10:16:14.9926855Z ✔ navigation persistence serializes writes and coalesces rapid changes to the newest full snapshot (1.125093ms)
+2026-10-30T10:16:14.9994200Z ✔ a late persistence failure after navigation closes never contaminates the next session (1.014697ms)
+2026-10-30T10:16:14.9997174Z ✔ finder epochs discard superseded listing successes and search failures independently per instance (0.695925ms)
+2026-10-30T10:16:15.0001810Z ✔ finder keeps loaded pages on failure and retries the same cursor without duplicate in-flight requests (0.432425ms)
+2026-10-30T10:16:15.0004887Z ✔ blank finder input replaces search and ignores its late continuation (0.299146ms)
+2026-10-30T10:16:15.0010630Z ✔ scroll follow keeps the 48px threshold and does not pull users reading above (0.180155ms)
+2026-10-30T10:16:15.0014162Z ✔ selection offsets reject source mismatch without creating an incorrect anchor (0.441752ms)
+2026-10-30T10:16:15.0019170Z ✔ DOM turn reuse excludes Return cards and requires exact turn text (0.284569ms)
+2026-10-30T10:16:15.0037607Z ✔ R1 Markdown view preserves syntax, source offsets and styled text (0.771825ms)
+2026-10-30T10:16:15.0039019Z ✔ R1 Markdown view carries fenced-code state between material blocks (0.271846ms)
+2026-10-30T10:16:15.0040739Z ✔ R1 material selection snaps surrogate pairs and combining graphemes outwards (0.324043ms)
+2026-10-30T10:16:15.0051033Z ✔ R1 material selection keeps a joined emoji grapheme intact (0.121426ms)
+2026-10-30T10:16:15.0157429Z ✔ R1 Search view preserves honest idle, loading, failed, empty, and populated states (7.378929ms)
+2026-10-30T10:16:15.0159706Z ✔ R1 Return view preserves anchored/fallback source facts and adoption states (1.703238ms)
+2026-10-30T10:16:15.0161623Z ✔ R1 diagnostics view preserves run, policy, and failure-panel states (0.86503ms)
+2026-10-30T10:16:15.0163524Z ✔ R1 navigation finder view preserves states, paging, and active-tree row behavior (1.274822ms)
+2026-10-30T10:16:15.0165989Z ✔ R1 navigation chrome view preserves overview and action state (0.651843ms)
+2026-10-30T10:16:15.0169077Z ✔ Studio API calls injected native fetch without a dependency-object receiver (0.361903ms)
+2026-10-30T10:16:15.0172570Z ✔ PDF pages reserve trusted geometry before paint so source jumps keep their viewport position (0.405865ms)
+2026-10-30T10:16:15.0192803Z ✔ stream follow records native scroll position before delayed scroll events and preserves readers above (0.351975ms)
+2026-10-30T10:16:15.0211245Z ✔ branch display indexes preserve identity and ordinals after state replacement and append (0.490282ms)
+2026-10-30T10:16:15.0213279Z ✔ PDF text anchors are positioned while the original page paint is still pending (0.853157ms)
+2026-10-30T10:16:15.0215715Z ✔ empty-tree starters focus an editable draft without submitting or overwriting existing input (0.742552ms)
+2026-10-30T10:16:15.0217732Z ✔ material tools open outside history and close without clearing domain state (1.519858ms)
+2026-10-30T10:16:15.0219425Z ✔ return focus reveals nested secondary tools before focusing a material or branch (0.724178ms)
+2026-10-30T10:16:15.0303807Z ℹ tests 28
+2026-10-30T10:16:15.0304530Z ℹ suites 0
+2026-10-30T10:16:15.0305149Z ℹ pass 28
+2026-10-30T10:16:15.0305826Z ℹ fail 0
+2026-10-30T10:16:15.0306532Z ℹ cancelled 0
+2026-10-30T10:16:15.0307230Z ℹ skipped 0
+2026-10-30T10:16:15.0309063Z ℹ todo 0
+2026-10-30T10:16:15.0311197Z ℹ duration_ms 117.454359
+2026-10-30T10:16:15.0405123Z ##[group]Run node --test tests/unit/d3-runner-cli.test.ts tests/unit/verifier-owner-scan.test.ts
+2026-10-30T10:16:15.0406412Z [36;1mnode --test tests/unit/d3-runner-cli.test.ts tests/unit/verifier-owner-scan.test.ts[0m
+2026-10-30T10:16:15.0436272Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:15.0436741Z ##[endgroup]
+2026-10-30T10:16:15.4921557Z ✔ run-d3-browser.mjs help exits before Chrome, Studio or provider initialization (64.91666ms)
+2026-10-30T10:16:15.4951024Z ✔ run-d3-real-pi.mjs help exits before Chrome, Studio or provider initialization (67.708495ms)
+2026-10-30T10:16:15.4987778Z ✔ run-terminology-eval.mjs help exits before Chrome, Studio or provider initialization (59.925045ms)
+2026-10-30T10:16:15.5010666Z ✔ browser runner rejects an unknown flag before launching a child (66.854797ms)
+2026-10-30T10:16:15.5031431Z ✔ browser runner accepts a trailing standalone keep-data flag (43.352933ms)
+2026-10-30T10:16:15.5611890Z ✔ D2 workspace scan includes extracted verifier owners (364.433689ms)
+2026-10-30T10:16:15.5723601Z ℹ tests 6
+2026-10-30T10:16:15.5724055Z ℹ suites 0
+2026-10-30T10:16:15.5724661Z ℹ pass 6
+2026-10-30T10:16:15.5725032Z ℹ fail 0
+2026-10-30T10:16:15.5725256Z ℹ cancelled 0
+2026-10-30T10:16:15.5725495Z ℹ skipped 0
+2026-10-30T10:16:15.5725718Z ℹ todo 0
+2026-10-30T10:16:15.5725972Z ℹ duration_ms 491.818665
+2026-10-30T10:16:15.5807664Z ##[group]Run node node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false
+2026-10-30T10:16:15.5808321Z [36;1mnode node_modules/typescript/bin/tsc -p tests/tsconfig.json --pretty false[0m
+2026-10-30T10:16:15.5828225Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:15.5828480Z ##[endgroup]
+2026-10-30T10:16:19.7837137Z ##[group]Run npm run typecheck
+2026-10-30T10:16:19.7837476Z [36;1mnpm run typecheck[0m
+2026-10-30T10:16:19.7857718Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:19.7857990Z ##[endgroup]
+2026-10-30T10:16:19.8876797Z 
+2026-10-30T10:16:19.8877361Z > treeai@0.0.0 typecheck
+2026-10-30T10:16:19.8877987Z > node scripts/typecheck.js
+2026-10-30T10:16:19.8878236Z 
+2026-10-30T10:16:19.9211225Z [typecheck] checking @treeai/runtime-smoke (apps/runtime-smoke)
+2026-10-30T10:16:22.4933274Z [typecheck] checking @treeai/studio (apps/studio)
+2026-10-30T10:16:28.2544752Z [typecheck] checking @treeai/contracts (packages/contracts)
+2026-10-30T10:16:28.9787172Z [typecheck] checking @treeai/event-journal (packages/event-journal)
+2026-10-30T10:16:30.0931935Z [typecheck] checking @treeai/persistence (packages/persistence)
+2026-10-30T10:16:31.5391385Z [typecheck] checking @treeai/runtime-pi (packages/runtime-pi)
+2026-10-30T10:16:33.7822386Z [typecheck] checking @treeai/tool-policy (packages/tool-policy)
+2026-10-30T10:16:34.6512306Z 
+2026-10-30T10:16:34.6512872Z typecheck summary (Gate 0 scaffold):
+2026-10-30T10:16:34.6514711Z   checked: @treeai/runtime-smoke, @treeai/studio, @treeai/contracts, @treeai/event-journal, @treeai/persistence, @treeai/runtime-pi, @treeai/tool-policy
+2026-10-30T10:16:34.6516754Z [typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.
+2026-10-30T10:16:34.6648938Z ##[group]Run npm test --workspace @treeai/studio
+2026-10-30T10:16:34.6649414Z [36;1mnpm test --workspace @treeai/studio[0m
+2026-10-30T10:16:34.6670436Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:16:34.6670725Z ##[endgroup]
+2026-10-30T10:16:34.7886549Z 
+2026-10-30T10:16:34.7887689Z > @treeai/studio@0.0.0 test
+2026-10-30T10:16:34.7888418Z > npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+2026-10-30T10:16:34.7888833Z 
+2026-10-30T10:16:34.9266453Z 
+2026-10-30T10:16:34.9267254Z > @treeai/studio@0.0.0 build:deps
+2026-10-30T10:16:34.9268309Z > npm run --workspace @treeai/event-journal build:test
+2026-10-30T10:16:34.9268647Z 
+2026-10-30T10:16:35.0623364Z 
+2026-10-30T10:16:35.0624278Z > @treeai/event-journal@0.0.0 build:test
+2026-10-30T10:16:35.0625321Z > tsc -p tsconfig.build.json
+2026-10-30T10:16:35.0625843Z 
+2026-10-30T10:16:36.4366216Z 
+2026-10-30T10:16:36.4367110Z > @treeai/studio@0.0.0 typecheck
+2026-10-30T10:16:36.4367710Z > tsc --noEmit -p tsconfig.json
+2026-10-30T10:16:36.4368064Z 
+2026-10-30T10:16:41.8756092Z ✔ API profiles support API formats and multiple independent providers/models (2.812915ms)
+2026-10-30T10:16:41.8784468Z ✔ API configuration rejects inline credentials, OAuth and unknown fields without echoing values (1.055819ms)
+2026-10-30T10:16:41.8817495Z ✔ API URLs reject credentials, remote plaintext, queries and non-HTTP protocols (2.941485ms)
+2026-10-30T10:16:41.8841142Z ✔ API model limits, duplicate IDs, input modalities and header references are validated (0.856146ms)
+2026-10-30T10:16:41.8843047Z ✔ preparation stores only environment references, validates selection and missing secrets before writing (3.446686ms)
+2026-10-30T10:16:41.8844702Z ✔ CLI API profiles require a server Pi driver and own a controlled directory (0.795594ms)
+2026-10-30T10:16:41.8935687Z ✔ API settings UI loads on demand, preserves edited values across model switching and sends guarded test/save requests (13.363046ms)
+2026-10-30T10:16:41.8958464Z ✔ API settings UI explains invalid JSON and stale saves without rendering untrusted server error text (3.473867ms)
+2026-10-30T10:16:41.8961374Z ✔ API settings UI aborts an in-flight test on close and removes listeners on disposal (3.702794ms)
+2026-10-30T10:16:41.8964100Z ✔ API key input is sent only to the guarded credential endpoint and cleared before the request completes (2.858218ms)
+2026-10-30T10:16:41.8966466Z ✔ model ID can be edited directly and the selected identity is saved without editing JSON (1.592479ms)
+2026-10-30T10:16:43.0992369Z ✔ settings save is atomic, detects stale edits, and activates only on a later startup (5.080102ms)
+2026-10-30T10:16:43.1004380Z ✔ connection testing is isolated, prevents concurrent probes, and never saves a draft (1.092627ms)
+2026-10-30T10:16:43.1015713Z ✔ an explicitly offline recovery can manage corrupt saved settings without exposing or overwriting their contents (1.324198ms)
+2026-10-30T10:16:43.1774869Z ✔ HTTP settings reject cross-origin, rebinding hosts and unguarded writes; responses contain no secret values (95.302383ms)
+2026-10-30T10:16:43.1801972Z ✔ system credentials are separate from settings, resolve in memory, and can be removed without changing environment values (2.176579ms)
+2026-10-30T10:16:43.2001559Z ✔ credential HTTP writes keep origin and CSRF guards and sanitize native failures (21.675003ms)
+2026-10-30T10:16:43.2022393Z ✔ composer catalog includes only models loaded at startup and never reveals credentials (1.221317ms)
+2026-10-30T10:16:43.7347025Z ✔ actual Pi SDK streams anthropic-messages and uses the configured model/header (291.882252ms)
+2026-10-30T10:16:43.9304873Z ✔ actual Pi SDK streams openai-completions and uses the configured model/header (200.959104ms)
+2026-10-30T10:16:43.9958924Z ✔ actual Pi SDK streams openai-responses and uses the configured model/header (69.813323ms)
+2026-10-30T10:16:44.1568179Z ✔ actual Pi SDK streams google-generative-ai and uses the configured model/header (154.095442ms)
+2026-10-30T10:16:44.1944645Z ✔ stored multi-provider keys and custom headers reach the real SDK only in memory (43.274511ms)
+2026-10-30T10:16:44.2871636Z ✔ HTTP API serves the UI and the full D3 flow, surviving a restart (337.109428ms)
+2026-10-30T10:16:44.2874607Z ✔ return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5) (97.746399ms)
+2026-10-30T10:16:44.2878391Z ✔ new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text (96.290366ms)
+2026-10-30T10:16:44.3225120Z ✔ HTTP layer rejects malformed bodies and unknown routes predictably (30.272995ms)
+2026-10-30T10:16:44.7069292Z ✔ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (387.32663ms)
+2026-10-30T10:16:44.8008919Z ✔ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (94.317335ms)
+2026-10-30T10:16:44.8616742Z ✔ response-loss resubmit and double-click converge to exactly one return (77.120012ms)
+2026-10-30T10:16:44.9085946Z ✔ send shortcuts distinguish every modifier and suppress IME/held Enter (1.921743ms)
+2026-10-30T10:16:44.9087638Z ✔ modified newline replaces selection, emits draft update and never sends (0.620858ms)
+2026-10-30T10:16:44.9129409Z ✔ appearance defaults to warm, validates storage and applies even when storage is blocked (2.030747ms)
+2026-10-30T10:16:44.9161274Z ✔ attachment presentation hides internal URLs while preserving source identity and malformed user text (0.716676ms)
+2026-10-30T10:16:53.1454863Z ✔ b9 dataset: two generations are byte-identical (determinism) with equal manifest hashes (283.930764ms)
+2026-10-30T10:16:53.1465245Z ✔ b9 dataset: structure-truth invariants all hold (totals, six special-tree rules, origin discipline) (68.701958ms)
+2026-10-30T10:16:53.1486998Z ✔ b9 dataset: loads into a real persistence database with row counts matching the structure truth (7370.204628ms)
+2026-10-30T10:16:53.1532900Z ✔ b9 engine probes: all frozen probes pass 100% against the structure truth (locate/origins/pagination/deep/samename/search/empty/shape/tree-list/p95) (1341.593305ms)
+2026-10-30T10:16:53.1548958Z ✔ b9 engine: cross-tree locate spot-checks (switch trees by branch id alone) (266.806245ms)
+2026-10-30T10:16:53.1551076Z ✔ b9 cleanup: close repositories and remove the temp data dir (30.546337ms)
+2026-10-30T10:16:53.2287190Z ✔ shared factories preserve constructor and SSE registry isolation (1.474577ms)
+2026-10-30T10:16:53.2289170Z ✔ material ranges retain cross-node offsets and fresh text after edits (0.730251ms)
+2026-10-30T10:16:53.2291542Z ✔ text ranges reject another node while preserving reversed endpoint slices (0.627136ms)
+2026-10-30T10:16:53.2293351Z ✔ storage and response stubs retain separate stores and payload identity (0.296911ms)
+2026-10-30T10:16:53.2295127Z ✔ echo defaults are unchanged (offline driver, no agent dir) (1.929007ms)
+2026-10-30T10:16:53.2296850Z ✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.235315ms)
+2026-10-30T10:16:53.2315140Z ✔ --agent-dir is rejected for the echo driver (0.800223ms)
+2026-10-30T10:16:53.2332514Z ✔ --driver pi fails clearly without provider/model (error names the env var too) (0.2861ms)
+2026-10-30T10:16:53.2334086Z ✔ empty --provider value still fails the pi boundary check (0.287162ms)
+2026-10-30T10:16:53.2335604Z ✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.220577ms)
+2026-10-30T10:16:53.2337003Z ✔ --driver pi accepts an explicit absolute agent dir (0.814677ms)
+2026-10-30T10:16:53.2338324Z ✔ --driver pi resolves a relative agent dir against the process cwd (0.422629ms)
+2026-10-30T10:16:53.2340173Z ✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.442066ms)
+2026-10-30T10:16:53.2341684Z ✔ empty or whitespace-only --agent-dir value is a usage error (0.78287ms)
+2026-10-30T10:16:53.2343096Z ✔ unknown flags and missing values keep failing with the usage error (0.510354ms)
+2026-10-30T10:16:53.2345083Z ✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.35948ms)
+2026-10-30T10:16:53.2346799Z ✔ readPiApiKey treats whitespace-only values as missing (0.774474ms)
+2026-10-30T10:16:53.2348245Z ✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.138833ms)
+2026-10-30T10:16:53.2350314Z ✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (1.377604ms)
+2026-10-30T10:16:53.2351916Z ✔ resolvePiDriverWiring fails for non-pi options (0.460381ms)
+2026-10-30T10:16:53.2353495Z ✔ no tool flags keeps the defaults at zero tools and no policy roots (echo and pi alike) (0.18491ms)
+2026-10-30T10:16:53.2354859Z ✔ --pi-tools is rejected for the echo driver (0.256966ms)
+2026-10-30T10:16:53.2356351Z ✔ --pi-tools must list at least one tool (empty or whitespace-only lists are usage errors) (0.29624ms)
+2026-10-30T10:16:53.2358040Z ✔ --pi-tools parses a trimmed comma-separated allowlist (order preserved) (0.221378ms)
+2026-10-30T10:16:53.2359906Z ✔ --policy-read-roots without --pi-tools is a usage error (echo and pi alike) (0.468545ms)
+2026-10-30T10:16:53.2361458Z ✔ --policy-read-roots must list at least one directory when given (0.281302ms)
+2026-10-30T10:16:53.2363086Z ✔ --policy-read-roots entries must be absolute (relative entries are boundary errors) (0.37032ms)
+2026-10-30T10:16:53.2364694Z ✔ --pi-tools with explicit absolute read roots parses the trimmed list (0.288666ms)
+2026-10-30T10:16:53.2366172Z ✔ resolvePiToolWiring is null without --pi-tools (echo and pi alike) (0.295969ms)
+2026-10-30T10:16:53.2367781Z ✔ resolvePiToolWiring defaults the read roots to the workspace and marks the default (0.268147ms)
+2026-10-30T10:16:53.2369685Z ✔ resolvePiToolWiring keeps explicit read roots and does not mark them defaulted (0.258699ms)
+2026-10-30T10:16:53.2371648Z ✔ resolvePiToolWiring probes every effective root and fails closed on a missing directory (0.310617ms)
+2026-10-30T10:16:53.2388114Z ✔ the wired policy engine allows in-root reads and denies out-of-root reads, writes, and shell (28.424573ms)
+2026-10-30T10:16:53.2390526Z ✔ D4-5: 'export' subcommand parses --out/--include-sessions/--readable and lands in export mode (0.280741ms)
+2026-10-30T10:16:53.2392360Z ✔ D4-5: '--import-package DIR' parses into import mode and stays exclusive with 'export' (0.50263ms)
+2026-10-30T10:16:53.2394243Z ✔ D4-5: export/import mode-confused and missing-value argvs fail with clear errors (0.513481ms)
+2026-10-30T10:16:53.2396188Z ✔ macOS store namespaces records by resolved data directory and uses fixed security commands (4.03083ms)
+2026-10-30T10:16:53.2397996Z ✔ set passes safely escaped credentials only through bounded stdin (0.619411ms)
+2026-10-30T10:16:53.2399939Z ✔ names and secret values are validated before invoking the runner (1.580337ms)
+2026-10-30T10:16:53.2401597Z ✔ missing records return null while failures are generic and sanitized (0.445021ms)
+2026-10-30T10:16:53.2402999Z ✔ runner exceptions are sanitized (0.458367ms)
+2026-10-30T10:16:53.2404526Z ✔ unsupported platforms fail honestly and resolver does not query the store (0.483684ms)
+2026-10-30T10:16:53.2406380Z ✔ environment values win, only declared names are queried, and input is unchanged (0.558206ms)
+2026-10-30T10:16:53.2408344Z ✔ interactive success is verified and a silently rejected write cannot be reported as saved (0.344261ms)
+2026-10-30T10:16:53.2410544Z ✔ empty environment values fall back to the store without mutating the environment (0.413271ms)
+2026-10-30T10:16:53.2412378Z ✔ credential presence checks use metadata without retrieving the password (0.575919ms)
+2026-10-30T10:16:53.2414225Z ✔ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (189.530753ms)
+2026-10-30T10:16:53.2416049Z ✔ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (61.529028ms)
+2026-10-30T10:16:53.2417830Z ✔ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (81.714296ms)
+2026-10-30T10:16:53.2420441Z ✔ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (151.487842ms)
+2026-10-30T10:16:53.2422533Z ✔ process restart: journal and diagnostics converge consistently (host-crash semantics) (51.23554ms)
+2026-10-30T10:16:53.2424663Z ✔ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (58.175369ms)
+2026-10-30T10:16:53.2426629Z ✔ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (90.025003ms)
+2026-10-30T10:16:53.2428280Z ✔ tool-activity events project tool name and phase only (scripted runtime) (37.538019ms)
+2026-10-30T10:16:53.2430275Z ✔ session availability derivation: live probe refines the cached assessment honestly (38.579388ms)
+2026-10-30T10:16:53.2432162Z ✔ policy request-time gate: denial surfaces provenance, fails the run, and reports honestly (63.267447ms)
+2026-10-30T10:16:53.2434043Z ✔ comparison is lazy, uses text nodes and keeps local selection across unchanged refreshes (37.812438ms)
+2026-10-30T10:16:53.2435895Z ✔ enlarged reading moves the same card DOM and preserves checks without model calls (3.446315ms)
+2026-10-30T10:16:53.2437784Z ✔ lost POST response keeps intent across retry and double-click causes one request (3.480591ms)
+2026-10-30T10:16:53.2452228Z ✔ late reads cannot render into another Tree; reopening after abort refreshes again (3.420687ms)
+2026-10-30T10:16:53.2454091Z ✔ new saved revisions never replace the user's selected revision without choosing it (2.62874ms)
+2026-10-30T10:16:53.2455771Z ✔ Return draft append preserves edits, rotates a failed request key, and never submits (1.386001ms)
+2026-10-30T10:16:53.2456903Z ✔ 接受合法的双概念对比卡 (3.855479ms)
+2026-10-30T10:16:53.2457606Z ✔ 拒绝未知字段和不支持的组件类型 (0.668294ms)
+2026-10-30T10:16:53.2458253Z ✔ 拒绝重复概念键和重复行键 (0.561281ms)
+2026-10-30T10:16:53.2458870Z ✔ 拒绝伪造的来源引用 (1.202753ms)
+2026-10-30T10:16:53.2459729Z ✔ 拒绝缺失的概念单元格 (0.345303ms)
+2026-10-30T10:16:53.2460814Z ✔ 拒绝超过总字符上限的输出 (0.607989ms)
+2026-10-30T10:16:53.2461520Z ✔ 将恶意 HTML 保留为普通文本 (0.557845ms)
+2026-10-30T10:16:53.2463000Z ✔ explicit comparison is isolated from turns, Returns and the main Pi cursor; intent replay dispatches once (124.425884ms)
+2026-10-30T10:16:53.2464927Z ✔ budget reservations block before dispatch; unknown output is rejected without writing a card (100.344249ms)
+2026-10-30T10:16:53.2466809Z ✔ queued cancellation is free; running cancellation retains reservation and ignores late results (138.861278ms)
+2026-10-30T10:16:53.2468777Z ✔ timeout aborts once and keeps unknown cost; startup interrupts queued/running without automatic dispatch (156.376547ms)
+2026-10-30T10:16:53.2471138Z ✔ cards and source snapshots export/restore without Pi sessions; schema-10 packages restore with an empty card set (157.175699ms)
+2026-10-30T10:16:53.2472998Z ✔ restore rejects re-signed forged card JSON and publishes no partial database (120.057532ms)
+2026-10-30T10:16:53.2475036Z ✔ initialization deadline settles even when createSession stalls; late initialization cannot dispatch a cancelled prompt (115.666888ms)
+2026-10-30T10:16:53.2477072Z ✔ changed source loses location but preserves the saved card and immutable excerpt (48.808647ms)
+2026-10-30T10:16:53.2478668Z ✔ material comparisons retain version/block/UTF-16 identity through export and restore (212.290815ms)
+2026-10-30T10:16:53.2480714Z ✔ HTTP protects explicit dispatch with local origin/header and scopes task reads to a Tree (124.496986ms)
+2026-10-30T10:16:53.2482356Z ✔ SSE emits the owning tree only, snapshot before events, and disconnects once (3.304977ms)
+2026-10-30T10:16:53.2483707Z ✔ ESM and CSS static allowlist serves correct content type (29.523638ms)
+2026-10-30T10:16:53.2485097Z ✔ unknown static paths and traversal attempts are rejected, not read from disk (0.92053ms)
+2026-10-30T10:16:53.2486623Z ✔ frozen identity constants: parserKind markdown / parserVersion d4-md-v1 (2.747364ms)
+2026-10-30T10:16:53.2488169Z ✔ Chinese prose: paragraphs split into blocks, same-block line breaks preserved (1.940416ms)
+2026-10-30T10:16:53.2490361Z ✔ English prose: multi-block with same-block continuation lines and a cross-line excerpt (0.536172ms)
+2026-10-30T10:16:53.2492083Z ✔ fenced code block with several lines and no blank line stays ONE block (0.702914ms)
+2026-10-30T10:16:53.2493614Z ✔ fenced code block between prose: only blank lines split blocks (0.531975ms)
+2026-10-30T10:16:53.2495139Z ✔ fenced code block containing a blank line SPLITS into blocks (no fence awareness) (0.338062ms)
+2026-10-30T10:16:53.2496578Z ✔ CRLF line endings canonicalize to single LF (never doubled) (0.313396ms)
+2026-10-30T10:16:53.2497846Z ✔ lone CR and mixed CRLF/CR/LF endings canonicalize to LF (0.403053ms)
+2026-10-30T10:16:53.2499339Z ✔ emoji incl. astral-plane characters: UTF-16 offsets count surrogate pairs as 2 units (0.370744ms)
+2026-10-30T10:16:53.2501101Z ✔ combining characters kept verbatim: no NFC normalization anywhere (1.0238ms)
+2026-10-30T10:16:53.2541018Z ✔ repeated distinctive words: both occurrences resolved to stable offsets and blocks (0.364832ms)
+2026-10-30T10:16:53.2559894Z ✔ links and inline code kept verbatim (0.163366ms)
+2026-10-30T10:16:53.2570772Z ✔ single-block document with and without a trailing newline (0.241602ms)
+2026-10-30T10:16:53.2572948Z ✔ document without trailing newline: final block keeps no forced terminator (0.292997ms)
+2026-10-30T10:16:53.2574438Z ✔ leading and trailing blank lines are dropped entirely (0.254014ms)
+2026-10-30T10:16:53.2576282Z ✔ whitespace-only separator lines contribute only their newline (blank-line whitespace dropped) (0.2998ms)
+2026-10-30T10:16:53.2577970Z ✔ multi-blank-line runs keep every newline (N blanks yield N+1 newlines) (0.233276ms)
+2026-10-30T10:16:53.2579336Z ✔ content lines keep leading/trailing spaces and tabs verbatim (0.275024ms)
+2026-10-30T10:16:53.2581160Z ✔ realistic mixed document: zh prose + fenced code + links + emoji, exact block map (0.290784ms)
+2026-10-30T10:16:53.2582350Z ✔ rejection: empty (0 bytes) (0.274332ms)
+2026-10-30T10:16:53.2584130Z ✔ rejection: invalid-utf8 (truncated / bad continuation / overlong / surrogate) (0.309529ms)
+2026-10-30T10:16:53.2585738Z ✔ rejection: nul-byte (embedded U+0000, incl. precedence over whitespace-only) (0.704516ms)
+2026-10-30T10:16:53.2587055Z ✔ rejection: whitespace-only (no meaningful content) (0.237564ms)
+2026-10-30T10:16:53.2588289Z ✔ rejection precedence: decode failure precedes NUL detection (0.168716ms)
+2026-10-30T10:16:53.2589886Z ✔ leading BOM is stripped by the strict decoder; content parses normally (0.166131ms)
+2026-10-30T10:16:53.2591608Z ✔ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (272.79176ms)
+2026-10-30T10:16:53.2593729Z ✔ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (280.489197ms)
+2026-10-30T10:16:53.2595765Z ✔ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (61.059982ms)
+2026-10-30T10:16:53.2597951Z ✔ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (159.315246ms)
+2026-10-30T10:16:53.2600432Z ✔ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (58.023176ms)
+2026-10-30T10:16:53.2602788Z ✔ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (41.402332ms)
+2026-10-30T10:16:53.2604924Z ✔ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (153.672726ms)
+2026-10-30T10:16:53.2606800Z ✔ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (116.463181ms)
+2026-10-30T10:16:53.2608727Z ✔ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (43.014378ms)
+2026-10-30T10:16:53.2610864Z ✔ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (148.508003ms)
+2026-10-30T10:16:53.2612946Z ✔ prompt attachments use saved version text and reject cross-tree references before writing turns (127.594766ms)
+2026-10-30T10:16:53.2615781Z ✔ material branching: creation lands branch/origin/binding with zero runs/turns; the context view is deterministic and byte-identical at dispatch time (charter §3.3 rule 1/3, ADR-004 §4) (179.537804ms)
+2026-10-30T10:16:53.2618630Z ✔ material branching: a text-layer PDF selection branches through the real d4-pdf-v1 pipeline with page-bearing blocks (B1 pdf-01) (178.133427ms)
+2026-10-30T10:16:53.2621564Z ✔ material context bounds: a large material truncates the window honestly; an oversized selection is refused with zero dispatch (ADR-003 §4 / ADR-004 §7) (276.456836ms)
+2026-10-30T10:16:53.2624624Z ✔ material first question: independent session, audited versionId prefix, composed context enters the model input; replay and post-restart replay are deterministic (ADR-004 §2/§4/§5) (148.594087ms)
+2026-10-30T10:16:53.2629113Z ✔ material first question reconciliation: a non-terminal run blocks re-dispatch (unknown, no blind send); an explicit failure allows the retry (ADR-004 §5 rules 3/4) (150.618088ms)
+2026-10-30T10:16:53.2632853Z ✔ restore-or-open: same source restores the existing branch, explicit new opens a second one; look-alike selections in other materials/versions are never reused; cross-tree isolation holds (charter §3.3 rule 5/6) (455.608545ms)
+2026-10-30T10:16:53.2636527Z ✔ material return: lands on the owning tree's trunk with targetAnchor null, a full material source card, idempotent replay, and adoption attempts recorded after the trunk prompt (charter §3.3 rule 7, ADR-004 §8) (156.617345ms)
+2026-10-30T10:16:53.2640428Z ✔ missing session: normal continuation fails closed; explicit new material exploration succeeds with the material context carried; an available session refuses the new exploration (W1 §3.4 + ADR-004 §3c) (150.357443ms)
+2026-10-30T10:16:53.2643627Z ✔ non-ready versions refuse branching with the honest reason (charter §3.2 — never disguise unsupported as an empty success) (130.76455ms)
+2026-10-30T10:16:53.2646339Z ✔ material branching HTTP API: from-material create/replay/conflict/restore/new + first-question + return + new-exploration + 503 unwired (D4-contracts §3 D4-3 rows) (263.908815ms)
+2026-10-30T10:16:53.2648723Z ✔ material branching HTTP API: unwired materials → 503 material-branching-not-wired for every D4-3 route (40.058858ms)
+2026-10-30T10:16:53.2651131Z ✔ valid categories resolve exactly: repeat-word-2nd (overlapping occurrences), cross-line, unicode, long-tail, utf16-range (28.023587ms)
+2026-10-30T10:16:53.2652978Z ✔ invalid categories are rejected with the correct frozen reason code (8.693368ms)
+2026-10-30T10:16:53.2654975Z ✔ stale-version: same range, changed text → stale for the new version; the old version stays readable and the anchor is not migrated (8.003319ms)
+2026-10-30T10:16:53.2658773Z ✔ reference errors: unknown version 404s; a version of another material is an input error (7.264527ms)
+2026-10-30T10:16:53.2661310Z ✔ grapheme cache is content-addressed: identical canonical texts in different versions never cross-contaminate (5.939782ms)
+2026-10-30T10:16:53.6624862Z ✔ reading position GET: empty state, PUT round-trip, upsert replaces, 404/405/503 surfaces (291.035046ms)
+2026-10-30T10:16:53.6671377Z ✔ reading positions stay isolated per tree and per material; exploration never clobbers reading (charter §3.2) (278.837192ms)
+2026-10-30T10:16:53.6682064Z ✔ resolve-selection over HTTP: 200 exact canonical selection for both locator kinds; sourceHash equals canonicalText SHA-256 (142.132539ms)
+2026-10-30T10:16:53.6691007Z ✔ resolve-selection rejection surface: 400 with the frozen reason codes, 409 not-ready, 404/400/405/503 (570.84983ms)
+2026-10-30T10:16:54.0685437Z ✔ markdown import: async pending→parsing→ready with chunked reads paginating blocks (182.586738ms)
+2026-10-30T10:16:54.0695384Z ✔ version semantics: tree-scoped same-bytes reuse; new bytes append a version; old versions stay readable (331.110495ms)
+2026-10-30T10:16:54.0698138Z ✔ limits: frozen defaults; small injected limits reject before parsing with zero persistence (40.737943ms)
+2026-10-30T10:16:54.1888555Z ✔ pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination (124.826113ms)
+2026-10-30T10:16:54.3175086Z ✔ pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready (116.785496ms)
+2026-10-30T10:16:54.4616641Z ✔ pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting (128.142518ms)
+2026-10-30T10:16:54.4620438Z ✔ custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence (25.020663ms)
+2026-10-30T10:16:54.5642967Z ✔ canonical text over the limit: version fails with text-units-exceeded; the oversized text is never stored (102.996251ms)
+2026-10-30T10:16:54.6359714Z ✔ parse cancellation with a gated fake parser: canceled stays canceled; the late result is discarded, never attached (28.826552ms)
+2026-10-30T10:16:54.6366428Z ✔ host interruption recovery: a version left parsing converges to failed (parse-interrupted) on the next construction (22.282265ms)
+2026-10-30T10:16:54.6368456Z ✔ honest rejections before any persistence: unknown extension, empty input, unknown tree (18.288905ms)
+2026-10-30T10:16:54.7337668Z ✔ composer attachments are tree/version scoped, bounded without splitting emoji, and retain readable source links (119.609168ms)
+2026-10-30T10:17:02.6301648Z ✔ nav api: trees listing is paginated scalar summaries with no full-tree payloads (7799.467657ms)
+2026-10-30T10:17:03.1647365Z ✔ nav api: tree overview carries the structure-truth shape of the special trees (537.545505ms)
+2026-10-30T10:17:03.1812185Z ✔ nav api: children pagination pages b9-wide's 220 root children in truth order (16.773635ms)
+2026-10-30T10:17:03.1953129Z ✔ nav api: lazy endpoints enforce bounded limits and reject malformed cursors/params (13.383632ms)
+2026-10-30T10:17:03.3495731Z ✔ nav api: b9-big full tree only ever arrives page-bounded (5000 nodes via subtree pagination, <1MiB pages) (153.313329ms)
+2026-10-30T10:17:03.3523026Z ✔ nav api: deep chain /path returns the complete 100-level chain (3.846105ms)
+2026-10-30T10:17:03.3577492Z ✔ nav api: locate switches trees by branch id alone with ancestors and origin (4.915323ms)
+2026-10-30T10:17:03.5982173Z ✔ nav api: same-name search disambiguates by full path and paginates in the full-order (240.533919ms)
+2026-10-30T10:17:03.6031381Z ✔ nav api: tree search paginates the deterministic order (ids and titles) (3.919792ms)
+2026-10-30T10:17:03.6070851Z ✔ nav api: empty tree stays honestly usable (4.227147ms)
+2026-10-30T10:17:09.8767165Z ✔ nav api: expand-state round trip, validation, and survival across a simulated restart (76.591735ms)
+2026-10-30T10:17:13.2146601Z ✔ nav api: product tree ≠ run/session trees — session availability sweep leaves nav byte-identical (9518.902789ms)
+2026-10-30T10:17:13.2201444Z ✔ nav api: 503 when nav is not wired (18.240377ms)
+2026-10-30T10:17:13.2205193Z ✔ nav api cleanup: close the shared instance and remove its data dir (0.242593ms)
+2026-10-30T10:17:13.3341858Z ✔ children pagination: page through 300 children at multiple page sizes without duplicates or gaps (838.526405ms)
+2026-10-30T10:17:13.3343910Z ✔ children pagination: parameter validation and cursor discipline (26.612305ms)
+2026-10-30T10:17:13.3345912Z ✔ index invalidation: new branch invisible until invalidate, visible after (56.903016ms)
+2026-10-30T10:17:13.3347849Z ✔ subtree expansion: depth limits, node limit truncation and cursor continuation (72.57236ms)
+2026-10-30T10:17:13.3350153Z ✔ locate: cross-tree identity, ancestors, sibling position, turn and material origins (63.444051ms)
+2026-10-30T10:17:13.3352251Z ✔ branch search: exact/prefix/substring, case folding, matchedOn, tree scope, honest zero (41.178529ms)
+2026-10-30T10:17:13.3354298Z ✔ search pagination: deterministic pages without duplicates or gaps; cursor discipline (46.419496ms)
+2026-10-30T10:17:13.3357081Z ✔ same-name disambiguation: identical titles under different parents carry distinct full paths (35.752137ms)
+2026-10-30T10:17:13.3359065Z ✔ empty tree: honest empty pages, single-node expansion, null title overview (29.87907ms)
+2026-10-30T10:17:13.3361296Z ✔ deep chain: 12000-level parent path and locate computed iteratively (no stack overflow) (6537.583806ms)
+2026-10-30T10:17:13.3363156Z ✔ tree list: paginated across forests without duplicates or gaps (31.913178ms)
+2026-10-30T10:17:13.3364826Z ✔ frozen identity constants: parserKind pdf / parserVersion d4-pdf-v1 / limits (1.639673ms)
+2026-10-30T10:17:13.3366641Z ✔ all registry ready fixtures extract to their frozen truth byte-exactly (12 PDF) (125.526599ms)
+2026-10-30T10:17:13.3368408Z ✔ all registry negatives reject with their frozen reason (encrypted/corrupt/no-text-layer) (2.00668ms)
+2026-10-30T10:17:13.3370233Z ✔ determinism: the same bytes parse to deep-equal results (8.308235ms)
+2026-10-30T10:17:13.3371961Z ✔ pages limit: pdf-08 (10 pages) is rejected before content interpretation under a tighter limit (44.939531ms)
+2026-10-30T10:17:13.3373823Z ✔ content operators beyond the fixture writer: TJ array, T-star, quote forms, TD, Tm (4.368472ms)
+2026-10-30T10:17:13.3375812Z ✔ FlateDecode-compressed content stream round-trips (fixture content streams are uncompressed) (1.752966ms)
+2026-10-30T10:17:13.3377549Z ✔ literal string octal escapes and WinAnsi high bytes decode exactly (1.345274ms)
+2026-10-30T10:17:13.3379152Z ✔ pinned reading order: left band completes before the right band; same-y ties break by x (1.339282ms)
+2026-10-30T10:17:13.3381322Z ✔ page blocks: non-final pages end with a newline; empty pages are skipped with true page numbers kept (3.011396ms)
+2026-10-30T10:17:13.3383197Z ✔ rejection: corrupt — not a PDF / truncated / Length mismatch / misplaced startxref (2.040803ms)
+2026-10-30T10:17:13.3384952Z ✔ rejection: unsupported — xref stream, DCTDecode, non-WinAnsi Type1, Type0 without ToUnicode (1.59455ms)
+2026-10-30T10:17:13.3386317Z ✔ rejection: unsupported — a CID absent from the ToUnicode map refuses to guess text (0.751514ms)
+2026-10-30T10:17:13.3387831Z ✔ Identity-H mapping: bfchar and bfrange both decode; surrogate pairs carry through (1.197698ms)
+2026-10-30T10:17:13.3389054Z ✔ bfrange array values map code-by-code (an array is never misread as a sequential range) (3.571941ms)
+2026-10-30T10:17:13.3392632Z ✔ inline images (BI/ID/EI) are skipped whole; text before and after survives intact (1.279521ms)
+2026-10-30T10:17:13.3394085Z ✔ lazy fonts: only a font actually used to show text can fail the page (2.102959ms)
+2026-10-30T10:17:13.3395536Z ✔ rejection: encrypted — a trailer carrying /Encrypt is refused without any decryption attempt (0.316812ms)
+2026-10-30T10:17:13.3397181Z ✔ rejection: no-text-layer — image-only content (no text operators) is never an empty ready document (0.359382ms)
+2026-10-30T10:17:13.3399415Z ✔ export default: versioned package with frozen facts set, content-addressed blobs and per-entry checksums; sessions/credentials/logs excluded (242.135958ms)
+2026-10-30T10:17:13.3404261Z ✔ export is byte-deterministic for the same database under an injected clock (220.734189ms)
+2026-10-30T10:17:13.3406462Z ✔ export --include-sessions: explicit opt-in copies referenced session files, marks the package sensitive and reports missing files honestly (218.383967ms)
+2026-10-30T10:17:13.3408691Z ✔ export --include-sessions refuses colliding session basenames instead of silently overwriting either file (242.814335ms)
+2026-10-30T10:17:13.3410675Z ✔ export --readable renders human-readable markdown alongside the data package (234.895479ms)
+2026-10-30T10:17:13.3412037Z ✔ export --readable refuses database ids that would escape the package (write-side path traversal guard) (241.439913ms)
+2026-10-30T10:17:13.3413429Z ✔ export guards: refuses a non-empty --out directory and a missing database (203.767649ms)
+2026-10-30T10:17:13.3414419Z ✔ restore into an empty data directory rebuilds every fact table and blob byte-identically; saved excerpts survive (257.374293ms)
+2026-10-30T10:17:13.3415929Z ✔ restore into an existing-but-empty directory works; carried sessions are placed, their references rewritten, missing references kept verbatim (278.443384ms)
+2026-10-30T10:17:13.3417305Z ✔ a corrupted package is rejected before anything is placed: checksum mismatch, empty target stays empty, source untouched, no staging residue (231.402246ms)
+2026-10-30T10:17:13.3418334Z ✔ restore refuses a non-empty target and leaves the existing files byte-identical (205.469798ms)
+2026-10-30T10:17:13.3419264Z ✔ restore rejects path traversal, symlinks, unexpected files, missing entries and oversized declarations (258.711038ms)
+2026-10-30T10:17:13.3431247Z ✔ restore rejects adversarial packages whose checksums were re-minted: schema lies, shape drift, dangling foreign keys, duplicate keys, unknown tables, marker mismatches (285.561099ms)
+2026-10-30T10:17:13.3432555Z ✔ restore of a sessions package refuses when a session file was dropped after export (checksum honesty) (209.453842ms)
+2026-10-30T10:17:13.3433531Z ✔ scoped search returns contract-shaped material hits positioned in the canonical text (200.999935ms)
+2026-10-30T10:17:13.3434468Z ✔ annotation hits omit the material-only fields; absent queries return an honest empty list (63.858342ms)
+2026-10-30T10:17:13.3435874Z ✔ /api/search spans all trees; a scoped search never leaks another tree's facts (175.542551ms)
+2026-10-30T10:17:13.3436547Z ✔ kinds filter passes through to the engine (168.168832ms)
+2026-10-30T10:17:13.3437203Z ✔ rejections: blank/wrong-type text, malformed kinds, bad JSON → 400 (48.994317ms)
+2026-10-30T10:17:13.3437886Z ✔ unknown tree → 404; non-POST methods → 405; unwired search → 503 (51.973644ms)
+2026-10-30T10:17:13.3438709Z ✔ B4 corpus shape: 3 trees, 35 saved-fact documents (12 material / 11 annotation / 6 return / 6 turn) (7.159334ms)
+2026-10-30T10:17:13.3439977Z ✔ B4 frozen positives (55): every pre-specified target lands in the engine's top-5 (24.641885ms)
+2026-10-30T10:17:13.3441375Z ✔ B4 frozen no-result queries (12): zero hits, nothing fabricated (42.954755ms)
+2026-10-30T10:17:13.3442098Z ✔ B4 sample: current-tree vs all-trees scoping changes the hit set exactly (15.833839ms)
+2026-10-30T10:17:13.3442841Z ✔ B4 material hits are precisely positioned in the frozen canonical text (14.085663ms)
+2026-10-30T10:17:13.3443580Z ✔ zh matching is substring-based: a query inside a longer sentence still hits (0.336168ms)
+2026-10-30T10:17:13.3444296Z ✔ en matching is whole-word: 'tree' must not match 'street' or 'trees' (0.356034ms)
+2026-10-30T10:17:13.3445009Z ✔ scoping: treeId restricts to one tree; kinds filter restricts source types (0.80848ms)
+2026-10-30T10:17:13.3445906Z ✔ old-version labeling: v1-only sentences hit with oldVersion=true; current v2 ranks first on shared text (1.855346ms)
+2026-10-30T10:17:13.3447116Z ✔ empty and punctuation-only queries return zero hits honestly (19.558869ms)
+2026-10-30T10:17:13.3448019Z ✔ determinism: rebuild, serialize/restore round-trip, and reversed input order all yield identical results (52.481523ms)
+2026-10-30T10:17:13.3449086Z ✔ ranking: phrase tier beats kind; kind order annotation<return<turn<material; then matchCount, recency, refId (0.827346ms)
+2026-10-30T10:17:13.3450463Z ✔ mixed zh/latin query: contiguous phrase ranks above scattered segment hits, both are returned (0.317904ms)
+2026-10-30T10:17:13.3451280Z ✔ invalid documents and query options fail fast with SearchEngineError (1.581104ms)
+2026-10-30T10:17:13.3452033Z ✔ repeated CJK grams and Latin words keep original hit offsets and match counts (0.597636ms)
+2026-10-30T10:17:13.3453140Z ✔ material versions enter the index per version: chain-derived oldVersion/labels, positioned hits, current version ranks first on shared text (282.499505ms)
+2026-10-30T10:17:13.3454336Z ✔ non-ready versions are honestly absent from the index; a failed chain tail still marks the last ready version old (251.462672ms)
+2026-10-30T10:17:13.3455475Z ✔ annotations are indexed as explanation+term bodies; explanation-only phrases are findable and annotations outrank turns (57.149142ms)
+2026-10-30T10:17:13.3456883Z ✔ returns and turns are indexed (return turns are not double-indexed as turns); display titles follow the frozen convention (24.711685ms)
+2026-10-30T10:17:13.3458255Z ✔ tree snapshot preserves branch-order turn documents with batched repository reads (29.836392ms)
+2026-10-30T10:17:13.3459227Z ✔ per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only (22.703534ms)
+2026-10-30T10:17:13.3460867Z ✔ scoping: a tree snapshot never leaks other trees; unknown trees throw; materials linked to several trees yield one document per tree (122.778545ms)
+2026-10-30T10:17:13.3461723Z ✔ kinds filter and limit pass through to the engine (111.692706ms)
+2026-10-30T10:17:13.3462819Z ✔ buildSearchDocuments is pure: identical snapshots assemble identically, empty bodies are skipped, note concatenation order holds, unknown trees fail fast (0.605521ms)
+2026-10-30T10:17:13.3463977Z ✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (170.897813ms)
+2026-10-30T10:17:13.3464898Z ✔ composePromptText prefixes pending returns deterministically (0.389657ms)
+2026-10-30T10:17:13.3466304Z ✔ branch anchoring is validated (answer role, slice integrity, bounds) (32.833269ms)
+2026-10-30T10:17:13.3467127Z ✔ return and prompt validation errors (45.625454ms)
+2026-10-30T10:17:13.3468256Z ✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (36.075993ms)
+2026-10-30T10:17:13.3469935Z ✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (32.234184ms)
+2026-10-30T10:17:13.3470895Z ✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (327.41236ms)
+2026-10-30T10:17:13.3471833Z ✔ concurrent prompt is rejected as a conflict and leaves no phantom run (107.633498ms)
+2026-10-30T10:17:13.3473429Z ✔ anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2) (51.275345ms)
+2026-10-30T10:17:13.3475455Z ✔ changed anchor (DB-constructed): originStatus reports changed, the excerpt stays readable, reveal refuses without fallback, nothing is silently repaired (W1 §6-3) (83.496586ms)
+2026-10-30T10:17:13.3476806Z ✔ return idempotency: same key+content replays the same turn; different content conflicts (47.060802ms)
+2026-10-30T10:17:13.3477934Z ✔ return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4) (66.6711ms)
+2026-10-30T10:17:13.3479002Z ✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (52.663291ms)
+2026-10-30T10:17:13.3480702Z ✔ missing session: submit saves the return first, navigation fails separately; same-key retries replay without duplicates (signed v3 §3.5) (61.952819ms)
+2026-10-30T10:17:13.3482567Z ✔ source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1): a deleted session still locates the database original; cursor alignment fails separately (42.993718ms)
+2026-10-30T10:17:13.3484672Z ✔ whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2) (64.083222ms)
+2026-10-30T10:17:13.3486759Z ✔ new exploration preconditions (v3 §4.4): available session and never-prompted trunks are refused as conflicts; an anchored branch with a lost anchor session explores from the excerpt alone (53.032071ms)
+2026-10-30T10:17:13.3488595Z ✔ empty-trunk return: submit persists directly without a session; the first trunk prompt creates the session and delivers it exactly once (W1 §6-7) (42.41161ms)
+2026-10-30T10:17:13.3490192Z ✔ failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4) (69.248997ms)
+2026-10-30T10:17:13.3491444Z ✔ return persists its target anchor snapshot of the branch origin (48.438399ms)
+2026-10-30T10:17:13.3492236Z ✔ repository-level return without a key still round-trips (legacy shape) (24.155686ms)
+2026-10-30T10:17:13.3493451Z ✔ published CSS modules preserve ordered cascade and critical responsive rules (4.259387ms)
+2026-10-30T10:17:13.3494473Z ✔ terminology eval sets: 180 + 180 items, ids unique within and across files (3.143863ms)
+2026-10-30T10:17:13.3495573Z ✔ terminology eval sets: group-based leakage prevention (group ids and source texts never straddle dev/frozen) (1.355156ms)
+2026-10-30T10:17:13.3496633Z ✔ terminology eval sets: Chinese >= 240 across 360; negatives >= 25% across 360 (0.30515ms)
+2026-10-30T10:17:13.3497668Z ✔ terminology eval sets: all six v2 coverage categories present in both files, with both task kinds (0.454028ms)
+2026-10-30T10:17:13.3498863Z ✔ terminology eval sets: homonym-polysemy terms (ambiguity dimension) span >= 2 semantic-context groups per file (0.517867ms)
+2026-10-30T10:17:13.3500282Z ✔ terminology eval sets: every explain term resolves mechanically at its occurrence with slice equality (0.405799ms)
+2026-10-30T10:17:13.3501919Z ✔ terminology eval sets: extract expectedTerms and negativeTerms verified against sources (expectedTerms outside code/URL spans; full negatives carry negativeTerms) (2.016758ms)
+2026-10-30T10:17:13.3503717Z ✔ terminology eval sets: long-answer items are >= 1500 chars with every target term in the final third (0.41739ms)
+2026-10-30T10:17:13.3504664Z ✔ terminology eval sets: code-mixed items carry real code fences (0.648141ms)
+2026-10-30T10:17:13.3505965Z ✔ reading modes pure helpers: blank-line paragraphs, per-paragraph/per-answer density caps (first-come, hiddenCount), and source-invalid projection (4.834782ms)
+2026-10-30T10:17:13.3507564Z ✔ reading mode persistence: default manual-only, enum validation, unknown tree 404, kv round-trip across a restart, corrupt kv degrades to the default (46.612645ms)
+2026-10-30T10:17:13.3509618Z ✔ quality gate OFF (production default): modes save and switch, but assistant answer completions dispatch NOTHING — zero term-runtime prompts, zero tasks, zero usage, honest autoSuggestions state (114.678674ms)
+2026-10-30T10:17:13.3512070Z ✔ gate ON (test-forced): only an assistant answer completion triggers exactly one extract; browsing adds nothing; failed and aborted runs dispatch nothing; auto-saving never happens (180.595169ms)
+2026-10-30T10:17:13.3513685Z ✔ gate ON + assisted reading: v2 per-paragraph 2 / per-answer 6 caps are enforced honestly (59.644079ms)
+2026-10-30T10:17:13.3514886Z ✔ gate ON: zero validated candidates surface as no-suggestions; one suggestion set per completed answer (55.767454ms)
+2026-10-30T10:17:13.3516357Z ✔ gate ON + exhausted budget: budget-paused with zero dispatch and untouched accounting; the explicit retry stays honestly paused; no annotation is ever written (37.906274ms)
+2026-10-30T10:17:13.3517901Z ✔ gate ON + unparseable model answer: the set lands on failed honestly; the explicit retry re-runs and recovers (42.288487ms)
+2026-10-30T10:17:13.3519590Z ✔ reading-mode HTTP surface: GET/PUT settings/reading-mode (enum 400 / unknown tree 404), read model carries mode + autoSuggestions, retry 200/404/400(gate)/400(manual-only) (147.010245ms)
+2026-10-30T10:17:13.3521555Z ✔ terminology pure helpers: prompts carry the passage and UTF-16 offsets; candidates are validated against the source (slice equality, dedup, density, code/URL exclusion) (4.42707ms)
+2026-10-30T10:17:13.3523234Z ✔ terminology explain is isolated: zero tree writes, zero main session files, main cursor untouched; echo task succeeds with the prompt as context (127.607696ms)
+2026-10-30T10:17:13.3525171Z ✔ terminology explain dedups against a saved annotation (zero model calls) and enforces UTF-16 slice integrity (emoji / cross-line / duplicate words) (60.816504ms)
+2026-10-30T10:17:13.3527019Z ✔ terminology save dedups by range; promotion reuses the Anchor/Branch/Origin machinery, dispatches the first question with composed context, and is idempotent across replays and conflicts (68.434705ms)
+2026-10-30T10:17:13.3529286Z ✔ promotion survives a failed first question: the binding and dispatch ledger are durable, and the same-key retry re-dispatches the SAME question without rebuilding the branch (51.600102ms)
+2026-10-30T10:17:13.3531393Z ✔ terminology cancel: queued cancels immediately; a late result after a running cancel is discarded (usage still recorded — honest cost) (87.869858ms)
+2026-10-30T10:17:13.3533219Z ✔ terminology cache key carries source identity, position and context: the same word at two semantic positions is explained separately (bank repro + 中文 + repeated word), and only the same anchor reuses (52.062265ms)
+2026-10-30T10:17:13.3535802Z ✔ terminology cancel accounting: a dispatched request that is aborted keeps its reservation and records UNKNOWN usage (requests >= 1, never zeroed); a timeout likewise; a dirty restart and a failing persistence fail-closed with zero dispatch (73.751403ms)
+2026-10-30T10:17:13.3538156Z ✔ terminology budget reserves input+output bounds before dispatch: an insufficient budget means ZERO dispatch (budgetTokens=1), usage settles by real completion, and the persisted state resumes across restarts (55.247149ms)
+2026-10-30T10:17:13.3540462Z ✔ terminology context discipline: explain windows oversized passages honestly (remapped offsets) and refuses unbounded stuffing; extract refuses oversized sources with zero dispatch (28.848709ms)
+2026-10-30T10:17:13.3542009Z ✔ terminology auto extract: validated JSON candidates (slice equality, dedup, density, code/URL exclusion); an unparseable echo answer fails honestly (34.621648ms)
+2026-10-30T10:17:13.3543926Z ✔ terminology promotion is atomic: a promotion key already held by another annotation is a 409 conflict with ZERO new rows, injected crashes at each write point roll the whole promotion back, and a double-click is idempotent (35.76581ms)
+2026-10-30T10:17:13.3546230Z ✔ terminology promotion first-question identity: the same key with a different question is a 409 conflict (not a replay); an unknown-result dispatch is reconciled against the ledger evidence and never blind-resent (61.019347ms)
+2026-10-30T10:17:13.3548422Z ✔ terminology promotion replay across a process restart: the binding and dispatch ledger are durable — a landed first question is never re-dispatched, and a different question under the same key stays a 409 (28.648209ms)
+2026-10-30T10:17:13.3550669Z ✔ terminology HTTP surface: read model, explain, annotations 201/200, promote 201/200/409 (incl. same-key different-question), preferences, cancel, and an honest 503 when unwired (123.974925ms)
+2026-10-30T10:17:13.3552381Z ✔ branch entry: the armed capture bar offers branching; the click resolves the canonical selection (server-signed sourceHash) then posts from-material — zero runs/turns, no cursor switch (224.848157ms)
+2026-10-30T10:17:13.3553776Z ✔ Escape closes the current reader when a pending flow belongs to another material, retaining that flow for its own reader (866.012485ms)
+2026-10-30T10:17:13.3555371Z ✔ context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted (99.978193ms)
+2026-10-30T10:17:13.3557409Z ✔ context declaration: a truncated window carries the explicit TRUNCATED marker with the truncation note verbatim — the 24,000-unit cap is never silent (charter §3.3 rule 3) (103.75628ms)
+2026-10-30T10:17:13.3558923Z ✔ first question: submitting posts material-first-question with the same intent key, lands the turns, closes the reader, and opens the branch panel (332.902933ms)
+2026-10-30T10:17:13.3560691Z ✔ no-duplicate discipline: a double-click submits exactly once (in-flight lock); a replay (same key, same content) reconciles without re-sending (341.50037ms)
+2026-10-30T10:17:13.3562118Z ✔ dispatch outcomes: 'failed' is shown honestly and a same-key retry is an explicit new attempt; 'unknown' is never auto-retried and is disclosed as not re-sent (401.263103ms)
+2026-10-30T10:17:13.3564042Z ✔ resume-or-create hits an existing exploration: the honest choice — open the existing branch (nothing new is created) or explicitly start a new one (fresh key, new branch) (329.929069ms)
+2026-10-30T10:17:13.3565516Z ✔ explicit new exploration: from the choice, a fresh intent key posts mode 'new' and the full first-question flow follows on the new branch (366.734048ms)
+2026-10-30T10:17:13.3567145Z ✔ pending intent resume: a branch created but never asked resumes straight to the declared scope with the SAME key after a refresh (idempotent continuation — localStorage carries the submission identity) (331.296739ms)
+2026-10-30T10:17:13.3569014Z ✔ restored branch navigation/session facts ride along honestly (failed navigation and unavailable session are disclosed, never masked) (94.792772ms)
+2026-10-30T10:17:13.3571262Z ✔ first-question conflict (409): after an in-flight dispatch lands unseen, a changed question is refused — the immutability is disclosed and the changed question is offered as a normal continuation (panel opens prefilled; sending stays an explicit action) (375.166868ms)
+2026-10-30T10:17:13.3573303Z ✔ branch-intent conflict (409 material-branch-conflict, same key bound to a different selection): the flow fails honestly and offers a retry (94.81431ms)
+2026-10-30T10:17:13.3575072Z ✔ material return: the panel return posts material-return with the draft idempotency key; the mainline card renders the material source fields, adoption state, and the source jump opens the reader at the anchored version and block (605.867971ms)
+2026-10-30T10:17:13.3576837Z ✔ material return card: a cached source card renders on the mainline at boot; a missing cache degrades honestly (the Return itself is intact, no source details are fabricated) (507.635835ms)
+2026-10-30T10:17:13.3578472Z ✔ session-unavailable material branch: the explicit new exploration posts material-new-exploration (material context rides along); an available session is refused with the honest 409 (172.367584ms)
+2026-10-30T10:17:13.3580717Z ✔ css lexical locks: the branching flow, the scope card, the truncation marker, and the material return source card have base-layer rules (1.247201ms)
+2026-10-30T10:17:13.3582309Z ✔ Harvest material source uses persisted locate facts with an empty browser source cache (94.577004ms)
+2026-10-30T10:17:13.3584399Z ✔ material list: honest per-state rows (ready / failed-with-reason / parsing / pdf), an honest empty state, a loading state, and a retryable list failure (371.720072ms)
+2026-10-30T10:17:13.3586625Z ✔ central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material (361.122155ms)
+2026-10-30T10:17:13.3589287Z ✔ block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end (149.444745ms)
+2026-10-30T10:17:13.3593234Z ✔ keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container) (68.389634ms)
+2026-10-30T10:17:13.3595690Z ✔ reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block) (2005.984682ms)
+2026-10-30T10:17:13.3597495Z ✔ reading position beyond the first page: the open loop pages forward until the saved block is loaded, then restores onto it (66.024791ms)
+2026-10-30T10:17:13.3598772Z ✔ lossless rendering: every rendered block's textContent equals the frozen canonicalText slice byte-for-byte, carrying its absolute range (73.849181ms)
+2026-10-30T10:17:13.3600477Z ✔ cross-line selection inside one block: the captured payload is the frozen md-sel-22 range [1015, 1036) over canonicalText (73.955536ms)
+2026-10-30T10:17:13.3601766Z ✔ repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19) (68.603933ms)
+2026-10-30T10:17:13.3602900Z ✔ cross-block selection: the honest not-anchorable state — no payload, no silent truncation (B2 discipline) (67.127958ms)
+2026-10-30T10:17:13.3604473Z ✔ grapheme-safe capture: a boundary inside a surrogate pair or a combining sequence snaps outward — the payload never splits a cluster (md-06 / md-07 fixtures) (100.044139ms)
+2026-10-30T10:17:13.3605735Z ✔ copy quote: the clipboard receives the exact canonical slice; the D4-3 anchor payload stays honestly displayed (68.887713ms)
+2026-10-30T10:17:13.3607108Z ✔ version awareness: the reader shows which version it renders, an older version is explicitly labeled and readable, and switching is non-destructive with a never-migrates note (126.926966ms)
+2026-10-30T10:17:13.3608585Z ✔ a saved reading position on an older version reopens that version (charter §1: return to the original text), with the older-version note and restore (63.216999ms)
+2026-10-30T10:17:13.3610280Z ✔ a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment) (68.284147ms)
+2026-10-30T10:17:13.3611522Z ✔ a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks (97.991537ms)
+2026-10-30T10:17:13.3614204Z ✔ a failed version shows its reason verbatim with no empty-document masquerade; the version strip keeps it honestly unlabeled-readable (64.116543ms)
+2026-10-30T10:17:13.3616280Z ✔ honest retry surfaces: a detail failure retries the open; an append-page failure retries the next page (218.823402ms)
+2026-10-30T10:17:13.3618391Z ✔ armed selection survives async refreshes and page appends: block elements and their text nodes keep identity while armed (no re-render during selection over the reading view) (183.267545ms)
+2026-10-30T10:17:13.3620254Z ✔ capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift) (112.353075ms)
+2026-10-30T10:17:13.3621564Z ✔ touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check (82.766596ms)
+2026-10-30T10:17:13.3622767Z ✔ Esc closes the reader with focus returned to the material's list button; keyboard affordances are native buttons (322.197661ms)
+2026-10-30T10:17:13.3623858Z ✔ CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically (8.505465ms)
+2026-10-30T10:17:13.3624886Z ✔ Harvest continue-reading restores the database version and block and returns focus to the harvest entry (92.31724ms)
+2026-10-30T10:17:13.3626212Z ✔ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (439.273388ms)
+2026-10-30T10:17:13.3627894Z ✔ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (258.997573ms)
+2026-10-30T10:17:13.3630408Z ✔ children page failures are honest: a first-page failure shows the error with a Retry row, and an auto-paged More failure keeps the loaded page and retries the next page (442.62418ms)
+2026-10-30T10:17:13.3632228Z ✔ expand-state persistence: every expansion/selection PUTs the full set, and reopening restores the saved expansion and the deep selection via ancestor paging (343.511053ms)
+2026-10-30T10:17:13.7219847Z ✔ keyboard traversal: arrows move row-by-row across the windowed order, → expands / enters the first child, ← collapses / returns to the parent, Enter selects, and the focused row never leaves the DOM (371.671496ms)
+2026-10-30T10:17:14.8130782Z ✔ same-name disambiguation: branch search hits carry distinct full paths, rows carry id chips, and the selected node's full parent path is complete (long chains collapse but expand to every level) (1086.542014ms)
+2026-10-30T10:17:15.0157777Z ✔ stale-cursor 409 recovery: a cursor page after index invalidation restarts from the first page (request sequence locked, no duplicate rows) (208.856176ms)
+2026-10-30T10:17:15.2366765Z ✔ nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues (220.503538ms)
+2026-10-30T10:17:15.4290748Z ✔ locate current branch: cross-tree locate switches the nav tree and reveals the workbench's current branch through its ancestor chain (191.212331ms)
+2026-10-30T10:17:15.8096727Z ✔ jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin (380.734081ms)
+2026-10-30T10:17:16.0948777Z ✔ jump to source across trees: the workbench first opens the origin's tree (existing openTree behavior), then the existing reveal runs (281.428626ms)
+2026-10-30T10:17:16.2061635Z ✔ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (128.165945ms)
+2026-10-30T10:17:16.2063098Z ✔ CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically (4.157033ms)
+2026-10-30T10:17:16.2341399Z ✔ import entry: the file picker accepts exactly the D4-1 support set and lives in the Materials section (142.22143ms)
+2026-10-30T10:17:16.2343360Z ✔ import happy path: a Chinese-and-space filename uploads raw bytes with the percent-encoded header, the parsing state is honest, and ready opens the reader (145.235283ms)
+2026-10-30T10:17:16.2344723Z ✔ import dedup: importing the exact same bytes again reports the reused version honestly (no new version, no fake success) (147.574999ms)
+2026-10-30T10:17:16.2345834Z ✔ import parse failures surface the reason verbatim (failed / rejected), never an empty-document masquerade (204.91085ms)
+2026-10-30T10:17:16.2347576Z ✔ import cancel: canceling an in-flight parse task stops it and reports canceled honestly; a 409 (already terminal) triggers an immediate recheck (196.313784ms)
+2026-10-30T10:17:16.2348674Z ✔ import upload failures surface verbatim: unsupported extension (415) and oversize (413) (174.779153ms)
+2026-10-30T10:17:16.2349911Z ✔ import state resets on tree switch (the in-flight poll and status never leak across trees) (130.063564ms)
+2026-10-30T10:17:16.2351004Z ✔ PDF pages render as real reading surfaces: page identifiers, frozen block text, absolute ranges, and the pdf fetch limit (79.0472ms)
+2026-10-30T10:17:16.2352138Z ✔ same-page selections map through the canonical-offset machinery to the frozen B2 payloads (pdf-sel-01 / pdf-sel-02) (83.168242ms)
+2026-10-30T10:17:16.2353278Z ✔ double-column PDF (pdf-06): both columns and a cross-line excerpt map to the frozen ranges on the same page (77.210516ms)
+2026-10-30T10:17:16.2354464Z ✔ grapheme safety on PDF pages: a boundary inside a surrogate pair snaps outward (pdf-12 payload discipline) (65.276386ms)
+2026-10-30T10:17:16.2355504Z ✔ cross-page selection is refused with the select-within-one-page prompt — no payload, no silent truncation (66.921571ms)
+2026-10-30T10:17:16.2356706Z ✔ reading positions work per PDF version: scrolling saves page-N via PUT, and reopening restores onto it (forward fill + rendered jump target) (109.734006ms)
+2026-10-30T10:17:16.2358628Z ✔ a server-side resolve-selection refusal surfaces verbatim in the branch flow (the backend already refuses — the UI relays it) (98.189303ms)
+2026-10-30T10:17:16.2360449Z ✔ lazy page rendering: a 30-page PDF renders a bounded leading batch first, and the scroll window (±1200px) renders/unloads page text layers (122.309127ms)
+2026-10-30T10:17:16.2361697Z ✔ CSS lexicon: PDF page frames, placeholders, and the import row/styles exist lexically (the suite does not execute CSS) (0.666456ms)
+2026-10-30T10:17:16.2805405Z ✔ visual baseline: real index.html skeleton and boot-rendered structure (140.268914ms)
+2026-10-30T10:17:16.2807785Z ✔ thought search shortcut preserves the current query and draft without creating product facts (38.181653ms)
+2026-10-30T10:17:16.2811146Z ✔ Session map opens the real paged dialogue and preserves drafts (74.342914ms)
+2026-10-30T10:17:16.2813103Z ✔ Paged dialogue groups multi-run Episodes and filters canonical turns to exactly one round (78.356626ms)
+2026-10-30T10:17:16.2814795Z ✔ Source reveal opens the older round containing the anchor (380.088794ms)
+2026-10-30T10:17:16.2816343Z ✔ Session map Escape returns to the same conversation and retains the Return draft (61.477347ms)
+2026-10-30T10:17:16.2818007Z ✔ Session graph limits rendered groups and empty Sessions have no invented dialogue rounds (138.519374ms)
+2026-10-30T10:17:16.2820300Z ✔ Session map without a tree shows a creation action and creates nothing during browsing (34.764762ms)
+2026-10-30T10:17:16.2822104Z ✔ journal drawer: failure with retry, honest empty state, Esc focus restore (342.970465ms)
+2026-10-30T10:17:16.2824180Z ✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (482.486006ms)
+2026-10-30T10:17:16.2826410Z ✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (86.44738ms)
+2026-10-30T10:17:16.2829042Z ✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (288.178999ms)
+2026-10-30T10:17:16.2831249Z ✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (553.539553ms)
+2026-10-30T10:17:16.2833663Z ✔ adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer (56.156955ms)
+2026-10-30T10:17:16.5839914Z ✔ a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately (307.105531ms)
+2026-10-30T10:17:16.8743770Z ✔ Esc on the branch panel closes it and restores focus to the triggering tab (290.394605ms)
+2026-10-30T10:17:16.9455317Z ✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (70.950853ms)
+2026-10-30T10:17:17.0402195Z ✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (88.788625ms)
+2026-10-30T10:17:17.1931864Z ✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (158.361698ms)
+2026-10-30T10:17:17.7620563Z ✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (566.342757ms)
+2026-10-30T10:17:18.3331137Z ✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (573.693938ms)
+2026-10-30T10:17:18.7358482Z ✔ Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs (396.835259ms)
+2026-10-30T10:17:18.8464824Z ✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (110.725385ms)
+2026-10-30T10:17:18.9226608Z ✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (80.33019ms)
+2026-10-30T10:17:18.9590011Z ✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (36.280796ms)
+2026-10-30T10:17:19.0516276Z ✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (96.659766ms)
+2026-10-30T10:17:19.1251049Z ✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (71.472388ms)
+2026-10-30T10:17:19.1885748Z ✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (63.235826ms)
+2026-10-30T10:17:19.2517601Z ✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (62.923985ms)
+2026-10-30T10:17:19.3137925Z ✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (61.701851ms)
+2026-10-30T10:17:19.3743243Z ✔ A2 cross-line selection: offsets and the revealed text span the line break intact (64.04701ms)
+2026-10-30T10:17:19.6698513Z ✔ topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open (295.65936ms)
+2026-10-30T10:17:19.9661949Z ✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (295.960629ms)
+2026-10-30T10:17:20.0163637Z ✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (49.615058ms)
+2026-10-30T10:17:20.0686161Z ✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (45.446045ms)
+2026-10-30T10:17:20.0687880Z ✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (2.561023ms)
+2026-10-30T10:17:20.0689905Z ✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (1.710815ms)
+2026-10-30T10:17:20.1592298Z ✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (90.371332ms)
+2026-10-30T10:17:20.2088214Z ✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (49.600612ms)
+2026-10-30T10:17:20.3295196Z ✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (120.237739ms)
+2026-10-30T10:17:20.3646208Z ✔ desktop sidebar collapses to a persistent rail without losing the current tree or prompt (35.177396ms)
+2026-10-30T10:17:20.4005898Z ✔ Harvest overview preserves full saved text and source identity, and browsing dispatches no model run (36.107793ms)
+2026-10-30T10:17:20.5051033Z ✔ Harvest overview updates attempted and delivered independently and stays readable without Pi (104.209035ms)
+2026-10-30T10:17:20.9266023Z ✔ Harvest opens the saved Return round and its exact source instead of the latest round (421.309834ms)
+2026-10-30T10:17:21.0437048Z ✔ Round cursors survive a new Studio instance, validate stale IDs, and remain scoped to each branch (117.268714ms)
+2026-10-30T10:17:21.1520681Z ✔ Harvest empty state is honest and saved cards page without losing older harvests (108.524712ms)
+2026-10-30T10:17:21.2137726Z ✔ Unavailable browser storage and stale tree/round cursors preserve database reading (67.70917ms)
+2026-10-30T10:17:21.2349954Z ✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (157.201101ms)
+2026-10-30T10:17:21.2352905Z ✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (71.691054ms)
+2026-10-30T10:17:21.2356152Z ✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (398.256887ms)
+2026-10-30T10:17:21.2358218Z ✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (301.517084ms)
+2026-10-30T10:17:21.2361762Z ✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (68.035271ms)
+2026-10-30T10:17:21.2364049Z ✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (288.35665ms)
+2026-10-30T10:17:21.2366568Z ✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (287.437828ms)
+2026-10-30T10:17:21.2369002Z ✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (64.525119ms)
+2026-10-30T10:17:21.2372005Z ✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (291.126654ms)
+2026-10-30T10:17:21.2374471Z ✔ a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch (318.314034ms)
+2026-10-30T10:17:21.2377243Z ✔ scope: default is the current tree (scoped endpoint, full kinds), an explicit toggle spans all trees, and a scoped search never leaks another tree's facts (185.273005ms)
+2026-10-30T10:17:21.2380154Z ✔ type filter: kinds pass through to the engine, and results render in the order returned (annotation → Return → turn → material) (142.88837ms)
+2026-10-30T10:17:21.2382355Z ✔ old-version hits are explicitly marked 旧版本 and open the older version's read-only reader at the hit block (116.650027ms)
+2026-10-30T10:17:21.2384258Z ✔ a current-version material hit opens the reader on that version and scrolls to the hit block (100.80567ms)
+2026-10-30T10:17:21.2386396Z ✔ session-unavailable hits show the explicit new-exploration entry alongside the source jump, and the jump still views the source (140.550052ms)
+2026-10-30T10:17:21.2388532Z ✔ a trunk hit in a session-unavailable trunk shows the same entry, and it routes to the trunk composer (no branch panel exists for the trunk) (123.173303ms)
+2026-10-30T10:17:21.2390911Z ✔ an annotation hit reveals the anchored answer and opens the saved annotation card (96.504566ms)
+2026-10-30T10:17:21.2392222Z ✔ a Return hit reveals the Return card on the trunk (94.844345ms)
+2026-10-30T10:17:21.2394026Z ✔ honest gates: blank queries and empty filters are stopped client-side (the server's own rule), and zero hits stay an honest empty state (124.664035ms)
+2026-10-30T10:17:21.2396318Z ✔ in-flight is honest, a failed search surfaces its error and is retryable, and unwired search reports 503 verbatim (230.931235ms)
+2026-10-30T10:17:21.2398795Z ✔ cross-tree hits open the hit's tree first; searching creates no turns; tree-scoped results clear honestly on tree switch while all-trees results persist (171.130413ms)
+2026-10-30T10:17:21.2401584Z ✔ with an empty library the search face stays available, this-tree is honestly disabled, and the honest zero-hit state renders (57.744691ms)
+2026-10-30T10:17:21.2403733Z ✔ CSS lexicon: the search form, hit rows, old-version mark, and session note rules are locked in the base layer (2.338688ms)
+2026-10-30T10:17:21.2406019Z ✔ layered turn structure: prose is its own layer, textContent stays byte-identical, and an async refresh never replaces the content layer (176.302495ms)
+2026-10-30T10:17:21.2408494Z ✔ selection drag window: an overlay-changing re-render is deferred until mouseup — the content layer is never swapped under the cursor (88.839778ms)
+2026-10-30T10:17:21.2411577Z ✔ toolbar modes: single-word selections arm term mode, spans arm range mode (exact POST payloads), dblclick arms like mouseup, and Esc closes the card with focus return (86.736918ms)
+2026-10-30T10:17:21.2414218Z ✔ Esc layering with the term card: a card inside the open panel closes before the panel; the panel branch keeps its semantics (314.232873ms)
+2026-10-30T10:17:21.2416263Z ✔ Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost (69.90137ms)
+2026-10-30T10:17:21.2418250Z ✔ explain card states: cached success note, honest failure with a working retry, cancelled with the late-discard note, and idempotent save showing the existing annotation (317.259294ms)
+2026-10-30T10:17:21.2420349Z ✔ late explain responses are discarded honestly when the target leaves: no resurrection of a closed card, counted in the drawer usage (72.41073ms)
+2026-10-30T10:17:21.2422163Z ✔ unified range overlays: annotation marks and the source highlight share one slice-exact mechanism, survive re-renders, and never alter the text (96.504259ms)
+2026-10-30T10:17:21.2423519Z ✔ resume-or-create: an already-promoted annotation surfaces the existing follow-up explicitly — no second promotion form, no silent reuse (64.61066ms)
+2026-10-30T10:17:21.2424867Z ✔ promotion outcomes: success opens the branch, a same-key replay is named honestly, and a 409 conflict lands on the card with the same-key retry kept (243.623315ms)
+2026-10-30T10:17:21.2426252Z ✔ promotion response loss resolves to the recorded promotion: the card refreshes to the resume affordance instead of pretending nothing happened (99.022754ms)
+2026-10-30T10:17:21.2427644Z ✔ narrow window and reduced motion: the ③ CSS rules are locked lexically (toolbar/card full width under 720px; card entrance animation neutralized under reduce) (4.296785ms)
+2026-10-30T10:17:21.2428995Z ✔ touch selection: selectionchange arms the toolbar without mouseup, and an emptied selection disarms it after the deferred check (47.116002ms)
+2026-10-30T10:17:21.2431033Z ✔ return draft/focus discipline holds under the layered renderer: submit closes the panel to the main input; the term-card first-question draft keeps its value and focus across re-renders (332.198872ms)
+2026-10-30T10:17:21.2432557Z ✔ drawer terminology surface: tasks with modes, honest usage counts, cache preference toggle with a retryable failure, and the read-model failure state (138.796458ms)
+2026-10-30T10:17:21.2434193Z ✔ P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders (50.74071ms)
+2026-10-30T10:17:21.2436013Z ✔ P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths) (95.491084ms)
+2026-10-30T10:17:21.2437430Z ✔ P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches (34.185262ms)
+2026-10-30T10:17:21.2438832Z ✔ P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations (132.510342ms)
+2026-10-30T10:17:21.2440431Z ✔ P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card (85.25125ms)
+2026-10-30T10:17:21.2442751Z ✔ reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure (134.72273ms)
+2026-10-30T10:17:21.2444296Z ✔ suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips (98.1773ms)
+2026-10-30T10:17:21.2445605Z ✔ suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus (113.634687ms)
+2026-10-30T10:17:21.2446794Z ✔ answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path (61.789866ms)
+2026-10-30T10:17:21.2447422Z ℹ tests 498
+2026-10-30T10:17:21.2447630Z ℹ suites 0
+2026-10-30T10:17:21.2447837Z ℹ pass 498
+2026-10-30T10:17:21.2448037Z ℹ fail 0
+2026-10-30T10:17:21.2448241Z ℹ cancelled 0
+2026-10-30T10:17:21.2448459Z ℹ skipped 0
+2026-10-30T10:17:21.2448661Z ℹ todo 0
+2026-10-30T10:17:21.2448910Z ℹ duration_ms 39572.726645
+2026-10-30T10:17:21.2547919Z ##[group]Run npm run audit:computed-paths
+2026-10-30T10:17:21.2548302Z [36;1mnpm run audit:computed-paths[0m
+2026-10-30T10:17:21.2548656Z [36;1mnode --test tests/unit/computed-paths.test.mjs[0m
+2026-10-30T10:17:21.2568705Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:17:21.2568967Z ##[endgroup]
+2026-10-30T10:17:21.3558386Z 
+2026-10-30T10:17:21.3559143Z > treeai@0.0.0 audit:computed-paths
+2026-10-30T10:17:21.3560168Z > node scripts/audit-computed-paths.mjs
+2026-10-30T10:17:21.3560575Z 
+2026-10-30T10:17:22.9283836Z PASS: 132 resolved resources, 20 test globs; 12 computed expressions require runtime gates
+2026-10-30T10:17:23.5939004Z ✔ computed resource audit catches a moved Worker URL and preserves unresolved dynamic paths (8.49208ms)
+2026-10-30T10:17:23.5943692Z ✔ computed discovery audit expands quoted globs and rejects a stranded test entry (4.86967ms)
+2026-10-30T10:17:23.5961998Z ✔ computed audit rejects a missing output path as usage before traversing the repository (283.51285ms)
+2026-10-30T10:17:23.6116896Z ℹ tests 3
+2026-10-30T10:17:23.6117447Z ℹ suites 0
+2026-10-30T10:17:23.6117882Z ℹ pass 3
+2026-10-30T10:17:23.6118314Z ℹ fail 0
+2026-10-30T10:17:23.6118760Z ℹ cancelled 0
+2026-10-30T10:17:23.6119205Z ℹ skipped 0
+2026-10-30T10:17:23.6119967Z ℹ todo 0
+2026-10-30T10:17:23.6120490Z ℹ duration_ms 614.197002
+2026-10-30T10:17:23.6215478Z ##[group]Run sudo apt-get update -qq
+2026-10-30T10:17:23.6215825Z [36;1msudo apt-get update -qq[0m
+2026-10-30T10:17:23.6216226Z [36;1msudo apt-get install -y --no-install-recommends fonts-wqy-zenhei[0m
+2026-10-30T10:17:23.6216703Z [36;1mtest -r /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc[0m
+2026-10-30T10:17:23.6237185Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:17:23.6237445Z ##[endgroup]
+2026-10-30T10:17:28.6133028Z Reading package lists...
+2026-10-30T10:17:28.8525415Z Building dependency tree...
+2026-10-30T10:17:28.8532799Z Reading state information...
+2026-10-30T10:17:29.0415126Z The following NEW packages will be installed:
+2026-10-30T10:17:29.0424676Z   fonts-wqy-zenhei
+2026-10-30T10:17:29.0668431Z 0 upgraded, 1 newly installed, 0 to remove and 6 not upgraded.
+2026-10-30T10:17:29.0669066Z Need to get 7472 kB of archives.
+2026-10-30T10:17:29.0669949Z After this operation, 16.8 MB of additional disk space will be used.
+2026-10-30T10:17:29.0670685Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-10-30T10:17:29.1149290Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+2026-10-30T10:17:29.4643930Z Fetched 7472 kB in 0s (57.8 MB/s)
+2026-10-30T10:17:29.4898047Z Selecting previously unselected package fonts-wqy-zenhei.
+2026-10-30T10:17:29.5183156Z (Reading database ... 
+2026-10-30T10:17:29.5183575Z (Reading database ... 5%
+2026-10-30T10:17:29.5183936Z (Reading database ... 10%
+2026-10-30T10:17:29.5184277Z (Reading database ... 15%
+2026-10-30T10:17:29.5184601Z (Reading database ... 20%
+2026-10-30T10:17:29.5184933Z (Reading database ... 25%
+2026-10-30T10:17:29.5186003Z (Reading database ... 30%
+2026-10-30T10:17:29.5186675Z (Reading database ... 35%
+2026-10-30T10:17:29.5187297Z (Reading database ... 40%
+2026-10-30T10:17:29.5187859Z (Reading database ... 45%
+2026-10-30T10:17:29.5188469Z (Reading database ... 50%
+2026-10-30T10:17:29.5226428Z (Reading database ... 55%
+2026-10-30T10:17:29.6723251Z (Reading database ... 60%
+2026-10-30T10:17:29.8417755Z (Reading database ... 65%
+2026-10-30T10:17:30.0834976Z (Reading database ... 70%
+2026-10-30T10:17:30.2758324Z (Reading database ... 75%
+2026-10-30T10:17:30.4292930Z (Reading database ... 80%
+2026-10-30T10:17:30.5229330Z (Reading database ... 85%
+2026-10-30T10:17:30.5920211Z (Reading database ... 90%
+2026-10-30T10:17:30.7332811Z (Reading database ... 95%
+2026-10-30T10:17:30.7333252Z (Reading database ... 100%
+2026-10-30T10:17:30.7333844Z (Reading database ... 215504 files and directories currently installed.)
+2026-10-30T10:17:30.7377693Z Preparing to unpack .../fonts-wqy-zenhei_0.9.45-8_all.deb ...
+2026-10-30T10:17:30.7515299Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+2026-10-30T10:17:31.2726501Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+2026-10-30T10:17:31.2859796Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+2026-10-30T10:17:31.9958761Z 
+2026-10-30T10:17:31.9959751Z Running kernel seems to be up-to-date.
+2026-10-30T10:17:31.9960260Z 
+2026-10-30T10:17:31.9960652Z No services need to be restarted.
+2026-10-30T10:17:31.9961030Z 
+2026-10-30T10:17:31.9961331Z No containers need to be restarted.
+2026-10-30T10:17:31.9961741Z 
+2026-10-30T10:17:31.9962137Z No user sessions are running outdated binaries.
+2026-10-30T10:17:31.9962570Z 
+2026-10-30T10:17:31.9963356Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-10-30T10:17:33.1128413Z ##[group]Run set +e
+2026-10-30T10:17:33.1128712Z [36;1mset +e[0m
+2026-10-30T10:17:33.1128960Z [36;1mnode scripts/verify-d4.js[0m
+2026-10-30T10:17:33.1129250Z [36;1mcode=$?[0m
+2026-10-30T10:17:33.1130110Z [36;1mecho "D4 offline verifier exit: $code (3 means NOT_RUN/BLOCKED, not PASS)"[0m
+2026-10-30T10:17:33.1130703Z [36;1mif [ "$code" -eq 1 ] || [ "$code" -eq 2 ]; then exit "$code"; fi[0m
+2026-10-30T10:17:33.1131094Z [36;1mexit 0[0m
+2026-10-30T10:17:33.1153035Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T10:17:33.1153397Z env:
+2026-10-30T10:17:33.1153716Z   TREEAI_B6_FONT_PATH: /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc
+2026-10-30T10:17:33.1154103Z ##[endgroup]
+2026-10-30T10:17:34.1886411Z verify-d4 0.1.0 — offline acceptance run
+2026-10-30T10:17:34.1887905Z root: /home/runner/work/TreeAI/TreeAI
+2026-10-30T10:17:34.1889222Z evidence: /home/runner/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261030T101734186Z
+2026-10-30T10:17:34.1890399Z 
+2026-10-30T10:17:34.7078188Z   [PASS] fixtures-integrity-d4
+2026-10-30T10:17:34.7087480Z   [PASS] docs-integrity-d4
+2026-10-30T10:17:34.7626076Z   [PASS] entrypoints-d4
+2026-10-30T10:17:49.3430909Z   [PASS] typecheck
+2026-10-30T10:17:53.4934389Z   [PASS] tests-typecheck
+2026-10-30T10:17:55.9608292Z   [PASS] unit-tests-d4
+2026-10-30T10:17:58.7265182Z   [PASS] b1-import-versions
+2026-10-30T10:18:00.7840755Z   [PASS] b2-precise-anchors
+2026-10-30T10:18:01.7598444Z   [PASS] b3-material-exploration
+2026-10-30T10:18:01.7613694Z   [PASS] b3-real-exploration
+2026-10-30T10:18:01.7843626Z   [PASS] b4-cross-material-find
+2026-10-30T10:18:08.3691451Z   [PASS] b5-restore-integrity
+2026-10-30T10:19:42.6967703Z   [FAIL] b6-scale-performance
+2026-10-30T10:19:42.6979426Z   [PASS] b6-browser-face
+2026-10-30T10:19:42.6991195Z   [PASS] b7-beta-usability
+2026-10-30T10:19:42.6996409Z   [NOT_RUN] b8-install-crossplatform — engineering delivered (packaging scripts/d4/package-installer.mjs + launcher + d4-installer CI workflow + macOS local real test under evidence/d4/d4-7/); B8 acceptance still requires the owner's clean-install real-machine validation on Windows 11 x64 and Ubuntu 24.04 (plus real-Pi material smoke), which no CI run can substitute (owner: D4-7)
+2026-10-30T10:20:00.6246812Z   [PASS] b9-large-tree-nav
+2026-10-30T10:20:00.6256297Z   [PASS] b9-nav-browser-face
+2026-10-30T10:20:00.6259086Z   [PASS] exit-codes
+2026-10-30T10:20:00.6260137Z   [PASS] evidence-write-hygiene
+2026-10-30T10:20:00.6315036Z 
+2026-10-30T10:20:00.6315409Z verify-d4 summary:
+2026-10-30T10:20:00.6316038Z   18 PASS, 1 FAIL, 0 BLOCKED, 1 NOT_RUN
+2026-10-30T10:20:00.6316712Z   verdict: HAS_FAIL (exit 2)
+2026-10-30T10:20:00.6317840Z   evidence: /home/runner/work/TreeAI/TreeAI/evidence/d4/runs/d4-offline-20261030T101734186Z
+2026-10-30T10:20:00.7331297Z D4 offline verifier exit: 2 (3 means NOT_RUN/BLOCKED, not PASS)
+2026-10-30T10:20:00.7348679Z ##[error]Process completed with exit code 2.
+2026-10-30T10:20:00.7415859Z ##[group]Run echo "Inspecting latest B6 verifier log (no pass/fail override)"
+2026-10-30T10:20:00.7416462Z [36;1mecho "Inspecting latest B6 verifier log (no pass/fail override)"[0m
+2026-10-30T10:20:00.7417126Z [36;1mfile=$(find evidence/d4/runs -type f -name '*b6-scale-performance*' 2>/dev/null | sort | tail -n 1)[0m
+2026-10-30T10:20:00.7417793Z [36;1mif [ -n "$file" ]; then sed -n '1,120p' "$file"; else echo "No B6 log found"; fi[0m
+2026-10-30T10:20:00.7438078Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T10:20:00.7438446Z ##[endgroup]
+2026-10-30T10:20:00.7481635Z Inspecting latest B6 verifier log (no pass/fail override)
+2026-10-30T10:20:00.7548908Z b6 scale/performance check
+2026-10-30T10:20:00.7552655Z environment: node v24.21.0; linux 7.0.0-1017-azure x64; cpu 4× AMD EPYC 7763 64-Core Processor; total memory 15.6 GiB; loadavg at start 1.85/0.91/0.35 — NOTE: parallel D4 wave agents may be building on this machine during this run; loadavg is recorded per probe and any timed probe within 20% of its limit (or over it) is rerun once with BOTH runs recorded
+2026-10-30T10:20:00.7555018Z generator CLI run A (with --load-check): exit 0 in 9872ms
+2026-10-30T10:20:00.7555549Z generator CLI run B (fresh process): exit 0 in 7652ms
+2026-10-30T10:20:00.7556733Z generator determinism: 103/103 artifacts byte-identical across two CLI runs (+ in-process engine reproduces the truth exactly); totals: 100 materials / 1000000 units / 1000 non-trunk branches / 10000 saved facts
+2026-10-30T10:20:00.7558541Z load: 100 ready versions (1000000 units exactly) + 1010 branch rows / 10 trees + 6000 qa turns + 2500 annotations + 1500 returns into a real persistence DB in 1891ms (real parsers + repository APIs, deterministic clock; sqlite integrity ok)
+2026-10-30T10:20:00.7561554Z search cold pass (first-ever queries; doubles as warmup): 50 frozen queries through POST /api/search (per-request rebuild) — p50 481.7ms / p95 544.5ms / max 633.5ms (loadavg 1.61/0.91/0.37 → 1.40/0.92/0.38)
+2026-10-30T10:20:00.7563222Z search warm pass (verdict): 50 frozen queries through POST /api/search (per-request rebuild) — p50 464.2ms / p95 533.1ms / max 557.1ms (loadavg 1.40/0.92/0.38 → 1.39/0.96/0.41)
+2026-10-30T10:20:00.7565102Z search warm pass rerun (contention disclosure: first warm pass neared/exceeded the limit; BOTH recorded): 50 frozen queries through POST /api/search (per-request rebuild) — p50 464.3ms / p95 521.3ms / max 547.5ms (loadavg 1.39/0.96/0.41 → 1.28/0.96/0.42)
+2026-10-30T10:20:00.7566659Z search warm p95 rerun recorded: first 533.1ms, rerun 521.3ms (verdict from the definitive rerun; limit 500ms)
+2026-10-30T10:20:00.7568681Z material-open-p95: PASS — 30 cold opens of existing materials (detail + first visible blocks page; 4 long PDFs + 8 long md + 18 shorts) p50 1.8ms / p95 4.9ms / max 5.6ms ≤ 2000ms; hot re-opens p50 1.9ms / p95 3.1ms (cold/hot reported separately); resume-opens deep inside the long PDFs (60% afterBlock): p50 1.3ms / max 1.5ms (evidence)
+2026-10-30T10:20:00.7571359Z scroll (server-side): 32 consecutive block-page fetches through the long md (limit 5) + long pdf (default limit) — p50 1.2ms / p95 1.6ms / max 1.6ms ≤ 200ms (round-trip budget of the scroll path; browser smoothness stays NOT_RUN)
+2026-10-30T10:20:00.7573320Z input (server-side evidence): 20 tree-scoped short searches (POST /api/trees/b6-t01/search, as-you-type shape) — p50 45.4ms / p95 49.6ms / max 50.8ms (no offline assert: the charter's freeze criterion is a browser main-thread metric — see NOT_RUN)
+2026-10-30T10:20:00.7575486Z import-10mib-100p: PASS — 10.33 MiB / 100-page sample (sha256 958dc14686b1b277…) imported through POST /api/trees/:id/materials to parse-ready in 1.67s ≤ 30s (upload + parse, real import pipeline; first-blocks read back: 1 block(s), textUnits 999999)
+2026-10-30T10:20:00.7577310Z cancel: gated import in parsing state → POST …/parse-tasks/:id/cancel answered 200 (state canceled) in 2.0ms ≤ 200ms (import request itself took 4.6ms; gated markdown parser holds the task open)
+2026-10-30T10:20:00.7578875Z cancel: late parse result structurally discarded after cancel (task lateResultDiscarded=true, version stays canceled; second cancel answered 409 in 1.0ms)
+2026-10-30T10:20:00.7580941Z NOT_RUN: scrolling (browser face): real-browser scroll smoothness with no >200ms main-thread segments while paging the reader — frontend wave / run:d4-browser; server-side block-page fetch timings recorded here as evidence only
+2026-10-30T10:20:00.7582708Z NOT_RUN: input (browser face): keydown-to-render latency for search-as-you-type and question input — frontend wave; server-side tree-scoped search timings recorded here as evidence only
+2026-10-30T10:20:00.7584221Z NOT_RUN: search hit-list rendering (browser face): render latency of the result list in a real browser — frontend wave; the server-side p95 measured here is the data path only
+2026-10-30T10:20:00.7585512Z NOT_RUN: cold app boot (browser face): first application open in a real browser — frontend wave / final candidate-SHA regression
+2026-10-30T10:20:00.7613882Z ##[group]Run node --test scripts/d4/browser/cli.test.mjs
+2026-10-30T10:20:00.7614307Z [36;1mnode --test scripts/d4/browser/cli.test.mjs[0m
+2026-10-30T10:20:00.7633146Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:20:00.7633412Z ##[endgroup]
+2026-10-30T10:20:00.8505530Z ✔ B3/B9 D4 browser CLI default remains offline selftest without credentials (1.646806ms)
+2026-10-30T10:20:00.8509714Z ✔ browser CLI --only repetitions, flags, and order are preserved (0.242263ms)
+2026-10-30T10:20:00.8520534Z ✔ browser CLI refuses unknown flags, missing values, inappropriate real-Pi flags (1.18367ms)
+2026-10-30T10:20:00.8521926Z ✔ browser CLI accepts --keep-data as a standalone final switch (0.274352ms)
+2026-10-30T10:20:00.8523252Z ✔ browser CLI retains positional values and rejects incomplete option pairs (0.27825ms)
+2026-10-30T10:20:00.8624073Z ℹ tests 5
+2026-10-30T10:20:00.8624484Z ℹ suites 0
+2026-10-30T10:20:00.8630560Z ℹ pass 5
+2026-10-30T10:20:00.8641070Z ℹ fail 0
+2026-10-30T10:20:00.8641564Z ℹ cancelled 0
+2026-10-30T10:20:00.8641973Z ℹ skipped 0
+2026-10-30T10:20:00.8642334Z ℹ todo 0
+2026-10-30T10:20:00.8642753Z ℹ duration_ms 65.524639
+2026-10-30T10:20:00.8708711Z ##[group]Run node --test scripts/d4/browser/scale-measurements.test.mjs
+2026-10-30T10:20:00.8709260Z [36;1mnode --test scripts/d4/browser/scale-measurements.test.mjs[0m
+2026-10-30T10:20:00.8729409Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:20:00.8730035Z ##[endgroup]
+2026-10-30T10:20:00.9672459Z ✔ B6 timing statistics keep the original nearest-rank p95 and empty-sample semantics (1.599487ms)
+2026-10-30T10:20:00.9687257Z ✔ B6 browser readable predicate keeps PDF text-layer readiness and markdown block readiness distinct (5.759095ms)
+2026-10-30T10:20:00.9783760Z ℹ tests 2
+2026-10-30T10:20:00.9784176Z ℹ suites 0
+2026-10-30T10:20:00.9784543Z ℹ pass 2
+2026-10-30T10:20:00.9784901Z ℹ fail 0
+2026-10-30T10:20:00.9785261Z ℹ cancelled 0
+2026-10-30T10:20:00.9790363Z ℹ skipped 0
+2026-10-30T10:20:00.9810835Z ℹ todo 0
+2026-10-30T10:20:00.9811348Z ℹ duration_ms 69.859885
+2026-10-30T10:20:00.9884383Z ##[group]Run node --test scripts/d4/browser/scale-responsiveness.test.mjs
+2026-10-30T10:20:00.9884962Z [36;1mnode --test scripts/d4/browser/scale-responsiveness.test.mjs[0m
+2026-10-30T10:20:00.9904638Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:20:00.9904904Z ##[endgroup]
+2026-10-30T10:20:01.0899819Z ✔ B6 responsiveness retains original p95, longtask and minimum typing count (1.5586ms)
+2026-10-30T10:20:01.0902197Z ✔ B6 fails a longtask over 200ms even when scroll frames are fast (0.293217ms)
+2026-10-30T10:20:01.0904211Z ✔ B6 independently rejects slow scroll frames and too few rendered keystrokes (0.203159ms)
+2026-10-30T10:20:01.0907500Z ✔ B6 keeps keystroke-to-render p95 frozen at 200ms, not keydown-to-value (0.182581ms)
+2026-10-30T10:20:01.0911305Z ✔ B6 accepts values exactly at the frozen limits (0.213438ms)
+2026-10-30T10:20:01.1013462Z ℹ tests 5
+2026-10-30T10:20:01.1013877Z ℹ suites 0
+2026-10-30T10:20:01.1014243Z ℹ pass 5
+2026-10-30T10:20:01.1014589Z ℹ fail 0
+2026-10-30T10:20:01.1015021Z ℹ cancelled 0
+2026-10-30T10:20:01.1015411Z ℹ skipped 0
+2026-10-30T10:20:01.1015765Z ℹ todo 0
+2026-10-30T10:20:01.1016177Z ℹ duration_ms 78.315713
+2026-10-30T10:20:01.1099258Z ##[group]Run node scripts/verify-d4-selftest.js
+2026-10-30T10:20:01.1100046Z [36;1mnode scripts/verify-d4-selftest.js[0m
+2026-10-30T10:20:01.1120532Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:20:01.1120786Z ##[endgroup]
+2026-10-30T10:20:01.2094645Z verify-d4-selftest — failure-path injections against the real verifier
+2026-10-30T10:20:01.2107132Z evidence: /home/runner/work/TreeAI/TreeAI/evidence/d4/selftest/d4-selftest-20261030T102001207Z
+2026-10-30T10:20:02.5685876Z   [PASS] control-clean-tree: clean copy → exit 0 (ALL_PASS)
+2026-10-30T10:20:03.9045216Z   [PASS] inject-tampered-fixture: fixtures-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:05.2253857Z   [PASS] inject-stray-fixture: fixtures-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:06.5530676Z   [PASS] inject-broken-selection-behind-regenerated-manifest: fixtures-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:07.8778103Z   [PASS] inject-fake-no-result-query: fixtures-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:09.1970957Z   [PASS] inject-missing-mirror: docs-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:10.5281854Z   [PASS] inject-missing-adr-004: docs-integrity-d4 FAIL with exit 2
+2026-10-30T10:20:11.7995105Z   [PASS] inject-unwired-entrypoint: entrypoints-d4 FAIL with exit 2
+2026-10-30T10:20:13.1223232Z   [PASS] inject-stripped-b7-sidecar: b7-beta-usability FAIL with exit 2
+2026-10-30T10:20:13.1415011Z 
+2026-10-30T10:20:13.1416416Z verify-d4-selftest: all injections detected; control clean (exit 0)
+2026-10-30T10:20:13.1517012Z ##[group]Run node --test scripts/d4/pdf/content.test.mjs
+2026-10-30T10:20:13.1517523Z [36;1mnode --test scripts/d4/pdf/content.test.mjs[0m
+2026-10-30T10:20:13.1537890Z shell: /usr/bin/bash -e {0}
+2026-10-30T10:20:13.1538207Z ##[endgroup]
+2026-10-30T10:20:13.2408612Z ✔ B1 frozen PDF fixture registry retains every ID, order, and render routine (1.454856ms)
+2026-10-30T10:20:13.2498540Z ℹ tests 1
+2026-10-30T10:20:13.2498957Z ℹ suites 0
+2026-10-30T10:20:13.2499362Z ℹ pass 1
+2026-10-30T10:20:13.2499993Z ℹ fail 0
+2026-10-30T10:20:13.2500362Z ℹ cancelled 0
+2026-10-30T10:20:13.2501945Z ℹ skipped 0
+2026-10-30T10:20:13.2502331Z ℹ todo 0
+2026-10-30T10:20:13.2502758Z ℹ duration_ms 62.515797
+2026-10-30T10:20:13.2681514Z Post job cleanup.
+2026-10-30T10:20:13.3578722Z [command]/usr/bin/git version
+2026-10-30T10:20:13.3626839Z git version 2.56.0
+2026-10-30T10:20:13.3673810Z Temporarily overriding HOME='/home/runner/work/_temp/8e1d1ed2-b4af-4c90-96fb-959c29d1117c' before making global git config changes
+2026-10-30T10:20:13.3675643Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T10:20:13.3679767Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/TreeAI/TreeAI
+2026-10-30T10:20:13.3724956Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T10:20:13.3764845Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T10:20:13.4056208Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T10:20:13.4088329Z http.https://github.com/.extraheader
+2026-10-30T10:20:13.4102929Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-30T10:20:13.4148097Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T10:20:13.4690405Z Cleaning up orphan processes
+2026-10-30T10:20:13.5102073Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

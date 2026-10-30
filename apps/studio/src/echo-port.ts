@@ -223,6 +223,7 @@ export class EchoPiSession {
   ) => Promise<{ readonly block: boolean; readonly reason?: string; readonly terminate?: boolean } | undefined>) | null =
     null;
   private readonly toolCalls: readonly EchoToolCall[];
+  private readonly answer: (texts: readonly string[]) => string;
   private toolCallCounter = 0;
   /** 经门放行后「执行」的工具名序列（断言 denied 工具从未出现于此）。 */
   readonly executedToolCalls: string[] = [];
@@ -235,11 +236,13 @@ export class EchoPiSession {
     model: { provider: string; id: string } | undefined,
     turnDelayMs: number = 1,
     toolCalls: readonly EchoToolCall[] = [],
+    answer: (texts: readonly string[]) => string = echoAnswer,
   ) {
     this.sessionManager = manager;
     this.modelRef = model;
     this.turnDelayMs = turnDelayMs;
     this.toolCalls = toolCalls;
+    this.answer = answer;
     this.rebuildMessages();
   }
 
@@ -428,7 +431,7 @@ export class EchoPiSession {
     }
 
     // Deterministic echo of the user texts visible on this branch.
-    const answer = echoAnswer(
+    const answer = this.answer(
       this.sessionManager
         .messageEntriesOnBranch()
         .filter((entry) => entry.role === "user")
@@ -512,6 +515,8 @@ function nextEchoSessionId(): string {
 
 /** Options for the offline echo SDK port. */
 export interface EchoSdkPortOptions {
+  /** Optional deterministic response fixture; no network/model evaluation. */
+  readonly answer?: (texts: readonly string[]) => string;
   /** Model the port resolves for the studio selector. */
   readonly model?: { readonly providerId: string; readonly modelId: string };
   /**
@@ -537,6 +542,7 @@ export class EchoSdkPort {
   private readonly modelId: string;
   private readonly turnDelayMs: number;
   private readonly toolCalls: readonly EchoToolCall[];
+  private readonly answer: (texts: readonly string[]) => string;
   readonly createdManagers: EchoSessionManager[] = [];
   readonly createdSessions: EchoPiSession[] = [];
 
@@ -545,6 +551,7 @@ export class EchoSdkPort {
     this.modelId = options?.model?.modelId ?? "studio-model";
     this.turnDelayMs = options?.turnDelayMs ?? 1;
     this.toolCalls = options?.toolCalls ?? [];
+    this.answer = options?.answer ?? echoAnswer;
   }
 
   async createServices(
@@ -654,7 +661,7 @@ export class EchoSdkPort {
       manager.append({ type: "thinking_level_change" });
     }
 
-    const session = new EchoPiSession(manager, model, this.turnDelayMs, this.toolCalls);
+    const session = new EchoPiSession(manager, model, this.turnDelayMs, this.toolCalls, this.answer);
     this.createdSessions.push(session);
     return { session, modelFallbackMessage };
   }

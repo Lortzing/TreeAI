@@ -1,0 +1,67 @@
+{
+  "script": "run-d4-browser.mjs",
+  "version": "0.6.0",
+  "runId": "d4-browser-20261028T102436-56838",
+  "mode": "selftest",
+  "verdict": "HAS_FAIL",
+  "exitCode": 2,
+  "scoped": [
+    "d4-beta-usability"
+  ],
+  "counts": {
+    "pass": 4,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 0
+  },
+  "gitCommit": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+  "gitDirty": true,
+  "generatedAt": "2026-10-28T10:24:46.777Z",
+  "git": {
+    "head": "1455dad7ba89a60884eed822d5b81773e881d8ff",
+    "dirty": true
+  },
+  "fixtures": {
+    "manifestPath": "tests/fixtures/d4/MANIFEST.sha256",
+    "manifestSha256": "dc4a18f58da9803174c3686c0a66d485c61c64de4fa0c8d021a399bef44f2202",
+    "used": [
+      "md-11",
+      "pdf-01"
+    ]
+  },
+  "checks": [
+    {
+      "id": "chrome-boot",
+      "status": "PASS",
+      "detail": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome on 127.0.0.1:56395",
+      "durationMs": 1510
+    },
+    {
+      "id": "studio-boot",
+      "status": "PASS",
+      "detail": "studio healthy on http://127.0.0.1:56422/",
+      "durationMs": 928
+    },
+    {
+      "id": "page-load",
+      "status": "PASS",
+      "detail": "studio shell rendered in headless Chromium",
+      "durationMs": 621
+    },
+    {
+      "id": "console-clean",
+      "status": "PASS",
+      "detail": "no console/log errors on the studio shell",
+      "durationMs": 0
+    },
+    {
+      "id": "d4-beta-usability",
+      "status": "FAIL",
+      "error": {
+        "message": "click target never settled at its coordinates (covered or moving): #reading-materials"
+      },
+      "durationMs": 6675
+    }
+  ],
+  "pageErrors": []
+}

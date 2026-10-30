@@ -1,5 +1,25 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-30 search CI follow-up:** Original Linux B6 failed at definitive warm p95 521.3ms > 500ms. Fix `20de66609951e99826c22a7a9732ce9a1afa1580` uses ordered posting arrays while retaining per-request rebuild and frozen semantics. 946 tests/types pass; local original B6 HTTP warm p95 is 194.8ms. [Preserved failure, equivalence experiment and remote-CI scope](../../evidence/integration/20261030/README.md#ci-performance-follow-up). Remote revalidation is recorded by the PR checks, not inferred from local timing.
+
+**2026-10-30 multi-branch integration:** Combined latest Studio refinement, icons, persisted generative comparisons, harvest/continuity and CI diagnostics. Code/test candidate `fd73a458a2e3e52dc68e19249b3cd23e8e986880`: types and 945 tests pass; full final-source native Chrome Echo D4 16/16 passes (dirty evidence state is explicitly recorded). [Source identities, validation and exclusions](../../evidence/integration/20261030/README.md). Original human/model/device gates remain open.
+
+**2026-10-29 secondary surfaces:** Code `f08fe370d706788fa96727a4b644afa63a13d080` collapses floating attachments on every right-panel entry and hides implementation details behind secondary disclosures. Final-code types, 905 tests, asset/path audits and complete Chrome Echo D4 16/16 pass. [Evidence and retained failures](../../evidence/studio-secondary/20261029/README.md) distinguish the working-tree run from a clean-start run; real-Pi and human gates remain separate.
+
+**2026-10-28 Studio compact shell:** Code `c03b19e70b4ae0a53b250de6e562227b72046856` adds a persistent collapsible sidebar, one-row icon toolbar, search popover and floating attachments opening a right-hand reader. Clean-commit typechecks, 905 tests and complete Chrome Echo D4 16/16 pass. [Exact evidence, retained failures and exclusions](../../evidence/studio-compact/20261028/README.md). Local only; real-Pi, human and target-platform gates remain separate.
+
+**2026-10-28 Studio experience redesign:** Final code `8a3890c9a938fb44360c6716742a2501c09d07d0` simplifies navigation with warm surfaces and a separate settings page; fixes hidden navigation, source-overlay and selection/focus regressions. Final typechecks and 904 tests pass. Complete working-candidate Chrome Echo D4 passes 16/16; final icon adjustment has scoped usability 5/5 plus direct browser verification. [Exact source/run identities, retained failures and exclusions](../../evidence/studio-experience/20261028/README.md); [next-stage priorities](../development/studio-experience-next.md). Local commits only. Participant trials remain owner-deferred; prior human/physical/quality gates remain open.
+
+**2026-10-29 Generative comparisons:** First ComparisonCard slice implemented on
+baseline `35ae4a012fd6beea0b66b9bb773dbe858dfedc45` (uncommitted working tree).
+Final typechecks and 924 tests pass, including 23 new comparison tests; native IAB
+Echo covers generation, sources, local draft handoff, reading dialog/Escape and
+actual process restart. The [scoped evidence record](../../evidence/generative-ui/20261029/README.md)
+binds the changed source/test hashes and records all exclusions. Offline D2 has
+21 PASS / 1 NOT_RUN and D4 has 19 PASS / 1 NOT_RUN (both exit 3: INCOMPLETE).
+Both verifier selftests pass. Real model quality, D1 live repro and original
+physical/human gates remain open. See the [implementation and usage notes](../design/GENERATIVE-UI-IMPLEMENTATION-20261029.md).
+
 **2026-10-28 Studio consistency / Keychain:** Local code commit
 `550eda4c253f8662b7fe3079bd33688c9857cf04` unifies the Studio controls/settings
 and adds macOS Keychain credentials. Typechecks and 901 tests pass; D3 Echo has

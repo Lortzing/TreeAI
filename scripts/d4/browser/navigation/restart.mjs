@@ -62,9 +62,9 @@ export async function runNavRestart(deps) {
           deps.ctx,
           `(() => { const heading = document.getElementById("nav-path-heading").textContent ?? ""; ` +
             `const steps = document.querySelectorAll("#nav-path .nav-path-step"); ` +
-            `if (!heading.includes("full path")) return false; ` +
+            `if (!heading.includes("完整路径")) return false; ` +
             `if (steps.length === 0) return false; ` +
-            `if (!(steps[steps.length - 1].title ?? "").includes("select b9-deep-c020 (")) return false; ` +
+            `if (steps[steps.length - 1].dataset.branchId !== "b9-deep-c020") return false; ` +
             `const status = document.getElementById("nav-tree-status").textContent ?? ""; ` +
             `return status.includes("visible rows"); })()`,
           { label: "saved selection + expansion restored in the UI after the restart", timeoutMs: 30_000 },

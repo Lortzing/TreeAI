@@ -1,0 +1,1598 @@
+
+> treeai@0.0.0 test
+> npm test --workspace @treeai/contracts && npm test --workspace @treeai/runtime-pi && npm test --workspace @treeai/persistence && npm test --workspace @treeai/tool-policy && npm test --workspace @treeai/event-journal && npm test --workspace @treeai/studio && node --test tests/unit/*.test.ts && node --test tests/integration/*.test.ts && node --test tests/live/*.test.ts && node --test scripts/d4/pdf/content.test.mjs && node --test scripts/d4/browser/scale-measurements.test.mjs && node --test scripts/d4/browser/scale-responsiveness.test.mjs && node --test apps/studio/tests/source-sha256.test.mjs && node --test apps/studio/tests/app-factory.test.mjs && node --test apps/studio/tests/shared-utils.test.mjs && node --test tests/unit/evidence-index.test.mjs && node --test tests/unit/computed-paths.test.mjs
+
+
+> @treeai/contracts@0.1.0 test
+> npm run typecheck && bash scripts/run-negative-type-tests.sh && bash scripts/check-no-pi-imports.sh
+
+
+> @treeai/contracts@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/brand-ids-not-interchangeable
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/error-code-not-in-enum
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/pinned-pi-version-drift
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/run-state-illegal-transition
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/run-state-illegal-via-helper
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/session-reference-missing-entry-id
+negative ok（已按预期拒绝）: /Users/tal/.codex/worktrees/7939/TreeAI/packages/contracts/tests/negatives/tool-decision-invalid-outcome
+negative type tests: 7/7 rejected as expected
+ok: no Pi imports in packages/contracts (src + tests)
+
+> @treeai/runtime-pi@0.0.0 test
+> npm run typecheck && node --test tests/unit/*.test.ts tests/real-port/*.test.ts
+
+
+> @treeai/runtime-pi@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ real Pi SDK offline battery in a sandboxed child process (998.897417ms)
+✔ unit test files never import the real Pi port (import graph isolation) (0.583667ms)
+✔ classifyPiFailure maps message patterns to the 8 closed codes (3.7305ms)
+✔ classification precedence: timeout > auth > model-unavailable > abort > upstream (0.215834ms)
+✔ TreeAIError instances pass through unchanged (identity) (0.259875ms)
+✔ policy marker wins over message classification (0.346375ms)
+✔ cause and fallback message handling (0.084291ms)
+✔ TreeAIRuntimeError redacts message and details at construction (0.200292ms)
+✔ TreeAIRuntimeError is a real Error subclass satisfying the contract shape (0.052791ms)
+✔ redactText rules: headers, cookies, bearer, sk-keys, credential fields, home (0.07275ms)
+✔ redactJsonValue recurses arrays and nested objects; setHomedirForTesting injects (0.09525ms)
+✔ POLICY_DENIED_MARKER uses a cross-realm symbol key (0.082333ms)
+✔ createSession in-memory: snapshot, event, no file (29.881ms)
+✔ createSession with sessionDir: file lazily flushed at first assistant message (Pi behavior) (9.238834ms)
+✔ createSession unknown model: TreeAIError model-unavailable + runtime.error event (52.542084ms)
+✔ createSession invalid inputs: TypeError (caller contract violations) (0.520583ms)
+✔ restoreSession after persisted prompts: same ids, entry advanced, prompt works (10.666458ms)
+✔ restoreSession failure taxonomy (14.490625ms)
+✔ restoreSession mid-tree reference: leaf repositioned via branch (9.944875ms)
+✔ restoreSession of never-prompted session: no file on disk (Pi lazy flush) -> missing-file (0.434459ms)
+✔ restoreSession pins the stored model across a completed-prompt session (8.361458ms)
+✔ restoreSession model not resolvable: model-unavailable with fallback marker (3.211042ms)
+✔ sessionDir directory is created if missing (file itself is lazily flushed) (0.485584ms)
+✔ navigateTree to assistant entry: same session/file, leaf moved, no new session (24.925209ms)
+✔ navigateTree to user entry: leaf moves to parent (Pi 0.85.1 semantics) (9.842625ms)
+✔ navigateTree to current leaf: no-op success (0.657125ms)
+✔ navigateTree preconditions: TypeError for bad input, in-flight run, missing session (8.707583ms)
+✔ prompt success: result message, advanced reference, normalized events (18.409083ms)
+✔ prompt sync throw: auth classification (401 unauthorized) (1.304458ms)
+✔ prompt sync throw: timeout classification (0.452375ms)
+✔ prompt sync throw: upstream classification (503) (0.384375ms)
+✔ prompt run failure (stopReason error + errorMessage): classified from state (3.912125ms)
+✔ prompt run failure with auth-shaped errorMessage: auth classification (2.912833ms)
+✔ prompt precondition violations: TypeError (thrown synchronously) (3.982542ms)
+✔ methods without session: TypeError; abort is a safe no-op (0.492625ms)
+✔ steer without in-flight run: TypeError (0.471667ms)
+✔ steer during in-flight run: same agent run, new turn, steer.enqueued event (136.512166ms)
+✔ abort during hanging run: abort resolves fast, prompt rejects user-abort, runtime non-streaming (10.768709ms)
+✔ double abort: idempotent, single run.abort-requested, no error (6.490583ms)
+✔ abort with no in-flight run: silent no-op (0.45225ms)
+✔ safety timer: prompt still settles user-abort when Pi abort never converges (61.215958ms)
+✔ dispose with in-flight run: prompt settles user-abort, dispose idempotent, events stop (1.850792ms)
+✔ dispose with idle runtime: clean resolve (0.55025ms)
+✔ multiple listeners, unsubscribe, no history replay (14.252125ms)
+✔ eventId format, seq strict monotonic, occurredAt ISO (8.353916ms)
+✔ session replacement: old subscription invalidated, new effective, seq continuous, in-flight settled (8.284042ms)
+✔ listener exceptions are isolated: other listeners and the runtime survive (7.796042ms)
+✔ subscribe preconditions: TypeError for non-function and after dispose (0.479459ms)
+✔ classifyPiToolCall maps Pi built-in tools; unknown tools fail closed (0.763417ms)
+✔ tool policy allow: tool executes and the decision surfaces with provenance (13.600292ms)
+✔ tool policy deny: request-time rejection, no execution, run fails policy-denied (25.0015ms)
+✔ tool policy require-approval is treated as denial (fail closed; no approval UI on this path) (7.595583ms)
+✔ mixed batch: allowed tool executes before the denied one fails the run (7.285167ms)
+✔ no tool policy configured: tools execute without decision events (existing behavior) (7.1385ms)
+✔ restored sessions get the tool gate installed too (18.960875ms)
+✔ port reporting a different Pi version fails the constructor explicitly (1.009167ms)
+✔ matching version constructs and reports piVersion = pinned (1.802875ms)
+✔ config without a real port object fails with TypeError (0.52425ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1119.132375
+
+> @treeai/persistence@0.0.0 test
+> npm run typecheck && node --test "tests/*.test.ts"
+
+
+> @treeai/persistence@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ backup and restore round-trip restores the snapshot state exactly (48.11125ms)
+✔ createBackup refuses to overwrite an existing target unless asked (22.013916ms)
+✔ restoreFromBackup can save the current database first (backupCurrentTo) (42.767208ms)
+✔ restore and validation fail clearly on bad backup files (13.475875ms)
+✔ restoreFromBackup is rejected for in-memory repositories (13.089125ms)
+✔ two repository handles on one file: second terminal update conflicts, no double terminal (58.087875ms)
+✔ parallel terminal updates from two worker threads produce exactly one terminal state (350.140209ms)
+✔ parallel restart sweeps converge all runs to failed exactly once (183.323375ms)
+✔ direct SQL mutation of a terminal run is blocked by the trigger (third defense layer) (60.005167ms)
+✔ fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state) (35.363708ms)
+✔ pre-0008 database upgrades: rows preserved, origin_kind backfilled (turn/none) (34.1245ms)
+✔ storeBlob is content-addressed and idempotent by hash (18.675333ms)
+✔ re-importing identical bytes reuses the version row; different bytes create a new version (20.077916ms)
+✔ insertVersion validates parse status, block coverage and failure reasons (11.491167ms)
+✔ material branch origin enforces the slice/excerpt/sourceHash discipline (15.425625ms)
+✔ old anchors stay readable after a new version is imported (immutable versions) (8.385625ms)
+✔ a branch cannot carry both a turn origin and a material origin; origin_kind stays consistent (14.280333ms)
+✔ material first questions are idempotent by (tree_id, intent_key) (9.70425ms)
+✔ tree material links: link, idempotent re-link preserves linked_at, unlink (9.939458ms)
+✔ reading positions upsert by (tree_id, material_id) with block discipline (9.116875ms)
+✔ parse-result transitions: pending→parsing→terminal; terminal rows structurally refuse late updates (late-result discard backstop) (10.959959ms)
+✔ migration applies to an empty file database (47.712042ms)
+✔ migration applies to an empty in-memory database (2.595916ms)
+✔ repeated migration execution is safe (idempotent) (14.802833ms)
+✔ corrupt file (not SQLite) fails with DatabaseCorruptError (1.98425ms)
+✔ foreign SQLite database (tables but no schema_migrations) is rejected (4.64875ms)
+✔ user_version set but schema_migrations missing is treated as corrupt (4.718709ms)
+✔ database from a newer TreeAI version fails with UnsupportedDatabaseVersionError (11.62ms)
+✔ failed migration rolls back atomically and reports version (8.151417ms)
+✔ migrations bring a fresh database to the current product schema (21.224ms)
+✔ an existing v1 database is upgraded in place to the current schema without data loss (13.614917ms)
+✔ turns round-trip and list in append order; roles are discriminated (11.582041ms)
+✔ tree-wide turns preserve branch order and per-branch append order (17.547667ms)
+✔ turn role invariants are rejected with InvalidArgumentError (14.439ms)
+✔ return turns persist provenance and delivery state (11.0575ms)
+✔ return turns persist idempotency key and target anchor; keyed returns are unique (18.060541ms)
+✔ migration 0004 upgrades a v3 database in place; legacy return rows keep NULL key/anchor (15.770584ms)
+✔ the same idempotency key is usable independently in two trees (signed v3 §3.4) (12.6665ms)
+✔ migrations 0005/0006 upgrade a v4 database in place; idempotency scope narrows to per-tree (17.321292ms)
+✔ return adoption attempts record per-run associations and survive reopen (signed v3 §3.2) (11.303291ms)
+✔ branch origins enforce anchor integrity (slice match, assistant role, entry id match) (10.113792ms)
+✔ product state survives repository reopen (fact-source persistence) (9.637333ms)
+✔ terminology annotations round-trip with anchor integrity, range dedup, at-most-one promotion binding, and kv state (9.001625ms)
+✔ terminology dispatch ledger (migration 0009): intent registration follows the promotion binding, one row per annotation, sent/settle state machine with attempt counting, and durable replay (11.196084ms)
+✔ getBranchRecovery returns the full context for a dual-branch tree (31.43625ms)
+✔ recovery info surfaces degraded session availability for the latest run (3.527458ms)
+✔ getTreeRecovery covers every branch of the tree (2.929083ms)
+✔ empty branch recovery has no episodes and null latest run (3.925959ms)
+✔ failNonTerminalRuns sweeps I6 recovery: non-terminal to failed, idempotent, terminals untouched (17.817833ms)
+✔ creates the full hierarchy and persists dual-branch relationship across reopen (36.092875ms)
+✔ branch parent validation: missing tree/parent, cross-tree parent, self-parent (2.550083ms)
+✔ tree/episode/run parent validation (2.646667ms)
+✔ duplicate entity ids are rejected as constraint violations without partial state (2.131791ms)
+✔ run creation with explicit duplicate id leaves no partial rows (5.659833ms)
+✔ session reference validation rejects empty reference fields (7.165375ms)
+✔ get/find semantics: EntityNotFoundError vs null (11.866208ms)
+✔ nav expand state: upsert, dedupe order-preserving, reopen persistence (restart semantics) (21.198125ms)
+✔ nav expand state: validation rejects unknown tree/branch, cross-tree ids, non-arrays and over-cap sets (21.1715ms)
+✔ every legal transition in the frozen table is accepted (19.594666ms)
+✔ illegal transitions are rejected (I5 no-skip, no-rollback; I7 exhaustive table) (2.443458ms)
+✔ terminal states are absorbing (I2) and singular (I3): same-connection double terminal rejected (1.455541ms)
+✔ failure is stored iff state is failed (5.086ms)
+✔ aborting converges to aborted (I4) and leaves no permanent aborting state (3.806125ms)
+✔ updateRunState on unknown run is EntityNotFoundError (1.327708ms)
+✔ creating a run never requires the Pi session file to exist (TreeAI DB is the fact source) (40.378417ms)
+✔ deleting the session file degrades availability but never deletes domain data (19.161375ms)
+✔ markSessionFileAvailability batches per file in both directions (13.363417ms)
+✔ refreshSessionAvailability uses the injected probe and never reads session content (17.559667ms)
+✔ updateRunSessionReference replaces the whole reference (entryId advance) (27.431875ms)
+✔ updateSessionAvailability validates the unavailable reason (12.68825ms)
+✔ mid-transaction failure rolls back every write in the transaction (13.123458ms)
+✔ nested savepoint: inner failure caught by caller rolls back only the inner scope (1.354375ms)
+✔ nested failure that propagates rolls back the outer transaction too (1.243375ms)
+✔ closed repository rejects operations and close is idempotent (1.461958ms)
+ℹ tests 74
+ℹ suites 0
+ℹ pass 74
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 915.755375
+
+> @treeai/tool-policy@0.0.0 test
+> npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/tool-policy@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ 审计记录与返回的 ToolDecision 字段一致 (3.386958ms)
+✔ targetPath 记录 canonical 形态 (0.635917ms)
+✔ 审计不含命令/主机原值与秘密形态 (0.338625ms)
+✔ 审计从不包含文件正文（引擎不读取目标内容） (0.58225ms)
+✔ reason 为固定模板，不含用户可控内容 (0.702125ms)
+✔ action 标签按安全模式净化 (0.789917ms)
+✔ 容量截断显式计数，保留最新记录 (0.864791ms)
+✔ 审计快照为只读副本（追加式纪律） (0.826875ms)
+✔ issue 固化 canonical 目标路径与显式有效期 (4.767417ms)
+✔ revoke 后授权立即失效，重复 revoke 返回 false (0.98175ms)
+✔ purgeExpired 清理过期授权并返回数量 (0.792709ms)
+✔ listActive 不含已消费的单次授权与过期授权 (1.002458ms)
+✔ 过期边界：now === expiresAt 即失效 (1.379292ms)
+✔ 授权生命周期写入审计（issued/consumed/revoked/purged） (1.236209ms)
+✔ absolute path with redundant separators and dot segments normalizes (0.370625ms)
+✔ root traversal clamps at filesystem root (0.06125ms)
+✔ relative path resolves against the provided cwd (0.298167ms)
+✔ relative path without cwd resolves against process.cwd() (0.248833ms)
+✔ non-existent suffix stays under the nearest existing ancestor (0.320708ms)
+✔ fully existing path resolves symlinks to the real location (0.882ms)
+✔ symlink escape resolves outside the linking directory (0.814625ms)
+✔ dot-dot after a symlink follows OS semantics, not lexical collapse (0.580333ms)
+✔ dangling symlink as final target is unresolvable (null) (0.425416ms)
+✔ dangling symlink as intermediate component is unresolvable (null) (0.422666ms)
+✔ path under a file component stays under it lexically (OS would fail) (1.0525ms)
+✔ empty input returns null (fail closed) (0.0485ms)
+✔ 大小写语义：已存在组件收敛到盘上真实大小写，不存在后缀保留输入大小写 (0.5875ms)
+✔ 不存在后缀中的 `..` 不可解析（fail closed） (0.695ms)
+✔ isPathWithin: containment boundaries (0.041167ms)
+✔ 默认配置下全部类别拒绝（DEFAULT_TOOL_POLICY_CONFIG） (3.419625ms)
+✔ readRoots 为空时 fixtures 式目录也拒绝（目录必须由调用方显式传入） (0.498375ms)
+✔ fixtures 目录内读取允许 (1.063375ms)
+✔ readRoot 内尚不存在的目标路径也可评估（规范化到最近存在祖先） (0.572166ms)
+✔ 授权目录之外的读取拒绝 (0.963917ms)
+✔ `..` 穿越出 read root 拒绝 (1.088959ms)
+✔ 符号链接逃逸拒绝（链接位于 read root 内、真实位置在外） (1.046083ms)
+✔ read 请求缺失目标路径拒绝（fail closed） (0.701333ms)
+✔ read 目标不可规范化（悬空符号链接）拒绝 (1.159375ms)
+✔ shell 默认拒绝 (0.580084ms)
+✔ network 默认拒绝 (0.414042ms)
+✔ 显式配置 allowShell 后 shell 才允许（risk 仍为 high） (0.049ms)
+✔ 显式配置 allowNetwork 后 network 才允许 (0.044291ms)
+✔ workspace 外写入拒绝 (0.662875ms)
+✔ workspace 内未授权写入返回 require-approval（不是 allow） (0.574292ms)
+✔ workspace 内不存在的新路径（嵌套目录）同样 require-approval (0.884792ms)
+✔ write 目标不可规范化拒绝 (0.7245ms)
+✔ 单次授权：产生一次 allow 后即消费，不可复用 (1.412458ms)
+✔ 限时多次授权：有效期内可复用，过期后失效 (0.89675ms)
+✔ 授权路径精确匹配：授权 A 路径不覆盖 B 路径 (0.860375ms)
+✔ 授权类别精确匹配：write 授权不覆盖 other-high-risk (0.737667ms)
+✔ 授权匹配规范化路径：等价路径形式命中同一授权 (0.809709ms)
+✔ 授权签发校验：不可授权类别 / 越界目标 / 非法有效期 / 不可解析路径 (0.943125ms)
+✔ other-high-risk：无路径拒绝、越界拒绝、workspace 内需授权、授权后允许 (1.22425ms)
+✔ 相对 targetPath 按配置 cwd 解析 (0.914708ms)
+✔ 大小写差异：已存在组件按平台语义收敛，不存在后缀精确匹配（fail closed） (1.155792ms)
+✔ 风险级别映射：read=low，其余=high (0.072208ms)
+✔ 配置结构非法抛 TypeError（编程错误，不产出决定） (0.303291ms)
+✔ 请求类别不在封闭枚举内抛 TypeError (0.328833ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.51325
+
+> @treeai/event-journal@0.0.0 test
+> npm run typecheck && npm run build:test && node --test 'dist/tests/*.test.js'
+
+
+> @treeai/event-journal@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+✔ seq strictly increasing within a run is accepted (1,2,3 and gaps) (0.736125ms)
+✔ duplicate seq in the same run is detected and rejected (0.118792ms)
+✔ seq below the current max is rejected (strict monotonicity) (0.098958ms)
+✔ same seq across different runs is fine (seq scope is per run) (0.086583ms)
+✔ duplicate eventId is detected and rejected (0.093542ms)
+✔ appendNext auto-allocates strictly increasing seq and fresh ids (1.488708ms)
+✔ invalid event shapes are rejected with precise reasons (0.307ms)
+✔ journal deep-redacts payloads and evidence locators before persisting (1.3885ms)
+✔ JSONL file on disk never contains secrets after append (6.678291ms)
+✔ query API filters by runId, type, types, afterSeq and limit (0.331542ms)
+✔ reopen reloads events and keeps rejecting duplicates across restarts (2.203792ms)
+✔ torn tail (crash-partial line, no trailing newline) is repaired at open (1.383166ms)
+✔ corruption in the middle of the file fails loudly (corrupt reason) (1.532416ms)
+✔ file-level duplicate seq across restart is treated as corruption (1.013917ms)
+✔ append and recovery after close throw; queries remain available (0.331375ms)
+✔ concurrent appends are serialized and all seq land strictly increasing (0.234458ms)
+✔ every legal edge of the frozen transition table applies via run.state-changed (0.733667ms)
+✔ every illegal edge is rejected with the right anomaly kind (0.259208ms)
+✔ illegal regression examples: running->queued and queued->succeeded (0.060333ms)
+✔ terminal self-confirmation is tolerated as an idempotent no-op (0.836041ms)
+✔ explicit failed transition records the failure from payload (0.093709ms)
+✔ explicit failed transition without failure payload defaults to unknown (0.042375ms)
+✔ out-of-sync explicit transition is rejected with the current state preserved (0.048333ms)
+✔ agent.started derives queued->running; repeats are idempotent (0.04275ms)
+✔ run.abort-requested derives running->aborting; from queued it is illegal (0.053292ms)
+✔ runtime.error with user-abort code from running converges via two steps to aborted (0.375333ms)
+✔ runtime.error with a non-abort code converges to failed with the failure recorded (0.067833ms)
+✔ runtime.error from queued converges directly to failed (queued->failed is legal) (0.037458ms)
+✔ runtime.error user-abort from queued has no legal path (illegal-convergence) (0.02975ms)
+✔ agent.settled statuses converge from running (succeeded / failed / aborted via two steps) (0.057125ms)
+✔ agent.settled aborted from aborting converges directly (0.032292ms)
+✔ agent.settled without status derives from state: running->succeeded, aborting->aborted (0.029292ms)
+✔ agent.settled after a terminal state is informational (no status) or a double-terminal (with status) (0.031375ms)
+✔ runtime.recovered converges to resolvedTo with the recovered failure (0.053541ms)
+✔ malformed state-bearing payloads yield invalid-payload anomalies (0.060625ms)
+✔ unknown event types (pi.unknown, message.*, custom) never affect state and never throw (0.062041ms)
+✔ events are processed in seq order regardless of input order (0.023625ms)
+✔ empty stream yields the zero-event queued projection (0.025209ms)
+✔ isLegalRunStateTransition agrees with the expected edge table (0.073ms)
+✔ piRuntimeEventKindToType maps known kinds, renames steer, and routes unknowns (0.415417ms)
+✔ recordPiRuntimeEvent: known kind maps 1:1 with pi-runtime evidence and caller timestamp (1.087583ms)
+✔ recordPiRuntimeEvent: steer.enqueued becomes run.steer-enqueued (0.145875ms)
+✔ recordPiRuntimeEvent: unknown kind is preserved as pi.unknown with rawKind, no throw (0.10475ms)
+✔ recordPiRuntimeEvent: non-record payloads are wrapped as { value } (0.091875ms)
+✔ recordPiRuntimeEvent: secrets in an unredacted payload are caught by the journal safety net (0.130791ms)
+✔ recording the same PiRuntimeEvent twice is rejected as duplicate-event-id (0.126417ms)
+✔ recordError persists code/message/details but never the cause (1.390625ms)
+✔ session lifecycle records carry the reference and the previous snapshot (1.028834ms)
+✔ tree navigation records the entry pointer move (0.761ms)
+✔ recordDuration emits duration.recorded with phase/timing/attributes (0.248167ms)
+✔ recorder allocates strictly increasing seq across all record methods (0.419542ms)
+✔ buildRunAudit aggregates errors, durations, session changes and navigations (0.410583ms)
+✔ buildRunAudit on an empty stream yields a queued projection and empty records (0.044792ms)
+✔ resolveRecoveryConvergence implements the host-crash / host-dispose table (0.655334ms)
+✔ host-crash converges a running run to failed(unknown) with hostInterrupted details (1.236125ms)
+✔ host-dispose converges running via aborting to aborted(user-abort) (0.845542ms)
+✔ host-dispose converges aborting directly to aborted (0.157833ms)
+✔ queued runs at dispose converge to failed(unknown, neverStarted) (0.132708ms)
+✔ recovery is idempotent: a second call finds the run already terminal (0.151125ms)
+✔ already-terminal runs are reported and left untouched (0.1035ms)
+✔ runIds filter scopes recovery; unknown ids are reported (0.225417ms)
+✔ mixed journal recovers every non-terminal run (0.192542ms)
+✔ file journal: crash -> reopen -> recover -> reopen keeps converged state (8.976917ms)
+✔ secret corpus: every synthetic secret is redacted and re-scan finds nothing (3.199458ms)
+✔ string redaction: cookie names survive, values never do (0.08425ms)
+✔ redactStringWithCategories reports category names, not contents (0.131584ms)
+✔ clean corpus: deepRedact returns an equal structure (no over-redaction of required fields) (0.713541ms)
+✔ clean corpus: scalar and array passthrough (0.066542ms)
+✔ deep nesting beyond the limit yields a depth marker without throwing (0.078333ms)
+✔ circular references are marked, not followed forever (0.061459ms)
+✔ unserializable values are replaced by typed markers (0.062375ms)
+✔ input is never mutated (1.028791ms)
+✔ findRemainingSecrets flags unredacted values (negative control) (0.175041ms)
+ℹ tests 73
+ℹ suites 0
+ℹ pass 73
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65.49675
+
+> @treeai/studio@0.0.0 test
+> npm run build:deps && npm run typecheck && node --test tests/*.test.ts
+
+
+> @treeai/studio@0.0.0 build:deps
+> npm run --workspace @treeai/event-journal build:test
+
+
+> @treeai/event-journal@0.0.0 build:test
+> tsc -p tsconfig.build.json
+
+
+> @treeai/studio@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+✔ API profiles support API formats and multiple independent providers/models (1.52375ms)
+✔ API configuration rejects inline credentials, OAuth and unknown fields without echoing values (0.511417ms)
+✔ API URLs reject credentials, remote plaintext, queries and non-HTTP protocols (1.669709ms)
+✔ API model limits, duplicate IDs, input modalities and header references are validated (0.305958ms)
+✔ preparation stores only environment references, validates selection and missing secrets before writing (55.124709ms)
+✔ CLI API profiles require a server Pi driver and own a controlled directory (0.326333ms)
+✔ API settings UI loads on demand, preserves edited values across model switching and sends guarded test/save requests (8.092084ms)
+✔ API settings UI explains invalid JSON and stale saves without rendering untrusted server error text (3.53425ms)
+✔ API settings UI aborts an in-flight test on close and removes listeners on disposal (1.459917ms)
+✔ API key input is sent only to the guarded credential endpoint and cleared before the request completes (1.819958ms)
+✔ model ID can be edited directly and the selected identity is saved without editing JSON (1.407834ms)
+✔ settings save is atomic, detects stale edits, and activates only on a later startup (5.761042ms)
+✔ connection testing is isolated, prevents concurrent probes, and never saves a draft (6.236542ms)
+✔ an explicitly offline recovery can manage corrupt saved settings without exposing or overwriting their contents (3.329167ms)
+✖ HTTP settings reject cross-origin, rebinding hosts and unguarded writes; responses contain no secret values (4.319708ms)
+✔ system credentials are separate from settings, resolve in memory, and can be removed without changing environment values (2.229792ms)
+✖ credential HTTP writes keep origin and CSRF guards and sanitize native failures (2.596ms)
+✖ actual Pi SDK streams anthropic-messages and uses the configured model/header (19.359125ms)
+✖ actual Pi SDK streams openai-completions and uses the configured model/header (3.525458ms)
+✖ actual Pi SDK streams openai-responses and uses the configured model/header (0.450166ms)
+✖ actual Pi SDK streams google-generative-ai and uses the configured model/header (1.095208ms)
+✖ stored multi-provider keys and custom headers reach the real SDK only in memory (2.702917ms)
+✖ HTTP API serves the UI and the full D3 flow, surviving a restart (22.667833ms)
+✖ return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5) (20.073667ms)
+✖ new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text (17.169459ms)
+✖ HTTP layer rejects malformed bodies and unknown routes predictably (16.485ms)
+✖ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (13.060042ms)
+✖ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (12.046792ms)
+✖ response-loss resubmit and double-click converge to exactly one return (20.940459ms)
+✔ b9 dataset: two generations are byte-identical (determinism) with equal manifest hashes (230.547333ms)
+✔ b9 dataset: structure-truth invariants all hold (totals, six special-tree rules, origin discipline) (34.311625ms)
+✔ b9 dataset: loads into a real persistence database with row counts matching the structure truth (4954.113542ms)
+✔ b9 engine probes: all frozen probes pass 100% against the structure truth (locate/origins/pagination/deep/samename/search/empty/shape/tree-list/p95) (424.570292ms)
+✔ b9 engine: cross-tree locate spot-checks (switch trees by branch id alone) (93.921417ms)
+✔ b9 cleanup: close repositories and remove the temp data dir (9.797791ms)
+✔ shared factories preserve constructor and SSE registry isolation (0.431ms)
+✔ material ranges retain cross-node offsets and fresh text after edits (0.223458ms)
+✔ text ranges reject another node while preserving reversed endpoint slices (0.201209ms)
+✔ storage and response stubs retain separate stores and payload identity (0.140916ms)
+✔ echo defaults are unchanged (offline driver, no agent dir) (0.58875ms)
+✔ echo keeps explicit provider/model overrides and never gets an agent dir (0.073708ms)
+✔ --agent-dir is rejected for the echo driver (0.169583ms)
+✔ --driver pi fails clearly without provider/model (error names the env var too) (0.075833ms)
+✔ empty --provider value still fails the pi boundary check (0.049958ms)
+✔ --driver pi defaults the agent dir to the data-dir-local controlled directory (0.051917ms)
+✔ --driver pi accepts an explicit absolute agent dir (0.059ms)
+✔ --driver pi resolves a relative agent dir against the process cwd (0.053583ms)
+✔ --agent-dir before --driver pi in argv still parses (flag order independent) (0.06075ms)
+✔ empty or whitespace-only --agent-dir value is a usage error (0.09725ms)
+✔ unknown flags and missing values keep failing with the usage error (0.07675ms)
+✔ readPiApiKey fails with a boundary error naming only the env var when missing (0.060875ms)
+✔ readPiApiKey treats whitespace-only values as missing (0.053125ms)
+✔ readPiApiKey returns the trimmed injected env value (sentinel fixture) (0.027709ms)
+✔ resolvePiDriverWiring hands the runtime factory exactly the controlled dir + in-memory credentials (0.351875ms)
+✔ resolvePiDriverWiring fails for non-pi options (0.05175ms)
+✔ no tool flags keeps the defaults at zero tools and no policy roots (echo and pi alike) (0.038917ms)
+✔ --pi-tools is rejected for the echo driver (0.046959ms)
+✔ --pi-tools must list at least one tool (empty or whitespace-only lists are usage errors) (0.045208ms)
+✔ --pi-tools parses a trimmed comma-separated allowlist (order preserved) (0.040834ms)
+✔ --policy-read-roots without --pi-tools is a usage error (echo and pi alike) (0.046958ms)
+✔ --policy-read-roots must list at least one directory when given (0.060625ms)
+✔ --policy-read-roots entries must be absolute (relative entries are boundary errors) (0.070042ms)
+✔ --pi-tools with explicit absolute read roots parses the trimmed list (0.044333ms)
+✔ resolvePiToolWiring is null without --pi-tools (echo and pi alike) (0.05175ms)
+✔ resolvePiToolWiring defaults the read roots to the workspace and marks the default (0.051208ms)
+✔ resolvePiToolWiring keeps explicit read roots and does not mark them defaulted (0.039875ms)
+✔ resolvePiToolWiring probes every effective root and fails closed on a missing directory (0.055917ms)
+✔ the wired policy engine allows in-root reads and denies out-of-root reads, writes, and shell (41.425625ms)
+✔ D4-5: 'export' subcommand parses --out/--include-sessions/--readable and lands in export mode (0.2465ms)
+✔ D4-5: '--import-package DIR' parses into import mode and stays exclusive with 'export' (1.43625ms)
+✔ D4-5: export/import mode-confused and missing-value argvs fail with clear errors (0.407084ms)
+✔ macOS store namespaces records by resolved data directory and uses fixed security commands (11.553625ms)
+✔ set passes safely escaped credentials only through bounded stdin (0.4595ms)
+✔ names and secret values are validated before invoking the runner (1.054667ms)
+✔ missing records return null while failures are generic and sanitized (0.626083ms)
+✔ runner exceptions are sanitized (0.373959ms)
+✔ unsupported platforms fail honestly and resolver does not query the store (0.3445ms)
+✔ environment values win, only declared names are queried, and input is unchanged (0.394333ms)
+✔ interactive success is verified and a silently rejected write cannot be reported as saved (0.208166ms)
+✔ empty environment values fall back to the store without mutating the environment (0.401917ms)
+✔ credential presence checks use metadata without retrieving the password (0.346334ms)
+✖ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (28.513958ms)
+✖ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (15.4635ms)
+✖ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (19.306208ms)
+✖ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (11.841917ms)
+✖ process restart: journal and diagnostics converge consistently (host-crash semantics) (22.3165ms)
+✖ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (10.057833ms)
+✖ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (16.92225ms)
+✔ tool-activity events project tool name and phase only (scripted runtime) (18.786ms)
+✔ session availability derivation: live probe refines the cached assessment honestly (24.235208ms)
+✔ policy request-time gate: denial surfaces provenance, fails the run, and reports honestly (31.630583ms)
+✔ SSE emits the owning tree only, snapshot before events, and disconnects once (1.240917ms)
+✔ ESM and CSS static allowlist serves correct content type (70.251042ms)
+✔ unknown static paths and traversal attempts are rejected, not read from disk (0.798667ms)
+✔ frozen identity constants: parserKind markdown / parserVersion d4-md-v1 (25.819792ms)
+✔ Chinese prose: paragraphs split into blocks, same-block line breaks preserved (2.254417ms)
+✔ English prose: multi-block with same-block continuation lines and a cross-line excerpt (0.461375ms)
+✔ fenced code block with several lines and no blank line stays ONE block (0.366958ms)
+✔ fenced code block between prose: only blank lines split blocks (0.283666ms)
+✔ fenced code block containing a blank line SPLITS into blocks (no fence awareness) (1.00575ms)
+✔ CRLF line endings canonicalize to single LF (never doubled) (3.564834ms)
+✔ lone CR and mixed CRLF/CR/LF endings canonicalize to LF (0.323334ms)
+✔ emoji incl. astral-plane characters: UTF-16 offsets count surrogate pairs as 2 units (0.914ms)
+✔ combining characters kept verbatim: no NFC normalization anywhere (0.806791ms)
+✔ repeated distinctive words: both occurrences resolved to stable offsets and blocks (0.111375ms)
+✔ links and inline code kept verbatim (0.222375ms)
+✔ single-block document with and without a trailing newline (0.203167ms)
+✔ document without trailing newline: final block keeps no forced terminator (0.173792ms)
+✔ leading and trailing blank lines are dropped entirely (0.164208ms)
+✔ whitespace-only separator lines contribute only their newline (blank-line whitespace dropped) (0.173667ms)
+✔ multi-blank-line runs keep every newline (N blanks yield N+1 newlines) (0.18725ms)
+✔ content lines keep leading/trailing spaces and tabs verbatim (0.062083ms)
+✔ realistic mixed document: zh prose + fenced code + links + emoji, exact block map (0.07075ms)
+✔ rejection: empty (0 bytes) (0.074625ms)
+✔ rejection: invalid-utf8 (truncated / bad continuation / overlong / surrogate) (0.089375ms)
+✔ rejection: nul-byte (embedded U+0000, incl. precedence over whitespace-only) (0.04925ms)
+✔ rejection: whitespace-only (no meaningful content) (0.042583ms)
+✔ rejection precedence: decode failure precedes NUL detection (0.02825ms)
+✔ leading BOM is stripped by the strict decoder; content parses normally (0.043042ms)
+✖ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (29.194333ms)
+✖ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (11.673708ms)
+✖ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (11.989625ms)
+✖ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (12.088084ms)
+✖ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (11.156167ms)
+✖ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (18.444042ms)
+✖ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (16.172334ms)
+✖ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (32.490084ms)
+✖ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (10.390417ms)
+✖ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (10.90825ms)
+✔ material branching: creation lands branch/origin/binding with zero runs/turns; the context view is deterministic and byte-identical at dispatch time (charter §3.3 rule 1/3, ADR-004 §4) (81.043125ms)
+✔ material branching: a text-layer PDF selection branches through the real d4-pdf-v1 pipeline with page-bearing blocks (B1 pdf-01) (109.639791ms)
+✔ material context bounds: a large material truncates the window honestly; an oversized selection is refused with zero dispatch (ADR-003 §4 / ADR-004 §7) (163.364709ms)
+✔ material first question: independent session, audited versionId prefix, composed context enters the model input; replay and post-restart replay are deterministic (ADR-004 §2/§4/§5) (75.118042ms)
+✔ material first question reconciliation: a non-terminal run blocks re-dispatch (unknown, no blind send); an explicit failure allows the retry (ADR-004 §5 rules 3/4) (87.09225ms)
+✔ restore-or-open: same source restores the existing branch, explicit new opens a second one; look-alike selections in other materials/versions are never reused; cross-tree isolation holds (charter §3.3 rule 5/6) (465.950333ms)
+✔ material return: lands on the owning tree's trunk with targetAnchor null, a full material source card, idempotent replay, and adoption attempts recorded after the trunk prompt (charter §3.3 rule 7, ADR-004 §8) (116.437875ms)
+✔ missing session: normal continuation fails closed; explicit new material exploration succeeds with the material context carried; an available session refuses the new exploration (W1 §3.4 + ADR-004 §3c) (139.607791ms)
+✔ non-ready versions refuse branching with the honest reason (charter §3.2 — never disguise unsupported as an empty success) (87.188333ms)
+✖ material branching HTTP API: from-material create/replay/conflict/restore/new + first-question + return + new-exploration + 503 unwired (D4-contracts §3 D4-3 rows) (14.373084ms)
+✖ material branching HTTP API: unwired materials → 503 material-branching-not-wired for every D4-3 route (8.796ms)
+✔ valid categories resolve exactly: repeat-word-2nd (overlapping occurrences), cross-line, unicode, long-tail, utf16-range (17.383625ms)
+✔ invalid categories are rejected with the correct frozen reason code (2.469542ms)
+✔ stale-version: same range, changed text → stale for the new version; the old version stays readable and the anchor is not migrated (1.717ms)
+✔ reference errors: unknown version 404s; a version of another material is an input error (5.137125ms)
+✔ grapheme cache is content-addressed: identical canonical texts in different versions never cross-contaminate (4.269458ms)
+✖ reading position GET: empty state, PUT round-trip, upsert replaces, 404/405/503 surfaces (14.618208ms)
+✖ reading positions stay isolated per tree and per material; exploration never clobbers reading (charter §3.2) (11.779708ms)
+✖ resolve-selection over HTTP: 200 exact canonical selection for both locator kinds; sourceHash equals canonicalText SHA-256 (21.768917ms)
+✖ resolve-selection rejection surface: 400 with the frozen reason codes, 409 not-ready, 404/400/405/503 (15.821458ms)
+✔ markdown import: async pending→parsing→ready with chunked reads paginating blocks (92.280541ms)
+✔ version semantics: tree-scoped same-bytes reuse; new bytes append a version; old versions stay readable (156.182125ms)
+✔ limits: frozen defaults; small injected limits reject before parsing with zero persistence (29.546875ms)
+✔ pdf import (default wiring): pdf-01 reaches ready with page blocks matching the frozen truth; chunked pagination (271.597708ms)
+✔ pdf negative: the corrupt fixture fails the version with the frozen reason; reads are material-not-ready (116.690208ms)
+✔ pdf pages limit: an injected maxPages rejects pdf-08 (10 pages) with pages-exceeded before extracting (79.808792ms)
+✔ custom registry omitting the pdf kind: .pdf import is honestly rejected as not wired, zero persistence (18.923333ms)
+✔ canonical text over the limit: version fails with text-units-exceeded; the oversized text is never stored (94.402167ms)
+✔ parse cancellation with a gated fake parser: canceled stays canceled; the late result is discarded, never attached (27.605458ms)
+✔ host interruption recovery: a version left parsing converges to failed (parse-interrupted) on the next construction (24.395458ms)
+✔ honest rejections before any persistence: unknown extension, empty input, unknown tree (22.620708ms)
+✖ nav api: trees listing is paginated scalar summaries with no full-tree payloads (3808.478875ms)
+✖ nav api: tree overview carries the structure-truth shape of the special trees (1833.929667ms)
+✖ nav api: children pagination pages b9-wide's 220 root children in truth order (1779.094416ms)
+✖ nav api: lazy endpoints enforce bounded limits and reject malformed cursors/params (1741.15675ms)
+✖ nav api: b9-big full tree only ever arrives page-bounded (5000 nodes via subtree pagination, <1MiB pages) (1750.024416ms)
+✖ nav api: deep chain /path returns the complete 100-level chain (1738.504916ms)
+✖ nav api: locate switches trees by branch id alone with ancestors and origin (1791.571333ms)
+✖ nav api: same-name search disambiguates by full path and paginates in the full-order (1714.910875ms)
+✖ nav api: tree search paginates the deterministic order (ids and titles) (1755.543ms)
+✖ nav api: empty tree stays honestly usable (1725.979417ms)
+✖ nav api: expand-state round trip, validation, and survival across a simulated restart (1681.327709ms)
+✖ nav api: product tree ≠ run/session trees — session availability sweep leaves nav byte-identical (1726.85ms)
+✖ nav api: 503 when nav is not wired (4.490458ms)
+✔ nav api cleanup: close the shared instance and remove its data dir (0.065708ms)
+✔ children pagination: page through 300 children at multiple page sizes without duplicates or gaps (234.925416ms)
+✔ children pagination: parameter validation and cursor discipline (16.575ms)
+✔ index invalidation: new branch invisible until invalidate, visible after (13.765917ms)
+✔ subtree expansion: depth limits, node limit truncation and cursor continuation (22.194959ms)
+✔ locate: cross-tree identity, ancestors, sibling position, turn and material origins (27.723042ms)
+✔ branch search: exact/prefix/substring, case folding, matchedOn, tree scope, honest zero (17.44175ms)
+✔ search pagination: deterministic pages without duplicates or gaps; cursor discipline (19.29375ms)
+✔ same-name disambiguation: identical titles under different parents carry distinct full paths (19.503708ms)
+✔ empty tree: honest empty pages, single-node expansion, null title overview (7.169625ms)
+✔ deep chain: 12000-level parent path and locate computed iteratively (no stack overflow) (2756.76075ms)
+✔ tree list: paginated across forests without duplicates or gaps (16.330167ms)
+✔ frozen identity constants: parserKind pdf / parserVersion d4-pdf-v1 / limits (0.898875ms)
+✔ all registry ready fixtures extract to their frozen truth byte-exactly (12 PDF) (67.039209ms)
+✔ all registry negatives reject with their frozen reason (encrypted/corrupt/no-text-layer) (4.145541ms)
+✔ determinism: the same bytes parse to deep-equal results (4.349708ms)
+✔ pages limit: pdf-08 (10 pages) is rejected before content interpretation under a tighter limit (37.345084ms)
+✔ content operators beyond the fixture writer: TJ array, T-star, quote forms, TD, Tm (7.248709ms)
+✔ FlateDecode-compressed content stream round-trips (fixture content streams are uncompressed) (1.553666ms)
+✔ literal string octal escapes and WinAnsi high bytes decode exactly (0.390041ms)
+✔ pinned reading order: left band completes before the right band; same-y ties break by x (0.557667ms)
+✔ page blocks: non-final pages end with a newline; empty pages are skipped with true page numbers kept (0.5155ms)
+✔ rejection: corrupt — not a PDF / truncated / Length mismatch / misplaced startxref (0.828917ms)
+✔ rejection: unsupported — xref stream, DCTDecode, non-WinAnsi Type1, Type0 without ToUnicode (1.128917ms)
+✔ rejection: unsupported — a CID absent from the ToUnicode map refuses to guess text (0.382ms)
+✔ Identity-H mapping: bfchar and bfrange both decode; surrogate pairs carry through (0.592917ms)
+✔ bfrange array values map code-by-code (an array is never misread as a sequential range) (0.739833ms)
+✔ inline images (BI/ID/EI) are skipped whole; text before and after survives intact (0.751292ms)
+✔ lazy fonts: only a font actually used to show text can fail the page (1.384125ms)
+✔ rejection: encrypted — a trailer carrying /Encrypt is refused without any decryption attempt (0.224667ms)
+✔ rejection: no-text-layer — image-only content (no text operators) is never an empty ready document (0.246708ms)
+✔ export default: versioned package with frozen facts set, content-addressed blobs and per-entry checksums; sessions/credentials/logs excluded (214.0265ms)
+✔ export is byte-deterministic for the same database under an injected clock (209.130708ms)
+✔ export --include-sessions: explicit opt-in copies referenced session files, marks the package sensitive and reports missing files honestly (438.213916ms)
+✔ export --include-sessions refuses colliding session basenames instead of silently overwriting either file (183.6525ms)
+✔ export --readable renders human-readable markdown alongside the data package (173.538125ms)
+✔ export --readable refuses database ids that would escape the package (write-side path traversal guard) (202.349917ms)
+✔ export guards: refuses a non-empty --out directory and a missing database (198.29025ms)
+✔ restore into an empty data directory rebuilds every fact table and blob byte-identically; saved excerpts survive (229.287917ms)
+✔ restore into an existing-but-empty directory works; carried sessions are placed, their references rewritten, missing references kept verbatim (276.718583ms)
+✔ a corrupted package is rejected before anything is placed: checksum mismatch, empty target stays empty, source untouched, no staging residue (232.495792ms)
+✔ restore refuses a non-empty target and leaves the existing files byte-identical (179.524667ms)
+✔ restore rejects path traversal, symlinks, unexpected files, missing entries and oversized declarations (277.930541ms)
+✔ restore rejects adversarial packages whose checksums were re-minted: schema lies, shape drift, dangling foreign keys, duplicate keys, unknown tables, marker mismatches (330.23375ms)
+✔ restore of a sessions package refuses when a session file was dropped after export (checksum honesty) (148.893708ms)
+✖ scoped search returns contract-shaped material hits positioned in the canonical text (29.303ms)
+✖ annotation hits omit the material-only fields; absent queries return an honest empty list (17.297417ms)
+✖ /api/search spans all trees; a scoped search never leaks another tree's facts (17.447792ms)
+✖ kinds filter passes through to the engine (15.758958ms)
+✖ rejections: blank/wrong-type text, malformed kinds, bad JSON → 400 (9.874291ms)
+✖ unknown tree → 404; non-POST methods → 405; unwired search → 503 (14.67025ms)
+✔ B4 corpus shape: 3 trees, 35 saved-fact documents (12 material / 11 annotation / 6 return / 6 turn) (10.174917ms)
+✔ B4 frozen positives (55): every pre-specified target lands in the engine's top-5 (51.836042ms)
+✔ B4 frozen no-result queries (12): zero hits, nothing fabricated (11.654208ms)
+✔ B4 sample: current-tree vs all-trees scoping changes the hit set exactly (9.435208ms)
+✔ B4 material hits are precisely positioned in the frozen canonical text (11.144792ms)
+✔ zh matching is substring-based: a query inside a longer sentence still hits (0.128875ms)
+✔ en matching is whole-word: 'tree' must not match 'street' or 'trees' (0.119209ms)
+✔ scoping: treeId restricts to one tree; kinds filter restricts source types (0.275292ms)
+✔ old-version labeling: v1-only sentences hit with oldVersion=true; current v2 ranks first on shared text (3.84525ms)
+✔ empty and punctuation-only queries return zero hits honestly (8.458791ms)
+✔ determinism: rebuild, serialize/restore round-trip, and reversed input order all yield identical results (88.787208ms)
+✔ ranking: phrase tier beats kind; kind order annotation<return<turn<material; then matchCount, recency, refId (2.149292ms)
+✔ mixed zh/latin query: contiguous phrase ranks above scattered segment hits, both are returned (2.829666ms)
+✔ invalid documents and query options fail fast with SearchEngineError (8.5365ms)
+✔ repeated CJK grams and Latin words keep original hit offsets and match counts (0.885708ms)
+✔ material versions enter the index per version: chain-derived oldVersion/labels, positioned hits, current version ranks first on shared text (183.468416ms)
+✔ non-ready versions are honestly absent from the index; a failed chain tail still marks the last ready version old (157.026917ms)
+✔ annotations are indexed as explanation+term bodies; explanation-only phrases are findable and annotations outrank turns (24.581375ms)
+✔ returns and turns are indexed (return turns are not double-indexed as turns); display titles follow the frozen convention (19.574333ms)
+✔ tree snapshot preserves branch-order turn documents with batched repository reads (18.911292ms)
+✔ per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only (32.9295ms)
+✔ scoping: a tree snapshot never leaks other trees; unknown trees throw; materials linked to several trees yield one document per tree (75.882875ms)
+✔ kinds filter and limit pass through to the engine (98.848375ms)
+✔ buildSearchDocuments is pure: identical snapshots assemble identically, empty bodies are skipped, note concatenation order holds, unknown trees fail fast (0.377209ms)
+✔ full D3 vertical slice: trunk → anchored branch → continue → navigate back → return → reload (137.919125ms)
+✔ composePromptText prefixes pending returns deterministically (0.2295ms)
+✔ branch anchoring is validated (answer role, slice integrity, bounds) (29.050875ms)
+✔ return and prompt validation errors (36.2335ms)
+✔ startup recovery converges interrupted runs to failed (I6 host-interrupt semantics) (17.365875ms)
+✔ diagnostics read model: safe projection only (no session refs, details, causes, paths) (27.427166ms)
+✔ abort: only the active run of the tree is abortable; user-abort converges to aborted, not failed (295.135958ms)
+✔ concurrent prompt is rejected as a conflict and leaves no phantom run (99.031833ms)
+✔ anchor status preserves duplicate and cross-line selections; session unavailability stays a separate dimension (v3 §1.2) (29.666834ms)
+✔ changed anchor (DB-constructed): originStatus reports changed, the excerpt stays readable, reveal refuses without fallback, nothing is silently repaired (W1 §6-3) (53.882959ms)
+✔ return idempotency: same key+content replays the same turn; different content conflicts (41.049ms)
+✔ return idempotency is scoped per tree: the same key lands independently in two trees (signed v3 §3.4) (46.178666ms)
+✔ concurrent same-key submits converge to one return (race-safe, no dangling episode) (79.674125ms)
+✔ missing session: submit saves the return first, navigation fails separately; same-key retries replay without duplicates (signed v3 §3.5) (53.095375ms)
+✔ source reveal is decoupled from session availability (v3 §1.2, issue #7 P0-1): a deleted session still locates the database original; cursor alignment fails separately (32.993375ms)
+✔ whole-tree session loss: explicit new exploration creates a new session, carries the saved content into the first prompt, and leaves the old history readable (v3 §4.4, issue #7 P0-2) (51.119333ms)
+✔ new exploration preconditions (v3 §4.4): available session and never-prompted trunks are refused as conflicts; an anchored branch with a lost anchor session explores from the excerpt alone (41.414333ms)
+✔ empty-trunk return: submit persists directly without a session; the first trunk prompt creates the session and delivers it exactly once (W1 §6-7) (55.926459ms)
+✔ failed prompt never delivers the pending return; the next successful trunk prompt delivers it exactly once (W1 §6-4) (47.844666ms)
+✔ return persists its target anchor snapshot of the branch origin (43.274958ms)
+✔ repository-level return without a key still round-trips (legacy shape) (27.369125ms)
+✔ published CSS modules preserve ordered cascade and critical responsive rules (5.639875ms)
+✔ terminology eval sets: 180 + 180 items, ids unique within and across files (1.333125ms)
+✔ terminology eval sets: group-based leakage prevention (group ids and source texts never straddle dev/frozen) (0.536875ms)
+✔ terminology eval sets: Chinese >= 240 across 360; negatives >= 25% across 360 (0.106875ms)
+✔ terminology eval sets: all six v2 coverage categories present in both files, with both task kinds (0.1325ms)
+✔ terminology eval sets: homonym-polysemy terms (ambiguity dimension) span >= 2 semantic-context groups per file (0.109917ms)
+✔ terminology eval sets: every explain term resolves mechanically at its occurrence with slice equality (0.149041ms)
+✔ terminology eval sets: extract expectedTerms and negativeTerms verified against sources (expectedTerms outside code/URL spans; full negatives carry negativeTerms) (1.032583ms)
+✔ terminology eval sets: long-answer items are >= 1500 chars with every target term in the final third (0.510542ms)
+✔ terminology eval sets: code-mixed items carry real code fences (0.561833ms)
+✔ reading modes pure helpers: blank-line paragraphs, per-paragraph/per-answer density caps (first-come, hiddenCount), and source-invalid projection (3.632333ms)
+✔ reading mode persistence: default manual-only, enum validation, unknown tree 404, kv round-trip across a restart, corrupt kv degrades to the default (45.487167ms)
+✔ quality gate OFF (production default): modes save and switch, but assistant answer completions dispatch NOTHING — zero term-runtime prompts, zero tasks, zero usage, honest autoSuggestions state (79.609875ms)
+✔ gate ON (test-forced): only an assistant answer completion triggers exactly one extract; browsing adds nothing; failed and aborted runs dispatch nothing; auto-saving never happens (200.577708ms)
+✔ gate ON + assisted reading: v2 per-paragraph 2 / per-answer 6 caps are enforced honestly (25.195791ms)
+✔ gate ON: zero validated candidates surface as no-suggestions; one suggestion set per completed answer (28.7395ms)
+✔ gate ON + exhausted budget: budget-paused with zero dispatch and untouched accounting; the explicit retry stays honestly paused; no annotation is ever written (65.443542ms)
+✔ gate ON + unparseable model answer: the set lands on failed honestly; the explicit retry re-runs and recovers (28.687583ms)
+✖ reading-mode HTTP surface: GET/PUT settings/reading-mode (enum 400 / unknown tree 404), read model carries mode + autoSuggestions, retry 200/404/400(gate)/400(manual-only) (18.380917ms)
+✔ terminology pure helpers: prompts carry the passage and UTF-16 offsets; candidates are validated against the source (slice equality, dedup, density, code/URL exclusion) (3.3765ms)
+✔ terminology explain is isolated: zero tree writes, zero main session files, main cursor untouched; echo task succeeds with the prompt as context (68.358041ms)
+✔ terminology explain dedups against a saved annotation (zero model calls) and enforces UTF-16 slice integrity (emoji / cross-line / duplicate words) (34.854375ms)
+✔ terminology save dedups by range; promotion reuses the Anchor/Branch/Origin machinery, dispatches the first question with composed context, and is idempotent across replays and conflicts (68.582834ms)
+✔ promotion survives a failed first question: the binding and dispatch ledger are durable, and the same-key retry re-dispatches the SAME question without rebuilding the branch (58.778333ms)
+✔ terminology cancel: queued cancels immediately; a late result after a running cancel is discarded (usage still recorded — honest cost) (88.37875ms)
+✔ terminology cache key carries source identity, position and context: the same word at two semantic positions is explained separately (bank repro + 中文 + repeated word), and only the same anchor reuses (49.098875ms)
+✔ terminology cancel accounting: a dispatched request that is aborted keeps its reservation and records UNKNOWN usage (requests >= 1, never zeroed); a timeout likewise; a dirty restart and a failing persistence fail-closed with zero dispatch (99.176875ms)
+✔ terminology budget reserves input+output bounds before dispatch: an insufficient budget means ZERO dispatch (budgetTokens=1), usage settles by real completion, and the persisted state resumes across restarts (66.562333ms)
+✔ terminology context discipline: explain windows oversized passages honestly (remapped offsets) and refuses unbounded stuffing; extract refuses oversized sources with zero dispatch (32.648167ms)
+✔ terminology auto extract: validated JSON candidates (slice equality, dedup, density, code/URL exclusion); an unparseable echo answer fails honestly (48.99325ms)
+✔ terminology promotion is atomic: a promotion key already held by another annotation is a 409 conflict with ZERO new rows, injected crashes at each write point roll the whole promotion back, and a double-click is idempotent (26.365958ms)
+✔ terminology promotion first-question identity: the same key with a different question is a 409 conflict (not a replay); an unknown-result dispatch is reconciled against the ledger evidence and never blind-resent (44.837417ms)
+✔ terminology promotion replay across a process restart: the binding and dispatch ledger are durable — a landed first question is never re-dispatched, and a different question under the same key stays a 409 (25.371458ms)
+✖ terminology HTTP surface: read model, explain, annotations 201/200, promote 201/200/409 (incl. same-key different-question), preferences, cancel, and an honest 503 when unwired (17.615084ms)
+✔ branch entry: the armed capture bar offers branching; the click resolves the canonical selection (server-signed sourceHash) then posts from-material — zero runs/turns, no cursor switch (246.533541ms)
+✔ Escape closes the current reader when a pending flow belongs to another material, retaining that flow for its own reader (1118.068167ms)
+✔ context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted (103.969625ms)
+✔ context declaration: a truncated window carries the explicit TRUNCATED marker with the truncation note verbatim — the 24,000-unit cap is never silent (charter §3.3 rule 3) (100.068625ms)
+✔ first question: submitting posts material-first-question with the same intent key, lands the turns, closes the reader, and opens the branch panel (336.870167ms)
+✔ no-duplicate discipline: a double-click submits exactly once (in-flight lock); a replay (same key, same content) reconciles without re-sending (328.061916ms)
+✔ dispatch outcomes: 'failed' is shown honestly and a same-key retry is an explicit new attempt; 'unknown' is never auto-retried and is disclosed as not re-sent (411.576625ms)
+✔ resume-or-create hits an existing exploration: the honest choice — open the existing branch (nothing new is created) or explicitly start a new one (fresh key, new branch) (316.491458ms)
+✔ explicit new exploration: from the choice, a fresh intent key posts mode 'new' and the full first-question flow follows on the new branch (352.336834ms)
+✔ pending intent resume: a branch created but never asked resumes straight to the declared scope with the SAME key after a refresh (idempotent continuation — localStorage carries the submission identity) (322.009292ms)
+✔ restored branch navigation/session facts ride along honestly (failed navigation and unavailable session are disclosed, never masked) (88.745542ms)
+✔ first-question conflict (409): after an in-flight dispatch lands unseen, a changed question is refused — the immutability is disclosed and the changed question is offered as a normal continuation (panel opens prefilled; sending stays an explicit action) (371.101958ms)
+✔ branch-intent conflict (409 material-branch-conflict, same key bound to a different selection): the flow fails honestly and offers a retry (86.768167ms)
+✔ material return: the panel return posts material-return with the draft idempotency key; the mainline card renders the material source fields, adoption state, and the source jump opens the reader at the anchored version and block (590.434542ms)
+✔ material return card: a cached source card renders on the mainline at boot; a missing cache degrades honestly (the Return itself is intact, no source details are fabricated) (480.426833ms)
+✔ session-unavailable material branch: the explicit new exploration posts material-new-exploration (material context rides along); an available session is refused with the honest 409 (149.691958ms)
+✔ css lexical locks: the branching flow, the scope card, the truncation marker, and the material return source card have base-layer rules (0.531625ms)
+✔ material list: honest per-state rows (ready / failed-with-reason / parsing / pdf), an honest empty state, a loading state, and a retryable list failure (377.742291ms)
+✔ central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material (399.248958ms)
+✔ block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end (169.227209ms)
+✔ keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container) (64.022917ms)
+✔ reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block) (2012.765458ms)
+✔ reading position beyond the first page: the open loop pages forward until the saved block is loaded, then restores onto it (58.495792ms)
+✔ lossless rendering: every rendered block's textContent equals the frozen canonicalText slice byte-for-byte, carrying its absolute range (61.025375ms)
+✔ cross-line selection inside one block: the captured payload is the frozen md-sel-22 range [1015, 1036) over canonicalText (60.413709ms)
+✔ repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19) (59.801333ms)
+✔ cross-block selection: the honest not-anchorable state — no payload, no silent truncation (B2 discipline) (60.510834ms)
+✔ grapheme-safe capture: a boundary inside a surrogate pair or a combining sequence snaps outward — the payload never splits a cluster (md-06 / md-07 fixtures) (91.402125ms)
+✔ copy quote: the clipboard receives the exact canonical slice; the D4-3 anchor payload stays honestly displayed (65.115458ms)
+✔ version awareness: the reader shows which version it renders, an older version is explicitly labeled and readable, and switching is non-destructive with a never-migrates note (115.965542ms)
+✔ a saved reading position on an older version reopens that version (charter §1: return to the original text), with the older-version note and restore (58.662958ms)
+✔ a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment) (57.668333ms)
+✔ a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks (89.288708ms)
+✔ a failed version shows its reason verbatim with no empty-document masquerade; the version strip keeps it honestly unlabeled-readable (57.5425ms)
+✔ honest retry surfaces: a detail failure retries the open; an append-page failure retries the next page (201.135541ms)
+✔ armed selection survives async refreshes and page appends: block elements and their text nodes keep identity while armed (no re-render during selection over the reading view) (174.229458ms)
+✔ capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift) (94.84975ms)
+✔ touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check (75.7845ms)
+✔ Esc closes the reader with focus returned to the material's list button; keyboard affordances are native buttons (299.433417ms)
+✔ CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically (2.276333ms)
+✔ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (410.1205ms)
+✔ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (200.651125ms)
+✔ children page failures are honest: a first-page failure shows the error with a Retry row, and an auto-paged More failure keeps the loaded page and retries the next page (407.576417ms)
+✔ expand-state persistence: every expansion/selection PUTs the full set, and reopening restores the saved expansion and the deep selection via ancestor paging (327.781542ms)
+✔ keyboard traversal: arrows move row-by-row across the windowed order, → expands / enters the first child, ← collapses / returns to the parent, Enter selects, and the focused row never leaves the DOM (302.525375ms)
+✔ same-name disambiguation: branch search hits carry distinct full paths, rows carry id chips, and the selected node's full parent path is complete (long chains collapse but expand to every level) (1062.748958ms)
+✔ stale-cursor 409 recovery: a cursor page after index invalidation restarts from the first page (request sequence locked, no duplicate rows) (197.642917ms)
+✔ nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues (196.121292ms)
+✔ locate current branch: cross-tree locate switches the nav tree and reveals the workbench's current branch through its ancestor chain (179.345334ms)
+✔ jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin (359.304042ms)
+✔ jump to source across trees: the workbench first opens the origin's tree (existing openTree behavior), then the existing reveal runs (245.0155ms)
+✔ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (107.716334ms)
+✔ CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically (1.500791ms)
+✔ import entry: the file picker accepts exactly the D4-1 support set and lives in the Materials section (102.971458ms)
+✔ import happy path: a Chinese-and-space filename uploads raw bytes with the percent-encoded header, the parsing state is honest, and ready opens the reader (145.348166ms)
+✔ import dedup: importing the exact same bytes again reports the reused version honestly (no new version, no fake success) (141.324875ms)
+✔ import parse failures surface the reason verbatim (failed / rejected), never an empty-document masquerade (189.6ms)
+✔ import cancel: canceling an in-flight parse task stops it and reports canceled honestly; a 409 (already terminal) triggers an immediate recheck (189.795125ms)
+✔ import upload failures surface verbatim: unsupported extension (415) and oversize (413) (162.234292ms)
+✔ import state resets on tree switch (the in-flight poll and status never leak across trees) (101.596791ms)
+✔ PDF pages render as real reading surfaces: page identifiers, frozen block text, absolute ranges, and the pdf fetch limit (60.077292ms)
+✔ same-page selections map through the canonical-offset machinery to the frozen B2 payloads (pdf-sel-01 / pdf-sel-02) (69.779208ms)
+✔ double-column PDF (pdf-06): both columns and a cross-line excerpt map to the frozen ranges on the same page (62.359292ms)
+✔ grapheme safety on PDF pages: a boundary inside a surrogate pair snaps outward (pdf-12 payload discipline) (62.171291ms)
+✔ cross-page selection is refused with the select-within-one-page prompt — no payload, no silent truncation (58.92675ms)
+✔ reading positions work per PDF version: scrolling saves page-N via PUT, and reopening restores onto it (forward fill + rendered jump target) (97.744833ms)
+✔ a server-side resolve-selection refusal surfaces verbatim in the branch flow (the backend already refuses — the UI relays it) (89.9485ms)
+✔ lazy page rendering: a 30-page PDF renders a bounded leading batch first, and the scroll window (±1200px) renders/unloads page text layers (117.265667ms)
+✔ CSS lexicon: PDF page frames, placeholders, and the import row/styles exist lexically (the suite does not execute CSS) (0.355292ms)
+✔ visual baseline: real index.html skeleton and boot-rendered structure (83.898708ms)
+✔ thought search shortcut preserves the current query and draft without creating product facts (38.481458ms)
+✔ Session map opens the real paged dialogue and preserves drafts (60.033292ms)
+✔ Paged dialogue groups multi-run Episodes and filters canonical turns to exactly one round (69.293459ms)
+✔ Source reveal opens the older round containing the anchor (389.66075ms)
+✔ Session map Escape returns to the same conversation and retains the Return draft (45.243167ms)
+✔ Session graph limits rendered groups and empty Sessions have no invented dialogue rounds (89.2805ms)
+✔ Session map without a tree shows a creation action and creates nothing during browsing (29.888584ms)
+✔ journal drawer: failure with retry, honest empty state, Esc focus restore (340.684417ms)
+✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (475.7795ms)
+✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (74.782ms)
+✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (280.22725ms)
+✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (543.859792ms)
+✔ adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer (43.04025ms)
+✔ a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately (277.576834ms)
+✔ Esc on the branch panel closes it and restores focus to the triggering tab (278.187125ms)
+✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (57.502041ms)
+✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (71.452166ms)
+✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (126.689208ms)
+✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (559.213542ms)
+✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (552.555333ms)
+✔ Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs (383.717583ms)
+✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (88.2155ms)
+✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (61.798166ms)
+✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (33.785208ms)
+✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (85.87375ms)
+✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (57.915834ms)
+✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (61.939625ms)
+✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (57.56625ms)
+✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (59.213834ms)
+✔ A2 cross-line selection: offsets and the revealed text span the line break intact (58.595666ms)
+✔ topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open (291.597458ms)
+✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (290.5785ms)
+✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (43.616834ms)
+✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (41.070208ms)
+✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (1.316667ms)
+✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (0.9505ms)
+✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (83.797958ms)
+✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (45.488ms)
+✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (101.509333ms)
+✔ trunk prompt failure: streaming placeholder cleared, recovery banner rendered, error visible — all before the error is rethrown (102.824375ms)
+✔ panel prompt failure with zero SSE events: degraded note with executable recovery, visible error, no stale placeholder (67.930834ms)
+✔ session banner dismissal is durable across re-renders; cleared only by availability recovery or the recovery action (385.382417ms)
+✔ same-key different-text 409: draft and panel kept, explicit conflict message, rekey on edit, resubmit succeeds (292.776834ms)
+✔ same-key same-text different-branch is also a conflict: the predicate matches idempotencyKey AND fromBranchId AND text (67.475458ms)
+✔ response-loss reconciliation requires key AND branch AND text to match before treating the return as submitted (277.404084ms)
+✔ panel open reconciles persisted drafts: an already-recorded return drops the draft and renders delivered state; a new explicit submission uses a new key (279.565416ms)
+✔ degraded revealOrigin applies the server-returned state: badges and degraded note never contradict the degraded error (57.295542ms)
+✔ closePanel navigation failure after a successful return surfaces in the visible main error banner, not the hidden panel (280.718833ms)
+✔ a saved return whose server-side navigation failed renders the saved fact and the navigation failure separately, without replaying /switch (280.784625ms)
+✔ scope: default is the current tree (scoped endpoint, full kinds), an explicit toggle spans all trees, and a scoped search never leaks another tree's facts (152.181542ms)
+✔ type filter: kinds pass through to the engine, and results render in the order returned (annotation → Return → turn → material) (105.936375ms)
+✔ old-version hits are explicitly marked 旧版本 and open the older version's read-only reader at the hit block (93.672792ms)
+✔ a current-version material hit opens the reader on that version and scrolls to the hit block (91.24175ms)
+✔ session-unavailable hits show the explicit new-exploration entry alongside the source jump, and the jump still views the source (120.814584ms)
+✔ a trunk hit in a session-unavailable trunk shows the same entry, and it routes to the trunk composer (no branch panel exists for the trunk) (117.393291ms)
+✔ an annotation hit reveals the anchored answer and opens the saved annotation card (98.343542ms)
+✔ a Return hit reveals the Return card on the trunk (90.48475ms)
+✔ honest gates: blank queries and empty filters are stopped client-side (the server's own rule), and zero hits stay an honest empty state (121.549166ms)
+✔ in-flight is honest, a failed search surfaces its error and is retryable, and unwired search reports 503 verbatim (217.172375ms)
+✔ cross-tree hits open the hit's tree first; searching creates no turns; tree-scoped results clear honestly on tree switch while all-trees results persist (158.320625ms)
+✔ with an empty library the search face stays available, this-tree is honestly disabled, and the honest zero-hit state renders (58.029916ms)
+✔ CSS lexicon: the search form, hit rows, old-version mark, and session note rules are locked in the base layer (1.06575ms)
+✔ layered turn structure: prose is its own layer, textContent stays byte-identical, and an async refresh never replaces the content layer (109.751917ms)
+✔ selection drag window: an overlay-changing re-render is deferred until mouseup — the content layer is never swapped under the cursor (73.914333ms)
+✔ toolbar modes: single-word selections arm term mode, spans arm range mode (exact POST payloads), dblclick arms like mouseup, and Esc closes the card with focus return (61.571ms)
+✔ Esc layering with the term card: a card inside the open panel closes before the panel; the panel branch keeps its semantics (291.733375ms)
+✔ Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost (60.093542ms)
+✔ explain card states: cached success note, honest failure with a working retry, cancelled with the late-discard note, and idempotent save showing the existing annotation (264.459083ms)
+✔ late explain responses are discarded honestly when the target leaves: no resurrection of a closed card, counted in the drawer usage (58.609333ms)
+✔ unified range overlays: annotation marks and the source highlight share one slice-exact mechanism, survive re-renders, and never alter the text (86.607916ms)
+✔ resume-or-create: an already-promoted annotation surfaces the existing follow-up explicitly — no second promotion form, no silent reuse (57.071875ms)
+✔ promotion outcomes: success opens the branch, a same-key replay is named honestly, and a 409 conflict lands on the card with the same-key retry kept (218.015208ms)
+✔ promotion response loss resolves to the recorded promotion: the card refreshes to the resume affordance instead of pretending nothing happened (84.031208ms)
+✔ narrow window and reduced motion: the ③ CSS rules are locked lexically (toolbar/card full width under 720px; card entrance animation neutralized under reduce) (1.872375ms)
+✔ touch selection: selectionchange arms the toolbar without mouseup, and an emptied selection disarms it after the deferred check (45.301042ms)
+✔ return draft/focus discipline holds under the layered renderer: submit closes the panel to the main input; the term-card first-question draft keeps its value and focus across re-renders (319.641125ms)
+✔ drawer terminology surface: tasks with modes, honest usage counts, cache preference toggle with a retryable failure, and the read-model failure state (128.728917ms)
+✔ P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders (42.8905ms)
+✔ P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths) (84.502792ms)
+✔ P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches (27.468833ms)
+✔ P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations (110.02ms)
+✔ P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card (71.840167ms)
+✔ reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure (126.212542ms)
+✔ suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips (84.066958ms)
+✔ suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus (101.563459ms)
+✔ answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path (55.112167ms)
+ℹ tests 459
+ℹ suites 0
+ℹ pass 401
+ℹ fail 58
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25734.132333
+
+✖ failing tests:
+
+test at tests/api-settings.test.ts:50:1
+✖ HTTP settings reject cross-origin, rebinding hosts and unguarded writes; responses contain no secret values (4.319708ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-settings.test.ts:86:1
+✖ credential HTTP writes keep origin and CSRF guards and sanitize native failures (2.596ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-wire.test.ts:22:3
+✖ actual Pi SDK streams anthropic-messages and uses the configured model/header (19.359125ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-wire.test.ts:22:3
+✖ actual Pi SDK streams openai-completions and uses the configured model/header (3.525458ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-wire.test.ts:22:3
+✖ actual Pi SDK streams openai-responses and uses the configured model/header (0.450166ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-wire.test.ts:22:3
+✖ actual Pi SDK streams google-generative-ai and uses the configured model/header (1.095208ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api-wire.test.ts:51:1
+✖ stored multi-provider keys and custom headers reach the real SDK only in memory (2.702917ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:120:1
+✖ HTTP API serves the UI and the full D3 flow, surviving a restart (22.667833ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:261:1
+✖ return with a missing Pi session file: saved first (201), navigation failed in the response; same-key retries replay without duplicates (signed v3 §3.5) (20.073667ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:367:1
+✖ new exploration over HTTP (v3 §4.4): 200 with the saved-content first prompt after session loss; 409 while the session is healthy; 400 on empty text (17.169459ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:474:1
+✖ HTTP layer rejects malformed bodies and unknown routes predictably (16.485ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:518:1
+✖ diagnostics and abort endpoints: safe projection, 404/400/409, user-abort convergence (13.060042ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:697:1
+✖ return idempotency over HTTP: 201 create, 200 replay, 409 conflict, 400 missing key (12.046792ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/api.test.ts:763:1
+✖ response-loss resubmit and double-click converge to exactly one return (20.940459ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:329:1
+✖ SSE streaming: snapshot, run-started, message deltas, run-terminal; clean disconnect (28.513958ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:399:1
+✖ model error injection: run converges failed across HTTP, diagnostics, journal and SSE (15.4635ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:476:1
+✖ abort over SSE: abort-requested precedes run-terminal aborted; journal projection agrees (19.306208ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:539:1
+✖ session deletion: readable tree, unavailable branch, fail-closed prompt with no partial writes, recovery path (11.841917ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:632:1
+✖ process restart: journal and diagnostics converge consistently (host-crash semantics) (22.3165ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:707:1
+✖ policy boundary: offline studio observes no tool decisions; synthetic tool.decision projects conservatively (10.057833ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/events.test.ts:769:1
+✖ journal endpoint: tree-filtered, newest last, limit respected, 404/400 mapping (16.92225ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:207:1
+✖ material import over HTTP: 201 upload, filename decoding (spaces/CJK), ready polling, chunked pagination (29.194333ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:284:1
+✖ same-bytes re-import → 200 + same versionId with no duplicate rows; new bytes → 201 + version chain with the old version readable (11.673708ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:351:1
+✖ rejection surface: 413 oversize, 415 unsupported extension and pending pdf, 404/400, 503 when not wired (11.989625ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:415:1
+✖ honest parse failure: invalid UTF-8 markdown fails the version with the reason; reads are 409 material-not-ready (12.088084ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:443:1
+✖ parse cancellation over HTTP: mid-parse cancel with a gated fake parser; the late result never resurrects the canceled state (11.156167ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:520:1
+✖ parse cancellation is tree-scoped over HTTP: wrong tree and unknown tree get a uniform 404 and never cancel; the owning tree still can (issue #8 P1) (18.444042ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:573:1
+✖ pdf import over HTTP: fixture upload 201, ready version, page-block pagination; same-bytes reuse 200 (16.172334ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:648:1
+✖ pdf negative over HTTP: the encrypted fixture fails the version honestly; 409 reads carry the reason (32.490084ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:680:1
+✖ custom registry omitting pdf: .pdf upload is 415 material-unsupported (not wired), zero persistence (10.390417ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-api.test.ts:704:1
+✖ reading position: PUT 204 upsert + detail read-back; validation failures are 400/404 (10.90825ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-branching.test.ts:891:1
+✖ material branching HTTP API: from-material create/replay/conflict/restore/new + first-question + return + new-exploration + 503 unwired (D4-contracts §3 D4-3 rows) (14.373084ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-branching.test.ts:1039:1
+✖ material branching HTTP API: unwired materials → 503 material-branching-not-wired for every D4-3 route (8.796ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-reading-api.test.ts:160:1
+✖ reading position GET: empty state, PUT round-trip, upsert replaces, 404/405/503 surfaces (14.618208ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-reading-api.test.ts:214:1
+✖ reading positions stay isolated per tree and per material; exploration never clobbers reading (charter §3.2) (11.779708ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-reading-api.test.ts:265:1
+✖ resolve-selection over HTTP: 200 exact canonical selection for both locator kinds; sourceHash equals canonicalText SHA-256 (21.768917ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/materials-reading-api.test.ts:317:1
+✖ resolve-selection rejection surface: 400 with the frozen reason codes, 409 not-ready, 404/400/405/503 (15.821458ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:137:1
+✖ nav api: trees listing is paginated scalar summaries with no full-tree payloads (3808.478875ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:166:1
+✖ nav api: tree overview carries the structure-truth shape of the special trees (1833.929667ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:196:1
+✖ nav api: children pagination pages b9-wide's 220 root children in truth order (1779.094416ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:224:1
+✖ nav api: lazy endpoints enforce bounded limits and reject malformed cursors/params (1741.15675ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:248:1
+✖ nav api: b9-big full tree only ever arrives page-bounded (5000 nodes via subtree pagination, <1MiB pages) (1750.024416ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:281:1
+✖ nav api: deep chain /path returns the complete 100-level chain (1738.504916ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:299:1
+✖ nav api: locate switches trees by branch id alone with ancestors and origin (1791.571333ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:314:1
+✖ nav api: same-name search disambiguates by full path and paginates in the full-order (1714.910875ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:372:1
+✖ nav api: tree search paginates the deterministic order (ids and titles) (1755.543ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:390:1
+✖ nav api: empty tree stays honestly usable (1725.979417ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:414:1
+✖ nav api: expand-state round trip, validation, and survival across a simulated restart (1681.327709ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:521:1
+✖ nav api: product tree ≠ run/session trees — session availability sweep leaves nav byte-identical (1726.85ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/nav-api.test.ts:577:1
+✖ nav api: 503 when nav is not wired (4.490458ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:167:1
+✖ scoped search returns contract-shaped material hits positioned in the canonical text (29.303ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:220:1
+✖ annotation hits omit the material-only fields; absent queries return an honest empty list (17.297417ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:275:1
+✖ /api/search spans all trees; a scoped search never leaks another tree's facts (17.447792ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:332:1
+✖ kinds filter passes through to the engine (15.758958ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:377:1
+✖ rejections: blank/wrong-type text, malformed kinds, bad JSON → 400 (9.874291ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/search-api.test.ts:415:1
+✖ unknown tree → 404; non-POST methods → 405; unwired search → 503 (14.67025ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/terminology-reading-modes.test.ts:698:1
+✖ reading-mode HTTP surface: GET/PUT settings/reading-mode (enum 400 / unknown tree 404), read model carries mode + autoSuggestions, retry 200/404/400(gate)/400(manual-only) (18.380917ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+
+test at tests/terminology.test.ts:1515:1
+✖ terminology HTTP surface: read model, explain, annotations 201/200, promote 201/200/409 (incl. same-key different-question), preferences, cancel, and an honest 503 when unwired (17.615084ms)
+  Error: listen EPERM: operation not permitted 127.0.0.1
+      at Server.setupListenHandle [as _listen2] (node:net:2306:21)
+      at listenInCluster (node:net:2437:12)
+      at node:net:2666:7
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '127.0.0.1'
+  }
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/tal/.codex/worktrees/7939/TreeAI/apps/studio
+npm error workspace @treeai/studio@0.0.0
+npm error location /Users/tal/.codex/worktrees/7939/TreeAI/apps/studio
+npm error command failed
+npm error command sh -c npm run build:deps && npm run typecheck && node --test tests/*.test.ts

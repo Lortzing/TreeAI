@@ -1,0 +1,3 @@
+{"name":"before","runs":14,"medianMs":165.4109580000004,"p95Ms":172.37479199999996}
+{"name":"after","runs":14,"medianMs":105.57545800000025,"p95Ms":114.53533300000004}
+All 50 frozen query results and extra scopes/filters match before/after exactly.

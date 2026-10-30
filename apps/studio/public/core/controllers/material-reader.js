@@ -47,6 +47,8 @@ export function createMaterialReaderController(deps) {
       （版本行不可变，正常不可能）时如实回落默认选择并注记，不伪装。 */
   async function openMaterial(materialId, opts = {}) {
     if (deps.state.currentTreeId === null) return;
+    deps.$("materials-section").open = false;
+    deps.$("reading-materials").setAttribute("aria-expanded", "false");
     if (
       deps.state.materialReader !== null &&
       deps.state.materialReader.materialId === materialId &&
@@ -61,14 +63,24 @@ export function createMaterialReaderController(deps) {
          既有块容器——blockId 序列（blk-N）跨材料重名，绝不能移用上一份的
          块元素。 */
       saveMaterialReadingPositionNow();
+      for (const task of deps.state.materialReader.pdfRenderTasks.values()) task.cancel?.();
+      deps.state.materialReader.pdfRenderTasks.clear();
+      void deps.state.materialReader.pdfDocument?.destroy?.();
       const previousBlocks = deps.document.getElementById("mat-blocks");
       if (previousBlocks !== null) previousBlocks.replaceChildren();
     }
     const treeId = deps.state.currentTreeId;
+    if (deps.state.readerTabsTree !== treeId) { deps.state.readerTabsTree = treeId; deps.state.readerTabs = []; }
+    deps.state.readerTabs ??= [];
+    if (!deps.state.readerTabs.some(tab => tab.materialId === materialId && tab.versionId === (opts.versionId ?? null))) {
+      deps.state.readerTabs.push({ materialId, versionId: opts.versionId ?? null, title: "正在打开…" });
+    }
+    deps.$("material-reader").classList.remove("reader-header-collapsed");
     const epoch = ++materialReaderEpoch;
     deps.state.materialSelection = null;
     deps.state.materialReader = {
       materialId,
+      tabVersion: opts.versionId ?? null,
       treeId,
       material: { id: materialId, title: "", createdAt: "" },
       versions: [],
@@ -90,7 +102,7 @@ export function createMaterialReaderController(deps) {
       restoredToBlockId: null,
       lastSavedBlockId: null,
       searchJump:
-        opts.versionId !== undefined
+        opts.versionId !== undefined && !["attachment", "reader-tab"].includes(opts.arrival)
           ? {
               blockId: opts.focusBlockId ?? null,
               versionId: opts.versionId,
@@ -117,9 +129,13 @@ export function createMaterialReaderController(deps) {
       }
       const reader = deps.state.materialReader;
       reader.material = detail.material;
+      for (const tab of deps.state.readerTabs ?? []) {
+        if (tab.materialId === materialId) tab.title = detail.material.title;
+      }
       reader.versions = detail.versions;
       reader.readingPosition = detail.readingPosition ?? null;
-      let version = null;
+      let version = opts.versionId ? detail.versions.find(candidate => candidate.id === opts.versionId) ?? null : null;
+      if (opts.versionId && version === null && ["attachment", "reader-tab"].includes(opts.arrival)) throw new Error("这份附件的指定版本已无法打开。");
       if (reader.searchJump !== null) {
         /* 搜索命中跳转：命中版本优先（旧版本命中打开旧版本）；版本已不在
            链上（不可变版本行，正常不可能）→ 如实回落 + 注记（绝不伪装）。 */

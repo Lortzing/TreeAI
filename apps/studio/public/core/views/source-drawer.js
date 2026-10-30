@@ -1,3 +1,4 @@
+import { createDisclosure } from "../dom.js";
 /** Saved source lineage, diagnostics/journal and terminology preference/read-model presentation. Instance-owned state and dependencies. */
 
 export function createSourceDrawerView(deps) {
@@ -15,11 +16,25 @@ export function createSourceDrawerView(deps) {
   function renderDrawer() {
     const drawer = deps.$("source-drawer");
     const toggle = deps.$("source-drawer-toggle");
-    toggle.textContent = deps.state.drawerOpen ? "× Close sources" : "⑂ Sources";
+    // Preserve the shared SVG icon across drawer refreshes.
+    const label = deps.state.drawerOpen ? "关闭来源记录" : "来源记录";
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
     toggle.setAttribute("aria-expanded", deps.state.drawerOpen ? "true" : "false");
     if (!deps.state.drawerOpen) return;
 
+    const diagnosticsOpen = deps.document.getElementById("source-diagnostics")?.open ?? false;
+    const preferencesOpen = deps.document.getElementById("source-reading-preferences")?.open ?? false;
     drawer.replaceChildren();
+    const diagnostics = createDisclosure(deps.document, "技术详情");
+    diagnostics.id = "source-diagnostics";
+    diagnostics.open = diagnosticsOpen;
+    const provenance = deps.document.createElement("ul");
+    provenance.className = "drawer-list";
+    diagnostics.append(provenance);
+    const preferences = createDisclosure(deps.document, "阅读偏好");
+    preferences.id = "source-reading-preferences";
+    preferences.open = preferencesOpen;
     drawerRunItems.clear();
     /* 抽屉头部（附-4，option B 方向）：抽屉为覆盖层，打开时同时盖住主线
        composer 的 Send 与 Sources 开关自身——鼠标用户此前唯一关闭路径是
@@ -28,10 +43,10 @@ export function createSourceDrawerView(deps) {
     const head = deps.document.createElement("div");
     head.className = "drawer-head";
     const title = deps.document.createElement("h2");
-    title.textContent = "Sources";
+    title.textContent = "来源与收获";
     const close = deps.document.createElement("button");
     close.id = "drawer-close";
-    close.textContent = "× Close";
+    close.textContent = "关闭";
     close.addEventListener("click", () => deps.closeDrawer());
     head.append(title, close);
     drawer.append(head);
@@ -39,10 +54,10 @@ export function createSourceDrawerView(deps) {
     /* per-run 出处（诊断面安全投影）。 */
     const runsTitle = deps.document.createElement("h3");
     runsTitle.textContent = "Runs";
-    drawer.append(runsTitle);
+    diagnostics.append(runsTitle);
     const diag = deps.state.diagnostics;
     if (diag === null || diag.runs.length === 0) {
-      drawer.append(deps.mutedLine("no runs recorded for this tree yet"));
+      diagnostics.append(deps.mutedLine("no runs recorded for this tree yet"));
     } else {
       const list = deps.document.createElement("ul");
       list.className = "drawer-list";
@@ -59,14 +74,14 @@ export function createSourceDrawerView(deps) {
         drawerRunItems.set(run.runId, li);
         list.append(li);
       }
-      drawer.append(list);
+      diagnostics.append(list);
     }
 
     /* Return 出处（signed v3 §3.2：区分已保存 / 采用尝试过 / 首次成功采用；
        尝试明细含 run 与结局——runId/状态/失败码是安全投影字段，无路径与
        session 引用）。 */
     const returnsTitle = deps.document.createElement("h3");
-    returnsTitle.textContent = "Returns";
+    returnsTitle.textContent = "已保存的收获";
     drawer.append(returnsTitle);
     const st = deps.state.treeState;
     const returns =
@@ -76,7 +91,7 @@ export function createSourceDrawerView(deps) {
             view.turns.filter((t) => t.role === "return").map((t) => ({ view, turn: t })),
           );
     if (returns.length === 0) {
-      drawer.append(deps.mutedLine("no returns submitted for this tree yet"));
+      drawer.append(deps.mutedLine("还没有保存收获。在支线中整理结论后，可以带回主线。"));
     } else {
       const list = deps.document.createElement("ul");
       list.className = "drawer-list";
@@ -99,14 +114,23 @@ export function createSourceDrawerView(deps) {
         } else {
           li.textContent = `from ${deps.branchLabel(turn.fromBranchId ?? "")} · ${anchorNote} · saved, pending adoption`;
         }
-        list.append(li);
+        provenance.append(li);
+        const saved = deps.document.createElement("li");
+        const stateLabel = turn.deliveredRunId !== null ? "已被主线采用" : attempts.length > 0 ? "已尝试采用，仍待确认" : "已保存，待主线采用";
+        const content = deps.document.createElement("p");
+        content.textContent = turn.text;
+        const origin = deps.document.createElement("p");
+        origin.className = "muted";
+        origin.textContent = `${deps.branchLabel(turn.fromBranchId ?? "")} · ${stateLabel}`;
+        saved.append(content, origin);
+        list.append(saved);
         for (const attempt of attempts) {
           const item = deps.document.createElement("li");
           item.className = "attempt";
           const failureNote = attempt.failure === null ? "" : ` · failure ${attempt.failure.code}`;
           item.textContent =
             `attempt: run ${attempt.runId.slice(0, 12)}… · ${attempt.runState}${failureNote}`;
-          list.append(item);
+          provenance.append(item);
         }
       }
       drawer.append(list);
@@ -119,15 +143,15 @@ export function createSourceDrawerView(deps) {
        分开计数）+ 缓存偏好（PUT preferences，可切换；在途/失败态如实）。
        三态呈现与 journal 同纪律：加载中 / 已载（可为空）/ 失败 + 重试。 */
     const termsTitle = deps.document.createElement("h3");
-    termsTitle.textContent = "Terminology";
+    termsTitle.textContent = "已保存的批注";
     drawer.append(termsTitle);
     const terminology = deps.state.terminology;
     if (terminology === null) {
-      drawer.append(deps.mutedLine("loading terminology…"));
+      drawer.append(deps.mutedLine("正在加载批注…"));
     } else if (!terminology.ok) {
       const line = deps.document.createElement("p");
       line.className = "muted";
-      line.append(deps.document.createTextNode("terminology failed to load — "));
+      line.append(deps.document.createTextNode("批注加载失败，请重试。"));
       const retryTerms = deps.document.createElement("button");
       retryTerms.className = "drawer-retry";
       retryTerms.textContent = "Retry";
@@ -142,7 +166,7 @@ export function createSourceDrawerView(deps) {
       drawer.append(line);
     } else {
       if (terminology.annotations.length === 0) {
-        drawer.append(deps.mutedLine("no saved term annotations yet — select a term in an answer and “Explain selection”"));
+        drawer.append(deps.mutedLine("还没有保存批注。选中回答中的文字，即可解释并保存。"));
       } else {
         const list = deps.document.createElement("ul");
         list.className = "drawer-list";
@@ -165,13 +189,21 @@ export function createSourceDrawerView(deps) {
           li.textContent =
             `“${annotation.term}” (${annotation.mode}) from ${deps.branchLabel(annotation.branchId)} · ` +
             `anchored on “${annotation.selection.text}” · ${promotedNote}${anchorNote}`;
-          list.append(li);
+          provenance.append(li);
+          const saved = deps.document.createElement("li");
+          saved.textContent = `“${annotation.term}” · ${deps.branchLabel(annotation.branchId)}`;
+          const quote = deps.document.createElement("blockquote");
+          quote.textContent = annotation.selection.text;
+          saved.append(quote);
+          if (annotation.promotedBranchId !== null) saved.append(deps.mutedLine(`已展开到 ${deps.branchLabel(annotation.promotedBranchId)}`));
+          if (anchorStatus !== "valid") saved.append(deps.mutedLine(anchorStatus === "changed" ? "原文已变化，保留的是保存时的摘录。" : "原文暂时不可用，已保存的摘录仍可查看。"));
+          list.append(saved);
         }
         drawer.append(list);
       }
       /* 近期任务（瞬态——模式与任务态如实；进程重启即空，如实呈现）。 */
       if (terminology.tasks.length === 0) {
-        drawer.append(deps.mutedLine("no terminology tasks in this process yet"));
+        diagnostics.append(deps.mutedLine("no terminology tasks in this process yet"));
       } else {
         const taskList = deps.document.createElement("ul");
         taskList.className = "drawer-list term-task-list";
@@ -191,7 +223,7 @@ export function createSourceDrawerView(deps) {
           li.textContent = `${task.kind} · ${task.mode} · ${taskState}`;
           taskList.append(li);
         }
-        drawer.append(taskList);
+        diagnostics.append(taskList);
       }
       const usageNote = deps.document.createElement("p");
       usageNote.className = "muted";
@@ -201,30 +233,30 @@ export function createSourceDrawerView(deps) {
         `est. ${String(usage.estTokens)}/${String(usage.budgetTokens)} tokens (chars/4 estimate), ` +
         `${String(usage.lateResultsDiscarded)} late result(s) discarded by the executor, ` +
         `${String(deps.state.termDiscardedLate)} late response(s) discarded client-side, cache ${terminology.cacheEnabled ? "on" : "off"}`;
-      drawer.append(usageNote);
+      diagnostics.append(usageNote);
       /* 缓存偏好（③：同 (mode, 选区, sourceHash) 解释复用缓存——可开关）。 */
       const cacheLine = deps.document.createElement("p");
       cacheLine.className = "muted term-cache-line";
       const cacheToggle = deps.document.createElement("button");
       cacheToggle.className = "term-cache-toggle";
       if (deps.terminologyController.termPrefsPending) {
-        cacheToggle.textContent = "updating cache preference…";
+        cacheToggle.textContent = "正在保存…";
         cacheToggle.disabled = true;
       } else {
         cacheToggle.textContent = terminology.cacheEnabled
-          ? "cache preference: on — click to disable"
-          : "cache preference: off — click to enable";
+          ? "重复解释：复用已保存的结果"
+          : "重复解释：每次重新生成";
         cacheToggle.addEventListener("click", () =>
           void deps.guard(() => deps.setTerminologyCachePreference(!terminology.cacheEnabled)),
         );
       }
       cacheLine.append(cacheToggle);
-      drawer.append(cacheLine);
+      preferences.append(cacheLine);
       if (deps.terminologyController.termPrefsError !== null) {
         const prefsError = deps.document.createElement("p");
         prefsError.className = "muted";
         prefsError.textContent = `cache preference failed — ${deps.terminologyController.termPrefsError}`;
-        drawer.append(prefsError);
+        preferences.append(prefsError);
       }
       /* 阅读模式三选一（①阅读模式）：manual-only（默认）/ minimal-hints /
          assisted-reading。模式可保存可切换；gate 未过（或仅手动）时旁注如实
@@ -236,9 +268,9 @@ export function createSourceDrawerView(deps) {
       modeRow.setAttribute("aria-label", "Terminology reading mode");
       const currentMode = terminology.readingMode ?? "manual-only";
       const MODE_LABELS = {
-        "manual-only": "Manual only",
-        "minimal-hints": "Minimal hints",
-        "assisted-reading": "Assisted reading",
+        "manual-only": "手动解释",
+        "minimal-hints": "少量提示",
+        "assisted-reading": "辅助阅读",
       };
       for (const mode of ["manual-only", "minimal-hints", "assisted-reading"]) {
         const modeButton = deps.document.createElement("button");
@@ -246,26 +278,26 @@ export function createSourceDrawerView(deps) {
         modeButton.textContent = MODE_LABELS[mode];
         modeButton.title =
           mode === "manual-only"
-            ? "No automatic suggestions — you explain selections yourself (default)"
+            ? "选中文字后再解释"
             : mode === "minimal-hints"
-              ? "A few suggested terms per completed answer (density-capped, display-only)"
-              : "More suggested terms per completed answer (density-capped, display-only)";
+              ? "每次回答后提示少量值得了解的概念"
+              : "每次回答后提供更多概念提示";
         modeButton.setAttribute("aria-pressed", String(currentMode === mode));
         modeButton.disabled = deps.terminologyController.termModePending;
         modeButton.addEventListener("click", () => void deps.guard(() => deps.setTerminologyReadingMode(mode)));
         modeRow.append(modeButton);
       }
-      drawer.append(modeRow);
+      preferences.append(modeRow);
       if (deps.terminologyController.termModePending) {
-        drawer.append(deps.mutedLine("saving reading mode…"));
+        preferences.append(deps.mutedLine("正在保存阅读偏好…"));
       }
       const autoState = terminology.autoSuggestions ?? null;
       if (autoState !== null && autoState.enabled !== true) {
-        drawer.append(
+        preferences.append(
           deps.mutedLine(
             autoState.reason === "manual-only"
-              ? "reading mode is manual-only — suggestions appear only when you explain a selection yourself"
-              : "the auto-annotation quality gate has not passed — automatic suggestions stay OFF; only manual explaining is in effect",
+              ? "当前仅在你选中文字后提供解释。"
+              : "自动提示暂未开放，你仍可选中文字进行解释。",
           ),
         );
       }
@@ -273,7 +305,7 @@ export function createSourceDrawerView(deps) {
         const modeError = deps.document.createElement("p");
         modeError.className = "muted";
         modeError.textContent = `reading mode failed — ${deps.terminologyController.termModeError}`;
-        drawer.append(modeError);
+        preferences.append(modeError);
       }
     }
 
@@ -282,9 +314,9 @@ export function createSourceDrawerView(deps) {
        伪装成无事件）。 */
     const journalTitle = deps.document.createElement("h3");
     journalTitle.textContent = "Journal (latest 20)";
-    drawer.append(journalTitle);
+    diagnostics.append(journalTitle);
     if (deps.state.journalEvents === null) {
-      drawer.append(deps.mutedLine("loading journal…"));
+      diagnostics.append(deps.mutedLine("loading journal…"));
     } else if (!deps.state.journalEvents.ok) {
       const line = deps.document.createElement("p");
       line.className = "muted";
@@ -295,9 +327,9 @@ export function createSourceDrawerView(deps) {
       retry.title = "Fetch the journal tail again";
       retry.addEventListener("click", () => void deps.loadJournal());
       line.append(retry);
-      drawer.append(line);
+      diagnostics.append(line);
     } else if (deps.state.journalEvents.events.length === 0) {
-      drawer.append(deps.mutedLine("no journal events recorded for this tree yet"));
+      diagnostics.append(deps.mutedLine("no journal events recorded for this tree yet"));
     } else {
       const list = deps.document.createElement("ul");
       list.className = "drawer-list journal-list";
@@ -309,15 +341,15 @@ export function createSourceDrawerView(deps) {
         li.append(time, deps.document.createTextNode(`${event.type} — ${event.summary}`));
         list.append(li);
       }
-      drawer.append(list);
+      diagnostics.append(list);
     }
 
     /* 工具活动（诚实边界：离线驱动无工具事件）。 */
     const toolTitle = deps.document.createElement("h3");
     toolTitle.textContent = "Tool activity";
-    drawer.append(toolTitle);
+    diagnostics.append(toolTitle);
     if (deps.state.toolActivity.length === 0) {
-      drawer.append(deps.mutedLine("no tool activity observed — Studio runs with an empty tool allowlist"));
+      diagnostics.append(deps.mutedLine("no tool activity observed — Studio runs with an empty tool allowlist"));
     } else {
       const list = deps.document.createElement("ul");
       list.className = "drawer-list";
@@ -332,14 +364,17 @@ export function createSourceDrawerView(deps) {
         li.textContent = text;
         list.append(li);
       }
-      drawer.append(list);
+      diagnostics.append(list);
     }
+
+    drawer.append(preferences, diagnostics);
 
     /* delivered 卡反查定位：滚动到该 run 的出处条目。 */
     const focusRunId = deps.state.drawerFocusRunId;
     if (focusRunId !== null) {
       const li = drawerRunItems.get(focusRunId);
       if (li !== undefined && typeof li.scrollIntoView === "function") {
+        diagnostics.open = true;
         li.scrollIntoView({ block: "start", behavior: deps.scrollBehavior() });
       }
     }

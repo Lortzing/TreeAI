@@ -1,3 +1,4 @@
+import { clearComposerAttachments } from "./composer-tools.js";
 /** Conversation prompts, explicit new explorations, abort requests and authoritative quiet refresh. Instance-owned state and dependencies. */
 
 export function createPromptController(deps) {
@@ -18,6 +19,9 @@ export function createPromptController(deps) {
     const branchId = isPanel ? deps.state.panelBranchId : deps.trunkBranchId();
     const input = deps.$(isPanel ? "panel-prompt-input" : "prompt-input");
     const text = input.value;
+    if (input.dataset.attachmentPending === "true") throw new Error("附件正在处理，请稍后发送。");
+    const attachments = input.dataset.attachments ? JSON.parse(input.dataset.attachments) : [];
+    if (attachments.some(item => item.treeId !== deps.state.currentTreeId || item.branchId !== branchId)) throw new Error("附件属于另一段对话，请移除后重新添加。");
     if (branchId === null || text.trim() === "") return;
     deps.sessionUI.followBranchId = branchId;
     if (!deps.studioEventsController.sseHealthy) deps.startDiagnosticsPolling();
@@ -26,9 +30,12 @@ export function createPromptController(deps) {
       const payload = await deps.api(`/api/trees/${encodeURIComponent(deps.state.currentTreeId)}/prompt`, "POST", {
         branchId,
         text,
+        ...(attachments.length ? { attachments: attachments.map(({ materialId, versionId }) => ({ materialId, versionId })) } : {}),
+        ...(deps.document.documentElement?.dataset.composerModel ? { model: JSON.parse(deps.document.documentElement.dataset.composerModel) } : {}),
       });
       deps.state.treeState = payload.state;
       input.value = "";
+      clearComposerAttachments(input, attachments);
       if (isPanel) deps.state.forcePanelSessionNote = false;
       else deps.state.forceSessionBanner = false;
       /* ①阅读模式：回答完成后刷新术语读模型（SSE run-terminal 同路径幂等；

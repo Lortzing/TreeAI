@@ -1,3 +1,4 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** Navigation nav-path; preserves the existing D4 endpoint and display contracts. */
 export function createNavPathView(deps) {
   const { document, getElement: $, getState, selectNavNode } = deps;
@@ -6,7 +7,7 @@ export function createNavPathView(deps) {
   const NAV_PATH_COLLAPSE_THRESHOLD = 6;
 
   function navStepLabel(step) {
-    return step.title !== null ? step.title : step.depth === 0 ? "Trunk" : step.id;
+    return step.title !== null ? attachedQuestion(step.title).text : step.depth === 0 ? "思考主线" : "未命名支线";
   }
 
   /** 路径行渲染：当前节点的完整根→选中链（path 端点 100 层完整返回）；长链
@@ -22,12 +23,12 @@ export function createNavPathView(deps) {
       return;
     }
     if (session.selectedBranchId === null) {
-      heading.textContent = "no branch selected — click a row (or press Enter) to select it and see its full path";
+      heading.textContent = "选择一条支线，查看完整路径。";
       return;
     }
     const path = session.path;
     if (path === null || path.state === "loading") {
-      heading.textContent = "loading the full path…";
+      heading.textContent = "正在加载路径…";
       return;
     }
     if (path.state === "failed") {
@@ -43,12 +44,13 @@ export function createNavPathView(deps) {
     }
     if (path.state === "idle") return;
     const steps = path.steps;
-    heading.textContent = `full path · ${String(steps.length)} level(s), root → selected`;
+    heading.textContent = `完整路径 · ${String(steps.length)} 层`;
     const stepButton = (step, isCurrent) => {
       const button = document.createElement("button");
       button.className = isCurrent ? "nav-path-step active" : "nav-path-step";
       button.textContent = navStepLabel(step);
-      button.title = `select ${step.id} (depth ${String(step.depth)})`;
+      button.title = navStepLabel(step);
+      button.dataset.branchId = step.id;
       button.addEventListener("click", () => void selectNavNode(step.id));
       return button;
     };
@@ -59,7 +61,7 @@ export function createNavPathView(deps) {
       parts.push(stepButton(steps[1], false));
       const more = document.createElement("button");
       more.className = "nav-path-more";
-      more.textContent = `… ${String(steps.length - 4)} more level(s) — show full path`;
+      more.textContent = `… 展开中间 ${String(steps.length - 4)} 层`;
       more.addEventListener("click", () => {
         session.pathShowAll = true;
         renderNavPath();
@@ -84,7 +86,7 @@ export function createNavPathView(deps) {
     if (steps.length > NAV_PATH_COLLAPSE_THRESHOLD && session.pathShowAll) {
       const collapse = document.createElement("button");
       collapse.className = "nav-path-more";
-      collapse.textContent = "collapse path";
+      collapse.textContent = "收起路径";
       collapse.addEventListener("click", () => {
         session.pathShowAll = false;
         renderNavPath();

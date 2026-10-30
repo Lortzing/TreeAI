@@ -1159,7 +1159,7 @@ test("forest finder: the boot listing paginates via More (cursors), tree search 
   const results = world.el("nav-tree-results");
   let buttons = results.querySelectorAll("button");
   assert.equal(buttons.length, 21, "20 tree rows + the More button");
-  assert.match(world.el("nav-tree-find-note").textContent!, /20 of 45 tree\(s\) listed/);
+  assert.match(world.el("nav-tree-find-note").textContent!, /已显示 20 \/ 45 棵思考树/);
   const firstListing = world.lastRequest("/api/nav/trees")!;
   assert.match(firstListing.path, /limit=20/);
   assert.ok(!firstListing.path.includes("cursor="), "the first page starts without a cursor");
@@ -1186,19 +1186,19 @@ test("forest finder: the boot listing paginates via More (cursors), tree search 
   let hits = results.querySelectorAll("button").filter((button) => button.dataset.treeId !== undefined);
   assert.equal(hits.length, 1);
   assert.equal(hits[0]!.dataset.treeId, "nav-big");
-  assert.match(world.el("nav-tree-find-note").textContent!, /1 tree hit\(s\) for “nav-big”/);
+  assert.match(world.el("nav-tree-find-note").textContent!, /找到 1 棵思考树/);
   assert.match(world.lastRequest("/api/nav/search/trees")!.path, /text=nav-big&mode=substring&limit=20/);
 
   await world.findTrees("fill-4");
   hits = results.querySelectorAll("button").filter((button) => button.dataset.treeId !== undefined);
   assert.equal(hits.length, 5, "id-substring search matches fill-40..fill-44");
-  assert.ok(hits.every((button) => /matched on id/.test(button.textContent!)), "id matches are labeled as such");
+  assert.deepEqual(hits.map((button) => button.dataset.treeId).sort(), ["fill-40", "fill-41", "fill-42", "fill-43", "fill-44"], "ID matches retain exact identity while showing human titles");
 
   /* 零命中：如实空态（不编造、不给近似匹配）。 */
   await world.findTrees("zzz-no-such-tree");
   assert.match(
     results.textContent!,
-    /no tree matches “zzz-no-such-tree” by title or id — nothing is fabricated/,
+    /没有找到“zzz-no-such-tree”/,
   );
 
   /* 空查询 + Find：回森林列表（刷新首页，不发空文本搜索）。 */
@@ -1229,8 +1229,8 @@ test("hierarchical on-demand loading: expanding loads only the first children pa
   await world.openNavTreeViaFinder("nav-big");
 
   /* 概览（236 节点 / 最大深度 13）与主干子节点首页（50/220）已取。 */
-  assert.match(world.el("nav-tree-title").textContent!, /Big navigation tree \(nav-big\)/);
-  assert.match(world.el("nav-tree-meta").textContent!, /236 nodes · max depth 13/);
+  assert.match(world.el("nav-tree-title").textContent!, /Big navigation tree/);
+  assert.match(world.el("nav-tree-meta").textContent!, /236 条路径/);
   assert.equal(world.childrenRequests("nav-big", "big-trunk").length, 1, "opening loads exactly the first children page");
   assert.match(world.childrenRequests("nav-big", "big-trunk")[0]!.path, /limit=50/);
 
@@ -1346,7 +1346,7 @@ test("expand-state persistence: every expansion/selection PUTs the full set, and
     expandedBranchIds: ["deep-trunk"],
     selectedBranchId: "d-001",
   });
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 2 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 2 层/);
 
   /* 再展开 d-001、选中 d-002（深层选中——祖先链在展开集合内）。 */
   await world.expandToggle("d-001");
@@ -1377,7 +1377,7 @@ test("expand-state persistence: every expansion/selection PUTs the full set, and
   assert.equal(d002.classList.contains("active"), true, "the saved selection is restored");
   assert.equal(d002.classList.contains("focused"), true, "the saved selection takes the roving focus");
   assert.equal(world.navRow("d-001")!.getAttribute("aria-expanded"), "true", "the saved expansion is restored");
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 3 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 3 层/);
   assert.deepEqual(
     world.navRows().map((row) => row.dataset.branchId),
     ["deep-trunk", "d-001", "d-002"],
@@ -1445,7 +1445,7 @@ test("keyboard traversal: arrows move row-by-row across the windowed order, → 
   await settle(25);
   const selected = world.navRowRequired("w-001");
   assert.equal(selected.classList.contains("active"), true, "Enter selects the focused row");
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 2 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 2 层/);
   const lastPut = world.expandPuts().pop()!;
   assert.equal((lastPut.body as Record<string, unknown>).selectedBranchId, "w-001");
 
@@ -1471,9 +1471,9 @@ test("same-name disambiguation: branch search hits carry distinct full paths, ro
   assert.equal(hits.length, 3, "the three same-name branches all hit");
   const hitMeta = hits.map((hit) => hit.textContent!);
   assert.ok(hitMeta.every((text) => text.includes(SAME_NAME_TITLE)), "each hit shows the title");
-  assert.ok(hits.some((hit) => hit.textContent!.includes("s-001") && hit.textContent!.includes("Wide branch 001")), "s-001's hit carries its path through w-001");
-  assert.ok(hits.some((hit) => hit.textContent!.includes("s-002") && hit.textContent!.includes("Wide branch 002")), "s-002's hit carries its path through w-002");
-  assert.ok(hits.some((hit) => hit.textContent!.includes("s-003") && hit.textContent!.includes("Mid step 3")), "s-003's hit carries its path through m-003");
+  assert.ok(hits.some((hit) => hit.dataset.branchId === "s-001" && hit.textContent!.includes("Wide branch 001")), "s-001's hit carries its path through w-001");
+  assert.ok(hits.some((hit) => hit.dataset.branchId === "s-002" && hit.textContent!.includes("Wide branch 002")), "s-002's hit carries its path through w-002");
+  assert.ok(hits.some((hit) => hit.dataset.branchId === "s-003" && hit.textContent!.includes("Mid step 3")), "s-003's hit carries its path through m-003");
   /* title 属性带完整路径（长链显示收拢、悬停完整）。 */
   const s003Hit = hits.find((hit) => hit.dataset.branchId === "s-003")!;
   assert.ok(s003Hit.title!.includes("Big navigation tree / Wide branch 000 / Mid step 1 / Mid step 2 / Mid step 3 / 方案A"));
@@ -1495,7 +1495,8 @@ test("same-name disambiguation: branch search hits carry distinct full paths, ro
   /* 长标题：title 属性携带全文（w-003 的 200+ 字标题）。 */
   const longLabel = world.navLabel("w-003");
   assert.equal(longLabel.title!.startsWith(LONG_TITLE.slice(0, 40)), true, "the title attribute carries the full long title");
-  assert.ok(longLabel.title!.includes("w-003"), "the title attribute carries the id identity");
+  assert.equal(world.navRowRequired("w-003").dataset.branchId, "w-003", "the row retains exact identity without exposing it in the tooltip");
+  assert.equal(s001.querySelector(".nav-id")!.hidden, true, "internal IDs stay hidden");
 
   /* 深链完整路径：nav-deep 的 d-060（61 层）——默认收拢，展开后 61 步全在。 */
   await world.openNavTreeViaFinder("nav-deep");
@@ -1507,11 +1508,11 @@ test("same-name disambiguation: branch search hits carry distinct full paths, ro
   deepHit.click();
   await settle(600); /* 60 层揭示：每层一页（1 子节点/页）的顺序续页 */
   assert.equal(world.navRowRequired("d-060").classList.contains("active"), true, "the 60-level node is revealed and selected");
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 61 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 61 层/);
   /* 收拢显示（首两步 + 末两步 + 「show full path」）。 */
   let steps = world.el("nav-path").querySelectorAll(".nav-path-step");
   assert.equal(steps.length, 4, "the long path renders collapsed (first two + last two)");
-  assert.match(world.el("nav-path").textContent!, /… 57 more level\(s\) — show full path/);
+  assert.match(world.el("nav-path").textContent!, /… 展开中间 57 层/);
   world.el("nav-path").querySelector(".nav-path-more")!.click();
   await settle(5);
   steps = world.el("nav-path").querySelectorAll(".nav-path-step");
@@ -1521,7 +1522,7 @@ test("same-name disambiguation: branch search hits carry distinct full paths, ro
   step30.click();
   await settle(25);
   assert.equal(world.navRowRequired("d-030").classList.contains("active"), true, "clicking a path step selects that ancestor");
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 31 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 31 层/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -1594,11 +1595,11 @@ test("locate current branch: cross-tree locate switches the nav tree and reveals
   await settle(60);
   const locateRequests = world.requestsOf("/api/nav/branches/other-b1/locate");
   assert.equal(locateRequests.length, 1, "Locate hits the cross-tree locate endpoint");
-  assert.match(world.el("nav-tree-title").textContent!, /Workbench tree \(nav-other\)/, "the nav session switched to the located tree");
+  assert.match(world.el("nav-tree-title").textContent!, /Workbench tree/, "the nav session switched to the located tree");
   const row = world.navRowRequired("other-b1");
   assert.equal(row.classList.contains("active"), true, "the located branch is selected");
   assert.equal(row.classList.contains("focused"), true, "the located branch takes focus");
-  assert.match(world.el("nav-path-heading").textContent!, /full path · 2 level\(s\), root → selected/);
+  assert.match(world.el("nav-path-heading").textContent!, /完整路径 · 2 层/);
   assert.match(world.el("nav-path").textContent!, /Branched from the trunk answer/);
 });
 
@@ -1663,14 +1664,14 @@ test("jump to source across trees: the workbench first opens the origin's tree (
 test("an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows", async () => {
   const world = await createWorld();
   await world.openNavTreeViaFinder("nav-empty");
-  assert.match(world.el("nav-tree-title").textContent!, /nav-empty — untitled \(no first question on the trunk\)/);
+  assert.match(world.el("nav-tree-title").textContent!, /新的思考/);
   assert.match(
     world.el("nav-tree-meta").textContent!,
-    /1 nodes · max depth 0 · this tree has no branches yet — branch from any answer to grow it/,
+    /1 条路径 · 选中回答可以展开支线/,
   );
   const trunkRow = world.navRowRequired("empty-trunk");
   assert.equal(trunkRow.querySelector(".nav-toggle")!.classList.contains("leaf"), true, "the trunk of an empty tree is an honest leaf");
-  assert.equal(trunkRow.querySelector(".nav-title")!.textContent, "Trunk", "an untitled trunk renders as Trunk");
+  assert.equal(trunkRow.querySelector(".nav-title")!.textContent, "思考主线", "an untitled trunk renders a user-facing label");
   assert.equal(world.childrenRequests("nav-empty", "empty-trunk").length, 1, "the trunk children (zero) are fetched once");
   assert.equal(world.navTree().querySelectorAll(".nav-more-row").length, 0, "no More row is fabricated for zero children");
   assert.match(world.el("nav-tree-status").textContent!, /rendering 1\/1 visible rows/);

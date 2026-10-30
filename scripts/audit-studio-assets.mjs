@@ -4,6 +4,7 @@
  * Fails closed when a relative module is absent from the exact HTTP allowlist.
  * No browser framework, generated manifest, API keys, or external dependencies.
  */
+import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +55,25 @@ function auditModule(url) {
  }
 }
 auditModule("/app.js");
+// Pinned, self-hosted Web Awesome subset: check every byte and every relative stylesheet import.
+const vendorRoot = resolve(PUBLIC, "vendor/webawesome");
+const vendorManifest = JSON.parse(readFileSync(resolve(vendorRoot, "manifest.json"), "utf8"));
+if (!existsSync(resolve(vendorRoot, "LICENSE.md"))) errors.push("Missing Web Awesome license");
+if (!indexSource.includes('href="/vendor/webawesome/styles/themes/default.css"')) errors.push("Missing Web Awesome local theme");
+for (const [name, checksum] of Object.entries(vendorManifest)) {
+ const url = "/vendor/webawesome/" + name;
+ const path = resolve(vendorRoot, name);
+ if (staticRoutes.get(url) !== "vendor/webawesome/" + name) errors.push(`Vendor asset not exactly allowlisted: ${url}`);
+ if (!existsSync(path)) { errors.push(`Missing vendor asset: ${url}`); continue; }
+ const bytes = readFileSync(path);
+ if (createHash("sha256").update(bytes).digest("hex") !== checksum) errors.push(`Vendored file changed: ${url}`);
+ if (name.endsWith(".js") && !visited.has(url)) errors.push(`Unreachable vendor module: ${url}`);
+ for (const match of bytes.toString().matchAll(/@import\s+url\(["']([^"']+)["']\)/g)) {
+  const target = relative(vendorRoot, resolve(dirname(path), match[1])).split(sep).join("/");
+  if (!Object.hasOwn(vendorManifest, target)) errors.push(`Vendor CSS dependency missing: ${target}`);
+ }
+}
+
 if(!installerSource.includes('entry.name === "src" || entry.name === "public" || entry.name === "package.json"')) {
  errors.push("D4 installer no longer copies entire Studio public directory");
 }

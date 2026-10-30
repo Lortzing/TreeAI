@@ -5,6 +5,7 @@
  */
 .sidebar-brand { display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 650; letter-spacing: -1px; flex-shrink: 0; }
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; background: var(--green); color: var(--surface); border-radius: 10px; font-size: 27px; font-weight: 400; box-shadow: var(--shadow-inset-top), 0 2px 7px rgb(31 64 41 / .28); }
+.brand-mark img { display: block; width: 100%; height: 100%; border-radius: inherit; }
 .brand-period { color: var(--gold); }
 #new-tree { padding: 12px 8px; box-shadow: var(--shadow-inset-top), 0 2px 8px -2px rgb(31 64 41 / .26); font-size: 13px; }
 .search-shortcut { display: flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--muted); padding: 4px 5px 8px; cursor: pointer; font-size: 12px; transition: color var(--motion-state) ease-out; }
@@ -68,7 +69,7 @@
 .turn.user { background: transparent; max-width: 76ch; color: var(--ink); font-size: 14.5px; line-height: 1.85; }
 .turn.user::before { content: '你'; display: block; font-family: var(--font-ui); font-size: 11px; color: var(--muted); margin-bottom: 5px; }
 .turn.assistant { background: transparent; border: 0; box-shadow: none; font-family: var(--font-read); font-size: 15.5px; line-height: 1.95; color: var(--ink); }
-.turn.assistant::before { content: '⑂  TreeAI'; display: block; color: var(--green); font-size: 10.5px; letter-spacing: .6px; line-height: 1.5; margin-bottom: 7px; white-space: pre; }
+.turn.assistant::before { content: 'TreeAI'; display: block; color: var(--green); font-size: 10.5px; letter-spacing: .6px; line-height: 1.5; min-height: 16px; margin-bottom: 7px; padding-left: 21px; background: url("/assets/treeai-mark.svg") left center / 16px 16px no-repeat; }
 .turn .turn-actions { margin-top: 17px; white-space: normal; }
 .turn .branch-here { margin-top: 0; border-style: solid; border-color: rgb(46 91 61 / .28); background: rgb(46 91 61 / .06); padding: 7px 11px; font-size: 11px; }
 .turn .term-explain { font-size: 11px; border-color: var(--hairline); border-style: solid; padding: 7px 11px; margin-top: 0; }
@@ -82,6 +83,7 @@
 #composer textarea:focus { outline: none; }
 .composer-actions { flex-wrap: wrap; }
 .composer-context { margin-right: auto; font-size: 10px; color: #728365; }
+.composer-context::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 4px; vertical-align: -3px; background: currentColor; mask: url("/assets/treeai-mark.svg") center / contain no-repeat; }
 .composer-context > span { color: var(--muted); margin-left: 6px; }
 #send { padding: 7px 10px; font-size: 11px; }
 #panel-header { padding: 24px 22px 15px; border-top: 2px solid var(--green); background: var(--room-raised); }
@@ -103,7 +105,7 @@
 #submit-return { width: 100%; background: var(--green); border-color: var(--green); font-size: 12px; padding: 10px; }
 #submit-return:hover:not(:disabled) { background: var(--green-deep); }
 .source-highlight { background: var(--highlight); }
-.empty-tree-symbol { display: block; font-size: 58px; color: #9db08d; margin-bottom: 20px; }
+.empty-tree-symbol { display: block; width: 58px; height: 58px; margin: 0 auto 20px; }
 /* 空态入场：hidden 解除时播放一次温和浮起（reduced-motion 全局块即时化）。 */
 #empty-state { max-width: 520px; animation: empty-rise var(--motion-card) var(--ease-grow); }
 @keyframes empty-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -353,3 +355,18 @@
   .session-view-heading { padding: 74px 24px 0; }
 }
 
+
+/* Saved harvests use the same workspace surface, with a bounded card page. */
+.harvest-content { overflow: auto; min-height: 0; padding: 12px 40px 48px; }
+.harvest-section { max-width: 850px; margin: 24px auto; }
+.harvest-section h2 { font-size: 15px; font-weight: 500; }
+.harvest-note { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.harvest-resume { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 16px 0; }
+.harvest-resume-button { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.harvest-material { margin: 4px 8px 4px 0; }
+.harvest-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px; margin: 16px 0; }
+.harvest-text, .harvest-quote { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.harvest-quote { border-left: 2px solid var(--hairline); padding-left: 14px; margin: 16px 0; font-size: 13px; }
+.harvest-identity { font-size: 11px; overflow-wrap: anywhere; color: var(--muted); }
+.harvest-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+@media (max-width: 719px) { .harvest-content { padding: 12px 20px 36px; } .harvest-card { padding: 14px; } }

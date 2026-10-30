@@ -1,0 +1,173 @@
+{
+  "runId": "d2-offline-20261030T100841785Z",
+  "schemaVersion": "d2-result-1",
+  "mode": "offline",
+  "startedAt": "2026-10-30T10:08:41.785Z",
+  "endedAt": "2026-10-30T10:09:32.001Z",
+  "verdict": "HAS_FAIL",
+  "counts": {
+    "pass": 20,
+    "fail": 1,
+    "blocked": 0,
+    "notRun": 1
+  },
+  "exitCode": 2,
+  "results": [
+    {
+      "durationMs": 17,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "113 files hashed; 9 valid / 17 invalid probes confirmed",
+      "id": "fixtures-integrity"
+    },
+    {
+      "durationMs": 1,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "keyword corpus clean",
+      "id": "schema-validator-selftest"
+    },
+    {
+      "durationMs": 3,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "23 rules fired on the synthetic corpus, clean corpus clean",
+      "id": "secret-scanner-selftest"
+    },
+    {
+      "durationMs": 4923,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "[typecheck] all workspaces WITH sources passed. Skipped workspaces have no sources yet and are NOT verified by this run.",
+      "id": "typecheck"
+    },
+    {
+      "durationMs": 1624,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "",
+      "id": "tests-typecheck"
+    },
+    {
+      "durationMs": 2232,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "negative type tests: 7/7 rejected as expected\nok: no Pi imports in packages/contracts (src + tests)",
+      "id": "unit-tests-contracts"
+    },
+    {
+      "durationMs": 1753,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 672.407583",
+      "id": "unit-tests-runtime-pi"
+    },
+    {
+      "durationMs": 1396,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 688.755334",
+      "id": "unit-tests-persistence"
+    },
+    {
+      "durationMs": 687,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 129.990791",
+      "id": "unit-tests-tool-policy"
+    },
+    {
+      "durationMs": 1159,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ todo 0\nℹ duration_ms 76.31425",
+      "id": "unit-tests-event-journal"
+    },
+    {
+      "durationMs": 860,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 832.615584",
+      "id": "unit-tests-agent-f"
+    },
+    {
+      "durationMs": 462,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 435.687",
+      "id": "integration-tests-agent-f"
+    },
+    {
+      "durationMs": 3670,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "ℹ duration_ms 3642.540459",
+      "id": "live-framework-selftest"
+    },
+    {
+      "durationMs": 2175,
+      "status": "PASS",
+      "exitCode": 0,
+      "id": "runtime-smoke"
+    },
+    {
+      "durationMs": 28383,
+      "status": "FAIL",
+      "exitCode": 1,
+      "error": {
+        "message": "npm test -w @treeai/studio exited 1"
+      },
+      "detail": "npm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path [HOME]/.codex/worktrees/7586/TreeAI/apps/studio\nnpm error workspace @treeai/studio@0.0.0\nnpm error location [HOME]/.codex/worktrees/7586/TreeAI/apps/studio\nnpm error command failed\nnpm error command sh -c npm run build:deps && npm run typecheck && node --test tests/*.test.ts",
+      "id": "unit-tests-studio"
+    },
+    {
+      "durationMs": 0,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "declared \"0.85.1\" / installed \"0.85.1\"",
+      "id": "pi-version-pin"
+    },
+    {
+      "durationMs": 627,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "3099 files scanned, 0 findings (scanner d2-v1.1)",
+      "id": "secret-scan-workspace"
+    },
+    {
+      "durationMs": 18,
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no treeai-* temp leftovers",
+      "id": "residual-resources"
+    },
+    {
+      "durationMs": 0,
+      "status": "NOT_RUN",
+      "exitCode": null,
+      "reason": "explicit --d1-repro flag required (offline PRs never force live model calls); execution also needs network + d1-spikes write authorization",
+      "id": "d1-repro"
+    },
+    {
+      "id": "exit-codes",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "all items follow the frozen status/exitCode discipline"
+    },
+    {
+      "id": "evidence-write-hygiene",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "no secret-shaped content attempted to enter the evidence"
+    },
+    {
+      "id": "schema-validation",
+      "status": "PASS",
+      "exitCode": 0,
+      "detail": "environment.json and the result draft validate against schemas/d2"
+    }
+  ],
+  "notes": [
+    "d1-repro skipped: requires explicit --d1-repro (offline PRs never force live model calls)"
+  ]
+}

@@ -1,0 +1,204 @@
+✔ navigation sessions ignore obsolete overview failures and closed-tree responses independently (10.936875ms)
+✔ restoring shallow and deep selection stays read-only and preserves the full expanded set (6.814084ms)
+✔ child paging merges in-flight requests and recovers stale cursors from the first page (3.71725ms)
+✔ navigation persistence serializes writes and coalesces rapid changes to the newest full snapshot (4.667708ms)
+✔ a late persistence failure after navigation closes never contaminates the next session (3.981083ms)
+✔ finder epochs discard superseded listing successes and search failures independently per instance (0.723042ms)
+✔ finder keeps loaded pages on failure and retries the same cursor without duplicate in-flight requests (0.3235ms)
+✔ blank finder input replaces search and ignores its late continuation (0.234583ms)
+✔ scroll follow keeps the 48px threshold and does not pull users reading above (0.139708ms)
+✔ selection offsets reject source mismatch without creating an incorrect anchor (0.342667ms)
+✔ DOM turn reuse excludes Return cards and requires exact turn text (0.221625ms)
+✔ R1 Markdown view preserves syntax, source offsets and styled text (0.6765ms)
+✔ R1 Markdown view carries fenced-code state between material blocks (0.194458ms)
+✔ R1 material selection snaps surrogate pairs and combining graphemes outwards (0.303125ms)
+✔ R1 material selection keeps a joined emoji grapheme intact (0.088166ms)
+✔ R1 Search view preserves honest idle, loading, failed, empty, and populated states (6.2045ms)
+✔ R1 Return view preserves anchored/fallback source facts and adoption states (0.969209ms)
+✔ R1 diagnostics view preserves run, policy, and failure-panel states (0.369667ms)
+✔ R1 navigation finder view preserves states, paging, and active-tree row behavior (0.721584ms)
+✔ R1 navigation chrome view preserves overview and action state (0.642542ms)
+✔ Studio API calls injected native fetch without a dependency-object receiver (0.400333ms)
+✔ PDF pages reserve trusted geometry before paint so source jumps keep their viewport position (0.161583ms)
+✔ stream follow records native scroll position before delayed scroll events and preserves readers above (0.141417ms)
+✔ branch display indexes preserve identity and ordinals after state replacement and append (0.510666ms)
+✔ PDF text anchors are positioned while the original page paint is still pending (0.843834ms)
+✔ empty-tree starters focus an editable draft without submitting or overwriting existing input (0.670375ms)
+✔ material tools open outside history and close without clearing domain state (0.855833ms)
+✔ return focus reveals nested secondary tools before focusing a material or branch (0.396458ms)
+✔ branch entry: the armed capture bar offers branching; the click resolves the canonical selection (server-signed sourceHash) then posts from-material — zero runs/turns, no cursor switch (158.665292ms)
+✔ Escape closes the current reader when a pending flow belongs to another material, retaining that flow for its own reader (922.223209ms)
+✔ context declaration: the scope card shows the exact selection, the bounded window, covered blocks, and the composed size — before any first-question request; the whole-material case states nothing is omitted (98.077ms)
+✔ context declaration: a truncated window carries the explicit TRUNCATED marker with the truncation note verbatim — the 24,000-unit cap is never silent (charter §3.3 rule 3) (100.591083ms)
+✔ first question: submitting posts material-first-question with the same intent key, lands the turns, closes the reader, and opens the branch panel (340.273916ms)
+✔ no-duplicate discipline: a double-click submits exactly once (in-flight lock); a replay (same key, same content) reconciles without re-sending (336.982458ms)
+✔ dispatch outcomes: 'failed' is shown honestly and a same-key retry is an explicit new attempt; 'unknown' is never auto-retried and is disclosed as not re-sent (422.052917ms)
+✔ resume-or-create hits an existing exploration: the honest choice — open the existing branch (nothing new is created) or explicitly start a new one (fresh key, new branch) (331.328125ms)
+✔ explicit new exploration: from the choice, a fresh intent key posts mode 'new' and the full first-question flow follows on the new branch (370.972791ms)
+✔ pending intent resume: a branch created but never asked resumes straight to the declared scope with the SAME key after a refresh (idempotent continuation — localStorage carries the submission identity) (339.669334ms)
+✔ restored branch navigation/session facts ride along honestly (failed navigation and unavailable session are disclosed, never masked) (98.123583ms)
+✔ first-question conflict (409): after an in-flight dispatch lands unseen, a changed question is refused — the immutability is disclosed and the changed question is offered as a normal continuation (panel opens prefilled; sending stays an explicit action) (397.797959ms)
+✔ branch-intent conflict (409 material-branch-conflict, same key bound to a different selection): the flow fails honestly and offers a retry (99.813125ms)
+✔ material return: the panel return posts material-return with the draft idempotency key; the mainline card renders the material source fields, adoption state, and the source jump opens the reader at the anchored version and block (618.45075ms)
+✔ material return card: a cached source card renders on the mainline at boot; a missing cache degrades honestly (the Return itself is intact, no source details are fabricated) (511.6595ms)
+✔ session-unavailable material branch: the explicit new exploration posts material-new-exploration (material context rides along); an available session is refused with the honest 409 (166.824167ms)
+✔ css lexical locks: the branching flow, the scope card, the truncation marker, and the material return source card have base-layer rules (0.6715ms)
+✔ material list: honest per-state rows (ready / failed-with-reason / parsing / pdf), an honest empty state, a loading state, and a retryable list failure (295.651667ms)
+✔ attachment selection preserves the trunk nodes, draft and scroll while opening and closing the right reader (387.059208ms)
+✔ block-chunked reading: pages arrive via the afterBlock cursor, Load more is an explicit keyboard path, near-bottom scroll prefetches, the end is honest, and no fetches continue past the end (162.696291ms)
+✔ keyboard-scrollable reading surface: #mat-blocks carries tabindex=0 (WCAG 2.1 SC 2.1.1 — arrow/PageDown scrolling needs a focusable scroll container) (67.314791ms)
+✔ reading position: throttled save on scroll, immediate flush on close, and restore on reopen (scrollIntoView on the saved block) (2011.7655ms)
+✔ reading position beyond the first page: the open loop pages forward until the saved block is loaded, then restores onto it (64.74675ms)
+✔ lossless rendering: every rendered block's textContent equals the frozen canonicalText slice byte-for-byte, carrying its absolute range (69.572584ms)
+✔ cross-line selection inside one block: the captured payload is the frozen md-sel-22 range [1015, 1036) over canonicalText (63.466208ms)
+✔ repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19) (69.006417ms)
+✔ cross-block selection: the honest not-anchorable state — no payload, no silent truncation (B2 discipline) (66.295875ms)
+✔ grapheme-safe capture: a boundary inside a surrogate pair or a combining sequence snaps outward — the payload never splits a cluster (md-06 / md-07 fixtures) (100.352208ms)
+✔ copy quote: the clipboard receives the exact canonical slice; the D4-3 anchor payload stays honestly displayed (73.407667ms)
+✔ version awareness: the reader shows which version it renders, an older version is explicitly labeled and readable, and switching is non-destructive with a never-migrates note (127.065375ms)
+✔ a saved reading position on an older version reopens that version (charter §1: return to the original text), with the older-version note and restore (64.117541ms)
+✔ a PDF material opens to the real page reading surface — pages render with identifiers and blocks are fetched (D4-2 PDF increment) (66.225625ms)
+✔ a parsing version shows its in-flight status with an explicit Refresh; when the parse completes the refresh loads the real blocks (101.868667ms)
+✔ a failed version shows its reason verbatim with no empty-document masquerade; the version strip keeps it honestly unlabeled-readable (65.582583ms)
+✔ honest retry surfaces: a detail failure retries the open; an append-page failure retries the next page (228.397625ms)
+✔ armed selection survives async refreshes and page appends: block elements and their text nodes keep identity while armed (no re-render during selection over the reading view) (195.785041ms)
+✔ capture bar freezes during the selection drag window: a mid-drag selectionchange defers arming until mouseup (no mid-drag layout shift) (106.759041ms)
+✔ touch arming: compatibility mouse events preserve the captured quote; a later explicit clear disarms it (87.510042ms)
+✔ Esc closes the reader with focus returned to the material's list button; keyboard affordances are native buttons (308.26775ms)
+✔ CSS lexicon: the reader's narrow-window, reduced-motion, wide-column, and base-layer rules are locked lexically (2.578708ms)
+✖ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (230.0865ms)
+✖ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (155.692167ms)
+✔ children page failures are honest: a first-page failure shows the error with a Retry row, and an auto-paged More failure keeps the loaded page and retries the next page (443.326792ms)
+✔ expand-state persistence: every expansion/selection PUTs the full set, and reopening restores the saved expansion and the deep selection via ancestor paging (344.589958ms)
+✔ keyboard traversal: arrows move row-by-row across the windowed order, → expands / enters the first child, ← collapses / returns to the parent, Enter selects, and the focused row never leaves the DOM (336.475917ms)
+✔ same-name disambiguation: branch search hits carry distinct full paths, rows carry id chips, and the selected node's full parent path is complete (long chains collapse but expand to every level) (1182.857791ms)
+✔ stale-cursor 409 recovery: a cursor page after index invalidation restarts from the first page (request sequence locked, no duplicate rows) (214.5785ms)
+✔ nav-not-wired 503: the honest unavailable state with a retry (no fabricated trees), and an expand-state read failure degrades to a note while browsing continues (221.103625ms)
+✔ locate current branch: cross-tree locate switches the nav tree and reveals the workbench's current branch through its ancestor chain (201.922917ms)
+✔ jump to source: a turn origin goes through the existing /source reveal, a material origin opens the reader at the anchored version+block, and a trunk honestly reports no origin (403.227167ms)
+✔ jump to source across trees: the workbench first opens the origin's tree (existing openTree behavior), then the existing reveal runs (271.532541ms)
+✖ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (121.117584ms)
+✔ CSS lexicon: the nav surface's bounded scroll container, fixed row height, keyboard-focus rule, title truncation, and narrow-window touch rules are locked lexically (2.115209ms)
+✔ visual baseline: real index.html skeleton and boot-rendered structure (85.885458ms)
+✔ thought search shortcut preserves the current query and draft without creating product facts (34.404459ms)
+✔ Session map opens the real paged dialogue and preserves drafts (56.599833ms)
+✔ Paged dialogue groups multi-run Episodes and filters canonical turns to exactly one round (72.935042ms)
+✔ Source reveal opens the older round containing the anchor (418.664833ms)
+✔ Session map Escape returns to the same conversation and retains the Return draft (48.977875ms)
+✔ Session graph limits rendered groups and empty Sessions have no invented dialogue rounds (97.956083ms)
+✔ Session map without a tree shows a creation action and creates nothing during browsing (34.824459ms)
+✔ journal drawer: failure with retry, honest empty state, Esc focus restore (349.777333ms)
+✔ sources drawer close button: visible while the overlay covers Send and the toggle, click closes, Esc path unchanged (475.706958ms)
+✔ branch panel degradation: recovery action posts an exact whole-answer /branches body, composer stays fail-closed (77.695042ms)
+✔ return flow: draft persistence with idempotency key, double-submit guard, submit finalization (284.048791ms)
+✔ return failure semantics: response-loss reconciliation, draft kept on failure, rekey on edit (554.705875ms)
+✔ adoption attempts: a saved return with a failed run attempt renders attempted-but-pending on the card and in the sources drawer (48.415ms)
+✔ a saved return whose server-side navigation failed shows the saved fact and the navigation failure separately (286.040458ms)
+✔ Esc on the branch panel closes it and restores focus to the triggering tab (286.038917ms)
+✔ streaming scroll discipline: a scrolled-up reader is never yanked to the bottom (68.765583ms)
+✔ trunk session banner: disabled with reason when nothing is available; cross-branch recovery posts an exact body (78.929542ms)
+✔ two-branch cross-switching: alternating panels keep lineage, context, and reading state per branch (139.18625ms)
+✔ selection to anchor: selection arms the branch affordance, exact offsets are submitted, the anchor card renders, and View source reveals or degrades honestly (602.180083ms)
+✔ narrow window: <720px rules exist in style.css and the sidebar-drawer JS behaviors hold (toggle, auto-close, Esc layering) (569.780041ms)
+✔ Esc during an in-flight /switch is never silently dropped (B7): the panel close bounded-waits the busy lock, then runs (398.1785ms)
+✔ prefers-reduced-motion: the global CSS downgrade exists and JS scroll positioning jumps instantly under reduce (97.402042ms)
+✔ reduced motion: at-bottom stick and delta follows land instantly instead of animating (70.595958ms)
+✔ scroll follow threshold: a delta within 47px of the bottom follows; at 49px it does not move (33.638917ms)
+✔ keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not (91.946ms)
+✔ tree list load failure: persistent sidebar retry with an honest pending state and boot-completing recovery (no page reload) (64.162458ms)
+✔ boot focus: initial focus lands on the New Tree button and re-renders never steal it (65.210375ms)
+✔ A2 long answer: a late selection inside a multi-thousand-character answer anchors at exact offsets and reveals by slice (no whole-answer fallback) (62.511542ms)
+✔ A2 duplicate phrase: anchoring the SECOND occurrence submits and reveals the second occurrence (never the first string match) (65.523459ms)
+✔ A2 cross-line selection: offsets and the revealed text span the line break intact (63.81975ms)
+✔ topbar position path: empty with no tree, tree name / 思考主线 once open, the branch name appended while the panel is open (303.018167ms)
+✔ topbar position path: empty with no tree, treeId / Trunk once open, the branch label appended while the panel is open (298.959208ms)
+✔ empty-state New Tree: the button creates a tree via POST /api/trees and opens it (46.786458ms)
+✔ sources drawer toggle: hidden while no tree is open, revealed once a tree opens (48.745792ms)
+✔ post-rework layout CSS: the >=1180px juxtaposed branch column and the bounded-height chain are locked lexically (2.351625ms)
+✔ post-rework CSS: restored rules are present and the removed anti-patterns stay absent (1.342166ms)
+✔ new exploration entry (v3 §4.4): empty-text guard, cancelled confirm posts nothing, confirmed flow posts the exact body and clears the degradation (98.539625ms)
+✔ return card fallback placement (issue #7 P1): the targetAnchor snapshot distinguishes source-on-another-branch / changed / missing; the excerpt and saved time stay on the card; long excerpts collapse; delivered cards carry the adoption time (54.175458ms)
+✔ terminology minimal UI: selection arms Explain, the card shows the isolated task result, save persists, and promotion opens the follow-up branch (114.894042ms)
+✔ desktop sidebar collapses to a persistent rail without losing the current tree or prompt (34.333042ms)
+✔ layered turn structure: prose is its own layer, textContent stays byte-identical, and an async refresh never replaces the content layer (133.955208ms)
+✔ selection drag window: an overlay-changing re-render is deferred until mouseup — the content layer is never swapped under the cursor (82.082ms)
+✔ toolbar modes: single-word selections arm term mode, spans arm range mode (exact POST payloads), dblclick arms like mouseup, and Esc closes the card with focus return (65.819791ms)
+✔ Esc layering with the term card: a card inside the open panel closes before the panel; the panel branch keeps its semantics (303.76225ms)
+✔ Esc from a mark-opened card (no armed selection): the disabled explain entry cannot take focus — focus falls back to the view composer, never silently lost (64.806583ms)
+✔ explain card states: cached success note, honest failure with a working retry, cancelled with the late-discard note, and idempotent save showing the existing annotation (296.209ms)
+✔ late explain responses are discarded honestly when the target leaves: no resurrection of a closed card, counted in the drawer usage (63.3625ms)
+✔ unified range overlays: annotation marks and the source highlight share one slice-exact mechanism, survive re-renders, and never alter the text (97.218958ms)
+✔ resume-or-create: an already-promoted annotation surfaces the existing follow-up explicitly — no second promotion form, no silent reuse (65.378584ms)
+✔ promotion outcomes: success opens the branch, a same-key replay is named honestly, and a 409 conflict lands on the card with the same-key retry kept (247.094208ms)
+✔ promotion response loss resolves to the recorded promotion: the card refreshes to the resume affordance instead of pretending nothing happened (94.35825ms)
+✔ narrow window and reduced motion: the ③ CSS rules are locked lexically (toolbar/card full width under 720px; card entrance animation neutralized under reduce) (2.025834ms)
+✔ touch selection: selectionchange arms the toolbar without mouseup, and an emptied selection disarms it after the deferred check (47.767834ms)
+✔ return draft/focus discipline holds under the layered renderer: submit closes the panel to the main input; the term-card first-question draft keeps its value and focus across re-renders (332.642333ms)
+✔ drawer terminology surface: tasks with modes, honest usage counts, cache preference toggle with a retryable failure, and the read-model failure state (159.859167ms)
+✔ P0 joint anchor validation: equal-length replacement, a moved word, an out-of-bounds deletion, and an off-range drift never attach an annotation to the wrong text — the intact one still renders (49.445125ms)
+✔ P0 degraded card: a hash-stale annotation with an intact excerpt opens as the saved snapshot with an explicit drift note (toolbar shortcut and server dedup paths) (100.381875ms)
+✔ P0 astral content: a valid emoji-anchored annotation renders its exact surrogate-pair slice, and a surrogate-shifted stale range never attaches (33.732291ms)
+✔ P1 stale read-model race: tree A's late terminology response never lands while tree B is open — the shared read model never holds another tree's annotations (124.670584ms)
+✔ P1 save-path guard: an annotation saved while its card was closed lands in the read model without resurrecting the card (78.176291ms)
+✔ reading mode selector: three modes with honest pressed state, the quality-gate note while disabled, exact PUT payload, and a retryable failure (143.467791ms)
+✔ suggestion strip states: partial chips with the not-shown count, no-suggestions, budget-paused with a recovery entry, and source-invalid snapshot-only chips (95.264084ms)
+✔ suggestion chips pre-fill an explain request: nothing is sent until the explicit confirm; Esc dismisses and restores chip focus (110.09425ms)
+✔ answer completion refreshes the read model: a pending suggestion set follows to its terminal state via the run-terminal path (63.81075ms)
+ℹ tests 146
+ℹ suites 0
+ℹ pass 143
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6860.691125
+
+✖ failing tests:
+
+test at apps/studio/tests/ui-nav.test.ts:1155:1
+✖ forest finder: the boot listing paginates via More (cursors), tree search matches title/id, zero-hit and blank-input are honest, and a listing failure retries (230.0865ms)
+  AssertionError [ERR_ASSERTION]: id matches are labeled as such
+      at TestContext.<anonymous> (file:///Users/tal/.codex/worktrees/7939/TreeAI/apps/studio/tests/ui-nav.test.ts:1195:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at apps/studio/tests/ui-nav.test.ts:1227:1
+✖ hierarchical on-demand loading: expanding loads only the first children page, the DOM renders only the scroll window (spacers carry the rest), scrolling re-windows, and the in-window More row auto-pages (155.692167ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /rendering 10\/52 visible rows \(virtualized window\) · 236 条路径/. Input:
+  
+  '显示详情rendering 10/52 visible rows (virtualized window) · 236 nodes · max depth 13'
+  
+      at TestContext.<anonymous> (file:///Users/tal/.codex/worktrees/7939/TreeAI/apps/studio/tests/ui-nav.test.ts:1256:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '显示详情rendering 10/52 visible rows (virtualized window) · 236 nodes · max depth 13',
+    expected: /rendering 10\/52 visible rows \(virtualized window\) · 236 条路径/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at apps/studio/tests/ui-nav.test.ts:1664:1
+✖ an empty tree stays honestly usable: single trunk, null title, explicit growth guidance, no fabricated rows (121.117584ms)
+  AssertionError [ERR_ASSERTION]: an untitled trunk renders as Trunk
+  
+  '思考主线' !== 'Trunk'
+  
+      at TestContext.<anonymous> (file:///Users/tal/.codex/worktrees/7939/TreeAI/apps/studio/tests/ui-nav.test.ts:1674:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '思考主线',
+    expected: 'Trunk',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

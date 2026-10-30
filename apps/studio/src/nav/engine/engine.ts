@@ -150,7 +150,7 @@ export class TreeNavEngine {
   #firstUserTurnTitle(branchId: string): string | null {
     const turns = this.#repository.listTurns(branchId as BranchId);
     for (const turn of turns) {
-      if (turn.role === "user") return turn.text;
+      if (turn.role === "user") return turn.text.replace(/^附件：(?:\[[^\]\n]+\]\(\/api\/trees\/[^/()]+\/materials\/[^/()]+\/versions\/[^/()]+\/file\)（[^）]+）)(?:、\[[^\]\n]+\]\(\/api\/trees\/[^/()]+\/materials\/[^/()]+\/versions\/[^/()]+\/file\)（[^）]+）)*\n\n/, "");
     }
     return null;
   }

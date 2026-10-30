@@ -1,5 +1,6 @@
 /** beta keyboard phase; the public probe retains original cleanup and output order Instance-owned state and dependencies. */
 import { inputClickAt } from "../material-probes.mjs";
+import { exposeInputTarget } from "../material/input.mjs";
 import { materialButtonSelector } from "../material-probes.mjs";
 import { waitFor } from "../material-probes.mjs";
 
@@ -44,6 +45,22 @@ export async function runBetaKeyboard(deps) {
           }
           const key = active.id ?? `${active.tag}.${active.cls}`;
           seen.set(key, (seen.get(key) ?? 0) + 1);
+          // Open secondary controls with the keyboard; all original reachability assertions remain.
+          if (active.id === "workspace-library-toggle") {
+            const open = await deps.ctx.evalJs(`document.getElementById("workspace-library").open`);
+            if (!open) await deps.pressKey(deps.ctx, "Enter", "Enter", 13, { text: "\r" });
+          }
+          if (active.id === "search-shortcut" && !seen.has("search-input")) {
+            await deps.pressKey(deps.ctx, "Enter", "Enter", 13, { text: "\r" });
+            const focused = await deps.ctx.evalJs(deps.ACTIVE_EL_EXPR);
+            deps.keyboard.sequence.push({ step, active: focused, action: "search opens and focuses its query" });
+            if (focused?.id === "search-input") seen.set("search-input", 1);
+          }
+          if (active.id === "search-close") await deps.pressKey(deps.ctx, "Enter", "Enter", 13, { text: "\r" });
+          if (active.id === "reading-materials") {
+            const open = await deps.ctx.evalJs(`document.getElementById("materials-section").open`);
+            if (!open) await deps.pressKey(deps.ctx, "Enter", "Enter", 13, { text: "\r" });
+          }
           if (active.id === "mat-blocks") { reachedBlocks = true; break; }
         }
         if (!reachedBlocks) {
@@ -74,7 +91,9 @@ export async function runBetaKeyboard(deps) {
               `outlineColor: cs.outlineColor, focusVisible: el.matches(":focus-visible") }; })()`,
         );
         const blocksStyle = await focusStyle("#mat-blocks");
+        await exposeInputTarget(deps.ctx, "#search-input");
         const searchStyle = await focusStyle("#search-input");
+        await deps.pressKey(deps.ctx, "Escape", "Escape", 27);
         const styleProblems = [];
         for (const style of [blocksStyle, searchStyle]) {
           if (style === null || style.outlineStyle === "none" || Number.parseFloat(style.outlineWidth) <= 0) {
@@ -114,6 +133,7 @@ export async function runBetaKeyboard(deps) {
         });
         deps.keyboard.enterActivation = "reader close button (Enter) closed the reader";
         /* Space 激活：焦点在搜索范围切换按钮上按 Space → aria-pressed 翻转。 */
+        await exposeInputTarget(deps.ctx, "#search-scope-all");
         const spaceBefore = await deps.ctx.evalJs(`(() => { const b = document.getElementById("search-scope-all"); b.focus(); return b.getAttribute("aria-pressed"); })()`);
         await deps.pressKey(deps.ctx, " ", "Space", 32);
         const spaceAfter = await deps.ctx.evalJs(`(() => document.getElementById("search-scope-all").getAttribute("aria-pressed"))()`);
@@ -122,6 +142,7 @@ export async function runBetaKeyboard(deps) {
         }
         await deps.pressKey(deps.ctx, " ", "Space", 32); /* 还原 */
         deps.keyboard.spaceActivation = `search-scope toggle (Space) flipped aria-pressed ${String(spaceBefore)} → ${String(spaceAfter)} → ${String(spaceBefore)}`;
+        await deps.pressKey(deps.ctx, "Escape", "Escape", 27);
         /* Escape 分层关闭 + 焦点还原：抽屉 → 阅读器 → 支线面板。 */
         const escapeLayers = [];
         const recordEscape = async (label, open, closedExpr, verifyFocusExpr, focusTargetLabel) => {
@@ -168,8 +189,8 @@ export async function runBetaKeyboard(deps) {
             );
           },
           `(() => { const r = document.getElementById("material-reader"); return r === null || r.hidden; })()`,
-          `(() => { const a = document.activeElement; return a !== null && a.closest("#material-list") !== null; })()`,
-          "the material-list button that opened the reader",
+          `(() => { const a = document.activeElement; return a === document.getElementById("reading-materials") && !document.getElementById("materials-section").open; })()`,
+          "the collapsed attachments summary",
         );
         /* 面板的 Esc 还原目标是打开它的分支 tab（panelFocusReturn 的 tab 引用——
            动态按钮无 id，以落在该 tab 上断言）。 */

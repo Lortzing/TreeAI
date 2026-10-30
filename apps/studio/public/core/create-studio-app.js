@@ -1,3 +1,5 @@
+import { createComposerTools } from "./controllers/composer-tools.js";
+import { registerAppearance, handleComposerKey } from "./controllers/appearance.js";
 import { registerWorkspaceEvents } from "./controllers/workspace-events.js";
 import { registerApiSettings } from "./controllers/api-settings.js";
 import { createStudioFeatures } from "./compose-features.js";
@@ -29,6 +31,7 @@ export function createStudioApp(deps) {
   function start() {
     if (started) return;
     started = true;
+    const disposeAppearance = registerAppearance({ document, window });
     const disposeApiSettings = registerApiSettings({ document, fetch });
 const studioState = createStudioState({
 
@@ -44,6 +47,7 @@ const studioFeatures = createStudioFeatures({
   get navigator() { return navigator; },
 });
 const {
+  disposeGenerativeUi,
   sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
   $,
   persistReturnDraft,
@@ -95,6 +99,10 @@ const {
   disconnectEvents,
 } = studioFeatures;
 
+const composerTools = ["prompt-input", "panel-prompt-input"].map(id => {
+  const tools = createComposerTools(document, $(id), { getContext: () => ({ treeId: state.currentTreeId, branchId: id === "panel-prompt-input" ? state.panelBranchId : trunkBranchId() }), fetch, refreshMaterials: studioFeatures.refreshMaterials }); const actions = $(id).parentElement.querySelector(".composer-actions") ?? $(id).parentElement; actions.insertBefore(tools.element, actions.firstChild); return tools;
+});
+
 const disposeWorkspaceEvents = registerWorkspaceEvents({ $, state, document, window, sessionUI, scrollBehavior, openMaterial, closeMaterialReader, setWorkspaceView, moveSessionRound });
 
 /* 失败后编辑 = 新的逻辑提交：旧键可能已被服务端绑定到旧文本（同键异容
@@ -134,10 +142,6 @@ $("nav-locate-current").addEventListener("click", () => void navLocateCurrent())
 $("nav-source-selected").addEventListener("click", () => void navJumpToSource());
 $("nav-close-tree").addEventListener("click", () => closeNavTree());
 
-$("sidebar-toggle").addEventListener("click", () => {
-  const open = document.body.classList.toggle("sidebar-open");
-  $("sidebar-toggle").setAttribute("aria-expanded", open ? "true" : "false");
-});
 
 /* ------------------------------ 滚动位置记忆（W2 §4） ------------------------------ */
 
@@ -163,18 +167,9 @@ $("empty-new-tree").addEventListener("click", () => guard(createTree));
 $("list-retry").addEventListener("click", () => void retryTreesLoad());
 $("send").addEventListener("click", () => guard(() => sendPrompt("main")));
 $("panel-send").addEventListener("click", () => guard(() => sendPrompt("panel"), "panel"));
-$("prompt-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-    event.preventDefault();
-    guard(() => sendPrompt("main"));
-  }
-});
-$("panel-prompt-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-    event.preventDefault();
-    guard(() => sendPrompt("panel"), "panel");
-  }
-});
+for (const [id, view] of [["prompt-input", "main"], ["panel-prompt-input", "panel"]]) {
+  $(id).addEventListener("keydown", (event) => handleComposerKey(event, $(id), () => guard(() => sendPrompt(view), view), document));
+}
 $("submit-return").addEventListener("click", () => guard(submitReturn, "panel"));
 /* 新探索（v3 §4.4）：session 不可用分支的显式换轨入口（按钮仅在不可用时
    可见，见 updateComposerLocks）。 */
@@ -241,6 +236,30 @@ $("panel-view-source").addEventListener("click", () => {
    z-index 在支线面板之上——它是当前注意面，先于面板收起）。 */
 registerDocumentListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  // Native settings dialog owns Escape; do not also navigate the workspace below it.
+  if ($("api-settings-dialog")?.open) return;
+  if ($("search-section").open) {
+    event.preventDefault();
+    $("search-section").open = false;
+    $("search-shortcut").setAttribute("aria-expanded", "false");
+    $("search-shortcut").focus();
+    return;
+  }
+  if ($("materials-section").open && $("materials-section").contains(event.target)) {
+    event.preventDefault();
+    $("materials-section").open = false;
+    $("reading-materials").focus();
+    return;
+  }
+  if ($("workspace-library")?.open) {
+    event.preventDefault();
+    $("workspace-library").open = false;
+    if (document.body.classList.contains("sidebar-open")) {
+      closeSidebar();
+      $("sidebar-toggle").focus();
+    } else $("workspace-library-toggle").focus();
+    return;
+  }
   if (state.drawerOpen) {
     event.preventDefault();
     closeDrawer();
@@ -380,7 +399,9 @@ void (async () => {
   try {
     await refreshTrees();
     if (state.trees.length > 0) {
-      await openTree(state.trees[0].id);
+      let rememberedTree = null;
+      try { rememberedTree = window.localStorage?.getItem("treeai:last-tree"); } catch { /* Optional browser cursor. */ }
+      await openTree(state.trees.find((tree) => tree.id === rememberedTree)?.id || state.trees[0].id);
     } else {
       renderAll();
     }
@@ -397,8 +418,11 @@ void (async () => {
 })();
 
     cleanup = () => {
+      disposeGenerativeUi();
       disposeApiSettings();
       disposeWorkspaceEvents();
+      disposeAppearance();
+      for (const tools of composerTools) tools.dispose();
       stopDiagnosticsPolling();
       disconnectEvents();
       for (const [name, listener, options] of docListeners.splice(0)) {

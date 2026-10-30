@@ -1,3 +1,6 @@
+import { controlIcon } from "../dom.js";
+import { wireRegionSelection } from "../controllers/region-selection.js";
+import { createDisclosure } from "../dom.js";
 /** Material reader chrome, notes, block layout, tail states and entrance/exit presentation. Instance-owned state and dependencies. */
 
 export function createMaterialReaderView(deps) {
@@ -37,21 +40,70 @@ export function createMaterialReaderView(deps) {
        注记补渲不再把视口拉回顶部。内容合法重置的路径（打开新材料前已清空
        子元素）scrollTop 自然归 0，不受影响。 */
     const preservedScrollTop = preservedBlocks === null ? null : preservedBlocks.scrollTop;
+    const detailsOpen = deps.document.getElementById("mat-file-details")?.open ?? false;
     root.replaceChildren();
+
+    const tabs = deps.document.createElement("div");
+    tabs.className = "reader-tabs";
+    tabs.setAttribute("role", "tablist");
+    tabs.setAttribute("aria-label", "已打开的材料");
+    const opened = deps.state.readerTabs ?? [];
+    opened.forEach((tab, index) => {
+      const active = tab.materialId === reader.materialId && tab.versionId === (reader.tabVersion ?? null);
+      const item = deps.document.createElement("button");
+      item.type = "button";
+      item.className = "reader-tab";
+      item.setAttribute("role", "tab");
+      item.setAttribute("aria-selected", String(active));
+      item.setAttribute("aria-label", tab.title);
+      item.title = tab.title;
+      const line = deps.document.createElement("span"); line.className = "reader-tab-line";
+      const label = deps.document.createElement("span"); label.className = "reader-tab-preview"; label.textContent = tab.title;
+      item.append(line, label);
+      const positionPreview = () => {
+        const rect = item.getBoundingClientRect?.();
+        if (!rect) return;
+        label.style.left = `${Math.max(12, Math.min(rect.left, (deps.window.innerWidth || 1280) - 252))}px`;
+        label.style.top = `${rect.bottom + 8}px`;
+      };
+      item.addEventListener("mouseenter", positionPreview); item.addEventListener("focus", positionPreview);
+      const activate = () => void deps.openMaterial(tab.materialId, tab.versionId ? { versionId: tab.versionId, arrival: "reader-tab" } : {});
+      item.addEventListener("click", activate);
+      item.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End", "Delete"].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === "Delete") {
+          opened.splice(index, 1);
+          const next = opened[Math.min(index, opened.length - 1)];
+          if (active && next) void deps.openMaterial(next.materialId, next.versionId ? { versionId: next.versionId, arrival: "reader-tab" } : {});
+          else if (active) deps.closeMaterialReader();
+          else renderMaterialReader();
+          return;
+        }
+        const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? opened.length - 1 : (index + (event.key === "ArrowLeft" ? -1 : 1) + opened.length) % opened.length;
+        tabs.children[nextIndex]?.focus();
+      });
+      tabs.append(item);
+    });
+    root.append(tabs);
 
     /* 头部：标题 + 关闭（覆盖层打开时盖住侧栏入口，阅读器内需要可见关闭）。 */
     const head = deps.document.createElement("div");
     head.className = "mat-head";
+    head.inert = root.classList.contains("reader-header-collapsed");
+    head.setAttribute("aria-hidden", String(head.inert));
     const title = deps.document.createElement("h2");
     title.className = "mat-title";
-    title.textContent = reader.material.title === "" ? reader.materialId : reader.material.title;
+    title.textContent = reader.material.title === "" ? "正在打开材料…" : reader.material.title;
     const close = deps.document.createElement("button");
     close.id = "mat-close";
-    close.className = "mat-close";
-    close.textContent = "关闭";
+    close.className = "mat-close reader-tabs-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "关闭阅读器");
     close.title = "关闭阅读器（Esc），阅读位置会保留";
     close.addEventListener("click", () => deps.closeMaterialReader());
-    head.append(title, close);
+    tabs.append(close);
+    head.append(title);
     root.append(head);
 
     /* 元信息行：所渲染版本可辨认（charter §3.1）——版本号/新旧、解析器
@@ -77,7 +129,15 @@ export function createMaterialReaderView(deps) {
         ),
       );
     }
-    root.append(meta);
+    const fileDetails = createDisclosure(deps.document, version ? `v${materialVersionNumber(reader.versions, version.id)} · ${version.parserKind === "pdf" ? "PDF" : "Markdown"} · 文件信息` : "文件信息", meta);
+    fileDetails.id = "mat-file-details";
+    fileDetails.open = detailsOpen;
+    fileDetails.classList.add("mat-info-popover");
+    const infoSummary = fileDetails.querySelector("summary");
+    infoSummary.textContent = "ⓘ";
+    infoSummary.setAttribute("aria-label", "文件信息与版本");
+    infoSummary.title = "文件信息与版本";
+    head.append(fileDetails);
 
     /* 版本链：每版一枚小片。ready 版本可点开（旧版本保持可读——切换是显式
        动作，绝不自动迁移任何锚点，charter §3.1）；非 ready 版本如实标注
@@ -113,13 +173,46 @@ export function createMaterialReaderView(deps) {
         }
         strip.append(chip);
       });
-      root.append(strip);
+      fileDetails.append(strip);
     }
 
     /* 诚实状态注记（可叠加）：打开/首页失败 + 重试；无版本；非 ready 状态
        （含原因与刷新入口）；PDF 下一增量；旧版本 + 切最新入口；最新版本
        不可读但当前读的是旧版；位置恢复注记。 */
-    for (const note of buildMaterialNotes(reader, version)) root.append(note);
+    // Keep actionable state on the reading surface; implementation prose stays in details.
+    for (const note of buildMaterialNotes(reader, version)) fileDetails.append(note);
+    const status = deps.document.createElement("div");
+    status.className = "mat-reading-status";
+    if (reader.firstPageState === "loading") status.textContent = "正在打开材料…";
+    else if (reader.firstPageState === "failed") status.textContent = "材料暂时无法打开，请重试。";
+    else if (version === null && reader.versions.length === 0) status.textContent = "这份材料还没有可阅读的版本。";
+    else if (version && version.parseStatus !== "ready") status.textContent = ["pending", "parsing"].includes(version.parseStatus) ? "材料正在处理，请稍后刷新。" : "这个版本暂时无法阅读，原始文件仍已保留。";
+    else if (version && version.id !== reader.versions.at(-1)?.id) status.textContent = `正在阅读旧版本 v${materialVersionNumber(reader.versions, version.id)}，引用仍对应这个版本。`;
+    else if (reader.searchJump !== null) status.textContent = reader.searchJump.arrival === "return-source" ? "已定位到收获的材料来源。" : "已定位到搜索结果。";
+    else if (reader.restoredToBlockId !== null) status.textContent = "已回到上次阅读的位置。";
+    if (reader.searchJump?.fellBackToDefaultVersion) status.textContent = "原引用版本已不可用，当前显示其他可用版本。";
+    if (status.textContent) root.append(status);
+    // Recovery and version-switch actions must remain available without opening diagnostics.
+    for (const action of [...fileDetails.querySelectorAll(".mat-note-action")]) {
+      root.append(action);
+    }
+    if (version && version.id !== reader.versions.at(-1)?.id && reader.versions.at(-1)?.parseStatus !== "ready") {
+      root.append(deps.mutedLine("最新版本暂时无法阅读，你仍可继续阅读这个旧版本。"));
+    }
+
+    const tools = deps.document.createElement("div"); tools.className = "reader-tools";
+    for (const [mode, text] of [["text", "选字提问"], ["region", "框选提问"]]) {
+      const button = deps.document.createElement("button"); button.type = "button"; button.append(controlIcon(deps.document, mode)); button.title = text; button.setAttribute("aria-label", text);
+      button.dataset.selectionTool = mode; button.setAttribute("aria-pressed", String((root.dataset.selectionMode ?? "text") === mode));
+      button.addEventListener("click", () => {
+        root.dataset.selectionMode = mode;
+        for (const item of tools.querySelectorAll("button")) item.setAttribute("aria-pressed", String(item === button));
+        tip.textContent = mode === "region" ? "拖出矩形选择文字，再确认摘录。" : "选中文字后，在浮动工具条中提问。";
+      });
+      tools.append(button);
+    }
+    const tip = deps.document.createElement("span"); tip.id = "reader-tool-hint"; tip.className = "muted"; tip.setAttribute("role", "status");
+    head.append(tools); root.append(tip);
 
     /* 选区捕获条（常驻——不随正文滚动消失；role=status 朗读状态变化）。 */
     const bar = deps.document.createElement("div");
@@ -177,7 +270,7 @@ export function createMaterialReaderView(deps) {
         {
           danger: true,
           actions: [
-            actionButton("Retry", "Retry opening this material", () =>
+            actionButton("重试", "Retry opening this material", () =>
               void deps.openMaterial(reader.materialId, { trigger: deps.materialReaderFocusReturn ?? undefined }),
             "mat-retry-open"),
           ],
@@ -204,7 +297,7 @@ export function createMaterialReaderView(deps) {
           `v${String(number)} is still being parsed (${version.parseStatus}${reason}) — press Refresh to check again`,
           {
             actions: [
-              actionButton("Refresh", "Re-fetch this material's version statuses", () =>
+              actionButton("刷新状态", "Re-fetch this material's version statuses", () =>
                 void deps.refreshMaterialDetail(),
               ),
             ],
@@ -236,7 +329,7 @@ export function createMaterialReaderView(deps) {
         {
           actions: [
             actionButton(
-              `Open v${String(reader.versions.length)}`,
+              `阅读最新版本 v${String(reader.versions.length)}`,
               "Switch the reader to the current version (non-destructive — this version stays readable)",
               () => void deps.switchMaterialVersion(latest.id),
             ),
@@ -310,10 +403,14 @@ export function createMaterialReaderView(deps) {
     blocksEl.setAttribute("tabindex", "0");
     /* ③ 同族：正文按下开启拖拽窗口——窗口内 chrome 重渲延后（块追加是纯
        增量的，不触碰既有节点，无需延后）。 */
-    blocksEl.addEventListener("mousedown", () => {
+    blocksEl.addEventListener("mousedown", (event) => {
+      // Touch selection is owned by selectionchange. Chrome's compatibility
+      // mouse events after release must not start another drag or clear it.
+      if (event.sourceCapabilities?.firesTouchEvents || deps.$("material-reader").dataset.selectionMode === "region") return;
       deps.state.selectionDragActive = true;
     });
-    const armFromEvent = () => {
+    const armFromEvent = (event) => {
+      if (event.sourceCapabilities?.firesTouchEvents || deps.$("material-reader").dataset.selectionMode === "region") return;
       if (deps.state.selectionDragActive) {
         deps.state.selectionDragActive = false;
         deps.window.setTimeout(deps.flushPendingRerender, 0);
@@ -322,7 +419,24 @@ export function createMaterialReaderView(deps) {
     };
     blocksEl.addEventListener("mouseup", armFromEvent);
     blocksEl.addEventListener("dblclick", armFromEvent);
+    let lastScroll = 0, travel = 0, userScrollUntil = 0;
+    const userScroll = () => { userScrollUntil = Date.now() + 700; };
+    blocksEl.addEventListener("wheel", userScroll, { passive: true });
+    blocksEl.addEventListener("touchmove", userScroll, { passive: true });
+    blocksEl.addEventListener("keydown", event => { if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) userScroll(); });
     blocksEl.addEventListener("scroll", () => {
+      const top = blocksEl.scrollTop;
+      const delta = top - lastScroll;
+      if (Math.sign(delta) !== Math.sign(travel)) travel = 0;
+      travel += delta;
+      const root = deps.$("material-reader");
+      if (top <= 12 || (Date.now() < userScrollUntil && travel < -32)) { root.classList.remove("reader-header-collapsed"); travel = 0; }
+      else if (Date.now() < userScrollUntil && top > 72 && travel > 32 && !deps.state.selectionDragActive && !root.contains(deps.document.activeElement?.closest?.(".mat-head"))) {
+        root.classList.add("reader-header-collapsed"); travel = 0;
+      }
+      const head = root.querySelector(".mat-head");
+      if (head) { head.inert = root.classList.contains("reader-header-collapsed"); head.setAttribute("aria-hidden", String(head.inert)); }
+      lastScroll = top;
       const reader = deps.state.materialReader;
       if (reader === null) return;
       deps.scheduleMaterialPositionSave();
@@ -330,6 +444,8 @@ export function createMaterialReaderView(deps) {
       /* PDF 懒渲染窗口随滚动重估（可见页先行渲染，窗外页卸回占位）。 */
       deps.updatePdfPageRendering(reader);
     });
+    wireRegionSelection({ document: deps.document, window: deps.window, root: deps.$("material-reader"), blocks: blocksEl,
+      arm: () => deps.armMaterialSelection(), notify: text => { const hint = deps.document.getElementById("reader-tool-hint"); if (hint) hint.textContent = text; } });
     return blocksEl;
   }
 
@@ -366,14 +482,14 @@ export function createMaterialReaderView(deps) {
     const isPdf = deps.materialReaderIsPdf(reader);
     const unitWord = isPdf ? "page(s)" : "block(s)";
     if (reader.firstPageState === "loading") {
-      tail.append(deps.document.createTextNode(`loading ${isPdf ? "pages" : "blocks"}…`));
+      tail.append(deps.document.createTextNode("正在加载内容…"));
       return;
     }
     if (reader.firstPageState === "failed") {
-      tail.append(deps.document.createTextNode(`loading failed — ${reader.firstPageError ?? "unknown error"} `));
+      tail.append(deps.document.createTextNode("加载失败，请重试。"), createDisclosure(deps.document, "错误详情", deps.document.createTextNode(`loading failed — ${reader.firstPageError ?? "unknown error"} `)));
       const retry = deps.document.createElement("button");
       retry.className = "drawer-retry mat-retry-open";
-      retry.textContent = "Retry";
+      retry.textContent = "重试";
       retry.title = "Retry opening this material";
       retry.addEventListener("click", () =>
         void deps.openMaterial(reader.materialId, { trigger: deps.materialReaderFocusReturn ?? undefined }),
@@ -385,42 +501,44 @@ export function createMaterialReaderView(deps) {
       const error = deps.document.createElement("span");
       error.className = "mat-tail-error";
       error.textContent = `loading more blocks failed — ${reader.appendError ?? "unknown error"} `;
-      tail.append(error);
+      tail.append(deps.document.createTextNode("后续内容加载失败，请重试。"), createDisclosure(deps.document, "错误详情", error));
       const retry = deps.document.createElement("button");
       retry.className = "drawer-retry mat-retry-append";
-      retry.textContent = "Retry";
+      retry.textContent = "重试";
       retry.title = "Retry loading the next page of blocks";
       retry.addEventListener("click", () => void deps.loadMoreMaterialBlocks());
       tail.append(retry);
       return;
     }
     if (reader.appendState === "loading") {
-      tail.append(deps.document.createTextNode("loading more blocks…"));
+      tail.append(deps.document.createTextNode("正在加载…"));
     } else if (reader.nextAfterBlock !== null) {
       /* 键盘可达的显式加载入口（滚贴近底自动预取，按钮是等价显式动作）。 */
       const more = deps.document.createElement("button");
       more.className = "mat-load-more";
-      more.textContent = isPdf ? "Load more pages" : "Load more blocks";
+      more.textContent = "继续加载";
       more.title = isPdf
         ? "Load the next page of PDF pages (also loads automatically near the bottom)"
         : "Load the next page of blocks (also loads automatically near the bottom)";
       more.addEventListener("click", () => void deps.loadMoreMaterialBlocks());
       tail.append(more);
     } else {
-      tail.append(deps.document.createTextNode(isPdf ? "end of material (last page)" : "end of material"));
+      tail.append(deps.document.createTextNode(isPdf ? "已到最后一页" : "已读到末尾"));
     }
-    tail.append(
+    const counts = createDisclosure(deps.document, "加载详情",
       deps.document.createTextNode(
         ` · ${String(reader.blocks.length)} ${unitWord} in view · ${String(reader.textUnits)} text units total`,
       ),
     );
+    tail.append(counts);
     if (reader.trimmedBlocks > 0) {
-      tail.append(
+      counts.append(
         deps.document.createTextNode(
           ` · ${String(reader.trimmedBlocks)} earlier ${isPdf ? "page(s)" : "block(s)"} unloaded to keep the view light — ` +
             "close and reopen (or reselect the version) to read from the beginning",
         ),
       );
+      tail.append(deps.document.createTextNode("前面的内容已暂时收起，重新打开材料可从头阅读。"));
     }
   }
 

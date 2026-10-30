@@ -1,0 +1,46 @@
+✔ B4 corpus shape: 3 trees, 35 saved-fact documents (12 material / 11 annotation / 6 return / 6 turn) (9.289042ms)
+✔ B4 frozen positives (55): every pre-specified target lands in the engine's top-5 (7.739791ms)
+✔ B4 frozen no-result queries (12): zero hits, nothing fabricated (6.480584ms)
+✔ B4 sample: current-tree vs all-trees scoping changes the hit set exactly (4.650959ms)
+✔ B4 material hits are precisely positioned in the frozen canonical text (3.152791ms)
+✔ zh matching is substring-based: a query inside a longer sentence still hits (0.367875ms)
+✔ en matching is whole-word: 'tree' must not match 'street' or 'trees' (0.7585ms)
+✔ scoping: treeId restricts to one tree; kinds filter restricts source types (0.619375ms)
+✔ old-version labeling: v1-only sentences hit with oldVersion=true; current v2 ranks first on shared text (2.76575ms)
+✔ empty and punctuation-only queries return zero hits honestly (3.026792ms)
+✔ determinism: rebuild, serialize/restore round-trip, and reversed input order all yield identical results (16.241959ms)
+✔ ranking: phrase tier beats kind; kind order annotation<return<turn<material; then matchCount, recency, refId (0.2325ms)
+✔ mixed zh/latin query: contiguous phrase ranks above scattered segment hits, both are returned (0.080208ms)
+✔ invalid documents and query options fail fast with SearchEngineError (0.389708ms)
+✔ repeated CJK grams and Latin words keep original hit offsets and match counts (0.102459ms)
+✖ posting intersections retain astral CJK, repeated query terms and mixed candidate orders (0.241875ms)
+✔ material versions enter the index per version: chain-derived oldVersion/labels, positioned hits, current version ranks first on shared text (99.007084ms)
+✔ non-ready versions are honestly absent from the index; a failed chain tail still marks the last ready version old (73.802208ms)
+✔ annotations are indexed as explanation+term bodies; explanation-only phrases are findable and annotations outrank turns (9.795125ms)
+✔ returns and turns are indexed (return turns are not double-indexed as turns); display titles follow the frozen convention (5.734792ms)
+✔ tree snapshot preserves branch-order turn documents with batched repository reads (7.967416ms)
+✔ per-request rebuild (no caching): facts saved after a search are found by the next one; searching is read-only (6.642292ms)
+✔ scoping: a tree snapshot never leaks other trees; unknown trees throw; materials linked to several trees yield one document per tree (46.877209ms)
+✔ kinds filter and limit pass through to the engine (40.736584ms)
+✔ buildSearchDocuments is pure: identical snapshots assemble identically, empty bodies are skipped, note concatenation order holds, unknown trees fail fast (0.409791ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 998.361458
+
+✖ failing tests:
+
+test at apps/studio/tests/search-engine.test.ts:784:1
+✖ posting intersections retain astral CJK, repeated query terms and mixed candidate orders (0.241875ms)
+  ReferenceError: turn is not defined
+      at TestContext.<anonymous> (file:///Users/tal/.codex/worktrees/7586/TreeAI/apps/studio/tests/search-engine.test.ts:785:36)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

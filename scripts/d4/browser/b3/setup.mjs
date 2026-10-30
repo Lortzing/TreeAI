@@ -126,7 +126,7 @@ export async function branchFromArmedSelection(ctx, material, range) {
   );
   const problems = [];
   const text = flow.text ?? "";
-  if (!text.includes("Material scope for this exploration — declared before your first question")) {
+  if (!text.includes("本次提问会参考以下材料")) {
     problems.push("the pre-submit material scope declaration is not visible");
   }
   if (!text.includes(`“${material.title}”`)) problems.push("material title not stated in the scope card");

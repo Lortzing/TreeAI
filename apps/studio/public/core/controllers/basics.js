@@ -1,3 +1,4 @@
+import { attachedQuestion } from "./composer-tools.js";
 /** Instance UI adapters, API errors, composer busy/session locks and saved-tree view helpers. Instance-owned state and dependencies. */
 import { createIsAtBottom } from "../../shared/reading-position/scroll.js";
 
@@ -185,7 +186,7 @@ export function createStudioBasics(deps) {
     const firstQuestion = view.turns.find((turn) => turn.role === "user");
     /* 材料建枝的首问是组合载荷（`[exploration from material vX] 问题`）：
        显示名剥掉前导范围标记——完整原文仍在对话正文，名字只承担指认。 */
-    const title = collapse(firstQuestion?.text).replace(/^\[[^\]]*\]\s*/, "");
+    const title = collapse(attachedQuestion(firstQuestion?.text).text).replace(/^\[[^\]]*\]\s*/, "");
     return title || collapse(view.origin?.selection.text) || branchLabel(branchId);
   }
    /* `${treeId}:${turnId}` → epoch ms */
@@ -225,9 +226,15 @@ export function createStudioBasics(deps) {
 
   /* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */
 
-  function closeSidebar() {
+  function closeSidebar({ keepLibrary = false } = {}) {
+    if (!keepLibrary && $("workspace-library")) $("workspace-library").open = false;
     deps.document.body.classList.remove("sidebar-open");
-    $("sidebar-toggle").setAttribute("aria-expanded", "false");
+    const narrow = deps.window?.matchMedia?.("(max-width: 719px)")?.matches ?? true;
+    const open = !narrow && !deps.document.body.classList.contains("sidebar-collapsed");
+    $("sidebar-toggle").setAttribute("aria-expanded", String(open));
+    $("sidebar-toggle").setAttribute("aria-label", open ? "收起侧栏" : "展开侧栏");
+    if ($("search-section")) $("search-section").open = false;
+    $("search-shortcut")?.setAttribute("aria-expanded", "false");
   }
 
   return {
