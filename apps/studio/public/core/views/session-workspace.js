@@ -158,7 +158,7 @@ function renderSessionWorkspace() {
   const alternate = sessionUI.mode !== "chat";
   if (alternate && treeId) {
     const context = "关系图";
-    deps.$("topbar-path").textContent = `${readingTitles.get(treeId) || treeId} / ${context}`;
+    deps.$("topbar-path").textContent = `${readingTitles.get(treeId) || "新的思考"} / ${context}`;
     deps.$("topbar-path").title = `${treeId} / ${context}`;
   } else {
     deps.renderTopbarPath();

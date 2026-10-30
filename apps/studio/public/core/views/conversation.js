@@ -154,6 +154,37 @@ export function createConversationView(deps) {
         branchId === st.trunkBranchId
           ? "在下方输入你的第一个问题。"
           : "在下方提问，继续探索这条支线。";
+      if (branchId === st.trunkBranchId) {
+        const welcome = deps.document.createElement("section");
+        welcome.className = "conversation-welcome";
+        const eyebrow = deps.document.createElement("div");
+        eyebrow.className = "welcome-eyebrow";
+        eyebrow.textContent = "一段新的思考";
+        const title = deps.document.createElement("h2");
+        title.textContent = "今天，想弄明白什么？";
+        const description = deps.document.createElement("p");
+        description.textContent = "先聊一个问题。回答里值得深究的地方，随时可以展开支线。";
+        const starters = deps.document.createElement("div");
+        starters.className = "starter-prompts";
+        for (const [label, prompt] of [
+          ["理解一个概念 ↗", "我想理解一个概念："],
+          ["比较不同选择 ↗", "帮我比较这几个选择的优缺点："],
+          ["梳理一个想法 ↗", "我有一个想法，想请你帮我梳理："],
+        ]) {
+          const button = deps.document.createElement("button");
+          button.type = "button";
+          button.textContent = label;
+          button.addEventListener("click", () => {
+            const input = deps.$("prompt-input");
+            // Suggestions are editable drafts; never replace what the user has written.
+            if (!input.value.trim()) input.value = prompt;
+            input.focus();
+          });
+          starters.append(button);
+        }
+        welcome.append(eyebrow, title, description, starters);
+        desired.push(welcome);
+      }
       desired.push(empty);
     }
     for (const turn of view.turns) {

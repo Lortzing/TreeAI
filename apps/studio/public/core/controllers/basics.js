@@ -226,6 +226,7 @@ export function createStudioBasics(deps) {
   /* ------------------------------ 窄窗侧栏抽屉 ------------------------------ */
 
   function closeSidebar() {
+    if ($("workspace-library")) $("workspace-library").open = false;
     deps.document.body.classList.remove("sidebar-open");
     $("sidebar-toggle").setAttribute("aria-expanded", "false");
   }

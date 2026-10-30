@@ -1,5 +1,7 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-28 Studio experience redesign (working tree):** Reading layout, onboarding and draft-only question starters refreshed. Typechecks and 902 tests pass; scoped Chrome Echo usability checks pass 5/5 (including boot). [Implementation, next-stage priorities and exact scope](../development/studio-experience-next.md). Owner has deferred participant trials while product experience is improved; deferred gates remain open and do not block this iteration.
+
 **2026-10-28 Studio consistency / Keychain:** Local code commit
 `550eda4c253f8662b7fe3079bd33688c9857cf04` unifies the Studio controls/settings
 and adds macOS Keychain credentials. Typechecks and 901 tests pass; D3 Echo has

@@ -39,8 +39,7 @@ listen($("reading-materials"), "click", () => {
     });
     return;
   }
-  document.body.classList.add("sidebar-open");
-  $("sidebar-toggle").setAttribute("aria-expanded", "true");
+  if ($("workspace-library")) $("workspace-library").open = true;
   /* 材料段默认折叠：回退路径（多份材料或无材料）要把列表/导入入口
      如实亮出来，先展开再聚焦。 */
   $("materials-section").open = true;
@@ -55,6 +54,25 @@ listen(document, "keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
     event.preventDefault();
     focusThoughtSearch();
+  }
+});
+
+/* Secondary tree tools share their original controls; opening never resets domain state. */
+listen($("workspace-library-toggle"), "click", () => {
+  document.body.classList.remove("sidebar-open");
+  $("sidebar-toggle").setAttribute("aria-expanded", "false");
+});
+listen($("workspace-library"), "toggle", () => {
+  $("workspace-library-toggle")?.setAttribute("aria-expanded", $("workspace-library").open ? "true" : "false");
+});
+listen($("workspace-library-close"), "click", () => {
+  $("workspace-library").open = false;
+  $("workspace-library-toggle").focus();
+});
+listen(document, "pointerdown", (event) => {
+  const library = $("workspace-library");
+  if (library?.open && event.target && !library.contains(event.target) && !$("reading-materials").contains(event.target)) {
+    library.open = false;
   }
 });
 

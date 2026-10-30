@@ -77,7 +77,7 @@ export async function runBetaLayout(deps) {
         }
         const narrowState = await deps.ctx.evalJs(
           `(() => ({ toggleVisible: getComputedStyle(document.getElementById("sidebar-toggle")).display !== "none", ` +
-            `sidebarDrawerHidden: getComputedStyle(document.getElementById("sidebar")).visibility === "hidden" }))()`,
+            `sidebarDrawerHidden: getComputedStyle(document.getElementById("sidebar")).visibility === "hidden", bodyClass: document.body.className, libraryOpen: document.getElementById("workspace-library").open, active: document.activeElement?.id }))()`,
         );
         if (narrowState.toggleVisible !== true || narrowState.sidebarDrawerHidden !== true) {
           throw new Error(`narrow viewport: the sidebar drawer is not in its closed state — ${JSON.stringify(narrowState)}`);

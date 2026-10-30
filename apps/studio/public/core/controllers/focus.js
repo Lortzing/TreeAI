@@ -176,6 +176,11 @@ export function createStudioFocusController(deps) {
 
   function restoreFocusRef(ref) {
     const target = resolveFocusRef(ref);
+    // A return target may now live in secondary tools. Reveal its disclosure chain
+    // before focusing, otherwise the browser silently drops focus on the hidden button.
+    for (let parent = target?.parentElement; parent; parent = parent.parentElement) {
+      if (parent.tagName === "DETAILS") parent.open = true;
+    }
     (target ?? deps.$("prompt-input")).focus();
   }
 
