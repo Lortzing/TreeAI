@@ -40,6 +40,7 @@ jobs:
           chrome_bin="$(command -v google-chrome || command -v chromium)"
           node scripts/run-d4-browser.mjs --mode selftest \
             --chrome-executable "$chrome_bin" \
+            --artifacts /tmp/treeai-ci-browser/materials \
             --only d4-import-material \
             --only d4-read-and-select \
             --only d4-beta-usability
@@ -51,6 +52,14 @@ jobs:
           chrome_bin="$(command -v google-chrome || command -v chromium)"
           node scripts/run-d4-browser.mjs --mode selftest \
             --chrome-executable "$chrome_bin" \
+            --artifacts /tmp/treeai-ci-browser/terminology \
             --only d4-import-material \
             --only terminology-path \
             --only d4-search-recover
+      - name: Preserve browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: refactor-browser-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/treeai-ci-browser/
+          if-no-files-found: ignore
