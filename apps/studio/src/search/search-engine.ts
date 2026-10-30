@@ -307,7 +307,7 @@ interface IndexedDocument {
 
 interface BuiltIndex {
   readonly documents: ReadonlyArray<IndexedDocument>;
-  readonly postings: ReadonlyMap<string, ReadonlySet<number>>;
+  readonly postings: ReadonlyMap<string, readonly number[]>;
 }
 
 /** 单元 ⇒ 倒排键：中文段=相邻二元 gram（长度 1 用一元）；拉丁词=词本身。 */
@@ -488,19 +488,18 @@ export class LocalSearchEngine {
       doc,
       lowered: doc.body.toLowerCase(),
     }));
-    const postings = new Map<string, Set<number>>();
+    const postings = new Map<string, number[]>();
     const emit = (key: string, docIndex: number): void => {
-      let set = postings.get(key);
-      if (set === undefined) {
-        set = new Set<number>();
-        postings.set(key, set);
-      }
-      set.add(docIndex);
+      const posting = postings.get(key);
+      if (posting === undefined) postings.set(key, [docIndex]);
+      else posting.push(docIndex);
     };
     indexed.forEach((entry, docIndex): void => {
       // Postings contain document IDs, not occurrence counts. Repeated
       // grams need only one global insertion per document. This local set
       // is rebuilt for every request; it never caches product facts.
+      // Document-order insertion plus local deduplication makes each posting
+      // strictly increasing, so compact arrays can replace per-key hash sets.
       const uniqueKeys = new Set<string>();
       indexBody(entry.doc.body, entry.lowered, (key) => {
         uniqueKeys.add(key);
@@ -565,19 +564,27 @@ export class LocalSearchEngine {
     }
 
     // 候选：全部单元键的倒排表求交（任一键在语料中不存在 ⇒ 必零命中）。
-    let candidates: Set<number> | null = null;
+    let candidates: readonly number[] | null = null;
     for (const unit of units) {
       for (const key of unitKeys(unit)) {
         const posting = this.built.postings.get(key);
         if (posting === undefined) return [];
         if (candidates === null) {
-          candidates = new Set<number>(posting);
+          candidates = posting;
         } else {
-          for (const docIndex of candidates) {
-            if (!posting.has(docIndex)) candidates.delete(docIndex);
+          const intersection: number[] = [];
+          let left = 0;
+          let right = 0;
+          while (left < candidates.length && right < posting.length) {
+            const candidate = candidates[left]!;
+            const other = posting[right]!;
+            if (candidate === other) { intersection.push(candidate); left += 1; right += 1; }
+            else if (candidate < other) left += 1;
+            else right += 1;
           }
+          candidates = intersection;
         }
-        if (candidates.size === 0) return [];
+        if (candidates.length === 0) return [];
       }
     }
     if (candidates === null) return [];

@@ -779,3 +779,24 @@ test("repeated CJK grams and Latin words keep original hit offsets and match cou
     );
   }
 });
+
+
+test("posting intersections retain astral CJK, repeated query terms and mixed candidate orders", () => {
+  const documents: SearchDocument[] = [
+    ["d1", "𠀀知识 alpha beta"], ["d2", "知识 beta"],
+    ["d3", "𠀀知识 alpha"], ["d4", "alpha only"],
+  ].map(([refId, body]) => ({ refId: refId!, body: body!, kind: "turn", treeId: "t1", treeTitle: "Tree", title: refId!, createdAt: "2026-01-01T00:00:00.000Z" }));
+  const engine = LocalSearchEngine.build(documents);
+  for (const [query, expected] of [
+    ["𠀀知识 alpha", ["d1", "d3"]], ["知识 beta", ["d2", "d1"]],
+    ["beta alpha", ["d1"]], ["alpha alpha", ["d1", "d3", "d4"]],
+    ["alpha missing", []], ["知识", ["d1", "d2", "d3"]],
+  ] as const) {
+    const hits = engine.search(query);
+    assert.deepEqual(hits.map((hit) => hit.refId), [...expected]);
+    assert.deepEqual(LocalSearchEngine.restore(engine.serialize()).search(query), hits);
+  }
+  const hit = engine.search("𠀀知识")[0]!;
+  assert.equal(hit.start, 0);
+  assert.equal(hit.end, "𠀀知识".length, "offsets remain UTF-16 even for astral CJK");
+});
