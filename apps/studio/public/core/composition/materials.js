@@ -40,6 +40,7 @@ export function createMaterialFeatures(deps) {
       });
 
       const materialListController = createMaterialListController({
+        get renderSessionWorkspace() { return deps.renderSessionWorkspace; },
         get sessionUI() { return deps.sessionUI; },
         get setWorkspaceView() { return deps.setWorkspaceView; },
         get $() { return deps.$; },

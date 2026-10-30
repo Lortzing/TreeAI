@@ -30,6 +30,11 @@ import { createSearchView } from "./views/search.js";
 export function createStudioFeatures(deps) {
 
 const sessionWorkspace = createSessionWorkspace({
+  get window() { return deps.window; },
+  get api() { return api; },
+  get openMaterial() { return openMaterial; },
+  get refreshMaterials() { return refreshMaterials; },
+  get revealOrigin() { return revealOrigin; },
   get $() { return $; },
   get trunkBranchId() { return trunkBranchId; },
   get branchView() { return branchView; },
@@ -399,6 +404,7 @@ const findTurnById = (turnId) => {
       get openBranchPanel() { return openBranchPanel; },
     });
 const materialsFeatures = createMaterialFeatures({
+  get renderSessionWorkspace() { return renderSessionWorkspace; },
       get sessionUI() { return sessionUI; },
       get setWorkspaceView() { return setWorkspaceView; },
   get environment() { return deps; },
