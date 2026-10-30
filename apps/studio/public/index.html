@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TreeAI Studio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -79,7 +80,7 @@
            分支导航，即既有 branch-tabs——点击语义不变：支线开局部面板 /
            Trunk 收面板回主线）同栏；New Tree 置顶为主操作。 -->
       <aside id="sidebar" aria-label="Trees">
-        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
+        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="/assets/treeai-icon.svg" width="32" height="32" alt="" /></span><span>TreeAI<span class="brand-period">.</span></span></div>
 
         <button id="new-tree" class="primary">＋ 新建思考树</button>
         <details class="sidebar-section sidebar-disclosure" id="search-section">
@@ -199,7 +200,7 @@
         <section id="session-workspace" hidden aria-label="Session 工作区" tabindex="-1"></section>
         <!-- 空态：无树打开。主操作直达（窄窗侧栏在抽屉后，不在首屏）。 -->
         <div id="empty-state" hidden>
-          <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
+          <img class="empty-tree-symbol" src="/assets/treeai-mark.svg" width="58" height="58" alt="" aria-hidden="true" />
 
           <h1 class="empty-title">从一个问题开始</h1><p class="empty-description">新建一棵思考树，与 AI 对话；遇到想深入的地方，展开支线，再把收获带回主线。</p>
 
@@ -229,7 +230,7 @@
               <div id="composer">
                 <textarea id="prompt-input" rows="2" aria-label="在主线上提问" placeholder="输入问题，继续探索…"></textarea>
                 <div class="composer-actions">
-                  <span class="composer-context">⑂ 在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
+                  <span class="composer-context">在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
                   <button id="send" class="primary" aria-label="发送到主线">发送 ↗</button>
                   <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                   <button id="new-exploration" class="accent" hidden>开始新的探索</button>
