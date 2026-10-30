@@ -36,7 +36,7 @@ export async function exposeInputTarget(ctx, selector) {
         `if (parent.tagName !== 'DETAILS' || parent.open) continue; const summary = parent.querySelector(':scope > summary'); ` +
         `if (!summary || summary.contains(el)) continue; ` +
         `const parts = []; let node = summary; while (node && !node.id) { parts.unshift(node.tagName.toLowerCase() + ':nth-child(' + ([...node.parentElement.children].indexOf(node) + 1) + ')'); node = node.parentElement; } ` +
-        `return { reveal: (node?.id ? '#' + CSS.escape(node.id) + ' > ' : '') + parts.join(' > ') }; } ` +
+        `return { reveal: (node?.id ? '#' + CSS.escape(node.id) + (parts.length ? ' > ' : '') : '') + parts.join(' > ') }; } ` +
         `if (typeof el.scrollIntoView === "function") el.scrollIntoView({ block: "center" }); ` +
         `const r = el.getBoundingClientRect(); ` +
         `if (r.width <= 0 || r.height <= 0) return { hidden: true }; ` +

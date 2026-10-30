@@ -231,7 +231,7 @@ export function createBrowserRecovery(deps) {
       const settled = await deps.waitForJs(
         "(() => { const placeholder = document.getElementById('streaming-turn'); " +
         "const status = document.getElementById('run-status'); " +
-        "return placeholder === null && status !== null && !status.textContent.includes('streaming'); })()",
+        "return placeholder === null && status !== null && status.classList.contains('idle'); })()",
         deps.CLI.promptTimeoutMs,
         "page settles after mid-stream reload (no stuck placeholder)",
       );

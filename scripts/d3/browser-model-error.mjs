@@ -284,7 +284,7 @@ export function createBrowserModelError(deps) {
     const composerEnabled = await deps.evalJs("document.getElementById('prompt-input').disabled === false");
     deps.assert(composerEnabled === true, "trunk composer did not re-enable after the failed run converged");
     await deps.waitForJs(
-      "document.getElementById('run-status') !== null && document.getElementById('run-status').textContent === 'idle'",
+      "document.getElementById('run-status') !== null && document.getElementById('run-status').classList.contains('idle')",
       10_000,
       "#run-status back to idle after the failed prompt converged",
     );
@@ -370,7 +370,7 @@ export function createBrowserModelError(deps) {
     const renderedFinal = (await renderedTurnCounts()).all;
     deps.assert(renderedFinal === 2, `rendered turns after recovery is ${String(renderedFinal)} (expected 2: user + assistant)`);
     await deps.waitForJs(
-      "document.getElementById('run-status') !== null && document.getElementById('run-status').textContent === 'idle'",
+      "document.getElementById('run-status') !== null && document.getElementById('run-status').classList.contains('idle')",
       10_000,
       "#run-status back to idle after the recovery prompt",
     );

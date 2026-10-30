@@ -64,6 +64,7 @@ import {
 } from "./cli.ts";
 import { EchoSdkPort } from "./echo-port.ts";
 import { loadApiConfig, prepareApiConfig } from "./api-config.ts";
+import { createCredentialStore, resolveCredentialEnvironment } from "./credential-store.ts";
 import { ApiSettingsService, readSavedApiSettings } from "./api-settings.ts";
 import { TreeStudioService } from "./service.ts";
 import { TerminologyExecutor, TerminologyService, normalizeExecutorUsage, type TerminologyExecutorUsage } from "./terminology.ts";
@@ -205,7 +206,8 @@ async function main(): Promise<void> {
   }
 
   const apiConfig = options.apiConfigPath === null ? savedSettings?.config ?? null : loadApiConfig(options.apiConfigPath);
-  const apiSetup = apiConfig === null ? null : prepareApiConfig(apiConfig, options, process.env);
+  const credentialEnvironment = apiConfig === null ? process.env : await resolveCredentialEnvironment(apiConfig, process.env, createCredentialStore(options.dataDir));
+  const apiSetup = apiConfig === null ? null : prepareApiConfig(apiConfig, options, credentialEnvironment);
   const piSetup: PiDriverWiring | null = apiSetup ??
     (options.driver === "pi" ? resolvePiDriverWiring(options, process.env) : null);
   if (piSetup !== null) {
