@@ -1,0 +1,32 @@
+{
+  "refinement": {
+    "sha": "4c0e3058c9eee3cacd2ca4a4d7203848c4728451",
+    "ref": "refs/heads/codex/snapshot-refinement-20261030",
+    "sourceHead": "fca8e4377fa5ebf887cf42d5c8572af3c7bbbfc2",
+    "tree": "5442e286b3abcd6be861d7d7db94ff372c22f808"
+  },
+  "icons": {
+    "sha": "7aee06e56aeb30dca517a6b48799f51c2af1aa89",
+    "ref": "refs/heads/codex/snapshot-icons-20261030",
+    "sourceHead": "35ae4a012fd6beea0b66b9bb773dbe858dfedc45",
+    "tree": "0b80a67d374e5c964f433af78a5d0219a58252cb"
+  },
+  "generative-ui": {
+    "sha": "d1cb06574ed9da5943876f21cc9c70d080027bcb",
+    "ref": "refs/heads/codex/snapshot-generative-ui-20261030",
+    "sourceHead": "35ae4a012fd6beea0b66b9bb773dbe858dfedc45",
+    "tree": "c6d649f54114559533852f35d7ddad6094692b87"
+  },
+  "legacy-settings": {
+    "sha": "795b3a89867412b89fe1838af084571acbc039a4",
+    "ref": "refs/heads/codex/snapshot-legacy-settings-20261030",
+    "sourceHead": "dfe938d5a3c2439cb78e4fb1ec8b7f2266e319be",
+    "tree": "d3559c5f327a945fa68895c676f62796e3d06966"
+  },
+  "legacy-layout": {
+    "sha": "65a36caadd8d02ef4ad12a09a7d9849aee05b4c5",
+    "ref": "refs/heads/codex/snapshot-legacy-layout-20261030",
+    "sourceHead": "35ae4a012fd6beea0b66b9bb773dbe858dfedc45",
+    "tree": "d30efdf76167b7cd9e00658ed5811ad192658a06"
+  }
+}

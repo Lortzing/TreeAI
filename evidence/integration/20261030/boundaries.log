@@ -1,0 +1,5 @@
+FAIL: 898 baseline static scenarios / 941 current; 4 boundary violations
+Static scenario lost (1 -> 0): central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material
+Static scenario lost (1 -> 0): touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check
+Static scenario lost (1 -> 0): keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not
+Static scenario lost (1 -> 0): fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state)

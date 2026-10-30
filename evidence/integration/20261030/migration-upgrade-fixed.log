@@ -1,0 +1,21 @@
+✔ fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state) (9.471333ms)
+✔ fresh database migrates to schema version 11 (material core + terminology dispatch ledger + nav expand state + generated comparisons) (6.136292ms)
+✔ pre-0008 database upgrades: rows preserved, origin_kind backfilled (turn/none) (9.045083ms)
+✔ storeBlob is content-addressed and idempotent by hash (5.343167ms)
+✔ re-importing identical bytes reuses the version row; different bytes create a new version (5.471666ms)
+✔ insertVersion validates parse status, block coverage and failure reasons (4.651792ms)
+✔ material branch origin enforces the slice/excerpt/sourceHash discipline (6.211916ms)
+✔ old anchors stay readable after a new version is imported (immutable versions) (4.86075ms)
+✔ a branch cannot carry both a turn origin and a material origin; origin_kind stays consistent (6.105833ms)
+✔ material first questions are idempotent by (tree_id, intent_key) (5.528ms)
+✔ tree material links: link, idempotent re-link preserves linked_at, unlink (5.628625ms)
+✔ reading positions upsert by (tree_id, material_id) with block discipline (6.1255ms)
+✔ parse-result transitions: pending→parsing→terminal; terminal rows structurally refuse late updates (late-result discard backstop) (6.541791ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 180.57575

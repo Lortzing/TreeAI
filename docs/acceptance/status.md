@@ -1,5 +1,7 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-30 multi-branch integration:** Combined latest Studio refinement, icons, persisted generative comparisons, harvest/continuity and CI diagnostics. Code/test candidate `fd73a458a2e3e52dc68e19249b3cd23e8e986880`: types and 945 tests pass; full final-source native Chrome Echo D4 16/16 passes (dirty evidence state is explicitly recorded). [Source identities, validation and exclusions](../../evidence/integration/20261030/README.md). Original human/model/device gates remain open.
+
 **2026-10-29 secondary surfaces:** Code `f08fe370d706788fa96727a4b644afa63a13d080` collapses floating attachments on every right-panel entry and hides implementation details behind secondary disclosures. Final-code types, 905 tests, asset/path audits and complete Chrome Echo D4 16/16 pass. [Evidence and retained failures](../../evidence/studio-secondary/20261029/README.md) distinguish the working-tree run from a clean-start run; real-Pi and human gates remain separate.
 
 **2026-10-28 Studio compact shell:** Code `c03b19e70b4ae0a53b250de6e562227b72046856` adds a persistent collapsible sidebar, one-row icon toolbar, search popover and floating attachments opening a right-hand reader. Clean-commit typechecks, 905 tests and complete Chrome Echo D4 16/16 pass. [Exact evidence, retained failures and exclusions](../../evidence/studio-compact/20261028/README.md). Local only; real-Pi, human and target-platform gates remain separate.
