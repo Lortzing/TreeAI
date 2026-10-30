@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "f84d70be11176088149541654133003b8490bc72",
+  "productCommit": "6d92d6e124a97e76fcb669f6436c53287f6b846d",
+  "files": {
+    "apps/studio/public/core/compose-features.js": "4f3fb15776731fce75161f57f10819b142130259a67f18ad3439ad62951eb0e6",
+    "apps/studio/public/core/controllers/basics.js": "6520fc4d2632dee6d2cef2a9de638215ae1ba9579dad882c37bee6e284b5f183",
+    "apps/studio/public/core/controllers/prompt.js": "bb168c8dd55ee9a4ebfa1f416634ff7cb312f6f831613a36fab2bf1825f3df37",
+    "apps/studio/src/http/routes/trees.ts": "f74ed0485659dbe10d71a86207e13bb8dda2c151e701c41336bb690d30e8ec80",
+    "apps/studio/src/portability/package-format.ts": "d2c24f4037dbfe788b73c09fd691ab6743b0027d0569b0e8748a19c985709a24",
+    "apps/studio/src/studio/tree-studio-service.ts": "387dd557b061cc2d10acd7df41f16e0651a844c6bf27aee780f41f719bbfb837",
+    "apps/studio/tests/prompt-controller.test.ts": "68a7c8240110a36fb4a97aaa4c07ce1b9eabcb25582384a545517247f6bf0551",
+    "apps/studio/tests/prompt-requests.test.ts": "bf81c35603a645ad370da35141cb9f9e227a3de713519bfb8f22c9d367e14a07",
+    "apps/studio/tests/ui-material-branching.test.ts": "a53f44012f74d3974ed4eb2af5ddf96cf98932c8c10c7e690605986de368e602",
+    "apps/studio/tests/ui-material-reader.test.ts": "9c99e9b2bf6d265cbf31c7e0a8b2531b2bb082cbf2d6c05b69f5c1b4d459aaff",
+    "apps/studio/tests/ui-nav.test.ts": "ccfc24fc17fdc76d7b68e2c43a03e7be1de8b49fa364ac1e2b1386cefb778edd",
+    "apps/studio/tests/ui-pdf-reader.test.ts": "45978600e4f5a74393d74133ec8354bf2b50aa4a89129c30a6c5782675bf587b",
+    "apps/studio/tests/ui-probe.test.ts": "31f98627fbdd29c8913da1cc379d15f8547b0397120c7595ddcababfbe58773c",
+    "apps/studio/tests/ui-regressions.test.ts": "1b236918cfe2939be2efd3fd96ee62e5ffb22a3e54bcea6397f013da6ae4021c",
+    "apps/studio/tests/ui-terminology.test.ts": "e71b5eeba15f6e0c9ebb64ece69cc2e109f39d6f8ff359a1339c7e70052006ec",
+    "packages/persistence/src/migrations/0012-prompt-requests.ts": "07b4dbddff32bf1ddc809f1f52eeca2ff88021ffaefb990a06a67b70239f9028",
+    "packages/persistence/src/migrations/index.ts": "1ec805b41dc374306d59345b10b7a96d5e4eefe67afa536376ba3a1bc481a6bb",
+    "packages/persistence/src/tree/prompt-requests.ts": "6ef36696728dd8645b54191b16623397335c1c027adf2c1e48d34dc7f5861271",
+    "packages/persistence/src/tree/repository.ts": "c9e9d06ae1bbfc0f2694b1c955ec95767d4670a326ffe5bd0c9a1e91bf0b6675",
+    "packages/persistence/tests/material-store.test.ts": "097cd914b92636e8c0ad859068ae56e0254d8b9a9ee2cb10d4004a90b6d12cec",
+    "packages/persistence/tests/migration.test.ts": "b3e1d5b55b1a49f246cbd1a78176a43272335a34213cb9bb3e36d3a178c4f8b0",
+    "scripts/d3/browser-input.mjs": "79d1bbc7e97cda20cd9ff67ac6468ca93a46bd176fc35d96e7cb0ebdb8b96cbf",
+    "scripts/d3/browser-projections.mjs": "ccf5d82f18d48ef71485e3187fd1f58de20df1a3b3f33910203b79371ad106c7",
+    "scripts/d3/browser-recovery.mjs": "98b315aa42b1ebbf0037da7b0465193814212b0c871ee11946e2b180572b6bde",
+    "scripts/probe-prompt-reconciliation.mjs": "87d42ca03932bc085d0c1cf88b4dace390d16072f53dab4ff7f48618a0bd3413",
+    "tests/unit/d3-details-reveal.test.ts": "4b3c31509713bc680b217846366bb806e1b7ce0d36bae4379ea81d03f99373ce",
+    "tests/unit/d3-round-projection.test.ts": "357c50a8278a1a7548eba02c9310d17f6887d8df05fe55ac059cfa1065b8f1c3"
+  }
+}

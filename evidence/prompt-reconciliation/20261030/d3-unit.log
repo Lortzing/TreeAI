@@ -1,0 +1,15 @@
+✔ D3 input opens a closed details through a summary with its own id, then hit-tests the target (1.046834ms)
+✔ round probe reads all actual pages in order and restores the selected page (8.776666ms)
+✔ round probe keeps a native selection intact, refreshes appended pages and isolates tree identity (6.46125ms)
+✔ round probe handles a fresh empty conversation without stale or out-of-scope counters (0.567375ms)
+✔ D4 restart history reads every rendered round and restores the reader without substituting API data (2.093334ms)
+✔ D3 hidden-pager snapshot refreshes from an empty tree to the first completed answer (0.686125ms)
+✔ D3 keyboard submission configures the public shortcut preference before native modifier events (0.139834ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 676.626083

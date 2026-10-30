@@ -1,0 +1,24 @@
+run-d3-browser v1.3.2 — mode selftest
+  workspace HEAD: e682af0ca55e6c2db97a6e52f608e9ec0610cd55 (dirty)
+  data dir: <dir> (temp; pass --data/--keep-data to keep)
+  artifacts: <dir>
+  [PASS] chrome-boot — /Applications/Google Chrome.app/Contents/MacOS/Google Chrome — Chromium Chrome/153.0.8010.37 (CDP on 127.0.0.1:64500)
+  [PASS] studio-boot — studio on :64526 (driver echo), /api/health ok
+  [PASS] page-boot — rendered; empty state visible; zero trees; initial focus on 新建 (new-tree)
+  [PASS] tree-create — tree created via real click; trunk view open; branch tabs: 思考主线
+  [FAIL] trunk-main-line — timeout (30000ms) waiting for: assistant answer #1 containing maple; page context: {"lastAnswer":"echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.]","composerValue":"","runStatus":"已就绪","banner":""}; server liveness: health 200; recent control requests: [{"id":…
+  [FAIL] selection-anchoring — assistant turn #0 not found in #conversation
+  [FAIL] branch-a-create — Cannot read properties of null (reading 'sourceBranchId')
+  [FAIL] branch-a-followups — timeout (30000ms) waiting for: assistant answer #1 containing cedar; page context: {"lastAnswer":"echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|We are now o","composerValue":"","runStatus":"已就绪","banner":""}; server liveness: health 200; recent control reque…
+  [FAIL] switch-navigation — branch tab for undefined not found
+  [FAIL] branch-b-create — click target not visible: #panel-close
+  [FAIL] branch-b-followups — type target not visible: #panel-prompt-input
+  [FAIL] no-context-bleed — branch B panel does not show its own codeword birch
+  [FAIL] return-flow — the A3 return must be submitted from branch A undefined, but the open panel branch is null
+  [FAIL] return-delivery — timeout (30000ms) waiting for: assistant answer #3 containing aspen; page context: {"lastAnswer":"echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, t","composerValue":"","runStatus":"已就绪","banner":""}; server liveness: health 200; recent control reque…
+  [FAIL] model-error-convergence — timeout (30000ms) waiting for: assistant answer #4 containing back-online; page context: {"lastAnswer":"echo:[This is the main line, turn one. The trunk topic is apples. Remember the trunk codeword: maple. Reply with exactly: understood — the trunk topic is apples and the codeword is maple.|Main line, t","composerValue":"","runStatus":"已就绪","banner":"upstream: Error: simulated upstream failure (50…
+  [FAIL] server-restart-recovery — branch count after restart is 2 (expected 3: trunk + A + B)
+  [FAIL] missing-session-degradation — trunk send not disabled after session loss (disabled=false)
+  [PASS] new-exploration-flow — v3 §4.4 browser face: session moved away → banner + fail-closed; typed first question → confirm cancel (zero POST, dialog states NOT restored) → confirm accept → POST /new-exploration → banner clears, composer unlocks, honest marker turn renders (page + server), trunk +2 turns, branch set unchanged
+  [NOT_RUN] response-loss-midstream — the echo driver's ~1ms turn delay leaves no deterministic in-flight window for a mid-stream page reload; the server-down-between-prompts half is covered by server-restart-recovery in both modes
+  [PASS] a11y-semantics — error banner role=alert + Tab-reachable; drawer aria-expanded both ways + Esc closes; panel anchor context programmatically focusable

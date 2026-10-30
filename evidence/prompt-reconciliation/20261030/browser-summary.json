@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "mode": "offline-echo",
+  "gitCommit": "6d92d6e124a97e76fcb669f6436c53287f6b846d",
+  "gitDirty": false,
+  "postResponses": 1,
+  "droppedQueries": 1,
+  "savedUserTurns": 1,
+  "savedAssistantTurns": 1,
+  "episodes": 1,
+  "checks": [
+    "committed POST response dropped",
+    "first status GET dropped",
+    "pending request survived page reload",
+    "missing Pi sessions did not block read-only reconciliation",
+    "empty composer Send reconciled by GET",
+    "no duplicate Episode, Run or Turn"
+  ],
+  "screenshot": "/tmp/treeai-prompt-browser-committed/01-reconciled-after-reload.jpg"
+}

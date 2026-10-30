@@ -1,0 +1,37 @@
+✔ round probe reads all actual pages in order and restores the selected page (8.455875ms)
+✔ round probe keeps a native selection intact, refreshes appended pages and isolates tree identity (9.269542ms)
+✔ round probe handles a fresh empty conversation without stale or out-of-scope counters (0.652875ms)
+✔ D4 restart history reads every rendered round and restores the reader without substituting API data (3.359125ms)
+✖ D3 hidden-pager snapshot refreshes from an empty tree to the first completed answer (1.123416ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 682.654459
+
+✖ failing tests:
+
+test at ../../../../../../private/tmp/treeai-d3-baseline-regression.test.ts:65:1
+✖ D3 hidden-pager snapshot refreshes from an empty tree to the first completed answer (1.123416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'u1',
+  -   'a1'
+  - ]
+  
+      at TestContext.<anonymous> (file:///private/tmp/treeai-d3-baseline-regression.test.ts:69:9)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'u1', 'a1' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

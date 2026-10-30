@@ -1,0 +1,15 @@
+✔ lost POST response reconciles saved success by GET without another prompt (0.871625ms)
+✔ unconfirmed request retains its key across refresh; retry reads first and reuses that key (0.255042ms)
+✔ in-flight reconciliation keeps edited question and never dispatches it automatically (0.118833ms)
+✔ success preserves text, attachments, and model edits made while the response was pending (0.179125ms)
+✔ terminal failure keeps the question and requires a fresh key on the next explicit send (0.138791ms)
+✔ unknown acceptance blocks changing the original payload under an existing key (0.13975ms)
+✔ missing Pi session still permits read-only reconciliation and never retries unknown acceptance (0.153334ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61.223875

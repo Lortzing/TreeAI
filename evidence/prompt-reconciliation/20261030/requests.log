@@ -1,0 +1,14 @@
+✔ ordinary prompt keys reconcile during execution, reject changed payloads and remain Tree-scoped (270.10425ms)
+✔ abort is terminal for a request key; only a deliberate new request can execute again (428.518583ms)
+✔ saved outcomes reconcile after restart without Pi sessions; interrupted acceptance never redispatches (21.772625ms)
+✔ Run binding failure rolls back Episode and Run together and leaves a queryable failure (7.768042ms)
+✔ HTTP keyed prompt supports query/replay and keeps the legacy unkeyed API (57.995666ms)
+✔ export and restore retain request identity and saved outcome without session files (29.834333ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1194.234666
