@@ -270,7 +270,7 @@ export class TreeStudioService {
 
       let result: Awaited<ReturnType<PiRuntime["prompt"]>>;
       try {
-        result = await this.runtime.prompt({ text: composedText });
+        result = await this.runtime.prompt({ text: composedText, ...(options?.model ? { model: options.model } : {}) });
       } catch (err) {
         const error = toTreeAIError(err);
         const record = this.#activeRun;

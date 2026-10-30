@@ -134,10 +134,12 @@ export function createMaterialSelectionController(deps) {
       return;
     }
     bar.replaceChildren();
+    bar.hidden = false;
     const reader = deps.state.materialReader;
     if (reader === null) return;
     const selection = deps.state.materialSelection;
     if (selection === null || selection.materialId !== reader.materialId || selection.versionId !== reader.versionId) {
+      bar.hidden = true;
       const hint = deps.document.createElement("span");
       hint.className = "muted";
       hint.textContent =
@@ -191,7 +193,7 @@ export function createMaterialSelectionController(deps) {
     copy.addEventListener("click", () => void copyMaterialQuote(copy, selection));
     const branch = deps.document.createElement("button");
     branch.className = "mat-branch-d43";
-    branch.textContent = "展开支线";
+    branch.textContent = "选文提问";
     branch.title =
       "围绕这段文字提问，发送前可以确认引用范围";
     branch.addEventListener("click", () => {
@@ -199,6 +201,17 @@ export function createMaterialSelectionController(deps) {
     });
     actions.append(copy, branch);
     bar.append(actions, location);
+    const range = deps.window.getSelection()?.rangeCount ? deps.window.getSelection().getRangeAt(0) : null;
+    const rect = range?.getBoundingClientRect?.();
+    const root = deps.document.getElementById("material-reader");
+    if (rect && root?.getBoundingClientRect) {
+      const bounds = root.getBoundingClientRect();
+      bar.style.top = `${Math.max(56, Math.min(rect.bottom - bounds.top + 10, bounds.height - 170))}px`;
+    }
+    if (bar.dataset.preservesSelection !== "true") {
+      bar.addEventListener("mousedown", event => event.preventDefault());
+      bar.dataset.preservesSelection = "true";
+    }
   }
 
 

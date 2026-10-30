@@ -18,7 +18,7 @@ export function createTreeChromeView(deps) {
       button.dataset.treeId = tree.id;
       const summary = deps.readingTitles.get(tree.id);
       name.textContent = summary || "新的思考";
-      button.title = summary ? `${summary}\n${tree.id}` : tree.id;
+      button.title = summary || "新的思考";
       const date = deps.document.createElement("span");
       date.className = "tree-date";
       /* 列表层只保留日粒度（当年省年份——安静的事实）；精确到秒的完整

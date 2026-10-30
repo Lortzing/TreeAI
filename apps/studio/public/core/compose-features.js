@@ -129,6 +129,7 @@ const findTurnById = (turnId) => {
 
 
     const conversationView = createConversationView({
+      get openMaterial() { return openMaterial; },
       get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get assistantTurns() { return assistantTurns; },
@@ -349,6 +350,7 @@ const findTurnById = (turnId) => {
 
 
     const promptController = createPromptController({
+      get document() { return deps.document; },
       get sessionUI() { return sessionUI; },
       get state() { return deps.state; },
       get trunkBranchId() { return trunkBranchId; },
@@ -633,7 +635,7 @@ const {
   });
 
   return {
-    sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial,
+    sessionUI, setWorkspaceView, moveSessionRound, scrollBehavior, openMaterial, refreshMaterials,
     $,
     persistReturnDraft,
     runNavTreeFind,

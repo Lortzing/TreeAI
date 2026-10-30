@@ -1,3 +1,4 @@
+import { handleComposerKey } from "../controllers/appearance.js";
 import { createDisclosure } from "../dom.js";
 /** Declared material context, existing-intent choices, dispatch/retry notes and material Return cards. Instance-owned state and dependencies. */
 
@@ -101,9 +102,9 @@ export function createMaterialBranchView(deps) {
     const label = deps.document.createElement("span");
     label.className = "muted";
     label.textContent = "想围绕这段材料了解什么？";
-    const input = deps.document.createElement("input");
+    const input = deps.document.createElement("textarea");
     input.id = "mat-branch-first-question";
-    input.type = "text";
+    input.rows = 2;
     input.value = flow.firstQuestion;
     input.placeholder = "输入你的问题…";
     input.disabled = flow.submitting;
@@ -122,12 +123,7 @@ export function createMaterialBranchView(deps) {
         }
       }
     });
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        void deps.guard(deps.submitMaterialFirstQuestion, "main");
-      }
-    });
+    input.addEventListener("keydown", (event) => handleComposerKey(event, input, () => void deps.guard(deps.submitMaterialFirstQuestion, "main"), deps.document));
     const submit = deps.document.createElement("button");
     submit.className = "primary mat-branch-submit";
     submit.textContent = flow.submitting ? "发送中…" : "发送问题";

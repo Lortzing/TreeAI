@@ -185,6 +185,7 @@ export function registerApiSettings({ document, fetch }) {
     if (providerSelect) providerSelect.value = activeProviderId;
 
     const provider = currentProvider();
+    dialog.setAttribute("data-has-provider", String(!!provider));
     const labels = ['Anthropic Messages', 'OpenAI Chat Completions', 'OpenAI Responses', 'Gemini API'];
     const formats = API_FORMATS.map((format, i) => [format, labels[i]]);
     replaceOptions(formatSelect, formats, '选择 API 格式');
@@ -213,7 +214,7 @@ export function registerApiSettings({ document, fetch }) {
     if (modelIdInput) { modelIdInput.value = String(model?.id ?? ''); modelIdInput.disabled = !model; }
     const hasCredential = provider && (storedNames.has(provider.apiKeyEnv) || environmentNames.has(provider.apiKeyEnv));
     if (keyControls) {
-      keyControls.hidden = !keychainSupported;
+      keyControls.hidden = !keychainSupported || !provider;
       if (credentialProviderId !== activeProviderId) keyControls.open = !hasCredential;
     }
     credentialProviderId = activeProviderId;
@@ -303,7 +304,7 @@ export function registerApiSettings({ document, fetch }) {
       if (disabledStates) return;
       disabledStates = new Map();
       for (const element of form.elements) {
-        if (element === closeButton) continue;
+        if (element === closeButton || element.id === "appearance-theme" || element.id === "composer-send-key" || element.hasAttribute?.("data-theme-choice")) continue;
         disabledStates.set(element, element.disabled);
         element.disabled = true;
       }
@@ -399,7 +400,7 @@ export function registerApiSettings({ document, fetch }) {
       const value = await requestJson(API_SETTINGS_URL, { signal }, '读取设置');
       if (signal.aborted || disposed) return;
       readSnapshot(value);
-      setStatus(value.configurationWarning ? '已保存的配置无法读取；可重新配置并保存。' : value.restartRequired ? '已有保存的配置等待生效；请重启服务。' : '设置已加载。');
+      setStatus(value.configurationWarning ? '已保存的配置无法读取；可重新配置并保存。' : value.restartRequired ? '已有保存的配置等待生效；请重启服务。' : '');
     });
   }
 

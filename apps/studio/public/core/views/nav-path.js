@@ -1,3 +1,4 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** Navigation nav-path; preserves the existing D4 endpoint and display contracts. */
 export function createNavPathView(deps) {
   const { document, getElement: $, getState, selectNavNode } = deps;
@@ -6,7 +7,7 @@ export function createNavPathView(deps) {
   const NAV_PATH_COLLAPSE_THRESHOLD = 6;
 
   function navStepLabel(step) {
-    return step.title !== null ? step.title : step.depth === 0 ? "思考主线" : "未命名支线";
+    return step.title !== null ? attachedQuestion(step.title).text : step.depth === 0 ? "思考主线" : "未命名支线";
   }
 
   /** 路径行渲染：当前节点的完整根→选中链（path 端点 100 层完整返回）；长链

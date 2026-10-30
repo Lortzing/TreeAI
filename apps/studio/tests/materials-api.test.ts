@@ -773,3 +773,26 @@ test("reading position: PUT 204 upsert + detail read-back; validation failures a
     cleanupDir(dir);
   }
 });
+
+test("prompt attachments use saved version text and reject cross-tree references before writing turns", async () => {
+  const dir = makeTempDataDir(), registry: RunningStudio[] = [];
+  try {
+    const studio = await startStudio(dir, registry);
+    const created = studio.instance.service.createTree();
+    const other = studio.instance.service.createTree();
+    const imported = await studio.instance.materials.importMaterial(created.tree.id, { filename: "question-source.md", bytes: utf8("Unique attachment fact: seven leaves.") });
+    await until(() => studio.instance.materials.getMaterialDetail(created.tree.id, imported.material.id).versions[0]!.parseStatus === "ready", "attachment ready");
+    const attachments = [{ materialId: imported.material.id, versionId: imported.version.id }];
+    const denied = await call(studio.url(`/api/trees/${other.tree.id}/prompt`), "POST", { branchId: other.trunkBranch.id, text: "read it", attachments });
+    assert.equal(denied.status, 404);
+    assert.equal(studio.instance.service.getTreeState(other.tree.id).branches[0]!.turns.length, 0);
+    const result = await call(studio.url(`/api/trees/${created.tree.id}/prompt`), "POST", { branchId: created.trunkBranch.id, text: "How many leaves?", attachments });
+    assert.equal(result.status, 200);
+    const turns = result.body.state.branches[0].turns;
+    assert.match(turns.find((turn: {role:string}) => turn.role === "user").text, /question-source.md/);
+    assert.match(turns.find((turn: {role:string}) => turn.role === "assistant").text, /seven leaves/);
+    const unavailable = await call(studio.url(`/api/trees/${created.tree.id}/prompt`), "POST", { branchId: created.trunkBranch.id, text: "must not send", model: { providerId: "unconfigured", modelId: "unknown" } });
+    assert.equal(unavailable.status, 400);
+    assert.equal(studio.instance.service.getTreeState(created.tree.id).branches[0]!.turns.length, turns.length);
+  } finally { await closeAll(registry); cleanupDir(dir); }
+});

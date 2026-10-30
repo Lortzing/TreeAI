@@ -1,3 +1,5 @@
+import { controlIcon } from "../dom.js";
+import { wireRegionSelection } from "../controllers/region-selection.js";
 import { createDisclosure } from "../dom.js";
 /** Material reader chrome, notes, block layout, tail states and entrance/exit presentation. Instance-owned state and dependencies. */
 
@@ -41,19 +43,67 @@ export function createMaterialReaderView(deps) {
     const detailsOpen = deps.document.getElementById("mat-file-details")?.open ?? false;
     root.replaceChildren();
 
+    const tabs = deps.document.createElement("div");
+    tabs.className = "reader-tabs";
+    tabs.setAttribute("role", "tablist");
+    tabs.setAttribute("aria-label", "已打开的材料");
+    const opened = deps.state.readerTabs ?? [];
+    opened.forEach((tab, index) => {
+      const active = tab.materialId === reader.materialId && tab.versionId === (reader.tabVersion ?? null);
+      const item = deps.document.createElement("button");
+      item.type = "button";
+      item.className = "reader-tab";
+      item.setAttribute("role", "tab");
+      item.setAttribute("aria-selected", String(active));
+      item.setAttribute("aria-label", tab.title);
+      item.title = tab.title;
+      const line = deps.document.createElement("span"); line.className = "reader-tab-line";
+      const label = deps.document.createElement("span"); label.className = "reader-tab-preview"; label.textContent = tab.title;
+      item.append(line, label);
+      const positionPreview = () => {
+        const rect = item.getBoundingClientRect?.();
+        if (!rect) return;
+        label.style.left = `${Math.max(12, Math.min(rect.left, (deps.window.innerWidth || 1280) - 252))}px`;
+        label.style.top = `${rect.bottom + 8}px`;
+      };
+      item.addEventListener("mouseenter", positionPreview); item.addEventListener("focus", positionPreview);
+      const activate = () => void deps.openMaterial(tab.materialId, tab.versionId ? { versionId: tab.versionId, arrival: "reader-tab" } : {});
+      item.addEventListener("click", activate);
+      item.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End", "Delete"].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === "Delete") {
+          opened.splice(index, 1);
+          const next = opened[Math.min(index, opened.length - 1)];
+          if (active && next) void deps.openMaterial(next.materialId, next.versionId ? { versionId: next.versionId, arrival: "reader-tab" } : {});
+          else if (active) deps.closeMaterialReader();
+          else renderMaterialReader();
+          return;
+        }
+        const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? opened.length - 1 : (index + (event.key === "ArrowLeft" ? -1 : 1) + opened.length) % opened.length;
+        tabs.children[nextIndex]?.focus();
+      });
+      tabs.append(item);
+    });
+    root.append(tabs);
+
     /* 头部：标题 + 关闭（覆盖层打开时盖住侧栏入口，阅读器内需要可见关闭）。 */
     const head = deps.document.createElement("div");
     head.className = "mat-head";
+    head.inert = root.classList.contains("reader-header-collapsed");
+    head.setAttribute("aria-hidden", String(head.inert));
     const title = deps.document.createElement("h2");
     title.className = "mat-title";
     title.textContent = reader.material.title === "" ? "正在打开材料…" : reader.material.title;
     const close = deps.document.createElement("button");
     close.id = "mat-close";
-    close.className = "mat-close";
-    close.textContent = "关闭";
+    close.className = "mat-close reader-tabs-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "关闭阅读器");
     close.title = "关闭阅读器（Esc），阅读位置会保留";
     close.addEventListener("click", () => deps.closeMaterialReader());
-    head.append(title, close);
+    tabs.append(close);
+    head.append(title);
     root.append(head);
 
     /* 元信息行：所渲染版本可辨认（charter §3.1）——版本号/新旧、解析器
@@ -82,7 +132,12 @@ export function createMaterialReaderView(deps) {
     const fileDetails = createDisclosure(deps.document, version ? `v${materialVersionNumber(reader.versions, version.id)} · ${version.parserKind === "pdf" ? "PDF" : "Markdown"} · 文件信息` : "文件信息", meta);
     fileDetails.id = "mat-file-details";
     fileDetails.open = detailsOpen;
-    root.append(fileDetails);
+    fileDetails.classList.add("mat-info-popover");
+    const infoSummary = fileDetails.querySelector("summary");
+    infoSummary.textContent = "ⓘ";
+    infoSummary.setAttribute("aria-label", "文件信息与版本");
+    infoSummary.title = "文件信息与版本";
+    head.append(fileDetails);
 
     /* 版本链：每版一枚小片。ready 版本可点开（旧版本保持可读——切换是显式
        动作，绝不自动迁移任何锚点，charter §3.1）；非 ready 版本如实标注
@@ -144,6 +199,20 @@ export function createMaterialReaderView(deps) {
     if (version && version.id !== reader.versions.at(-1)?.id && reader.versions.at(-1)?.parseStatus !== "ready") {
       root.append(deps.mutedLine("最新版本暂时无法阅读，你仍可继续阅读这个旧版本。"));
     }
+
+    const tools = deps.document.createElement("div"); tools.className = "reader-tools";
+    for (const [mode, text] of [["text", "选字提问"], ["region", "框选提问"]]) {
+      const button = deps.document.createElement("button"); button.type = "button"; button.append(controlIcon(deps.document, mode)); button.title = text; button.setAttribute("aria-label", text);
+      button.dataset.selectionTool = mode; button.setAttribute("aria-pressed", String((root.dataset.selectionMode ?? "text") === mode));
+      button.addEventListener("click", () => {
+        root.dataset.selectionMode = mode;
+        for (const item of tools.querySelectorAll("button")) item.setAttribute("aria-pressed", String(item === button));
+        tip.textContent = mode === "region" ? "拖出矩形选择文字，再确认摘录。" : "选中文字后，在浮动工具条中提问。";
+      });
+      tools.append(button);
+    }
+    const tip = deps.document.createElement("span"); tip.id = "reader-tool-hint"; tip.className = "muted"; tip.setAttribute("role", "status");
+    head.append(tools); root.append(tip);
 
     /* 选区捕获条（常驻——不随正文滚动消失；role=status 朗读状态变化）。 */
     const bar = deps.document.createElement("div");
@@ -337,11 +406,11 @@ export function createMaterialReaderView(deps) {
     blocksEl.addEventListener("mousedown", (event) => {
       // Touch selection is owned by selectionchange. Chrome's compatibility
       // mouse events after release must not start another drag or clear it.
-      if (event.sourceCapabilities?.firesTouchEvents) return;
+      if (event.sourceCapabilities?.firesTouchEvents || deps.$("material-reader").dataset.selectionMode === "region") return;
       deps.state.selectionDragActive = true;
     });
     const armFromEvent = (event) => {
-      if (event.sourceCapabilities?.firesTouchEvents) return;
+      if (event.sourceCapabilities?.firesTouchEvents || deps.$("material-reader").dataset.selectionMode === "region") return;
       if (deps.state.selectionDragActive) {
         deps.state.selectionDragActive = false;
         deps.window.setTimeout(deps.flushPendingRerender, 0);
@@ -350,7 +419,24 @@ export function createMaterialReaderView(deps) {
     };
     blocksEl.addEventListener("mouseup", armFromEvent);
     blocksEl.addEventListener("dblclick", armFromEvent);
+    let lastScroll = 0, travel = 0, userScrollUntil = 0;
+    const userScroll = () => { userScrollUntil = Date.now() + 700; };
+    blocksEl.addEventListener("wheel", userScroll, { passive: true });
+    blocksEl.addEventListener("touchmove", userScroll, { passive: true });
+    blocksEl.addEventListener("keydown", event => { if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) userScroll(); });
     blocksEl.addEventListener("scroll", () => {
+      const top = blocksEl.scrollTop;
+      const delta = top - lastScroll;
+      if (Math.sign(delta) !== Math.sign(travel)) travel = 0;
+      travel += delta;
+      const root = deps.$("material-reader");
+      if (top <= 12 || (Date.now() < userScrollUntil && travel < -32)) { root.classList.remove("reader-header-collapsed"); travel = 0; }
+      else if (Date.now() < userScrollUntil && top > 72 && travel > 32 && !deps.state.selectionDragActive && !root.contains(deps.document.activeElement?.closest?.(".mat-head"))) {
+        root.classList.add("reader-header-collapsed"); travel = 0;
+      }
+      const head = root.querySelector(".mat-head");
+      if (head) { head.inert = root.classList.contains("reader-header-collapsed"); head.setAttribute("aria-hidden", String(head.inert)); }
+      lastScroll = top;
       const reader = deps.state.materialReader;
       if (reader === null) return;
       deps.scheduleMaterialPositionSave();
@@ -358,6 +444,8 @@ export function createMaterialReaderView(deps) {
       /* PDF 懒渲染窗口随滚动重估（可见页先行渲染，窗外页卸回占位）。 */
       deps.updatePdfPageRendering(reader);
     });
+    wireRegionSelection({ document: deps.document, window: deps.window, root: deps.$("material-reader"), blocks: blocksEl,
+      arm: () => deps.armMaterialSelection(), notify: text => { const hint = deps.document.getElementById("reader-tool-hint"); if (hint) hint.textContent = text; } });
     return blocksEl;
   }
 

@@ -1,3 +1,4 @@
+import { handleComposerKey } from "../controllers/appearance.js";
 import { createDisclosure } from "../dom.js";
 /** Suggestion strips and explanation/annotation/promotion cards; no automatic product writes. Instance-owned state and dependencies. */
 
@@ -287,14 +288,15 @@ export function createTerminologyView(deps) {
         const label = deps.document.createElement("span");
         label.className = "muted";
         label.textContent = "saved — promote to a follow-up branch:";
-        const input = deps.document.createElement("input");
+        const input = deps.document.createElement("textarea");
         input.id = "term-first-question";
-        input.type = "text";
+        input.rows = 2;
         input.value = card.firstQuestion;
         input.placeholder = "First question for the follow-up branch…";
         input.addEventListener("input", () => {
           if (deps.state.termExplain !== null) deps.state.termExplain.firstQuestion = input.value;
         });
+        input.addEventListener("keydown", (event) => handleComposerKey(event, input, () => deps.guard(deps.promoteTermAnnotation, "panel"), deps.document));
         const promote = deps.document.createElement("button");
         promote.className = "accent term-promote";
         promote.textContent = card.promoting ? "Promoting…" : "⑃ Promote to branch";

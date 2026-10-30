@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TreeAI Studio</title>
+  <link rel="stylesheet" href="/vendor/webawesome/styles/themes/default.css" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -24,10 +25,7 @@
       </div>
       <div id="diagnostics-bar" hidden>
         <span id="run-status" class="run-status idle" aria-live="polite">已就绪</span>
-        <details class="runtime-details">
-          <summary title="运行详情" aria-label="运行详情"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7h.01"></path></svg><span class="sr-only">运行详情</span></summary>
-          <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
-        </details>
+
         <button id="abort-run" class="danger" hidden>停止生成</button>
       </div>
       <button id="source-drawer-toggle" class="drawer-toggle icon-button" aria-expanded="false" aria-label="来源记录" title="来源记录"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg><span class="sr-only">来源记录</span></button>
@@ -39,6 +37,10 @@
           <summary id="workspace-library-toggle" class="icon-button" aria-label="路径导航" title="路径导航" aria-expanded="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></summary>
           <div class="workspace-library-panel" role="region" aria-label="路径导航">
             <div class="library-heading"><h2>路径导航</h2><button id="workspace-library-close" type="button" class="icon-button" aria-label="关闭路径导航" title="关闭"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
+        <details class="runtime-details">
+          <summary title="运行详情" aria-label="运行详情"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7h.01"></path></svg><span class="sr-only">运行详情</span></summary>
+          <div class="runtime-popover"><span id="run-detail" class="muted"></span><span id="policy-note" class="muted"></span><span id="cursor-note-details" class="muted"></span></div>
+        </details>
         <section class="sidebar-section" id="branch-section" hidden>
           <h2 class="sidebar-heading">当前树的路径 <span id="branch-count"></span></h2>
           <nav id="branch-tabs" aria-label="Branches"></nav>
@@ -81,17 +83,45 @@
     </header>
     <dialog id="api-settings-dialog" aria-labelledby="api-settings-title">
       <form id="api-settings-form">
-        <div class="api-settings-heading"><div><p class="settings-eyebrow">工作区设置</p><h2 id="api-settings-title">设置</h2></div><button id="api-settings-close" type="button" aria-label="关闭 API 设置">← 返回工作区</button></div>
-        <p class="settings-intro">选择 API 服务和模型。保存后重启生效，已有思考记录会保留。</p>
+        <div class="api-settings-heading"><h2 id="api-settings-title">设置</h2><button id="api-settings-close" type="button" class="icon-button" aria-label="关闭设置" title="关闭设置">×</button></div>
+        <wa-tab-group id="settings-tabs" active="appearance" aria-label="设置分类">
+          <wa-tab panel="appearance">外观</wa-tab>
+          <wa-tab panel="input">输入</wa-tab>
+          <wa-tab panel="connection">模型与连接</wa-tab>
+          <wa-tab-panel name="appearance">
+            <section class="settings-section" aria-labelledby="appearance-heading">
+              <h3 id="appearance-heading">主题</h3>
+              <p class="settings-description">选择让你阅读更舒服的底色。</p>
+              <div class="theme-options" role="group" aria-label="主题">
+                <button type="button" class="theme-choice" data-theme-choice="warm" aria-pressed="true"><span class="theme-preview theme-preview-warm" aria-hidden="true"><i></i><b></b><em></em></span><span>暖白<span class="theme-choice-check" aria-hidden="true">✓</span></span></button>
+                <button type="button" class="theme-choice" data-theme-choice="sage" aria-pressed="false"><span class="theme-preview theme-preview-sage" aria-hidden="true"><i></i><b></b><em></em></span><span>浅灰绿<span class="theme-choice-check" aria-hidden="true">✓</span></span></button>
+              </div>
+              <select id="appearance-theme" hidden aria-label="主题值"><option value="warm">暖白</option><option value="sage">浅灰绿</option></select>
+              <p id="appearance-status" class="settings-help" role="status">更改会自动保存。</p>
+            </section>
+          </wa-tab-panel>
+          <wa-tab-panel name="input">
+            <section class="settings-section" aria-labelledby="input-heading">
+              <h3 id="input-heading">发送与换行</h3>
+              <p class="settings-description">按你的习惯设置提问快捷键。</p>
+              <label class="settings-row"><span>发送消息</span><select id="composer-send-key"><option value="enter">Enter</option><option value="control-enter">Ctrl / ⌘ + Enter</option><option value="shift-enter">Shift + Enter</option></select></label>
+              <p id="input-preference-status" class="settings-help" role="status"></p>
+              <p class="settings-help" id="input-shortcut-hint" role="status">Ctrl + Enter 或 Shift + Enter 换行</p>
+              <div class="settings-note">输入中文时，确认候选文字不会发送消息。</div>
+            </section>
+          </wa-tab-panel>
+          <wa-tab-panel name="connection">
+        <p class="settings-intro">连接配置保存后，重启应用生效。</p>
         <section class="settings-section" aria-labelledby="api-connection-heading">
           <h3 id="api-connection-heading">API 连接</h3>
+          <p class="settings-connection-empty settings-description">添加模型服务，开始与你的材料对话。</p>
           <div class="api-settings-grid">
             <label>提供方<select id="api-provider"></select></label><button id="api-provider-add" type="button">添加提供方</button>
             <label class="settings-wide">接口格式<select id="api-format"><option value="anthropic-messages">Anthropic Messages</option><option value="openai-completions">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="google-generative-ai">Gemini API</option></select></label>
             <label class="settings-wide">API 地址<input id="api-base-url" type="url" required placeholder="https://api.example.com/v1"></label>
           </div>
           <details id="api-keychain-controls" class="credential-controls" hidden><summary>API key <span id="api-key-summary">未配置</span></summary>
-            <label for="api-key-value">API key</label>
+            <label class="sr-only" for="api-key-value">API key</label>
             <input id="api-key-value" type="password" placeholder="输入新的 API key，已保存的密钥不会显示" autocomplete="new-password" spellcheck="false">
             <p id="api-keychain-status" class="settings-help" role="status">密钥保存在本机系统钥匙串，不写入配置文件。</p>
             <div class="credential-actions"><button id="api-key-save" type="button">保存到钥匙串</button><button id="api-key-remove" type="button">移除已存密钥</button></div>
@@ -114,7 +144,9 @@
           <label for="api-config-json">多个提供方、模型与请求头（JSON）</label><textarea id="api-config-json" rows="9" spellcheck="false"></textarea><button id="api-json-apply" type="button">应用 JSON</button>
         </details>
         <p id="api-settings-status" role="status" aria-live="polite"></p>
-        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button class="primary" type="submit">保存设置</button></div>
+        <div class="api-settings-actions"><button id="api-connection-test" type="button">测试连接</button><button class="primary" type="submit">保存连接配置</button></div>
+          </wa-tab-panel>
+        </wa-tab-group>
       </form>
     </dialog>
 
@@ -159,8 +191,8 @@
         </section>
         <div id="sidebar-foot">
           <button id="api-settings-open" type="button" aria-label="设置" title="设置 · 模型与连接"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4 1-2h4l1 2 2 1 2-.2 2 3-1 2v4l1 2-2 3-2-.2-2 1-1 2h-4l-1-2-2-1-2 .2-2-3 1-2v-4l-1-2 2-3L7 5Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>设置</span></button>
-          <p class="subtitle"><span class="local-dot" aria-hidden="true"></span>本地工作区</p>
-          <p id="driver-note" class="muted">思考记录保存在本机</p>
+
+
         </div>
       </aside>
 
@@ -211,8 +243,8 @@
               <div id="composer">
                 <textarea id="prompt-input" rows="2" aria-label="在主线上提问" placeholder="输入问题，继续探索…"></textarea>
                 <div class="composer-actions">
-                  <span class="composer-context">⑂ 在主线上继续 <span>· ⌘ / Ctrl + Enter 发送</span></span>
-                  <button id="send" class="primary" aria-label="发送到主线">发送 ↗</button>
+                  <span class="composer-context sr-only">⑂ 在主线上继续 <span>· Enter 发送 · Ctrl + Enter 换行</span></span>
+                  <button id="send" class="primary" aria-label="发送到主线">↑</button>
                   <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                   <button id="new-exploration" class="accent" hidden>开始新的探索</button>
                 </div>
@@ -252,7 +284,7 @@
                 <div id="panel-composer">
                   <textarea id="panel-prompt-input" rows="2" aria-label="在当前支线继续提问" placeholder="输入问题，继续探索…"></textarea>
                   <div class="composer-actions">
-                    <button id="panel-send" class="primary">发送 ↗</button>
+                    <button id="panel-send" class="primary">↑</button>
                     <!-- v3 §4.4：session 不可用时的显式换轨入口（app.js 按可用性显隐）。 -->
                     <button id="panel-new-exploration" class="accent" hidden>开始新的探索</button>
                   </div>

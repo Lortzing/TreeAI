@@ -99,3 +99,16 @@ test('credential HTTP writes keep origin and CSRF guards and sanitize native fai
   assert.equal((await fetch(url,{method:'DELETE',headers,body:JSON.stringify(profile())})).status,200);assert.equal(entries.size,0);
  }finally{server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));rmSync(dir,{recursive:true,force:true});}
 });
+
+test('composer catalog includes only models loaded at startup and never reveals credentials', () => {
+ const dir=mkdtempSync(join(tmpdir(),'treeai-model-catalog-'));
+ try {
+  const service=new ApiSettingsService({dataDir:dir,initial:profile(),env:{LOCAL_API_KEY:'hidden-catalog-secret'}});
+  const before=service.activeModels();
+  assert.equal(before.models[0]!.modelId,'fixture');
+  const original=profile();const next=parseApiSettings({...original,config:{providers:{local:{...original.config.providers.local,models:[...original.config.providers.local!.models,{id:'not-loaded-yet'}]}}}});
+  service.save({...next,revision:service.snapshot().revision});
+  assert.deepEqual(service.activeModels(),before);
+  assert.ok(!JSON.stringify(before).includes('hidden-catalog-secret'));
+ } finally {rmSync(dir,{recursive:true,force:true});}
+});

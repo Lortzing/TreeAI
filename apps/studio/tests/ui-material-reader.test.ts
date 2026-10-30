@@ -1440,7 +1440,7 @@ test("cross-line selection inside one block: the captured payload is the frozen 
      诚实占位；入口的完整流程由 ui-material-branching.test.ts 锁定）。 */
   const d43 = bar.querySelector(".mat-branch-d43")!;
   assert.equal(d43.disabled, false, "the D4-3 branch entry is offered (enabled) on the armed bar");
-  assert.match(d43.textContent!, /展开支线/);
+  assert.match(d43.textContent!, /选文提问/);
 });
 
 test("repeat-word discipline: selecting the FIFTH 递归 captures [116, 118) — the second-block occurrence, never the first string match (md-sel-19)", async () => {

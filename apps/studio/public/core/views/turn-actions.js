@@ -45,7 +45,7 @@ export function createTurnActionsView(deps) {
     explainButton.textContent = "⌖ 解释选文";
     explainButton.disabled = !armedHere;
     explainButton.title =
-      "Explain the selected term or span (terminology executor — isolated, no main-session side effects)";
+      "解释选中的文字";
     termExplainButtons.set(turn.id, explainButton);
     explainButton.addEventListener("click", () => {
       const current = deps.state.armedSelection;
@@ -58,7 +58,7 @@ export function createTurnActionsView(deps) {
 
     const hint = deps.document.createElement("span");
     hint.className = "selection-hint";
-    hint.textContent = "(select text above to anchor the branch)";
+    hint.textContent = "选择文字可从选文开始追问";
     wrap.append(branchButton, explainButton, hint);
     if (armedHere) wrap.append(buildSelectionToolbar(branchId, turn, armed));
     return wrap;

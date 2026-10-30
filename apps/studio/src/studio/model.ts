@@ -94,6 +94,7 @@ export interface PromptOutcome {
  * 可读（append-only，来源关系不动）。
  */
 export interface PromptOptions {
+  readonly model?: PiModelSelector;
   readonly newExploration?: boolean;
   /**
    * 服务端生成的组合前缀（模型输入上下文，不落用户 turn；术语推广的

@@ -1,9 +1,10 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** Saved Episode pages and Session relationship graph, owned by one Studio instance. */
 export function createSessionWorkspace(deps) {
 const readingTitles = new Map();
 function questionTitle(view) {
   const firstQuestion = view?.turns.find((turn) => turn.role === "user");
-  return firstQuestion ? firstQuestion.text.replace(/\s+/g, " ").trim() : "";
+  return firstQuestion ? attachedQuestion(firstQuestion.text).text.replace(/\s+/g, " ").trim() : "";
 }
 function renderReadingHeading() {
   const view = deps.branchView(deps.trunkBranchId());
@@ -125,9 +126,29 @@ function renderRoundNavigation() {
   const view = deps.branchView(deps.state.panelBranchId || deps.trunkBranchId());
   if (!view) return;
   const { round, rounds, index } = currentSessionRound(view);
+  root.hidden = root.hidden || rounds.length < 2;
   deps.$("round-previous").disabled = index <= 0;
   deps.$("round-next").disabled = index < 0 || index >= rounds.length - 1;
   deps.$("round-position").textContent = round ? `${String(index + 1).padStart(2, "0")} / ${String(rounds.length).padStart(2, "0")}` : "00 / 00";
+  let directory = deps.document.getElementById("round-directory");
+  if (!directory) {
+    directory = deps.document.createElement("div"); directory.id = "round-directory";
+    directory.className = "round-directory"; directory.setAttribute("role", "tablist"); directory.setAttribute("aria-label", "对话目录");
+    root.append(directory);
+  }
+  directory.replaceChildren();
+  // Keep the directory bounded around the current round for long conversations.
+  const first = Math.max(0, Math.min(index - 10, rounds.length - 21));
+  rounds.slice(first, first + 21).forEach((item, offset) => {
+    const question = attachedQuestion(item.turns.find(turn => turn.role === "user")?.text).text || "这一轮对话";
+    const button = workspaceButton("", "round-line", () => moveSessionRound(first + offset - index));
+    button.setAttribute("role", "tab"); button.setAttribute("aria-selected", String(item === round));
+    button.setAttribute("aria-label", `第 ${first + offset + 1} 轮：${question.slice(0, 80)}`);
+    const line = workspaceElement("span", "round-line-mark");
+    const preview = workspaceElement("span", "round-line-preview", question.slice(0, 180));
+    button.append(line, preview);
+    directory.append(button);
+  });
   for (const id of ["main-reading-content", "branch-panel"]) {
     const card = deps.$(id);
     card.classList.toggle("has-history", rounds.length > 1);

@@ -3,7 +3,7 @@ import type { ApiSettingsService } from "../../api-settings.ts";
 import { readJsonBody } from "../requests.ts";
 import { sendJson } from "../responses.ts";
 export async function handleApiSettingsRoute(req: IncomingMessage, res: ServerResponse, pathname: string, service: ApiSettingsService | null): Promise<boolean> {
-  if (pathname !== "/api/settings/api" && pathname !== "/api/settings/api/test" && pathname !== "/api/settings/api/credentials") return false;
+  if (pathname !== "/api/settings/models" && pathname !== "/api/settings/api" && pathname !== "/api/settings/api/test" && pathname !== "/api/settings/api/credentials") return false;
   res.setHeader("Cache-Control", "no-store");
   let target: URL;
   try { target = new URL(`http://${req.headers.host ?? ""}`); }
@@ -12,6 +12,7 @@ export async function handleApiSettingsRoute(req: IncomingMessage, res: ServerRe
     sendJson(res, 403, { error: { code: "local-only", message: "仅允许同源本机访问设置。" } }); return true;
   }
   if (service === null) { sendJson(res, 503, { error: { code: "settings-unavailable", message: "此实例未启用 API 设置。" } }); return true; }
+  if (req.method === "GET" && pathname === "/api/settings/models") { sendJson(res, 200, service.activeModels()); return true; }
   if (req.method === "GET" && pathname === "/api/settings/api") { await service.refreshCredentials(); sendJson(res, 200, service.snapshot()); return true; }
   const credentialRequest = pathname === "/api/settings/api/credentials" && (req.method === "POST" || req.method === "DELETE");
   const settingsWrite = req.method === "PUT" && pathname === "/api/settings/api";

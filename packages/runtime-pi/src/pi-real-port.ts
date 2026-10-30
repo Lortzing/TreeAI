@@ -96,6 +96,7 @@ export function adaptSession(session: PiSession): PiPortSession {
     get sessionManager(): PiPortSessionManager {
       return session.sessionManager as unknown as PiPortSessionManager;
     },
+    setModel: (model) => session.setModel((model.raw ?? model) as Parameters<PiSession["setModel"]>[0]),
     prompt: (text: string) => session.prompt(text),
     steer: (text: string) => session.steer(text),
     abort: () => session.abort(),

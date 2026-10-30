@@ -104,6 +104,7 @@ export interface PiPortSession {
   readonly model: PiPortModelHandle | undefined;
   readonly sessionManager: PiPortSessionManager;
 
+  setModel?(model: PiPortModelHandle): Promise<void>;
   prompt(text: string): Promise<void>;
   steer(text: string): Promise<void>;
   abort(): Promise<void>;

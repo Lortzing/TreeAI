@@ -1670,7 +1670,7 @@ test("branch entry: the armed capture bar offers branching; the click resolves t
   const bar = selectionBar(world);
   const branchButton = bar.querySelector(".mat-branch-d43")!;
   assert.equal(branchButton.disabled, false, "the branch entry is offered (enabled) on the armed bar");
-  assert.match(branchButton.textContent!, /展开支线/);
+  assert.match(branchButton.textContent!, /选文提问/);
 
   await clickBranchButton(world);
 

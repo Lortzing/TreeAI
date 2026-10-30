@@ -1,3 +1,5 @@
+import { createComposerTools } from "./controllers/composer-tools.js";
+import { registerAppearance, handleComposerKey } from "./controllers/appearance.js";
 import { registerWorkspaceEvents } from "./controllers/workspace-events.js";
 import { registerApiSettings } from "./controllers/api-settings.js";
 import { createStudioFeatures } from "./compose-features.js";
@@ -29,6 +31,7 @@ export function createStudioApp(deps) {
   function start() {
     if (started) return;
     started = true;
+    const disposeAppearance = registerAppearance({ document, window });
     const disposeApiSettings = registerApiSettings({ document, fetch });
 const studioState = createStudioState({
 
@@ -95,6 +98,10 @@ const {
   disconnectEvents,
 } = studioFeatures;
 
+const composerTools = ["prompt-input", "panel-prompt-input"].map(id => {
+  const tools = createComposerTools(document, $(id), { getContext: () => ({ treeId: state.currentTreeId, branchId: id === "panel-prompt-input" ? state.panelBranchId : trunkBranchId() }), fetch, refreshMaterials: studioFeatures.refreshMaterials }); const actions = $(id).parentElement.querySelector(".composer-actions") ?? $(id).parentElement; actions.insertBefore(tools.element, actions.firstChild); return tools;
+});
+
 const disposeWorkspaceEvents = registerWorkspaceEvents({ $, state, document, window, sessionUI, scrollBehavior, openMaterial, closeMaterialReader, setWorkspaceView, moveSessionRound });
 
 /* 失败后编辑 = 新的逻辑提交：旧键可能已被服务端绑定到旧文本（同键异容
@@ -159,18 +166,9 @@ $("empty-new-tree").addEventListener("click", () => guard(createTree));
 $("list-retry").addEventListener("click", () => void retryTreesLoad());
 $("send").addEventListener("click", () => guard(() => sendPrompt("main")));
 $("panel-send").addEventListener("click", () => guard(() => sendPrompt("panel"), "panel"));
-$("prompt-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-    event.preventDefault();
-    guard(() => sendPrompt("main"));
-  }
-});
-$("panel-prompt-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-    event.preventDefault();
-    guard(() => sendPrompt("panel"), "panel");
-  }
-});
+for (const [id, view] of [["prompt-input", "main"], ["panel-prompt-input", "panel"]]) {
+  $(id).addEventListener("keydown", (event) => handleComposerKey(event, $(id), () => guard(() => sendPrompt(view), view), document));
+}
 $("submit-return").addEventListener("click", () => guard(submitReturn, "panel"));
 /* 新探索（v3 §4.4）：session 不可用分支的显式换轨入口（按钮仅在不可用时
    可见，见 updateComposerLocks）。 */
@@ -419,6 +417,8 @@ void (async () => {
     cleanup = () => {
       disposeApiSettings();
       disposeWorkspaceEvents();
+      disposeAppearance();
+      for (const tools of composerTools) tools.dispose();
       stopDiagnosticsPolling();
       disconnectEvents();
       for (const [name, listener, options] of docListeners.splice(0)) {

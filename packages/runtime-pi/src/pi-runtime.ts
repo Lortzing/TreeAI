@@ -209,17 +209,26 @@ class PiRuntimeImpl implements PiRuntime {
         resolve,
       };
       this.inFlight = run;
-      void this.drivePrompt(active, input.text, run);
+      void this.drivePrompt(active, input, run);
     });
   }
 
   private async drivePrompt(
     active: ActiveSession,
-    text: string,
+    input: PiPromptInput,
     run: InFlightRun,
   ): Promise<void> {
     try {
-      await active.session.prompt(text);
+      if (input.model) {
+        if (!active.session.setModel) throw new Error("This runtime does not support switching models");
+        const services = await this.port.createServices(this.defaultCwd, this.agentDir);
+        const model = services.getModel(input.model.providerId, input.model.modelId);
+        if (!model) throw new Error("The selected model is not available in this process");
+        if (run.settled || run.abortRequested) return;
+        await active.session.setModel(model);
+      }
+      if (run.settled || run.abortRequested) return;
+      await active.session.prompt(input.text);
     } catch (err) {
       if (run.settled) {
         return;

@@ -121,7 +121,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
       // Navigation reads durable product facts independently of Pi session availability.
       if (await handleNavRoute(req, res, url, method, pathname, nav)) return;
 
-      if (await handleTreeRoute(req, res, url, method, pathname, service, startSseStream)) return;
+      if (await handleTreeRoute(req, res, url, method, pathname, service, startSseStream, options.apiSettings ?? undefined, materials)) return;
 
       if (pathname === "/api/health" && method === "GET") {
         sendJson(res, 200, { ok: true });

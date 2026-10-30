@@ -1,3 +1,4 @@
+import { attachedQuestion } from "../controllers/composer-tools.js";
 /** Reconciled conversation/Return ordering, source anchor context, selection-preserving DOM reuse and reading position. Instance-owned state and dependencies. */
 import { findReusableTurnElement, createDisclosure } from "../dom.js";
 
@@ -44,7 +45,19 @@ export function createConversationView(deps) {
       deps.attachTurnSelectionListeners(div, turn, branchId);
       updateAssistantTurnLayer(div, turn, branchId);
     } else {
-      div.textContent = turn.text;
+      const question = turn.role === "user" ? attachedQuestion(turn.text) : { text: turn.text, files: [] };
+      if (question.files.length) {
+        const files = deps.document.createElement("div"); files.className = "turn-attachments";
+        for (const file of question.files) {
+          const button = deps.document.createElement("button"); button.type = "button";
+          button.textContent = file.title; button.title = `${file.title} · ${file.scope}`;
+          button.addEventListener("click", () => {
+            if (file.treeId === deps.state.currentTreeId) void deps.openMaterial(file.materialId, { versionId: file.versionId, arrival: "attachment" });
+          });
+          files.append(button);
+        }
+        div.append(files, deps.document.createTextNode(question.text.trimStart()));
+      } else div.textContent = turn.text;
     }
     return div;
   }

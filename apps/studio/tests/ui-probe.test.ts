@@ -2594,8 +2594,9 @@ test("scroll follow threshold: a delta within 47px of the bottom follows; at 49p
 /* 15. 键盘提交：Cmd/Ctrl+Enter（主线 / 面板）；普通 Enter 不提交        */
 /* ------------------------------------------------------------------ */
 
-test("keyboard submit: Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not", async () => {
+test("keyboard submit: configured Cmd+Enter and Ctrl+Enter submit from the main and panel composers; plain Enter does not", async () => {
   const world = await createWorld();
+  world.document.body!.dataset.sendKey = "control-enter";
 
   /* 普通 Enter：多行输入留给换行，不提交。 */
   const promptInput = world.el("prompt-input");
