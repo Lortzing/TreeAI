@@ -2,6 +2,27 @@ import { clearComposerAttachments } from "./composer-tools.js";
 /** Conversation prompts, explicit new explorations, abort requests and authoritative quiet refresh. Instance-owned state and dependencies. */
 
 export function createPromptController(deps) {
+  const pendingRequests = new Map();
+  function storageKey(treeId, branchId) { return `treeai:prompt:${treeId}:${branchId}`; }
+  function pendingRequest(key) {
+    if (pendingRequests.has(key)) return pendingRequests.get(key);
+    try {
+      const record = JSON.parse(deps.window.localStorage?.getItem(key) ?? "null");
+      if (record && typeof record.requestKey === "string" && typeof record.payload === "string") {
+        pendingRequests.set(key, record);
+        return record;
+      }
+    } catch { /* Same-page reconciliation still works without browser storage. */ }
+    return null;
+  }
+  function saveRequest(key, record) {
+    pendingRequests.set(key, record);
+    try {
+      if (record === null) deps.window.localStorage?.removeItem(key);
+      else deps.window.localStorage?.setItem(key, JSON.stringify(record));
+    } catch { /* Keep the in-memory key on storage failures. */ }
+  }
+
 
 
   /**
@@ -20,22 +41,70 @@ export function createPromptController(deps) {
     const input = deps.$(isPanel ? "panel-prompt-input" : "prompt-input");
     const text = input.value;
     if (input.dataset.attachmentPending === "true") throw new Error("附件正在处理，请稍后发送。");
-    const attachments = input.dataset.attachments ? JSON.parse(input.dataset.attachments) : [];
+    const attachmentSnapshot = input.dataset.attachments;
+    const modelSnapshot = deps.document.documentElement?.dataset.composerModel;
+    const attachments = attachmentSnapshot ? JSON.parse(attachmentSnapshot) : [];
     if (attachments.some(item => item.treeId !== deps.state.currentTreeId || item.branchId !== branchId)) throw new Error("附件属于另一段对话，请移除后重新添加。");
-    if (branchId === null || text.trim() === "") return;
+    if (branchId === null) return;
+    const treeId = deps.state.currentTreeId;
+    const key = storageKey(treeId, branchId);
+    const body = { branchId, text,
+      ...(attachments.length ? { attachments: attachments.map(({ materialId, versionId }) => ({ materialId, versionId })) } : {}),
+      ...(modelSnapshot ? { model: JSON.parse(modelSnapshot) } : {}) };
+    const snapshot = JSON.stringify(body);
+    let pending = pendingRequest(key);
+    if (pending === null && text.trim() === "") return;
+    const existing = pending !== null;
+    if (pending === null) {
+      pending = { requestKey: deps.crypto.randomUUID(), payload: snapshot };
+      saveRequest(key, pending);
+    }
+    const requestPath = `/api/trees/${encodeURIComponent(treeId)}/prompt-requests/${encodeURIComponent(pending.requestKey)}`;
     deps.sessionUI.followBranchId = branchId;
     if (!deps.studioEventsController.sseHealthy) deps.startDiagnosticsPolling();
     let promptError = null;
     try {
-      const payload = await deps.api(`/api/trees/${encodeURIComponent(deps.state.currentTreeId)}/prompt`, "POST", {
-        branchId,
-        text,
-        ...(attachments.length ? { attachments: attachments.map(({ materialId, versionId }) => ({ materialId, versionId })) } : {}),
-        ...(deps.document.documentElement?.dataset.composerModel ? { model: JSON.parse(deps.document.documentElement.dataset.composerModel) } : {}),
-      });
-      deps.state.treeState = payload.state;
-      input.value = "";
-      clearComposerAttachments(input, attachments);
+      let payload = existing ? await deps.api(requestPath) : null;
+      if (!payload?.request) {
+        if (existing && deps.branchView?.(branchId)?.sessionAvailability === "unavailable") {
+          throw new Error("尚无本次请求的接收记录，且旧会话不可用；原请求保留，请核对后再开始新的探索。");
+        }
+        if (pending.payload !== snapshot) {
+          throw new Error("上次发送尚未确认。请恢复原问题、附件和模型后重试；再次发送会沿用原请求编号。原问题：" + JSON.parse(pending.payload).text);
+        }
+        try {
+          payload = await deps.api(`/api/trees/${encodeURIComponent(treeId)}/prompt`, "POST", {
+            ...body, requestKey: pending.requestKey,
+          });
+        } catch (err) {
+          // A response can disappear after commit. Read first; never silently resend.
+          const reconciled = await deps.api(requestPath).catch(() => null);
+          if (!reconciled?.request) {
+            if (err.status >= 400 && err.status < 500 && reconciled !== null) saveRequest(key, null);
+            throw err;
+          }
+          payload = reconciled;
+        }
+      }
+      if (deps.state.currentTreeId === treeId) deps.state.treeState = payload.state;
+      const request = payload.request;
+      if (!request) throw new Error("本次发送的结果尚未确认，请稍后再次核对。");
+      if (["accepted", "queued", "running", "aborting"].includes(request.status)) {
+        throw new Error("上次提问仍在执行。稍后再次点击发送会先核对状态，不会重复提问。");
+      }
+      saveRequest(key, null);
+      if (request.status !== "succeeded") {
+        const error = new Error(request.failure ? `${request.failure.code}: ${request.failure.message}` : "本次提问已中止，原问题保留；再次发送将开始新尝试。");
+        error.code = request.status === "aborted" ? "user-abort" : request.failure?.code;
+        throw error;
+      }
+      // Reconciliation may concern the previous question; preserve edits made since submission.
+      if (pending.payload === snapshot && input.value === text && input.dataset.attachments === attachmentSnapshot &&
+          deps.document.documentElement?.dataset.composerModel === modelSnapshot && deps.state.currentTreeId === treeId &&
+          (isPanel ? deps.state.panelBranchId : deps.trunkBranchId()) === branchId) {
+        input.value = "";
+        clearComposerAttachments(input, attachments);
+      }
       if (isPanel) deps.state.forcePanelSessionNote = false;
       else deps.state.forceSessionBanner = false;
       /* ①阅读模式：回答完成后刷新术语读模型（SSE run-terminal 同路径幂等；
@@ -159,6 +228,7 @@ export function createPromptController(deps) {
   }
 
   return {
+    hasPendingPrompt: (treeId, branchId) => pendingRequest(storageKey(treeId, branchId)) !== null,
     sendPrompt,
     startNewExploration,
     abortActiveRun,

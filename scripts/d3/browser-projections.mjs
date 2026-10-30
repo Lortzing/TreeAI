@@ -97,7 +97,9 @@ export function createBrowserProjections(deps) {
             currentRoundIndex: Math.min(originalPosition.index, scannedRoundCount),
             complete: true,
           };
-        } else if (cache[key] === undefined) {
+        } else if (cache[key] === undefined || originalPosition.count <= 1) {
+          // The pager is hidden for zero/one round. Refresh that visible snapshot
+          // when the first answer replaces the empty tree; never reuse the empty cache.
           cache[key] = {
             turns: [...turns.values()],
             returnCards: [...returnCards.values()],
@@ -197,12 +199,25 @@ export function createBrowserProjections(deps) {
     }
   }
 
+  async function configureModifierSubmit() {
+    // The current product defaults to plain Enter. Exercise the modifier shortcut
+    // through its public preference control before sending a native key event.
+    await deps.evalJs(`(() => {
+      const select = document.getElementById('composer-send-key');
+      if (select === null) throw new Error('composer send-key preference is missing');
+      select.value = 'control-enter';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      if (document.documentElement.dataset.sendKey !== 'control-enter') throw new Error('send-key preference did not apply');
+    })()`);
+  }
+
   async function sendTrunkPrompt(text, { keyboard = false } = {}) {
     /* replace：失败 prompt 会把文本留在输入框（sendPrompt 仅成功路径清空），
        残留文本 + 追加会把恢复 prompt 拼成 /fail… 前缀——全选覆盖是唯一
        确定性且符合真实用户编辑的路径。 */
     await deps.typeInto("#prompt-input", text, { replace: true });
     if (keyboard) {
+      await configureModifierSubmit();
       await deps.pressModifierEnter("meta");
     } else {
       await deps.click("#send");
@@ -212,6 +227,7 @@ export function createBrowserProjections(deps) {
   async function sendPanelPrompt(text, { keyboard = false } = {}) {
     await deps.typeInto("#panel-prompt-input", text, { replace: true });
     if (keyboard) {
+      await configureModifierSubmit();
       await deps.pressModifierEnter("ctrl");
     } else {
       await deps.click("#panel-send");

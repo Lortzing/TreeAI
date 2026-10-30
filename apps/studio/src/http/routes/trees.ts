@@ -73,6 +73,13 @@ export async function handleTreeRoute(
   req: IncomingMessage, res: ServerResponse, url: URL, method: string, pathname: string,
   service: TreeStudioService, startSseStream: ReturnType<typeof createSseStream>, apiSettings?: ApiSettingsService, materials?: MaterialImportService | null,
 ): Promise<boolean> {
+  const requestMatch = /^\/api\/trees\/([^/]+)\/prompt-requests\/([^/]+)$/.exec(pathname);
+  if (requestMatch !== null && method === "GET") {
+    const treeId = asTreeId(requestMatch[1]!);
+    const request = service.getPromptRequest(treeId, decodeURIComponent(requestMatch[2]!));
+    sendJson(res, 200, { request, state: service.getTreeState(treeId) });
+    return true;
+  }
   const treeMatch = /^\/api\/trees\/([^/]+)(?:\/(state|prompt|branches|switch|return|diagnostics|events|journal))?$/.exec(pathname);
   if (treeMatch !== null) {
     const treeId = asTreeId(treeMatch[1]!);
@@ -131,6 +138,14 @@ export async function handleTreeRoute(
       }
       if (body["attachments"] !== undefined && !materials) throw new InvalidArgumentError("当前实例未启用材料服务。");
       const attachmentContext = body["attachments"] === undefined ? {} : materials!.composeAttachments(treeId, body["attachments"]);
+      if (body["requestKey"] !== undefined) {
+        const request = await service.submitPromptRequest(treeId, requireString(body, "branchId") as BranchId,
+          requireString(body, "text"), requireString(body, "requestKey"),
+          { ...attachmentContext, ...(model ? { model } : {}) });
+        const inFlight = ["accepted", "queued", "running", "aborting"].includes(request.status);
+        sendJson(res, inFlight ? 202 : 200, { request, state: service.getTreeState(treeId) });
+        return true;
+      }
       const outcome = await service.prompt(
         treeId,
         requireString(body, "branchId") as BranchId,

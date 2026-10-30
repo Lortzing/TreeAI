@@ -23,6 +23,11 @@ export function createBrowserRecovery(deps) {
           30_000,
           "error banner after server-down prompt",
         );
+        const pendingKey = await deps.evalJs(`(() => {
+          const key = Object.keys(localStorage).find(key => key.startsWith('treeai:prompt:'));
+          return key ? JSON.parse(localStorage.getItem(key)).requestKey : null;
+        })()`);
+        deps.assert(typeof pendingKey === 'string', 'server-down prompt did not preserve its request key');
         /* 同数据目录重启（server 进程重启；数据全在磁盘）。 */
         await deps.startStudio(deps.sc.dataDir);
         await deps.navigate(deps.sc.studioUrl);
@@ -32,6 +37,15 @@ export function createBrowserRecovery(deps) {
         const stateRes = await deps.api("GET", `/api/trees/${encodeURIComponent(deps.sc.treeId)}/state`);
         const branchCount = (stateRes.body?.branches ?? []).length;
         deps.assert(branchCount === 3, `branch count after restart is ${String(branchCount)} (expected 3: trunk + A + B)`);
+        // Unknown acceptance must be resolved before replacing its payload. This
+        // explicit same-question retry first queries, then reuses the saved key.
+        const unanswered = await deps.api('GET', `/api/trees/${encodeURIComponent(deps.sc.treeId)}/prompt-requests/${encodeURIComponent(pendingKey)}`);
+        deps.assert(unanswered.status === 200 && unanswered.body?.request === null, 'server-down request was unexpectedly accepted');
+        const previousAnswers = summary.conversation.turns.filter(turn => turn.role === 'assistant').length;
+        await deps.sendTrunkPrompt('This prompt is sent while the server is down.', { keyboard: false });
+        await deps.waitForAnswerMarkers('#conversation', [], deps.CLI.promptTimeoutMs, previousAnswers + 1);
+        const reconciled = await deps.api('GET', `/api/trees/${encodeURIComponent(deps.sc.treeId)}/prompt-requests/${encodeURIComponent(pendingKey)}`);
+        deps.assert(reconciled.body?.request?.status === 'succeeded', 'explicit retry did not reuse and settle the original key');
         /* 重启后主线续聊可用。 */
         await deps.sendTrunkPrompt("After the restart, the main line continues. Reply with: restart-ok.", { keyboard: false });
         await deps.waitForAnswerMarkers("#conversation", deps.MODE === "selftest" ? ["restart-ok"] : ["restart-ok"], deps.CLI.promptTimeoutMs, deps.MODE === "selftest" ? 5 : 4);
@@ -39,7 +53,7 @@ export function createBrowserRecovery(deps) {
         deps.chrome.expectPageErrors = false;
       }
       await deps.snap("server-restart-recovered");
-      return { detail: `server SIGKILL → page showed an honest error banner on the next prompt; same-data restart + reload kept the trunk turns and all 3 branches; continuation works` };
+      return { detail: `server SIGKILL → page showed an honest error banner on the next prompt; same-data restart + reload kept the trunk turns and all 3 branches; explicit retry first reconciled and reused the unaccepted request key; continuation works` };
     });
 
     await deps.runCheck("missing-session-degradation", async () => {

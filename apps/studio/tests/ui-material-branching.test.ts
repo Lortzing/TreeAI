@@ -1455,7 +1455,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     }
     m = /^\/api\/trees\/([^/]+)\/prompt$/.exec(p);
     if (m !== null && method === "POST") {
-      return respond(200, { outcome: { kind: "completed" }, state: treeState });
+      return respond(200, { request: { status: "succeeded", failure: null }, outcome: { kind: "completed" }, state: treeState });
     }
     m = /^\/api\/trees\/([^/]+)\/return$/.exec(p);
     if (m !== null && method === "POST") {

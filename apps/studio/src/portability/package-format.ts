@@ -392,6 +392,13 @@ export const FACT_TABLES: readonly FactTableSpec[] = [
     ],
   },
   {
+    table: "prompt_requests",
+    columns: [text("tree_id"), text("request_key"), text("branch_id"), text("payload_hash"),
+      text("run_id", true), text("failure_code", true), text("failure_message", true), text("created_at")],
+    orderBy: "created_at, rowid",
+    foreignKeys: [{ column: "tree_id", references: "trees.id" }, { column: "branch_id", references: "branches.id" }, { column: "run_id", references: "runs.id" }],
+  },
+  {
     table: "generative_ui_tasks",
     columns: [text("id"), text("tree_id"), text("branch_id"), text("anchor_turn_id"), text("intent_id"), integer("revision"),
       text("context_hash"), text("context_json"), text("model"), text("state"), text("artifact_json", true), text("error", true),
@@ -408,6 +415,7 @@ export const FACT_TABLES_BY_NAME: ReadonlyMap<string, FactTableSpec> = new Map(
 
 /** 表 → 主键列（PK 唯一性校验 + 引用完整性集合构造）。 */
 export const TABLE_PRIMARY_KEYS: Readonly<Record<string, readonly string[]>> = {
+  prompt_requests: ["tree_id", "request_key"],
   generative_ui_tasks: ["id"],
   forests: ["id"],
   trees: ["id"],
@@ -455,6 +463,7 @@ export const RESTORE_INSERT_ORDER: readonly string[] = [
   "terminology_state",
   "tree_active_navigation",
   "generative_ui_tasks",
+  "prompt_requests",
 ];
 
 /* ------------------------------------------------------------------ */

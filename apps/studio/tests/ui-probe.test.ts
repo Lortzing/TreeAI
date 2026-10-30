@@ -1162,7 +1162,8 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
       });
       view.turns.push(assistantTurn);
       backend.treeState.cursor = { treeId: TREE, branchId, entryId: assistantTurn.piEntryId! };
-      return respond(200, { outcome: { kind: "completed" }, state: backend.treeState });
+      return respond(200, { request: { requestKey: record.requestKey, branchId, runId, status: "succeeded", failure: null },
+        outcome: { kind: "completed" }, state: backend.treeState });
     }
     return respond(404, { error: { code: "not-found", message: `no route for ${method} ${p}` } });
   };

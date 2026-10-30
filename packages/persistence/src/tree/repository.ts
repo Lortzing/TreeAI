@@ -1,3 +1,4 @@
+import { TreePromptRequestsRepository } from "./prompt-requests.ts";
 import type {
   TreeDomainContext,
 } from "./context.ts";
@@ -99,6 +100,7 @@ export class TreeRepository {
   readonly #turns: TreeTurnsRepository;
   readonly #terminology: TreeTerminologyRepository;
   readonly #navigation: TreeNavigationRepository;
+  readonly promptRequests: TreePromptRequestsRepository;
   readonly generativeUi: TreeGenerativeUiRepository;
 
   private constructor(options: TreeRepositoryOptions, db: DatabaseSync) {
@@ -115,6 +117,7 @@ export class TreeRepository {
       newId: (prefix) => this.#newId(prefix),
       repository: this,
     };
+    this.promptRequests = new TreePromptRequestsRepository(domainContext);
     this.#entities = new TreeEntitiesRepository(domainContext);
     this.#runs = new TreeRunsRepository(domainContext);
     this.#turns = new TreeTurnsRepository(domainContext);
