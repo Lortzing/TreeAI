@@ -11,7 +11,7 @@ function fixture() {
  const makeTurn=(id:string)=>({dataset:{turnId:id,turnText:id},classList:{contains:(role:string)=>role===(id.startsWith('a')?'assistant':'user')},querySelector:()=>null});
  const branch={dataset:{branchId:'trunk'},textContent:'Main',classList:{contains:(name:string)=>name==='active'},getAttribute:()=>null};
  const elements: Record<string,unknown>={
-  'round-navigation':{hidden:false}, 'round-position':{get textContent(){return `${state.pages.length?state.round+1:0} / ${state.pages.length}`;}},
+  'round-navigation':{get hidden(){return state.pages.length<=1;}}, 'round-position':{get textContent(){return `${state.pages.length?state.round+1:0} / ${state.pages.length}`;}},
   'round-previous':{get disabled(){return state.round<=0;},click(){state.round--;state.clicks++;}},
   'round-next':{get disabled(){return state.round>=state.pages.length-1;},click(){state.round++;state.clicks++;}},
   'conversation':{scrollTop:23},'branch-panel':{hidden:true},'run-status':{textContent:'idle'},'tree-list':{children:[branch]},
@@ -60,4 +60,26 @@ test('D4 restart history reads every rendered round and restores the reader with
  assert.equal(history.text,'u1\na1\nu2\na2');assert.equal(history.pages,2);assert.equal(f.state.round,1);
  assert.deepEqual(Array.from(history.turnIds),['u1','a1','u2','a2']);
  f.state.pages=[];f.state.round=0;assert.equal((await readConversationRounds(f.ctx,'#conversation')).text,'');
+});
+
+test('D3 hidden-pager snapshot refreshes from an empty tree to the first completed answer', async()=>{
+ const f=fixture(); f.state.pages=[]; f.state.round=0;
+ assert.equal((await f.summary()).conversation.turns.length,0);
+ f.state.pages=[['u1','a1']];
+ assert.deepEqual((await f.summary()).conversation.turns.map(t=>t.turnId),['u1','a1']);
+ f.state.pages=[['u1','a1-updated']];
+ assert.deepEqual((await f.summary()).conversation.turns.map(t=>t.turnId),['u1','a1-updated']);
+ assert.equal(f.state.clicks,0,'a hidden pager must never be clicked');
+});
+
+test('D3 keyboard submission configures the public shortcut preference before native modifier events', async()=>{
+ const calls: string[]=[];
+ const projections=createBrowserProjections({
+  typeInto:async()=>{calls.push('type');},
+  evalJs:async(expression:string)=>{assert.match(expression,/composer-send-key/);assert.match(expression,/dispatchEvent/);calls.push('preference');},
+  pressModifierEnter:async(modifier:string)=>{calls.push(modifier);},
+ }) as {sendTrunkPrompt(text:string,options:object):Promise<void>;sendPanelPrompt(text:string,options:object):Promise<void>};
+ await projections.sendTrunkPrompt('main',{keyboard:true});
+ await projections.sendPanelPrompt('branch',{keyboard:true});
+ assert.deepEqual(calls,['type','preference','meta','type','preference','ctrl']);
 });
