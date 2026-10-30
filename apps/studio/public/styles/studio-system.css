@@ -31,7 +31,7 @@ textarea { font-size: 15px; line-height: 1.65; }
 #app { grid-template-columns: 232px minmax(0, 1fr); grid-template-rows: 64px minmax(0, 1fr); }
 #sidebar { width: 232px; padding: 24px 14px 16px; gap: 12px; background: var(--room-sunken); }
 .sidebar-brand { gap: 10px; font-size: 23px; letter-spacing: -.6px; padding: 0 8px 10px; }
-.brand-mark { width: 32px; height: 32px; border-radius: 9px; font-size: 24px; box-shadow: none; }
+.brand-mark { width: 32px; height: 32px; border-radius: 8px; background: transparent; box-shadow: none; flex-shrink: 0; }
 .brand-period { color: var(--green); }
 #new-tree { min-height: 42px; padding: 10px 14px; font-size: 14px; box-shadow: none; }
 .search-shortcut { min-height: 38px; padding: 8px 10px; color: var(--ink-soft); font-size: 13px; border: 1px solid var(--line); background: var(--surface); }
@@ -118,7 +118,7 @@ textarea { font-size: 15px; line-height: 1.65; }
 }
 @media (max-width: 719px) {
   #app { grid-template-columns: minmax(0,1fr); grid-template-rows: 60px minmax(0,1fr); }
-  #sidebar { width: min(288px, 88vw); padding: 22px 16px; }
+  #sidebar { width: min(288px, 88vw); padding: 62px 16px 22px; }
   #branch-bar { padding: 10px 12px 10px 54px; gap: 6px; }
   #topbar-path { font-size: 13px; }
   #branch-bar .drawer-toggle, #api-settings-open { min-height: 36px; padding: 7px 9px; font-size: 12px; }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TreeAI Studio</title>
   <link rel="stylesheet" href="/vendor/webawesome/styles/themes/default.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -155,7 +156,7 @@
     <div id="workspace">
       <!-- 左栏保留新建、搜索、思考树与设置；桌面可收为图标栏，窄屏为抽屉。 -->
       <aside id="sidebar" aria-label="Trees">
-        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true">⑂</span><span>TreeAI<span class="brand-period">.</span></span></div>
+        <div class="sidebar-brand"><span class="brand-mark" aria-hidden="true"><img src="/assets/treeai-icon.svg" width="32" height="32" alt="" /></span><span>TreeAI<span class="brand-period">.</span></span></div>
 
         <button id="new-tree" class="primary" aria-label="新建思考" title="新建思考"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span>新建思考</span></button>
         <details class="sidebar-section sidebar-disclosure" id="search-section">
@@ -217,7 +218,7 @@
         <section id="session-workspace" hidden aria-label="Session 工作区" tabindex="-1"></section>
         <!-- 空态：无树打开。主操作直达（窄窗侧栏在抽屉后，不在首屏）。 -->
         <div id="empty-state" hidden>
-          <span class="empty-tree-symbol" aria-hidden="true">⑂</span>
+          <img class="empty-tree-symbol" src="/assets/treeai-mark.svg" width="58" height="58" alt="" aria-hidden="true" />
 
           <h1 class="empty-title">给思考，留一点生长的空间。</h1><p class="empty-description">从一个问题开始。沿着好奇深入，再把新的理解带回这里。</p>
 
