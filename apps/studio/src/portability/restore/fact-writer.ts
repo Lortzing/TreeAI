@@ -1,4 +1,5 @@
 /** fact-writer ownership for restore-service.ts; compatibility entrypoint remains one level above. */
+import { validateGenerativeUiStorage } from "@treeai/persistence";
 import {
   FACT_TABLES_BY_NAME,
   type FactsFileShape,
@@ -68,6 +69,7 @@ export function insertAllFacts(
         insert.run(...values);
       }
     }
+    validateGenerativeUiStorage(db);
     db.exec("COMMIT");
   } catch (error) {
     try {

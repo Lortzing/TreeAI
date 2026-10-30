@@ -318,7 +318,22 @@ export function createReturnController(deps) {
     }
   }
 
+  /** Explicit generated-card handoff: append locally, never submit or navigate. */
+  function appendReturnDraft(branchId, text) {
+    if (deps.state.panelBranchId !== branchId || !text.trim()) return;
+    syncReturnDraftForBranch(branchId);
+    const draft = ensureReturnDraft(branchId);
+    if (draft.failed) { draft.idempotencyKey = deps.crypto.randomUUID(); draft.failed = false; }
+    const current = deps.$("return-input").value;
+    draft.text = current.trim() ? `${current}\n\n${text}` : text;
+    deps.$("return-input").value = draft.text;
+    persistReturnDraft();
+    deps.$("return-panel").open = true;
+    deps.$("return-input").focus();
+  }
+
   return {
+    appendReturnDraft,
     syncReturnDraftForBranch,
     persistReturnDraft,
     submitReturn,

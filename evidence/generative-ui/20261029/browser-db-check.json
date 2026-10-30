@@ -1,0 +1,12 @@
+{
+  "driver": "echo",
+  "temporarySyntheticData": true,
+  "records": [
+    {
+      "state": "succeeded",
+      "n": 1,
+      "charged_chars": 1597
+    }
+  ],
+  "confirmedReturns": 0
+}

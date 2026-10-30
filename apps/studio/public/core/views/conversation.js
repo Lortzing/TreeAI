@@ -174,6 +174,8 @@ export function createConversationView(deps) {
       }
       desired.push(ensureTurnElement(container, turn, branchId));
       if (turn.role === "assistant") {
+        const comparison = deps.comparisonCard?.(turn, branchId);
+        if (comparison) desired.push(comparison);
         /* 术语建议条（①阅读模式）：渲染在该条答案之后、其 Return 卡之前
            ——建议附着在回答区，正文层（textContent 字节不变）不受影响。 */
         const suggestStrip = deps.termSuggestionStrip(branchId, turn);

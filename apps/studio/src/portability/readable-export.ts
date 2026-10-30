@@ -14,6 +14,7 @@
  *    来源（Turn 来源 / 材料来源）、Return 采用记录、术语批注。
  */
 
+import { validateUiContext, validateComparisonArtifact } from "@treeai/persistence";
 import type { FactsFileShape } from "./package-format.ts";
 
 export interface ReadableRenderInput {
@@ -113,6 +114,7 @@ export function renderReadableFiles(input: ReadableRenderInput): readonly Readab
   const treeMaterialLinks = tableOf(input, "tree_material_links");
   const materialOrigins = tableOf(input, "material_branch_origins");
   const readingState = tableOf(input, "tree_material_reading_state");
+  const generatedUi = tableOf(input, "generative_ui_tasks");
   const firstQuestions = tableOf(input, "material_first_questions");
 
   const files: ReadableFile[] = [];
@@ -300,6 +302,20 @@ export function renderReadableFiles(input: ReadableRenderInput): readonly Readab
           lines.push("");
           lines.push(indentBlock(turn.str("text")));
           lines.push("");
+        }
+      }
+
+      const branchCards = Array.from({ length: generatedUi.rows.length }, (_, i) => generatedUi.at(i)).filter(row => row.str("branch_id") === branchId);
+      if (branchCards.length > 0) lines.push("### Generated comparisons (not confirmed Returns)", "");
+      for (const card of branchCards) {
+        const context = validateUiContext(JSON.parse(card.str("context_json")));
+        lines.push(`Revision ${card.str("revision")} · ${card.str("state")} · anchor ${card.str("anchor_turn_id")} · model ${card.str("model")}`, "");
+        if (card.strOrNull("artifact_json") !== null) {
+          const artifact = validateComparisonArtifact(JSON.parse(card.str("artifact_json")), context);
+          lines.push(indentBlock(artifact.fallbackText, "    "), "");
+        }
+        for (const source of context.sources) {
+          lines.push(indentBlock(`${source.key}: ${source.title}\n${JSON.stringify(source)}`, "    "), "");
         }
       }
 

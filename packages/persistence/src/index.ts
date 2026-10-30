@@ -34,6 +34,8 @@ export {
   type TreeRepositoryOptions,
   type UpdateRunStateOptions,
 } from "./tree-repository.ts";
+export { validateComparison, comparisonFallback, validateUiContext, validateComparisonArtifact, MAX_COMPARISON_CHARS } from "./generative-ui-validation.ts";
+export type { CreateUiTaskInput } from "./tree/generative-ui.ts";
 
 export {
   MIGRATIONS,
@@ -93,3 +95,5 @@ export {
   UnsupportedDatabaseVersionError,
   type PersistenceErrorCode,
 } from "./errors.ts";
+
+export { validateGenerativeUiStorage } from "./generative-ui-integrity.ts";
