@@ -183,3 +183,28 @@ test("failed migration rolls back atomically and reports version", () => {
     cleanupTempDir(dir);
   }
 });
+
+test("schema 11 upgrades to durable prompt requests without changing existing product rows", () => {
+  const dir = makeTempDir();
+  try {
+    const path = dbPath(dir);
+    const old = new DatabaseSync(path);
+    runMigrations(old, MIGRATIONS.slice(0, 11));
+    old.prepare("INSERT INTO forests (id, created_at) VALUES (?, ?)").run("existing-forest", "2026-10-30T00:00:00.000Z");
+    old.close();
+    const repo = TreeRepository.open({ path });
+    assert.equal(repo.schemaVersion, 12);
+    assert.equal(repo.listForests()[0]!.id, "existing-forest");
+    const tree = repo.createTree(repo.listForests()[0]!.id), branch = repo.createBranch(tree.id);
+    repo.promptRequests.create(tree.id, "key", branch.id, "a".repeat(64));
+    assert.equal(repo.promptRequests.find(tree.id, "key")?.branchId, branch.id);
+    const other = repo.createTree(repo.listForests()[0]!.id), otherBranch = repo.createBranch(other.id);
+    assert.throws(() => repo.promptRequests.create(tree.id, "wrong-branch", otherBranch.id, "a".repeat(64)), /branch\/tree mismatch/);
+    assert.throws(() => repo.promptRequests.create(tree.id, "key", branch.id, "a".repeat(64)), /UNIQUE/);
+    assert.equal(repo.promptRequests.find(other.id, "key"), null);
+    repo.close();
+    const reopened = TreeRepository.open({ path });
+    assert.equal(reopened.promptRequests.find(tree.id, "key")?.runId, null);
+    reopened.close();
+  } finally { cleanupTempDir(dir); }
+});

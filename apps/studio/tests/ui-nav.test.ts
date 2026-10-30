@@ -960,7 +960,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
     }
     m = /^\/api\/trees\/([^/]+)\/prompt$/.exec(p);
     if (m !== null && method === "POST") {
-      return respond(200, { outcome: { kind: "completed" }, state: workbenchState(findTree(decodeURIComponent(m[1]!))!, null) });
+      return respond(200, { request: { status: "succeeded", failure: null }, outcome: { kind: "completed" }, state: workbenchState(findTree(decodeURIComponent(m[1]!))!, null) });
     }
 
     /* ---- 材料面（material 来源揭示：mat-src / v-src-1 / blk-0..blk-4） ---- */

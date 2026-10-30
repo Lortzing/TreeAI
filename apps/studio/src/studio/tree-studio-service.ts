@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   StudioReadModels,
 } from "./read-models.ts";
@@ -124,6 +125,7 @@ export class TreeStudioService {
    * （宿主中断语义）。DB 是事实源，重复调用安全（无则空转）。
    */
   recoverInterruptedRuns(): readonly Run[] {
+    this.repository.promptRequests.recoverInterrupted();
     return this.repository.failNonTerminalRuns({
       code: "unknown",
       message: "host process interrupted before the run reached a terminal state",
@@ -165,6 +167,55 @@ export class TreeStudioService {
 
   /* ------------------------------ 对话 ------------------------------ */
 
+  /** Durable reconciliation for ordinary prompts only. Replays never dispatch again,
+   * including failed/aborted/interrupted requests. A deliberate retry needs a new key. */
+  async submitPromptRequest(treeId: TreeId, branchId: BranchId, text: string, requestKey: string,
+    options?: Pick<PromptOptions, "model" | "composedPrefix" | "turnPrefix">) {
+    this.repository.getTree(treeId);
+    const payloadHash = createHash("sha256").update(JSON.stringify({ branchId, text,
+      model: options?.model ? [options.model.providerId, options.model.modelId] : null,
+      composedPrefix: options?.composedPrefix ?? null, turnPrefix: options?.turnPrefix ?? null,
+    })).digest("hex");
+    const previous = this.repository.promptRequests.find(treeId, requestKey);
+    if (previous !== null) {
+      if (previous.payloadHash !== payloadHash) throw new TypeError("requestKey 已绑定其他问题、分支、附件或模型，请先核对原请求。");
+      return this.getPromptRequest(treeId, requestKey)!;
+    }
+    if (typeof text !== "string" || text.trim() === "") throw new InvalidArgumentError("prompt text must be a non-empty string");
+    if (this.repository.getBranch(branchId).treeId !== treeId) throw new InvalidArgumentError("branch does not belong to tree");
+    if (this.#promptInFlight) throw new TypeError("a prompt is already in flight on this service; wait for it to settle or abort it first");
+    this.repository.promptRequests.create(treeId, requestKey, branchId, payloadHash);
+    try {
+      await this.#executePrompt(treeId, branchId, text, options, requestKey);
+    } catch (err) {
+      const error = toTreeAIError(err);
+      // Bound Run state is authoritative, even when HTTP/journal delivery failed after commit.
+      const bound = this.repository.promptRequests.find(treeId, requestKey);
+      if (bound?.runId) {
+        const run = this.repository.getRun(bound.runId);
+        if (run.terminalAt === null) this.repository.updateRunState(run.id, "failed", { failure: error });
+        if (this.#activeRun?.runId === run.id) this.#activeRun = null;
+      } else this.repository.promptRequests.failBeforeRun(treeId, requestKey, error.code, error.message);
+    }
+    return this.getPromptRequest(treeId, requestKey)!;
+  }
+
+  getPromptRequest(treeId: TreeId, requestKey: string) {
+    this.repository.getTree(treeId);
+    const record = this.repository.promptRequests.find(treeId, requestKey);
+    if (record === null) return null;
+    const run = record.runId === null ? null : this.repository.getRun(record.runId);
+    return { requestKey, branchId: record.branchId, runId: record.runId,
+      status: run?.state ?? (record.failureCode === null ? "accepted" : "failed"),
+      failure: run?.failure ? { code: run.failure.code, message: run.failure.message }
+        : record.failureCode === null ? null : { code: record.failureCode, message: record.failureMessage! },
+    };
+  }
+
+  async prompt(treeId: TreeId, branchId: BranchId, text: string, options?: PromptOptions): Promise<PromptOutcome> {
+    return this.#executePrompt(treeId, branchId, text, options);
+  }
+
   /**
    * 在分支上执行一轮 prompt（Episode + Run + user/assistant Turn 落库）。
    *
@@ -184,7 +235,7 @@ export class TreeStudioService {
    * tree.navigated）缓冲后归属本次创建的 run；run 落库记录显式
    * queued→running；运行期事件实时归属。收敛由运行时事件派生（见文件头）。
    */
-  async prompt(treeId: TreeId, branchId: BranchId, text: string, options?: PromptOptions): Promise<PromptOutcome> {
+  async #executePrompt(treeId: TreeId, branchId: BranchId, text: string, options?: PromptOptions, requestKey?: string): Promise<PromptOutcome> {
     if (typeof text !== "string" || text.trim().length === 0) {
       throw new InvalidArgumentError("prompt text must be a non-empty string");
     }
@@ -232,8 +283,12 @@ export class TreeStudioService {
         explorationPrefix !== null ? NEW_EXPLORATION_TURN_PREFIX : options?.turnPrefix ?? null;
       const composedText = composePromptText(pendingReturns, composedPrefix === null ? text : composedPrefix + text);
 
-      const episode = this.repository.createEpisode(branch.id);
-      const run = this.repository.createRun(episode.id, preRef);
+      const { episode, run } = this.repository.transaction(() => {
+        const episode = this.repository.createEpisode(branch.id);
+        const run = this.repository.createRun(episode.id, preRef);
+        if (requestKey !== undefined) this.repository.promptRequests.bind(tree.id, requestKey, run.id);
+        return { episode, run };
+      });
       // 采用尝试关联（已签署 W1 v3.0 §3.2）：本次 Run 的确定输入（组合
       // 文本）已包含这些 pending Return → 各记一条 Return→Run 关联。
       // Run 结果（succeeded/failed/aborted）由 runs 行自身记录，读取面以

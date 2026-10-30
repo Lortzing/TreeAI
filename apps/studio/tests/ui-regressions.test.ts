@@ -741,7 +741,7 @@ async function createWorld(options: WorldOptions = {}): Promise<World> {
           ],
           policyDecisions: { observed: false, reason: "offline echo driver has no tool executor" },
         };
-        return respond(502, { error: { code: backend.promptFailure.code, message: backend.promptFailure.message } });
+        return respond(200, { request: { status: "failed", failure: { code: backend.promptFailure.code, message: backend.promptFailure.message } }, state: backend.treeState });
       }
       return respond(200, { outcome: { kind: "completed" }, state: backend.treeState });
     }

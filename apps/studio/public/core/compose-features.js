@@ -230,6 +230,7 @@ const findTurnById = (turnId) => {
 
 
     const studioBasics = createStudioBasics({
+      get hasPendingPrompt() { return promptController.hasPendingPrompt; },
       get currentSessionRound() { return currentSessionRound; },
       get document() { return deps.document; },
       get window() { return deps.window; },
@@ -367,6 +368,7 @@ const findTurnById = (turnId) => {
 
 
     const promptController = createPromptController({
+      get crypto() { return deps.crypto; },
       get document() { return deps.document; },
       get sessionUI() { return sessionUI; },
       get state() { return deps.state; },

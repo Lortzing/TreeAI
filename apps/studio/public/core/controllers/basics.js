@@ -46,6 +46,7 @@ export function createStudioBasics(deps) {
     if (!response.ok) {
       const message = payload && payload.error ? `${payload.error.code}: ${payload.error.message}` : `HTTP ${response.status}`;
       const error = new Error(message);
+      error.status = response.status;
       if (payload && payload.error && typeof payload.error.code === "string") {
         error.code = payload.error.code;
       }
@@ -96,22 +97,30 @@ export function createStudioBasics(deps) {
     const busy = deps.state.busy;
     const trunkView = deps.state.treeState === null ? null : branchView(trunkBranchId());
     const trunkUnavailable = trunkView !== null && trunkView.sessionAvailability === "unavailable";
-    const trunkLocked = busy || trunkUnavailable;
+    const trunkPending = deps.hasPendingPrompt?.(deps.state.currentTreeId, trunkBranchId()) ?? false;
+    const trunkLocked = busy || (trunkUnavailable && !trunkPending);
     $("prompt-input").disabled = busy;
     $("prompt-input").placeholder = trunkUnavailable
       ? "Session missing on the Trunk — type the first question of a new exploration, then “Start new exploration”…"
       : "继续对话…";
     $("send").disabled = trunkLocked;
+    $("send").textContent = trunkPending ? "↻" : "↑";
+    $("send").title = trunkPending ? "核对上次发送的结果" : "发送到主线";
+    $("send").setAttribute("aria-label", $("send").title);
     $("new-exploration").hidden = !trunkUnavailable;
     $("new-exploration").disabled = busy;
     const panelView = deps.state.panelBranchId === null ? null : branchView(deps.state.panelBranchId);
     const panelUnavailable = panelView !== null && panelView.sessionAvailability === "unavailable";
-    const panelLocked = busy || panelUnavailable;
+    const panelPending = deps.hasPendingPrompt?.(deps.state.currentTreeId, deps.state.panelBranchId) ?? false;
+    const panelLocked = busy || (panelUnavailable && !panelPending);
     $("panel-prompt-input").disabled = busy;
     $("panel-prompt-input").placeholder = panelUnavailable
       ? "Session missing on this branch — type the first question of a new exploration, then “Start new exploration”…"
       : "继续对话…";
     $("panel-send").disabled = panelLocked;
+    $("panel-send").textContent = panelPending ? "↻" : "↑";
+    $("panel-send").title = panelPending ? "核对上次发送的结果" : "发送到分支";
+    $("panel-send").setAttribute("aria-label", $("panel-send").title);
     $("panel-new-exploration").hidden = !panelUnavailable;
     $("panel-new-exploration").disabled = busy;
     $("submit-return").disabled = busy;

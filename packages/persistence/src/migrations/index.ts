@@ -22,6 +22,7 @@ import { terminologyMigration } from "./0007-terminology.ts";
 import { materialCoreMigration } from "./0008-material-core.ts";
 import { terminologyDispatchLedgerMigration } from "./0009-terminology-dispatch-ledger.ts";
 import { navTreeExpandStateMigration } from "./0010-nav-tree-expand-state.ts";
+import { promptRequestsMigration } from "./0012-prompt-requests.ts";
 import { generativeUiMigration } from "./0011-generative-ui.ts";
 
 /** 一条版本化 migration。`up` 必须只含幂等性不要求的 DDL（事务保护下执行一次）。 */
@@ -44,6 +45,7 @@ export const MIGRATIONS: readonly Migration[] = [
   terminologyDispatchLedgerMigration,
   navTreeExpandStateMigration,
   generativeUiMigration,
+  promptRequestsMigration,
 ];
 
 /** 当前代码支持的最高 schema 版本。 */
