@@ -1,5 +1,7 @@
 # TreeAI refactor acceptance — live candidate matrix
 
+**2026-10-30 search CI follow-up:** Original Linux B6 failed at definitive warm p95 521.3ms > 500ms. Fix `20de66609951e99826c22a7a9732ce9a1afa1580` uses ordered posting arrays while retaining per-request rebuild and frozen semantics. 946 tests/types pass; local original B6 HTTP warm p95 is 194.8ms. [Preserved failure, equivalence experiment and remote-CI scope](../../evidence/integration/20261030/README.md#ci-performance-follow-up). Remote revalidation is recorded by the PR checks, not inferred from local timing.
+
 **2026-10-30 multi-branch integration:** Combined latest Studio refinement, icons, persisted generative comparisons, harvest/continuity and CI diagnostics. Code/test candidate `fd73a458a2e3e52dc68e19249b3cd23e8e986880`: types and 945 tests pass; full final-source native Chrome Echo D4 16/16 passes (dirty evidence state is explicitly recorded). [Source identities, validation and exclusions](../../evidence/integration/20261030/README.md). Original human/model/device gates remain open.
 
 **2026-10-29 secondary surfaces:** Code `f08fe370d706788fa96727a4b644afa63a13d080` collapses floating attachments on every right-panel entry and hides implementation details behind secondary disclosures. Final-code types, 905 tests, asset/path audits and complete Chrome Echo D4 16/16 pass. [Evidence and retained failures](../../evidence/studio-secondary/20261029/README.md) distinguish the working-tree run from a clean-start run; real-Pi and human gates remain separate.

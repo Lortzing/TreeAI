@@ -1,5 +1,7 @@
 # TreeAI multi-branch integration — 2026-10-30
 
+**Latest CI follow-up:** source/test commit `20de66609951e99826c22a7a9732ce9a1afa1580` supersedes the initial candidate below with a focused search performance fix. Original failed CI evidence and the original limits are retained; see the follow-up section at the end.
+
 Remote base: `35ae4a012fd6beea0b66b9bb773dbe858dfedc45` (PR #29).
 Final code/test candidate: `fd73a458a2e3e52dc68e19249b3cd23e8e986880`.
 Integration branch: `codex/integrate-development-20261030`.
@@ -36,3 +38,19 @@ Offline D2 rerun: **21 PASS / 0 FAIL / 1 NOT_RUN**, exit 3 INCOMPLETE ([log](d2-
 ## Boundaries
 
 No new real-Pi/model-quality, live microphone/provider-switching, full new installer, target-device signoff, independent participant or long-term trial result is claimed. Raw UI selections and Echo sample cards do not establish factual correctness or product value. D1 opt-in, frozen quality/annotation/arbitration and original human/device gates stay open. DOCX/PPT/web/image ingestion and shared tabs across every right-pane type remain the prior refinement line's stated exclusions. Merge does not constitute formal release or whole-project acceptance.
+
+
+## CI performance follow-up
+
+Initial PR head `44eb27bb667400259034c6ef9f3a31df29ecf1d3` passed remote D2 and native browser workflows, but [diagnostics run 41039456137](https://github.com/Lortzing/TreeAI/actions/runs/41039456137) failed the original B6 search gate: Linux warm p95 **533.1ms**, definitive rerun **521.3ms**, limit **500ms**. This is retained as a FAIL in [the complete job log](ci-first-diagnostics.log), not treated as machine noise or hidden by a rerun.
+
+Source/test fix: `20de66609951e99826c22a7a9732ce9a1afa1580`. Per-document unique tokens now append monotonically increasing IDs into array postings, and queries intersect them with two pointers. The engine still reads/rebuilds from current product facts every request; no product cache or invalidation mechanism, ranking, matching, Unicode offsets, serialization format, frozen corpus, query list, threshold or rerun rule changed.
+
+CPU profiling on the exact B6 corpus identified index construction as the dominant cost. Alternating before/after builds on identical snapshot documents measured median **165.4ms → 105.6ms**, p95 **172.4ms → 114.5ms** (14 measured builds each after two warmups). Every complete hit object matched across all 50 frozen queries plus extra Unicode/scope/kind/limit cases ([comparison output](perf-comparison.log)). The regression covers astral CJK, repeated query terms, intersection order, exact UTF-16 positions and restored indexes. Its initial missing local test-helper failure is retained; the corrected focused suites pass 25/25.
+
+Revalidation on unchanged fix bytes:
+
+- Complete root suite **946/946 PASS**, no failures/skips ([log](search-fix-tests.log)); workspace and root test types pass.
+- Static boundary audit **898 original names preserved / 943 current, 0 violations** ([report](search-fix-boundaries.json)).
+- Original scoped B6 check passes, **3 PASS / 0 FAIL**, exit 0 including its original result/hygiene rows ([log](search-fix-b6.log)). Full original 50-query HTTP warm p95 **194.8ms ≤ 500ms** on this macOS host; cold p95 **166.9ms**. This local timing does not substitute for the Linux rerun. Raw generated evidence: `evidence/d4/runs/d4-offline-20261030T102645640Z/`.
+- [Exact tested source hashes](search-fix-source-hashes.json). The earlier full browser 16/16 record remains bound to its initial code; the fix changes only search internals and its test. The PR's subsequent Linux workflows provide remote validation of the new head and are not preclaimed here.

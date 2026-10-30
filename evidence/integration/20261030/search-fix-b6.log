@@ -1,0 +1,13 @@
+verify-d4 0.1.0 — offline acceptance run
+root: /Users/tal/.codex/worktrees/7586/TreeAI
+evidence: /Users/tal/.codex/worktrees/7586/TreeAI/evidence/d4/runs/d4-offline-20261030T102645640Z
+scoped to: b6-scale-performance
+
+  [PASS] b6-scale-performance
+  [PASS] exit-codes
+  [PASS] evidence-write-hygiene
+
+verify-d4 summary:
+  3 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN
+  verdict: ALL_PASS (exit 0)
+  evidence: /Users/tal/.codex/worktrees/7586/TreeAI/evidence/d4/runs/d4-offline-20261030T102645640Z
