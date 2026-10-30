@@ -1217,7 +1217,7 @@ test("material list: honest per-state rows (ready / failed-with-reason / parsing
 /* 2. 打开 + 分块懒加载 + 阅读位置（保存/恢复/跨页前补）                  */
 /* ------------------------------------------------------------------ */
 
-test("attachment selection preserves the trunk nodes, draft and scroll while opening and closing the right reader", async () => {
+test("central reading navigation preserves the trunk nodes, draft and scroll while opening and closing the only material", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT], pageSize: 5 });
   const conversation = world.el("conversation");
   const nodes = [...conversation.children];
@@ -1822,7 +1822,7 @@ test("capture bar freezes during the selection drag window: a mid-drag selection
   );
 });
 
-test("touch arming: compatibility mouse events preserve the captured quote; a later explicit clear disarms it", async () => {
+test("touch arming: selectionchange arms the capture bar without mouseup, and an emptied selection disarms it after the deferred check", async () => {
   const world = await createWorld({ materials: [MD01_SCRIPT] });
   await world.openMaterial("mat-md01");
   const block = world.blockElement("blk-1");

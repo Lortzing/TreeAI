@@ -125,6 +125,34 @@ function importMarkdown(
 
 /* ------------------------------ 迁移 ------------------------------ */
 
+// Retain the v10 regression separately from current-schema creation: the old
+// migration prefix is also the upgrade input for existing installed databases.
+test("fresh database migrates to schema version 10 (material core + terminology dispatch ledger + nav expand state)", () => {
+  const dir = makeTempDir();
+  try {
+    const path = dbPath(dir);
+    const legacy = MIGRATIONS.filter((migration) => migration.version <= 10);
+    assert.equal(legacy.at(-1)!.version, 10);
+    const raw = new DatabaseSync(path);
+    runMigrations(raw, legacy);
+    assert.equal(Number((raw.prepare("PRAGMA user_version").get() as { user_version: number }).user_version), 10);
+    const tables = raw.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Array<{ name: string }>;
+    for (const name of ["materials", "material_blobs", "material_versions", "tree_material_links", "material_branch_origins", "tree_material_reading_state", "material_first_questions", "nav_tree_expand_state", "terminology_state"]) {
+      assert.ok(tables.some((table) => table.name === name), `v10 table preserved: ${name}`);
+    }
+    raw.prepare("INSERT INTO terminology_state (key, value) VALUES (?, ?)").run("integration-upgrade", '{"requests":3}');
+    raw.close();
+    const upgraded = TreeRepository.open({ path });
+    assert.equal(upgraded.schemaVersion, 11);
+    assert.deepEqual(upgraded.getTerminologyState("integration-upgrade"), '{"requests":3}');
+    upgraded.close();
+    const after = new DatabaseSync(path, { readOnly: true });
+    assert.ok(after.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='generative_ui_tasks'").get());
+    assert.equal(Number((after.prepare("SELECT COUNT(*) AS n FROM schema_migrations WHERE version <= 10").get() as { n: number }).n), 10);
+    after.close();
+  } finally { cleanupTempDir(dir); }
+});
+
 test("fresh database migrates to schema version 11 (material core + terminology dispatch ledger + nav expand state + generated comparisons)", () => {
   assert.equal(LATEST_SCHEMA_VERSION, 11, "migration 0011 adds generated comparisons after the material/navigation migrations");
   const dir = makeTempDir();
